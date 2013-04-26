@@ -1,0 +1,83 @@
+(*
+ *
+ * $Log: stest.str,v $
+ * Revision 1.2  1998/06/11 13:00:19  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+(* This is just for parsing, really *)
+functor StringTest(structure N : SNAME;
+	     structure SL : SORTEDLIST) : STEST =
+struct
+    structure N = N
+	
+    type test = N.name list list
+	
+    val True = []
+	
+	
+    fun mkstr([]) = "[True]"
+      | mkstr(T) =
+	let fun mkstr_eq(L) = (Lib.mapconcat N.mkstr L "=")
+	in "[" ^ (Lib.mapconcat mkstr_eq T ",") ^ "]"
+	end
+
+    fun eq (t1,t2) = 
+	Lib.eq (Lib.eq N.eq) (t1,t2)
+ 
+    fun match (n1,n2) =
+	if N.le(n1,n2)
+	    then if N.le(n2,n1) then True
+		 else [[n1,n2]]
+	else [[n2,n1]]
+	    
+    fun hd (h::t) = h | hd _ = raise Match
+    fun tl (h::t) = t | tl _ = raise Match
+	
+    fun insert L [] = [L]
+      | insert [] L = L
+      | insert L (h::t) =
+	if N.le(hd L,hd h) then L::h::t
+	else h::(insert L t)
+	    
+    fun intersects _ [] = false
+      | intersects [] _ = false
+      | intersects (a::s) (b::t) =
+	if N.le(a,b) then
+	    if N.le(b,a) then true
+	    else intersects s (b::t)
+	else intersects (a::s) t
+	    
+    fun split L [] = ([],[])
+      | split L (h::t) =
+	let val (f1,f2) = split L t
+	in if intersects L h then (h::f1,f2)
+	   else (f1,h::f2)
+	end
+    
+    fun merge P [] = P
+      | merge [] Q = Q
+      | merge (a::s) (b::t) =
+	if N.le(a,b) then
+	    if N.le(b,a) then a::(merge s t)
+	    else a::(merge s (b::t))
+	else b::(merge (a::s) t)
+	    
+    fun bigmerge [] = []
+      | bigmerge [L] = L
+      | bigmerge (a::b::t) = bigmerge((merge a b)::t)
+	
+    fun join (P,[]) = P
+      | join (P,h::t) =
+	let val (f1,f2) = split h P
+	in join (insert (bigmerge(h::f1)) f2,t)
+	end
+	
+    (* return a list of pairs (a,b) to substitute a for b *)
+    fun sigma [] = []
+      | sigma((h::t)::r) =
+	(map (fn x => (h,x)) t)@(sigma r)
+      | sigma _ = raise Match
+end

@@ -1,0 +1,537 @@
+(*
+ *
+ * $Log: PolyGraph.str,v $
+ * Revision 1.2  1998/06/02 15:31:19  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: PolyGraph.str,v 1.2 1998/06/02 15:31:19 jont Exp $";
+functor PolyGraph (include sig
+	            structure Agf  : AGENTFUNS;
+                    structure SL   : SORTEDLIST;
+                    structure AgIO : AGENTIO
+                    sharing AgIO.Ag = Agf.Ag
+	           end where type AgIO.Ag.agent = PK.hash_key) : POLYGRAPH =
+struct
+
+   structure Ag = Agf.Ag
+   structure A  = Ag.A
+   structure V  = Ag.V
+   structure E  = Agf.E
+
+   type act     =  A.act
+   type var     =  V.var
+   type agent   =  Ag.agent
+   type 'a env  =  'a E.env
+
+   val tau      =  A.tau
+   val eps      =  A.eps
+   val act_eq   =  A.eq
+   val act_le   =  A.le
+
+   val Sub = Array.sub
+   infix 8 Sub
+
+   datatype vertex =
+   V of {keycopy  : agent ref,
+         suc      : (A.act * (vertex ref list ref)) list ref,
+         wsuc     : (A.act * (vertex ref list ref)) list ref}
+
+   datatype 'a state =
+   S of {keycopy  : agent ref,
+         suc      : (A.act * ('a state ref list ref)) list ref,
+         taus     : 'a state ref list ref,
+         newtaus  : 'a state ref list ref,
+         info     : 'a,
+         id       : int,
+         prdiv    : bool,
+         gldiv    : bool ref,
+         tauarr   : bool Array.array ref,
+         mark     : bool ref,
+         p_id     : int ref}
+
+   exception LookUp
+
+   val table = ref (PH.mkTable(1024,LookUp)) : vertex ref PH.hash_table ref
+
+   fun mktable () = table := PH.mkTable(1024,LookUp)
+
+   val counter = ref 0;
+
+   fun vkeycopy (ref(V{keycopy,...})) = keycopy
+   fun vsuc  (ref(V{suc,...}))  = suc
+   fun vwsuc (ref(V{wsuc,...})) = wsuc
+
+   fun skeycopy (ref(S{keycopy,...})) = keycopy
+   fun sid   (ref(S{id,...}))   = id
+   fun ssuc  (ref(S{suc,...}))  = suc
+
+(* Take a successor list, and add to it the information that you can         *)
+(* do action and get to stateref. The successor list is ordered, so we put   *)
+(* it in the right place. NB this can actually be VERTEXrefs as well as STATE*)
+   fun addlink (suc,action,stateref) =
+     let fun insert checked [] = suc := checked@[(action,ref [stateref])]
+(* We looked at the whole of suc, and there wasn't any entry for action or   *)
+(* anything greater than action. Add an entry for action at the end. *)
+	   | insert checked (t as (action',l)::rest) =
+	     if A.le(action,action') then
+	       if A.le(action',action) then
+(* There's already an entry for action. If stateref is already in the  	     *)
+(* list, of states you can get to via this action, fine, else add it.	     *)
+		 if Lib.member (op =) (stateref,!l) then ()
+		 else l := stateref::(!l)
+	       else suc := checked@[(action,ref [stateref])]@t
+(* We passed the right place, so there isn't any entry for action	     *)
+(* yet. Insert one here. *)
+	     else insert (checked@[(action',l)]) rest
+(* ie if action' < action, we're not far enough along yet. Keep going *)
+     in insert [] (!suc)
+     end
+
+(* ********** ********** Make Graph, in various guises ********** ********** *)
+(* Newgraph -- makes a polygraph from scratch, the hashing way  *)
+
+  fun order (init,graph) = 
+      let val maxid = PH.numItems graph
+          val A = Array.array(maxid,init)
+          val L = map (fn(k,s) => (k,sid s)) (PH.listItems graph)
+          fun upd [] = ()
+            | upd ((k,id)::t) = (Array.update(A,id,PH.find graph k); upd t)
+          fun listing 0 = [A Sub 0]
+            | listing n = (A Sub n)::(listing (n - 1))
+       in (upd L;(init, listing (maxid - 1)))
+      end 
+
+  fun Newgraph ifunc DV NF TR agent =
+    let val graph = PH.mkTable(1024,LookUp)
+      val idnr = ref 0
+      fun mkstate agent' =
+	let val key = agent'
+	  val normalisedagent' = NF agent' (* new: slightly suspect *)
+                in (PH.find graph key) handle LookUp =>
+                    let val stateref = ref (S{keycopy = ref key,
+                                        id      = !idnr,
+                                        suc     = ref nil,
+                                        prdiv   = DV normalisedagent',
+                                        gldiv   = ref false,
+                                        info    = ifunc normalisedagent',
+                                        taus    = ref nil,
+                                        newtaus = ref nil,
+                                        tauarr  = ref (Array.array(1,false)),
+                                        mark    = ref false,
+                                        p_id    = ref 1})
+                    in ignore(inc idnr);
+                       PH.insert graph (key,stateref);
+                       app (mklink (!stateref)) (TR normalisedagent');
+                       stateref
+                    end
+                end
+            and mklink (S{suc,...}) (action, agent') =
+                let val stateref' = mkstate (agent') (* no NF here now... *)
+ 	       in addlink(suc,action,stateref')
+                end
+         in order(mkstate(agent),graph)	(* ... or here *)
+        end
+  
+   exception Noacts
+
+   val tauref = fn x =>
+		let fun ar [] = raise Noacts
+                      | ar ((b,l)::t) = if A.eq(A.tau,b) then l else ar t
+                 in ar
+                end x
+
+   fun tausfrom l  = !(tauref l) handle Noacts => []
+
+(*********************************************)
+(*  transcl      - J. Eve & R. Kurki-Suonio  *)
+(*********************************************)
+
+   fun transcl (init,graph) =
+       let val sz = sid(hd graph) + 1
+           val strefarray = Array.array(sz,init)
+           val listindex = ref sz
+           val stacktop = ref ~1
+           val i = ref 0
+           val j = ref 0
+           val vertices = Array.array(sz,~1)
+           val index = Array.array(sz,~1)
+
+           fun ge (ref (S{id=id1,...}),ref(S{id=id2,...})) = id1>=id2
+
+           fun inits (stateref as (ref (S{id,suc,newtaus,taus,...}))) =
+               ( Array.update(strefarray,id,stateref);
+                 newtaus := nil;
+                 taus := SL.sort ge true (tausfrom (!suc)) )
+
+           fun afters (ref (S{suc,taus,newtaus,...})) =
+               if not(null (!newtaus)) then
+                  ( taus := !newtaus;
+                    (tauref (!suc)) := !taus)
+               else ()
+
+           fun add_taus (ref(S{newtaus=n1,...})) (ref(S{newtaus=n2,...})) =
+               n1 := SL.merge ge true (!n1,!n2)
+
+           fun closure (x as (ref(S{id,taus,newtaus,...}))) =
+               let val w_list = ref []
+                   val w_id = ref 0
+                   val w = ref init
+                in ( inc stacktop;
+                     Array.update(index,id,!stacktop);
+                     Array.update(vertices,!stacktop,id);
+                     w_list := !taus;
+                     while not(null(!w_list)) do
+                        ( w := hd(!w_list);
+                          w_id := sid(!w);
+                          newtaus := SL.add ge true (!w,!newtaus);
+                          if index Sub (!w_id) = ~1 then closure (!w)
+                          else ();
+                          if index Sub (!w_id) <= (!stacktop) then
+                             Array.update(index,id,
+                                        min(index Sub id,
+                                                index Sub (!w_id)))
+                          else add_taus x
+                               (strefarray Sub
+                                  (vertices Sub (index Sub (!w_id))));
+                          w_list := tl(!w_list) );
+                     if id = (vertices Sub (index Sub id)) then
+                        ( dec listindex;
+                          w_id := (vertices Sub (!stacktop));
+                          w := strefarray Sub (!w_id);
+                          dec stacktop;
+                          Array.update(index,!w_id,!listindex);
+                          while (!w_id) <> id do
+                             ( add_taus x (!w);
+                               w_id := vertices Sub (!stacktop);
+                               w := strefarray Sub (!w_id);
+                               dec stacktop;
+                               Array.update(index,!w_id,!listindex) );
+                          Array.update(vertices,!listindex,id) )
+                     else () )
+               end
+        in ( app inits graph;
+             i := 0;
+             while (!i) < sz do
+                ( if index Sub (!i) = ~1 then closure (strefarray Sub (!i))
+                  else ();
+                  inc i );
+             i := 0;
+             while (!i) < sz do
+                ( j := vertices Sub (index Sub (!i));
+                  if (!i) <> (!j) then
+                     add_taus (strefarray Sub (!i)) (strefarray Sub (!j))
+                  else ();
+                  inc i );
+             app afters graph;
+             (init,graph) )
+       end
+
+(*****************************************************************************)
+(*  actcl replaces -a-> by ==>-a->==>  (for a#tau).                          *)
+(*  It is assumed that the tau field in each state has been set by transcl.  *)
+(*****************************************************************************)
+
+   fun actcl (init,graph) =
+       let val temp = ref []
+           val sz = sid(hd graph) + 1
+           val strefarray = Array.array(sz,init)
+           val i = ref 0
+           fun updateall _ [] = ()
+             | updateall arr ((ref (S{id,...}))::t) =
+               ( Array.update(arr,id,true);
+                 updateall arr t )
+           fun findactintemp ac [] = let val arr = Array.array(sz,false)
+                                      in (temp := (ac,arr)::(!temp); arr)
+                                     end
+             | findactintemp ac ((ac',arr)::t) =
+               if A.eq(ac,ac') then arr else findactintemp ac t
+           fun clear (_,arr) = ( i := 0;
+                                 while (!i) < sz do
+                                    ( Array.update(arr,!i,false);
+                                      inc i ) )
+           fun addsuc suc (ac,arr) =
+               let val l = ref nil
+                   val listarr = ( i := 0;
+                                   while (!i) < sz do
+                                      ( if arr Sub (!i) then
+                                           l := (strefarray Sub (!i))::(!l)
+                                        else ();
+                                        inc i );
+                                   l )
+                   fun adds _ [] = suc := (!suc)@[(ac,listarr)]
+                     | adds checked (unch as ((ac',l)::rest)) =
+                       if A.le(ac,ac') then
+                          if A.le(ac',ac) then l := !listarr
+                          else suc := checked@[(ac,listarr)]@unch
+                       else adds (checked@[(ac',l)]) rest
+                in if null (!listarr) then () else  adds [] (!suc)
+               end
+           fun beginstate (stateref as (ref (S{suc,...}))) =
+               let fun collecttaus _ [] = ()
+                     | collecttaus arr ((stateref as (ref (S{taus,...})))::t) =
+                       ( updateall arr (stateref::(!taus));
+                         collecttaus arr t )
+                   fun oneact (ac,l) =
+                       if A.eq(ac,A.tau) then ()
+                       else collecttaus (findactintemp ac (!temp)) (!l)
+                in ( app clear (!temp);
+                     app oneact (!suc);
+                     app (addsuc suc) (!temp) )
+               end
+           fun finishstate (stateref as (ref (S{suc,taus,...}))) =
+               let fun oneact (ac,l) =
+                       if A.eq(ac,A.tau) then ()
+                       else updateall (findactintemp ac (!temp)) (!l)
+                   fun collectsuc (ref(S{suc,...})) =
+                       app oneact (!suc)
+                in ( app clear (!temp);
+                     app collectsuc (stateref::(!taus));
+                     app (addsuc suc) (!temp) )
+               end
+        in app (fn stateref as (ref (S{id,...})) =>
+                       Array.update(strefarray,id,stateref)) graph;
+           app beginstate graph;
+           app finishstate graph;
+           (init,graph)
+       end
+
+(*************)
+(*   obscl   *)
+(*************)
+
+   fun reflexcl (init,graph) =
+       (app (fn (v as ref(S{suc,...})) => addlink(suc,A.tau,v)) graph;
+        (init,graph) )
+
+   fun obscl graph = reflexcl(actcl(transcl graph))
+
+(*************)
+(*  congrcl  *)
+(*************)
+
+   fun congrcl newinfo gr =
+       let val (clgr as ((ref (S{keycopy,id,suc,prdiv,gldiv,info,
+                                 taus,newtaus,tauarr,mark,p_id})),graph)) =
+               (* ? *) actcl(transcl gr)
+           val newinitstref =
+               ref (S{keycopy = keycopy,
+                      id      = sid(hd graph) + 1,
+                      suc     = ref (map (fn (ac,l) => (ac,ref(!l)))
+                                    (!suc)),
+                      prdiv   = prdiv,
+                      gldiv   = ref (!gldiv),
+                      info    = newinfo,
+                      taus    = ref (!taus),
+                      newtaus = ref (!newtaus),
+                      tauarr  = ref (!tauarr),
+                      mark    = ref (!mark),
+                      p_id    = ref (!p_id)})
+           val (_,reflgr) = reflexcl clgr
+        in (newinitstref,newinitstref::reflgr)
+       end
+
+(*************)
+(*  epscl    *)
+(*************)
+
+   fun epscl (init as (ref (S{suc,...})),graph) =
+       ( addlink(suc,A.eps,init);
+         (init,graph) )
+
+
+(* Internals *)
+(* mkgr adds agent and its descendants into table, returning the vxref  *)
+   fun mkgr NF TR agent =
+(* mkstate looks up agent' in the main table, adding it if nec. *)
+     let fun mkstate agent' =
+       let val key = agent'
+       in (PH.find (!table) key) handle LookUp =>
+	 let val vr = ref (V{keycopy = ref key,
+			     suc     = ref nil,
+			     wsuc    = ref nil})
+	 in PH.insert (!table) (key,vr);
+	   app (mklink (!vr)) (TR agent');
+	   vr
+	 end				(* handler *)
+       end
+(* mklink takes a vx and adds to its successor list the info that via action *)
+(* you can get to agent', suitably turned into a vx. *)
+	 and mklink (V{suc,...}) (action,agent') =
+	   let val vr' = mkstate agent'
+	   in addlink(suc,action,vr')
+	   end
+	 
+     in mkstate agent
+     end
+
+
+   fun sucs (V{keycopy,suc,...})  = (keycopy,suc) 
+   fun sucw (V{keycopy,wsuc,...}) = (keycopy,wsuc) 
+
+(* build a new hash table for the trans graph root and return it. Exfn	  *)
+(* determines whether we build a weak or a strong graph. *)     
+   fun extract exfn root =
+(* cat takes a list of ('a, 'b list ref) pairs and returns the concatenation *)
+(* of the dereferenced second elements. Used to get a list of staterefs out *)
+(* of a successor list.							  *)
+     let fun cat [] = []
+	   | cat ((_,vrl)::t) = (!vrl)@(cat t)
+(* Keeping a list of vxrefs we still have to look at, build a hash table  *)
+	 fun add [] L = L
+	   | add (vr::t) L =
+	     let val (keycopy,suc) = exfn(!vr)
+	     in if not((PH.peek L (!keycopy)) = NONE) then add t L
+(* if a vx of this key is already there, just ignore this pair, keep going *)
+		else add ((cat (!suc))@t) (PH.insert L ((!keycopy),vr); L)
+(* else append its successors to the list of things we have to examine,	  *)
+(* and keep building the hash table.	*)
+	     end
+     in 
+       add [root] (PH.mkTable(1024,LookUp))
+     end
+
+   val extracts = extract sucs
+
+   exception WeakGraph
+
+   fun extractw root = 
+       if (null o ! o vwsuc) root then raise WeakGraph
+       else extract sucw root
+
+   (* Comment in the .sig says taus, newtaus & suc fields are ordered *)
+   (* by decreasing state id. Outside PolyGraph, newtaus is unused,   *)
+   (* and the taus field is only used in contexts where the closure   *)
+   (* routines are called directly -- see dquivalent in Top, and uses *)
+   (* of mkDgraph. So I set both fields here to nil. *)
+
+   fun mkpoly ifunc DV (ref(V{keycopy,...})) =
+            ref (S{keycopy = keycopy,
+(* this should be the only place counter is incremented *)
+                   id      = let val c = !counter in (inc(counter) ; c) end,
+                   suc     = ref nil,
+                   prdiv   = DV (!keycopy),
+                   gldiv   = ref false,
+                   info    = ifunc (!keycopy),
+                   taus    = ref nil,
+                   newtaus = ref nil,
+                   tauarr  = ref (Array.array(1,false)),
+                   mark    = ref false,
+                   p_id    = ref 1})
+
+(* Given a complete vx hash table and an embryonic state hash table, fill *)
+(* in one or other of the state ht's successor lists *)
+   (* The closure operations really don't care if the successors are   *)
+   (* properly ordered -- first bu action and then by decreasing state *)
+   (* id -- but user's might. So sort them here: this probably isn't   *)
+   (* necessary because the id's are assigned in the same sequence     *)
+   (* every time, but I'm getting paranoid by now. *)
+
+   fun setsuc exfn graph newg = 
+       let val lookupold = PH.find graph
+           val lookupnew = PH.find newg
+(* Take a vx ref list ref, turn it into the corresponding state ref list  *)
+(* ref: (MM added sort)*) 
+           val SS = SL.sort (fn (s1,s2) => sid s1 > sid s2) false
+           fun newl (a,l) = (a, ref(SS (map (lookupnew o ! o vkeycopy) (!l))))
+(* take a state, get its key, look up the corresponding vx, get its	  *)
+(* successor list, turn it into a state-like list, and assign the result  *)
+(* to the state successor list. Sheesh. *)
+           fun setlinks (ref(S{keycopy,suc,...})) = 
+               suc := map newl ((! o exfn) (lookupold (!keycopy)))
+        in PH.apply (fn (_,stateref) => setlinks stateref) newg
+       end
+
+   (* MLA -- eta abstract *)
+   val setsucs = fn x => setsuc vsuc x
+   val setsucw = fn x => setsuc vwsuc x
+
+   fun savewl [] = ()
+     | savewl ((ref(S{keycopy,suc,...}))::rest) = 
+       ((vwsuc (PH.find (!table) (!keycopy))) := 
+         map (fn (a,l) =>
+	      (a, ref(map ((PH.find (!table)) o ! o skeycopy) (!l)))) 
+                (!suc) ; 
+         savewl rest)
+
+(* DOING THIS: *)
+   (* The user said "agent" but we actually build "NF agent" which is  *)
+   (* irritating when one comes to look at the bisimulation. Could     *)
+   (* experiment with DV <== DV o NF and TR <== TR o NF, deleting uses *)
+   (* of NF below. Saving the graph slows us down badly if it's small. *)
+   (* "extracts/w" and "mkpoly" could be combined I guess.*)
+   fun mkGraph weak ifunc DV NF TR agent =
+       let val rkey = agent
+	 
+   (* build the graph from scratch - or just get the reference to root *)
+(* a vxref. As a sideeffect adds agent and all descendants into *)
+(* table: NB this used to be done on NF agent*)
+	 
+           val root = mkgr NF TR agent
+           val mkpolygraph = PH.map (fn (_,vr) => mkpoly ifunc DV vr) 
+        in
+
+(* extract the graph from the vertex table -- this is a retraversal *)
+(* the first time round! *)
+	    (let val graph = if weak then extractw root else extracts root
+(* :a hashtable of (key, vref). Why??? *)	  
+
+(* transform that into a polygraph, suitably initialised -- linear *)
+		 val newg = (counter := 0; mkpolygraph graph)
+(* :a new hashtable, same keys, but in which the values are states. *)		   
+
+	     in 
+
+(* now set the edge links correctly -- currently they are all nil *)
+		 (if weak then setsucw graph newg else setsucs graph
+		    newg ;
+(* :fill in the relevant successor list in the new state ht *)		    
+
+(* and order the vertices by identifier *)
+		      order(PH.find newg rkey, newg))
+	     end) handle WeakGraph =>
+(* similar for a weak graph: we now have to compute the weak links *)
+             let val graph = extracts root
+		 val newg = (counter := 0; mkpolygraph graph)
+	     in 
+		 (setsucs graph newg ; 
+		  let val (i,g) = (reflexcl o actcl o transcl o order)
+		      (PH.find newg rkey, newg)
+   (* and save them in the vertex table *)
+		  in (savewl g ; (i,g))
+		  end)
+	     end
+       end
+
+(* Here's the pre-MM version. I'm not convinced about the elegance of  *)
+(* some of the above but basically I'm sure it's an improvement!       *)
+(* fun mkGraph weak ifunc DV NF TR agent =			       *)
+(*        (let val _ = counter := 0	(* only initialisation of counter *) *)
+(*             val polyinit = mkpoly ifunc DV (* fn turning vx into state *) *)
+(*             val ragent = NF agent				       *)
+(*             val rkey = AgIO.mkstr ragent			       *)
+(*             val root = mkgr NF TR ragent			       *)
+(* (* :a vxref. As a sideeffect adds ragent and all descendants into table *) *)
+(*             val graph = if weak then extractw root else extracts root *)
+(* (* :a hashtable of (name, vref). Why??? *)			       *)
+(*             val newg = PH.map (fn (_,vr) => polyinit vr) graph       *)
+(* (* :a new hashtable, same keys, but in which the values are states. *) *)
+(*         in 							       *)
+(*             (if weak then setsucw graph newg else setsucs graph newg ; *)
+(* (* :fill in the relevant successor list in the new state ht *)      *)
+(*                  (PH.find newg rkey, rev (map snd (PH.listItems newg)))) *)
+(* (* return the root state ref and the list of states. Why rev? Surely	  *) *)
+(* (* there's no guarantee about the order, is there? *)	       *)
+(*         end) handle WeakGraph =>				       *)
+(*              let val (i,g) = (reflexcl o actcl o transcl) 	       *)
+(*                                   (Newgraph ifunc DV NF TR agent)   *)
+(*               in (savewl g ; (i,g))				       *)
+(*              end						       *)
+
+	(* MLA - eta abstract *)
+   val mkgraph = fn x => mkGraph false x
+   val mkweakgraph = fn x => mkGraph true x
+
+end

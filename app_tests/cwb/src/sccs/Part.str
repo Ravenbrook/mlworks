@@ -1,0 +1,43 @@
+(*
+ *
+ * $Log: Part.str,v $
+ * Revision 1.2  1998/06/02 15:50:15  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Part.str,v 1.2 1998/06/02 15:50:15 jont Exp $";
+
+functor Part () : PART =
+struct
+   datatype part = Name of Name.name | Coname of Name.name
+
+   fun hashval (Name a) = Name.hashOf a
+     | hashval (Coname a) = Name.hashOf a
+
+   val eq : part * part -> bool = (op =)
+
+   fun le (Name _, Coname _) = true
+     | le (Name x, Name y) = Name.stringOf x <= Name.stringOf y
+     | le (Coname x, Coname y) = Name.stringOf x <= Name.stringOf y
+     | le (Coname _, Name _) = false
+
+   fun mkstr (Name s) = Name.stringOf s
+     | mkstr (Coname s) = "'"^(Name.stringOf s)
+
+   fun name (Name x) = Name x
+     | name (Coname x) = Name x
+
+   fun isname (Name _) = true
+     | isname (Coname _) = false
+
+   fun inverse (Name s) = Coname s
+     | inverse (Coname s) = Name s
+
+   fun mkpart s =
+       let val L = explode s
+        in if hd L = "'" then inverse(mkpart(implode(tl L)))
+           else Name (Name.mkName s)
+       end
+end

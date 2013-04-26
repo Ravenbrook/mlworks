@@ -1,0 +1,29 @@
+# ==== MLWorks runtime system x86/Win95-specific (Gnu) Makefile ====
+#
+# $Id: GNUmake,v 1.20 1997/06/04 15:08:54 andreww Exp $
+
+# Windows 95 supports Win32
+
+OS_TYPE := Win32
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) MACH_FIXUP OS_NT Win95 NATIVE_THREADS LITTLE_ENDIAN
+
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS)
+
+# add target-specific options (none for Windows)
+
+TARGETOPTS	=
+TARGETOPTSDEBUG =
+
+# other target-specific things
+
+STRIP		= /usr/bin/strip
+
+#runtime dll-ization specific details
+
+DLLFLAGS	= /LD
+DLLLIBRARIES	= libc.lib

@@ -1,0 +1,258 @@
+# Win32-specific GNU make file. Holds all Win32-specific build
+# information. For instance, using Visual C++
+
+# $Log: GNUmake,v $
+# Revision 1.29  1999/03/19 15:35:16  daveb
+# [Bug #190523]
+# Ensure that statuses.sml is generated automatically.
+#
+# Revision 1.28  1999/03/11  16:43:37  daveb
+# [Bug #190523]
+# Added make_statuses.
+#
+# Revision 1.27  1998/08/18  10:19:06  jont
+# [Bug #20133]
+# Avoid trying to update code vectors in DLL based version
+#
+# Revision 1.26  1998/08/10  15:39:16  jont
+# [Bug #70151]
+# Change the debugging linker options to put the debug info in the DLL
+#
+# Revision 1.25  1998/08/04  14:58:04  jkbrook
+# [Bug #30457]
+# Make license-code offsets platform-dependent
+#
+# Revision 1.24  1998/07/10  09:04:01  jkbrook
+# [Bug #30435]
+# Need validate_license.lib to create a standalone license validator
+#
+# Revision 1.23  1998/07/02  11:48:08  mitchell
+# [Bug #30345]
+# Add support for building validate_license.dll
+#
+# Revision 1.22  1998/04/20  12:36:00  jont
+# [Bug #70102]
+# Remove time_zone from list of modules
+#
+# Revision 1.21  1998/03/30  12:31:25  jont
+# [Bug #70086]
+# Add make_key_rights for windows NT registry key security
+#
+# Revision 1.20  1997/10/29  09:39:34  johnh
+# [Bug #30059]
+# Don't copy __control_names.sml into winsys.
+#
+# Revision 1.19  1997/10/27  14:25:10  johnh
+# [Bug #30059]
+# Implement interface to Win32 resource dialogs.
+#
+# Revision 1.18  1997/07/23  10:03:10  johnh
+# [Bug #30124]
+# Add shell32.lib to list of libraries.
+#
+# Revision 1.17  1997/07/22  16:42:20  andreww
+# [Bug #30057]
+# Altering bits'n'bobs to make DLLization work.
+#
+# Revision 1.16  1997/05/21  10:37:24  johnh
+# [Bug #01702]
+# Added new win32_error.c file.
+#
+# Revision 1.15  1997/05/17  10:12:43  johnh
+# Need another library to support the implementation of toolbars.
+#
+# Revision 1.14  1996/11/20  13:39:20  daveb
+# Removed runtime.rc, runtime.rcv and runtime.dlg.  We can edit the .res
+# file directly, using VC++ 4.x.
+# Also removed runtime.hlp, which is currently not used.
+#
+
+MODULES		:= $(MODULES) win32_error win32 window native_threads timer \
+	                heap i386_code dde_lib mach_fixup
+
+# note the module name "window-dll" in the following.  The "-dll" suffix
+# tells the top-level rts makefile to use window.c, but compile it with
+# a special flag, RUNTIME_DLL set.
+
+DLLMODULES    := $(DLLMODULES) win32_error win32 window-dll native_threads \
+	 	timer i386_code dde_lib mach_fixup
+
+RTSMODULES    := $(RTSMODULES) heap
+
+MODULESSTATIC := $(MODULES)
+
+GENFILES      := $(GENFILES) $(ARCH)/$(OS)/keys.sml $(ARCH)/$(OS)/statuses.sml
+
+VCCOPTS = -nologo -Gd -W3
+
+# -nologo suppresses copyright message
+#
+# -Gd is __cdecl calling convention
+#
+# -W3 sets the warning level to 3
+#
+# 
+
+VCCDEBUGOPTS = $(VCCOPTS) -Zi -Od -FR
+
+# -Zi generates debugging info
+#
+# -Od disables optimization
+#
+# -FR extended SBR file
+
+VCCNODEBUGOPTS = $(VCCOPTS) -O2
+
+# -O2 optimize for speed
+
+DEFINES := $(DEFINES) SPACE_PROFILE_OVERFLOW
+
+DEFINEOPTS = $(DEFINES:%=/D%)
+
+DEFINEDEBUGOPTS = $(DEFINESDEBUG:%=/D%)
+
+INCLUDES = $(INCLUDEDIRS:%=/I %)
+
+CFLAGS		 = $(DEFINEOPTS) $(INCLUDES) $(VCCNODEBUGOPTS) $(TARGETOPTS)
+CFLAGSDEBUG	 = $(DEFINEOPTS) $(DEFINEDEBUGOPTS) $(INCLUDES) $(VCCDEBUGOPTS) $(TARGETOPTSDEBUG)
+CC		 = cl
+
+CPU=I386
+hc=hcw
+rc=rc
+proj=runtime
+
+GUILIBS = user32.lib gdi32.lib comdlg32.lib winspool.lib version.lib winmm.lib wsock32.lib advapi32.lib comctl32.lib shell32.lib
+
+LIBRARIES = libc.lib kernel32.lib msvcrt.lib $(GUILIBS)
+
+foo:	all
+
+# $(proj).rc should be edited with the MSVC++ dialog editor
+
+$(proj).res: $(proj).rc 
+	$(rc) $(rcvars) -r -isrc -isrc/arch/I386 -fo $(proj).res $(cvars) $(proj).rc
+
+$(proj).rbj:	$(proj).res $(proj).rc $(proj).ico $(proj).bmp
+	cvtres -$(CPU) $(proj).res -o $(proj).rbj
+
+$(proj): $(proj).res $(proj).def $(proj).rbj
+
+# Use MSVC++ for compiling and linking:
+
+COMPILE		= $(CC)
+COMPILEFLAGS	= $(CFLAGS) -c -Fo
+COMPILEFLAGSDEBUG = $(CFLAGSDEBUG) -c -Fo
+
+LINK            = $(CC)
+LINKFLAGS       = $(CFLAGS) -Fe
+LINKFLAGSDEBUG  = $(CFLAGSDEBUG) -Fe
+
+# These flags have to come at the end of the link line, before the subsystem:
+# directive
+
+LINKENDFLAGS      = -link
+LINKENDFLAGSDEBUG = -link -debug:full -debugtype:both -pdb:none
+
+# We also use GCC, to generate dependencies and to assemble .S files
+# We don't need any warnings or optimization for this....
+
+GCC		 = gcc
+GCCINCLUDES      = $(INCLUDEDIRS:%=-I%)
+GCCDEFINES	 = $(DEFINES:%=-D%)
+GCCDEFINESDEBUG	 = $(DEFINESDEBUG:%=-D%)
+GCCFLAGS         = -ansi $(GCCINCLUDES) $(GCCDEFINES)
+GCCFLAGSDEBUG    = -ansi -g $(GCCINCLUDES) $(GCCDEFINES) $(GCCDEFINESDEBUG)
+
+ASM	       = $(GCC)
+ASMFLAGS       = $(GCCFLAGS) -c -o 
+ASMFLAGSDEBUG  = $(GCCFLAGSDEBUG) -c -o 
+
+DEPENDGEN          = $(GCC)
+DEPENDGENFLAGS     = $(GCCFLAGS) -MM -D_M_IX86 -D_WIN32
+
+# The extra flags are pre-defined constant macros in Visual C++, and
+# are required for some internal Windows header files.
+
+# Since this file is included by ../../../GNUmakefile before the "all" 
+# target is defined, any system specific rules will be hit instead of
+# all if no specific target is requested.  The following ensures that
+# the default "all" rule is hit instead.
+
+win32all: all
+
+
+
+# os_errors.c is build in two parts because awk isn't very good at reading
+# from more than one file at a time therefore there are two scripts, one
+# for winerror.h and one for error.h.
+#
+# winerror.h and errno.h in the following refers to local copies of 
+# standard Win32 (Visual C++) headers.  This is hopefully a temporary
+# hack until we sort out how we can reference the files in their real
+# locations.
+#
+# The reason that this cannot currently be done very easily is that
+# the compiler is installed in different places on different machines
+# and there is no variable which uniquely identifies the location of
+# the compiler on all of the machines :-<
+
+gen/$(ARCH)/$(OS)/os_errors.c: awk/win32_os_errors_c.awk awk/win32_c_errors_c.awk
+	echo 'MAKE: $< -> $@'
+	$(MKDIR) gen/$(ARCH)/$(OS) $(MKDIREND)
+	$(AWK) -f awk/win32_c_errors_c.awk < src/OS/Win32/errno.h > $@
+	$(AWK) -f awk/win32_os_errors_c.awk < src/OS/Win32/winerror.h >> $@
+
+$(TARGETDIR)/make_keys:	obj/$(ARCH)/$(OS)/make_keys.o
+	@echo 'MAKE: $@'
+	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
+	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console
+
+gen/$(ARCH)/$(OS)/keys.sml:	$(TARGETDIR)/make_keys
+	@echo 'MAKE: $@'
+	$< > $@
+
+$(TARGETDIR)/make_statuses:	obj/$(ARCH)/$(OS)/make_statuses.o
+	@echo 'MAKE: $@'
+	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
+	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console
+
+gen/$(ARCH)/$(OS)/statuses.sml:	$(TARGETDIR)/make_statuses
+	@echo 'MAKE: $@'
+	$< > $@
+
+
+# validate_license.dll is made here
+
+VALIDATE_SOURCES= \
+	src/OS/$(OS_TYPE)/validate_license.c \
+	sha/mlw_mklic.h \
+	sha/sha.h \
+	src/license.h \
+	src/license_offset.h \
+	src/version.h
+
+VALIDATE_OBJS= \
+	$(OBJECTDIR)/sha.o \
+	$(OBJECTDIR)/license_offset.o \
+	$(OBJECTDIR)/validate_license.o
+
+VALIDATE_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
+ advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
+ odbccp32.lib /nologo /subsystem:windows /dll \
+ /pdb:"$(TARGETDIR)\validate_license.pdb" \
+ /out:"$(TARGETDIR)\validate_license.dll" 
+ /implib:"$(TARGETDIR)\validate_license.lib" 
+
+$(OBJECTDIR)/validate_license.o : $(VALIDATE_SOURCES)
+
+$(TARGETDIR)/validate_license.dll: $(TARGETDIR)/mlw_mklic $(VALIDATE_OBJS)
+	link.exe $(VALIDATE_FLAGS) $(VALIDATE_OBJS)
+
+validate_license.dll:	force $(TARGETDIR)/validate_license.dll
+	@rm -f $(TARGETDIR)/validate_license.exp
+
+$(OBJDIR)/mlworks_license.o:	mlworks_license.c
+	@$(COMPILE) $(COMPILEFLAGS) $@ $<
+
+

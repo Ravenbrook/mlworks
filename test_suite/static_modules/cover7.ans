@@ -1,0 +1,30 @@
+signature Empty =
+  sig
+  end
+signature Real =
+  sig
+    type t
+  end
+structure A =
+  struct
+    type t = real
+  end
+functor FUN
+structure A =
+  struct
+  end
+structure B =
+  struct
+  end
+signature T =
+  sig
+    structure C : Real
+    sharing C = B
+  end
+structure S =
+  struct
+    structure C =
+      struct
+        type t = real
+      end
+  end

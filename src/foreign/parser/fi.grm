@@ -1,0 +1,664 @@
+require "fi_abs_syntax";
+require "fi_int_abs_syn";
+require "lex_parse_interface";
+
+structure FIAbsSyntax = FIIntAbsSyn.FIAbsSyntax
+ (*
+  * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+  *
+  * $Log: fi.grm,v $
+  * Revision 1.2  1997/08/22 15:02:19  brucem
+  * [Bug #30034]
+  * Allow scalar pseudo types to be returned by functions.
+  *
+  # Revision 1.1  1997/08/22  09:27:56  brucem
+  # new unit
+  # Grammar definition for Foreign Interface parser (used by sml-yacc).
+  #
+  *
+  *)
+
+%%
+
+%name FI
+
+%header (functor FILrValsFun 
+           (structure Token : TOKEN
+                  and FIIntAbsSyn : FI_INT_ABS_SYN
+                  and LexParseInterface : LEX_PARSE_INTERFACE)
+        )
+
+%pure
+
+%term
+
+ (* Tokens with values *)
+   ID of string
+ | REAL_CONST of string
+ | HEX_INT_CONST of string
+ | OCT_INT_CONST of string
+ | DEC_INT_CONST of string
+ | CHAR_CONST of string
+ | STRING_CONST of string
+
+ (* Keywords *)
+ | KW_CHAR | KW_CONST | KW_DOUBLE | KW_ENUM | KW_EXTERN | KW_FLOAT
+ | KW_INT | KW_LONG | KW_REGISTER | KW_SHORT | KW_SIGNED | KW_STATIC 
+ | KW_STRUCT | KW_TYPEDEF | KW_UNION | KW_UNSIGNED | KW_VOID 
+ | KW_VOLATILE
+
+ (* MLWorks Pseudo-types `_A' for `_array', `_V' for `_vector'. *)
+ | KW_MLW_INT | KW_MLW_WORD | KW_MLW_INT32 | KW_MLW_CHAR | KW_MLW_WORD8
+ | KW_MLW_INT32_V | KW_MLW_INT32_A | KW_MLW_WORD32_V | KW_MLW_WORD32_A 
+ | KW_MLW_INT16_V | KW_MLW_INT16_A | KW_MLW_WORD16_V | KW_MLW_WORD16_A
+ | KW_MLW_STRING | KW_MLW_CHAR_A | KW_MLW_WORD8_V | KW_MLW_WORD8_A
+ | KW_MLW_FLOAT_V | KW_MLW_FLOAT_A | KW_MLW_DOUBLE_V | KW_MLW_DOUBLE_A
+
+ (* Punctuation *)
+ | BRAC | KET | COMMA | HASH | C_BRAC | C_KET | S_BRAC | S_KET
+ (* (      )      ,      #      {         }      [        ]     *)
+ | FSTOP | AMP | ASTERIX | PLUS | MINUS | MULT | DIV | TILDE
+ (*  .      &      *        +       -      *      /       ~     *)
+ | EXCLAM | SLASH | PERCENT | LESS | GREATER | UPARR | BAR
+ (*  !        \       %         <      >         ^      |       *)
+ | QUESTION | COLON | SEMICOLON | EQUALS 
+ (*  ?         :         ;         =                            *)
+ | ARROW | INCREMENT | DECREMENT | L_SHIFT | R_SHIFT 
+ (* ->        ++         --          <<       >>                *)
+ | LESS_EQ | GREATER_EQ | EQ_EQ | NOT_EQ | AND_AND | OR_OR
+ (*  <=          >=        ==       !=       &&       ||        *)
+ | MULT_EQ | DIV_EQ | PLUS_EQ | MINUS_EQ | LSHIFT_EQ | RSHIFT_EQ
+ (*  *=       /=        +=        -=         <<=         >>=    *)
+ | AND_EQ | UP_EQ | OR_EQ | ELLIPSIS
+ (* &=        ^=      |=      ...                               *)
+
+ (* End of file marker *)
+ | END
+
+
+%eop END
+%noshift END
+
+
+%nonterm
+   FILE of FIAbsSyntax.declaration_list
+ | DECL_LIST of FIAbsSyntax.declaration list
+
+ | CONSTANT of FIAbsSyntax.expression
+ | PRIMARY_EXPRESSION of FIAbsSyntax.expression
+ | UNARY_EXPRESSION of FIAbsSyntax.expression
+ | CAST_EXPRESSION of FIAbsSyntax.expression
+ | MULT_EXPRESSION of FIAbsSyntax.expression
+ | ADD_EXPRESSION of FIAbsSyntax.expression
+ | SHIFT_EXPRESSION of FIAbsSyntax.expression
+ | AND_EXPRESSION of FIAbsSyntax.expression
+ | EXC_OR_EXPRESSION of FIAbsSyntax.expression
+ | INC_OR_EXPRESSION of FIAbsSyntax.expression
+ | EXPRESSION of FIAbsSyntax.expression
+
+ | DECLARATION of FIAbsSyntax.declaration list
+ | TYPEDEF_DECLARING_LIST of 
+     ( FIAbsSyntax.types *
+       {name : string, typeInfo : FIIntAbsSyn.type_info} list )
+ | CONST_DECLARING_LIST of
+     ( FIAbsSyntax.types *
+       ({name : string, typeInfo : FIIntAbsSyn.type_info} * 
+         FIAbsSyntax.expression) list )
+ | BASIC_DECLARING_LIST of 
+     ( FIAbsSyntax.types *
+       {name : string, typeInfo : FIIntAbsSyn.type_info} list )
+
+ | TYPE_SPECIFIER of FIAbsSyntax.types
+ | BASIC_TYPE_NAME of FIAbsSyntax.types
+ | COMPOUND_TYPE_NAME of FIAbsSyntax.types
+ | ELABORATED_TYPE_NAME of FIAbsSyntax.types
+
+ | SCALAR_PSEUDO_TYPE of FIAbsSyntax.types
+ | PSEUDO_TYPE of FIAbsSyntax.types
+ | PARAM_TYPE of FIAbsSyntax.types
+
+ | CAST_TYPE of FIAbsSyntax.types
+
+ | AGGREGATE_NAME of FIAbsSyntax.types
+ | AGGREGATE_KEY of FIAbsSyntax.aggregate_type
+ | MEMBER_DECLARATION_LIST of FIAbsSyntax.field list
+ | MEMBER_DECLARATION of FIAbsSyntax.field list
+ | MEMBER_DECLARING_LIST of (FIAbsSyntax.types * FIAbsSyntax.field list)
+ | MEMBER_DECLARATOR of 
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+
+ | ENUM_NAME of FIAbsSyntax.types
+ | ENUM_LIST of FIAbsSyntax.e_field list
+ | ENUM_VALUE_OPT of FIAbsSyntax.expression option
+
+ | PARAM_TYPE_LIST of
+     {name: string option, paramType: FIAbsSyntax.types} list
+ | PARAM_LIST of
+     {name: string option, paramType: FIAbsSyntax.types} list
+ | PARAM_DECL of
+     {name: string option, paramType: FIAbsSyntax.types}
+
+ | INITIALISER_OPT of FIAbsSyntax.expression option
+ | INITIALISER of FIAbsSyntax.expression
+ | INITIALISER_LIST of FIAbsSyntax.expression list
+
+ | ID_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+ | PAREN_ID_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+ | UNARY_ID_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info }
+ | POSTFIX_ID_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info }
+
+ | PARAM_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+ | PARAM_UNARY_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+ | PARAM_AST_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+ | PARAM_POSTFIX_DECLARATOR of
+     {name : string, typeInfo : FIIntAbsSyn.type_info}
+
+ | ABSTRACT_DECLARATOR of FIIntAbsSyn.type_info
+ | UNARY_ABSTRACT_DECLARATOR of FIIntAbsSyn.type_info
+ | POSTFIX_ABSTRACT_DECLARATOR of FIIntAbsSyn.type_info
+ | POSTFIXING_ABSTRACT_DECLARATOR of FIIntAbsSyn.type_info
+ | ARRAY_ABSTRACT_DECLARATOR of FIIntAbsSyn.type_info
+
+
+%pos LexParseInterface.pos
+
+%verbose
+
+%start FILE
+
+
+%%
+
+
+FILE:
+   DECL_LIST (FIAbsSyntax.DECL_LIST DECL_LIST )
+
+DECL_LIST:
+   DECLARATION ( DECLARATION )
+ | DECL_LIST DECLARATION  (  DECL_LIST @ DECLARATION )
+
+
+(********** Constants **********)
+
+
+CONSTANT:
+   DEC_INT_CONST (FIAbsSyntax.DEC_CONSTANT DEC_INT_CONST)
+ | OCT_INT_CONST (FIAbsSyntax.OCT_CONSTANT OCT_INT_CONST)
+ | HEX_INT_CONST (FIAbsSyntax.HEX_CONSTANT HEX_INT_CONST)
+ | ID (FIAbsSyntax.IDENTIFIER_EXP ID)
+ | STRING_CONST (FIAbsSyntax.STRING_CONSTANT STRING_CONST)
+ | REAL_CONST (FIAbsSyntax.FLOAT_CONSTANT REAL_CONST)
+ | CHAR_CONST (FIAbsSyntax.CHAR_CONSTANT CHAR_CONST)
+
+
+(********** Expressions **********)
+
+
+(* We only have expressions with side effects,
+   e.g. not with +=, =
+   without simple logical expressions (e.g. ||, &&)
+   and with constants but no identifiers *)
+
+PRIMARY_EXPRESSION:
+   CONSTANT ( CONSTANT )
+ | BRAC EXPRESSION KET ( EXPRESSION )
+
+UNARY_EXPRESSION:
+   PRIMARY_EXPRESSION ( PRIMARY_EXPRESSION )
+ | EXCLAM CAST_EXPRESSION
+     ( FIAbsSyntax.UNARY_EXP(FIAbsSyntax.BIN_NEG, CAST_EXPRESSION ) )
+ (* We don't have any of the other unary operators *)
+
+CAST_EXPRESSION:
+   UNARY_EXPRESSION ( UNARY_EXPRESSION )
+ | BRAC CAST_TYPE KET CAST_EXPRESSION
+     ( FIAbsSyntax.CAST_EXP(CAST_TYPE, CAST_EXPRESSION) )
+
+
+MULT_EXPRESSION:
+   CAST_EXPRESSION ( CAST_EXPRESSION )
+ | MULT_EXPRESSION ASTERIX CAST_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (MULT_EXPRESSION, FIAbsSyntax.MULTIPLY, CAST_EXPRESSION) )
+ | MULT_EXPRESSION SLASH CAST_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (MULT_EXPRESSION, FIAbsSyntax.DIVIDE, CAST_EXPRESSION) )
+ | MULT_EXPRESSION PERCENT CAST_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (MULT_EXPRESSION, FIAbsSyntax.MODULUS, CAST_EXPRESSION) )
+
+ADD_EXPRESSION:
+   MULT_EXPRESSION ( MULT_EXPRESSION )
+ | ADD_EXPRESSION PLUS MULT_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (ADD_EXPRESSION, FIAbsSyntax.PLUS, MULT_EXPRESSION) )
+ | ADD_EXPRESSION MINUS MULT_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (ADD_EXPRESSION, FIAbsSyntax.MINUS, MULT_EXPRESSION) )
+
+SHIFT_EXPRESSION:
+   ADD_EXPRESSION ( ADD_EXPRESSION )
+ | SHIFT_EXPRESSION L_SHIFT ADD_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (SHIFT_EXPRESSION, FIAbsSyntax.L_SHIFT, ADD_EXPRESSION) )
+ | SHIFT_EXPRESSION R_SHIFT ADD_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (SHIFT_EXPRESSION, FIAbsSyntax.R_SHIFT, ADD_EXPRESSION) )
+
+AND_EXPRESSION:
+   SHIFT_EXPRESSION ( SHIFT_EXPRESSION )
+ | AND_EXPRESSION AMP SHIFT_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (AND_EXPRESSION, FIAbsSyntax.BIT_AND, SHIFT_EXPRESSION) )
+
+EXC_OR_EXPRESSION:
+   AND_EXPRESSION ( AND_EXPRESSION )
+ | EXC_OR_EXPRESSION UPARR AND_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (EXC_OR_EXPRESSION, FIAbsSyntax.BIT_EOR, AND_EXPRESSION) )
+
+INC_OR_EXPRESSION:
+   EXC_OR_EXPRESSION ( EXC_OR_EXPRESSION )
+ | INC_OR_EXPRESSION BAR EXC_OR_EXPRESSION
+     ( FIAbsSyntax.BINARY_EXP
+         (INC_OR_EXPRESSION, FIAbsSyntax.BIT_OR , EXC_OR_EXPRESSION) )
+
+(* Alias for the lowest precedence expression *)
+EXPRESSION:
+   INC_OR_EXPRESSION ( INC_OR_EXPRESSION )
+
+
+(********** Declarations **********)
+
+
+DECLARATION: (* top level declarations *)
+   BASIC_DECLARING_LIST SEMICOLON (* e.g. function declaration *)
+    ( case BASIC_DECLARING_LIST of (ty, decls) =>
+      map (fn declarator =>
+             FIIntAbsSyn.makeDeclaration(ty, declarator))
+          (rev decls) )
+ | KW_EXTERN BASIC_DECLARING_LIST SEMICOLON (* may put extern before decl *)
+    ( case BASIC_DECLARING_LIST of (ty, decls) =>
+      map (fn declarator =>
+             FIIntAbsSyn.makeDeclaration(ty, declarator))
+          (rev decls) )
+ | TYPEDEF_DECLARING_LIST SEMICOLON (* typedef declaration *)
+     ( case TYPEDEF_DECLARING_LIST of (ty, decls) =>
+       map (fn declarator =>
+               FIIntAbsSyn.makeTypedef(ty, declarator) )
+           (rev decls) )
+ | CONST_DECLARING_LIST SEMICOLON (* constant declaration *)
+     ( case CONST_DECLARING_LIST of (ty, decls) =>
+       map (fn (declarator, value) =>
+               FIIntAbsSyn.makeConst(ty, declarator, value) )
+           (rev decls) )
+ | ELABORATED_TYPE_NAME SEMICOLON (* struct, enum and unions *)
+    ( [FIAbsSyntax.TYPE_DECL ELABORATED_TYPE_NAME] )
+
+TYPEDEF_DECLARING_LIST: (* typedef declaration *)
+   KW_TYPEDEF TYPE_SPECIFIER ID_DECLARATOR
+     ( (TYPE_SPECIFIER, [ ID_DECLARATOR ]) )
+ | TYPEDEF_DECLARING_LIST COMMA ID_DECLARATOR
+                                           (* comma separated list of names *)
+     ( (#1 TYPEDEF_DECLARING_LIST,
+        ID_DECLARATOR :: (#2 TYPEDEF_DECLARING_LIST)) )
+
+CONST_DECLARING_LIST: (* constant declaration *)
+   KW_CONST TYPE_SPECIFIER ID_DECLARATOR EQUALS INITIALISER
+                                                         (* must have value *)
+     ( (TYPE_SPECIFIER, [(ID_DECLARATOR, INITIALISER)]) )
+ | CONST_DECLARING_LIST COMMA ID_DECLARATOR EQUALS INITIALISER
+                                                    (* comma separated list *)
+     ( (#1 CONST_DECLARING_LIST,
+        (ID_DECLARATOR, INITIALISER)::(#2 CONST_DECLARING_LIST) ) )
+
+BASIC_DECLARING_LIST: (* includes functions, arrays ... *)
+   TYPE_SPECIFIER ID_DECLARATOR (* we do not allow initialisers *)
+     ( (TYPE_SPECIFIER,
+        [ ID_DECLARATOR ] ) )
+ | BASIC_DECLARING_LIST COMMA ID_DECLARATOR
+     ( (#1 BASIC_DECLARING_LIST,
+        ID_DECLARATOR :: (#2 BASIC_DECLARING_LIST) ) )
+
+
+TYPE_SPECIFIER: (* range of things that can occur in declarations *)
+   COMPOUND_TYPE_NAME
+     ( COMPOUND_TYPE_NAME )
+ |  ELABORATED_TYPE_NAME 
+     ( ELABORATED_TYPE_NAME )
+ | ID
+     ( FIAbsSyntax.NAME ( ID) )
+ | SCALAR_PSEUDO_TYPE
+     ( SCALAR_PSEUDO_TYPE )
+
+BASIC_TYPE_NAME:
+   KW_INT ( FIAbsSyntax.INT )
+ | KW_CHAR ( FIAbsSyntax.CHAR )
+ | KW_SHORT ( FIAbsSyntax.SHORT )
+ | KW_LONG ( FIAbsSyntax.LONG )
+ | KW_FLOAT ( FIAbsSyntax.FLOAT )
+ | KW_DOUBLE ( FIAbsSyntax.DOUBLE )
+ | KW_SIGNED ( FIAbsSyntax.SIGNED )
+ | KW_UNSIGNED ( FIAbsSyntax.UNSIGNED )
+ | KW_VOID ( FIAbsSyntax.VOID )
+
+(* This is probably the best place to add type qualifiers:
+   static, const, volatile ... *)
+
+COMPOUND_TYPE_NAME: (* things like `unsigned long int' *)
+   BASIC_TYPE_NAME
+     ( BASIC_TYPE_NAME )
+ | KW_SIGNED COMPOUND_TYPE_NAME
+     ( FIIntAbsSyn.makeSignedType(COMPOUND_TYPE_NAME) )
+ | KW_UNSIGNED COMPOUND_TYPE_NAME
+     ( FIIntAbsSyn.makeUnsignedType(COMPOUND_TYPE_NAME) )
+ | KW_LONG COMPOUND_TYPE_NAME
+     ( FIIntAbsSyn.makeLongType(COMPOUND_TYPE_NAME) )
+ | KW_SHORT COMPOUND_TYPE_NAME
+     ( FIIntAbsSyn.makeShortType(COMPOUND_TYPE_NAME) )
+
+ELABORATED_TYPE_NAME: (* enum/struct/union *)
+   AGGREGATE_NAME ( AGGREGATE_NAME )
+ | ENUM_NAME ( ENUM_NAME )
+
+SCALAR_PSEUDO_TYPE:
+   KW_MLW_INT      (FIAbsSyntax.MLW_INT)
+ | KW_MLW_WORD     (FIAbsSyntax.MLW_WORD)
+ | KW_MLW_INT32    (FIAbsSyntax.MLW_INT32)
+ | KW_MLW_CHAR     (FIAbsSyntax.MLW_CHAR)
+ | KW_MLW_WORD8    (FIAbsSyntax.MLW_WORD8)
+
+PSEUDO_TYPE: (* MLWorks pseudo-types for function parameters *)
+   KW_MLW_INT32_V  (FIAbsSyntax.MLW_INT32_V)
+ | KW_MLW_INT32_A  (FIAbsSyntax.MLW_INT32_A)
+ | KW_MLW_WORD32_V (FIAbsSyntax.MLW_WORD32_V)
+ | KW_MLW_WORD32_A (FIAbsSyntax.MLW_WORD32_A) 
+ | KW_MLW_INT16_V  (FIAbsSyntax.MLW_INT16_V)
+ | KW_MLW_INT16_A  (FIAbsSyntax.MLW_INT16_A)
+ | KW_MLW_WORD16_V (FIAbsSyntax.MLW_WORD16_V)
+ | KW_MLW_WORD16_A (FIAbsSyntax.MLW_WORD16_A)
+ | KW_MLW_STRING   (FIAbsSyntax.MLW_STRING)
+ | KW_MLW_CHAR_A   (FIAbsSyntax.MLW_CHAR_A)
+ | KW_MLW_WORD8_V  (FIAbsSyntax.MLW_WORD8_V)
+ | KW_MLW_WORD8_A  (FIAbsSyntax.MLW_WORD8_A)
+ | KW_MLW_FLOAT_V  (FIAbsSyntax.MLW_FLOAT_V)
+ | KW_MLW_FLOAT_A  (FIAbsSyntax.MLW_FLOAT_A)
+ | KW_MLW_DOUBLE_V (FIAbsSyntax.MLW_DOUBLE_V)
+ | KW_MLW_DOUBLE_A (FIAbsSyntax.MLW_DOUBLE_A)
+
+PARAM_TYPE: (* includes the MLWorks pseudo-types *)
+   TYPE_SPECIFIER
+     ( TYPE_SPECIFIER )
+ | PSEUDO_TYPE
+     ( PSEUDO_TYPE )
+
+(* There is a problem in C syntax with cast expressions since
+   identifiers for values and typedef names look the same, so
+   there is no way to tell how to reduce 
+     BRAC ID KET
+   (especially if you mix `*'s in).  So we only allow fairly simple
+   types for casting.
+   As expressions are only used for constants, this is not a practical
+   limitation. *)
+CAST_TYPE:
+   COMPOUND_TYPE_NAME
+     ( COMPOUND_TYPE_NAME )
+ | COMPOUND_TYPE_NAME ABSTRACT_DECLARATOR
+     ( FIIntAbsSyn.makeType(COMPOUND_TYPE_NAME, ABSTRACT_DECLARATOR) )
+
+
+AGGREGATE_NAME: (* union or struct *)
+   AGGREGATE_KEY C_BRAC MEMBER_DECLARATION_LIST C_KET (* no name, fields *)
+     ( FIAbsSyntax.AGGREGATE
+       {aggType= AGGREGATE_KEY, name= NONE,
+        fields= MEMBER_DECLARATION_LIST } )
+ | AGGREGATE_KEY ID C_BRAC MEMBER_DECLARATION_LIST C_KET (* name and fields *)
+     ( FIAbsSyntax.AGGREGATE
+       {aggType= AGGREGATE_KEY, name= SOME ( ID),
+        fields = MEMBER_DECLARATION_LIST } )
+ | AGGREGATE_KEY ID C_BRAC C_KET (* name, empty fields *)
+     ( FIAbsSyntax.AGGREGATE
+       {aggType = AGGREGATE_KEY, name = SOME ( ID),
+        fields = []} )
+ | AGGREGATE_KEY C_BRAC C_KET (* no name, empty fields *)
+     ( FIAbsSyntax.AGGREGATE
+       {aggType = AGGREGATE_KEY, name = NONE, fields = []} )
+ | AGGREGATE_KEY ID (* name, no fields e.g. to use previous declaration *)
+     ( FIAbsSyntax.AGGREGATE
+       {aggType= AGGREGATE_KEY, name= SOME ( ID),
+        fields = [] } )
+
+AGGREGATE_KEY: (* the word `struct' or `union' *)
+   KW_STRUCT ( FIAbsSyntax.STRUCT )
+ | KW_UNION  ( FIAbsSyntax.UNION )
+
+MEMBER_DECLARATION_LIST: (* fields of struct or union *)
+   MEMBER_DECLARATION
+     ( MEMBER_DECLARATION )
+ | MEMBER_DECLARATION_LIST MEMBER_DECLARATION
+     ( MEMBER_DECLARATION_LIST @ MEMBER_DECLARATION )
+
+MEMBER_DECLARATION: (* row of fields in struct or union, e.g. `int a, b, c;' *)
+   MEMBER_DECLARING_LIST SEMICOLON
+     ( case MEMBER_DECLARING_LIST of (t, l) => rev l )
+
+MEMBER_DECLARING_LIST: (* row of fields in struct or union, e.g. `int a, b' *)
+   TYPE_SPECIFIER MEMBER_DECLARATOR
+     (( TYPE_SPECIFIER,
+        [FIIntAbsSyn.makeField
+           (TYPE_SPECIFIER, MEMBER_DECLARATOR)]))
+ | MEMBER_DECLARING_LIST COMMA MEMBER_DECLARATOR (* comma separated *)
+     ( case MEMBER_DECLARING_LIST of (t, l) =>
+         (t, (FIIntAbsSyn.makeField (t, MEMBER_DECLARATOR))::l) )
+
+MEMBER_DECLARATOR:
+   ID_DECLARATOR (* in C, this can have bitfield information appended *)
+     ( ID_DECLARATOR )
+
+
+ENUM_NAME: (* enumeration *)
+   KW_ENUM C_BRAC ENUM_LIST C_KET (* no name, with list *)
+     ( FIAbsSyntax.ENUM {name = NONE, fields = rev ENUM_LIST} )
+ | KW_ENUM ID C_BRAC ENUM_LIST C_KET (* named, with list *)
+     ( FIAbsSyntax.ENUM {name = SOME( ID),
+                         fields = rev ENUM_LIST} )
+ | KW_ENUM ID (* named without list, refers to previous declaration *)
+     ( FIAbsSyntax.ENUM {name = SOME( ID), fields = []} )
+
+ENUM_LIST: (* list of enumeration values *)
+   ID ENUM_VALUE_OPT
+   ( [ FIAbsSyntax.E_FIELD
+        {name =  ID, value = ENUM_VALUE_OPT} ] )
+ | ENUM_LIST COMMA ID ENUM_VALUE_OPT (* comma separated list *)
+   ((FIAbsSyntax.E_FIELD {name= ID, value= ENUM_VALUE_OPT})::
+    ENUM_LIST )
+
+ENUM_VALUE_OPT: (* enumeration values be given explicitly *)
+   (* Empty *)
+     ( NONE )
+ | EQUALS EXPRESSION
+     ( SOME EXPRESSION )
+
+
+PARAM_TYPE_LIST: (* list of parameters, possibly with `...' *)
+   PARAM_LIST
+     ( PARAM_LIST )
+ | PARAM_LIST COMMA ELLIPSIS
+     ( {name=NONE, paramType=FIAbsSyntax.FLEX} :: PARAM_LIST )
+
+PARAM_LIST: (* list of parameters without `...' *)
+   PARAM_DECL
+     ( [PARAM_DECL] )
+ | PARAM_LIST COMMA PARAM_DECL (* comma separated *)
+     ( PARAM_DECL :: PARAM_LIST )
+
+PARAM_DECL: (* declaration of a single parameter *)
+   PARAM_TYPE PARAM_DECLARATOR (* parameter with a name, `int *a[]' *)
+     ( {name = SOME (#name PARAM_DECLARATOR),
+        paramType = FIIntAbsSyn.makeType(PARAM_TYPE,
+                                            #typeInfo PARAM_DECLARATOR)} )
+ | PARAM_TYPE ABSTRACT_DECLARATOR (* parameter without a name, `int **' *)
+     ( {name = NONE,
+        paramType = FIIntAbsSyn.makeType(PARAM_TYPE, ABSTRACT_DECLARATOR) } )
+ | PARAM_TYPE (* parameter without a name and without modifiers *)
+     ( {name = NONE, paramType = PARAM_TYPE} )
+
+
+INITIALISER: (* for constants *)
+   C_BRAC INITIALISER_LIST C_KET (* array or list *)
+     ( FIAbsSyntax.LIST_EXP (rev INITIALISER_LIST) )
+ | C_BRAC INITIALISER_LIST COMMA C_KET (* C syntax allows an extra comma *)
+     ( FIAbsSyntax.LIST_EXP (rev INITIALISER_LIST) )
+ | EXPRESSION (* simple value *)
+     ( EXPRESSION )
+
+INITIALISER_LIST: (* List of values, e.g. initialise an array *)
+   INITIALISER
+     ( [INITIALISER] )
+ | INITIALISER_LIST COMMA INITIALISER
+     ( INITIALISER :: INITIALISER_LIST )
+
+
+(*
+   A declarator is a name with type options in a declaration, e.g.:
+      `*a[5]' `**b[][]'  `f(int a)'
+   Used for top level declarations, struct/union members and fn params. 
+*)
+
+ID_DECLARATOR: (* a name and type options for the top level, e.g. `*a[5]' *)
+   UNARY_ID_DECLARATOR
+     ( UNARY_ID_DECLARATOR )
+ | PAREN_ID_DECLARATOR (* identifier optionally surrounded in brackets *)
+     ( PAREN_ID_DECLARATOR )
+
+PAREN_ID_DECLARATOR: (* identifier optionally surrounded in brackets *)
+   ID
+     ( {name =  ID, typeInfo = FIIntAbsSyn.NO_TYPE_INFO} )
+ | BRAC PAREN_ID_DECLARATOR KET
+     ( PAREN_ID_DECLARATOR )
+
+UNARY_ID_DECLARATOR: (* declarator, possibly preceeded by `*'s *)
+   POSTFIX_ID_DECLARATOR
+   ( POSTFIX_ID_DECLARATOR )
+ | ASTERIX ID_DECLARATOR
+   ( {name = #name ID_DECLARATOR,
+      typeInfo = FIIntAbsSyn.insertTypeInfo
+                   (#typeInfo ID_DECLARATOR,
+                    FIIntAbsSyn.AS_POINTER FIIntAbsSyn.NO_TYPE_INFO )} )
+
+POSTFIX_ID_DECLARATOR: (* without leading *s, possibly array for fn *)
+   PAREN_ID_DECLARATOR POSTFIXING_ABSTRACT_DECLARATOR
+     ( {name = #name PAREN_ID_DECLARATOR,
+        typeInfo = POSTFIXING_ABSTRACT_DECLARATOR} )
+ | BRAC UNARY_ID_DECLARATOR KET
+     ( UNARY_ID_DECLARATOR )
+ | BRAC UNARY_ID_DECLARATOR KET POSTFIXING_ABSTRACT_DECLARATOR
+     ( {name = #name UNARY_ID_DECLARATOR,
+        typeInfo = FIIntAbsSyn.insertTypeInfo
+                    (#typeInfo UNARY_ID_DECLARATOR,
+                     POSTFIXING_ABSTRACT_DECLARATOR) } )
+    (* The last case is special:
+         `( *a )[]' is a pointer to an array, not an array of pointers *)
+
+
+(* Declarators in parameter lists are slightly different:
+   You can't surround an identifier in a parameter list with brackets
+   as this would be the same as an abstract declarator representing a fn
+     e.g. int function(int (number));
+                           ^^^^^^^^ this is a param list in an
+                                    abstract declarator,
+                                    NOT an integer called `number' *)
+
+PARAM_DECLARATOR: (* a declarator occurring in a param list *)
+   PARAM_POSTFIX_DECLARATOR
+     (PARAM_POSTFIX_DECLARATOR )
+ | ID 
+     ( {name =  ID, typeInfo = FIIntAbsSyn.NO_TYPE_INFO} )
+ | ASTERIX PARAM_DECLARATOR
+     ( {name = #name PARAM_DECLARATOR,
+        typeInfo = FIIntAbsSyn.insertTypeInfo
+            (#typeInfo PARAM_DECLARATOR,
+             FIIntAbsSyn.AS_POINTER FIIntAbsSyn.NO_TYPE_INFO ) } )
+
+PARAM_AST_DECLARATOR: (* ID with at least one ASTERIX *)
+   ASTERIX ID
+     ( {name =  ID,
+        typeInfo = FIIntAbsSyn.AS_POINTER FIIntAbsSyn.NO_TYPE_INFO} )
+ | ASTERIX PARAM_AST_DECLARATOR
+     ( {name = #name PARAM_AST_DECLARATOR,
+        typeInfo = FIIntAbsSyn.AS_POINTER (#typeInfo PARAM_AST_DECLARATOR)} )
+ | BRAC PARAM_AST_DECLARATOR KET
+     ( PARAM_AST_DECLARATOR )
+
+PARAM_POSTFIX_DECLARATOR:
+   ID POSTFIXING_ABSTRACT_DECLARATOR
+     ({name =  ID, typeInfo = POSTFIXING_ABSTRACT_DECLARATOR})
+ | BRAC PARAM_AST_DECLARATOR KET
+     ( PARAM_AST_DECLARATOR )
+ | BRAC PARAM_AST_DECLARATOR KET POSTFIXING_ABSTRACT_DECLARATOR
+     ( {name = #name PARAM_AST_DECLARATOR,
+        typeInfo = FIIntAbsSyn.insertTypeInfo
+                     (#typeInfo PARAM_AST_DECLARATOR,
+                      POSTFIXING_ABSTRACT_DECLARATOR) } )
+
+(* This does not allow you to define functions which return
+   functions, e.g. you can't have
+     int function(int (paramFunction())());
+   in which paramFunction is a function returning a function *)
+
+(* Abstract declarators are declarators without names, used for
+   function parameters, e.g. in `int function(int, int *, int *[])' *)
+
+ABSTRACT_DECLARATOR: (* A declarator without a name *)
+   UNARY_ABSTRACT_DECLARATOR
+   ( UNARY_ABSTRACT_DECLARATOR )
+ | POSTFIX_ABSTRACT_DECLARATOR
+   ( POSTFIX_ABSTRACT_DECLARATOR )
+ | POSTFIXING_ABSTRACT_DECLARATOR
+   ( POSTFIXING_ABSTRACT_DECLARATOR )
+
+UNARY_ABSTRACT_DECLARATOR: (* possibly preceeded by `*'s. *)
+   ASTERIX
+     ( FIIntAbsSyn.AS_POINTER FIIntAbsSyn.NO_TYPE_INFO )
+ | ASTERIX ABSTRACT_DECLARATOR
+     ( FIIntAbsSyn.AS_POINTER ABSTRACT_DECLARATOR )
+
+POSTFIX_ABSTRACT_DECLARATOR: (* No preceeding `*'s, possible fn or array. *)
+   BRAC UNARY_ABSTRACT_DECLARATOR KET
+    ( UNARY_ABSTRACT_DECLARATOR )
+ | BRAC POSTFIX_ABSTRACT_DECLARATOR KET
+    ( POSTFIX_ABSTRACT_DECLARATOR )
+ | BRAC POSTFIXING_ABSTRACT_DECLARATOR KET
+    ( POSTFIXING_ABSTRACT_DECLARATOR )
+ | BRAC UNARY_ABSTRACT_DECLARATOR KET POSTFIXING_ABSTRACT_DECLARATOR
+    ( FIIntAbsSyn.insertTypeInfo
+        (POSTFIXING_ABSTRACT_DECLARATOR, UNARY_ABSTRACT_DECLARATOR) )
+    (* The last case is for things like `( * )()': pointer to function *)
+
+POSTFIXING_ABSTRACT_DECLARATOR: (* Postfix for any declarator *)
+   BRAC KET (* function with no parameters *)
+   ( FIIntAbsSyn.AS_FUNCTION {params = [],
+                              returnTypeInfo = FIIntAbsSyn.NO_TYPE_INFO } )
+ | ARRAY_ABSTRACT_DECLARATOR (* array *)
+   ( ARRAY_ABSTRACT_DECLARATOR )
+ | BRAC PARAM_TYPE_LIST KET (* function with parameters *)
+   ( FIIntAbsSyn.AS_FUNCTION{params = rev PARAM_TYPE_LIST,
+                             returnTypeInfo = FIIntAbsSyn.NO_TYPE_INFO} )
+
+ARRAY_ABSTRACT_DECLARATOR: (* postfix to declarator of arrays *)
+   S_BRAC S_KET (* array of unknow size *)
+   ( FIIntAbsSyn.AS_ARRAY
+       {dimensions = NONE, elemTypeInfo = FIIntAbsSyn.NO_TYPE_INFO} )
+ | S_BRAC EXPRESSION S_KET (* array of known size *)
+   ( FIIntAbsSyn.AS_ARRAY{dimensions = SOME EXPRESSION,
+                          elemTypeInfo = FIIntAbsSyn.NO_TYPE_INFO} )
+ | ARRAY_ABSTRACT_DECLARATOR S_BRAC EXPRESSION S_KET (* array of arrays *)
+   ( FIIntAbsSyn.AS_ARRAY{dimensions = SOME EXPRESSION,
+                          elemTypeInfo = ARRAY_ABSTRACT_DECLARATOR } )

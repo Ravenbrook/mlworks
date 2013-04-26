@@ -1,0 +1,22 @@
+val it : unit = ()
+signature S =
+  sig
+    type t
+    val x : t
+  end
+signature T =
+  sig
+    type t
+    val y : t
+  end
+signature SIG =
+  sig
+    local
+      type t'
+    in
+     include S
+     sharing type t = t'
+     include T
+     sharing type t = t'
+    end
+  end

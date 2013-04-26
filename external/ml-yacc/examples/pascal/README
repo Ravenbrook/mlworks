@@ -1,0 +1,17 @@
+This is a grammar for Berkeley Pascal, hacked to be SLR, though that is
+not necessary because ML-Yacc supports LALR(1).
+
+To construct the parser, first use ML-Yacc on the file "pascal.grm" to create
+the files "pascal_grm.sml" and "_pascal_grm.sml".  This can be done by loading
+ML-Yacc and typing ``ParseGen.parseGen "pascal.grm"''.  Then construct the
+lexer by using ML_Lex on the file pascal.lex (``LexGen.lexGen "pascal.lex"'').
+
+To load it into Harlequin MLWorks, in the GUI open the project
+yaccpascal.mlp in the Project Workspace tool and compile and load the
+targets using Project > Compile Target Sources and Project > Load
+Targets.  This will build the parser structure automatically.
+
+The end result is a structure Parser with two functions.  The
+The function parse will parse a program in a file.  
+The function keybd will parse a program from the standard input.
+

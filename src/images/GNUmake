@@ -1,0 +1,1403 @@
+# ==== BUILD MLWORKS IMAGES ====
+#
+# Instructions
+# ------------
+# Generic part of the images building system
+#
+# $Log: GNUmake,v $
+# Revision 1.196  1999/06/01 11:45:43  johnh
+# [Bug #190560]
+# Remove circular dependency in targets caused by FOREIGNMO being used as target.
+#
+# Revision 1.195  1999/05/13  14:57:20  daveb
+# [Bug #190553]
+# Added os_exit.
+#
+# Revision 1.194  1999/04/13  10:52:51  johnh
+# [Bug #190506]
+# Make sure foreign mos are built before making image.
+# Also change format of targets for building windows, xm, and foreign images.
+#
+# Revision 1.193  1999/03/18  12:18:22  johnh
+# [Bug #190530]
+# make utils/mutex mos after making batch image.
+#
+# Revision 1.192  1999/03/17  17:37:48  johnh
+# [Bug #190529]
+# Add stub generator files to foreign-files
+#
+# Revision 1.191  1999/03/12  14:46:51  mitchell
+# [Bug #190526]
+# Include require_all in basis-files
+#
+# Revision 1.190  1999/03/11  17:44:08  johnh
+# [Bug #190506]
+# Remove old FI.  Still keep foreign.img but change it to make the new FI.
+#
+# Revision 1.189  1999/03/08  11:02:05  mitchell
+# [Bug #30286]
+# Export Unix and Windows structures
+#
+# Revision 1.188  1999/02/15  16:23:10  mitchell
+# [Bug #190508]
+# Load the sockets files for the basis
+#
+# Revision 1.187  1999/02/09  09:50:00  mitchell
+# [Bug #190505]
+# Support for precompilation of subprojects
+#
+# Revision 1.186  1998/10/28  11:15:10  jont
+# [Bug #70204]
+# Load __list_pair in before _shell_utils
+#
+# Revision 1.185  1998/10/19  10:46:27  jont
+# [Bug #70203]
+# Modify for alternative argument scheme
+#
+# Revision 1.184  1998/10/05  10:42:07  jont
+# [Bug #30487]
+# Load __large_real before loading time
+#
+# Revision 1.183  1998/08/13  16:56:57  jkbrook
+# [Bug #30470]
+# Add the Option structure to the distribution
+#
+# Revision 1.182  1998/07/07  10:18:11  jont
+# [Bug #20122]
+# Move pervasive signatures into __pervasive_library.sml
+#
+# Revision 1.181  1998/06/11  11:37:50  johnh
+# [Bug #30411]
+# CommandLine structure required by Motif Capi.
+#
+# Revision 1.180  1998/05/05  18:56:51  jkbrook
+# [Bug #30354]
+# Temporarily restore old FI to distribution
+#
+# Revision 1.179  1998/05/05  18:03:11  io
+# [Bug #50079]
+# simplify distribution archival of images
+#
+# Revision 1.178  1998/04/24  14:01:16  johnh
+# [Bug #30229]
+# specify local_functions on to batch compiler.
+#
+# Revision 1.177  1998/04/06  15:58:23  jont
+# [Bug #70086]
+# Integrate Windows structure and signature
+#
+# Revision 1.176  1998/04/06  10:27:54  jont
+# [Bug #70089]
+# Add __sys_word to list of basis files
+#
+# Revision 1.175  1998/04/01  12:21:17  jont
+# [Bug #70086]
+# *windows has moved to *windows_gui
+#
+# Revision 1.174  1998/03/31  12:00:14  jont
+# [Bug #70077]
+# Removing path, _unixpath, _win_ntpath and __path
+# These are replaced by OS.Path
+#
+# Revision 1.173  1998/03/19  21:04:18  jkbrook
+# [Bug #50047]
+# __timer.mo should appear in the distribution of the basis, i.e.,
+# in BASISSRC
+#
+# Revision 1.172  1998/03/17  17:28:20  jkbrook
+# [Bug #50052]
+# Include command_line structure in basis distribution
+#
+# Revision 1.171  1998/02/23  11:38:14  johnh
+# [Bug #30362]
+# objects directory now extended to allow for different modes.
+#
+# Revision 1.170  1998/02/19  18:00:13  jont
+# [Bug #70065]
+# Make terminal available to windows.img and xm.img
+#
+# Revision 1.169  1998/02/16  16:19:49  jkbrook
+# [Bug #30306]
+# Remove FI-related targets
+#
+# Revision 1.168  1998/02/09  14:30:48  johnh
+# [Bug #30071]
+# Change order of loading basis/__date
+#
+# Revision 1.167  1998/01/30  16:37:34  johnh
+# [Bug #30071]
+# Merge in Project Workspace changes.
+#
+# Revision 1.166  1997/11/26  17:41:11  daveb
+# [Bug #30329]
+# Added basis/__wordN_array2.
+#
+# Revision 1.165  1997/11/26  10:27:26  daveb
+# [Bug #30329]
+# Removed mono_array2 from basis files.
+#
+# Revision 1.164  1997/11/24  12:15:49  daveb
+# [Bug #30304]
+# Added SML90 to the basis library.
+#
+# Revision 1.163  1997/11/09  09:23:36  jont
+# [Bug #30089]
+# Utils/__timer now needs basis/__timer
+#
+# Revision 1.162  1997/10/09  14:33:10  johnh
+# [Bug #30193]
+# Add *sys_messages.sml to gui.
+#
+# Revision 1.161  1997/09/23  09:39:57  jont
+# [Bug #70010]
+# Remove references to sml90 as these are no longer used
+#
+# Revision 1.160  1997/09/19  09:03:01  brucem
+# [Bug #30153]
+# Change Old and OLD to SML90.
+#
+# Revision 1.159.2.7  1998/01/19  14:55:49  daveb
+# [Bug #30071]
+# Set ARCH_OS in sub-Makefiles.
+#
+# Revision 1.159.2.6  1997/12/12  15:17:32  johnh
+# [Bug #30071]
+# Add basis/date and basis/__date to LEXER1.
+#
+# Revision 1.159.2.5  1997/11/26  14:11:33  daveb
+# [Bug #30071]
+# Removed *action_queue.
+#
+# Revision 1.159.2.4  1997/11/25  20:24:12  daveb
+# [Bug #30071]
+# Object files are now found in a separate directory.
+#
+# Revision 1.159.2.3  1997/11/25  14:23:42  daveb
+# [Bug #30326]
+# Renamed utils/*timer to utils/*mlworks_timer and main/*io to main/*mlworks_io.
+#
+# Revision 1.159.2.2  1997/09/12  14:52:41  johnh
+# [Bug #30071]
+# Redesign Compilation Manager -> Project Workspace.
+# New files: *proj_workspace and *proj_properties.  Removed: *comp_manager.
+#
+# Revision 1.159  1997/08/08  15:11:04  brucem
+# [Bug #30245]
+# ARRAY2 now depends on Vector.
+#
+# Revision 1.158  1997/07/21  08:58:28  daveb
+# [Bug #30090]
+# Moved load of __old.
+#
+# Revision 1.157  1997/07/02  13:42:23  stephenb
+# [Bug #30029]
+# The MLWorks<->C interface has grown.  Replace {__}c.sml with
+# {__}mlworks_c_interface, {__}mlworks_c_io, {__}mlworks_dynamic_library,
+# {__,}mlworks_c_resource and {_,}mlworks_c_pointer.sml
+#
+# Revision 1.156  1997/06/16  10:32:51  johnh
+# [Bug #30174]
+# Making podium platform specific.
+#
+# Revision 1.155  1997/06/05  09:45:45  johnh
+# [Bug #30068]
+# Make Breakpoint and Trace Managers top level tools - added new files.
+#
+# Revision 1.154  1997/05/29  17:19:54  jkbrook
+# [Bug #01749]
+# Further basis synonym corrections
+#
+# Revision 1.153  1997/05/29  16:16:26  jkbrook
+# [Bug #01749]
+# __sys_word in LEXER1 moved to Unix-specific Makefiles
+#
+# Revision 1.152  1997/05/27  17:00:24  jont
+# [Bug #30090]
+# Rearrangements caused by replacing MLWorks.IO by basis I/O
+#
+# Revision 1.151  1997/05/27  13:36:35  jkbrook
+# [Bug #01749]
+# Some files now depend on basis synonym files __large_{int,real,word} and __sys_word
+#
+# Revision 1.150  1997/05/19  09:35:03  stephenb
+# [Bug #30121]
+# Move to new FI: remove foreign.img and related rules.
+#
+# Revision 1.149  1997/04/16  16:15:47  jont
+# Fix building of foreign.img when ARCH_OS is set
+#
+# Revision 1.148  1997/03/31  12:40:02  johnh
+# [Bug #1967]
+# Moved basis/os_path to before system/_win_ntgetenv.
+#
+# Revision 1.147  1997/03/13  11:33:15  andreww
+# [Bug #1667]
+# Adding mutexes to control access to the Listener.
+#
+# Revision 1.146  1997/03/06  10:51:36  matthew
+# Adding array2 files
+#
+# Revision 1.145  1997/02/26  12:43:42  andreww
+# [Bug #1759]
+# adding new TEXT_STREAM_IO signature.
+#
+# Revision 1.144  1997/01/31  12:35:53  andreww
+# [Bug #1901]
+# Adding new RealVector and RealArray structures to basis
+#
+# Revision 1.143  1997/01/15  15:18:54  io
+# [Bug #1892]
+# rename __word{8,16,32}{array,vector} to __word{8,16,32}_{array,vector}
+#        __pre{integer,int32,real,word{,32}} to __pre_{int{,32},real,word{,32}}
+#        __pack{8,16,32}{big,little} to __pack{8,16,32}_{big,little}
+#
+# Revision 1.142  1997/01/14  11:23:24  io
+# [Bug #1757]
+# renamed __ieeereal to __ieee_real
+#         __char{array,vector} to __char_{array,vector}
+#
+# Revision 1.141  1997/01/13  10:29:39  andreww
+# [Bug #1818]
+# Adding new floatarray file to the pervasives
+#
+# Revision 1.140  1997/01/08  15:38:34  jont
+# [Bug #1816]
+# [Bug #1816]
+# Modify the way rm is done to cope with new GNU tools
+#
+# Revision 1.139  1997/01/06  10:53:07  matthew
+# Adding basis/vector
+#
+# Revision 1.138  1997/01/02  11:18:34  jont
+# [Bug #1816]
+# Change use of " when sh invoked to ' to keep new PC make happy
+# Modified method of producing foreign.img so that compilation part
+# is done directly from here. This allows considerable simplification
+# of mk_interface.sh
+#
+# Revision 1.137  1996/11/15  16:48:53  daveb
+# _license.sml now requires __substring.
+#
+# Revision 1.136  1996/11/07  12:27:49  daveb
+# Added main/*license.
+#
+# Revision 1.135  1996/11/06  11:57:55  matthew
+# [Bug #1728]
+# __integer becomes __int
+#
+# Revision 1.134  1996/11/04  16:53:04  jont
+# [Bug #1725]
+# Remove unsafe string operations introduced when String structure removed
+#
+# Revision 1.133  1996/11/02  15:21:05  daveb
+# Removed stringlib from FOREIGN image.
+#
+# Revision 1.132  1996/10/31  11:53:50  daveb
+# Moved basis/__old to the LEXER build, as it is now needed by _lexrules.
+#
+# Revision 1.131  1996/10/29  21:09:52  daveb
+# Added old structure to PARSER2.
+#
+# Revision 1.130  1996/10/21  15:41:55  jont
+# Remove references to toplevel
+#
+# Revision 1.129  1996/10/09  14:24:58  jont
+# Add BASIS_LOADER variable
+#
+# Revision 1.128  1996/10/08  13:54:22  stephenb
+# [Bug #1602]
+# Moved basis/__word8vector, basis/mono_vector and
+# basis/__word8 from PARSER1 in GNUMake to PARSERSYS
+# in the SunOS/Irix/Linux specific Makefiles since the files are only
+# needed under Unix.
+#
+# Revision 1.127  1996/09/27  10:00:25  stephenb
+# [Bug #1615]
+# Remove duplicate dependencies.
+#
+# Revision 1.126  1996/09/16  15:57:01  andreww
+# [Bug #1577]
+# reordering dependencies
+#
+# Revision 1.125  1996/08/11  14:53:10  daveb
+# Removed basis.array from PARSER1.
+#
+# Revision 1.124  1996/08/09  13:48:02  daveb
+# [Bug #1536]
+# Added BASIS1 to parser sources.
+#
+# Revision 1.123  1996/08/05  14:33:27  stephenb
+# [Bug #1510]
+# location now depends on char, string (and transitively list) so
+# moved them to before location in LEXER filename list.
+#
+# Revision 1.122  1996/07/19  09:44:53  jont
+# Bring up to date following file name changes
+#
+# Revision 1.121  1996/07/16  10:05:54  andreww
+# removing dependency on gui_standard_io which is now defunct.
+# ,
+#
+# Revision 1.120  1996/07/03  15:06:26  andreww
+# correcting make dependencies.
+#
+# Revision 1.119  1996/07/03  12:49:51  andreww
+# Adding GuiStandardIO structure to load.
+#
+# Revision 1.118  1996/06/24  20:37:33  io
+# expose Char.scanc() and restrict __char
+#
+# Revision 1.117  1996/06/24  19:56:56  brianm
+# Modifying foreign.img build ...
+#
+# Revision 1.116  1996/06/19  14:07:23  brianm
+# Mods to allow mk_interface.sh to be used under Win32 ..
+#
+# Revision 1.114  1996/06/14  17:53:26  brianm
+# Modifications to add custom editor interface ...
+#
+# Revision 1.113  1996/06/05  13:47:59  brianm
+# Modified foreign.img entry to rebuild FFI .mo files ...
+#
+# Revision 1.112  1996/06/04  22:44:08  io
+# stringcvt->string_cvt
+#
+# Revision 1.111  1996/06/04  10:04:16  jont
+# Minor alterations for NT stuff
+#
+# Revision 1.110  1996/06/04  09:55:02  jont
+# Update following basis changes
+#
+# Revision 1.109  1996/05/29  10:47:45  stephenb
+# Move basis/{__,}char above basis/__time in PARSER1 as the latter
+# now requires the former.
+# Also move {math,ieeereal,prereal,real} from GUI to above basis/__time
+# in PARSER 1 for the same reason.
+# Removed a redundant reference to basis/__list_pair in BASIS.
+#
+# Revision 1.108  1996/05/28  10:57:09  jont
+# More problems
+#
+# Revision 1.107  1996/05/28  10:49:44  jont
+# Revert to previous method of building foreign.img
+#
+# Revision 1.105  1996/05/24  10:09:10  daveb
+# Removed evaluator.
+#
+# Revision 1.104  1996/05/22  11:36:28  io
+# readying substring, byte
+#
+# Revision 1.103  1996/05/22  09:22:36  matthew
+# New basis ordering
+#
+# Revision 1.102  1996/05/21  12:33:28  stephenb
+# Use the new path implementation.
+#
+# Revision 1.101  1996/05/21  11:52:10  jont
+# signature changes
+#
+# Revision 1.100  1996/05/21  09:42:46  jont
+# Add preferences to interpreter files
+#
+# Revision 1.99  1996/05/20  15:53:59  daveb
+# Added interpreter/*save_image
+#
+# Revision 1.98  1996/05/17  09:43:36  stephenb
+# Change filesys -> file_sys in accordance with latest file naming conventions.
+#
+# Revision 1.97  1996/05/17  07:34:50  stephenb
+# Added various files needed to support a full OS.FileSys implementation.
+#
+# Revision 1.96  1996/05/16  16:50:01  jont
+# Remove settings of SYSTEM from here
+#
+# Revision 1.95  1996/05/16  16:19:28  jont
+# Revise file list for foreign.img
+#
+# Revision 1.94  1996/05/16  15:02:27  io
+# add string
+# __string
+#
+# Revision 1.93  1996/05/15  15:36:53  jont
+# Added guib.img to the list of distributed targets
+#
+# Revision 1.92  1996/05/15  12:41:05  jont
+# Name changes within the revised basis
+#
+# Revision 1.91  1996/05/15  11:44:48  jont
+# Add ieeereal and remove some duplication
+#
+# Revision 1.90  1996/05/14  08:58:43  stephenb
+# Reorder basis/__chars and basis/__int so that the latter comes
+# before the former.
+#
+# Revision 1.89  1996/05/13  09:29:36  matthew
+# Removing word8 from lexer files
+#
+# Revision 1.88  1996/05/10  13:18:59  matthew
+# Fixing basis.img problem
+#
+# Revision 1.87  1996/05/10  09:44:03  matthew
+# Changes to words.
+#
+# Revision 1.86  1996/05/09  11:33:58  stephenb
+# Remove any reference to FILESYS since it is subsumed by PARSERSYS
+# now that filesys stuff is needed for the parser.
+#
+# Revision 1.85  1996/05/08  13:14:38  stephenb
+# Rename filesys -> os_filesys and move main/exit to basis.
+#
+# Revision 1.84  1996/05/08  08:43:58  stephenb
+# Fix so that basis.img build works.
+#
+# Revision 1.83  1996/05/08  08:13:04  stephenb
+# Add missing files so that it is possible to build an image.
+# Specifically: added __pre_char to LEXER as stringcvt needs it and
+# replaced any reference to basis/lists with basis/list since the file
+# name has been changed to match that used in the revised basis.
+#
+# Revision 1.82  1996/05/07  21:31:49  io
+# add __pre_char, char into basis
+#
+# Revision 1.81  1996/05/07  12:03:47  stephenb
+# Add files to support OS.IO.
+#
+# Revision 1.80  1996/05/02  20:52:21  io
+# fix bool dependency with toplevel
+#
+# Revision 1.79  1996/05/02  19:16:51  io
+# add bool
+#
+# Revision 1.78  1996/05/02  17:22:35  jont
+# Add foreign.img to list of images distributed
+#
+# Revision 1.77  1996/05/02  16:02:24  jont
+# Adding foreign.img and foreign-files
+#
+# Revision 1.76  1996/05/02  12:49:04  matthew
+# Bah, I was misinformed.
+#
+# Revision 1.75  1996/05/02  12:00:38  matthew
+# Moving word32 and int32
+#
+# Revision 1.74  1996/04/30  13:40:53  matthew
+# Removed utils/integer
+#
+# Revision 1.73  1996/04/25  10:43:09  jont
+# Change maths to math and __maths to __math
+#
+# Revision 1.72  1996/04/23  11:22:04  daveb
+# Added gui/*file_viewer.
+#
+# Revision 1.71  1996/04/18  16:39:58  jont
+# initbasis becomes basis
+#
+# Revision 1.70  1996/04/17  15:50:15  stephenb
+# Rename initbasis/__process -> initbasis/__os_process so that the
+# file name matches the structure as defined in the latest basis revision.
+#
+# Revision 1.69  1996/04/02  13:57:42  stephenb
+# Patch up the BASIS src list so that it includes all the files in the basis!
+#
+# Revision 1.68  1996/04/02  12:59:46  stephenb
+# Remove any reference to initbasis/__os since this is now implementation
+# dependent i.e. in the unix and win_nt directories.
+#
+# Revision 1.67  1996/04/02  09:29:24  stephenb
+# Remove os dependence on toplevel as this causes build problems because
+# it requires the inclusion of files that cannot be compiled by SML/NJ.
+#
+# Revision 1.66  1996/03/27  16:44:55  stephenb
+# Various changes as part of the upgrade to the latest OS.* definition.
+#
+# Revision 1.65  1996/03/15  12:18:09  matthew
+# hyphenizing command line arguments
+#
+# Revision 1.64  1996/03/08  15:24:54  jont
+# Add rules to make windows.img
+#
+# Revision 1.63  1996/03/01  15:06:23  jont
+# Modifications to get distributions working under NT
+#
+# Revision 1.62  1996/02/26  14:33:33  stephenb
+# Add stack_frame
+#
+# Revision 1.61  1996/02/26  12:49:36  jont
+# mononewmap becomes monomap
+#
+# Revision 1.60  1996/02/26  11:51:56  jont
+# newhashtable becomes hashtable
+#
+# Revision 1.59  1996/02/26  09:43:44  jont
+# Change newmap to be map
+#
+# Revision 1.58  1996/02/22  14:36:27  jont
+# Removing Map
+#
+# Revision 1.57  1996/02/08  15:39:03  daveb
+# Replaced evaluator (now a source display sub-tool).
+#
+# Revision 1.56  1996/01/23  11:01:23  matthew
+# Dave forgot to remove *evaluator from here
+#
+# Revision 1.55  1996/01/19  15:46:43  stephenb
+# OS reorganisation: editor implementation now depends on the
+# OS type i.e. NT or Unix.
+#
+# Revision 1.54  1996/01/12  12:27:53  daveb
+# Moved file_dialog from gui to motif.
+#
+# Revision 1.53  1996/01/09  14:07:22  matthew
+# Permuting capi and menus files
+#
+# Revision 1.52  1996/01/09  12:21:34  matthew
+# Renaming motif.img to gui.img
+#
+# Revision 1.51  1995/12/27  16:33:47  jont
+# Removing utils/option
+#
+# Revision 1.50  1995/12/12  17:27:39  daveb
+# Removed file_tool, added path_tool.
+#
+# Revision 1.49  1995/12/05  13:43:45  jont
+# Move types to be loaded before absyn
+#
+# Revision 1.48  1995/12/05  10:36:20  daveb
+# Added modules for project tool.
+#
+# Revision 1.47  1995/10/18  16:25:37  nickb
+# Change load order to get profile tool in before the evaluator.
+#
+# Revision 1.46  1995/10/18  12:12:46  nickb
+# Add profile tool.
+#
+# Revision 1.45  1995/10/14  21:48:00  brianm
+# GraphWidget now depends on Gui Utils - rearranging ...
+#
+# Revision 1.44  1995/10/06  11:29:16  jont
+# Move initbasis/lists stuff into xmsrc as it's not relevant for NT
+#
+# Revision 1.43  1995/10/04  13:18:48  daveb
+# *gui_utils now use *entry.
+#
+# Revision 1.42  1995/10/02  11:50:42  brianm
+# Adding utils/lisp for use by Motif.
+#
+#
+#
+#
+
+# The following ifeq stuff is an ugly hack which should be sorted 
+# out by moving OS specific styff into OS specific makefiles.
+#
+
+ifeq "$(OS)" "NT"
+NTTYPE=TRUE
+else
+ifeq "$(OS)" "Win95"
+NTTYPE=TRUE
+else
+NTTYPE=FALSE
+endif
+endif
+
+SRC =		../../..
+OBJ =           ../../../../objects
+
+ifeq "$(NTTYPE)" "TRUE"
+RM =		c:/usr/local/bin/rm -rf
+MKDIR =		mkdir -p
+CP =		cp
+else
+COMPRESS =	compress
+UNCOMPRESS =	uncompress
+RM =		/bin/rm -f
+CP =		/bin/cp
+MKDIR =		/bin/mkdir
+TMPDIR =	/tmp
+SML_HOME =	/u/sml
+ADB =		adb
+endif
+DISTRIB =	$(SML_HOME)/distribution/images
+
+COMMON_DISTRIBUTED_IMAGES = pervasive.img batch.img gui.img foreign.img basis.img guib.img
+
+
+#
+# This is a hack because the foreign interface is not currently used
+# internally by MLWorks.
+#
+
+BASIS_TARGETS = basis/require_all \
+	   	$(SYSTEM)/platform_specific_exports
+
+FOREIGN = 	mlworks_c_pointer \
+	  	mlworks_c_interface \
+	  	__mlworks_c_interface \
+	  	_mlworks_c_pointer \
+	  	mlworks_dynamic_library \
+	  	__mlworks_dynamic_library \
+	  	mlworks_c_resource \
+	  	__mlworks_c_resource \
+	  	mlworks_c_io \
+	  	__mlworks_c_io
+
+STUB_GEN = 	utils/lists \
+		utils/_lists \
+		utils/__lists \
+		foreign/stub_gen \
+		foreign/_stub_gen \
+		foreign/__stub_gen \
+		foreign/__stub_gen_input
+
+DISTRIBUTED_IMAGES = $(COMMON_DISTRIBUTED_IMAGES) $(PLATFORM_DISTRIBUTED_IMAGES)
+
+
+PERVASIVE =	__builtin_library __pervasive_library 
+
+TIMER = 	basis/timer \
+		basis/__timer 
+
+BASIS1 =	basis/__pre_basis \
+		basis/__pre_string_cvt \
+		basis/string_cvt \
+		basis/__string_cvt \
+		basis/list_pair \
+		basis/list \
+		basis/__list_pair \
+		basis/__list \
+		basis/__pre_int \
+		basis/__pre_word32 \
+		basis/__pre_int32 \
+		basis/__pre_word \
+                basis/integer \
+                basis/__large_int \
+		basis/word \
+		basis/__word \
+		basis/__word8 \
+		basis/__sys_word \
+		basis/__int \
+		basis/char \
+		basis/__pre_char \
+		basis/__char \
+		basis/array \
+		basis/vector \
+		basis/mono_vector \
+		basis/mono_array \
+		basis/string \
+		basis/__string \
+		basis/__char_vector \
+		basis/__word8_vector \
+		basis/__word8_array \
+		basis/__char_array \
+		basis/__array \
+		basis/__vector \
+		basis/array2 \
+		basis/__array2 \
+		basis/bool \
+		basis/__bool \
+		basis/math \
+		basis/__math \
+		basis/__pre_ieee_real \
+		basis/ieee_real \
+		basis/__ieee_real \
+		basis/__pre_real \
+		basis/real \
+                basis/__large_real \
+		basis/__real \
+		basis/time \
+		$(SYSTEM)/__time \
+		basis/date \
+		basis/__date \
+		basis/io \
+		basis/__position \
+		basis/os_process \
+		basis/os_file_sys \
+		basis/__word32 \
+		basis/os_path \
+		$(SYSTEM)/__os_path \
+		basis/__large_word 
+
+BASIS2 =	basis/os_io \
+		basis/os \
+		basis/pack_word \
+		basis/_mono_vector \
+		basis/_mono_array \
+		basis/mono_array2 \
+		basis/_mono_array2 \
+		basis/_pack_words_big \
+		basis/_pack_words_little \
+		basis/__word16 \
+		basis/substring \
+		basis/__substring \
+		basis/byte \
+		basis/__byte \
+		$(SYSTEM)/os_exit \
+		$(SYSTEM)/__os_exit \
+		basis/exit \
+		basis/__exit \
+		basis/_os_process \
+		basis/__os_process \
+		$(SYSTEM)/_os_io \
+		$(SYSTEM)/__os_io \
+		$(SYSTEM)/_os_file_sys \
+		$(SYSTEM)/__os_file_sys \
+		$(SYSTEM)/_os \
+		$(SYSTEM)/__os \
+		basis/__io \
+		basis/prim_io \
+		basis/os_prim_io \
+		basis/stream_io \
+		basis/_stream_io \
+		basis/imperative_io \
+		basis/_imperative_io \
+		basis/_prim_io \
+		basis/__bin_prim_io \
+		basis/bin_io \
+		basis/__text_prim_io \
+		basis/text_stream_io \
+		basis/text_io \
+		basis/__pack16_big \
+		basis/__pack16_little \
+		basis/__pack32_big \
+		basis/__pack32_little \
+		basis/__pack8_big \
+		basis/__pack8_little \
+		basis/__word8_array2 \
+		basis/__word16_vector \
+		basis/__word16_array \
+		basis/__word16_array2 \
+		basis/__word32_vector \
+		basis/__word32_array \
+		basis/__word32_array2 \
+		basis/__real_vector \
+		basis/__real_array \
+		basis/__real_array2 \
+		basis/__int8 \
+		basis/__int16 \
+		basis/__int32
+
+BASIS3 =	$(SYSTEM)/__os_prim_io \
+		basis/__text_stream_io \
+		basis/__bin_stream_io \
+		basis/_text_io \
+		basis/__text_io \
+		basis/_bin_io \
+		basis/__bin_io \
+		basis/sml90 \
+		basis/__sml90 \
+		basis/command_line \
+		basis/__command_line \
+		basis/option \
+		basis/__option \
+		basis/general \
+		basis/__general \
+		basis/net_db  \
+		basis/__pre_sock  \
+		basis/__net_db  \
+		basis/serv_db  \
+		basis/__serv_db  \
+		basis/prot_db  \
+		basis/__prot_db  \
+		basis/host_db \
+		basis/__host_db  \
+		basis/socket  \
+		basis/__socket  \
+		basis/inet_sock \
+		basis/generic_sock \
+		basis/__generic_sock \
+		basis/__inet_sock  \
+		basis/unix_sock \
+		basis/__unix_sock 
+
+
+BASISSRC = 	$(BASIS1) $(LEXERSYS) $(PARSERSYS) $(BASIS2) $(BASISSYS) $(BASIS3) $(TIMER) $(BASISSYS2)
+
+BASIS_LOADER = 	$(BASISSRC) $(BASIS_TARGETS)
+
+LEXER1 =	$(BASIS_LOADER) \
+		basics/location \
+		basics/_location \
+		basics/__location \
+		utils/print \
+		utils/_print \
+		utils/__print \
+		utils/lists \
+		utils/_lists \
+		utils/__lists \
+		utils/map \
+		utils/monomap \
+		utils/intnewmap 
+
+
+LEXER2 =	main/info \
+		main/_info \
+		main/__info \
+		utils/crash \
+		utils/_crash \
+		utils/__crash \
+		utils/_b23tree \
+		utils/__btree \
+		utils/_intb23tree \
+		utils/__intbtree \
+		basics/symbol \
+		basics/_symbol \
+		basics/__symbol \
+		basics/token \
+		basics/_token \
+		basics/__token \
+		lexer/ndfa \
+		lexer/_ndfa \
+		lexer/__ndfa \
+		lexer/regexp \
+		lexer/_regexp \
+		lexer/__regexp \
+		lexer/inbuffer \
+		lexer/_inbuffer \
+		lexer/__inbuffer \
+		main/options \
+		main/_options \
+		main/__options \
+		lexer/lexrules \
+		lexer/_lexrules \
+		lexer/__lexrules \
+		lexer/lexer \
+		utils/mlworks_timer \
+		utils/__mlworks_timer \
+		lexer/_lexgen \
+		lexer/__lexer
+
+LEXER =	$(LEXER1) $(LEXERSYS) $(TIMER) $(LEXER2)
+
+PARSER1 =	basics/ident \
+		basics/_ident \
+		basics/__ident \
+		basics/identprint \
+		utils/set \
+		utils/_set \
+		utils/__set
+
+PARSER2 =	basics/module_id \
+		basics/_module_id \
+		basics/__module_id \
+		utils/counter \
+		utils/_counter \
+		typechecker/stamp \
+		typechecker/_stamp \
+		typechecker/__stamp \
+		typechecker/datatypes \
+		typechecker/_datatypes \
+		typechecker/__datatypes \
+		basics/absyn \
+		parser/parserenv \
+		parser/derived \
+		parser/parser \
+ 		parser/LRbasics \
+ 		parser/actionfunctions \
+ 		parser/LRparser \
+		parser/_parser \
+		basics/_identprint \
+		basics/__identprint \
+ 		debugger/runtime_env \
+ 		debugger/_runtime_env \
+ 		debugger/__runtime_env \
+		typechecker/types \
+		typechecker/_types \
+		typechecker/__types \
+		basics/_absyn \
+		basics/__absyn \
+		parser/_parserenv \
+		parser/__parserenv \
+		parser/_derived \
+		parser/__derived \
+ 		parser/_LRbasics \
+ 		parser/_LRparser \
+ 		parser/_actionfunctions \
+ 		parser/__LRbasics \
+ 		parser/__actionfunctions \
+ 		parser/__LRparser \
+		parser/__parser
+
+PARSER =	$(PARSER1) $(PARSERSYS) $(PARSER2)
+
+TYPER =		utils/hashset \
+		utils/_hashset \
+		lambda/pretty \
+		lambda/_pretty \
+		lambda/__pretty \
+		utils/sexpr \
+		utils/_sexpr \
+		utils/__sexpr \
+		basics/absynprint \
+		basics/_absynprint \
+		basics/__absynprint \
+		lambda/topdecprint \
+		lambda/_topdecprint \
+		lambda/__topdecprint \
+		utils/text \
+		utils/_text \
+		utils/__text \
+		utils/diagnostic \
+		utils/_diagnostic \
+		utils/hashtable \
+		utils/_hashtable \
+		utils/__hashtable \
+		main/pervasives \
+		main/_pervasives \
+		main/__pervasives \
+		lambda/lambdatypes \
+		lambda/_lambdatypes \
+		lambda/__lambdatypes \
+		lambda/environtypes \
+		lambda/_environtypes \
+		lambda/__environtypes \
+		basis/vector \
+		basis/__vector \
+		lambda/environ \
+		lambda/_environ \
+		lambda/__environ \
+		main/primitives \
+		main/_primitives \
+		main/__primitives \
+		typechecker/namehash \
+		typechecker/_namehash \
+		typechecker/__namehash \
+		typechecker/strnames \
+		typechecker/_strnames \
+		typechecker/__strnames \
+		typechecker/namesettypes \
+		typechecker/_namesettypes \
+		typechecker/__namesettypes \
+		typechecker/basistypes \
+		typechecker/_basistypes \
+		typechecker/__basistypes \
+		typechecker/unify \
+		typechecker/_unify \
+		typechecker/__unify \
+		typechecker/completion \
+		typechecker/_completion \
+		typechecker/__completion \
+		typechecker/scheme \
+		typechecker/_scheme \
+		typechecker/__scheme \
+		typechecker/valenv \
+		typechecker/_valenv \
+		typechecker/__valenv \
+		typechecker/tyenv \
+		typechecker/_tyenv \
+		typechecker/__tyenv \
+		typechecker/strenv \
+		typechecker/_strenv \
+		typechecker/__strenv \
+		typechecker/environment \
+		typechecker/_environment \
+		typechecker/__environment \
+		typechecker/nameset \
+		typechecker/_nameset \
+		typechecker/__nameset \
+		typechecker/sigma \
+		typechecker/_sigma \
+		typechecker/__sigma \
+		typechecker/basis \
+		typechecker/_basis \
+		typechecker/__basis \
+		typechecker/type_exp \
+		typechecker/_type_exp \
+		typechecker/__type_exp \
+		typechecker/assemblies \
+		typechecker/_assemblies \
+		typechecker/__assemblies \
+		typechecker/control_unify \
+		typechecker/_control_unify \
+		typechecker/__control_unify \
+		typechecker/context_print \
+		typechecker/_context_print \
+		typechecker/__context_print \
+		typechecker/patterns \
+		typechecker/_patterns \
+		typechecker/__patterns \
+		typechecker/core_rules \
+		typechecker/_core_rules \
+		typechecker/__core_rules \
+		typechecker/sharetypes \
+		typechecker/_sharetypes \
+		typechecker/__sharetypes \
+		typechecker/share \
+		typechecker/_share \
+		typechecker/__share \
+		typechecker/realise \
+		typechecker/_realise \
+		typechecker/__realise \
+		typechecker/type_debugger \
+		typechecker/_type_debugger \
+		typechecker/__type_debugger \
+		typechecker/mod_rules \
+		typechecker/_mod_rules \
+		typechecker/__mod_rules
+
+BATCH =		main/version \
+		main/__version \
+		main/license \
+		main/_license \
+		main/__license \
+		utils/mlworks_exit \
+		$(SYSTEM)/__mlworks_exit \
+		main/batch \
+		main/_batch \
+		main/__batch
+
+SHELLSRC =	main/version \
+		main/__version \
+		main/license \
+		main/_license \
+		main/__license \
+		utils/mlworks_exit \
+		$(SYSTEM)/__mlworks_exit \
+		main/batch_common_export_filter \
+		main/batch_export_filter \
+		main/preferences \
+		main/_preferences \
+		main/__preferences \
+		editor/custom \
+		editor/_custom \
+		editor/__custom \
+		interpreter/inter_envtypes \
+		interpreter/_inter_envtypes \
+		interpreter/__inter_envtypes \
+		interpreter/interload \
+		interpreter/_interload \
+		interpreter/__interload \
+		interpreter/intermake \
+		interpreter/_intermake \
+		interpreter/__intermake \
+		interpreter/incremental \
+		interpreter/_incremental \
+		interpreter/__incremental
+
+
+INTERSRC1 =	basis/__int32 \
+		debugger/value_printer_utilities \
+		debugger/_value_printer_utilities \
+		debugger/__value_printer_utilities \
+		debugger/value_printer \
+		debugger/_value_printer \
+		debugger/__value_printer \
+		interpreter/interprint \
+		interpreter/_interprint \
+		interpreter/__interprint \
+		interpreter/user_context \
+		interpreter/_user_context \
+		interpreter/__user_context \
+		interpreter/shell_types \
+		interpreter/_shell_types \
+		interpreter/__shell_types \
+		debugger/newtrace \
+		debugger/_newtrace \
+		debugger/__newtrace \
+		basis/list_pair \
+		basis/__list_pair \
+		interpreter/shell_utils \
+		interpreter/_shell_utils \
+		interpreter/__shell_utils \
+		debugger/stack_frame \
+		debugger/_stack_frame \
+		debugger/__stack_frame \
+	        debugger/debugger_print \
+		debugger/_debugger_print \
+	        debugger/__debugger_print \
+		debugger/ml_debugger \
+		debugger/_ml_debugger \
+		debugger/__ml_debugger \
+		interpreter/inspector_values \
+		interpreter/_inspector_values \
+		interpreter/__inspector_values \
+		interpreter/inspector \
+		interpreter/_inspector \
+		interpreter/__inspector \
+		main/version \
+		main/__version \
+		main/license \
+		main/_license \
+		main/__license \
+		interpreter/save_image \
+		interpreter/_save_image \
+		interpreter/__save_image \
+		interpreter/shell_structure \
+		interpreter/_shell_structure \
+		interpreter/__shell_structure \
+		interpreter/shell \
+		interpreter/_shell \
+		interpreter/__shell \
+		interpreter/tty_listener \
+		interpreter/_tty_listener \
+		interpreter/__tty_listener \
+		interpreter/interpreter_export_filter
+
+INTERSRC =	$(INTERSYS) $(INTERSRC1)
+
+TTYSRC =	interpreter/interpreter
+
+TERMINAL =	basis/require_all \
+		basis/platform_specific_exports \
+		utils/terminal \
+		utils/__terminal
+
+XMSRC =		motif/xm \
+		motif/_xm \
+		motif/__xm
+
+XMOBJ = 	../../../motif/objects
+
+WINDOWSSRC =    winsys/windows_gui \
+                winsys/_windows_gui \
+                winsys/__windows_gui
+
+WINDOWSOBJ = 	../../../mswindows/objects
+
+XCAPISRC=	utils/lisp \
+		utils/_lisp \
+		utils/__lisp \
+		basis/command_line \
+		basis/__command_line \
+		motif/file_dialog \
+		motif/_file_dialog \
+		motif/__file_dialog \
+		gui/menus \
+		motif/_menus \
+		motif/__menus \
+		gui/capi \
+		motif/_capi \
+		motif/__capi
+
+GUI =		basis/date \
+		basis/__date \
+		interpreter/entry \
+		interpreter/_entry \
+		interpreter/__entry \
+		utils/mutex \
+		utils/__mutex \
+		gui/path_tool \
+		gui/_path_tool \
+		gui/__path_tool \
+		gui/gui_utils \
+		gui/_gui_utils \
+		gui/__gui_utils \
+		gui/graph_widget \
+		gui/_graph_widget \
+		gui/__graph_widget \
+		gui/tooldata \
+		gui/_tooldata \
+		gui/__tooldata \
+		gui/break_trace \
+		gui/_break_trace \
+		gui/__break_trace \
+		gui/console \
+		gui/_console \
+		gui/__console \
+		gui/inspector_tool \
+		gui/_inspector_tool \
+		gui/__inspector_tool \
+		gui/file_viewer \
+		gui/_file_viewer \
+		gui/__file_viewer \
+		gui/debugger_window \
+		gui/_debugger_window \
+		gui/__debugger_window \
+		gui/error_browser \
+		gui/_error_browser \
+		gui/__error_browser \
+                gui/bar_chart \
+                gui/_bar_chart \
+                gui/__bar_chart \
+                gui/profile_tool \
+                gui/_profile_tool \
+                gui/__profile_tool \
+		gui/proj_properties \
+		gui/_proj_properties \
+		gui/__proj_properties \
+		gui/proj_workspace \
+		gui/_proj_workspace \
+		gui/__proj_workspace \
+		gui/browser_tool \
+		gui/_browser_tool \
+		gui/__browser_tool \
+		gui/context \
+		gui/_context \
+		gui/__context \
+		gui/sys_messages \
+		gui/_sys_messages \
+		gui/__sys_messages \
+		gui/listener \
+		winsys/podium \
+	 	gui/_listener \
+		winsys/_podium \
+	 	gui/__listener \
+		winsys/__podium \
+		interpreter/xinterpreter
+
+XGUISRC =	$(XMSRC) $(XCAPISRC) $(GUI)
+
+TAGS =		ml_utils/mltags
+
+ETAGS =		ml_utils/mletags
+
+SCRIPT =	utils/option \
+		utils/__option \
+		main/mlworks_io \
+		main/_mlworks_io \
+		main/__mlworks_io \
+		ml_utils/script
+
+ARSRC =		utils/lists \
+		utils/_lists \
+		utils/__lists \
+		ml_utils/ml_ar
+
+.PRECIOUS: pervasive.img lexer.img typechecker.img shell.img gui.img batch.img basis.img foreign.img
+.SILENT:
+
+profile:
+	$(MAKE_COMMAND) RUNTIMEOPTS="-verbose -c 2 -profile -profile-frequency 100"
+
+clean:
+	echo $(RM) *.img
+	$(RM) *.img
+
+backup:
+	echo 'make: moving *.img to *.img~'
+	for image in *.img; do mv $$image $$image~; done
+
+
+PERVASIVEMO =   $(addsuffix .mo,$(addprefix $(SRC)/pervasive/,$(join $(dir $(PERVASIVE)),$(notdir $(PERVASIVE)))))
+LEXERMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(LEXER))))
+PARSERMO =      $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(PARSER))))
+TYPERMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(TYPER))))
+COMPILERMO =    $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(COMPILER))))
+BATCHMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(BATCH))))
+SHELLMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(SHELLSRC))))
+INTERMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(INTERSRC))))
+TTYMO =         $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(TTYSRC))))
+XGUIMO =        $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(XGUISRC))))
+TAGSMO =        $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(TAGS))))
+ETAGSMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(ETAGS))))
+SCRIPTMO =      $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(SCRIPT))))
+ARMO =          $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(ARSRC))))
+BASISMO =       $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(BASISSRC))))
+BASIS_LOADERMO =        $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(BASIS_LOADER))))
+XMMO =          $(addsuffix .mo,$(addprefix $(XMOBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(XMSRC))))
+TERMINALMO =    $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(TERMINAL))))
+WINDOWSMO =     $(addsuffix .mo,$(addprefix $(WINDOWSOBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(WINDOWSSRC))))
+
+
+BASIS_TARGETSMO = $(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(BASIS_TARGETS)))) 
+FOREIGNMO = 	$(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(FOREIGN))))
+STUBGENMO = 	$(addsuffix .mo,$(addprefix $(OBJ)/$(ARCH_OS)/$(MODE)/, $(notdir $(STUB_GEN))))
+
+BASIS_AND_LOADERMO = $(BASIS_LOADERMO)
+
+lexer-files: force
+	echo $(LEXERMO) > $@
+
+pervasive-files: force
+	echo $(PERVASIVEMO) > $@
+
+typer-files: force
+	echo $(PARSERMO) $(TYPERMO) > $@
+
+basis-files: force
+	echo $(BASIS_LOADERMO) > $@
+
+foreign-files: force
+	echo $(BASIS_TARGETSMO) $(FOREIGNMO) $(STUBGENMO) > $@
+
+batch-files: force
+	echo $(COMPILERMO) $(BATCHMO) > $@
+
+tty-files: force
+	echo $(COMPILERMO) $(BATCHMO) $(SHELLMO) $(INTERMO) $(TTYMO) > $@
+
+xm-files: force
+	echo $(XMMO) > xm-files
+
+gui-files: force
+	echo $(COMPILERMO) $(BATCHMO) $(SHELLMO) $(INTERMO) $(XGUIMO) > $@
+
+gui2-files: force
+	echo $(INTERMO) $(XGUIMO) > gui2-files
+
+tags-files: force
+	echo $(TAGSMO) > tags-files
+
+etags-files: force
+	echo $(ETAGSMO) > etags-files
+
+script-files: force
+	echo $(SCRIPTMO) > script-files
+
+ar-files: force
+	echo $(ARMO) > ar-files
+
+pervasive.img: $(PERVASIVEMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ $(PERVASIVEMO) MLWargs
+
+basis.img: pervasive.img $(BASISMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load pervasive.img -save $@ $(BASISMO) MLWargs
+
+$(FOREIGNMO): batch.img
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../foreign/foreign.mlp -configuration $(ARCH_OS) -build
+
+foreign.img: basis.img $(FOREIGNMO) $(BASIS_TARGETSMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load basis.img -save $@ $(BASIS_TARGETSMO) $(FOREIGNMO) MLWargs
+
+$(XMMO): batch.img
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../motif/xm.mlp -configuration $(ARCH_OS) -build
+
+xm.img: basis.img $(XMMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load basis.img -save $@ $(TERMINALMO) $(XMMO) MLWargs
+
+$(WINDOWSMO): batch.img
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../mswindows/windows.mlp -configuration $(ARCH_OS) -build
+
+windows.img: basis.img $(TERMINALMO) $(WINDOWSMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load basis.img -save $@ $(TERMINALMO) $(WINDOWSMO) MLWargs
+
+lexer.img: pervasive.img $(LEXERMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load pervasive.img -save $@ $(LEXERMO) MLWargs
+
+typechecker.img: lexer.img $(PARSERMO) $(TYPERMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ -load lexer.img $(PARSERMO) $(TYPERMO) MLWargs -parser-tables $(SRC)/parser/ml-tables/
+
+batch.img: typechecker.img $(COMPILERMO) $(BATCHMO)
+	echo make: $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load typechecker.img $(COMPILERMO) $(BATCHMO) MLWargs -verbose -save $@
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../utils/utils.mlp -configuration $(ARCH_OS) -build
+
+distribution: $(DISTRIBUTED_IMAGES) 
+ifdef OS
+ifdef ARCH
+	-cd $(DISTDIR) && $(RM) -rf images/$(ARCH)/$(OS)
+	-$(MKDIR) $(DISTDIR)/images
+	-$(MKDIR) $(DISTDIR)/images/$(ARCH)
+	-$(MKDIR) $(DISTDIR)/images/$(ARCH)/$(OS)
+ifeq "$(NTTYPE)" "TRUE"
+	$(CP) $(DISTRIBUTED_IMAGES) $(DISTDIR)/images/$(ARCH)/$(OS)
+else
+	for image in $(DISTRIBUTED_IMAGES); do $(COMPRESS) -c $$image > $(DISTDIR)/images/$(ARCH)/$(OS)/$$image.Z; done
+endif
+else
+	@echo Cannot make distribution, ARCH not set
+	exit 1
+endif
+else
+	@echo Cannot make distribution, OS not set
+	exit 1
+endif
+
+force:

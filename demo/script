@@ -1,0 +1,181 @@
+                             -*- Text -*-
+
+(The demo directory contains files to use (or include in) as .emacs,
+ .twmrc. .mwmrc and .Xresources files.  Also check your environment for
+ correct (or incorrect) settings of the PATH, MLWORKS_SRC_PATH,
+ MLWORKS_PERVASIVE, MLWORKS_OBJ_PATH, XUSERFILESEARCHPATH, etc.
+ Check your X modmap files.  If you want to use the graphics, make sure
+ that you have got the necessary motif/windows and initial basis files.)
+
+(Start an emacs first and check that the mlworks server is running.  Ensure
+ that you're in the demo directory, and that your source path is set to the
+ src directory, or else loading basis files will break.  Check that
+ app-defaults/MLWorks-fonts is linked to the appropriate fonts file, and
+ use the appropriate elisp font function to set the emacs font.  Check that
+ that _simplelib.sml is the original version, and that all .mo files are
+ removed.)
+
+Start MLWorks.
+
+  Explain the top-level window.  Explain the `Works' menu and that it
+  appears in all the tools.  Explain that we're using a larger font than
+  normal.
+
+  Explain our philosophy of integrating with existing systems where possible,
+  e.g. host window systems, host editors.
+  Explain the editor preferences, and check that emacs is selected.
+
+  Use the options menu to switch on debugging etc.
+ 
+Start a Listener.
+
+  Say `This is the traditional interactive ML interface'.
+  Type `val x=1'.
+
+  Type the fibonacci function.  Show that multi-line editing works.
+  Press `Evaluate' (or use Control + Enter).
+
+  Trace the fibonacci function and evaluate "fib 4".
+  Demonstrate completion and the history menu.
+
+Show the pervasive context browser.
+
+  Show how you can browse structures.
+
+  Select Shell.Make.make_file and paste it into the Listener.
+  Load the "data_tree" file.
+  Evaluate "y1".
+
+Start an Inspector.
+
+  Show how you can changed the layout of the graph.
+
+  Show that the tools are linked by evaluating "rottree it" and "revtree it"
+  in the Listener.
+
+Show the Context History.
+
+  Show that you can examine values in the Context History even after they
+  have been redefined.
+
+  Mention that you can disconnect tools from this automatic linking.
+
+Say that you're going to demonstrate stepping and the debugger.
+
+  Select step mode.
+
+  Evaluate "revtree y1".  Make sure the emacs window is visible.
+  Step through part of the evaluation, then continue.
+
+Say that you're going to demonstrate profiling.
+
+  Load "__simple".  Explain that this is a standard benchmark.
+  Explain that it uses the make system, and that only those files
+  that are needed are recompiled.
+
+  Evaluate "Shell.Profile.profile Simple.simple ()"
+  Explain the resulting figures.  Demonstrate the slider.
+
+  Edit the most expensive function.  Uncomment the alternative
+  implementation.  Unlink the profile tool and run the profile again.
+  Point out that only the changed files are being recompiled.
+
+
+Say that you're going to demonstrate separate compilation.
+  Compile "hello.sml".
+  Use an xterm to show the .mo file.
+  Run the .mo file with mlpervasive.
+
+
+Say that you're going to demonstrate the error browser.
+
+  Nobble the hello.sml file and remake.  Use the editor function to find
+  your error and correct it.  Remake again.
+
+Say that you're going to demonstrate the graphics libraries.
+
+  Load "life.sml".
+  While this is loading, explain that we use the host window system 
+  whereever possible, to preserve native look and feel and to make
+  programming easier.
+  Run "test" for a little while.  Point out that you can still type
+  at the Listener, etc.
+  Load "man-demo.sml" and run "test".
+
+Say that you're going to demonstrate exporting an image.
+
+  Evaluate Shell.exportFn ("life.img", appl)
+  Point out that the evironment is still running.
+  Run the saved image briefly.
+
+
+
+** Secondary and old stuff.
+
+    Explain how MLWorks prints stuff in psuedo-source form.
+    Briefly demonstrate the value printer options by changing the
+    depth.
+
+  Start the Inspector on a Btree value.
+
+    Show how the Inspector method can be improved by adding a new
+    inspect method.
+      Use the Context Browser to find Shell.add_inspect_method and
+      Btree.members.
+      Add the inspect method.
+        Explain in passing that you're using a dynamic type.  Use the
+        word `reify'.
+      Demonstrate it on the previous tree.
+      Also, type Btree.eg in the Inspector and explain that it is
+      eval'ed to display it.
+    Exit the Inspector.
+
+  Say that you're going to demonstrate advanced tracing.
+
+    Load the tracing examples.
+      use "examples";
+    Put a simple trace on the fib function.
+      Shell.trace <<fib>>;
+    Run it.
+      fib 5;
+    (Explain that we'll probably have a graphical tracing tool later.)
+    Explain that you can use conditional tracing and breakpoints.
+      Shell.trace_full (<<fib>>, <<fn n=>n>2>>, <<fn n=>n=0>>);
+    This will pop up a debugger when fib 0 is called.
+      Now's your chance to demonstrate frame filters to remove all the
+      tracing rubbish.
+    Continue from the debugger several times.
+
+  Say that you're going to demonstrate the TTY debugger.
+    Unset the "always use window debugger" preference.
+    Evaluate "fun f 0 => raise Div | f n = n + f (n-1)".
+    Evaluate "f 3".
+    Demonstrate the TTY debugger commands.
+
+
+  Say that you're going to demonstrate the make system.
+
+    Pop up a file tool.  Switch to the demo directory.
+    Use the `edit' action to pop up the file number.sml.  It contains
+    a signature describing numbers.  Explain this.
+    Find the `integer' file.  It contains a structure implementing the
+    signature using the built-in integers.  Explain this.  Explain the
+    require statement at the top.
+    Make the integer file.
+
+  Say that you're going to demonstrate incremental recompilation.
+
+    Find the `church' file.  It contains an implementation using
+    Church numerals.  Point out the require.
+    Make the church file.  Note that number isn't recompiled.
+
+    Find the `convert' file.  It contains conversions between church
+    numbers and integers.  Make it.  Demonstrate the functions.
+
+Say that you're going to demonstrate windows and threads.
+  Load "threads.sml".
+  Explain that we can distribute libraries in compiled form.
+  Load "textwindow.sml".
+  Explain that this is loading the xm.mo files.
+
+

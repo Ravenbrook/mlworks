@@ -1,0 +1,14 @@
+val it : unit = ()
+signature SIG =
+  sig
+    type t
+    datatype t' =
+      C |
+      D of t
+  end
+signature Sig' =
+  sig
+    structure S : SIG
+    sharing type S.t = int
+  end
+functor f

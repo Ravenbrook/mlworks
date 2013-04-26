@@ -1,0 +1,59 @@
+Each example involves creating a .so specific to that example.  In
+order to create the .so, the value of MLWORKS_INCLUDE must be set to
+point to the directory that contains mlw_ci.h.  The default location
+of mlw_ci.h is MLWorks/foreign and all that you should need to do to 
+build the .so for each example is type the following in each example
+directory.
+
+  $ make
+
+If the make works, it should produce a .so in that example directory.
+For example, if the above is typed in the add example directory, then
+it should produce the add_stub.so
+
+If for some reason mlw_ci.h is not in its default location, then you
+can alter MLWORKS_INCLUDE in a couple of ways: it can be set on the
+command line or directly in the Makefile for each example.
+
+For example, assuming that MLWorks is installed in /usr/local/MLWorks,
+you can set the value on the command line as :-
+
+  $ make MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+
+or you could edit the Makefile in each example to include the line 
+
+  MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+
+and then just type 
+
+  $ make
+
+
+When you come to run any of the examples, it is vital that your
+LD_LIBRARY_PATH environment variable is set correctly.  If is not,
+then the examples can fail in various (and often ungraceful) ways.
+For example, one common way of failing is for the following message to
+be output :-
+
+  dlopen: stub interception failed
+  Abort
+
+The simplest way to ensure that the examples work is to set
+LD_LIBRARY_PATH so that the current directory is searched.  Under
+sh/bash/ksh you can do this by typing :-
+
+  $ LD_LIBRARY_PATH=.
+  $ export LD_LIBRARY_PATH
+
+and under csh by typing :-
+
+  % setenv LD_LIBRARY_PATH=.
+
+If you want to run an example from a different directory, then you
+either need to put the example specific .so in a directory which is
+in your LD_LIBRARY_PATH or add the example to your LD_LIBRARY_PATH.
+For example, if you wanted to run the ndbm example from elsewhere,
+then in sh/ksh/bash you'd do :-
+
+    $ LD_LIBRARY_PATH=/usr/local/MLWorks/examples/foreign/ndbm
+    $ export LD_LIBRARY_PATH

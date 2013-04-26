@@ -1,0 +1,84 @@
+(*
+ *
+ * $Log: DivPre.str,v $
+ * Revision 1.2  1998/06/02 15:19:39  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: DivPre.str,v 1.2 1998/06/02 15:19:39 jont Exp $";
+functor DivPre ( structure GenP : GENPRE ) : DIVPRE =
+struct
+   structure DivC = GenP.DivC
+   structure Elem = DivC.Elem
+   structure PG = Elem.PG
+
+(*****************************************************************************)
+(* The initialization predicate for the divergence preorder                  *)
+(*****************************************************************************)
+
+   fun initdivpreordpred (s1,s2) =
+       Elem.actlistinclusion(Elem.divinf s2,Elem.divinf s1) andalso
+       ((DivC.globdivpred s1) orelse not (DivC.globdivpred s2))
+
+(*****************************************************************************)
+(* The general function for the variations of the divergence preorder        *)
+(*****************************************************************************)
+
+   fun divpreorder (slist1,slist2,s1,s2) =
+       GenP.genpreord (DivC.globdivpred,initdivpreordpred)
+                    ((s1,slist1),(s2,slist2))
+
+(*****************************************************************************)
+(* Derived functions to check:                                               *)
+(*    a) strong preorder       c) weak precongruence  e) weak equivalence    *)
+(*    b) weak preorder         d) strong equivalence  f) weak congruence     *)
+(*****************************************************************************)
+
+   fun strongpreorder ((sr1,slist1),(sr2,slist2)) =
+       (ignore(DivC.strlocdivinf slist1);
+        ignore(DivC.strlocdivinf slist2);
+        divpreorder (slist1,slist2,sr1,sr2))
+
+   fun weakpreorder ((sr1,slist1),(sr2,slist2)) =
+       (ignore(DivC.weaklocdivinf slist1);
+        ignore(PG.obscl(sr1,slist1));
+        ignore(DivC.weaklocdivinf slist2);
+        ignore(PG.obscl(sr2,slist2));
+        divpreorder(slist1,slist2,sr1,sr2))
+
+   fun precongruence ((sr1,slist1),(sr2,slist2)) =
+       let val _ = DivC.weaklocdivinf slist1
+           val (sr1,slist1) =
+               PG.congrcl (Elem.preinfcongrcl sr1) (sr1,slist1)
+           val _ = DivC.weaklocdivinf slist2
+           val (sr2,slist2) =
+               PG.epscl (PG.congrcl (Elem.preinfcongrcl sr2) (sr2,slist2))
+        in divpreorder(slist1,slist2,sr1,sr2)
+       end
+
+   fun strongequivalence ((sr1,slist1),(sr2,slist2)) =
+       divpreorder(slist1,slist2,sr1,sr2)
+
+   fun weakequivalence ((sr1,slist1),(sr2,slist2)) =
+       (ignore(PG.obscl(sr1,slist1));
+        ignore(PG.obscl(sr2,slist2));
+        divpreorder(slist1,slist2,sr1,sr2))
+
+   fun weakcongruence ((sr1,slist1),(sr2,slist2)) =
+       let val (sr1,slist1) =
+               PG.congrcl (Elem.preinfcongrcl sr1) (sr1,slist1)
+           val (sr2,slist2) =
+               PG.congrcl (Elem.preinfcongrcl sr2) (sr2,slist2)
+        in divpreorder(slist1,slist2,sr1,sr2)
+       end
+
+   fun twothirds((sr1,slist1),(sr2,slist2)) =
+       let fun covers l = forall (fn x => Lib.member PG.act_eq (x,l))
+           fun samefst(ref(PG.S({suc=suc1,...})),ref(PG.S({suc=suc2,...}))) =
+               covers (map fst (!suc1)) (map fst (!suc2))
+        in GenP.genpreord (fn _=>true,samefst) ((sr1,slist1),(sr2,slist2))
+       end
+end
+

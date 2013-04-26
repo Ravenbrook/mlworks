@@ -1,0 +1,41 @@
+Shell.Make.make_file "__simple";
+
+- we're interested in reducing the time taken by this function, so we profile it for time:
+
+Shell.Profile.profile_time Simple.simple ();
+
+- The top function (about 25%) is our array access function (edit it).
+  This uses integer multiplication to generate the array index. On
+  some machines, such as older SPARCs, this is inefficient. Editing
+  it to use a different system...
+
+- recompile.
+- unlink the profile tool, so you can see the two side by side, then
+  redo the profile. 
+
+- sub2 has disappeared. The top two functions are now 'pow' and 'm',
+  from the map function. Edit both of those, explaining how the
+  existing code is inefficient.
+
+- recompile.
+- unlink the profile tool, so you can see them all side by side, then
+  redo the profile.
+
+- The top two functions are now 'pow' and 'm', from the map
+  function. Edit both of those, explaining how the existing code is
+  inefficient
+
+- recompile.
+- unlink the profile tool, so you can see them all side by side, then
+  redo the profile.
+
+- The top function now is a key computational one. You could stop at
+  this point, or you could continue with functions further down. Other
+  functions which can be 'improved' are:
+
+	'from'
+	'fold'
+	'sum_list'
+
+  In any case, when you have finished you can compare the first
+  profile tool with the last.

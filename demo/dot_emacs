@@ -1,0 +1,61 @@
+;;; GNU Emacs environment initialization for MLWorks demos
+;;; Copyright (C) 1993 Harlequin Ltd
+
+;; Remove scroll bars and menu bar
+(scroll-bar-mode ())
+(menu-bar-mode ())
+
+;; Add the MLWorks Emacs lisp directory to the load path.
+(setq load-path (cons "$MLWORKSDIR/lib/emacs/lisp" load-path))
+
+;; Set up autoload hooks for the MLWorks server and SML mode.
+(autoload 'mlworks-server "mlworks-server" "The MLWorks server" t)
+(autoload 'sml-mode "sml-mode" "Major mode for editing Standard ML programs." t)
+
+;; Use SML mode to edit files with the `sml' suffix.
+(setq auto-mode-alist (cons '("\\.sml$" . sml-mode) auto-mode-alist))
+
+;; Start the mlworks-server
+(mlworks-server)
+
+;; Setting fonts for projection, demoing, &c
+
+(defun set-params-in-frames (params frames)
+     "Sets PARAMS parameters (an alist) in FRAMES frames"
+     (cond (frames (let ((car (car frames))
+                         (rest (cdr frames)))
+                        (modify-frame-parameters car params)
+                        (set-params-in-frames params rest)))
+           (t ())))
+
+(defun set-params-in-all-frames (params)
+     "Sets PARAMS parameters (an alist) in all frames"
+     (set-params-in-frames params (frame-list)))
+
+(defun set-fonts (a-font)
+     "Set the default font, and the fonts in all frames"
+     (interactive "sEnter font name: ")
+     (let ((font-param (cons 'font a-font)))
+          (set-params-in-all-frames (cons font-param nil))
+          (setq default-frame-alist (cons font-param default-frame-alist))
+          ()))
+
+(defun font-projection ()
+     "Use font suitable for use on a projection screen.
+See also font-demo and font-small."
+     (interactive)
+     (set-fonts "-adobe-courier-bold-r-*-*-24-*-*-*-*-*-*-*"))
+
+(defun font-demo ()
+     "Use font suitable for use in a multi-person demo.
+See also font-projection and font-small"
+     (interactive)
+     (set-fonts "-adobe-courier-medium-r-*-*-16-*-*-*-*-*-*-*"))
+
+(defun font-small ()
+     "Use font suitable for personal use.
+See also font-projection and font-demo"
+     (interactive)
+     (set-fonts "6x13"))
+
+

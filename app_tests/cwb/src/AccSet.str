@@ -1,0 +1,34 @@
+(*
+ *
+ * $Log: AccSet.str,v $
+ * Revision 1.2  1998/06/02 15:15:13  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: AccSet.str,v 1.2 1998/06/02 15:15:13 jont Exp $";
+functor AccSet ( structure A    : ACT;
+                 structure Trie : TRIE ) : ACCSET =
+struct
+   type act = A.act
+   type accset = (act,unit) Trie.trie
+
+   val empty = Trie.empty
+
+   fun insert aset = Trie.insert A.le (aset,())
+   val union = Trie.merge A.le
+
+   val eq = fn x => Trie.eq A.eq (op =) x
+
+   val mkaccset =
+       let fun mas S [] = S
+             | mas S (h::t) =
+               mas (if Trie.has_sublist A.le S h then S
+                    else insert h (Trie.rm_superlists A.le h S)) t
+        in mas empty
+       end
+
+   val subaccset = Trie.subaccset A.le
+end
+

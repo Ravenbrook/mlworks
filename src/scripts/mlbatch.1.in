@@ -1,0 +1,190 @@
+'\" t
+.TH MLBATCH 1 1998-04-15 Harlequin MLWORKS
+.SH NAME
+mlbatch \- The MLWorks 2.0 batch compiler
+.SH SYNOPSIS
+.B mlbatch
+[
+.I options
+]
+.SH DESCRIPTION
+.LP
+The batch compiler uses the MLWorks project system to compile 
+Standard ML source files with the suffix
+.B .sml
+into MLWorks object files.  Object files have the suffix
+.B .mo
+and are suitable for loading into
+.BR mlrun (1)
+or
+.BR mlpervasive (1)
+for execution.  The batch compiler requires a project file, 
+which must have been previously created using the MLWorks GUI.
+.LP
+Dependencies between files must be specified by the 
+.B require
+reserved word, a language extension (see the
+.I MLWorks User Guide
+for details).
+.LP
+.B mlbatch
+is a shell script which invokes
+.BR mlrun (1)
+on an ML image containing the MLWorks compiler.
+.SH OPTIONS
+.TP 6
+.B -verbose
+Enable verbose mode.  When in verbose mode the system will give
+messages indicating the various options interpreted during argument
+processing, otherwise it will not.
+.TP
+.B -silent
+Disable verbose mode.
+.TP
+.B -project \fIfilename
+Specifies the project file to use.  This must precede all the 
+following options on the command line.
+.TP
+.B -mode \fIname
+Specifies which mode to use.  The project must have been specified
+earlier on the command line.  Reports an error if the mode does 
+not exist in the specified project file.  This option overrides 
+the setting of the current mode in the project file.  If no mode 
+is specified on the command line, the current mode specified in 
+the project file is used.  The modes 'Debug' and 'Release' exist
+in every project.
+.TP
+.B -target \fIname
+Specifies a target to recompile.  The project must have been 
+specified earlier on the command line, and also reports an error
+if the target does not exist in the specified project file.  
+Multiple targets may be specified by repeated use of this option.
+If any options are specified on the command line, the current 
+targets set in the project file are ignored.  If no 
+targets are specified on the command line, those specified as 
+current in the project file are recompiled.
+.TP
+.B -configuration \fIname
+If the project includes configurations, this specifies which one
+to use.  The project must have been specified earlier on the 
+command line and also reports an error if the configuration does 
+not exist in the specified project file.  This option overrides 
+the setting of the current configuration in the project file.
+If a project includes configurations, and none is specified on 
+the command line, the current configuration specified in the 
+project file is used.
+.TP
+.B -object-path \fIdirectory
+Specifies the directory in which to find and/or put the object
+files.  The project must have been specified earlier on the 
+command line.  This overrides the specification in the project
+file.  If the directory includes the string "%S", this is
+expanded to the directory containing the source file.
+.TP
+.B -build 
+Builds the specified project using the current targets in the 
+current configuration (if any) with the current mode.
+.TP
+.B -show-build 
+Show the files that would be recompiled by 
+.B -build 
+option.
+.TP
+.B -list-objects
+Show all the files that are used in the building of the current 
+targets.
+.TP
+.B -source-path \fIpath
+Sets the path that
+.B mlbatch
+searches for source files.
+.I path
+is a colon-separated list of directories.  For example,
+~/ml/src:/usr/sml/src.  The default path contains the current
+directory and the directory in which 
+.B MLWorks
+was installed.
+.TP
+.B -compile \fIsource-file-names
+Process the source files in compile mode.  Inclusion of the 
+.B .sml 
+suffix in source file names is optional.  For each file compiled,
+produces an MLWorks object file with a name that has the same stem as
+the source file, but a   
+.B .mo
+suffix.
+.TP
+.B -check-dependencies \fIsource-file-names
+Process the source files in check-dependencies mode.  Inclusion of the 
+.B .sml 
+suffix in source file names is optional.  Produces a list of the
+source files that would be compiled if you submitted the same list of
+files to the
+.B -compile
+option.
+.TP
+.B -old-definition \fIon/off
+When set to on, use the semantics of the old version of SML, dating back to
+1990.  Default set to off.
+.TP
+.B -<option> \fI<option_arg>
+The following compiler/language options may be set on the command 
+line.  These override the settings in the mode specified.  They 
+must follow the -mode argument, which must be present.
+.TP
+.B -debug \fIon/off
+Generate (set to on) debugging information for all declarations in 
+the files compiled.  
+.TP
+.B -debug-variables \fIon/off
+Generate (set to on) variable debugging information.
+.TP
+.B -trace-profile \fIon/off
+Generate code that can (or cannot) be traced or profiled with the call 
+counter, for all declarations in the files compiled.  Default off.
+.TP
+.B -interrupt \fIon/off
+Interruptable code enabled (set to on) or disabled.
+.TP
+.B -mips-r4000-and-later \fIon/off
+Compile code for MIPS R400 and later versions.  Default on.
+.TP
+.B -sparc-v7 \fIon/off
+Compile code for version 7 of the SPARC architecture.  Default off.
+.TP
+.SH ENVIRONMENT
+.TP 20
+.SB MLWORKS_SRC_PATH
+If set, its value overrides the default search path, which contains the
+current directory and the directory in which MLWorks was installed.  (The
+.B -source-path 
+flag, in turn, overrides this value.) 
+.SH FILES
+.PD 0
+.LP
+.B $MLWORKSDIR/pervasive/__builtin_library.mo
+.LP
+.B $MLWORKSDIR/pervasive/__pervasive_library.mo
+.LP
+.RS 4
+MLWorks pervasive library object files used by 
+.B mlbatch
+when compiling all SML sources submitted to it.
+.PD
+.RE
+.PD 0
+.LP
+.B $IMAGEDIR/batch.img
+.LP
+.RS 4
+The batch compiler image.
+.PD
+.RE
+.SH SEE ALSO
+.BR mlimage (1),
+.BR mlrun (1), 
+.BR mlpervasive (1),
+.BR mlworks (1),
+.BR mlworks-basis (1)
+.LP
+.I MLWorks User Guide

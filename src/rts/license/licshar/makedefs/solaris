@@ -1,0 +1,55 @@
+# Makefile fragment for sparc solaris
+#
+# $Id: solaris,v 1.3 1994/08/04 13:08:21 luke Exp $
+#
+# This makefile bit just exports a whole bundle of macros.  It also includes
+# common.unx to export a bundle of default rules.  See the README file to
+# see what macros this is obligated to provide.
+#
+# If you have a CHANGE used by ONLY ONE COMPOUND, it DOESN'T BELONG HERE.
+# Put it in the compound's Makefile, or in a platform-specific include in
+# that compound (e.g. v20/makebits/sparc.make, for example).  This is for
+# much more general macro definitions.
+##################################################
+
+OLDCC=gcc -c
+ANSICC=gcc -c -ansi
+CCOM=${OLDCC}
+LDCOM=gcc
+LINT=lint
+CPPCOM=/lib/cpp
+MAKE=make
+RANLIB=/usr/ccs/bin/ar t
+AR=/usr/ccs/bin/ar
+
+ARFLAGS=cr
+MCFLAGS=-DSolaris=1 -Dsparc=1 -DUNIX=1
+SPEEDFLAGS=-O
+DEBUGFLAGS=-g
+
+SYSINC=-I/usr/include
+DEFS=${MCFLAGS} ${CDEFINES}
+CPPFILE=${CPPCOM} ${INCDIRS} ${DEFS} ${SYSINC}
+CCSPEED=${CCOM} ${SPEEDFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+CCDBG=${CCOM} ${DEBUGFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+LNFILE=	${LINT} -i ${LNFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+
+#The licensing tools all require the same libs so they're here
+########## ONLY BUILD ON Solaris 5.2 OR LATER !!!!!
+LS_SYSLIBS=-lc -lnsl -lelf -L/usr/ucblib -lucb
+
+
+##################################################
+# $Log: solaris,v $
+# Revision 1.3  1994/08/04 13:08:21  luke
+# add -DSolaris=1 to the C flags
+#
+# Revision 1.2  1994/06/01  14:16:31  chrism
+# add LS_SYSLIBS here since all licensing tools require the same libs
+#
+# Revision 1.1  1994/05/10  16:15:10  freeland
+# new file
+#
+# <copied from sparc>
+
+

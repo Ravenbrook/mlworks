@@ -1,0 +1,60 @@
+# ==== MLWorks runtime system MIPS/Irix-specific (Gnu) Makefile ====
+#
+# $Id: GNUmake,v 1.19 1998/06/15 11:45:14 johnh Exp $
+
+# Irix is a Unix variant ...
+
+OS_TYPE 	= Unix
+
+# add target-specific modules
+
+MODULES		:= $(MODULES) x unix unixlocal mach_fixup intmul poly_equal
+DLLMODULES	:= $(DLLMODULES) x unix unixlocal mach_fixup intmul poly_equal
+
+# add target-specific static modules
+
+MODULESSTATIC   := $(MODULES) static_link
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) MACH_FIXUP MACH_INT_MUL MACH_POLY_EQ \
+		_BSD_SIGNALS __EXTENSIONS__ _SGI_SOURCE \
+		_LANGUAGE_C LANGUAGE_C _SVR4_SOURCE _MIPS_SZPTR=32 \
+		_MODERN_C
+
+# _MODERN_C
+#   ensure that the correct prototypes for open ... etc. are found in <fcntl.h>
+# 
+# LANGUAGE_C
+#   ensures that various prototypes are found in <sys/fpu.h>
+
+# these two defines not given for MIPS
+#		MACH_INT_DIV MACH_STRINGS
+
+
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS) - /usr/include/X11
+
+# add target specific options
+
+TARGETOPTS		= -UNeedFunctionPrototypes -Wno-trigraphs
+TARGETOPTSDEBUG		= $(TARGETOPTS)
+
+# -Wno-trigraphs
+#   GCC alleges that termios.h contains them and we don't care about this.
+#
+
+# add target-specific libraries
+
+LIBRARIES	= -lm -L/usr/lib -L/usr/lib/X11 -Xlinker -B -Xlinker static -lXpm -Xlinker -B -Xlinker dynamic -lXm -lXt -lXmu -lX11 -lelf -lc
+LIBRARIESSTATIC	= -L/usr/lib -L/usr/lib/X11 -lgen -lm -Xlinker -B -Xlinker static -lXm -lXpm -lXt -lXmu -lXext -Xlinker -B -Xlinker dynamic -lX11 -lelf
+
+
+# details for runtime dll-ization
+
+DLLFLAGS	= -shared
+DLLLIBRARIES	=
+
+# other target-specific things (none for Irix)
+

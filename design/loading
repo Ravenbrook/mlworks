@@ -1,0 +1,41 @@
+
+Object file format
+------------------
+
+It is assumed that no load time resolution of addresses is required
+within code sequences. Thus, the architecture must support pc-relative
+branches. In the following grammar, |, is alternation, <...> indicates
+terminals and ::= indicates a production rule.
+
+We assume the following implicit definition for any syntactic class :
+
+	[class] ::= class | class [class]
+	class_size ::= <u_int32>
+
+Any size specified is either the number of objects, or the size of the
+object in bytes. The top level item is a module.
+
+module		::= module_size [element]
+element		::= real | string | codeset | external
+codeset		::= opcode_codeset codeset_length total_size [code]
+code		::= offset code_size [<u_int32>]
+real		::= opcode_real offset real_size [<u_int32>]
+string		::= opcode_string offset string_size [char]
+external	::= opcode_external offset string_size [char]
+offset		::= <u_int32>
+
+During loading, all items are placed in a vector at the specified
+offset, and external references are fixed up. The first element of the
+resulting vector is a pointer to the initial function which is called
+with the vector as its (only) argument. This is expected to transform
+the collection of values previously read in into the correct structure
+of a module (ie as a tuple of its declared values) and return it to
+the loader.
+
+Outstanding points to note
+--------------------------
+
+care must be taken to ensure the garbage collector sees all roots
+while loading is in process. Also, the loader must be aware that ML
+objects may be moved during any allocation (because the allocation may
+invoke a garbage collection).

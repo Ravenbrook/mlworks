@@ -1,0 +1,21 @@
+Yesterday I requested a specification of HARP in order to determine if
+it would be suitable for a machine independent representation for the
+ML code generator. The answer is that there isn't one, you "just look
+at the operation names and it's obvious". It seems amazing to me that
+a fundamental part of all our Lisp compilers doesn't even have an
+informal specification. Looking at the list of operations, it isn't
+obvious what all of them mean, any more than it would be if confronted
+with the mnemonics of any other CPU. Obvious questions (apart from the
+meanings of some of the mnemonics) are how many operands of what form
+and in what order do they take, what condition codes exist and which
+instructions alter them? One can add to these more subtle questions
+such as what is the exact definition of mod, what is the interaction
+of ld, ldh and ldb when passed the same address (I assume these mean
+load, load halfword and load byte), and can any operations take place
+on arguments to operations within the operation itself, such as barrel
+shifting as found on the ARM? This list is by no means exhaustive, nor
+is it meant to be. But I would like to know the answers to at least
+the above before deciding if I can use HARP in the code generation of
+ML. ML has a culture of being well defined, and one day we may even
+want to verify our work. Basing it one something as ill defined as
+HARP seems to be at present is hardly going to help.

@@ -1,0 +1,28 @@
+(*
+ *
+ * $Log: Var.str,v $
+ * Revision 1.2  1998/06/02 15:36:44  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Var.str,v 1.2 1998/06/02 15:36:44 jont Exp $";
+functor Var () : VAR =
+struct
+   datatype var = Var of Name.name
+
+   fun mkvar s = Var(Name.mkName s)
+
+   fun mkstr (Var n) = Name.stringOf n
+
+   (* fun eq (Var s,Var t) = (s=t) *)(* superfluous now it's an eqtype *)
+   fun eq (Var v,Var w) = Name.sameName (v,w)
+     
+     
+   fun le (Var s,Var t) = (Name.stringOf s <= Name.stringOf t)
+
+(* CAUTION! broken encapsulation *)
+   fun hashval (Var n) = Name.hashOf n
+end
+

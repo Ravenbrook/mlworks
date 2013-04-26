@@ -1,0 +1,631 @@
+#!/bin/sh
+#
+# Search facility
+#
+# Revision Log
+# ------------
+#
+# $Log: srctool,v $
+# Revision 1.15  1995/03/17 12:29:12  brianm
+# Minor correction.
+#
+# Revision 1.14  1995/03/12  19:56:25  brianm
+# Due to a bug in grep the loc option didn't report filenames.
+# The workaround is to add an additional grep filter and to change the
+# basic patterns used.
+#
+# Revision 1.13  1995/02/06  10:21:48  brianm
+# Improved pattern-matching of rtspaths
+#
+# Revision 1.12  1995/01/24  13:58:58  brianm
+# Added case sensitive processing for all match expressions
+#
+# Revision 1.11  1995/01/24  13:22:33  brianm
+# Adding case-sensitivity search options ...
+#
+# Revision 1.10  1994/10/05  20:51:53  brianm
+# added to RTSPATHS & ensured that src directory found is
+# the top src directory.
+#
+# Revision 1.9  1994/10/05  12:30:18  brianm
+# Corrected use of RTSPATHS - added filename expansion by first of all
+# cd'ing into the src directory (when poss.)
+#
+# Revision 1.8  1994/09/01  16:21:17  brianm
+# adding more paths to the RTS variable ...
+#
+# Revision 1.7  1994/08/30  13:57:55  brianm
+# adding /usr/include/sys to CPATHS ...
+#
+# Revision 1.6  1994/08/28  17:40:32  brianm
+# correcting filter paths & extensions for C
+#
+# Revision 1.5  1994/08/26  13:34:05  brianm
+# Correction of Motif library path ...
+#
+# Revision 1.4  1994/08/24  13:22:41  brianm
+# removing echo of grep command ...
+#
+# Revision 1.3  1994/08/24  13:18:11  brianm
+# fixing signature switch ...
+#
+# Revision 1.2  1994/08/24  12:56:50  brianm
+# removal of quick exit - too quick!
+#
+# Revision 1.1  1994/08/24  11:52:26  brianm
+# new file
+#
+#
+# (C) Harlequin Ltd. (1994)
+#
+
+#
+# This script is designed to be called using the aliases:
+#
+#    alias search="srctool search"
+#    alias src="srctool src"
+#    alias srca="srctool srca"
+#
+
+if [ "$2" = "" ]
+then headfile="/usr/tmp/srctool.$$.use.head"
+     tailfile="/usr/tmp/srctool.$$.use.tail"
+	
+     trap 'rm -f $headfile $tailfile; exit 1' 1 2 3 15
+
+     cat - > $headfile <<\%end%
+
+ Usage : SRC [CASE] [SCAN] [COMPOUND] [OPTIONS] [match] ... [match]
+         (up to four match fields)
+
+%end%
+
+     cat - > $tailfile <<\%end%
+   CASE has the form:
+
+    -ic | -I  : ignore case
+    -lc | -L  : lower case only
+    -uc | -U  : UPPER case only
+    -cs | -C  : Case sensitive search (default)
+
+ and
+
+   SCAN has the form:
+
+    -and  : filter stream with each subsequent match (default).
+    -seq  : construct pattern from given matches in sequence.
+
+ and
+
+   COMPOUND has the form:
+
+    -com compound-directory  : restrict scan to specific compound (prefix).
+    -loc                     : restrict scan to current directory.
+    -std                     : search in "standard" places (C-oriented).
+    -any                     : no restriction (default).
+
+ and
+
+   OPTIONS can be any one of:
+
+    -sig     : scan signature files        (a*).
+    -fun     : scan functor files          (_a*).
+    -imp     : scan implementation files   (__a*).
+    -all     : all of the above (default).
+
+    -ch, -hc : scan C source (.c) & header (.h)
+    -ch:<SW> : as above but with SWitch restrictions
+    -hc:<SW> : ....
+
+    -c       : scan C source only (.c)
+    -c:<SW>  : as above but with SWitch restrictions
+
+    -h       : scan C header only (.h)
+    -h:<SW>  : as above but with SWitch restrictions
+
+    where SW = colon seperated list of tokens (e.g. sun:sparc:sol)
+
+    Notes:
+      a) for above C-oriented flags, the earlier -any and -std options
+         provide C relevent paths for searching ...
+   
+      b) The <SW> options are used to select Op. Sys./Arch options (e.g.
+         SunOS, SPARC, MIPS &c) and can be truncated (case insensitive).
+
+ Variables:
+
+    CPATHS    --- standard search path for system C source/header files
+    RTSPATHS  --- paths for the RTS C source/header files
+
+    LIBX11    --- X11 include directory   (default: /usr/include)
+    LIBMOTIF  --- Motif include directory (default: /usr/local/motif/include)
+
+ Examples:
+
+    SRC fun '[]'
+        --- search globally for "fun" and "[]"
+            (filtered search just means that the resulting lines
+            will contain the strings "fun" and "[]" - in either order)
+
+    SRC -seq 'functor ' '()'
+        --- search globally for "functor " followed somewhere by "()"
+
+    SRC -loc fun Fred
+        --- search in local compound for "fun" and "Fred".
+
+    SRC -com type -sig type Data
+        --- search in compounds beginning with "type"
+            and in signature files for "type" and "Data".
+
+    SRC -com type -fun coerce '(('
+        --- search in compounds beginning with "type" and in functor
+            files for strings containing "coerce" and '(('
+
+    SRC -std -h printf
+        --- search standard C header files for occurrences of printf
+
+    SRC -ch:su:spa Widget
+        --- search (system) C source & header files for occurrences of Widget
+            but constrained to the (SunOS, SPARC) Op.Sys/Arch combination.
+%end%
+     case $1
+     in
+        src)
+              cat - >> $headfile <<\%end%
+ Greps the source for match info
+
+ where
+
+%end%
+
+              cat $headfile $tailfile | sed -e "s;SRC;src;g"
+;;
+
+        srca)
+              cat - >> $headfile <<\%end%
+ Greps the source for match info (returning only line addresses)
+
+ where
+
+%end%
+
+              cat $headfile $tailfile | sed -e "s;SRC;srca;g"
+;;
+
+        search)
+              rm -f $headfile
+              cat - > $headfile <<\%end%
+
+ Usage : SRC [LINE] [CASE] [SCAN] [COMPOUND] [OPTIONS] [match] ... [match]
+         (up to four match fields)
+
+ Greps the source for match info
+
+ where
+
+   LINE can be any one of:
+
+    -line : produce line numbers ONLY
+    -text : output matching text, without line numbers (default)
+
+ and
+
+%end%
+              cat - >> $tailfile <<\%end%
+
+    SRC -line -loc fun Fred
+        --- search in local compound for "fun" and "Fred", returning
+            line addresses.
+%end%
+              cat $headfile $tailfile | sed -e 's;SRC;search;g'
+;;
+     esac
+     rm -f $headfile $tailfile
+     exit 0
+fi
+
+
+# External Environment variables ...
+LIBMOTIF=${LIBMOTIF='/usr/local/motif/include'}
+LIBX11=${LIBX11='/usr/include'}
+CPATHS=${CPATHS="/usr/include /usr/include/sys $LIBX11/X11 $LIBMOTIF/Xm"}
+RTSPATHS=${RTSPATHS="rts/src rts/src/OS/* rts/src/OS/*/arch/* rts/src/arch/*"}
+
+# Default values ...
+GREP=egrep
+EXTN=sml
+
+# We begin here ...
+# Which progs are we doing today - src, srca or search?
+PROG=$1
+shift
+
+OUTFILE="/usr/tmp/srca+outfile+$$"
+sedfile="/usr/tmp/$PROG+sedfile+$$"
+OUTPUT=""
+
+trap 'rm -f $sedfile $OUTPUT; exit 1' 1 2 3 15
+
+
+#SRC=`pwd | sed -e 's;^\(.*/[Ss][Rr][Cc]\)/.*$;\1;'`
+SRC=`pwd | sed -e 's;\(/[Ss][Rr][Cc]\)/.*$;\1;1'`
+PWD=`pwd`
+
+case "$SRC"
+in
+   */[Ss][Rr][Cc])
+       cd $SRC
+       ;;
+
+   *)  echo "Not in source (src) directory ..."
+       exit 1
+       ;;
+esac
+
+
+case "$PROG"
+in
+   src)
+     SW=e
+     OUTPUT=""
+     ;;
+   srca)
+     SW=ne
+     OUTPUT="$OUTFILE"
+     ;;
+   search)
+     SW=e
+     OUTPUT=""
+     ;;
+esac
+
+# Argument processing ...
+
+L=text
+case "$PROG$1"
+in
+   search-li*)
+     L=line
+     SW=ne
+     OUTPUT=$OUTFILE
+     shift
+     ;;
+
+   search-te*)
+     L=text
+     SW=ne
+     OUTPUT=""
+     shift
+     ;;
+esac
+
+C=""
+R="cat -"
+case "$1"
+in
+   -ic|-I)
+     C="-i"
+     R="cat -"
+     shift
+     ;;
+   -lc|-L)
+     C=""
+     R="tr '[A-Z]' '[a-z]'"
+     shift
+     ;;
+   -uc|-U)
+     C=""
+     R="tr '[a-z]' '[A-Z]'"
+     shift
+     ;;
+   -cs|-C)
+     C""
+     R="cat -"
+     shift
+     ;; 
+  -help)
+     srctool $PROG
+     exit 1
+     ;;
+esac
+
+M=and
+case "$1"
+in
+   -and)
+     M=and
+     shift
+     ;;
+
+   -se*)
+     M=seq
+     shift
+     ;;
+esac
+
+STD=""
+D='*'
+case "$1"
+in
+   -any) shift ;;
+
+   -co*) D="$2*"
+         shift 2 ;;
+
+   -lo*) cd $PWD
+         D=""
+# Due to a bug in grep, we have to handle the local case seperately
+# in order to get output lines labelled by the file they came from.
+         shift ;;
+
+   -st*) STD="STD"
+         shift ;;
+esac
+
+
+
+MODE="SML"
+F='*'
+OSTOK=""
+PREFIX="."
+
+case "$1"
+in
+   -all) shift ;;
+
+   -si*) F='[a-zA-Z]*'
+         PREFIX=""
+         shift ;;
+
+   -f*)  F='_[a-zA-Z]*'
+         PREFIX="_"
+         shift ;;
+
+   -i*)  F='__[a-zA-Z]*'
+         PREFIX="__"
+         shift ;;
+
+   -ch|-hc)
+         MODE="CH"
+         EXTN="c h"
+         shift ;;
+
+   -ch:*)
+         MODE="CH"
+         EXTN="c h"
+         OSTOK=`echo $1 | sed -e 's;^-ch:;;'`
+         shift ;;
+
+   -hc:*)
+         MODE="CH"
+         EXTN="c h"
+         OSTOK=`echo $1 | sed -e 's;^-hc:;;'`
+         shift ;;
+
+   -c)
+         MODE="C"
+         EXTN="c"
+         shift ;;
+
+   -c:*)
+         MODE="C"
+         EXTN="c"
+         OSTOK=`echo $1 | sed -e 's;^-c:;;'`
+         shift ;;
+
+   -h)           
+         MODE="H"
+         EXTN="h"
+         shift ;;
+
+   -h:*)
+         MODE="H"
+         EXTN="h"
+         OSTOK=`echo $1 | sed -e 's;^-h:;;'`
+         shift ;;
+esac
+
+case "$OSTOK"
+in
+   "") ;;
+   *)
+       OSTOK=`echo $OSTOK | tr '[A-Z]' '[a-z]' | sed -e 's;\:; ;g'`
+
+       newRTSPATHS=""
+
+       for p in $RTSPATHS
+       do
+	 case "$p"
+	 in
+	   */OS/*|*/arch/*)
+  	      for s in $OSTOK
+	      do
+
+#		match=`basename $p | tr '[A-Z]' '[a-z]' | sed -e 's;'$s'.*;;'`
+
+		match=`echo $p | tr '[A-Z]' '[a-z]' | sed -e 's;.*'$s'.*;!;'`
+
+		if test "($match)" = "(!)"
+		then newRTSPATHS="$newRTSPATHS $p"
+		fi
+              done
+		;;
+
+	    *)
+		newRTSPATHS="$newRTSPATHS $p"
+		;;
+	 esac
+       done
+
+       RTSPATHS=$newRTSPATHS
+       ;;
+esac
+
+case "$MODE"
+in
+   SML)
+      case "$D"
+      in
+         "") 
+            SRCFILES="*.$EXTN"
+            ;;
+
+         *) SRCFILES="$D/$F.$EXTN"
+            PREFIX=""
+            ;;
+      esac
+      ;;
+
+   *)
+      SRCFILES=""
+      case "$MODE+$STD"
+      in
+         C+STD)
+           SPATHS="$RTSPATHS"
+           ;;
+
+         CH+STD)
+           SPATHS="$CPATHS $RTSPATHS"
+           ;;
+
+         H+STD)
+           SPATHS="$CPATHS"
+           ;;
+
+         *)
+           SPATHS="$RTSPATHS"
+           ;;
+     esac
+
+     for p in $SPATHS
+     do
+       case "$p"
+       in
+          *\.[cChH]|*\.sml)
+              SRCFILES="$SRCFILES $p"
+              ;;
+
+          *)
+	      for e in $EXTN
+	      do
+		SRCFILES="$SRCFILES $p/*.$e"
+	      done
+	      ;;
+       esac
+     done
+     ;;
+esac
+
+# text expressions - additional quoting for grep expressions ...
+
+cat - > $sedfile <<\%%
+s:^+::
+s:-$::
+s;\[;\\\[;g
+s;\];\\\];g
+s:\.:\\\.:g
+s;(;\\(;g
+s;);\\);g
+s:;:\\;:g
+s:|:\\|:g
+s:#:\\#:g
+s:\^:\\^:g
+s:\$:\\$:g
+s:\*:\\*:g
+s:\+:\\+:g
+%%
+
+case $#
+in
+   1)
+	m1=`echo +$1- | sed  -f $sedfile | $R`
+        ;;
+
+   2)
+	m1=`echo +$1- | sed  -f $sedfile | $R`
+	m2=`echo +$2- | sed  -f $sedfile | $R`
+        ;;
+
+   3)
+	m1=`echo +$1- | sed  -f $sedfile | $R`
+	m2=`echo +$2- | sed  -f $sedfile | $R`
+	m3=`echo +$3- | sed  -f $sedfile | $R`
+        ;;
+
+   4)
+	m1=`echo +$1- | sed  -f $sedfile | $R`
+	m2=`echo +$2- | sed  -f $sedfile | $R`
+	m3=`echo +$3- | sed  -f $sedfile | $R`
+	m4=`echo +$4- | sed  -f $sedfile | $R`
+        ;;
+
+   *)   echo "too many arguments ... $# in total"
+        exit 1 ;;
+esac
+
+rm -f $sedfile
+
+MATCH="^$PREFIX[a-zA-Z]"
+
+case $M
+in
+  and)
+    case $#
+    in
+       1) $GREP $C -$SW "$m1" $SRCFILES |
+          $GREP $C $MATCH               |
+          $GREP $C -ve "^$GREP: "       > $OUTPUT 2>&1
+          ;;
+
+       2) $GREP $C -$SW "$m1" $SRCFILES |
+          $GREP $C $MATCH               |
+          $GREP $C -ve "^$GREP: "       |
+          $GREP $C -e "$m2" > $OUTPUT 2>&1
+          ;;
+
+       3) $GREP $C -$SW "$m1" $SRCFILES |
+          $GREP $C $MATCH               |
+          $GREP $C -ve "^$GREP: "       |
+          $GREP $C -e "$m2" |
+          $GREP $C -e "$m3" > $OUTPUT 2>&1
+          ;;
+
+       4) $GREP $C -$SW "$m1" $SRCFILES |
+          $GREP $C $MATCH               |
+          $GREP $C -ve "^$GREP: "       |
+          $GREP $C -e "$m2" |
+          $GREP $C -e "$m3" |
+          $GREP $C -e "$m4" > $OUTPUT 2>&1
+          ;;
+    esac
+    ;;
+
+  seq)
+    case $#
+    in
+       1) $GREP $C -$SW "$m1" $SRCFILES |
+          $GREP $C $MATCH               |
+          $GREP $C -ve "^$GREP: "       > $OUTPUT 2>&1 ;;
+
+       2) $GREP $C -$SW "$m1.*$m2" $SRCFILES |
+          $GREP $C $MATCH                    |
+          $GREP $C -ve "^$GREP: "            > $OUTPUT 2>&1 ;;
+
+       3) $GREP $C -$SW "$m1.*$m2.*$m3" $SRCFILES |
+          $GREP $C $MATCH                    |
+          $GREP $C -ve "^$GREP: "                 > $OUTPUT 2>&1 ;;
+
+       4) $GREP $C -$SW "$m1.*$m2.*$m3.*$m4" $SRCFILES |
+          $GREP $C $MATCH                              |
+          $GREP $C -ve "^$GREP: "                      > $OUTPUT 2>&1 ;;
+    esac
+    ;;
+esac
+
+case "$PROG"
+in
+   srca)
+      sed -e 's;\(:[0-9]*:\).*$;\1;1' $OUTPUT
+      rm -f $OUTPUT
+      ;;
+esac

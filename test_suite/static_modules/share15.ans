@@ -1,0 +1,16 @@
+val it : unit = ()
+structure A =
+  struct
+    eqtype t = int
+  end
+structure B =
+  struct
+    structure A =
+      struct
+      end
+  end
+signature SIG =
+  sig
+    structure D : sig ... end
+    sharing D = A
+  end

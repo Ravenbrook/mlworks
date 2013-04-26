@@ -1,0 +1,206 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_name=`basename $0`
+cmd="status"
+STATUS=0
+hide=""; test=""; verbose=""; format=""; claim=""; branch=""; pager="-page"; local=""; show="-show"; recursive="";
+usage="usage: $script_name [-(c|v)] [-[zph]+] [-b <branch>] (file1|dir1)+"
+
+while getopts "cb:zhvt" opt; do
+  case $opt in
+    z) recursive="-recursive";;
+    b) branch="-b $OPTARG";;
+    c) claim="-find-claims $USER";;
+    v) verbose=1;;
+    t) test="test";;
+    h|\?) 
+      echo $usage; 
+      echo "    h for this help"
+      echo "    c to get my claims"
+      echo "    z zzz for recursive"
+      echo "    v for verbosity"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage
+  exit 1
+else
+  : echo ok
+fi
+
+: echo prime $entry
+
+eval `findcomp2 $1`;
+if [ -z "$compound" ]; then
+  entry=;
+  echo "cannot identify compound \"$1\""
+  exit 1
+elif [ -z "$unit" ]; then
+  entry="-c $compound"
+else
+  entry="-c $compound -u $unit"
+fi
+shift
+
+: echo stuff in the separators
+
+for arg in $*; do
+  eval `findcomp2 $arg`;
+  if [ -z "$compound" ]; then
+    echo "cannot identify compound \"$arg\""
+    exit 1
+  elif [ -z "$unit" ]; then
+    entry="$entry -a -c $compound"
+  else
+    entry="$entry -a -c $compound -u $unit"
+  fi
+done
+
+if [ "$TERM" = emacs ]; then
+  pager="-not-page"
+fi
+
+
+if [ -n "$verbose" ]; then
+  show="";
+  hide="";
+  format="";
+else
+  show="";
+  hide="-hide attributes";
+  format="";
+fi
+
+: echo final processing
+
+if [ -z "$TMP" ]; then
+  temp_dir=/tmp
+else
+  temp_dir=`echo $TMP | sed -e 's!\\\\!/!g'`
+fi
+temp_file=$temp_dir/hope_tmp$$
+
+# We need to work out whether we're on Unix or Windows.
+# NT sets the OS variable to Windows_NT.
+# Some MLWorkers set the OS variable themselves.
+# Failing that, bash sets the OSTYPE variable.
+hope_temp_file=""
+case "$OS" in
+  Win*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  NT*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  Solaris*)
+    hope_temp_file=$temp_file;;
+  SunOS*)
+    hope_temp_file=$temp_file;;
+  Irix*)
+    hope_temp_file=$temp_file;;
+  Linux*)
+    hope_temp_file=$temp_file;;
+esac
+
+if [ -z "$hope_temp_file" ]; then
+  case "$OSTYPE" in
+    Win*)
+      hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+    Solaris*)
+      hope_temp_file=$temp_file;;
+    SunOS*)
+      hope_temp_file=$temp_file;;
+    linux*)
+      hope_temp_file=$temp_file;;
+    *)
+      # Assume Unix if we have no other clue.
+      # We could also get here on Win95, but we don't use that
+      # for development.
+      hope_temp_file=$temp_file;;
+  esac
+fi
+
+if [ -z "$entry" ]; then
+  echo skipped everything
+else
+  echo $test $cmd $pager $local $recursive $branch $format $show $claim $hide $entry > $temp_file
+  hope source $hope_temp_file
+  rm $temp_file
+fi
+
+###############################################################################
+# $Log: status,v $
+# Revision 1.22  1999/03/24 15:38:36  daveb
+# [Bug #190541]
+# Check both the OS and OSTYPE environment variables.
+#
+# Revision 1.21  1998/10/07  12:46:15  jont
+# [Bug #70179]
+# Avoid OSTYPE=linux problems
+#
+# Revision 1.20  1998/09/24  14:18:13  jont
+# [Bug #70179]
+# Make sure temp file name more carefully created to avoid drive letter problems
+#
+# Revision 1.19  1998/08/25  14:45:41  jont
+# [Bug #70162]
+# Use source files to get past hope 44 argument limit under Win32
+#
+# Revision 1.18  1997/09/19  10:01:03  jont
+# [Bug #20089]
+# Get rid of further instances of script_path
+#
+# Revision 1.17  1997/07/08  12:30:07  jont
+# [Bug #20089]
+# Don't use $script_path as this doesn't work under win32
+#
+# Revision 1.16  1997/06/16  15:08:38  daveb
+# [Bug #30166]
+# Removed one of the comma-separated arguments to -hide.
+#
+# Revision 1.15  1996/09/21  18:46:08  io
+# update some options
+#
+# Revision 1.14  1996/09/21  18:26:50  io
+# show branching/checkpoints
+#
+# Revision 1.13  1996/09/16  15:24:52  io
+# update getopts for all claims
+#
+# Revision 1.12  1996/09/04  14:29:12  io
+# branch argument not passed correctly and claims not showed on older units
+#
+# Revision 1.11  1996/08/15  16:13:12  io
+# add verbosity flag
+#
+# Revision 1.10  1996/07/12  10:37:59  io
+# [Bug #1463]
+# add support for directories, better options for viewing claims, trees...
+#
+# Revision 1.9  1995/02/28  12:48:56  jont
+# Modify use of version (deprecated) to branch
+#
+# Revision 1.8  1995/02/23  17:21:49  jont
+# Modify for new file structure /u
+#
+# Revision 1.7  1995/02/21  15:47:10  brianm
+# Introducing SML_HOME
+#
+# Revision 1.6  1994/08/18  12:52:51  daveb
+# Added -not-page argument to hope call.
+#
+# Revision 1.5  1994/06/22  11:13:09  jont
+# Add path setting code
+#
+# Revision 1.4  1994/06/14  14:39:53  nickh
+# Better .compound finding.
+#
+# Revision 1.3  1994/04/05  11:00:00  daveb
+# Now handles trailing / in arguments.
+#
+# Revision 1.2  1994/03/08  11:39:21  daveb
+# Fixing handling of directory arguments.

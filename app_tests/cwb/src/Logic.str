@@ -1,0 +1,40 @@
+(*
+ *
+ * $Log: Logic.str,v $
+ * Revision 1.2  1998/06/02 15:29:07  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Logic.str,v 1.2 1998/06/02 15:29:07 jont Exp $";
+functor Logic ( structure A : ACT;
+                structure V : VAR ) : LOGIC =
+struct
+   structure A = A
+   structure V = V
+
+   datatype modality = modlist of A.act list
+                     | negmodlist of A.act list
+                     | modvar of V.var
+                     | negmodvar of V.var
+
+   datatype param = Modparam of modality
+                  | Propparam of prop
+
+        and prop = True
+                 | False
+                 | Var of V.var * param list
+                 | Not of prop
+                 | And of prop * prop
+                 | Or of prop * prop
+                 | Imp of prop * prop
+                 | Nec of modality * prop
+                 | Pos of modality * prop
+                 | WeakNec of modality * prop
+                 | WeakPos of modality * prop
+                 | Max of V.var * prop
+                 | Min of V.var * prop
+
+end
+

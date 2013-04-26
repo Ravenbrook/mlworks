@@ -1,0 +1,75 @@
+#!/usr/local/bin/perl
+# Hand-written perl script.
+#
+# We can't use sed because it has the software integrity of a wet fish and
+# truncates lines at 4k (some of our test-suite lines are much longer than
+# this).
+#
+# Copyright (c) 1993 Harlequin Ltd.
+# 
+# $Log: perl_script,v $
+# Revision 1.12  1997/02/06 18:01:44  jont
+# [Bug #1911]
+# [Bug #1911]
+# Modify now that header output is no longer to be processed.
+#
+# Revision 1.11  1996/11/13  15:58:28  daveb
+# Discards final release header.
+#
+# Revision 1.10  1996/09/09  14:32:10  io
+# update for commercial flyer
+#
+# Revision 1.9  1996/05/23  11:31:13  jont
+# Modify to use binary mode on output so as to throw away the spurious ^Ms from DOS
+#
+# Revision 1.8  1995/09/14  11:52:20  daveb
+# Now ignores MLWorks header, which is being piped into output files again.
+#
+# Revision 1.7  1994/11/04  11:44:48  nickb
+# Also elide MLWorks> prompts as found in the tty.img
+#
+# Revision 1.6  1994/08/24  16:39:38  daveb
+# The version info is no longer printed on std_out, so we don't have to
+# delete it here.
+#
+# Revision 1.5  1993/12/16  13:23:47  nickh
+# RCS having fumbled the last version, this is a reconstruction.
+#
+# Revision 1.4  1993/12/16  13:11:34  nickh
+# New hand-written version (thanks to Jason Trenouth), which fixes a
+# problem with the s2p original.
+#
+# Revision 1.2  1993/12/15  17:25:29  nickh
+# MLWorks prompts throughout a line.
+#
+# Revision 1.1  1993/12/15  17:18:22  nickh
+# Initial revision
+#
+# 
+
+# make sure we're running perl (for when #! won't do it for us)
+
+eval 'exec /usr/local/bin/perl -S $0 ${1+"$@"}'
+	if $running_under_some_shell;
+
+# loop through the rest
+
+binmode(STDOUT);
+
+while( <> ) {
+
+# discard Setting and Use lines
+
+    unless ( /^(Setting)|(Use)|(MLWorks\(TM\))|(commercial )/ ) {
+
+# elide MLWorks prompts with one or two > chars
+
+	s/MLWorks-1>>? //g;
+	s/MLWorks>>? //g;
+	s/\015\012/\012/g;
+
+# print everything else
+	print;
+	
+    }
+}

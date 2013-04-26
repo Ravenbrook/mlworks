@@ -1,0 +1,37 @@
+			     -*- Text -*-
+
+A simple foreign interface example that involves calling a C function
+to add two numbers and return the result.
+
+See README.txt for the explanation that customers get on how to run
+the example.
+
+Given that the directory structure is different in a development tree,
+those instructions don't work unaltered here.
+
+The changes you need to make are :-
+
+* it is up to you to know which platform you are on and choose the
+  correct Makefile.  For example, under Solaris you'd need to do :-
+
+    $ make -f Makefile.Solaris
+
+* You need to set up MLWORKS_INCLUDE and if running under Win32 you
+  need to set up MLWORKS_LIB.  The former is in the rts/src directory
+  and the latter in the rts directory.  For under SunOS you'd write
+  something like 
+
+    $ make -f Makefile.SunOS MLWORKS_INCLUDE=../../../src/rts/src
+
+  and under NT :-
+
+    $ make -f Makefile.Win32 MLWORKS_INCLUDE=../../../src/rts/src MLWORKS_LIB=../../../src/rts/runtime.lib
+
+
+* You need to add either Win32 or Unix to the MLWorks source path as
+  is appropriate for the platform you are developing on.  For example,
+  under SunOS you'd do something like :-
+
+    $ ../../../src/rts/bin/SPARC/SunOS/main-g -load ../../../src/images/SPARC/SunOS/gui.img -pass args -tty -source-path Unix:.:../../../src args
+
+From then on the instructions are as per README.txt

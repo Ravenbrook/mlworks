@@ -1,0 +1,137 @@
+PROBLEMS WITH THE DEBUGGER INFERING TYPES
+=========================================
+
+  The debugger needs to infer the instance types of the input parameters to all
+of the functions on the stack, but unfortunately this looks a a little
+problematic in the case of polymorphic closure elements. In fact I'm
+not sure that it is solvable for us at this stage - however, it looks
+like we can sweep the problem under the carpet by forcing users to
+rewrite problem code ...
+
+  With straightforward polymorphic functions it is easy - what we need
+to do is simply note down the types that are passed to the next
+function in the call sequence at all continuable points of exit from the function.
+In simple cases this can be expressed in terms of the type of the
+input parameters of the function.
+
+e.g.  fun map (f,[]) = []
+	| map (f,h::t) = f(h) :: map(f,t)
+
+which may be annotated as follows (the subscripts are the types passed
+to the called function)
+
+      map : ('a -> 'b) * 'a list  (* Input type specification *)
+
+      fun map (f,[]) = []
+	| map (f,h::t) = f  (h) :: map           (f,t)
+                          'a          ('a -> 'b) * 'a list
+
+This means that if we find a stack with map on it, we can deduce the
+input types of the next frame on the stack from the typed input of the
+current frame. Since we know the type of the argument of the first
+frame on the stack is concrete, by recursion we can deduce all of the
+input types.
+
+Again
+
+	fun map f x =
+	  let
+	    fun map_sub [] = []
+	      | map_sub (h::t) = f(h) :: map_sub t
+	  in
+	    map_sub
+	  end
+
+which is translated into the following after expanding the derived
+forms
+
+	map : ('a -> 'b)   (* Input type *)
+	fun map	f =
+	  let
+	    map' : 'a list  (* Input type *)
+	    fun map' x =
+	      let
+		map_sub : 'a list  (* Input type *)
+		fun map_sub [] = []
+		  | map_sub (h::t) = f  (h) :: map_sub t
+				      'a
+	      in
+		map_sub       x
+		       'a list
+	      end
+	  in
+	    map'        f
+		'a -> 'b
+	  end
+
+and again, the type passed on at each stage is expressible in terms of
+the input type of the function.
+
+  We can modify the example above to break this though
+	fun map f g x =
+	  let
+	    fun map_sub [] = []
+	      | map_sub (h::t) = g(f(h)) :: map_sub t
+	  in
+	    map_sub
+	  end
+
+
+	map : ('a -> 'b)   (* Input type *)
+	fun map	f =
+	  let
+	    map' : 'b -> 'c  (* Input type *)
+	    fun map' g =
+  	      let
+	        map'' : 'a list  (* Input type *)              <-----------
+	        fun map'' x =				                   |
+	          let					                   |
+		    map_sub : 'a list  (* Input type *)	                   |
+		    fun map_sub [] = []			                   | SCOPE
+		      | map_sub (h::t) = g  (f  (h)) :: map_sub t	   |
+				          'b  'a	                   |
+	          in					                   |
+		    map_sub      x			                   |
+		          'a list			                   |
+	          end                                          <-----------
+	      in
+	        map''     g
+		    'b->'c
+	      end
+	  in
+	    map'      f
+		'a->'b
+	  end
+
+
+
+  The problem comes if we close over polymorphic elements - in this
+case we can not deduce the types that are propogated from the frame
+simply from knowing the types of the input parameters... in the
+example above, in the SCOPE marked, we cannot express the 'b passed to
+g since it is neither concrete (int,real,string,exn or user defined)
+nor polymorphic in the same variables as the input types to function
+unit. We do not have a static chain, so there is no way to find the
+frames belonging to any of the outer functions when we find a map''
+frame on the stack.
+
+  The best we can do for the moment, is to notify the user that such
+an object will not be debuggable - the user can always get round the
+problem by not currying, but passing the arguments in as a group, or
+by making the problem variables not polymorphic... once the typing
+code has been put into the lambda calculus, I'll run some code through
+it to determine how often such functions occur in practice
+
+
+  Your ideas, as ever, are welcome ...
+
+clive
+
+p.s. work underway to put suitable type information into the lambda
+calculus, which should allow us to do some more of the backend
+optimisations.. 
+
+p.p.s in the above the information flows from the bottom of the stack
+to the top - we can also figure out the flow the other way, and
+resolve the results using unification - this does not seem to solve
+the above problem though...

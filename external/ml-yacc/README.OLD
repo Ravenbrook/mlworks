@@ -1,0 +1,57 @@
+Copyright (c) 1989, 1990, 1991 Andrew W. Appel and David R. Tarditi Jr.
+
+This directory contains ML-Yacc, an LALR parser generator for Standard ML.
+ML-Yacc is distributed subject to the terms of the accompanying ML-Yacc
+copyright notice, license, and disclaimer in the file COPYRIGHT.
+
+Files of interest (those marked with a * must be built by the person
+installing ML-Yacc):
+
+	* smlyacc.sml - the source code for smlyacc
+	* base.sml    - the standard base file for ML-Yacc
+	doc	      - documentation for ML-Yacc.  Please read this before
+			using ML-Yacc
+	examples      - sample parsers built with ML-Yacc
+	src	      - source code for ML-Yacc
+	Makefile      - makefile to construct smlyacc.sml and base.sml
+		        from source files
+	COPYRIGHT     - this software is distributed subject to the
+		        terms of this file.
+
+You must build smlyacc.sml and base.sml using the make file in this
+directory.  The make file constructs smlyacc.sml and base.sml from
+files in the src subdirectory.
+
+Build base.sml first, since it is used in constructing smlyacc.sml.
+Base.sml may contain an error-correcting LR parser or a plain LR parser.
+We recommend that you use the error-correcting LR parser.  To build the
+error-correcting LR parser, type 'make ec'.   To build the plain LR parser,
+type 'make vanilla'.
+
+The file smlyacc.sml contains the source code for smlyacc.  It may contain
+code to build a stand-alone image that may be run from the command line
+like any other program in Unix(tm) or code that may be loaded and used in
+an interactive ML system.  The code to build the stand-alone image is specific
+to the SML of New Jersey compiler. We recommend that you build a stand-alone
+image if possible.
+
+Important note: the following two paragraphs apply to SML/NJ systems only!
+
+To build the stand-alone image, type 'make stand-alone'.  Then load the
+file 'smlyacc.sml' into a version of sml built using the -noshare option.
+An executable file named 'sml-yacc' will be created.
+
+You can use a version of sml not built with the -noshare option.   The code
+for the compiler will be included in your executable image and your executable
+image will be several megabytes larger than necessary.  Please see the
+compiler file doc/INSTALL for a description of the meaning  of the
+-noshare option and how to build a version of the compiler using the -noshare
+option.
+
+To build a version that may be used in an interactive system, type
+'make interactive'.  Then load the file 'smlyacc.sml' into your interactive
+system. 
+--------
+Unix(tm) is a trade mark of AT&T
+
+

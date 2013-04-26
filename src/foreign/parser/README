@@ -1,0 +1,36 @@
+(*
+ * Foreign Interface parser: How to compile the parser:
+ * 
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * $Log: README,v $
+ * Revision 1.1  1997/08/22 10:03:31  brucem
+ * new unit
+ * File describing how to compile the Foreign Interface parser.
+ *
+ *
+ *)
+
+
+The parser is generated from the MLWorks versions of sml-yacc and sml-lex
+(by Appel, Tarditi and Mattson).
+
+You must have executables of both sml-yacc and sml-lex (see their
+documentation for how to produce these).
+
+Create the source files using the commands
+  sml-yacc -pass a fi.grm a
+and
+  sml-lex -pass a fi.lex a
+
+This produces the files fi_grm.sml, _fi_grm.sml and fi_lex.sml.
+
+Compile the file __fi_parser (which contains the structure FIParser) using
+either the GUI (with the Basis loaded) or the batch compiler.  Some
+sml-yacc files are required when compiling, you must add the sml-yacc source
+directory to the path so that the compiler can find them.
+
+The signatures required by code using the parser are FI_ABS_SYNTAX and
+FI_PARSER (in fi_abs_syntax and fi_parser).
+The structure FIParser (in fi_parser) corresponds to the FI_PARSER
+signature and will be required by code using the parser.

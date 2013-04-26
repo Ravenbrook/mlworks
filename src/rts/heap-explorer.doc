@@ -1,0 +1,361 @@
+%
+% HEAP EXPLORER DOCUMENTATION
+%
+%  Copyright (C) 1996 Harlequin Ltd
+%
+%   Revision Log
+%   -------------
+%   $Log: heap-explorer.doc,v $
+%   Revision 1.2  1996/08/20 15:39:15  andreww
+%   updating to include the extra features Nick recently added.
+%
+# Revision 1.1  1996/07/10  10:36:33  andreww
+# new unit
+# Internal documentation for the heap explorer.
+#
+
+When MLWorks delivers either an image or an executable, it has to save
+the contents of the heap (i.e., all the objects live at the time of
+delivery) so that the delivered function will be able to run properly.
+
+This document describes two options to the runtime system which allow
+one to analyse the contents of the heap in MLWorks delivered images
+and executables.  These are:
+
+	rts/runtime-g -load <image name> -image-analysis
+	rts/runtime-g -load <image name> -explore
+
+The first returns some statistics about what is in the heap, and how
+much space is used by the various kinds of objects.  The second allows
+one to examine the contents of the heap in more detail.  Typically,
+they are used by MLWorks developers in trying to cut down the size of
+delivered functions.  As such this is not a tool to be used or known
+by customers.  This is a purely internal piece of documentation.
+
+
+
+-IMAGE-ANALYSIS
+
+There's really not much to say here --- using this flag simply returns
+a small table of statistics about what is in the heap.  Then it
+executes the image.  Here's an example.  'hello.img' is an image which
+simply writes "hello!" on the screen.
+
+ bash$ rts/runtime-g -load hello -image-analysis
+ [Heap analysis results:
+
+ total: 88176 headers: 1244
+        code    records      pairs    strings     arrays weakarrays bytearrays
+         126        313        253        685        110          9          1
+       34288       8512       2024      30976       2344       1832       8200
+       38.89%      9.65%      2.30%     35.13%      2.66%      2.08%      9.30%
+
+ ref cells: 103 code items: 296
+ ancillary info: 4336 ( 4.92%) code names: 25448 (28.86%)
+ ]
+ hello!
+ bash$
+
+The total: field returns the total size of the heap in bytes.  The
+headers: field returns the number of headers in the heap.  Every ML
+object has a header except for pairs (which would be wasteful).  Thus
+the total number of objects in the above heap is
+
+			1244+253=1497
+
+Thus the above information tells me that the biggest chunks are taken
+by code, strings and code names (note that code names are a subset of
+strings).  Since the delivered function is so trivial, there are
+obviously too many functions being delivered with it.  To see what
+they are we need to use the explorer.
+
+
+
+-EXPLORE
+
+This option invokes an interactive debugger-like environment.  There
+is a summary of the various commands at the end.  Just before the
+summary there are some hints on how the tool can be used profitably to
+detect space leaks.  In our example, we have
+
+  bash$ rts/runtime-g -load hello -explore
+  Exploring.
+
+  current value : 0x040002cd : record
+    0 : 40
+    1 : 0x04000703 : array length 47: [0x04000bb5, 0x04000bc5, ...]
+    2 : 0x040007cb : array length 47: [0x00040044, 0x00000044, ...]
+    3 : 0x04000893 : array length 47: [0x04000013, 0x040002f5, ...]
+  explore>
+
+This data data gives the value of the "global root" --- a 4-tuple of
+data.  Child 0 is the number of live global objects in the heap.
+Children 1 to 3 are arrays returning information about these objects.
+Child 1 lists names, child 2 lists some flags which describe how
+various objects are treated in various circumstances (Documented in
+rts/src/global.h) and child 3 lists their actual values.
+
+Each entry of the list is formatted thus:
+
+	<child number>: <hex address> <type> <value>
+
+Let's inspect:
+
+  explore> c 1
+  0x04000703 : array length 47:
+    0 : 0x04000bb5 : "environment"
+    1 : 0x04000bc5 : string length 32: "toplevel exception handle..."
+    2 : 0x04000bed : "ML threads"
+    3 : 0x04000bfd : "image continuation"
+    4 : 0x04000c15 : "loaded code list"
+    
+    ... etc.
+ 
+  explore>
+
+The command "c 1" tells the explorer to examine the contents of child
+number 1.  Typing "c 3" here tells the explorer to examine the
+contents of child 3 --- in this case the string "image continuation":
+
+  explore> c 3
+  0x04000bfd : string length 19: "image continuation"
+  explore>
+
+To go back to the global root, we have to use the history mechanism.
+The explorer keeps track of the various objects which have been
+examined, and we can go back and inspect a previous value using one of
+the following history commands:
+
+  		      p     - previous         n - next
+                      r <n> - repeat item      h - show history
+
+  explore> h
+  Exploration history :
+  0 : 0x040002cd : record length 4: (0x000000a0, 0x04000703, ...)
+  1 : 0x04000703 : array length 47: [0x04000bb5, 0x04000bc5, ...]
+  2 : 0x04000bfd : "image continuation"
+  
+So to get back to the global root, we could either type 'p' twice, or
+r 0 which reshows the value number 0, the global root:
+
+  explore> r 0
+  0x040002cd : record
+    0 : 40
+    1 : 0x04000703 : array length 47: [0x04000bb5, 0x04000bc5, ...]
+    2 : 0x040007cb : array length 47: [0x00040044, 0x00000044, ...]
+    3 : 0x04000893 : array length 47: [0x04000013, 0x040002f5, ...]
+
+
+Now, we are interested in cutting down the size of the heap.  The
+command 'l' lets us find the largest item:
+
+  explore> l
+  value of size 8200 bytes found
+  0x0400205b : bytearray length 8192: [68, 65, 6c,...]
+
+In this case it is an array of size 8k (containing the characters
+h,e,l,l,o).  Since I wrote this code, I happen to know that this is an
+8k unix output buffer.
+
+Related to this command is "> n" which returns a list of all the
+objects whose size is greater than n bytes.
+
+Another useful command is 's' which returns a list of all the elements
+which refer to the current object.
+
+  explore> s
+      0 : 0x0400205b at record 0x04001325 [1] in gen 2
+                               ^^^^^^^^^^ 
+Note that this is not a current object, it is simply a piece of
+information about the current object (the 8k buffer).  To examine it,
+we have to use the go to the specified addres (0x04001325) manually
+(cut and paste or dabbrev for emacs users saves a lot of pain):
+
+  explore> g 0x04001325
+  0x04001325 : record
+    0 : 0x0400204b : ref [0x00000000]
+    1 : 0x0400205b : bytearray length 8192: [68, 65, 6c,...]
+    2 : 0x04004063 : ref [0x00000008]
+    3 : 0x04004075 : "<stdOut>"
+    4 : 0x04004083 : ref [0x00000000]
+    5 : 0x04004093 : ref [0x040064a1]
+
+(I told you it was an output buffer --- in this case the name
+"<stdOut>" is quite clear!)  We can repeat the whole process.  Note
+--- in the following I have elided some information to ease
+comprehension.
+
+  explore> s
+      0 : 0x04001325 in array 0x04000ad3 [0] in gen 2
+
+  explore> g 0x04000ad3
+  0x04000ad3 : array length 1:
+    0 : 0x04001325 : record length 6: (0x0400204b, 0x0400205b, ...)
+
+	         # This looks like a pointer to the previous record
+		 # in fact arrays of length 1 are synonymous with
+		 # references.
+
+  explore> s
+      0 : 0x04000ad3 at record 0x0400063d [2] in gen 2
+
+  explore> g  0x0400063d
+  0x0400063d : closure of print[...basis/_text_io. sml: ... ]<Entry1>: record
+    0 : 0x04000a15 : code for print[...basis/_text_io.sml:...]<Entry1>
+    1 : 0x04000a85 : record length 19: (0x04001231, 0x04001245, ...)
+    2 : 0x04000ad3 : ref [0x04001325]
+
+We can also search for occurrences of certain strings in the heap.
+For example, suppose we wish to find where the string "flushOut" (the
+name of the function that flushes output) occurs.  Then we use the $ command:
+
+  explore> $flushOut
+      0 : 0x0400563d, length 9 in gen 2
+      1 : 0x0400c8fd, length 81 in gen 2
+      2 : 0x0400c955, length 80 in gen 2
+      3 : 0x0400c9ad, length 88 in gen 2
+
+Again, this is not an object, just a list of data.  We have to
+manually go to the specified address:
+ 
+  explore> g 0x0400563d
+  0x0400563d : string length 9: "flushOut"
+  explore> s
+      0 : 0x0400563d at record 0x040019cd [34] in gen 2
+
+  explore> g  0x040019cd
+    0x040019cd : closure of handler[...basis/_streamio.sml:...]: record
+    0 : 0x04004a05 : code for handler[...basis/_streamio.sml:...]
+    1 : 0
+    2 : 0x04004a55 : code for <handle>[.../basis/_streamio.sml:...]
+    3 : 0
+    4 : 0x04004add : code for loop[...basis/_streamio.sml:...]
+    5 : 0
+    6 : 0x04004bd5 : code for flushOut'[...basis/_streamio.sml:...]
+    7 : 0
+    8 : 0x04004c45 : code for flushOut[...basis/_streamio.sml:...]
+    9 : 0
+    10 : 0x04004cf5 : code for flushOut[...basis/_streamio.sml:...]<Entry1>
+
+    ... etc
+
+Here we have a "shared closure".  These can be identified by the
+occurrences of 0 between each item in the list.  Shared closures occur
+naturally when we have a group of mutually recursive functions.  The
+simplest way to handle mutual recursion is to package the relevant
+functions together and simply recurse on the one closure.
+Unfortunately, they also improve the efficiency of function calling
+--- if flushOut calls flushOut' then we can save some work in context
+switching by putting them together in the same closure.  However, in
+the above example, the shared closure contains something like twenty
+functions, not all of which are related to flushOut.  Thus one
+possible way to decrease the size of the delivered image would be to
+remove these extra functions from shared closures.
+
+Another object you might find in the heap is a *weak array*.  This
+behaves like an ordinary array, except that it does not mark its
+contents as live.  (Hence if nothing else marks them as live, then the
+garbage collector could remove them.)  These are used, for example, by
+the profiler, which needs to keep track of the functions it profiles,
+but without keeping them live longer than the profiled program itself.
+I.e., liveness is determined solely by the program --- not the
+profiler.
+
+This accounts for majority of the heap-explorer commands.  Here are
+some methodological hints on how to find space-leaks, gleaned from the
+experience of Nick Barnes who wrote the explorer:
+
+  > Space leaks on delivery are either caused by ML data structures (which
+  > can mostly be handled without too much difficulty with the delivery
+  > hooks mechanism, now that Matthew has fixed the structures-in-closures
+  > hole) or by runtime roots.
+  >
+  > In my experience, with the new global roots mechanisms in place,
+  > delivery either has a space leak and gives you more-or-less the whole
+  > environment (a 4Mb image for SPARCs, more for other platforms) or has
+  > no space leak at all. If a delivered image seems a bit big but not
+  > huge, you can do a partial check of its contents by looking at what
+  > code items it contains. You can get this information in a variety of
+  > ways: profiling it, putting a small hack into the image analysis code
+  > in gc.c, adding a line to loader.c:disable(), &c.
+  >
+  > If you find you have a space leak, you can identify the cause in a few
+  > minutes using the heap explorer (load the image with -explore):
+  >
+  > 1. find an object which you don't think should be in the heap. If
+  > you've got a massive heap, use the 'l' command to find the largest
+  > object, which is invariably a code vector from a really big module in
+  > the compiler; if you've got a smaller heap which contains some
+  > unwanted function, use the '$' command to find that function's name.
+  >
+  > 2. use the 's' and 'g' commands to find out why that object is in the
+  > heap. 's' lists all the places which point to the current object (if
+  > the current object is a code vector, this will include a bunch of
+  > array entries which are the global code item weak list; ignore these
+  > and look for the record entries instead). Then use 'g' to go to the
+  > first listed object (always going to the first means you take the
+  > shortest path to the root).
+  >
+  > 3. Iterate step 2 until
+  >
+  > (a) you find a value which you think _should_ be in the image (e.g. a
+  > closure for a sensible function), or
+  >
+  > (b) you get to the packed global root (i.e. the same object which the
+  > explorer had on entry), or
+  >
+  > (c) 's' finds no pointers to the current object.
+  >
+  > In case (a), the problem is now to determine why the desirable object
+  > is hanging on to the undesirable object. That now falls in the realm
+  > of compiler hacking.
+  >
+  > In case (b), the undesirable object will be hanging off one entry in
+  > the fourth ('values') element of the packed root (see
+  > global.c:global_pack; the packed root is a 4-tuple (size, names,
+  > flags, values)). You can identify which global root it is from the
+  > explorer by identifying the index in the 'values' element and looking
+  > it up in the 'names' element. There must be something wrong with the
+  > flags or functions of that global root; this is now in the realm of
+  > minor runtime hacking.
+  >
+  > In case (c), the undesirable object is not actually live at image
+  > load, but it was at image save during delivery. This basically means
+  > that some non-global root kept it alive. This is generally either a
+  > root which should have been cleared or a root which should be a global
+  > root. The next problem is to identify the root. This means you have to
+  > debug the final GC during delivery.
+  >
+  > In order to debug this GC, you have to mess with export.c in a trivial
+  > manner so that it doesn't fork() for delivery. You can see what the
+  > runtime roots are by putting a breakpoint in gc.c:fix_c_roots.
+  > Alternatively you can just look at roots[0..root_table_size-1] after
+  > the GC. When you've identified the rogue root, you can conditionally
+  > breakpoint declare_root and re-run. Alternatively you can turn on the
+  > culprit identification stuff in gc.c.
+  >
+
+To summarise, there is a built-in help command:
+
+  explore> ?Explorer help:                                  
+  Previously-seen values:                        
+     b     - backwards        f - forwards        
+
+   History:                                       
+     p     - previous         n - next            
+     r <n> - repeat item      h - show history    
+
+   Navigation:                                    
+     c <n> - goto child       s - search for roots
+     g <x> - goto ML value    l - find largest object
+     > <n> - find objects larger than <n> bytes   
+     $ab   - find string 'ab'                     
+     u     - up in heap       d - down in heap    
+
+   Misc:                                          
+     . - reshow current item                      
+     a - display image analysis report            
+     i - list all code names                      
+     v - view contents of current object          
+     q - quit                 x - exit runtime    
+     ? - help                                     

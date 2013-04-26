@@ -1,0 +1,72 @@
+#!/bin/sh
+# Find locks on all files.
+# Copyright (c) 1991 Harlequin Ltd.
+#
+# locks,v
+# Revision 1.6  1994/02/08  16:24:09  daveb
+# Corrected a <> to a != in a shell test.
+#
+# 
+# Revision 1.5  1994/02/07  17:16:52  daveb
+# Converted to Hope.
+
+
+script=`basename $0`
+usage="USAGE: $script [-b <branch>] [-u <username>] [-a] [-d] [<Compound>]"
+test="";
+name=""
+show=units
+all=0
+branch="trunk";
+while getopts tb:hdau: option
+do
+  case $option in
+    t) test="echo";;
+    u) name="$OPTARG";;
+    a) all=1;;
+    b) branch="$OPTARG";;
+    d) show=claims;;
+    h|\?|*)
+      echo $usage;
+      echo "   h for this help"
+      echo "   t for the hope expression sent"
+      echo "   b for the branch"
+      echo "     use \"*\" for all branches"
+      echo "     but works intermittently due to \"/\" in branches"
+      echo "   a for all claims"
+      echo "   d for ???"
+      echo "   u for claims held by user"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+if [ $# -eq 0 ]; then
+  allcompounds=MLW
+else
+  allcompounds=$1
+  shift
+  compounds=$*
+  for compound in $compounds; do
+    allcompounds="$allcompounds -and -com $compound"
+  done
+fi
+
+if [ "$branch" = "*" ]; then
+  for branch in `hope status -format program -show names|egrep "branch"`; do
+    test "$branch" != "branch" && locks -b "$branch" -a $*
+  done
+  exit
+elif [ $all = 1 ]; then
+  $test hope status -branch $branch -recursive -find-claims '*' -format brief -show claims -not-page -compound $allcompounds
+elif [ "$name" != "" ]; then
+  $test hope status -branch $branch -recursive -find-claims $name -format brief -show $show -not-page -compound $allcompounds
+else
+  $test hope status -branch $branch -recursive -my-claims -format brief -show $show -not-page -compound $allcompounds
+fi
+
+#  hope status -recursive -com $allcompounds | awk '/Status for compound/ {print $0;} \
+#  /claimed/ {print $0}' | egrep "Status for compound|$name"
+
+#  hope status -recursive -com $allcompounds | awk '/Status for compound/ {print $0;} \
+#  /claimed/ {print $0}'

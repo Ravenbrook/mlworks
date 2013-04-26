@@ -1,0 +1,1810 @@
+(*  ==== FOREIGN INTERFACE : Internal Documentation ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ * $Log: foreign.doc,v $
+ * Revision 1.6  1996/10/25 16:08:13  io
+ * [Bug #1547]
+ * updating for current naming conventions
+ *
+ * Revision 1.5  1996/08/20  11:50:29  brianm
+ * Adding documentation for is_eq_ptr and is_null_ptr ...
+ *
+ * Revision 1.4  1996/05/24  17:47:34  brianm
+ * Beta release modifications.
+ *
+ * Revision 1.3  1995/09/10  22:25:40  brianm
+ * Further modification for updates and general reorganisation.
+ *
+ * Revision 1.2  1995/09/07  22:43:36  brianm
+ * Edits due to reorganisation and added short tutorial section.
+ *
+ * Revision 1.1  1995/08/01  12:50:16  brianm
+ * new unit
+ * New file.
+ *
+ *
+ *)
+
+
+0.  Introduction - Caveat
+========================
+
+This document describes the visible interface to the MLWorks Foreign
+Interface (or FI for short).  The intended audience is MLWorkers and
+technical documenters.  This document will take the form of annotated
+ML signatures to explain and motivate the design.  Accordingly, most
+sections of the document map naturally onto an ML structure and
+signature.
+
+   To users of MLWorks - a caveat and a plea:
+
+   It should be emphasised that this interface is presently of an
+   experimental nature and may be subject to revision and redesign in
+   future releases of MLWorks.  This interface should be regarded as part
+   of an initial offering and will be improved as time goes on.
+   Consequently, it is very important for us to receive significant user
+   feedback on it's use - without this, it is hard to tell where
+   improvements would be needed the most.  So please try this out and let
+   us know how you get on.
+
+Some terminology.  In general, all ML expressions evaluate to
+_values_.  In addition, an ML _object_ is simply an ML value which is
+also _stateful_ and so has persistent effect.  ML computes values
+which can therefore be either stateful or not.  For emphasis, ML
+values that are _stateless_ can be called _pure_ ML values.
+
+Within general ML programming, transient values tend not to be
+stateful, with objects used mainly when information persists from
+transaction to transaction.  However, the programming model when using
+the MLWorks FI is usually procedural and imperative, relying upon very
+much upon persistent state.  This situation is almost forced here
+since the languages being interfaced to are static and imperative
+themselves.  In particular, function calling requires addresses and
+pointers to stay consistent during a foreign function call - this can
+be acheived by providing static memory and having ML operators
+construct and analyse corresponding data in these static areas.
+
+Finally, you may also be wondering why we are not following convention
+and calling this part a Foreign Function Interface (FFI).  The reason
+is that ML is strongly typed and so the interface has to be also
+concerned with the differences in typing between different languages.
+Also, the concept of function is central within ML and is certainly
+not `neutral' from an ML perspective.  For this reason, it seemed best
+to use terminology that suggested breadth - hence we use the simpler
+term `Foreign Interface'.
+
+
+0.1.  Acknowledgements
+======================
+
+Various people have been very helpful and influential in the
+development of this work.  In general, all of the MLWorkers (Jon
+Thackray, Nick Barnes, Dave Berry, Matthew Arcus, Stephen Bevan and
+Schzen Ooi) have been very ready with advice, suggestions and other
+helpful information.  Outside the immediate group, Paul Gardner has
+been very helpful in pointing me towards useful sources concerning
+link-loaders, dynamic shared libraries and the required ABI's.  I have
+also been strongly influenced by some very useful conversations with
+Richard Brooksby who had had some earlier thoughts about the
+fundamental technical issues.
+
+
+1.  A small example
+===================
+
+By way of an introduction to the approach, a small example is
+given showing some of the key features.  To perform this
+exercise using the system, you will need to build a `guii.img'
+(prefereably for SunOS 4.1) and use this as follows:
+
+     rts/runtime-g -load images/guii.img
+
+The `guii.img' extends the standard MLWorks gui.img with the
+MLWorks FI loaded as user-level code.
+
+The following code will be found under hello.c, hello.make and hello.sml.
+
+1.1  On the C side ...
+======================
+
+Suppose we have the following short piece of C code:
+
+   #include <stdio.h>
+
+   int hello(char *str, int num)
+   {
+      printf("%s %i\n", str, num);
+      return(42 + num);
+   }
+
+in a file called "hello.c". Note that hello.c does not contain a
+`main' function - it is instead providing a `shared library', albeit
+a rather trivial example of one.
+
+This is then compiled using our favourite C compiler, creating an
+object file and from that, a shared object file.  A sample makefile to
+do this (on SunOS 4.1.3) might look like:
+
+   hello.o: hello.c
+	$(CC) $(CFLAGS) -c hello.c -o hello.o
+
+   hello.so: hello.o
+        $(LD) -Bdynamic hello.o -o hello.so
+
+The variants for Solaris and Irix are fairly trivial.
+
+To make use of Unix shared libraries in general, _including_ from
+MLWorks, it is __very__ important to have the LD_LIBRARY_PATH
+environment variable set appropriately.  For correct operation, the
+path _must_ include the current directory (.) and the standard shared
+object systems directory (usually /usr/lib).  This path is very
+sensitive to ordering, so if there seem to be problems, experiment
+with different orderings and don't just rely upon the documented
+defaults.
+
+
+1.2  And on the ML side ...
+===========================
+ 
+Having constructed a `shared library' in C, we now want to make use of
+it from ML.  To do this within MLWorks, we use the tools provided via
+the ForeignInterface structure.  For ease of presentation, it is
+assumed that the ForeignInterface structure and the substructures
+concerned with the C interface have all been opened. The ML side of
+the interface now goes as follows - note that system responses will
+be prefixed by "> ".
+
+The first step is to load the foreign code itself, thereby creating an
+ML object called a c_structure:
+
+
+     val hello_struct = loadObjectFile("foreign/hello.so",IMMEDIATE_LOAD);
+     > val hello_struct : c_structure = _
+
+This has loaded the raw code into MLWorks.  But now we need to be able
+to make use of this.  To do that, we basiclly need to feed data as
+arguments to foreign functions and then to accept their results.
+
+This involves building ML entities which can access and manipulate
+foreign data.  As such, foreign data has to have an ML type associated
+with it.  Moreover, there also has to be some way of describing how
+such data is to be interpreted and `understood'.  From an operational
+point of view, this `understanding' amounts to a qualification of what
+operations this data may participate in and hence what form this
+participation could take.
+
+So, in the FI, each piece of foreign data will come equipped with a
+`certificate' which describes what the interpretation is at any given
+time.  Since the `certificates' are information-bearing, they must
+themselves be represented in terms of ML values.
+
+However, the FI further seperates the data storage of data values from
+their representation, by mapping the actual values into `workspace'
+objects called stores.  The interpretation of these data values is
+then contained in another kind of ML entity called a `c_object' (rather
+like a disembodied `container').  The idea is that objects are generally
+associated with a place within some store containing the object's data
+value.  This indirection between object value and the interpretation of
+that value provides considerable flexibility, even within a strongly
+typed framework such as ML.  Such flexibility will prove necessary in
+order to mimic enough of a foreign data typing scheme.
+
+So the next step is to build a `store' object which will contain the
+data values - such as the arguments and the results to foreign calls.
+
+
+    val hello_store =
+        store{ alloc     = ALIGNED_4,
+               overflow = BREAK,
+               size     = 60,
+               status   = RDWR_STATUS   };
+    > val hello_store : store = _
+
+So we now have a workspace for data values to `live' in.  The
+parameters say that:
+
+    - allocation is 4-byte aligned
+    - an error is raised if too much memory is requested.
+    - has size 60 bytes
+    - both read and write status.
+
+The next step is to build some objects through which foreign data
+can be manipulated and accessed.
+
+   val void_object =
+         object { ctype     = VOID_TYPE,
+                  store     = hello_store };
+
+   val str_object =
+         object { ctype     = STRING_TYPE{ length = 20 },
+                  store     = hello_store };
+
+   val int_object1 =
+         object { ctype     = INT_TYPE,
+                  store     = hello_store };
+
+   val int_object2 =
+         object { ctype     = INT_TYPE,
+                  store     = hello_store };
+
+   val ptr_object =
+         object { ctype     = ptrType(VOID_TYPE),
+                  store     = hello_store };
+
+
+   > val void_object : c_type object = _
+   > val str_object  : c_type object = _
+   > val int_object1 : c_type object = _
+   > val int_object2 : c_type object = _
+   > val ptr_object  : c_type object = _
+
+These objects are associated with particular places in the
+`hello_store'.  However, they haven't yet been assigned to and hence
+assumed to be invalid for reading.  Once they have been written to,
+they can then be read safely.  The following code initialises some of
+these objects:
+
+   setString(str_object,  "What is 65 - 42? ---"); 
+
+   (* note only 20 characters , not including null character,
+    * any more, the MLWorks Debugger should raise a StoreAccess exception
+    *)
+
+   setInt(int_object1, 23);
+
+and the following extracts their values:
+ 
+   getString str_object;
+   > val it : string = "What is 65 - 42? ---"
+
+   getInt int_object1;
+   > val it : int = 23
+
+Having now set up this data, we need to use them in conjunction with
+the foreign code we have already loaded.  To do this, we need some
+`signature' information concerning the foreign functions we want to
+use.  To do this, an empty `c_signature' object is first generated:
+
+   val hello_sig = newSignature();
+   > val hello_sig : c_signature = _
+
+and the following entry is then added, corresponding to the foreign
+function that we wish to use:
+
+   defEntry(hello_sig,
+             FUN_DECL { name = "hello",
+                        source = [ptrType(CHAR_TYPE), INT_TYPE] : c_type list,
+                        target = INT_TYPE }
+            );
+
+Note how the form of the signature information follows the structure
+of the ANSI C prototype for the function.  We hope to automate the
+construction of this signature information by reading in C header
+information and analysing it sufficiently to construct these entries
+above.  This should form an integral part of the `stubs generator'
+software to be provided.
+
+So, we can now use the c_signature and c_structure information we have
+obtained to extract `callable entries' for the foreign functions they
+provide:
+
+   val def_hello = defineForeignFun (hello_struct, hello_sig);
+   (* val def_hello = defineForeignFun(hello_cset, hello_cinfo); *)
+   > val def_hello : filename -> c_function = fn
+
+Using this, we can obtain a `c_function' object that can then be
+called directly. 
+
+   val hello = def_hello "hello";
+   > val hello : c_function = _
+
+The above allows foreign functions to be extracted as ML values and
+bound to ML identifiers in the usual way.
+
+We have almost reached the point at which we can call our foreign
+function.  Before we do, we need to set up the first argument as a
+character pointer to some string data.  The following does this:
+
+   setPtrType     { ptr = ptr_object, data = str_object };
+   setPtrAddr_of  { ptr = ptr_object, data = str_object };
+   castPtrType    { ptr = ptr_object, ctype = CHAR_TYPE };
+
+This first sets the pointer to the corresponding type of str_object, the
+pointer is then set to point at the data and finally the pointer is
+cast to the required argument type.
+
+In fact, because strings are such a frequent case, the FI can accept
+STRING_TYPE values directly and convert them into an appropriate CHAR_TYPE
+pointer, for both argument and result from a foreign function.
+
+So finally, we can call our foreign function hello() using all we have
+put together:
+
+   call hello ([ptr_object,int_object1], int_object2);
+   What is 65 - 42? ---- Ans is  23
+   > val it : unit = ()
+
+The above call required two objects to give the argument values and a object
+to accept the result.  Calling this function should have deposited the
+result value into int_object2 - we can extract this value by doing:
+
+   getInt(int_object2);
+   > val it : int = 65
+
+This completes our example.
+
+1.3  Summary
+============
+
+So, the above shows briefly how the ML FI provides a `data model' of
+each foreign language.  The interface provided offers the means to
+manipulate data in a way consistent with the original foreign
+language.  The support offered by the FI for a foreign language is
+provided by a general component common to all languages supported and
+a specific part dealing with just that language.
+
+
+
+2.  structure Interface : INTERFACE
+===================================
+
+This is the top-level structure and signature for the FI and contains
+the following sub-structures:
+
+      structure Store
+      structure Object
+      structure Aliens
+      structure LibML
+      structure Diagnostic
+
+      structure C
+      structure C.Structure
+      structure C.Type
+      structure C.Value
+      structure C.Signature
+      structure C.Function
+      structure C.Diagnostic
+
+
+The following sections document each of these sub-structures.  A final
+section describes known limitations of this interface and possible
+future developments and enhancements.
+
+In addition, various standard types used throughout the interface are
+exported - these are:
+
+   type word32     (= Word32.word)
+   -- Gives a standard 32-bit value
+
+   type address    (= word32)
+   -- Address type is 32-bit addresses
+
+   type bytearray  (= MLWorks.Internal.ByteArray.bytearray)
+   -- Bytearray values are supplied using standard MLWorks bytearrays
+
+   type name       (= string)
+   -- Names used are strings
+
+   type filename   (= string)
+   -- Filenames used are strings
+
+
+3.  structure Store
+====================
+
+This structure defines store objects and operations upon them.  The
+idea behind stores is straightforward.  They provide the underlying
+workspace in which foreign data is represented.  To access and
+manipulate foreign data, the user declares  objects associated
+with particular locations within stores and it is via these
+objects that foreign data can be read and also be written.  These
+objects can be relocated under user control within their associated
+store.
+
+So, a store represents a staticlly allocated, uniformly addressable
+(i.e. contiguous) `workspace' in which interfacing can take place as
+direct actions upon memory.  Naturally, the store has additional
+structure to make their use more robust and convenient for
+programming.  For example, the programmer has control over what
+happens if and when the store `overflows'.  One such overflow
+`policy' is to raise an exception, another policy will automatically
+`expand' a store and increase the workspace available.
+
+The use of stores is not specific to any particular language
+interface (e.g. C) and could be used for other interfaces added later.
+These can therefore be implemented once and for all.
+
+
+3.1. Why stores _and_ objects?
+==============================
+
+The original idea was that each `obj' object would have local storage
+to contain it's foreign data - but it turns out that this would have
+limited programmatic access to that data.  For example, the programmer
+may want to have several object's inspecting the same piece of foreign
+data - and this is clearly `difficult' to arrange if they all have
+seperate storage.
+
+Also, we want this data to be static - not movable by the Garbage
+Collector.  Although the GC knows about the liveness of static objects
+etc., it obviously cannot compact static blocks.  If there wasn't a
+sufficiently large turnover of these static objects, then this could
+eventually lead to memory management difficulties (i.e. excessive
+fragmentation) if an ML application using the FI had to remain in
+operation over a reasonable stretch of time.
+
+Hence, stores are intended to give the programmer control and to
+allow for pre-allocation of space for their needs.  Of course, it is
+possible to rely on store `expansion' as necessary - this involves
+copying of static bytearrays to preserve the uniform address space.
+[A static bytearray is identical to a standard ML bytearray, except
+that it is a static object and has an extra operation that yields the
+machine address of any byte it contains.]  However, as the next
+section explains, this may not be what the programmer needs to do.
+Hence the need for several options.
+
+
+3.2. Machine pointers and stores
+=================================
+
+Much foreign data can consist of pointers, represented as machine
+addresses, and generally speaking, such data would be stored within a
+store.  However, as mentioned above, stores can grow in size, by
+expanding them.  To ensure the uniformity of addressing, this
+expansion is implemented by copying.  Such an operation may of course
+invalidate any machine pointers that were pointing at `local'
+storage associated with the store.
+
+For this reason, explicit machine pointers need to be treated with
+care and respect.  In the C interface below, there is a facility for
+providing `local' pointers represented as a local offset from the base
+address of the store.  The use of small indices here means that
+conventional array indexing can be used directly from ML.  Of course,
+this facility also needs the ability to interconvert between local
+indices and actual machine addresses.
+
+The advantage of using `local' pointers is that they remain invariant
+under expansion of the store.  However, their disadvantage is that
+they are meaningless if used out of context.  Hence, local pointers
+must not be passed into foreign code - they must first be turned into
+machine addresses.  Tools are provided to facilitate this.
+
+One way of avoiding these difficulties is to work with stores that
+cannot be expanded - sufficient static space is pre-allocated.  In
+this case, machine addresses cannot be invalidated due to store
+expansion and so can be passed to foreign code with impunity.
+
+
+3.3. Stores
+============
+
+   type store
+   -- An encapsulated type representing store objects.
+
+   datatype store_status
+   -- Each store possesses a `status' which can take the following
+      values:
+
+      + LOCKED_STATUS
+        - store data may not be accessed or modified by ML.
+
+      + RD_STATUS
+        - store data is read-only from ML.
+
+      + WR_STATUS
+        - store data is write-only from ML.
+
+      + RDWR_STATUS
+        - store data is readable/writeable from ML (normal).
+
+   exception ReadOnly
+   -- This exception is raised if an attempt to write data is made to
+      a store whose status forbids writing (i.e. LOCKED_STATUS, RD_STATUS).
+
+   exception WriteOnly
+   -- This exception is raised if an attempt to read data is made from
+      a store whose status forbids reading (i.e. LOCKED_STATUS, WR_STATUS).
+
+   val storeStatus     : store -> store_status
+   -- Function for inspecting the status of a store.   
+
+   val setStoreStatus : (store * store_status) -> unit
+   -- Function for setting the status of a store object.
+
+   datatype alloc_policy
+   -- Each store object is created just like any other ML value (except
+      that it is static - not relocatable by the GC) and given some memory
+      for its representation.  However, the store is involved in managing a
+      number of `obj' objects associated with the store's workspace area.
+      The `alloc_policy' datatype is used to specify the manner in which
+      space is given to these `obj' objects from within the store's
+      workspace:
+  
+      + ORIGIN
+        - Each fresh object is located at the origin.  This implies that the
+          applications programmer has to control the arrangement of
+          objects within the store.  To use the associated objects, these
+          would be relocated under programmatic control.  Operations
+          that perform such relocation are subject to the semantics
+          of the data model for the foreign language being interfaced
+          to.  Because of this, operations that involve relocation
+          actions are provided by specific foreign language interfaces.
+
+      + SUCC
+        - Each fresh object is located at the `top' of the workspace,
+          immediately following all the other objects.
+
+      + ALIGNED_4
+        - As for SUCC, but each fresh object is allocated on a
+          4-byte address boundary (i.e. address is 0 mod 4). 
+
+      + ALIGNED_8
+        - As for SUCC, but each fresh object is allocated on a
+          8-byte address boundary (i.e. address is 0 mod 8).
+
+      It is possible to have several stores being used at the same
+      time - and each could have different allocation policies,
+      perhaps because each is handling different kinds of data.
+
+
+   datatype overflow_policy
+   -- Each store object in effect manages a piece of workspace memory on
+      ML's behalf, and objects are associated with bits of this workspace.  So,
+      what then happens when the workspace memory is fully allocated to
+      existing objects and more space is requested?
+
+      Various courses of action are reasonable and the overflow_policy
+      datatype reflects the choices made available to the applications
+      programmer.  A store is said to have _overflowed_ when an attempt is
+      made to use more space then is presently available in the associated
+      workspace.
+
+      + BREAK
+	- The exception ExpandStore is raised when the store has overflowed
+	  and an attempt to expand it is made (possibly via the expand()
+	  function (see below)).
+
+	  In effect, the store is of fixed size and cannot be expanded.
+
+      + EXTEND
+	- The store automatically expands (by some internal rule) to
+	  accomodate whatever fresh allocation requests are made.  Clearly, this
+	  expansion is subject to system limits on the amount of memory that a
+	  process can have mapped at any one moment.
+
+	  Explicit calls to expand() need advice on how much extra space needs
+	  to be allocated.
+
+	  In effect, stores with this overflow policy are flexible in size and
+	  can be expanded (automatically or manually) as necessary.
+
+      + RECYCLE
+	- With this policy, the store contains `ephemeral' objects whose lifetimes
+	  are known in advance to be short.  When the store overflows,
+	  allocation simply resumes at the origin and continues apace.  Clearly,
+	  there is a danger that data could be overwritten inadvertently, if
+	  insufficient workspace isn't available to cater for all objects
+          that are live at any one time.
+
+	  Stores with this overflow policy may be explicitly expanded.  If a
+	  request to allocate space which cannot be met is given then the
+          ExpandStore exception is raised.
+
+
+   val store : { alloc    : alloc_policy,
+		  overflow : overflow_policy,
+		  status   : store_status,
+		  size     : int } -> store
+   -- This function is used to generate fresh stores.  The initial size,
+      allocation policy, overflow policy, and initial store status
+      can be supplied.  Note that the store_status may be modified
+      using the setStoreStatus() function, and the size may be
+      explicitly increased (when possible) using the expand() function. 
+      The other attributes cannot be modified dynamically.
+
+   val storeSize     : store -> int
+   -- This function returns the current size of the store.
+
+   val storeAlloc    : store -> alloc_policy
+   -- This function returns the allocation policy for the store.
+
+   val storeOverflow : store -> overflow_policy
+   -- This function returns the overflow policy for the store.
+
+   val isStandardStore  : store -> bool
+   -- This predicate determines if the store is deemed to be
+      `standard'.   A store is _standard_ when the allocation policy isn't
+      ORIGIN or if the overflow policy isn't RECYCLE.
+
+   val isEphemeralStore : store -> bool
+   -- This predicate determines if the store is deemed to be
+      `ephemeral'.  A store is _ephemeral_ when the allocation policy isn't
+      ORIGIN and the overflow policy _is_ RECYCLE.
+
+   exception ExpandStore
+   -- This exception is raised when an attempt is made to expand a
+      store which cannot be fulfilled.
+
+   val expand  : (store * int) -> unit
+   -- This function expands a store by at least the specified size
+      (given in bytes) or fails with exception ExpandStore.
+
+
+4. structure Object
+===================
+
+This section discusses the generic aspects of foreign objects.  A
+foreign object provides the means to both access and modify foreign
+data from ML.  They do not themselves contain this data, but instead
+they are generally associated with a location in some store and it is
+these stores which contain foreign data.  In short, a foreign object provides
+_indirect_ access to foreign data, thus permitting greater freedom.
+
+Now, for each language specific interface, some specific idea of
+foreign object is thus required.  Fortunately, many features of
+objects would be common to each of their language-specific
+counterparts and these common, language-independent, operations can be
+provided here.
+
+However, the objects are also likely to have some very language
+specific aspects as well.  In particular, any notion of `typing' will
+be very language specific.  For this reason, the ML type that
+represents object objects turn out to be polymorphic, to allow for
+this dependence on language specific aspects, such as typing.
+
+As you will see below, there are several generic ways of inspecting a
+foreign object, but _no_ (generic) ways of generating objects directly
+or modifying any existing characteristics they may have.  The reason
+is that these are very much subject to the language-specific semantics
+of the appropriate data model.  Accordingly, such operations are
+provided within the language specific interfaces.
+
+   type ('l_type)object
+   -- Any foreign object consists of two main components - a `value'
+      part and a `type' part.  The value part generally refers to some raw
+      information contained in an associated store workspace, whereas the
+      `type' part determines how this information is to be interpreted.
+
+      This `value' part can be implemented generically, since this just
+      amounts to some location in the associated store.
+
+      The ML type of the language-specific information is provided via
+      the ML type-parameter 'l_type.
+
+
+   exception ReadOnly   (= Store.ReadOnly)
+   exception WriteOnly  (= Store.WriteOnly)
+   -- These exceptions are raised when a object attempts to access or
+      update a store in a manner that is forbidden according to it's
+      current status.
+
+   datatype object_mode
+   -- Each object also has an associated `mode' which governs the way in
+      which foreign data can be accessed.  In general, foreign objects access
+      foreign data that is present `locally' within their associated store.
+      However, there are occasions when a programmer wishes to `inspect'
+      some foreign data without doing anything to it (e.g. selecting a
+      component from a record value).
+
+      Using the approach described above, such data could only be inspected
+      by first arranging for it to be copied to a store and then accessed.
+      This is clearly inefficient and far too unwieldy.
+
+      To counter this, a object may actually be in one of two `modes': local or
+      remote.  A object in local mode can only access and modify data present
+      within its associated store.  A object in remote mode is located
+      remotely to enable it to access foreign data without having first
+      copied it back.  In addition, a `remote' object cannot modify or affect
+      foreign data.
+
+      The modes provided are:
+
+      + LOCAL_OBJECT
+        -- Foreign data is sited _locally_ within a store workspace.
+           Such data can be read and written by ML and foreign code.
+
+           Pointer values are not restricted i.e. they can be simple
+           indices (i.e. relative) or machine addresses.
+
+      + REMOTE_OBJECT
+        -- Foreign data is sited remotely somewhere in the users
+           address space.  Such data can only be read - and
+           *not* written to - from ML.
+
+           Pointer values are restricted to being machine addresses.
+
+   val objectMode         : ('l_type) object -> object_mode
+   -- The current `object_mode' can be inspected using this function.
+
+
+   datatype object_status
+   -- As foreign data is not stored directly as part of a foreign object,
+      objects can be cheaply replicated without changing the meaning of the
+      foreign data.  However, it is also sometimes useful to be able to
+      control the way in which foreign objects are replicated.
+
+      To do this, each object is given a status value, which can be either
+      `permanent' or `temporary'.  The purpose of the object status is that
+      permanent foreign objects can be duplicated but temporary objects are _never_
+      duplicated and would be returned unmodified.  Temporary objects are made
+      by an operation that first duplicates a permanent object and changes the
+      status of the duplicate to temporary.
+
+      The functions which perform such duplication may need to take suitable
+      care of the language-specific part of a object.  As such, these function
+      are provided as part of the language specific interfaces.
+
+      The object status values are:
+      + PERMANENT_OBJECT
+        -- A object with permanent status usually represents
+           some sort of `live' object which is in some way persistent.
+           By default, newly built objects are given permanent status.
+
+      + TEMPORARY_OBJECT
+        -- A object with temporary status usually represents an ephemeral
+           short-lived object that is summoned into existence to perform
+           a very specific role within code.
+
+   val objectStatus       : ('l_type) object -> object_status
+   -- This function yields the current status of the given object.
+
+   exception OutOfBounds
+   -- This exception is raised if an attempt is made to `move' or
+      `relocate' a object to some location outside the current store.
+      This is analogous to the Subscript error that is raised when
+      an attempt is made to update an array at an invalid index.
+
+   exception Currency
+   -- This exception is raised when an attempt is made to perform some
+      action upon a object when the association between object and foreign data is
+      assumed to be `corrupt' or `invalid'.
+
+      Of course this is a highly semantic notion, heavily dependent upon the
+      interpretation placed on the semantics of the data model for the
+      language being interfaced with.  In general, a object is taken to _not_
+      be current if it has just been moved, relocated or otherwise changed
+      without having adjusted it's language-dependent interpretation
+      (i.e. it's `type') accordingly.
+
+      Hence, the manner in which the currency of a object is changed and
+      brought up-to-date is entirely language-dependent.
+
+   val objectCurrency     : ('l_type) object -> bool
+   -- This predicate reports true iff the given object is assumed to
+      represent current data.
+
+   val objectSize         : ('l_type) object -> int
+   -- This function returns the current size (in bytes) occupied by the
+      associated foreign data located in the store.
+
+   val objectLocation     : ('l_type) object -> int
+   -- This function returns the location of the associated foreign
+      data located in the store.
+
+   val objectAddress      : ('l_type) object -> address
+   -- This function returns the machine address corresponding to the
+      location returned by object_location().
+
+
+5.  structure Aliens
+====================
+
+This structure is involved with managing externally linked foreign
+code objects.  This interface uses dynamic linking of foreign code
+(supplied via the underlying OS) and ML makes a record of what objects
+have been linked in so far.  The basic interface for linking foreign
+code allows code to either be linked immediately (i.e. at link time)
+or when something actually makes use of the code (i.e. at call time).
+
+The following functions are used to ensure that the appropriate
+associations between ML values representing external objects are in
+the desired state:
+
+   val ensureAliens  :  unit -> unit
+   -- Ensures that all objects and associated values are available.
+      This preserves any existing entities that are present.
+
+   val resetAliens   :  unit -> unit
+   -- Reset all objects and associated values - so that they are
+      obtained afresh when they are next requested - and not before.
+      This allows lazy semantics for establishing associations.
+
+   val refreshAliens  :  unit -> unit
+   -- Refresh objects and associated values immediately.
+      This reobtains all external entities - even if they are
+      already present (apparently).
+
+For example, these facilities may be used to `reset' associations between
+foreign code and ML representations and also ensure that up-to-date
+versions have been obtained.
+
+
+6.  structure LibML
+===================
+
+This structure provides the ML side of a C programmers interface for
+accessing ML values and calling ML functions from C.  This facility is
+provided only for C code that has already been called from ML.
+Applications of this is to provide windowing `callback' functions as
+ML functions.  To make use of this, ML values have first to be
+registered by ML for access from C.  The following functions provide
+facilities for this registration - values so registered are called
+`external values':
+
+   val registerExternalValue  :  string * 'a -> unit
+   -- Associates a given value with a string.  This string is then
+      used from C as a handle for the C version of the object.
+
+      If a value is already associated then an exception is raised.
+
+   val deleteExternalValue  :  string -> unit
+   -- Provides means for deleting a specific evternal value entry.
+
+   val externalValues  :  unit -> string list
+   -- Provides a list of all strings used to name the external values.
+
+   val clearExternalValues  :  unit -> unit
+   -- Provides an efficient way to clear all the external value
+      entries in a single operation.
+
+
+7.  structure Diagnostic
+========================
+
+This structure contains a general collection of tools to assist with
+the provision of diagnostics involving general elements of the FI,
+such as stores.  It is not envisaged that these would be used to
+provide functionality within applications - but, of course, this is
+not prohibited either.
+
+These tools are provided here on the understanding that the interface
+may be changed arbitrarily,  In particular, there is no guarantee to
+preserve any functionality in future versions.  However, such
+interfaces are not changed without there being just cause.
+
+   val viewStore : store -> string
+   -- Outputs a string containing information about stores.
+
+   val dispStore : store -> store
+   -- Outputs the string produced by view_store() on the standard
+      output stream and returns the store.
+
+   val storeInfo : store ->
+	  { kind     : string,
+	    origin   : address,
+	    status   : string,
+	    alloc    : string,
+	    overflow : string,
+	    size     : int,
+	    top      : int,
+	    free     : int }
+   -- Provides a structured, diagnostic `view' of the internals of a
+      store.  This can be used by programmers to monitor what is happening
+      within a store and also encourages the construction of additional
+      diagnostic tools for their own purposes.
+
+   val storeData :
+       { store : store,
+	 start  : int,
+	 length : int } -> int list
+   -- Provides a region of the store workspace as a list of integers
+      (actually positive numbers from 0 to 255 inc.). 
+
+   val storeDataHex :
+       { store : store,
+	 start  : int,
+	 length : int } -> string
+   -- Provides a region of the store workspace as a hex string.
+
+   val storeDataAscii :
+       { store : store,
+	 start  : int,
+	 length : int } -> string
+   -- Provides a region of the store workspace as an ASCII string.
+
+   val diffAddr : address -> address -> int
+   -- Yeilds the difference of two addresses - useful for relative
+      address computations.
+
+   val incrAddr : address * int -> address
+   -- Offsets a given address by an integer (note that the offset may
+      be positive or negative).
+
+
+8.  structure C
+===============
+
+This structure contains the language specific part of the interface
+providing support for C.  It has the following sub-structures:
+
+      structure Structure
+      structure Type
+      structure Value
+      structure Signature
+      structure Function
+      structure Diagnostic
+
+The basic idea behind this part of the FI is to provide support for a
+C-compatible data model from within ML.  Object is provided under this
+model via things called _objects_.  These may be considered to have two
+main components: a `value' part and a `type' part.  The `value' part
+of a object consists of the raw information concerning what is being
+denoted, whereas the `type' part specifies how the `value' part can be
+interpreted.  Both components of objects are under the control of the ML
+programmer and can be manipulated in ways that are familiar to a C
+programmer.  Furthermore, the value parts of objects are associated with
+physical storage via a given store workspace, thereby ensuring
+that memory allocation is (a) static and (b) decoupled from the
+representation of specific data values. 
+
+This structure also provides an interface for robustly managing
+dynamically linked foreign code and invoking it.  This is provided via
+the Structure and Signature sub-structures.  The basic idea here is
+that linked-in foreign code provides raw behaviour, which is kept
+locked within a `c_structure' object.  To acces and use this raw
+behaviour, another object called a `c_signature' is needed to provide
+signature information as `c_type' values.  When appropriately matching
+c_signature and c_structure objects are combined, this then permits
+the raw behaviour contained within the c_structure to be invoked.
+
+
+8.1.  structure C.Structure
+=========================
+
+This structure provides facilities for loading and dynamiclly linking
+foreign code for use with the C data model.
+
+   type c_structure
+   -- Objects of type c_structure are containers of foreign code.
+      Each c_structure object is created as a result of dynamically
+      linking foreign code from a file.  At present, no attempt is
+      made to cache this code when images is saved, and so this would have
+      to be restored when an image is restarted.  Fortunately, this is made
+      trivial by using the tools provided via the Aliens structure.
+
+   datatype load_mode
+   -- When foreign code is loaded, the dynamic linking of that code
+      may occur immediately (now, at load time) or may be
+      (to call time).  These options are reflected here by:
+
+      + IMMEDIATE_LOAD   - link foreign code immediately
+
+      + DEFERRED_LOAD    - link foreign code at first-call to the library.
+
+
+   val loadObjectFile  :  filename * load_mode -> c_structure
+   -- This function generates a c_structure by dynamiclly linking
+      foreign code associated with the specified file, in accordance
+      with the given load_mode.
+
+   val fileInfo  :  c_structure -> (filename * load_mode)
+   -- This function obtains both the filename and the load_mode used
+      to create the c_structure.
+
+   val filesLoaded  :  unit -> filename list
+   -- This yeilds a list of all foreign code files loaded so far.
+
+   val symbols  :  c_structure -> name list
+   -- Extracts symbol table info concerning the foreign code contained
+      within a given c_structure.  This info might indicate name of
+      object, what kind of object it is and even a relocatable address
+      associated with the code.
+
+   datatype value_type
+   -- This specifies a coarse classification of foreign code objects.
+
+      + CODE_VALUE   - object appears to be functional code of some description.
+
+      + VAR_VALUE    - object appears to be a (visible) variable containing 
+                    foreign data.
+
+      + UNKNOWN_VALUE   - object cannot be classified as above (but might be either
+                    one of the above, in fact).
+
+   val symbolInfo : c_structure * name -> value_type
+   -- This function attempts to classify named foreign code objects
+      according to the scheme given above.  The function could always
+      be implemented by returning UNKNOWN_VALUE, but such behaviour would not
+      be very helpful to programmers.
+
+
+8.2.  structure C.Type
+======================
+This structure provides support for representing C type information in
+a manipulable form as ML data.
+
+   type enum_value  (= string)
+   -- This type is used to model enumerated values.  There are
+      conversion functions to and from integers.
+
+   type tag         (= string)
+   -- This is used to provide convenient `type' tags.
+
+   datatype pointer_kind
+   -- As described in earlier sections, machine pointers need to be
+      treated with special care.  To provide this care, the idea of a
+      `pointer kind' is introduced.  This provides qualification of pointer
+      values and determines how they can be used; 
+
+      A pointer kind is one of the following:
+      + LOCAL_PTR
+        -- Machine address pointing within the associated store
+
+      + REMOTE_PTR
+        -- Machine address pointing to arbitrary (user accessible)
+           memory.
+
+      + RELATIVE_PTR
+        -- Index value accessing location within associated store
+
+   datatype c_type
+   -- The ML type c_type provides a representation of C type information
+      accessable as an ML value.  These values are used to provide
+      information on how to interpret the `value' parts of `c_object' objects
+      used to represent foreign data.
+
+      In actual fact, c_type values are generally objects since certain
+      types contain internally cached information, mainly relating to its
+      `size'.  Since this attribute is functionally determined by it's
+      components (i.e. a synthesised attribute), consistency can be easily
+      maintained. The function sizeOf() has the additional task of defining
+      the value of size attributes (see below).
+
+      However, there are some other attributes which make c_type objects
+      stateful (e.g. see POINTER_TYPE and UNION_TYPE below).  These constructors will
+      therefore need to be copied on an instance-by-instance basis.  The
+      function dupType() is provided to make copies as necessary.  This
+      function is also used internally where necessary so that it is
+      generally unnecessary for this to be used externally.
+
+      + SIZE_OF of { size : int, ctype : c_type }
+        -- Component for adding size attribute to arbitrary c_type
+           objects.  This may now be redundent and unnecessary.
+
+      + VOID_TYPE
+        -- This represents the C type `void' - it has size 0.
+
+      + CHAR_TYPE
+        -- This represents the C type char - it has size 1 (byte).  It
+           may be associated with either signed or unsigned chars by
+           the particular C compiler used.
+
+      + UNSIGNED_CHAR_TYPE
+        -- This represents the C type `unsigned char'.
+
+      + SIGNED_CHAR_TYPE
+        -- This represents the C type `signed char'.
+      
+      + SHORT_TYPE
+        -- This represents the C type `short int'.
+
+      + INT_TYPE
+        -- This represents the C type `int'.
+
+      + LONG_TYPE
+        -- This represents the C type `long int'.
+
+      + UNSIGNED_SHORT_TYPE
+        -- This represents the C type `unsigned short int'.
+
+      + UNSIGNED_INT_TYPE
+        -- This represents the C type `unsigned int'.
+
+      + UNSIGNED_LONG_TYPE
+        -- This represents the C type `unsigned long int'.
+
+      + FLOAT_TYPE
+        -- This represents the C type `float'.
+
+      + DOUBLE_TYPE
+        -- This represents the C type `double'.
+
+      + LONG_DOUBLE_TYPE
+        -- This represents the C type `long double'.
+
+      + STRING_TYPE   of { length : int }
+        -- This represents C string type `char *' where each string
+           has an explicit amount of storage allocated for it.  This
+           length should include room for the null byte sentinel.
+
+      + TYPENAME of { name : name,
+		 	 defn : c_type,
+		 	 size : int }
+        -- This represents the use of a named type (i.e. typedef'd) within
+           a C type.
+
+      + POINTER_TYPE     of { ctype : c_type, mode : pointer_kind ref }
+        -- This represents ANSI C's idea of typed pointers.  The additional
+           pointer mode information concerns how ML encodes and treats
+           this pointer information.  In particular, `relative' pointers
+           are simply small indices which make indirection within a store
+           workspace more direct and efficient.  The representation also
+           caters for `remote' pointers which can refer to arbitrary places
+           in memory and `local' pointers are remote pointers which
+           are known to refer to places in the associated store workspace.  
+
+           The pointer mode data is provided on an instance-by-instance basis
+           and 
+
+      + STRUCT_TYPE   of { tag    : tag option,
+		 	 fields : c_field list,
+			 size   : int }
+        -- This represents the structured record type in C.  Such
+           types may be tagged or untagged.
+
+      + UNION_TYPE of { tag      : tag option,
+		      variants : c_variant list ref,
+		      size     : int,
+		      current  : c_variant }
+        -- This represents the union type in C.  Such types may be
+           tagged or untagged.
+
+      + ARRAY_TYPE of { length : int, ctype : c_type }
+        -- This represents the array type in C.
+
+      + ENUM_TYPE  of { tag   : tag option,
+	 	      elems : enum_value list,
+		      card  : int
+		   }
+        -- This represents (simple) enumerated types as provided by C.
+           Tools are provided for mapping strings to and from
+           representing integers.  Such types may be tagged or untagged.
+
+      datatype c_variant = VARIANT of { name  : name,
+		                     ctype : c_type,
+		                     size  : int }
+      -- This is used to encode members of C unions.  Note that each
+         variant object contains it's size.
+
+      datatype c_field  =  FIELD of { name    : name,
+		                     ctype   : c_type,
+		                     size    : int,
+		                     padding : int,
+	                             offset  : int }
+      -- This is used to encode field components of C structs.  In
+         addition to it's size, this representation also has the
+         offset for the field from the start of the record (useful
+         for indexing) and also takes account of any `padding' required
+         within each field.  This padding will be dependent upon the
+         particular compiler used to compile foreign code.
+
+   val sizeOf : c_type -> int
+   -- This function computes the size of a c_type object and fills in
+      any size attributes that have not already been computed.
+      Clearly, this requires named types to have had declarations
+      filled in - with failure if not.
+
+   val equalType : c_type * c_type -> bool
+   -- Because c_type values can contain size attribute (which may be
+      set to NONE), this function is
+      used to make equality comparisons between two c_types which
+      disregard the attribute components they may possess.
+
+Some convenience functions for building compound c_type objects:
+
+   val structType  :  string * (string * c_type) list -> c_type
+   -- Builds C struct type representations.
+      Notice that these C type objects are tagged.
+
+   val unionType  :  string * (string * c_type) list -> c_type
+   -- Builds C union type representations.
+      Notice that these C type objects are tagged.
+
+   val ptrType  :  c_type -> c_type
+   -- builds C pointer type representations.
+
+   val typeName  :  string -> c_type
+   -- builds C named type objects.
+
+   val enumType  :  string * string list -> c_type
+   -- builds C enumerated type representations
+
+
+8.3.  structure C.Value
+=======================
+This structure provides support for foreign data values as ML data
+structures.
+
+   type store     (= Store.store)
+
+   type object_mode   (= Object.object_mode)
+
+   type c_type     (= Type.c_type)
+
+   type c_object
+   -- This is an encapsulated ML type used to represent foreign data
+      and is equivalent to (c_type)Object.object.
+
+   val object : { ctype    : c_type,
+	          store   : store } -> c_object
+   -- This generates fresh c_objects, given specific type
+      information and a particular store to contain the raw value
+      information.
+
+   val setObjectMode  :  c_object * object_mode -> unit
+   -- This is used to change the current object mode.
+
+   val objectType  :  c_object -> c_type
+   -- This is used to inspect the current c_type.
+
+   val castObjectType  :  c_object * c_type -> unit
+   -- This is used to change the current c_type.
+
+   val tmpObject  :  c_object -> c_object
+   -- This maps permanent objects into a duplicate except that the status
+      of the duplicate is mapped to temporary.  Temporary objects are
+      simply returned.
+
+   val dupObject  :  c_object -> c_object
+   -- Duplicates permanent objects, but doesn't duplicate objects whose status
+      is temporary.
+
+   val newObject  :  c_object -> c_object
+   -- This generates a fresh foreign object, including making a duplicate type
+      component (using dupType()), irrespective of the object's status.
+
+   type c_char
+   -- This ML type is compatible with the C type `char'.
+
+   type c_short_int
+   -- This ML type is compatible with the C type `short int'.
+
+   type c_int
+   -- This ML type is compatible with the C type `int'.
+
+   type c_long_int
+   -- This ML type should be compatible with the C type `long int'.
+
+   type c_real
+   -- This ML type is compatible with the C type `float'.
+
+   type c_double
+   -- This ML type is compatible with the C type `double'.
+
+   type c_long_double
+   -- This ML type should be compatible with the C type `long double'.
+
+   exception ForeignType
+   exception StoreAccess
+   exception OutOfBounds
+   exception Currency
+
+
+The following are generally `setter' functions for particular kinds of
+C data - in particular, these expect the foreign objects to have an
+appropriate c_type already set.  If not, then they fail with exception
+ForeignType.
+
+   val setChar  :  c_object * c_char -> unit
+   -- This function sets the object value to a value representing a C char.
+
+   val setUnsignedChar  :  c_object * c_char -> unit
+   -- This function sets the object value to a value representing an
+      unsigned C char (i.e. 0 <= char <= 255).
+
+   val setSignedChar  :  c_object * c_char -> unit
+   -- This function sets the object value to a value representing an
+      unsigned C char (i.e. -127 <= char <= 128).
+
+   val setShort  :  c_object * c_short_int -> unit
+   -- This function sets the object value to a value representing a C
+      short int.
+
+   val setInt  :  c_object * c_int -> unit
+   -- This function sets the object value to a value representing a C
+      integer.
+
+   val setLong  :  c_object * c_long_int -> unit
+   -- This function sets the object value to a value representing a C
+      long integer.
+
+   val setUnsignedShort  :  c_object * c_short_int -> unit
+   -- This function sets the object value to a value representing a C
+      unsigned short integer.
+
+   val setUnsigned  :  c_object * c_int -> unit
+   -- This function sets the object value to a value representing a C
+      unsigned integer.
+
+   val setUnsignedLong  :  c_object * c_long_int -> unit
+   -- This function sets the object value to a value representing a C
+      unsigned long integer.
+
+   val setWord32  :  c_object * word32 -> unit
+   -- This function sets the object value from an ML 32-bit value.
+
+   val setFloat  :  c_object * c_real -> unit
+   -- This function sets the object value to a value representing a C
+      floating point real value.
+
+   val setDouble  :  c_object * c_double -> unit
+   -- This function sets the object value to a value representing a C
+      double floating point real value.
+
+   val setLongDouble  :  c_object * c_long_double -> unit
+   -- This function sets the object value to a value representing a C
+      long double floating point real value.
+
+   val setString : c_object * string -> unit
+   -- This function sets the object value to a value representing a C
+      string.  In general, ML strings can contain embedded NULL
+      characters - so only the string up to the first NULL is
+      significant.  However, if no NULL is included then one is
+      added.  Finally, the foreign object must have a suitable string
+      c_type whose length (including any NULL sentinel) is sufficient
+      to contain this data.
+
+
+Functions for mainpulating and testing pointer objects:
+
+   val setAddr  :  { obj:c_object, addr:c_object } -> unit
+   -- This makes the value part of the `obj' object coincide with the value
+      based at the address given by the `addr' object.  The c_type of `obj'
+      may be arbitrary and the c_type of `addr' should be a numeric type
+      capable of representing a machine address or an appropriate pointer
+      type.
+
+      In a sense, this makes the `obj' object inspect value data at a given
+      address.
+
+   val setPtrAddr  :  { ptr:c_object, addr:c_object } -> unit
+   -- This sets the given pointer object `ptr' to reference the address
+      value given by `addr' (see above).  The c_type of `ptr' is any
+      pointer c_type and the c_type of `addr' is any numeric type
+      capable of representing a machine address or an appropriate
+      pointer type.
+
+      This function makes a pointer object refer to a given address.
+
+   val setPtrAddrOf : { ptr:c_object, data:c_object } -> unit
+   -- This sets the given pointer object, `ptr', to reference the value
+      referred to by the `data' object.  The c_type of `ptr' is any
+      pointer c_type and the c_type of `data' must be compatible with
+      this.
+
+      This function makes a pointer object refer to a given piece of
+      data of compatible type.
+
+   val setPtrData    : { ptr:c_object, data:c_object } -> unit
+   -- This sets the data that is addressed by the pointer object, `ptr',
+      to the data specified by the object `data'.  The c_type of `ptr'
+      can be any pointer c_type and the c_type of `data' must be
+      compatible with this.
+
+      This function indirectly assigns data into the space referred to
+      by pointer.
+
+   val setPtrType  : { ptr:c_object, data:c_object } -> unit
+   -- This sets the c_type of the data addressed by the pointer `ptr'
+      to the c_type specified by the object `data'.  The c_type of `ptr'
+      can be any pointer c_type and the c_type of `data' can be
+      arbitrary.  The current pointer mode is preserved.
+
+      This function performs an implicit `type cast' of the pointer to
+      match that of the given data object.
+
+   val castPtrType : { ptr : c_object, ctype : c_type } -> unit
+   -- This sets the c_type of the data addressed by the pointer `ptr'
+      to the c_type specified.  This function performs an explicit
+      `type cast' of the given pointer, while preserving the current
+      pointer mode.
+
+   val setLocalPtr : c_object -> unit
+   -- This converts the current pointer into a local pointer i.e. a machine
+      address located within the associated store workspace.  This
+      may fail if the given pointer is a remote pointer that points
+      outside of this workspace.
+
+   val setRelativePtr : c_object -> unit
+   -- This converts the current pointer into a relative pointer i.e. a small
+      index value giving the relative offset from the origin address of the
+      store workspace.  This fails if the given pointer points outside
+      the associated store workspace.
+
+   val setRemotePtr : c_object -> unit
+   -- This converts the current pointer into a remote pointer i.e. a machine
+      address.
+
+   val isEqPtr : c_object * c_object -> bool
+   -- Tests for equality of pointers - must have compatible
+      types.  Fails on non-pointers.
+
+   val isNullPtr : c_object -> bool
+   -- Tests for NULL pointer - must have compatible types.
+      Fails on non-pointers.
+
+
+Functions for manipulating structured objects:
+
+   val setStruct  : c_object * (c_object list) -> unit
+   -- This function takes a object specifying a structure and updates it's
+      fields from the given list of data items.  This relies upon fields
+      being ordered in a structure and that the c_types of corresponding
+      items and fields are matched. If there are fewer items than fields
+      then only the corresponding leading prefix of fields are updated.
+      Also, if there are more items then fields then the excess items are
+      ignored.
+
+   val setField   : { record:c_object, field:name, data:c_object } -> unit
+   -- This function updates a specific field of a C struct with the
+      given data.
+
+   val setMember  : { union:c_object, member:name } -> unit
+   -- This updates a object with union c_type by selecting a particular
+      member.  The selected member must be one of the known options.
+
+   val setUnion   : { union:c_object, data:c_object } -> unit
+   -- This updates a object with union c_type with given data.  The
+      c_type of the current member of the union object must be compatible
+      with the c_type of the data.
+
+   val setArray   : c_object * (c_object list) * int -> unit
+   -- This updates an array object  with a `slice' of items, based at a
+      given index.  This allows several elements of an array to be updated
+      together.  The array elements updated begin with the given index
+      and continue with consecutive indices until either the list is
+      exhausted or the array ends. 
+
+   val setEnum    : c_object * int -> unit
+   -- This updates a object containing enumerated values.  The integer
+      must be in the appropriate range defined by the c_type of the
+      object.  The c_type of the object should be an enumerated type.
+
+
+The following are particular selection functions for particular kinds
+of structured C data - these expect the foreign objects to have an
+appropriate c_type already set.  If not, then they fail with exception
+ForeignType.
+
+
+   val indexObject   : { array:c_object,  tgt:c_object, index:int } -> unit
+   -- This selects an array element from the given array at the given index
+      and copies the data to the target object, `tgt'.  The index must be
+      in the range of the array, the c_type of `array' should be an
+      array type and the target object should have compatible c_type.
+
+   val derefObject   : { ptr:c_object,    tgt:c_object } -> unit
+   -- This locates the data pointed at by the pointer object and copies it
+      to the target object.
+
+   val selectObject  : { record:c_object, tgt:c_object, field:name } -> unit
+   -- This selects data from a field of a given record and copies it
+      to the target object.  The field has to be one of those associated
+      with the C struct type of the `record'; the c_type of the target
+      object must also be compatible with the field.
+
+   val coerceObject  : { union:c_object,  tgt:c_object } -> unit
+   -- This extracts the content of the union object and copies it to the target
+      object.  The c_types of the union and the target do not have to
+      match (i.e. implict coercion).
+
+   val copyIndexObject     : c_object * int -> c_object
+   -- As for indexObject() above, but generates a new object to provide the
+      result.
+
+   val copyDerefObject     : c_object -> c_object
+   -- As for derefObject() above, but generates a new object to provide the
+      result.
+
+   val copySelectObject    : c_object * name -> c_object
+   -- As for selectObject() above, but generates a new object to provide the
+      result.
+
+   val copyCoerceObject    : c_object -> c_object
+   -- As for coerceObject() above, but generates a new object to provide the
+      result.
+
+   val indexObjectType  :  c_object -> c_type
+   -- This gives the c_type of an element of the array.
+
+   val derefObjectType  :  c_object -> c_type
+   -- This gives the c_type of the value pointed at by the pointer object.
+
+   val selectObjectType  :  c_object * name -> c_type
+   -- This gives the c_type of the field selected from the C struct object.
+
+   val coerceObjectType  :  c_object -> c_type
+   -- This gives the c_type of the current member of the C union object.
+
+   val indexObjectSize  :  c_object -> int
+   -- This gives the size (in bytes) of an element of the specified array.
+
+   val derefObjectSize  :  c_object -> int
+   -- This gives the size (in bytes) of the value pointed at by the
+      pointer object.
+
+   val selectObjectSize  :  c_object * name -> int
+   -- This gives the size (in bytes) of the field selected from the C
+      struct object.
+
+   val coerceObjectSize  :  c_object -> int
+   -- This gives the size (in bytes) of the current member for the C
+      union object.
+
+   val nextArrayItem  :  c_object -> unit
+   -- This `shifts' the object forwards through the workspace by an amount
+      equal to its size.  This is useful when `stepping through' an array.
+
+   val prevArrayItem  :  c_object -> unit
+   -- As for nextArrayItem(), except that the object is shifted `backwards'.
+
+
+The following are generally `getter' functions for particular kinds of
+C data - as for the related `setter' functions, these expect the object
+objects to have an appropriate c_type already set.  If not, then they
+fail with exception ForeignType.
+
+
+   val getChar  :  c_object -> c_char
+   -- Extracts from a object with appropriate c_type, a C character
+      represented as an ML value.
+
+   val getUnsignedChar  :  c_object -> c_char
+   -- Extracts  from a object with appropriate c_type, a C unsigned
+      character represented as an ML value (0 - 255).
+
+   val getSignedChar    : c_object -> c_char
+   -- Extracts a C signed character represented as an ML value
+      (-127 - 127) from a object with appropriate c_type.
+
+   val getShort          : c_object -> c_short_int
+   -- Extracts  from a object with appropriate c_type, a C short value
+      represented as an ML value.
+
+   val getInt            : c_object -> c_int
+   -- Extracts  from a object with appropriate c_type, a C int value
+      represented as an ML value.
+
+   val getLong           : c_object -> c_long_int
+   -- Extracts  from a object with appropriate c_type, a C long value
+      represented as an ML value.
+
+   val getUnsignedShort  :  c_object -> c_short_int
+   -- Extracts from a object with appropriate c_type, a C unsigned short
+      value represented as an ML value.
+
+   val getUnsigned  :  c_object -> c_int
+   -- Extracts from a object with appropriate c_type, a C unsigned int
+      value represented as an ML value.
+
+   val getUnsignedLong  :  c_object -> c_long_int
+   -- Extracts from a object with appropriate c_type, a C unsigned long
+      value represented as an ML value.
+
+   val getWord32  :  c_object -> word32
+   -- Extracts from a object with appropriate c_type a 4-byte quantity
+      (i.e. C unsigned) represented as a Word32 ML value.
+
+   val getFloat  :  c_object -> c_real
+   -- Extracts from a object with appropriate c_type, a C float represented as an
+      ML value.
+
+   val getDouble  :  c_object -> c_double
+   -- Extracts from a object with appropriate c_type, a C double float
+      represented as an ML value.
+
+   val getLongDouble  :  c_object -> c_long_double
+   -- Extracts from a object with appropriate c_type, a C long double float
+      represented as an ML value.
+
+   val getString  :  c_object -> string
+   -- Extracts from a object with appropriate c_type, an ASCII character string
+      represented as an ML value.
+
+   val getData  :  c_object -> c_object
+   -- Yields a object containing the dereferenced value of the given pointer.
+      This is a synonym for the copy_deref_object() function.
+
+   val getStruct  :  c_object -> c_object list
+   -- Yields a list of objects each corresponding to a field of the given
+      C struct object.
+
+   val getField  :  c_object * name -> c_object
+   -- Yields the value of a given field.  This is a synonym for the
+      copySelectObject() function.
+
+   val getUnion  :  c_object -> c_object
+   -- Yields a object whose value and c_type corresponds to the current member
+      of the given union object.  This is a synonym for the copyCoerceObject()
+      function.
+
+   val getArray  :  c_object -> c_object list
+   -- Yields a list of objects corresponding to the elements of the given
+      array object.
+
+   val getEnum  :  c_object -> int
+   -- Yields an integer corresponding to the enumerated value
+      represented by the given object.
+
+
+8.4.  structure C.Signature
+==========================
+
+This structure defines how external signature information is
+represented and provides operators for manipulating this information.
+
+   type c_type (= Type.c_type)
+   -- This makes use of the represented C-type information.
+
+   type c_signature
+   -- This is an encapsulated abstract type for representing consistent
+      collections of C declaration information for types, functions
+      and variables.
+
+
+   datatype c_decl =
+   -- This data type is used to represent C type declaration info and
+      has the following structure:
+      + UNDEF_DECL
+        -- This value is included as a default return value for queries
+           rather than using option values (i.e. NONE and SOME)
+           for wrapping and unwrapping these values.
+
+      + VAR_DECL of { name : name, ctype : c_type }
+        -- C variable declarations can be recorded in this form.  The
+           type information may be updated and modified.
+
+      + FUN_DECL of { name   : name,
+	 	     source : c_type list,
+		     target : c_type }
+        -- C function declaration information can be recorded in this
+           form.  The type information may be updated and modified.
+
+      + TYPE_DECL of { name : name,
+	 	     defn : c_type,
+		     size : int }
+
+        -- C type information associated with a name (i.e. typedef and
+           struct/union/enum decls) can be recorded in this form.  The
+           associated type and size information may be updated and
+           modified.
+       
+      + CONST_DECL of { name : name, ctype : c_type }
+        -- Type information associated with simple literal `#define'
+           constants can be recorded in this form.
+
+   val newSignature      : unit -> c_signature
+   -- This generates a fresh c_signature object.
+
+   val lookupEntry : c_signature -> name -> c_decl
+   -- This takes a c_signature and a name and returns up a declaration
+      value having that name, if one exists.
+
+   val defEntry    : c_signature * c_decl -> unit
+   -- This updates a c_signature object by adding a given entry.
+
+   val removeEntry   : c_signature * name -> unit
+   -- This removes the named entry from the given c_signature object.
+
+   val showEntries : c_signature -> c_decl list
+   -- This yields a list of all the entries contained within a given
+      c_signature.
+
+   val normaliseType : c_signature -> (c_type -> c_type)
+   -- This function takes a c_type object and ensures that size information
+      is correct and up to date.  Normalised types can have their
+      sizes computed using sizeOf().
+
+   val loadHeader : filename -> c_signature
+   -- When implemented, this will scan a C header file for declaration
+      info and construct a corresponding C signature.
+
+
+
+8.5.  structure C.Function
+==========================
+
+   type c_structure (= Structure.c_structure)
+
+   type c_signature (= Signature.c_signature)
+
+   type c_type      (= Type.c_type)
+
+   type c_object       (= Value.c_object)
+
+   type c_function
+   -- This is an encapsulated abstract type used for representing foreign
+      function data.  It supports sufficient information to enable these
+      functions to be called with appropriate arguments and for its
+      results to be interpreted.
+
+   val defineForeignFun : (c_structure * c_signature) -> (name -> c_function)
+   -- This is the main function in which all the key elements of the C
+      interface are combined.  This function is used to extract named
+      foreign code from a c_structure and then combined with the type
+      information associated with the c_signature for that name.  The result
+      is a c_function object which can then be supplied with arguments and
+      called.
+
+   val call   : c_function -> (c_object list * c_object) -> unit
+   -- This function takes a c_function object and a list of objects
+      representing the arguments, calls the associated foreign function and
+      returns the result to the other given object.  Of course, all the type
+      information for c_function, argument objects and result object must match
+      accordingly.
+
+
+
+8.6.  structure C.Diagnostic
+============================
+
+This structure contains a general collection of tools to help provide
+diagnostic services for C specific parts of the FI such as c_objects.  It
+is not envisaged that these would be used to provide functionality
+within applications - but, of course, this is not prohibited either.
+
+These tools are provided here on the understanding that this part of
+the interface may be changed arbitrarily, In particular, there is no
+guarantee to preserve any functionality in future versions.  However,
+such interfaces are not changed without there being just cause.
+
+   type store  (= Store.store)
+
+   type c_type  (= Type.c_type)
+
+   type c_object   (= Value.c_object)
+
+   val cTypeInfo : c_type -> string
+   -- This provides a string describing the given c_type value.
+
+   val viewObject : c_object -> string
+   -- This provides a string describing the given c_object.
+
+   val dispObject : c_object -> c_object
+   -- Outputs the string produced by view_object() on the standard
+      output stream and returns the c_object.
+
+   val objectInfo : c_object ->
+	      { store     : store,
+		status    : string,
+		currency  : string,
+		mode      : string,
+		langtype  : string,
+		size      : int,
+		base      : address option,
+		offset    : int
+	      }
+   -- This provides a structured, diagnostic `view' of the internals of a
+      c_object.  This can be used by programmers to construct additional
+      diagnostic tools based upon these.
+
+
+   val objectData         : c_object -> int list
+   -- This function presents the data associated with a object in the
+      form of a list of integers.
+
+   val objectDataHex     : c_object -> string
+   -- This function presents the data associated with a object in the
+      form of string of hex digits.
+
+   val objectDataAscii   : c_object -> string
+   -- This function presents the data associated with a object in the
+      form of an ASCII string.
+
+
+9.  Some limitations and future extensions
+===========================================
+
+The main limitation at present is that the foreign function call is
+not completely general.  Both arguments and results are limited to
+being values of size at most 4 bytes.  Such values can be:
+
+   - characters
+   - standard integers (short, long, signed or unsigned)
+   - simple floats (not doubles)
+   - enumerated constants
+   - machine pointers to general values (incl. structures and functions).
+
+The final case allows general strings to be handled and general data to
+be used.  In practice, this is only a limitation when a general
+`struct' value or a `double' needs to be passed or returned directly.
+
+The present FI is felt to be reasonably comprehensive, if a litlle
+intimidating to use.  It is hoped that future revisions will
+incorporate support for automatic stub generation that makes use of
+header file information.
+
+----------------------------- End of foreign.doc ----------------------------------

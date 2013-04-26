@@ -1,0 +1,64 @@
+(*
+ *
+ * $Log: action.str,v $
+ * Revision 1.2  1998/06/11 13:43:37  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+functor Action(structure N : NAME) : ACTION =
+struct
+
+   structure N = N
+
+   datatype action = Tau
+                | Input of N.name
+                | Output of N.name
+
+   fun mkstr(Tau) = "t"
+     | mkstr(Input(c)) = (N.mkstr c)
+     | mkstr(Output(c)) ="'" ^ (N.mkstr c)
+
+   fun makstr(Tau,_) = "t"
+     | makstr (Input(c),nl) = N.makstr(c,nl)
+     | makstr (Output(c),nl) = "'"^(N.makstr(c,nl))
+
+   fun hashval(Tau) = (ord "t")-(ord "`")
+     | hashval (Input n) = N.code(n)
+     | hashval (Output n) = N.code(n)
+
+   and is_tau(Tau) = true
+     | is_tau _ = false
+   and is_input(Input _) = true
+     | is_input _ = false
+   and is_output(Output _) = true
+     | is_output _ = false
+   and mk_tau () = Tau
+   and mk_input (n) = Input(n)
+   and mk_output(n) = Output(n)
+   and name(Input(n)) = n
+     | name(Output(n)) = n
+     | name (Tau) = raise Lib.disaster "calling Act.name(Tau)"
+
+   and eq (Tau,Tau) = true
+     | eq (Input(c1),Input(c2)) = N.eq(c1,c2)
+     | eq (Output(c1),Output(c2)) = N.eq(c1,c2)
+     | eq (_,_) = false
+
+   and free_names(Tau,_) = nil
+     | free_names (Input(c),lvl) = if N.is_free(c,lvl) then [N.free(c,lvl)] else nil
+     | free_names (Output(c),lvl) = if N.is_free(c,lvl) then [N.free(c,lvl)] else nil
+
+   and names(Tau) = nil
+     | names(Input(c)) = [c]
+     | names(Output(c)) = [c]
+
+   fun substitute(e,v,Tau) = Tau
+     | substitute(e,v,Input(n)) = Input(N.substitute(e,v,n))
+     | substitute(e,v,Output(n))= Output(N.substitute(e,v,n))
+
+   fun beta_reduce Tau _ = Tau
+     | beta_reduce (Input(n)) E = Input(N.beta_reduce n E)
+     | beta_reduce (Output(n)) E = Output(N.beta_reduce n E)
+end

@@ -1,0 +1,19 @@
+
+Bug #1967:  Win32: Paths should ignore case.
+Fixed by change #2916
+
+Repeat by:  In registry, go to the following key:
+HKEY_CURRENT_USER/Software/Harlequin/MLWorks
+and change the path settings to include a mixture of lowercase and 
+uppercase letters, but do not change the actual paths.  Then type 
+the following on a command line:
+
+ml_batch -compile-file <filename>
+where <filename> is a legal file name of an ML source file.
+
+Bug behaviour:  the compilation will fail, giving an error message
+like:  'can't find parent for module name:   foo'
+
+Proper behaviour:  the compilation will succeed, and path settings
+will be displayed in lower case.
+

@@ -1,0 +1,223 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_name=`basename $0`
+cmd="ci"
+STATUS=0
+usage="usage: $script_name [-[ftzh]+] [-b <branch>] [(-r <reason>|-c)] [-i <bug-id>] <file>+"
+claim_reason=""; new_reason="";bug_id="";test="";branch=""; items="";lastdir=""; force="";echo="";
+while getopts "eb:tr:ci:hf" opt; do
+  case $opt in
+    e) echo="echo";;
+    f) force="-force-checkin";;
+    b) branch="-branch $OPTARG";;
+    t) test="test";;
+    r) new_reason="$OPTARG";;
+    c) claim_reason="-use-claim-reason";;
+    i) bug_id="-bug-number $OPTARG";;
+    h) echo $usage; 
+      echo "    h for this help"
+      echo "    b <branch>"
+      echo "    t run in hope test mode"
+      echo "    r <new claim reason>"
+      echo "    f force checkin"
+      echo "    i <bug-id>"
+      echo "    c use original claim reason"
+      exit 1;;
+    \?) echo $usage; exit 1 ;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage
+  exit 1
+elif [ -n "$new_reason" -a -n "$claim_reason" ]; then
+  echo "options \"r\" and \"c\" are mutually exclusive"
+  exit 1
+else
+  : echo ok
+fi
+
+items=""
+lastdir=""
+for i in $*
+do
+  if [ $i = '/' ]
+  then
+     echo $script_name: ignoring /
+  else
+    # strip trailing /
+    tmp=`expr match $i '\(.*[^/]\)'`
+    # find the compound
+    eval `findcomp $tmp`
+	# defines $dir, $compound, $unit
+    if [ -z "$compound" ]
+    then
+      echo $script_name failed : .compound file not found
+      exit 3
+    elif [ ! -z "$lastdir" -a "$lastdir" != "$dir" ]
+    then
+      echo $script_name failed : incompatible root directories $dir and $lastdir
+      exit 4
+    elif [ -z "$items" ]
+    then
+      items="-compound $compound -unit $unit"
+    else
+      items="$items -and -compound $compound -unit $unit"
+    fi
+    lastdir=$dir
+  fi
+done
+
+cd $dir
+if [ -z "$TMP" ]; then
+  temp_dir=/tmp
+else
+  temp_dir=`echo $TMP | sed -e 's!\\\\!/!g'`
+fi
+temp_file=$temp_dir/hope_tmp$$
+
+# We need to work out whether we're on Unix or Windows.
+# NT sets the OS variable to Windows_NT.
+# Some MLWorkers set the OS variable themselves.
+# Failing that, bash sets the OSTYPE variable.
+hope_temp_file=""
+case "$OS" in
+  Win*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  NT*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  Solaris*)
+    hope_temp_file=$temp_file;;
+  SunOS*)
+    hope_temp_file=$temp_file;;
+  Irix*)
+    hope_temp_file=$temp_file;;
+  Linux*)
+    hope_temp_file=$temp_file;;
+esac
+
+if [ -z "$hope_temp_file" ]; then
+  case "$OSTYPE" in
+    Win*)
+      hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+    Solaris*)
+      hope_temp_file=$temp_file;;
+    SunOS*)
+      hope_temp_file=$temp_file;;
+    linux*)
+      hope_temp_file=$temp_file;;
+    *)
+      # Assume Unix if we have no other clue.
+      # We could also get here on Win95, but we don't use that
+      # for development.
+      hope_temp_file=$temp_file;;
+  esac
+fi
+
+if [ -z "$items" ]; then
+  echo skipped everything
+elif [ -n "$new_reason" ]; then
+  echo $test $cmd $force $recursive -filedate $bug_id -reason "$new_reason" $branch $items > $temp_file
+  $echo hope source $hope_temp_file
+  rm $temp_file
+else
+  echo $test $cmd $force $recursive -filedate $bug_id $claim_reason $branch $items > $temp_file
+  $echo hope source $hope_temp_file
+  rm $temp_file
+fi  
+
+###############################################################################
+# $Log: cin,v $
+# Revision 1.25  1999/03/24 15:37:53  daveb
+# [Bug #190541]
+# Check both the OS and OSTYPE environment variables.
+#
+# Revision 1.24  1998/10/07  12:34:00  jont
+# [Bug #70179]
+# Avoid OSTYPE=linux problems
+#
+# Revision 1.23  1998/09/24  14:31:08  jont
+# [Bug #70179]
+# Make sure temp file name more carefully created to avoid drive letter problems
+#
+# Revision 1.22  1998/08/25  14:42:44  jont
+# [Bug #70162]
+# Use source files to get past hope 44 argument limit under Win32
+#
+# Revision 1.21  1997/04/15  11:19:31  jont
+# Stop using script_path mechanism as this confuses Win32
+#
+# Revision 1.20  1996/10/04  17:53:49  io
+# give it a force checkin
+#
+# Revision 1.19  1996/09/04  14:35:27  io
+# use of "-filename" in cin/cout scripts is causing an interaction
+# with hope such that different .version files could contain
+# the same units. I will restore to the old mechanism and lose
+# the ability to handle compounds
+#
+# Revision 1.18  1996/07/15  18:46:13  io
+# add recursive option
+#
+# Revision 1.17  1996/07/11  18:08:36  io
+# [Bug #1463]
+# add support for directories and bug-ids,
+# see "-h" for other options
+#
+# Revision 1.16  1995/07/21  13:04:00  jont
+# Remove -checkout
+#
+# Revision 1.15  1995/03/20  11:38:56  daveb
+# <embarassed cough> forgot to remove the "echo" that I was using for tests!
+#
+# Revision 1.14  1995/03/20  11:24:32  daveb
+# Changed this script drastically to take advantage of the greater speed
+#  offered by passing all arguments to hope at once.
+#
+# Revision 1.13  1995/02/28  12:52:04  jont
+# Modify use of version (deprecated) to branch
+#
+# Revision 1.12  1995/02/23  17:15:34  jont
+# Modify for new file structure /u
+#
+# Revision 1.11  1995/02/21  15:47:09  brianm
+# Introducing SML_HOME
+#
+# Revision 1.10  1994/06/15  11:02:50  jont
+# Add shell variable settings to allow findcomp to be found
+#
+# Revision 1.9  1994/06/09  15:27:10  nickh
+# Better .compound awareness.
+#
+# Revision 1.8  1994/04/05  11:25:31  daveb
+# Now handles trailing / in arguments.
+#
+# Revision 1.7  1994/03/02  12:42:01  daveb
+# Revamping to take file names as arguments.
+#
+# Revision 1.6  1994/02/04  10:12:21  daveb
+# Converted to hope.
+#
+# Revision 1.5  1993/09/07  16:43:43  daveb
+# Merged in bug fix.
+#
+# Revision 1.4.1.2  1993/09/07  11:51:59  daveb
+# Prevented -rrev flag from generating spurious error messages.
+#
+# Revision 1.4  1992/01/31  12:18:00  richard
+# New files are initialized before checkin: their comment leaders are set
+# to null strings.
+#
+# Revision 1.3  1991/12/24  09:31:33  richard
+# Updated to use RCS 5.6 commands.  Much better!
+#
+# Revision 1.2  1991/06/21  12:37:46  jont
+# Changed to use program for reading time stamp in order to preserve
+# second accuracy
+#
+# Revision 1.1  91/06/13  11:31:04  jont
+# Initial revision
+# 

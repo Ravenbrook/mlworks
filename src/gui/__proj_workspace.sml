@@ -1,0 +1,107 @@
+(*
+ * $Log: __proj_workspace.sml,v $
+ * Revision 1.3  1998/04/27 07:23:39  mitchell
+ * [Bug #50078]
+ * Clear project_tool reference when saving a session
+ *
+*Revision 1.2  1998/02/06  15:58:38  johnh
+*new unit
+*[Bug #30071]
+*Replaces *comp_manager.sml for new Project Workspace tool.
+*
+ *  Revision 1.1.1.6  1997/11/26  15:11:02  daveb
+ *  [Bug #30071]
+ *  Removed Module structure.
+ *
+ *  Revision 1.1.1.5  1997/11/26  11:19:35  daveb
+ *  [Bug #30071]
+ *  Removed ActionQueue.
+ *
+ *  Revision 1.1.1.4  1997/11/20  18:17:53  daveb
+ *  [Bug #30326]
+ *  Removed MLWorksIo_ parameter.
+ *
+ *  Revision 1.1.1.3  1997/10/29  15:48:38  daveb
+ *  [Bug #30089]
+ *  Removed OldOs.
+ *
+ *  Revision 1.1.1.2  1997/09/12  14:18:08  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ * Revision 1.7  1996/05/07  16:19:55  jont
+ * Array moving to MLWorks.Array
+ *
+ * Revision 1.6  1996/04/18  15:18:17  jont
+ * initbasis moves to basis
+ *
+ * Revision 1.5  1996/03/26  12:45:23  stephenb
+ * Mark any uses of Os as referring to the old Os interface.
+ *
+ * Revision 1.4  1996/01/19  15:19:39  stephenb
+ * OS reorganisation: the editor structure is now OS specific
+ * so it is to be found in system and not editor.
+ *
+ *  Revision 1.3  1995/12/13  10:17:45  daveb
+ *  Removed FileDialog argument.
+ *
+ *  Revision 1.2  1995/12/07  17:03:30  daveb
+ *  Added header.
+ *
+ *  
+ * Copyright (c) 1995 Harlequin Ltd.
+ *)
+
+require "../basics/__module_id";
+require "../main/__preferences";
+require "../main/__user_options";
+require "../main/__project";
+require "../main/__toplevel";
+require "../main/__proj_file";
+require "../system/__editor";
+require "../utils/__btree";
+require "../utils/__crash";
+require "../basis/__list";
+require "../interpreter/__incremental";
+require "../interpreter/__shell_utils";
+require "../interpreter/__save_image";
+require "../debugger/__ml_debugger";
+require "../winsys/__capi";
+require "../winsys/__menus";
+require "__graph_widget";
+require "__gui_utils";
+require "__tooldata";
+require "__console";
+require "__debugger_window";
+require "__error_browser";
+require "__proj_properties";
+
+require "_proj_workspace";
+
+structure ProjectWorkspace_ =
+  ProjectWorkspace (
+    structure ModuleId = ModuleId_
+    structure Preferences = Preferences_
+    structure UserOptions = UserOptions_
+    structure Editor = Editor_
+    structure TopLevel = TopLevel_
+    structure ProjFile = ProjFile_
+    structure Incremental = Incremental_
+    structure ShellUtils = ShellUtils_
+    structure Ml_Debugger = Ml_Debugger_
+    structure NewMap = BTree_
+    structure Crash = Crash_
+    structure List = List
+    structure Project = Project_
+    structure Capi = Capi_
+    structure Menus = Menus_
+    structure GraphWidget = GraphWidget_
+    structure GuiUtils = GuiUtils_
+    structure ToolData = ToolData_
+    structure Console = Console_
+    structure ErrorBrowser = ErrorBrowser_
+    structure DebuggerWindow = DebuggerWindow_
+    structure ProjProperties = ProjProperties_
+    structure SaveImage = SaveImage_
+  )
+

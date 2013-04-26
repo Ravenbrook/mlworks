@@ -1,0 +1,29 @@
+# Example makefile (Linux variant)
+
+CC 		= gcc
+
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -g
+
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+LDFLAGS		= -G -Bdynamic 
+
+LIB		= -ldl -lelf
+
+PROGS		= hello.so random.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) *.so *.o

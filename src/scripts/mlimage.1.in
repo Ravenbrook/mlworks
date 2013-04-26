@@ -1,0 +1,115 @@
+'\" t
+.TH MLIMAGE 1 1996-08-15 Harlequin MLWORKS
+.SH NAME
+mlimage \- Restarts an MLWorks session saved in an image file.
+.SH SYNOPSIS
+.B mlimage
+[
+.B -mono 
+]
+.B -load 
+.I image-file 
+.SH DESCRIPTION
+.LP
+.B mlimage
+restarts an
+.B MLWorks
+session saved in an image file (a 
+.B \.img
+file) with the File > Save Image menu item on
+the
+.B MLWorks
+console, or with the interactive context function 
+.B Shell.saveImage.
+For running other image files, use 
+.B mlrun\fR(1).
+.LP
+.B mlimage
+starts MLWorks as though you have called
+.B mlworks\fR(1)
+and reinstates the top-level interactive context as it stood at
+the time the image file was saved.  All items evaluated and loaded
+into MLWorks at that time will be available in the restarted image.
+Preference settings, trace manager, and breakpoint manager settings
+are also reinstated. 
+.SH OPTIONS
+.TP 6
+.B -load \fIfilename
+Restart the session image in 
+.I filename
+.TP 6
+.B -mono 
+Disables the use of colours in X, and should  be given when 
+.B MLWorks
+is used on a monochrome screen. 
+.SH ERRORS
+.LP
+This section lists the fatal errors that may occur and their causes.
+.LP
+.PD 0
+The file `\fIname\fR' is not in the correct image format.
+.LP
+The image file `\fIname\fR' is incompatible with the current version of the image loader.
+.LP
+The image loader was unable to allocate enough memory while loading the file `\fIname\fR'.
+.LP
+The image loader was unable to open the file `\fIname\fR'.
+.LP
+The loader was unable to read from the file `\fIname\fR' despite being able to open it.
+.PD
+.RS 4
+These errors occur in conjunction with the
+.B -load
+option.
+.RE
+.LP
+.PD 0
+An unknown option `\fIarg\fR' was specified.  Use `-help' for help.
+.LP
+The wrong number of arguments were specified for the option
+`\fIoption\fR'.  Use -help for help.
+.LP
+Missing closing delimiter after option `\fIoption\fR'.  Use `-help' for help.
+.PD
+.RS 4
+These errors occur when the form of the call to
+.B mlimage
+is incorrect.
+.RE
+.LP
+The file `\fIname\fR' is not in the correct image format.
+.RS 4
+Check that the file specified is really an image file output
+from MLWorks.  If it is then either it has been corrupted or
+there is a problem with the compiler.
+.RE
+.LP
+The global state in the image file `\fIname\fR' does not correspond to
+that of this runtime system.
+.RS 4
+This error indicates that the runtime system is not compatible with
+the image.  It should only occur when an image from one release is
+used with a runtime system from another, incompatible, release.
+.RE
+.LP
+.PD 0
+The image loader was unable to open the file `\fIname\fR'.
+.LP
+The image loader was unable to read from the file `\fIname\fR' despite being able to open it.
+.PD
+.RS 4
+Check that the specified files exist and are not protected against reading.
+.SH SEE ALSO
+.BR mlbatch (1),
+.BR mlpervasive (1),
+.BR mlrun (1),
+.BR mlworks (1),
+.BR mlworks-basis (1)
+.LP
+.I MLWorks User Guide
+
+
+
+
+
+

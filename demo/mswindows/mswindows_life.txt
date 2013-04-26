@@ -1,0 +1,53 @@
+  Load File: life.sml
+
+  Implements the Life game.
+
+  To run from inside MLWorks, at the listener prompt type
+
+	life_test ();
+
+  This starts a new game with the default initial values.  To start
+  the run, type `s' into this window -- this starts a continuous cycle
+  of generations.  To stop this continuous cycle, press `s' again.  To
+  see one generation at a time, press any other key, apart from `r'
+  and `x'.
+
+  Other controls are:
+
+           s   start and stop
+           r   return to initial configuration
+  other keys   get next generation
+
+           x   quit
+ 
+  The setting of particular points can also be toggled using the left
+  mouse-button.
+
+  It is also possible to start games using different initial
+  configurations. For instance, typing the following into the listener
+
+    life (gunvals,world_x,world_y);
+
+  starts a game with a `glider gun' in place and in a grid of the
+  default size.  To use other pre-defined configurations, you will
+  need to load the file `forms.sml'.
+
+
+  To run as a standalone executable, first compile and load the
+  module as usual using the project workspace.  Then create an
+  executable file for instance by doing
+
+      MLWorks.Deliver.deliver 
+	("life", life_appl(gunvals,world_x,world_y), MLWorks.Deliver.WINDOWS);
+
+  (life_appl(values,x,y) is a function of type unit -> unit which allows
+  the demo to be run from the command-line without invoking MLWorks).  
+  After delivery the MLWorks session will exit and the file `life.exe' 
+  can then be run from the command-line.
+  
+  Note that MLWorks executables depend on the MLWorks runtime shared
+  library (DLL).  If the DLL cannot be found, either add the bin
+  subdirectory of the current directory to your path environment
+  variable, or run the executable from either the MLWorks bin directory
+  or the directory in which it is located.
+

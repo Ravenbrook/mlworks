@@ -1,0 +1,846 @@
+#!/bin/sh
+#
+# Copyright (C) 1997 The Harlequin Group Ltd.  All rights reserved.
+#
+#       ==== INSTALL MLWORKS ====
+#
+# This script installs MLWorks from the contents of the current
+# directory, which should be the MLWorks distribution.
+#
+#
+#       === CONFIGURATION ===
+#
+# The following variable may be adjusted to suit your system:
+#
+#       Location of installation
+#
+#   MLWORKSDIR  root directory for MLWorks
+#   LIBDIR      directory for MLWorks libraries
+#   IMAGEDIR    directory for MLWorks images
+#   BINDIR      directory for MLWorks binaries
+#   SCRIPTDIR   directory for MLWorks scripts
+#   MANDIR      root directory for MLWorks manual pages
+#   RUNTIME     name of the runtime system to install as mlrun
+#   RUNTIMEOPTS options when using it
+#   ARCH	architecture of the host machine (e.g. SPARC)
+#   OS		operating system of the host machine (e.g. SunOS)
+#
+#	Other variables
+#
+#   If your X installation recognises the %C escape in the value of
+#   XFILESEARCHPATH, set APP_DEFAULT_EXTENSION=%N%C.  Otherwise set
+#   APP_DEFAULT_EXTENSION=%N-color or APP_DEFAULT_EXTENSION=%N-mono,
+#   as appropriate for your system.  X11R5 recognises the %C escape.
+#
+#
+# We allow MLWORKSDIR to be given on the command line
+#
+
+# determine cwd so that licence text can be found
+
+script_dir=`dirname $0`
+cd $script_dir
+
+# Default show legal agreement -- want to turn this off during RPM building
+
+silent=0
+
+# For free versions we need to show the legal agreement during installation
+
+while getopts "s" opt; do
+  case $opt in
+    s) silent=1;;
+    *) echo "Usage: install-mlworks [installation-dir]" 
+       exit 0;;
+  esac
+done;
+shift `expr $OPTIND - 1`
+
+if [ $silent -eq 0 ]; then
+  if [ -z "$PAGER" ] || [ "`type $PAGER`" = "$PAGER not found" ] ; then
+    if [ "`type more`" != "more not found" ] ; then
+      page=more
+    else
+      page=cat
+    fi
+  else
+    page="$PAGER"
+  fi
+
+  $page license.txt
+
+  answer=
+  while [ -z "$answer" ] ; do
+    echo " "
+    echo "Do you accept the terms and conditions of this license agreement? (yes/no)"
+    read answer
+    ucanswer=`echo "${answer}" | tr '[a-z]' '[A-Z]'`
+    case "$ucanswer" in
+    YES)
+      ;;
+    NO)
+      echo " "
+      echo "License not accepted.  MLWorks not installed. "
+      echo " "
+      exit 1
+      ;;
+    *)
+      echo " "
+      echo "Please enter \"yes\" or \"no\"."
+      answer=
+      ;;
+    esac
+  done
+fi
+
+# MLWorks installation
+
+if [ $# -eq 1 ]; then
+  MLDIR=$1
+foo=`sed -e 's,^\.,,g' << EOF
+$MLDIR
+EOF`
+if [ "$foo" != "$MLDIR" ]; then
+  echo install-mlworks: Installation directory must be an absolute filename
+  exit 1
+fi
+if [ $MLDIR != "/" ]; then
+MLWORKSDIR=`sed -e 's,/$,,g' << EOF
+$MLDIR
+EOF`
+else
+MLWORKSDIR=$MLDIR
+fi
+else
+  MLWORKSDIR=/usr/local/lib/MLWorks
+fi
+
+echo install-mlworks: Installing into $MLWORKSDIR
+
+LIBDIR=$MLWORKSDIR/lib
+IMAGEDIR=$MLWORKSDIR/images
+BINDIR=$MLWORKSDIR/bin
+SCRIPTDIR=$MLWORKSDIR/bin
+MANDIR=$MLWORKSDIR/man
+EXAMPLEDIR=$MLWORKSDIR/examples
+ARCH=SPARC
+OS=SunOS
+if [ "$OS" = "Irix" -o "$OS" = "Solaris" ]; then
+  USE_STATIC=false
+else
+  USE_STATIC=true
+fi
+if [ "$USE_STATIC" = "false" ]; then
+  RUNTIME=main
+else
+  RUNTIME=main-static
+fi
+RUNLIB=libmlw.so
+RUNTIMEOPTS=
+APP_DEFAULT_EXTENSION=%N%C
+
+#       Programs
+#
+# You may want to alter the options passed to these programs.
+
+cp="/bin/cp"
+rm="/bin/rm -f"
+ln="/bin/ln -s"
+mkdir="/bin/mkdir -p"
+sed=/bin/sed
+zcat=zcat
+chmod_exec="chmod 775"
+chmod_exec_read_only="chmod 555"
+chmod_non_exec="chmod 664"
+chmod_read_only="chmod 444"
+
+#       === END OF CONFIGURATION ===
+#
+# You should not normally need to change anything beyond this comment.
+
+script=`basename $0`
+
+# This is a sed script to substitute the values of the installation
+# variables into text files.
+
+subst="s!\$MLWORKSDIR!$MLWORKSDIR!g
+       s!\$LIBDIR!$LIBDIR!g
+       s!\$IMAGEDIR!$IMAGEDIR!g
+       s!\$BINDIR!$BINDIR!g
+       s!\$SCRIPTDIR!$SCRIPTDIR!g
+       s!\$MANDIR!$MANDIR!g
+       s!\$RUNTIME!$RUNTIME!g"
+
+# Let's get going.
+
+$mkdir $MLWORKSDIR
+if test ! -d $MLWORKSDIR
+then
+  echo Failed to create $MLWORKSDIR, exiting
+  exit 1
+fi
+
+# Now we always install all the packages
+packages="toplevel binaries scripts pervasives libraries images emacs X11 manuals environments examples licensing"
+
+echo ARCH=$ARCH
+echo OS=$OS
+echo packages=$packages
+
+for package in $packages
+do
+  case $package in
+    # Top level items
+    toplevel)
+      echo "$script: top-level items in $MLWORKSDIR"
+      {
+	for f in README sml_97.ps bug-template.txt license.txt
+	do
+	  dest=$MLWORKSDIR/$f
+	  $rm $dest && $cp -p $f $dest
+          $chmod_read_only $dest
+	done
+      } ||
+      {
+        echo "$script: Failed to install top-level items"
+        exit 70
+      };;
+
+    # The binaries are simply copied to $BINDIR
+    binaries)
+      RUN_NAME=$RUNTIME.$ARCH.$OS;export RUN_NAME
+      echo "$script: binaries in $BINDIR"
+      {
+	if test \! -d $BINDIR
+	then
+          $mkdir $BINDIR &&
+	  $chmod_exec $BINDIR
+	fi &&
+	$rm $BINDIR/mlrun &&
+	$rm $BINDIR/$RUN_NAME &&
+        $cp bin/$ARCH/$OS/$RUNTIME $BINDIR/$RUN_NAME &&
+        $ln $BINDIR/$RUN_NAME $BINDIR/mlrun &&
+        $chmod_exec_read_only $BINDIR/$RUN_NAME &&
+        # copy the license validator
+        $rm $BINDIR/mlworks_license &&
+        $cp bin/$ARCH/$OS/mlworks_license $BINDIR/mlworks_license &&
+        $chmod_exec_read_only $BINDIR/mlworks_license &&  
+        (
+          cd bin/$ARCH/$OS &&
+          for f in *.xpm
+          do
+            dest=$MLWORKSDIR/bin/$f
+            $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+          done
+        )
+	if test "$OS" != SunOS
+	then
+	    $rm $BINDIR/$RUNLIB &&
+	    $cp bin/$ARCH/$OS/$RUNLIB $BINDIR/$RUNLIB &&
+	    $chmod_exec_read_only $BINDIR/$RUNLIB
+	fi 
+      } ||
+      {
+        echo "$script: Failed to install binaries"
+        exit 50
+      };;
+
+    # Scripts are processed to include the configuration settings if
+    # their name matches *.in, otherwise they are just copied.
+    scripts)
+      echo "$script: shell scripts in $SCRIPTDIR"
+      {
+	if test \! -d $SCRIPTDIR
+	then
+          $mkdir $SCRIPTDIR &&
+	  $chmod_exec $SCRIPTDIR
+	fi &&
+        (
+          cd scripts &&
+          for s in *
+          do
+	    dest=$SCRIPTDIR/`basename $s .in`
+	    $rm $dest &&
+            case $s in
+              *.in)
+                cat > $dest <<EOF
+#!/bin/sh
+MLWORKSDIR=$MLWORKSDIR
+IMAGEDIR=$IMAGEDIR
+LIBDIR=$LIBDIR
+BINDIR=$BINDIR
+SCRIPTDIR=$SCRIPTDIR
+MANDIR=$MANDIR
+RUNTIME=$RUNTIME
+RUNTIMEOPTS=$RUNTIMEOPTS
+MLWORKS_PERVASIVE=\${MLWORKS_PERVASIVE:-$MLWORKSDIR/pervasive}
+export MLWORKS_PERVASIVE
+MLWORKS_SRC_PATH=\${MLWORKS_SRC_PATH:-.}:$MLWORKSDIR
+export MLWORKS_SRC_PATH
+MLWORKS_DOC=\${MLWORKS_DOC:-$MLWORKSDIR/documentation}
+export MLWORKS_DOC
+XFILESEARCHPATH=\
+\$LIBDIR/X11/%L/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/%l/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/%T/$APP_DEFAULT_EXTENSION%S:\
+\$XFILESEARCHPATH
+export XFILESEARCHPATH
+XKEYSYMDB=/usr/lib/X11/XKeysymDB
+export XKEYSYMDB
+LD_LIBRARY_PATH=$BINDIR\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+EOF
+	      if [ "$OS" = "Solaris" ] ; then
+	        cat >> $dest <<EOF
+LD_LIBRARY_PATH=/usr/openwin/lib:\$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH
+EOF
+	      fi
+	      if [ "$OS" = "SunOS" ] ; then
+	        cat >> $dest <<EOF
+if [ ! -d /usr/lib/X11/nls ] ; then
+  XNLSDIR=\${XNLSDIR:-$MLWORKSDIR/lib/X11/nls}
+  export XNLSDIR
+fi
+EOF
+	      fi
+              cat $s >> $dest
+            ;;
+              *)
+                $cp $s $dest;;
+            esac
+	    $chmod_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install shell scripts"
+        exit 60
+      };;
+
+    # The pervasive modules are simply copied.
+    pervasives)
+      echo "$script: pervasive modules in $MLWORKSDIR/pervasive"
+      {
+	if test \! -d $MLWORKSDIR/pervasive
+	then
+          $mkdir $MLWORKSDIR/pervasive &&
+	  $chmod_exec $MLWORKSDIR/pervasive
+	fi &&
+	if test \! -d $MLWORKSDIR/pervasive/DEPEND
+	then
+          $mkdir $MLWORKSDIR/pervasive/DEPEND &&
+	  $chmod_exec $MLWORKSDIR/pervasive/DEPEND
+	fi &&
+	(
+	  cd pervasive/$ARCH/$OS/DEPEND &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/pervasive/DEPEND/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+	  done
+	) &&
+	(
+	  cd pervasive/$ARCH/$OS &&
+	  for f in *.mo
+	  do
+	    dest=$MLWORKSDIR/pervasive/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+	  done
+	)
+      } ||
+      {
+        echo "$script: Failed to install pervasive modules"
+        exit 10
+      };;
+
+    # The library modules are simply copied.
+    # objects go in the objects dir, signatures in specific directories
+    libraries)
+      echo "$script: library signatures in $MLWORKSDIR/{basis,utils,motif,foreign}"
+      {
+      {
+        if test \! -d $MLWORKSDIR/foreign
+       then
+           $mkdir $MLWORKSDIR/foreign &&
+         $chmod_exec $MLWORKSDIR/foreign
+       fi &&
+       (
+         cd foreign &&
+         for f in *.*
+         do
+           dest=$MLWORKSDIR/foreign/$f
+           $rm $dest && $cp -p $f $dest
+         done
+       )
+       } &&
+     {
+      if test \! -d $MLWORKSDIR/basis
+	then
+          $mkdir $MLWORKSDIR/basis &&
+	  $chmod_exec $MLWORKSDIR/basis
+	fi &&
+	(
+	  cd basis &&
+          dest=$MLWORKSDIR/basis/basis.mlp &&
+          $rm $dest && $cp basis.mlp $dest &&
+	  for f in *.sml
+	  do
+	    dest=$MLWORKSDIR/basis/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/utils
+	then
+          $mkdir $MLWORKSDIR/utils &&
+	  $chmod_exec $MLWORKSDIR/utils
+	fi &&
+	(
+	  cd utils &&
+	  for f in *.sml
+	  do
+	    dest=$MLWORKSDIR/utils/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/motif
+	then
+          $mkdir $MLWORKSDIR/motif &&
+	  $chmod_exec $MLWORKSDIR/motif
+	fi &&
+	(
+	  cd motif &&
+	  for f in *.sml *.mlp
+	  do
+	    dest=$MLWORKSDIR/motif/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_read_only $dest
+	  done
+	)
+      } &&
+    # now copy the objects
+    echo "$script: library modules in $MLWORKSDIR/objects/Release"
+      {
+        if test \! -d $MLWORKSDIR/objects/Release
+        then
+          $mkdir $MLWORKSDIR/objects/Release &&
+          $chmod_exec $MLWORKSDIR/objects/Release
+        fi &&
+        (
+          cd objects/$ARCH/$OS/Release &&
+          for f in *
+          do
+            dest=$MLWORKSDIR/objects/Release/$f
+            $rm $dest && $cp -p $f $dest
+	    $chmod_read_only $dest
+          done
+        ) &&
+        if test \! -d $MLWORKSDIR/objects/DEPEND
+        then
+          $mkdir $MLWORKSDIR/objects/DEPEND &&
+          $chmod_exec $MLWORKSDIR/objects/DEPEND
+        fi &&
+        (
+          cd objects/$ARCH/$OS/DEPEND &&
+          for f in *
+          do
+            dest=$MLWORKSDIR/objects/DEPEND/$f
+            $rm $dest && $cp -p $f $dest
+	    $chmod_read_only $dest
+          done
+        )
+      }
+      } ||
+      {
+        echo "$script: Failed to install library modules"
+        exit 10
+      };;
+
+    # Images are uncompressed if their name matches *.Z, otherwise
+    # they are simply copied.
+    images)
+      echo "$script: images in $IMAGEDIR"
+      {
+	if test \! -d $IMAGEDIR
+	then
+          $mkdir $IMAGEDIR &&
+          $chmod_exec $IMAGEDIR
+	fi &&
+        (
+          cd images/$ARCH/$OS &&
+          for f in *
+          do
+	    dest=$IMAGEDIR/`basename $f .Z`
+	    $rm $dest &&
+            case $f in
+              *.Z) $zcat $f > $dest;;
+              *)   $cp $f $dest;;
+            esac &&
+	    $chmod_read_only $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install images"
+        exit 20
+      };;
+
+    # Emacs LISP files are run through sed using the $subst script
+    # constructed above if their name matches *.in.  This allows them
+    # to locate other Emacs bits and bobs.  Other files, and the files
+    # in the etc directory, are simply copied.
+    emacs)
+      echo "$script: Emacs library in $LIBDIR/emacs"
+      {
+	if test \! -d $LIBDIR
+	then
+	  $mkdir $LIBDIR &&
+	  $chmod_exec $LIBDIR
+	fi &&
+	if test \! -d $LIBDIR/emacs
+	then
+	  $mkdir $LIBDIR/emacs &&
+	  $chmod_exec $LIBDIR/emacs
+	fi &&
+	if test \! -d $LIBDIR/emacs/lisp
+	then
+          $mkdir $LIBDIR/emacs/lisp &&
+          $chmod_exec $LIBDIR/emacs/lisp
+	fi &&
+	if test \! -d $LIBDIR/emacs/etc
+	then
+          $mkdir $LIBDIR/emacs/etc &&
+          $chmod_exec $LIBDIR/emacs/etc
+	fi &&
+	(
+	  cd lib/emacs/etc/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$LIBDIR/emacs/etc/$f
+	    $rm $dest && $cp $f $dest && $chmod_exec_read_only $dest
+	  done
+	) &&
+        (
+          cd lib/emacs/lisp &&
+          for f in *
+          do
+	    dest=$LIBDIR/emacs/lisp/`basename $f .in`
+	    $rm $dest &&
+            case $f in
+              *.in) $sed -e "$subst" < $f > $dest;;
+	      *)    $cp $f $dest;;
+            esac &&
+	    $chmod_read_only $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install Emacs library"
+        exit 30
+      };;
+
+    # X11 stuff: Bitmap files are simply copied, but resource files
+    # are run through the $subst sed script constructed above if their
+    # name matches *.in.  This allows them to locate the bitmaps.
+    X11)
+      echo "$script: X11 library in $LIBDIR/X11"
+      {
+	if test \! -d $LIBDIR/X11
+	then
+	  $mkdir $LIBDIR/X11 &&
+	  $chmod_exec $LIBDIR/X11
+	fi &&
+	if test \! -d $LIBDIR/X11/bitmaps
+	then
+	  $mkdir $LIBDIR/X11/bitmaps &&
+	  $chmod_exec $LIBDIR/X11/bitmaps
+	fi &&
+	if test \! -d $LIBDIR/X11/app-defaults
+	then
+	  $mkdir $LIBDIR/X11/app-defaults &&
+	  $chmod_exec $LIBDIR/X11/app-defaults
+	fi &&
+	(
+	  cd lib/X11/bitmaps &&
+	  for f in *
+	  do
+	    dest=$LIBDIR/X11/bitmaps/$f
+	    $rm $dest && $cp $f $dest && $chmod_read_only $dest
+	  done
+	) &&
+        (
+          cd lib/X11/app-defaults &&
+          (for f in *
+           do
+	     dest=$LIBDIR/X11/app-defaults/`basename $f .in`
+	     $rm $dest &&
+             case $f in
+               *.in) $sed -e "$subst" < $f > $dest;;
+	       *)    $cp $f $dest;;
+             esac &&
+	     $chmod_read_only $dest
+           done
+	   $rm $LIBDIR/X11/app-defaults/MLWorks-fonts
+	   ln -s MLWorks-normal-fonts $LIBDIR/X11/app-defaults/MLWorks-fonts
+	  )
+        ) &&
+        if test -d lib/X11/nls
+        then
+          $rm -r $LIBDIR/X11/nls
+          $cp -rp lib/X11/nls $LIBDIR/X11/nls
+        fi
+      } ||
+      {
+        echo "$script: Failed to install X11 library"
+        exit 31
+      };;
+
+    # The manual pages are run throught the $subst sed script if their
+    # name matches *.in so that they can cross reference the
+    # installation itself.  Otherwise they are just copied.
+    manuals)
+      echo "$script: manual pages in $MANDIR"
+      {
+	if test \! -d $MANDIR
+	then
+          $mkdir $MANDIR &&
+          $chmod_exec $MANDIR
+	fi &&
+        (
+          cd man &&
+          for d in *
+          do
+	    if test \! -d $MANDIR/$d
+	    then
+              $mkdir $MANDIR/$d &&
+              $chmod_exec $MANDIR/$d
+	    fi &&
+            cd $d &&
+            for f in *
+            do
+	      dest=$MANDIR/$d/`basename $f .in`
+	      $rm $dest &&
+              case $f in
+                *.in) $sed -e "$subst" < $f > $dest;;
+		*)    $cp $f $dest;;
+              esac &&
+	      $chmod_read_only $dest
+            done
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install manual pages"
+        exit 40
+      };;
+
+    environments)
+      echo "$script: environments in $MLWORKSDIR/env"
+      {
+	if test \! -d $MLWORKSDIR/env
+	then
+          $mkdir $MLWORKSDIR/env &&
+          $chmod_exec $MLWORKSDIR/env
+	fi &&
+        (
+          cd env &&
+          for f in *
+          do
+	    dest=$MLWORKSDIR/env/`basename $f .in`
+	    $rm $dest &&
+            case $f in
+              *.in) $sed -e "$subst" < $f > $dest;;
+	      *)    $cp $f $dest;;
+            esac &&
+	    $chmod_non_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install environments"
+        exit 50
+      };;
+
+    # Examples are simply copied.
+    examples)
+      echo "$script: examples in $EXAMPLEDIR"
+      {
+	if test \! -d $EXAMPLEDIR
+	then
+          $mkdir $EXAMPLEDIR &&
+          $chmod_exec $EXAMPLEDIR
+	fi &&
+	if test \! -d $EXAMPLEDIR/basis
+	then
+          $mkdir $EXAMPLEDIR/basis &&
+          $chmod_exec $EXAMPLEDIR/basis
+	fi &&
+	if test \! -d $EXAMPLEDIR/motif
+	then
+          $mkdir $EXAMPLEDIR/motif &&
+          $chmod_exec $EXAMPLEDIR/motif
+	fi &&
+	if test \! -d $EXAMPLEDIR/threads
+	then
+          $mkdir $EXAMPLEDIR/threads &&
+          $chmod_exec $EXAMPLEDIR/threads
+	fi &&
+	if test \! -d $EXAMPLEDIR/gui
+	then
+          $mkdir $EXAMPLEDIR/gui &&
+          $chmod_exec $EXAMPLEDIR/gui
+	fi &&
+	if test \! -d $EXAMPLEDIR/gui/motif
+	then
+          $mkdir $EXAMPLEDIR/gui/motif &&
+          $chmod_exec $EXAMPLEDIR/gui/motif
+	fi &&
+	if test \! -d $EXAMPLEDIR/projects
+	then
+          $mkdir $EXAMPLEDIR/projects &&
+          $chmod_exec $EXAMPLEDIR/projects
+	fi &&
+	if test \! -d $EXAMPLEDIR/projects/subprojects
+	then
+          $mkdir $EXAMPLEDIR/projects/subprojects &&
+          $chmod_exec $EXAMPLEDIR/projects/subprojects
+	fi &&
+	if test \! -d $EXAMPLEDIR/foreign
+	then
+          $mkdir $EXAMPLEDIR/foreign &&
+          $chmod_exec $EXAMPLEDIR/foreign
+	fi &&
+	if test \! -d $EXAMPLEDIR/foreign/ndbm
+	then
+          $mkdir $EXAMPLEDIR/foreign/ndbm &&
+          $chmod_exec $EXAMPLEDIR/foreign/ndbm
+	fi &&
+	if test \! -d $EXAMPLEDIR/foreign/add
+	then
+          $mkdir $EXAMPLEDIR/foreign/add &&
+          $chmod_exec $EXAMPLEDIR/foreign/add
+	fi &&
+	if test \! -d $EXAMPLEDIR/foreign/stdio
+	then
+          $mkdir $EXAMPLEDIR/foreign/stdio &&
+          $chmod_exec $EXAMPLEDIR/foreign/stdio
+	fi &&
+        (
+          cd examples/basis &&
+          for f in *
+          do
+	    dest=$EXAMPLEDIR/basis/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+          cd ../motif &&
+          for f in *
+          do
+	    dest=$EXAMPLEDIR/motif/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+          cd ../threads &&
+          for f in *
+          do
+	    dest=$EXAMPLEDIR/threads/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+          cd ../foreign &&
+          for f in *
+          do
+	    if test \! -d $f
+	    then
+	      dest=$EXAMPLEDIR/foreign/$f
+	      $rm $dest && $cp -p $f $dest
+              $chmod_non_exec $dest
+	    fi
+          done
+	  cd add &&
+	  for f in *
+          do
+	    dest=$EXAMPLEDIR/foreign/add/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+	  cd ../ndbm &&
+	  for f in *
+	  do 
+	    dest=$EXAMPLEDIR/foreign/ndbm/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+	  done
+	  cd ../stdio &&
+	  for f in *
+	  do 
+	    dest=$EXAMPLEDIR/foreign/stdio/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+	  done
+          cd ../../gui &&
+          for f in *
+          do
+	    if test \! -d $f
+	    then
+	      dest=$EXAMPLEDIR/gui/$f
+	      $rm $dest && $cp -p $f $dest
+              $chmod_non_exec $dest
+	    fi
+          done
+          cd motif &&
+          for f in *
+          do
+	    dest=$EXAMPLEDIR/gui/motif/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+          cd ../../projects &&
+          for f in *
+          do
+	    if test \! -d $f 
+            then
+	      dest=$EXAMPLEDIR/projects/$f
+	      $rm $dest && $cp -p $f $dest
+              $chmod_non_exec $dest
+	    fi
+          done
+          cd ../projects/subprojects &&
+          for f in *
+          do
+	    dest=$EXAMPLEDIR/projects/subprojects/$f
+	    $rm $dest && $cp -p $f $dest
+            $chmod_non_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install examples"
+        exit 60
+      };;
+
+    licensing)
+    {
+      if [ $silent -eq 0 ]; then
+         echo "Enter license information."
+         echo "To install MLWorks Personal Edition, leave both fields blank."
+	 $BINDIR/mlworks_license
+      fi
+
+    };;
+
+    *)
+      echo "$script: Unknown package: $package"
+      exit 255;;
+  esac
+done

@@ -1,0 +1,28 @@
+(*
+ *
+ * $Log: saction.str,v $
+ * Revision 1.2  1998/06/11 13:03:41  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+functor StringAction(structure N : SNAME) : SACTION =
+struct
+
+   structure N = N
+
+   datatype action = Tau
+                | Input of N.name
+                | Output of N.name
+
+   fun mkstr(Tau) = "t"
+     | mkstr(Input(c)) = (N.mkstr c)
+     | mkstr(Output(c)) ="'" ^ (N.mkstr c)
+
+   and eq (Tau,Tau) = true
+     | eq (Input(c1),Input(c2)) = N.eq(c1,c2)
+     | eq (Output(c1),Output(c2)) = N.eq(c1,c2)
+     | eq (_,_) = false
+
+end

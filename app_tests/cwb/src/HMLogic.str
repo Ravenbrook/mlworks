@@ -1,0 +1,28 @@
+(*
+ *
+ * $Log: HMLogic.str,v $
+ * Revision 1.2  1998/06/02 15:26:45  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: HMLogic.str,v 1.2 1998/06/02 15:26:45 jont Exp $";
+functor HMLogic ( structure A : ACT;
+                  structure V : VAR ) : HMLOGIC =
+struct
+   structure A = A
+   structure V = V
+
+   datatype modality = modlist of A.act list
+                     | negmodlist of A.act list
+
+   datatype prop = True
+                 | Var of V.var
+                 | Not of prop
+                 | And of prop * prop
+                 | Nec of modality * prop
+                 | Max of V.var * prop
+end
+
+

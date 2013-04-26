@@ -1,0 +1,113 @@
+'\" t
+.TH MLWORKS 1 1997-10-06 Harlequin MLWORKS
+.SH NAME
+mlworks \- MLWorks incremental compiler
+.SH SYNOPSIS
+.B mlworks
+[
+.BI \-mono
+]
+.RB [ " \-gui " ]
+.RB [ " \-tty " ]
+.RB [ " \-debug-mode " ]
+.if n .ti +.8i
+.RB [ " \-optimize-mode " ]
+.RB [ " \-no-init " ]
+.RB [ " \-silent " ]
+.if n .ti +.8i
+.RB [ " \-stack " \fIn\fP\   ]
+.RB [ " \-help " ]
+
+.SH DESCRIPTION
+.LP
+.B mlworks
+invokes the MLWorks system as an interactive incremental
+compiler with a GUI and programming tools.  Standard ML
+declarations and expressions can be typed at the prompt and are
+compiled and incorporated into the SML interactive environment.  The
+incremental compiler also has facilities for performing separate
+compilation of source files and for invoking the batch compiler.  
+.LP 
+.B mlworks
+is a shell script which invokes
+.BR mlrun (1) 
+on an ML image containing the incremental compiler and GUI
+environment. 
+.LP
+For a full description of the interactive environment, see the
+.I MLWorks User Guide.
+.SH OPTIONS
+.TP 6
+.B -mono
+Disables the standard use of multiple colors in the GUI.
+Should be given when 
+.B mlworks
+is used on a monochrome screen.
+.TP
+.B -gui
+Starts up the MLWorks GUI.  This happens by default.
+.TP
+.B -tty 
+Starts MLWorks up in teletype mode instead of in the GUI.  The GUI can
+be subsequently started from the prompt by calling the interactive
+context function
+.B Shell.startGUI. 
+.TP
+.B -debug-mode
+Sets debug compilation mode at startup.  All SML code will be compiled
+with debugging information by default.  Debug mode can also be
+adjusted using the MLWorks console's Preferences > Mode menu item.
+.TP
+.B -optimize-mode
+Sets optimize compilation mode at startup.  By default, all SML code
+will be fully optimized during compilation.  Optimize mode can also be
+adjusted using the MLWorks console's Preferences > Mode menu item.
+.TP
+.B -no-init
+Do not read the MLWorks initialization file, 
+.B .mlworks,
+from the user's home directory.  If it exists, the contents of the
+.B .mlworks
+file are read unless this option is given.  The file can contain any
+valid SML code.  
+.TP
+.B -silent
+Turn off printing of messages about using, loading or
+compiling files.  Also suppresses the MLWorks prompt.
+.TP
+.B -stack \fIn\fP
+Set the initial maximum number of stack blocks to \fIn\fP, where
+\fIn\fP is a positive integer.  The default value for \fIn\fP is 5.
+.TP
+.B -help
+Display information about command usage.
+.SH ENVIRONMENT
+.TP 20
+.SB MLWORKS_PERVASIVE
+If set, its value overrides the default location for the
+.B MLWorks
+pervasive library.
+.TP
+.SB MLWORKS_SRC_PATH
+If set, its value overrides the default search path, which contains just the
+current directory.  The path should be specified as a colon-separated list
+of directories, e.g. ~/ml/src:/usr/sml/src.
+.SH FILES
+.PD 0
+.LP
+.B $IMAGEDIR/gui.img
+.LP
+.RS 4
+The interactive MLWorks image with X Window System and Motif GUI
+environment. 
+.PD
+.RE
+.SH SEE ALSO
+.BR mlworks-basis (1),
+.BR mlrun (1),
+.BR mlimage (1),
+.BR mlpervasive (1),
+.BR mlbatch (1)
+.LP
+.I MLWorks User Guide
+

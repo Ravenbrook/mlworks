@@ -1,0 +1,342 @@
+(*
+ *
+ * $Log: HMLCheck.str,v $
+ * Revision 1.2  1998/06/02 15:23:36  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: HMLCheck.str,v 1.2 1998/06/02 15:23:36 jont Exp $";
+functor HMLCheck ( structure SL   : SORTEDLIST;
+                   structure E    : ENV;
+                   structure PG   : POLYGRAPH;
+                   structure HML  : HMLOGIC;
+                     sharing type PG.act = HML.A.act
+                         and E.V = HML.V ) : HMLCHECK =
+struct
+   structure PG = PG
+   structure V = E.V
+
+   open HML
+
+(*****************************************************************************)
+(* Elements of type mcinfo are references to objects that bind variables to  *)
+(* integer environment lists.                                                *)
+(*****************************************************************************)
+
+   type mcinfo = int E.env list E.env ref
+
+(*****************************************************************************)
+(* "setmcinfo" computes the "info" field for states in POLYGRAPHs that will  *)
+(* be used in model checking.                                                *)
+(*****************************************************************************)
+
+   fun setmcinfo _ = ref E.empty
+
+   val insert = SL.add V.le true
+
+(*****************************************************************************)
+(* "subst" substitutes proposition "Q" for variable "x" in its 3rd argument. *)
+(*****************************************************************************)
+
+   fun subst Q x True            = True
+     | subst Q x (Var y)         = if V.eq(x,y) then Q else Var y
+     | subst Q x (Not P)         = Not (subst Q x P)
+     | subst Q x (And (P,P'))    = And (subst Q x P,subst Q x P')
+     | subst Q x (Nec (K,P))     = Nec (K,subst Q x P)
+     | subst Q x (Max (y,P))     = if V.eq(x,y) then Max(y,P)
+                                   else Max(y,subst Q x P)
+
+(*****************************************************************************)
+(* "unroll" unrolls a (recursive) proposition once.                          *)
+(*****************************************************************************)
+
+   fun unroll (P as (Max (x,B))) = subst P x B
+     | unroll P = P
+
+(*****************************************************************************)
+(* "mk_afi_env" takes a proposition as its only argument and returns an      *)
+(* environment in which each variable x appearing in the proposition is      *)
+(* bound to the list of variables free in the subformula Max (x,B) in the    *)
+(* proposition. We shall refer to Max (x,B) as the "subformula associated    *)
+(* with x" in what follows and to afi as the relation between variables      *)
+(* that is computed--so x afi y iff x appears free in the subformula         *)
+(* associated with y.                                                        *)
+(*****************************************************************************)
+
+   fun mk_afi_env P =
+
+(*****************************************************************************)
+(* "update" : given an "appears free in" environment ae, variable x and a    *)
+(* list of variables, adds x to the list of variables bound to each variable *)
+(* y in ae on the argument list. This in effect records that x afi y for     *)
+(* each y on the list.                                                       *)
+(*****************************************************************************)
+
+       let fun update ae x [] = ae
+             | update ae x (y::t) =
+               update (E.bind(y,insert(x,E.lookup(y,ae)),ae)) x t
+
+(*****************************************************************************)
+(* "mae" : builds the "afi" environment for its 3rd argument in the context  *)
+(* of its first two arguments, which have the following interpretation:      *)
+(*    be - "binding environment". This environment binds a variable x to a   *)
+(*         list of variables y such that it might be the case that x afi y.  *)
+(*    ae - the "afi" environment built so far.                               *)
+(*****************************************************************************)
+
+           fun mae be ae True = ae
+             | mae be ae (Var x) = update ae x (E.lookup(x,be))
+             | mae be ae (Not P) = mae be ae P
+             | mae be ae (And (P,Q)) = mae be (mae be ae P) Q
+             | mae be ae (Nec (_,P)) = mae be ae P
+             | mae be ae (Max (x,P)) =
+               mae (E.bind(x,[],E.map (fn (y,l) => (y,insert(x,l))) be))
+                   (E.bind(x,[],ae)) P
+        in mae E.empty E.empty P
+       end
+
+(*****************************************************************************)
+(* "valof" looks up a variable in an environment, returning "[]" if the      *)
+(* variable is not bound in the environment.                                 *)
+(*****************************************************************************)
+
+   fun valof x e = ( E.lookup(x,e) handle E.Unbound => [] )
+
+(*****************************************************************************)
+(* "merge_envs" takes two environments binding variables to lists and merges *)
+(* them; if a variable is bound in both environments then the lists it is    *)
+(* bound to are merged (no duplicates) in the resulting environment, while   *)
+(* if a variable is bound in only one environment then it is bound to the    *)
+(* appropriate value in the resulting environment.                           *)
+(*****************************************************************************)
+
+   fun merge_envs e1 e2 =
+       let fun addlist [] = e1
+             | addlist (x::t) =
+               let val x1 = valof x e1
+                   val x2 = valof x e2
+                in E.bind(x,Lib.del_dups (op =) (x1@x2),addlist t)
+               end
+        in addlist (E.getvars e2)
+       end
+
+(*****************************************************************************)
+(* "check" accepts a "mcinfo" polygraph (a pair consisting of a reference to *)
+(* reference to a "mcinfo" state and a list of "mcinfo" states) and a propo- *)
+(* sition and determines if the (deref'ed) state satisfies the proposition   *)
+(* Global values:                                                            *)
+(* afi_env      - Binds each variable x in the proposition to lists of       *)
+(*                variables y such that y afi x.                             *)
+(* hypcount_env - Binds each variable to (a reference to) the number of      *)
+(*                "hypotheses" that are currently active about the variable. *)
+(*                ("Hypotheses" are used in calculating whether a state      *)
+(*                satisfies a recursive proposition.)  Initially, the number *)
+(*                of hypotheses is 0 for each variable.                      *)
+(*****************************************************************************)
+
+   fun check (stref,stlist) P =
+       let fun Ksuc inK K [] = []
+             | Ksuc inK K ((a,srlr)::t) =
+               let val rest = Ksuc inK K t
+                in if inK=(Lib.member A.eq (a,K)) then (!srlr)@rest
+                   else rest
+               end
+           val afi_env = mk_afi_env P
+           val hypcount_env = E.map (fn (x,_) => (x,ref 0)) afi_env
+
+(*****************************************************************************)
+(* "mk_hypcount_env", when given a list of variables, constructs an environ- *)
+(* ment binding each variable in the list to the number of "hypotheses" that *)
+(* have been made about it.                                                  *)
+(*****************************************************************************)
+
+           fun mk_hypcount_env [] = E.empty
+             | mk_hypcount_env (x::t) =
+               E.bind(x,!(E.lookup(x,hypcount_env)),mk_hypcount_env t)
+
+(*****************************************************************************)
+(* "isbound" checks if x is bound to the environment e1 in environment e2.   *)
+(*****************************************************************************)
+
+           fun isbound x e1 e2 =
+               ( (exists (fn e => E.eq (op =) (e1,e)) (E.lookup(x,e2)))
+                 handle E.Unbound => false )
+
+(*****************************************************************************)
+(* Given a state s and a proposition P, "|=" computes a pair of values.      *)
+(* The first is a boolean reflecting whether or not the state satisfies the  *)
+(* proposition, and the second is an environment binding variables to assum- *)
+(* ption lists (ie, elements of "mcinfo"). This environment is needed in     *)
+(* order to make the checking of recursive propositions more efficient. Its  *)
+(* use will be explained more later on.                                      *)
+(*                                                                           *)
+(* NOTE: This function only works properly if the recursion variables have   *)
+(* been uniquely named! At present this is done in the translation functor.  *)
+(*                                                                           *)
+(* The satisfaction relation for nonrecursive propositions is the usual      *)
+(* satisfaction relation defined for the Hennessy-Milner Logic. For conven-  *)
+(* ience it is repeated here. "|=" is the satisfaction relation, and "s" is  *)
+(* a state.                                                                  *)
+(*     s |= T     always.                                                    *)
+(*     s |= x     never, since a proposition can have no free variables.     *)
+(*     s |= ~P    iff not s |= P.                                            *)
+(*     s |= P & Q iff s |= P and s |= Q.                                     *)
+(*     s |= [K]P  iff t |= P whenever s --a--> t with a in K.                *)
+(*     s |= [-K]P  iff t |= P whenever s --a--> t with a not in K.           *)
+(*     s |= [.]P  iff t |= P whenever s --a--> t for any a.                  *)
+(*****************************************************************************)
+
+           infix |=
+
+           fun s |= True = (true,E.empty)
+             | s |= (Var x) = (print "O O P S ! !  Cannot happen !!";
+                               raise Match)
+             | s |= (Not P) = let val (ans,he) = s |= P
+                               in (not ans,he)
+                              end
+             | s |= (And (P,Q)) =
+                  let val (ans,he) = s |= P
+                   in if ans then let val (ans,he') = s |= Q
+                                   in (ans,merge_envs he he')
+                                  end
+                      else (ans,he)
+                  end
+             | (PG.S{suc,...}) |= (Nec (modlist l,P)) =
+               checklist (Ksuc true l (!suc)) P
+             | (PG.S{suc,...}) |= (Nec (negmodlist l,P)) =
+               checklist (Ksuc false l (!suc)) P
+             | (s as (PG.S{info=assumptions,...})) |= (P as (Max (x,_))) =
+
+(*****************************************************************************)
+(* The remainder of function "|=" is devoted to determining if a state       *)
+(* satisfies a given recursive proposition, Max (x,B) for some B. The        *)
+(* details of the way this is done appear below; intuitively, however, "|="  *)
+(* proceeds by adding a hypothesis about x to the mcinfo element             *)
+(* associated with s and checking whether s satisfies the unrolling of the   *)
+(* formula. If there is already an active hypothesis, "true" is returned.    *)
+(* value of the environment x is bound to in the mcinfo element of s is used *)
+(* to determine if a hypothesis is active or not.                            *)
+(*                                                                           *)
+(* The following variables have these meanings:                              *)
+(* afi_list - the list of variables y such that y afi x.                     *)
+(* hypenv   - an environment that binds each variable on afi_list to the     *)
+(*            number of hypotheses that have been made about it.             *)
+(*****************************************************************************)
+
+                 let val afi_list = E.lookup(x,afi_env)
+                     val hypenv = mk_hypcount_env afi_list
+
+(*****************************************************************************)
+(* addhyp - "add hypothesis". Adds a hypothesis about variable x to the      *)
+(* given "mcinfo" element  by binding the variable to the current value of   *)
+(* hypenv and updating  hypcount_env appropriately.                          *)
+(*****************************************************************************)
+
+                     fun addhyp x eref =
+                         (eref := E.bind(x,hypenv::(valof x (!eref)),!eref);
+                          let val hypcount = E.lookup(x,hypcount_env)
+                           in hypcount := !hypcount + 1
+                          end)
+
+(*****************************************************************************)
+(* ishyp - determines if x is an "active" hypothesis in the assumption       *)
+(* environment of the current state. A hypothesis is active if no other      *)
+(* hypotheses about variables y with y afi x have been made since it was     *)
+(* last added to the mcinfo environment. This is why variables are bound to  *)
+(* environments in mcinfo elements; these environments record the number of  *)
+(* hypotheses that are active for each variable y such that y afi x.         *)
+(*****************************************************************************)
+
+                     fun ishyp x eref = isbound x hypenv (!eref)
+
+(*****************************************************************************)
+(* rmhyp - "remove hypothesis". Removes (the latest) hypothesis about the    *)
+(* given variable x from the given mcinf element; updates hypenv as well.    *)
+(*****************************************************************************)
+
+                     fun rmhyp x eref =
+                         (eref := (E.bind(x,tl(E.lookup(x,!eref)),!eref));
+                          let val hypcount = E.lookup(x,hypcount_env)
+                           in hypcount := !hypcount - 1
+                          end)
+
+(*****************************************************************************)
+(* rm_dep_hyps - "remove depending hypotheses" removes any hypotheses which  *)
+(* might have depended on the hypothesis made about x during this call of    *)
+(* sat. For reasons of efficiency, if there are no variables that appear     *)
+(* free in Max (x,B) and the call to sat is successful, then the hypothesis  *)
+(* about x is not removed from the mcinfo element associated with the        *)
+(* current state. However, the validity of retaining this information        *)
+(* depends on the current calls to the currently active calls to sat         *)
+(* involving Max (x,B) also being true. If one of these turns out to be      *)
+(* false, then all dependent hypotheses need to be removed. These dependent  *)
+(* hypotheses reside on mcinfo elements in the appropriate states. The       *)
+(* environment e binds variables to lists of mcinfo elements having depend-  *)
+(* ent hypothesis involving the variable; each of these mcinfo elements has  *)
+(* its hypothesis involving x removed, and then x is unbound in e to reflect *)
+(* the fact that there are no dependent hypotheses left.                     *)
+(*****************************************************************************)
+
+                     fun rm_dep_hyps x e =
+                         (app (fn eref => (rmhyp x eref)) (valof x e);
+                          E.unbind(x,e))
+
+(*****************************************************************************)
+(* To compute whether s satisfies max(x.P), its mcinfo element is examined   *)
+(* for x, and if x is a valid assumption true is returned, together with an  *)
+(* empty environment, the "hypothesis environment". Otherwise, x is added to *)
+(* the assumption environment, and s is checked against the unrolling of P.  *)
+(* If there is no y with y afi x, and if s satisfies the unrolling of P,     *)
+(* then the mcinfo element, is added to the list that x is bound to in the   *)
+(* "hypothesis environment", and this updated hypothesis environment is      *)
+(* returned. If x is not dependent on any variables, yet s does not satisfy  *)
+(* the unrolling of P, then each mcinfo element on the list bound to x in    *)
+(* the hypothesis environment needs to have x removed. If x is dependent on  *)
+(* variables, then after the call of sat on s and the unrolling of P the     *)
+(* assumption must be removed.                                               *)
+(*                                                                           *)
+(* INTUITION: If x does not depend on any variables, then once s has been    *)
+(*     found to satisfy the unrolling of P one possible way to retain this   *)
+(*     information (so that it is not needlessly computed again) is to leave *)
+(*     x as an assumption of s. However, care needs to be taken, because the *)
+(*     fact that s satisfies the unrolling of P may depend on other assump-  *)
+(*     tions made about x before the current call to sat. If one of these    *)
+(*     should turn out not to be true, then it would not be valid to leave x *)
+(*     as an assumption of s. This is where hypothesis environments help.    *)
+(*     After the completion of a call, he binds variables to the lists of    *)
+(*     assumption structures having x retained as a hypothesis. If the call  *)
+(*     is unsuccessful, these assumption structures need to have x removed.  *)
+(*****************************************************************************)
+
+                  in if (ishyp x assumptions) then (true,E.empty)
+                     else (addhyp x assumptions;
+                           let val (ans,he) = s |= (unroll P)
+                            in if (null afi_list) then
+                                  if ans then
+                                     (ans,E.bind(x,assumptions::
+                                                       (valof x he),he))
+                                  else (rmhyp x assumptions;
+                                        (ans,rm_dep_hyps x he))
+                               else (rmhyp x assumptions;(ans,he))
+                           end)
+                 end
+
+(*****************************************************************************)
+(* "checklist" checks to see if every state on the given list of states      *)
+(* satisfies the given proposition.                                          *)
+(*****************************************************************************)
+
+           and checklist [] P = (true,E.empty)
+             | checklist (s::t) P =
+               let val (ans,he) = !s |= P
+                in if ans then let val (ans,he') = checklist t P
+                                in (ans,merge_envs he he')
+                               end
+                   else (ans,he)
+               end
+        in fst(!stref |= P)
+       end
+end
+

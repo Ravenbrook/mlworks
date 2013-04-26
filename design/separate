@@ -1,0 +1,63 @@
+The separate compilation of ML modules has as yet no defined
+semantics. One obvious semantics would be that of the interpretation
+of some suitably ordered sequence of the source modules. This is
+unsatisfactory for various reasons. Firstly, if we have one module C,
+dependent on a module B which in turns on a module A, then it is
+somewhat unreasonable for a user to have to examine A in order to
+determine the semantics of some portion of C which is not to some
+extent explained within B. Thus
+
+module A
+val y = 1
+finish
+
+module B
+require "A"
+val z = y
+finish
+
+module C
+require "B"
+val x = y
+finish
+
+This would be valid within the interpreter, but would fail when trying
+for separate compilation because y, defined in A, wouldn't be visible
+within C. The semantics of require would be to make A local within the
+body of B, thus
+
+module B
+local
+  require "A"
+in
+  val z = y
+end
+
+Secondly, there are some situations that cannot be expressed in the
+interpretive form. Consider
+
+module A
+val x = ref "hello"
+finish
+
+module B
+require "A"
+val y = x
+val x = 3
+finish
+
+module C
+require "A"
+val z = x
+finish
+
+module D
+require "B,C"
+val w = (x, y, z)
+finish
+
+The effect of val w = (y,z) in module D cannot be achieved by any
+sequence of passing A, B, C, D through the interpreter, unless at
+least one of them is interpreted more than once. Yet the semantics
+given above gives a well defined meaning to a program produced from
+these separate compilation units.

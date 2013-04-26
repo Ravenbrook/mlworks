@@ -1,0 +1,50 @@
+(* strenv.sml the signature *)
+
+(* $Log: strenv.sml,v $
+ * Revision 1.8  1997/05/01 12:56:04  jont
+ * [Bug #30088]
+ * Get rid of MLWorks.Option
+ *
+ * Revision 1.7  1995/03/23  13:36:46  matthew
+ * Removing pervasive_strname_count
+ *
+Revision 1.6  1995/02/06  16:19:23  matthew
+Lookup functions return option
+
+Revision 1.5  1993/03/09  13:04:47  matthew
+Str to Structure
+
+Revision 1.4  1993/02/08  13:30:56  matthew
+Removed open Datatypes, Changes for BASISTYPES signature
+
+Revision 1.3  1992/08/04  12:29:45  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.2  1992/01/07  19:27:54  colin
+> Added pervasive_strname_count giving strname id of first strname after
+the pervasives have been defined and added code to reset strname counter
+
+Revision 1.1  1991/11/13  13:47:51  richard
+Initial revision
+
+Copyright (C) 1991 Harlequin Ltd.
+*)
+
+
+require "../typechecker/datatypes";
+
+
+signature STRENV =
+
+  sig
+
+    structure Datatypes	: DATATYPES
+
+    val empty_strenv : Datatypes.Strenv
+    val empty_strenvp : Datatypes.Strenv -> bool
+    val lookup : Datatypes.Ident.StrId * Datatypes.Strenv -> Datatypes.Structure option
+    val se_plus_se : Datatypes.Strenv * Datatypes.Strenv -> Datatypes.Strenv
+    val add_to_se : Datatypes.Ident.StrId * Datatypes.Structure * Datatypes.Strenv -> Datatypes.Strenv
+    val initial_se : Datatypes.Strenv
+  end
+

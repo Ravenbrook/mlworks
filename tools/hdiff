@@ -1,0 +1,88 @@
+#!/bin/sh
+# $Log: hdiff,v $
+# Revision 1.9  1997/06/04 16:08:28  johnh
+# [Bug #30166]
+# Removed one of the comma-saparated arguments, so that hope.bat
+# will accept the command line.
+#
+# Revision 1.8.7.2  1997/06/04  15:50:17  daveb
+# [Bug #30166]
+# Removed one of the comma-separated options, so that hope.bat doesn't barf
+# on the command line.
+#
+# Revision 1.8.7.1  1997/05/12  11:12:33  hope
+# branched from 1.8
+#
+# Revision 1.8  1996/08/12  11:34:19  daveb
+# Ensured that expr can handle files called "index", etc.
+#
+# Revision 1.7  1995/07/31  14:32:54  daveb
+# Added Path variables.
+#
+# Revision 1.6  1995/07/24  13:10:43  daveb
+# Interface to hope diff has changed.
+#
+# Revision 1.5  1995/02/28  12:57:52  jont
+# Modify use of version (deprecated) to branch
+#
+# Revision 1.4  1994/06/09  15:28:25  nickh
+# Better .compound awareness
+#
+# Revision 1.3  1994/04/05  11:37:40  daveb
+# Now handles trailing / in arguments.
+#
+# Revision 1.2  1994/03/25  15:43:24  daveb
+# Added second -v option.
+#
+# Revision 1.1  1994/03/07  13:49:07  daveb
+# new file
+#
+# 
+# Copyright Harlequin Ltd. 1991
+#
+# Limitations: if a version is specified, it applies to all files.
+
+SML_HOME=/u/sml; export SML_HOME
+SML=$SML_HOME/MLW; export SML
+PATH=$SML/tools:$SML/images:/usr/local/bin:$PATH; export PATH
+script=`basename $0`
+usage="USAGE: $script [-b <branch1> [-t <branch2>]] <File1> [<File2> ...]"
+
+diffopts=""
+while getopts b:t: option
+do
+  case $option in
+    b) diffopts="$diffopts -branch $OPTARG";;
+    t) diffopts="$diffopts -to-version $OPTARG";;
+    *) echo "$usage"; exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+if [ "$#" -lt 1 ]; then
+    echo $usage
+    exit
+fi
+
+for i in $*
+do
+  (if [ $i = '/' ]
+   then
+     echo $script: ignoring /
+   else
+     # strip trailing /
+     tmp=`expr match X$i X'\(.*[^/]\)'`
+     # find the compound
+     eval `findcomp $tmp`
+	# defines $dir, $compound, $unit
+     if [ -z "$compound" ]
+     then
+       echo $script failed : .compound file not found
+     else
+       cd $dir
+       hope diff -ignore space-changes -not-page $diffopts -compound $compound -unit $unit
+     fi
+   fi)
+done
+
+exit

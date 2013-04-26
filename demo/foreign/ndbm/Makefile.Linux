@@ -1,0 +1,36 @@
+# Copyright 1998 Harlequin Group plc.  All rights reserved.
+#
+# Linux makefile
+#
+# Revision Log
+# ------------
+# $Log: Makefile.Linux,v $
+# Revision 1.1  1998/10/26 17:42:30  jkbrook
+# new unit
+# [Bug #70184]
+# Port FI demos to Linux
+#
+#
+
+# As default, mlw_ci.h lives in the enclosing (..) directory.
+# Alter this if mlw_ci.h is somewhere else.
+#
+MLWORKS_INCLUDE=../../../src/rts/src
+
+CC=gcc
+#CC=acc
+CFLAGS=-I$(MLWORKS_INCLUDE)
+
+MAKE_MLWorks_LIB= ld -shared -lgdbm
+
+OBJ= ndbm_stub.o
+
+.PHONEY: all clean
+
+all: ndbm_stub.so
+
+ndbm_stub.so:	$(OBJ)
+	$(MAKE_MLWorks_LIB) -o $@ $(OBJ)
+
+clean:
+	rm -f ndbm_stub.so $(OBJ)

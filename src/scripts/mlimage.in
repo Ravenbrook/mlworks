@@ -1,0 +1,17 @@
+if [ $# -gt 0 -a $1"" = -mono ]
+then
+  MONO=-mono;
+  shift
+else
+  MONO=
+fi
+if [ $# -gt 1 -a $1"" = -load ]
+then
+  LOAD_FILE=$2
+  shift
+  shift
+else
+  echo Usage:mlimage \[-mono\] -load \<image-file\> \<args\>
+  exit 1
+fi
+exec $BINDIR/mlrun -MLWpass MLWargs -stack 5 $RUNTIMEOPTS $MONO -load $LOAD_FILE -pass MLWargs $*

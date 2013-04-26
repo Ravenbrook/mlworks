@@ -1,0 +1,110 @@
+(*
+ *
+ * $Log: name.str,v $
+ * Revision 1.2  1998/06/11 13:12:53  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+functor deBruijnName() : NAME =
+struct
+    datatype name = Name of int * string
+
+    fun mkname(s,i) = Name(i,s)
+    fun eq(Name (i,_),Name (j,_)) = i=j
+    fun curry_eq (Name (i,_)) (Name (j,_)) = i=j
+    fun le(Name (i,_),Name (j,_)) = i<=j
+    fun mkstr(Name (i,s)) = if not (Flags.trace()) then "_"^(makestring i)
+			    else "_"^(makestring i)^"("^s^")"
+    fun makstr(Name (i,s),nl) =
+	(if i >= length nl
+	    then print("**Name("^(makestring i)^","^s^") - index outside ["^(Lib.mapconcat (fn x=>x) nl ",")^"]\n") else ();
+	nth(nl,i))
+(*	(if size s > 0 then s
+	 else if i > lvl then "_"
+	      else nth(nl,lvl-i))^(if lvl-i = 0 then ""
+				   else makestring (lvl-i)) *)
+    fun pretty_name(Name (i,s)) = s
+
+    val Zero = Name (0,"")
+    fun zerop(Name (i,_)) = i=0
+    fun pred(Name (i,s)) = Name(i-1,s)
+    fun succ(Name (i,s)) = Name(i+1,s)
+    fun is_free (Name (i,_),lvl) = i >= lvl
+    fun free (Name (i,s),lvl) = Name(i-lvl,s)
+
+    fun increment(Name (i,s),n) = Name(i+n,s)
+
+    fun code(Name (n,_)) = n
+
+    (* hmm *)
+    fun substitute (e,v,n) = raise Lib.disaster "foo!"
+
+    fun newNameNotin(set) =
+	let fun find [] = Zero
+	      | find [(Name (n,_))] = Name (n+1,"")
+	      | find ((Name (n,_))::(R as ((Name (m,_))::rest))) =
+		if n = m-1
+		    then find R
+		else Name(n+1,"")
+	in
+	    find (Lib.sort le set)
+	end
+    val next = newNameNotin
+
+    fun n_newNamesNotin(n,set) =
+	let fun maknames (from,upto) =
+	    if upto < from then raise Lib.disaster("make "^(makestring(upto-from))^" names - impossible!")
+	    else if from = upto then [Name (from,"")]
+		 else (Name (from,""))::(maknames (from+1,upto))
+	    fun mknames(nst,min) =
+		maknames(min,min+nst-1)
+	    fun min(x,y) = if x < y then x else y
+	    fun find 0 _ _ = []
+	      | find n i [] = mknames(n,i)
+	      | find n m ((Name (i,_))::R) =
+(*		(if Flags.trace() then print("find n="^(makestring n)^" m="^(makestring m)^" i="^(makestring i)^"\n") else (); *)
+		if m = i then find n (i+1) R
+		else
+		    let val j = min(n,i-m)
+(*			val _ = if Flags.trace() then print(" j = "^(makestring j)^"\n") else ()  *)
+		    in
+			(mknames(j,m))@(find (n-j) (i+1) R)
+		    end
+(*		) *)
+	in
+(*	    (if Flags.trace() then print("n_new("^(makestring n)^",["^(Lib.mapconcat mkstr set ",")^"])\n") else (); *)
+	    rev (find n 0 (Lib.sort le (Lib.del_dups eq set)))
+(*	    ) *)
+	end
+
+    fun fill ([]) = []
+      | fill (seq) =
+	let val sseq = rev (Lib.sort le (Lib.del_dups eq seq))
+	   fun mknames (from,downto) =
+	       if from < downto then []
+	       else if from = downto then [Name (from,"")]
+	       else (Name(from,""))::(mknames (from-1,downto))
+	   fun code(Name (n,_)) = n
+	   fun fll ([]) = []
+	     | fll ([N as Name(i,is)]) = N::(mknames(i-1,0))
+	     | fll ((n as Name(i,is))::(R0 as ((m as Name(j,js))::R))) =
+	       if i = j+1 then n::(fll R0)
+	       else n::(fll ((Name (i-1,""))::R0))
+	in
+	(* mknames (code (hd sseq),0)*)
+	    fll sseq
+	end
+
+    fun beta_reduce (N as (Name (i,is))) (args,lc) =
+	if i < lc then N		(* N is bound *)
+	else if lc <= i andalso i < lc+(length args) then
+	    (* N is what we're looking for *)
+	    let val (Name (k,ks)) = nth(args,(length args)-(i-lc)-1)
+	    in (* k >= adjustlimit (#lambda in ArgJ) *)
+		Name(k+lc,if size ks > 0 then ks else is)	(* Adjust for lc *)
+	    end
+	else (* i >= lc+Nargs *)
+	    Name(i-(length args),is)	(* N is bound at outer lvl ("free") *)
+end

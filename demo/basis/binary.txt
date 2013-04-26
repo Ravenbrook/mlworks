@@ -1,0 +1,32 @@
+  Load File: __binary.sml 
+
+  This module defines a type 'binary' that is a vector of bits.  It provides
+  functions to convert strings and bytes (i.e., Word8.word) to and from the
+  binary type.  Functions are also provided to convert a string to and from
+  the vector of binaries representing the ASCII code of each character
+  (note that these are stored in the reverse order to that in the original
+  string).
+
+  For example
+
+    val (SOME b) = Binary.fromString("110");
+
+  gives
+
+    val b : bit(hidden) vector = #V[ZERO, ONE, ONE]
+    
+  which can be converted back to a string using
+
+    Binary.toString b;
+
+  The functions Binary.fromAscii and Binary.toAscii convert strings of
+  ASCII characters into binary vectors, while Binary.fromByte and
+  Binary.toByte convert between binary vectors and bytes. 
+  For example, using the same environment as above
+
+    Binary.toByte b;    
+
+  gives
+
+    val it : MLWorks.Internal.Types.word8 = 0w6
+	

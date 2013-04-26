@@ -1,0 +1,202 @@
+(*
+ *
+ * $Log: GenPre.str,v $
+ * Revision 1.2  1998/06/02 15:22:41  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: GenPre.str,v 1.2 1998/06/02 15:22:41 jont Exp $";
+functor GenPre ( structure DivC : DIVCOMP ) : GENPRE =
+struct
+   structure DivC = DivC
+   structure Elem = DivC.Elem
+   structure PG = Elem.PG
+
+(****************************************************************************)
+(*    checkpreordapprox checks the preorder relationship state1 < state2    *)
+(*             w.r.t. the current approximation environment                 *)
+(****************************************************************************)
+
+fun checkpreordapprox(state1,state2,relaxpred) =
+    let
+
+(****************************************************************************)
+(*        Functions handling the check w.r.t. a given action act            *)
+(****************************************************************************)
+
+(* checkactpresim(statelist1,statelist2) is false whenever there exists a   *)
+(* member h of the act successor list of the considered state S1, which     *)
+(* cannot be approximated be the act successorlist statelist2 of the state  *)
+(* S2 which currently is considered as a possible upper approximation h     *)
+(* (ie as a state which can cover the act behaviour of S1), ie,             *)
+(* giveapproxinf h is disjoint with statelist2.                             *)
+
+  fun checkactpresim
+          ( nil,           (* act successors list of the considered state S *)
+            statelist2,    (* act1 successors list of the considered        *)
+                           (* approximation state of S                      *)
+            state2,        (* currently considered approximation state      *)
+            act1 ) =       (* currently considered action                   *)
+            true
+
+   | checkactpresim
+          ( h::t,          (* act successors list of the considered state S *)
+            statelist2,    (* act1 successors list of the considered        *)
+                           (* approximation state of S                      *)
+            state2,        (* currently considered approximation state      *)
+            act1 ) =       (* currently considered action                   *)
+
+      if Elem.statelistinters(Elem.approxinf h,statelist2) then
+         PG.act_eq(act1,PG.tau) andalso DivC.globdivpred h andalso
+         not(Elem.statelistinters
+             (Elem.approxinf h,Elem.actsuclist(PG.eps,state2))) andalso
+         checkactpresim(t,statelist2,state2,act1)
+      else checkactpresim(t,statelist2,state2,act1)
+
+(* checkactpresimback(statelist1,statelist2) is true whenever all members   *)
+(* h1 of the act successor list of the considered upper approximation S2    *)
+(* of S1 possess a lower approximation, which is an act successor of S1 (an *)
+(* element of statelist1). This is checked in checkpback.                   *)
+
+  fun checkactpresimback
+          ( statelist,     (* complete act successors list of the considered *)
+                           (* state S                                        *)
+            statelist1,    (* list of successors of the considered state S   *)
+                           (* for the analysis of the act successor of the   *)
+                           (* of the upper approximation state of S, which   *)
+                           (* contains the remaining candidates for lower    *)
+                           (* approximations                                 *)
+            nil ) = true   (* act successors list of the considered          *)
+                           (* approximation state of S                       *)
+   | checkactpresimback
+          ( statelist,     (* complete act successors list of the considered *)
+                           (* state S                                        *)
+            statelist1,    (* actual act successors list of the considered   *)
+                           (* state S                                        *)
+            statelist2 as (h2::t2) ) =
+                           (* act successors list of the considered          *)
+                           (* approximation state of S                       *)
+      let
+        fun checkpback (statelist,nil,statelist2 as (h2::t2)) = false
+          | checkpback (statelist,h1::t1,statelist2 as (h2::t2)) =
+                          if Elem.statemem(h2,Elem.approxinf h1)
+                            then checkactpresimback(statelist,statelist,t2)
+			  else
+			    checkactpresimback(statelist,t1,statelist2)
+	  | checkpback (_, _, _) = raise Panic (* shouldn't happen *)
+       in checkpback(statelist,statelist1,statelist2)
+      end
+
+(****************************************************************************)
+(* Functions handling the complete "simulation" check (1. or 2. condition)  *)
+(****************************************************************************)
+
+(*   checks the first condition of state1 < state2         *)
+
+  fun checkpresim ((state1,state2),nil) = true
+    | checkpresim ((state1,state2),(act1,statelistref1)::t) =
+      checkactpresim(!statelistref1,Elem.actsuclist(act1,state2),state2,act1)
+      andalso checkpresim((state1,state2),t)
+
+(*        checks the second condition of state1 < state2        *)
+
+  fun checkpresimback ((state1,state2),nil) = true
+    | checkpresimback((state1,state2),(act2,statelistref2)::t) =
+      if DivC.locdivpred (state1,act2) orelse PG.act_eq(act2,PG.eps) then
+         checkpresimback ((state1,state2),t)
+
+(* This "then case" can only be accessed while divergence preorder checking *)
+(* as locdivpred cannot deliver true in other cases (the corresponding info *)
+(* list is simply empty) and the action epsilon does not accur at as long   *)
+(* as we do not check for (divergence) precongruence                        *)
+
+      else checkactpresimback (Elem.actsuclist(act2,state1),
+                               Elem.actsuclist(act2,state1),
+                               !statelistref2) andalso
+           checkpresimback((state1,state2),t)
+in (*  checkpreorderapprox: combination of both conditions  *)
+  checkpresim((state1,state2),!(Elem.compsuc state1)) andalso
+      (relaxpred state1 orelse
+          checkpresimback((state1,state2),!(Elem.compsuc state2)))
+end (* of checkpreordapprox *)
+
+fun genpreord (relaxpred,initpred)
+              ((leftst,leftstlist),(rightst,rightstlist))  =
+let
+
+(* The following predicate becomes false when the right hand side state *)
+(* is no longer an upper approximation of the left hand side state.     *)
+
+  fun predf1 state1 = Elem.stateeq(state1,leftst)
+  fun predf2 state1 = Elem.statemem(rightst,Elem.approxinf state1) 
+
+(* abstrsemfuncpre checks whether the current global approximative preorder *)
+(* info gives raise to reduce the approximate preorder info of state1 and   *)
+(* reduces this information if possible. The value of abstrsemfuncpre is    *)
+(* true if a reduction has been made.                                       *)
+
+  fun abstrsemfuncpre state1 =
+      let fun abstrfupre (state1,nil,applist)  =
+              (Elem.infocompappref state1 := applist;  false)
+            | abstrfupre(state1,h::t,applist) =
+              if checkpreordapprox(state1,h,relaxpred) then
+                 abstrfupre(state1,t,applist @ (h::nil))
+              else (ignore(abstrfupre(state1,t,applist)); true)
+       in abstrfupre(state1,Elem.approxinf state1,nil)
+      end
+
+(* initializes the globalization process for the preorder check  *)
+
+  fun initprocheck (leftstlist,rightstlist,initpred) =
+  let
+
+(* Computes the first preorder approximation simply by means of consistency *)
+(* with "initpred". Note, only the "left states" get a nontrivial app-info  *)
+(* and this info only consists of members of the "right state set". The     *)
+(* Boolean value has no meaning.Later it will be used for faster checking.  *)
+
+    fun firstapproxpre (nil,
+                                (* gives the states to be checked   *)
+                                (* i.e. parts of leftstlist         *)
+                 statelist1,
+                                (* states to be checked againsts    *)
+                                (* i.e. parts of rightstlist        *)
+                 statelist2) =
+                                (* for initialization when starting *)
+                   false        (* i.e. the      rightstlist        *)
+     | firstapproxpre (statelist as (h::t),statelist1,statelist2) =
+     let
+      fun firstapp (applist,    (* states which already checked positively   *)
+                         h,    (* state which is checked currently          *)
+                         t,    (* states which remain to be checked         *)
+                        nil,    (* states to be checked against              *)
+                 statelist2)    (* for initialization when starting to check *)
+                                (* a new state                               *)
+            = (Elem.infocompappref h := applist;
+                firstapproxpre (t,statelist2,statelist2))
+
+       | firstapp (applist,h,t,statelist1 as (h1::t1),statelist2) =
+               if initpred(h,h1) then
+                  (ignore(firstapp(applist@(h1::nil),h,t,t1,statelist2));true)
+               else firstapp (applist,h,t,t1,statelist2)
+      in firstapp(nil,h,t,statelist1,statelist2)
+     end
+  in firstapproxpre(leftstlist,rightstlist,rightstlist)
+  end
+
+  val statelist = (ignore(initprocheck (leftstlist,rightstlist,initpred)); leftstlist)
+
+  fun gf [] = true
+    | gf (h::t) = if abstrsemfuncpre h then 
+                     if predf1 h then
+                        predf2 h andalso gf statelist
+                     else gf statelist
+                  else gf t
+
+in (exists (fn x => predf1 x andalso predf2 x) statelist) andalso
+   gf statelist
+end
+end
+

@@ -1,0 +1,76 @@
+# ==== MLWorks runtime system SPARC/Solaris-specific (Gnu) Makefile ====
+#
+# Copyright (C) 1997 The Harlequin Group Ltd.  All rights reserved.
+#
+# $Log: GNUmake,v $
+# Revision 1.26  1998/06/15 10:57:21  johnh
+# [Bug #30411]
+#
+# Statically link Xpm libraries.
+#
+# Revision 1.25  1998/06/10  15:48:40  johnh
+# [Bug #30411]
+# Add support for free edition splash screen - need xpm library.
+#
+# Revision 1.24  1997/07/23  09:16:13  stephenb
+# [Bug #30066]
+# Ensure that Openwin/DeskTop includes and libraries are used.
+#
+# Revision 1.23  1997/07/22  16:20:29  andreww
+# [Bug #30046]
+# add system-specific target for shared object runtime
+#
+# Revision 1.22  1997/06/13  14:48:50  jkbrook
+# [Bug #30170]
+# Merging changes from 1.0r2c2 into 2.0m0
+#
+#
+# Revision 1.21  1997/03/31  12:17:46  daveb
+# [Bug #1716]
+# Changed LIBRARIESSTATIC so that only the Motif library is statically linked.
+#
+# Revision 1.20  1996/10/18  13:45:23  jont
+# Merge in license stuff
+#
+#
+
+# Solaris is a Unix variant ...
+
+OS_TYPE = Unix
+
+# add target-specific modules
+
+MODULES		:= $(MODULES) x unix pioc unixlocal poly_equal intmul mach_fixup check_windows
+DLLMODULES		:= $(DLLMODULES) x unix pioc unixlocal poly_equal intmul mach_fixup check_windows
+
+# add target-specific static modules
+
+MODULESSTATIC   := $(MODULES)
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) \
+		MACH_FIXUP MACH_INT_MUL MACH_INT_DIV MACH_POLY_EQ \
+		MACH_STRINGS IMPLICIT_PROFILE_CODE Solaris_License
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS) - /usr/openwin/include /usr/dt/include
+
+# add target-specific options
+
+TARGETOPTS	= -L/usr/openwin/lib -L/usr/dt/lib
+TARGETOPTSDEBUG = $(TARGETOPTS)
+
+# add target-specific libraries
+
+LIBRARIESSTATIC = -L/usr/lib/X11 -Xlinker -Bstatic -lm -lXpm -Xlinker -Bdynamic -lXm -lXt -lX11 -lsocket -lnsl -lgen -lform -lintl -lelf -ldl
+
+LIBRARIES	= -L/usr/lib/X11 -Xlinker -Bstatic -lXpm -Xlinker -Bdynamic -lm -lXm -lXt -lX11 -lsocket -lnsl -lgen -lform -lintl -lelf -ldl
+
+DLLLIBRARIES 	=
+DLLFLAGS	= -G -B dynamic -B symbolic
+
+# other target specific things
+
+STRIP		= /usr/ccs/bin/strip
+

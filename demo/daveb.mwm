@@ -1,0 +1,124 @@
+! Dave's .mwmrc file
+
+Buttons globalButtons
+{
+	<Btn1Down>		root			f.menu applicationMenu
+	<Btn2Down>		root			f.menu toolMenu
+	<Btn3Down>		root			f.menu hostMenu
+	Shift<Btn3Down>		root			f.menu windowToolMenu
+	<Btn1Down>		frame|title		f.raise
+	<Btn2Down>		frame|title		f.move
+	<Btn3Down>		title			f.lower
+	<Btn1Down>		icon			f.normalize
+	<Btn2Down>		icon			f.move
+	<Btn3Down>		icon			f.lower
+	Shift<Btn1Down>		window|icon|frame|title f.raise
+	Shift<Btn2Down>		window|icon|frame|title f.move
+	Shift<Btn3Down>		window|icon|frame|title f.resize
+}
+
+
+! ==== APPLICATIONS MENU ====
+
+Menu applicationMenu
+{
+	"Applications"			f.title
+	"Shell"				!"xterm -name shell &"
+	"GNU Emacs"			!"emacs19 &"
+	"Epoch"				!"epoch &"
+	"Manual"			!"xman &"
+	"Calculator"    	        !"xcalc &"
+	"Screen Dump"    	        !"xwd > ~/xwd.out &"
+	"Mosaic"    	        	!"mosaic foo &"
+	"Spring"			!"rsh springhost 'export DISPLAY=tek6:0.0; /usr/local/bin/spring ' &"
+}
+
+
+! === TOOLS MENU ===
+
+Menu toolMenu
+{
+	"Tools"				f.title
+	"Font selector"			!"xfontsel &"
+	"Clipboard"			!"xclipboard &"
+	"Process Status"		!"nice -15 xterm -name processStatus -e sh -c \"while true; do ps -auxw | head | cut -c1-25,38-80 > tmp/\$\$; cat tmp/\$\$; sleep 10; done\" &"
+	"Cut selector"			!"xcutsel &"
+	"Preferences"			f.menu preferenceMenu
+	"Special"			f.menu specialMenu
+	"Refresh screen"		f.refresh
+	"Exit mwm"			f.quit_mwm
+}
+
+Menu preferenceMenu
+{
+	 "Preferences"	 		f.title
+	 "Bell Loud"	 		!"xset b 100&"
+	 "Bell Quiet"	 		!"xset b 50 &"
+	 "Bell Off"	 		!"xset b off&"
+	 "Click Loud"	 		!"xset c 8&"
+	 "Click Soft"	 		!"xset c on&"
+	 "Click Off"	 		!"xset c off&"
+	 "Lock On"	 		!"xset l on&"
+	 "Lock Off"	 		!"xset l off&"
+	 "Mouse Fast"	 		!"xset m 4 2&"
+	 "Mouse Normal"	 		!"xset m &"
+	 "Mouse Slow"	 		!"xset m 1 1&"
+}
+
+menu specialMenu
+{
+	"Restart mwm"			f.restart
+	"Reload resources"		!"xrdb -load $HOME/.Xresources"
+	"Pack icons"			f.pack_icons
+}
+
+
+! === REMOTE HOSTS MENU ===
+
+Menu hostMenu
+{
+	"Other Hosts"		f.title
+	"Abel"			!"xterm -name remoteShell -title Abel -n Abel -e rsh abel &"
+	"Bilbo"			!"xterm -name remoteShell -title Bilbo -n Bilbo -e rsh bilbo &"
+	"Dedekind"		!"xterm -name remoteShell -title Dedekind -n Dedekind -e rsh dedekind &"
+	"Romulus"		!"xterm -name remoteShell -title Romulus -n Romulus -e rsh romulus &"
+	"Sorrol"		!"xterm -name remoteShell -title Sorrol -n Sorrol -e rsh sorrol &"
+	"Zermelo"		!"xterm -name remoteShell -title Zermelo -n Zermelo -e rsh zermelo &"
+}
+
+
+! === WINDOW TOOL MENU ===
+
+! Default Window Menu Description
+
+Menu windowToolMenu
+{
+	Move		_M	Alt<Key>F7	f.move
+	Raise		_a	Alt<Key>F2	f.raise
+	Lower		_L	Alt<Key>F3	f.lower
+	Minimize	_n	Alt<Key>F9	f.minimize
+	Restore		_R	Alt<Key>F5	f.normalize
+	Refresh		_f	Alt Ctrl<Key>L	f.refresh_win
+	no-label				f.separator
+	Close		_C	Alt<Key>F4	f.kill
+}
+
+
+! === KEY BINDINGS ===
+! Defaults culled from system settings
+
+Keys DefaultKeyBindings
+{
+	Shift<Key>Escape	window|icon		f.post_wmenu
+! Commented out to avoid conflict with Compose space
+!	Meta<Key>space		window|icon		f.post_wmenu
+	Meta<Key>Tab		root|icon|window	f.next_key
+	Meta Shift<Key>Tab	root|icon|window	f.prev_key
+	Meta<Key>Escape		root|icon|window	f.next_key
+	Meta Shift<Key>Escape	root|icon|window	f.prev_key
+	Meta Shift Ctrl<Key>exclam root|icon|window	f.set_behavior
+	Meta Ctrl<Key>exclam    root|icon|window	f.set_behavior
+	Meta<Key>F6		window			f.next_key transient
+	Meta Shift<Key>F6	window			f.prev_key transient
+	Ctrl<Key>L		root			f.refresh
+}

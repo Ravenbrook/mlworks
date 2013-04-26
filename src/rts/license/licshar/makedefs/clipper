@@ -1,0 +1,51 @@
+# Makefile fragment for Clipper
+#
+# $Id: clipper,v 1.1 1994/10/26 10:01:31 sarah Exp $
+#
+# This makefile bit just exports a whole bundle of macros.  It also includes
+# common.unx to export a bundle of default rules.  See the README file to
+# see what macros this is obligated to provide.
+#
+# If you have a CHANGE used by ONLY ONE COMPOUND, it DOESN'T BELONG HERE.
+# Put it in the compound's Makefile, or in a platform-specific include in
+# that compound (e.g. v20/makebits/sparc.make, for example).  This is for
+# much more general macro definitions.
+##################################################
+
+OLDCC=acc -knr -c
+ANSICC=acc -c
+CCOM=${OLDCC}
+LDCOM=acc
+CPPCOM=/lib/cpp
+LINT=lint
+MAKE=make
+RANLIB=ar t
+AR=ar
+
+ARFLAGS=rv
+MCFLAGS=-DCLIPPER=1 -DUNIX=1 -DSYSV=1 -DNO_TIMEGM=1
+SPEEDFLAGS=-O
+DEBUGFLAGS=-g
+# Clipper make has CFLAGS=-O by default!
+CFLAGS=
+
+LINTLIBS=
+LNLIBOUT=-C
+
+SYSINC=	-I/usr/include
+DEFS=${MCFLAGS} ${CDEFINES}
+CCSPEED=${CCOM} ${SPEEDFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+CCDBG=${CCOM} ${DEBUGFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+CPPFILE=${CPPCOM} ${INCDIRS} ${DEFS} ${SYSINC}
+LNFILE=${LINT} -i ${LNFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+
+#The licensing tools all require the same libs so they're here
+LS_SYSLIBS=-lsun
+
+##################################################
+# $Log: clipper,v $
+# Revision 1.1  1994/10/26 10:01:31  sarah
+# new file
+#
+#
+

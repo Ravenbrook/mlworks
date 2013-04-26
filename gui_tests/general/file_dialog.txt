@@ -1,0 +1,77 @@
+
+Bug #1300:  File dialog should remember its directory
+Fixed by change #2823
+
+Bug behaviour:  File dialog does not remember the directory it was last in.
+
+Repeat by:  Select File->LoadSource from the Listener menu, and load some
+source file which is not in the current directory.  Then select 
+File->LoadSource again.  The correct behaviour here is that the file dialog
+will now display the directory it last visited (in this case the directory 
+where you loaded the source file from).
+
+
+----------
+
+Bug #1591:  File dialog does not observe current directory.
+Fixed by change #2824
+
+Behaviour:  When the file system directory is changed the file dialog 
+should then start in the new directory when it is next invoked.
+
+Repeat by:  In Listener, load system/__os_file_sys.sml and type:
+	OSFileSys_.chDir <new dir>;
+where <new dir> is a different directory than the current directory.
+Then invoke the file dialog by selecting File->LoadFromSource and the
+file dialog should pop in the new directory.
+
+
+----------
+
+Bug #2022: GUI+UNIX: File dialog only accepts directory ending in "/"
+
+Bug Description: If you type a directory name into the Selection area of a
+File dialog that is expecting a directory but don't include a trailing
+"/" , then the entry is not accepted but no indication of the reason is
+given.  It should accept the directory and add the remaining "/" if 
+necessary.
+
+Repeat by:
+
+  Start up MLWorks and select Podium>Path>Source Path
+
+This should pop up a Source Path window.  From that select
+Action>Insert Entry.
+
+Type the following (but replace "/u/stephenb/test/" with whatever is
+appropriate for you) into the Selection :-
+
+  /u/stephenb/test/MLW/src/parser
+
+and press OK.  Nothing visibily happens.  The entry is not added
+to the Source Path and nor is any message displayed indicating that
+the entry is unacceptable.
+
+
+Proper behaviour: the entry is added whether or not there is a 
+trailing "/"
+
+
+---------
+
+Change #2709:  NT: open_file_dialog and friends
+
+Check that the Open File dialog works on NT 4.0.  Currently it is the
+old style.
+
+---------
+
+Request #01860: explorer style file_dialogs
+10/10/97
+
+The above gui test is now redundant because of the decision to revert
+back to the use of explorer style file dialogs on NT 4.0.  To test
+this, select File->LoadFromSource (or any command which invokes a 
+file or directory choosing dialog) and the dialog that appears should
+be in the explorer style on NT 4.0.  On NT 3.51, the old style should
+still be in use.

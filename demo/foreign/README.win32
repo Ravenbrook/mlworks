@@ -1,0 +1,32 @@
+Each example involves creating a .DLL specific to that example.  In
+order to create the .DLL, the value of MLWORKS_INCLUDE must be set to
+point to the directory that contains MLW_CI.H and MLWORKS_LIB must be
+set to point to LIBMLW.LIB.  The Makefile in each example is set to
+point at the default locations of these values, so all you should need
+to do to build the .DLL for each example is type
+
+  > nmake
+
+in each example.  If the make works correctly it should result in a
+.DLL being produced.  For example, if the above is run in the add
+example directory, then it should produce ADD_STUB.DLL.
+
+
+If for some reason mlw_ci.h and libmlw.lib are not in their default
+locations, then you can alter the value of MLWORKS_INCLUDE and
+MLWORKS_LIB in a number of ways: the values can be set on the command
+line or they can be edited into the Makefile for each example.
+
+For example, assuming that MLWorks is installed in C:\MLWorks, you
+could either edit each Makefile to include :-
+
+  MLWORKS_INCLUDE=C:\MLWorks\foreign
+  MLWORKS_LIB=C:\MLWorks\bin\libmlw.lib
+
+and then just type
+
+  > nmake
+
+as before, or pass the values to nmake :-
+
+  > nmake MLWORKS_INCLUDE=C:\MLWorks\foreign MLWORKS_LIB=C:\MLWorks\bin\libmlw.lib

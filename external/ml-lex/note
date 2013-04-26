@@ -1,0 +1,77 @@
+From: sufrin%prg.oxford.ac.uk@NSS.CS.UCL.AC.UK
+Message-Id: <8812101713.AA10966@uk.ac.oxford.prg.client13>
+Date: Sat Dec 10 17:13:18 1988
+To: dbm <@RELAY.CS.NET:dbm@att.arpa>
+Subject: small suggestion for Andrew (re lexgen)
+Reply-To: Bernard Sufrin <sufrin%prg.oxford.ac.uk@NSS.CS.UCL.AC.UK>
+
+
+Dave: sorry to send stuff this way,
+but I can't find Andrew's email address. Bernard
+
+Lexgen is very useful. A very simple impro-
+vement (which I've implemented here) is to
+give programmers the option of avoiding con-
+struction of a substring every time yytext
+is bound. Whilst "substring" is the simplest
+way to "internalise" a string, the program-
+mer may be able to do better by taking the
+"substring specification" (!yyb,i0,i-i0) and
+internalising it by some other means (which
+involves comparing the substring spec with
+already-internalised strings by any of the
+usual methods: I usually use open-hash +
+linear search).
+
+
+When employing this trick in a couple of
+compilers and our proof-support system I've
+found the consequent reduction of garbage
+collector cycles to be well worthwhile
+(instead of one substring construction per
+symbol of the text being analysed we get one
+substring constructed per DISTINCT symbol).
+
+I've added an option in the lexgen defini-
+tions section: %nosubstring turns the binding
+of yytext from
+
+	val yytext = substring(!yyb,i0,i-i0)
+into
+	val yytext = (!yyb,i0,i-i0:int)
+	
+
+Here's the diff: 
+
+92c94
+<           COUNT | REJECT | FULLCHARSET | STRUCT
+---
+>           COUNT | REJECT | FULLCHARSET | STRUCT | NOSUBSTRING
+118c120
+<    val StrName = ref "Mlex"
+---
+>    val StrName = ref "Mlex";
+120,121c122
+<    val ResetFlags = fn () => (CountNewLines := false; HaveReject := false;
+<                              CharSetSize := 128; StrName := "Mlex")
+---
+>    (* Can obliterate substring operator *)
+122a124,129
+>    val SubStrName = ref "substring";
+> 
+>    val ResetFlags = fn () =>
+>    (CountNewLines := false; HaveReject := false;
+>     CharSetSize := 128; StrName := "Mlex"; SubStrName := "substring" )
+> 
+325a333,334
+>                                  else if command = "nosubstring" then
+>                                         NOSUBSTRING
+606a616,617
+>               | NOSUBSTRING =>
+>                          (SubStrName := ""; ParseDefs())
+958c969
+<        sayln "\t\t\t(let val yytext = substring(!yyb,i0,i-i0)";
+---
+>        say "\t\t\t(let val yytext = "; say(!SubStrName); sayln "(!yyb,i0,i-i0:int)";
+
+

@@ -1,0 +1,869 @@
+(*
+ *
+ * $Log: Parse.str,v $
+ * Revision 1.2  1998/06/02 15:30:10  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Parse.str,v 1.2 1998/06/02 15:30:10 jont Exp $";
+(* I have hacked the parser to make the UI slightly more user	       *)
+(* friendly, and to allow action sets as parameters. As a result some  *)
+(* comments no longer match the code. This should all be replaced by a *)
+(* YACC grammar soon, really. *)
+functor Parse ( structure Commands : COMMANDS ) : PARSE =
+struct
+
+   structure Commands = Commands
+   structure A = Commands.Ag.A
+   structure V = Commands.Ag.V
+
+   open Commands
+
+   exception Parse of string
+   exception ActErr of string
+
+   datatype token = Lbrack  | Rbrack  | Lsq   | Rsq
+                  | Lset    | Rset    | Plus
+                  | Para    | Rest    | Repl
+                  | Equals  | Point   | Comma | Colon | Semicolon
+                  | Bottomt | Deltat  | Eos
+                  | Vart of string
+		  | Actt of string | Timet of int
+
+   fun symbol Lbrack     = "("
+     | symbol Rbrack     = ")"
+     | symbol Lsq        = "["
+     | symbol Rsq        = "]"
+     | symbol Lset       = "{"
+     | symbol Rset       = "}"
+     | symbol Plus       = "+"
+     | symbol Para       = "|"
+     | symbol Rest       = "\\"
+     | symbol Repl       = "/"
+     | symbol Equals     = "="
+     | symbol Point      = "."
+     | symbol Comma      = ","
+     | symbol Colon      = ":"
+     | symbol Semicolon  = ";"
+     | symbol Bottomt    = "@"
+     | symbol Deltat     = "$"
+     | symbol Eos        = "end of input"
+     | symbol (Vart v)  = v
+     | symbol (Actt a)  = a
+     | symbol (Timet t) = makestring t
+
+   val breaks = ["(" , ")" , "[" , "]" , "{" , "}" ,
+                 "+" , "|" , "\\", "/" , "=" , "." , "," , ":" , ";" ,
+                 " " , "\t", "\n", "@" , "$" ]
+
+   fun parse module mkact mkvar mkagent mkprop str =
+       let fun isbreak e = Lib.member (op =) (e,breaks)
+
+           fun sc "" []            = (Eos,[])
+             | sc "" (" "::t)      = sc "" t
+             | sc "" ("\t"::t)     = sc "" t
+             | sc "" ("\n"::t)     = sc "" t
+             | sc "" ("("::t)      = (Lbrack,t)
+             | sc "" (")"::t)      = (Rbrack,t)
+             | sc "" ("["::t)      = (Lsq,t)
+             | sc "" ("]"::t)      = (Rsq,t)
+             | sc "" ("{"::t)      = (Lset,t)
+             | sc "" ("}"::t)      = (Rset,t)
+             | sc "" ("+"::"+"::t) = (Plus,t)
+             | sc "" ("|"::t)      = (Para,t)
+             | sc "" ("\\"::t)     = (Rest,t)
+             | sc "" ("/"::t)      = (Repl,t)
+             | sc "" ("="::t)      = (Equals,t)
+             | sc "" ("."::t)      = (Point,t)
+             | sc "" (","::t)      = (Comma,t)
+             | sc "" (":"::t)      = (Colon,t)
+             | sc "" (";"::t)      = (Semicolon,t)
+             | sc "" ("@"::t)      = (Bottomt,t)
+             | sc "" ("$"::t)      = (Deltat,t)
+             | sc s  l             = if null l orelse isbreak(hd l) then
+	       ((if Lib.startsWithCapital s then Vart s
+		 else Timet (Lib.atoi s) handle Lib.AtoI => Actt s) ,l)
+                                     else sc (s^(hd l)) (tl l)
+
+           val scan = sc ""
+
+(****************************************************************************)
+(*                     OUT OF DATE!!                                        *)
+(*  Recursive descent parser:                                               *)
+(*                                                                          *)
+(*  CMD  ::=  agent         VAR = <agent>                                   *)
+(*         |  agent         VAR ( PARAMLIST ) = <agent>                     *)
+(*         |  agent         VAR                                             *)
+(*         |  prop          VAR = <prop>                                    *)
+(*         |  prop          VAR ( PPARAMLIST ) = <prop>                     *)
+(*         |  prop          VAR                                             *)
+(*         |  set           VAR = { }                                       *)
+(*         |  set           VAR = { ACTLIST }                               *)
+(*         |  set           VAR                                             *)
+(*         |  rel           VAR = [ ]                                       *)
+(*         |  rel           VAR = [ ACTACTLIST ]                            *)
+(*         |  rel           VAR                                             *)
+(*         |  min           (VAR, <agent>)                                  *)
+(*         |  printenv                                                      *)
+(*         |  clearenv                                                      *)
+(*         |  input         <filename>                                      *)
+(*         |  output        <filename>                                      *)
+(*         |  save          <filename>                                      *)
+(*         |  savemeije     ( <filename> , <agent> )                        *)
+(*         |  savefc        ( <filename> , <agent> )                        *)
+(*         |  help          <command>                                       *)
+(*         |  reduce                                                        *)
+(*         |  noreduce                                                      *)
+(*         |  localmc                                                       *)
+(*         |  globalmc                                                      *)
+(*         |  synthesize                                                    *)
+(*         |  quit                                                          *)
+(*         |  sim           <agent>                                         *)
+(*         |  prefixform    <agent>                                         *)
+(*         |  transitions   <agent>                                         *)
+(*         |  stable        <agent>                                         *)
+(*         |  diverges      <agent>                                         *)
+(*         |  freevars      <agent>                                         *)
+(*         |  sort          <agent>                                         *)
+(*         |  size          <agent>                                         *)
+(*         |  states        <agent>                                         *)
+(*         |  statesexp     <agent>                                         *)
+(*         |  statesobs     <agent>                                         *)
+(*         |  actders       ( <act> , <agent> )           (act =/= eps)     *)
+(*         |  eq            ( <agent> , <agent> )                           *)
+(*         |  cong          ( <agent> , <agent> )                           *)
+(*         |  strongeq      ( <agent> , <agent> )                           *)
+(*         |  maypre        ( <agent> , <agent> )                           *)
+(*         |  mustpre       ( <agent> , <agent> )                           *)
+(*         |  testpre       ( <agent> , <agent> )                           *)
+(*         |  mayeq         ( <agent> , <agent> )                           *)
+(*         |  musteq        ( <agent> , <agent> )                           *)
+(*         |  testeq        ( <agent> , <agent> )                           *)
+(*         |  twothirdseq   ( <agent> , <agent> )      		       *)
+(*         |  twothirdspre  ( <agent> , <agent> )                           *)
+(*         |  branching     ( <agent> , <agent> )                           *)
+(*         |  contraction   ( <agent> , <agent> )                           *)
+(*         |  dfstrong      ( <agent> , <agent> )                           *)
+(*         |  dfweak        ( <agent> , <agent> )                           *)
+(*         |  dftrace       ( <agent> , <agent> )                           *)
+(*                                                                          *)
+(*  ACTLIST  ::=  <act>                              (act =/= tau,eps)      *)
+(*             |  <act> , ACTLIST                    (act =/= tau,eps)      *)
+(*                                                                          *)
+(*  ACTACTLIST ::=  <act>_1 / <act>_2                (act_1 =/= eps &       *)
+(*               |  <act>_1 / <act>_2 , ACTACTLIST    act_2 =/= tau,eps)    *)
+(*                                                                          *)
+(*  PARAMLIST  ::=  PARAM              PPARAMLIST  ::=  PPARAM              *)
+(*               |  PARAM,PARAMLIST                  |  PPARAM,PPARAMLIST   *)
+(*                                                                          *)
+(****************************************************************************)
+
+           fun check (tok,(t,s)) =
+               if tok=t then scan s
+               else raise Parse("Expected "^symbol tok^" but found "^symbol t)
+
+           fun uptoComma [] =
+               raise Parse("Unexpected end of input")
+             | uptoComma (","::t) = ("",t)
+             | uptoComma (h::t) =
+                  let val (str,res) = uptoComma t
+                   in (h^str,res)
+                  end
+
+(* Get string up to the next comma which isn't inside a pair of	       *)
+(* brackets. This is necessary in order to be able to parse things     *)
+(* like cp (A({a,b}),F). Doubtless there are mode idiomatic ways of    *)
+(* writing this. *)
+	   fun uptoCommaWithBracketCount l =
+	     let fun look [] _ _ _ =
+	       raise Parse("Failed to find comma")
+		   | look (","::t) 0 0 0 = ("",t)
+		   | look ("("::t) n m p = passover ("("::t) (n+1) m p
+		   | look (")"::t) n m p = passover (")"::t) (n-1) m p
+		   | look ("{"::t) n m p = passover ("{"::t) n (m+1) p
+		   | look ("}"::t) n m p = passover ("}"::t) n (m-1) p
+		   | look ("["::t) n m p = passover ("["::t) n m (p+1)
+		   | look ("]"::t) n m p = passover ("]"::t) n m (p-1)
+		   | look (h::t) n m p = passover (h::t) n m p
+		     
+		 and passover [] _ _ _ = raise Panic (* can't happen *)
+		   | passover (h::t) i j k = let val (str, res) = look t i j k
+					     in (h^str,res)
+					     end
+	     in look l 0 0 0
+	     end
+	    
+           fun uptoRbrack n [] =
+               raise Parse("Unexpected end of input")
+             | uptoRbrack n (")"::t) =
+                  if n=0 then ("",scan t)
+                  else let val (str,s) = uptoRbrack (n-1) t
+                        in (")"^str,s)
+                       end
+             | uptoRbrack n ("("::t) =
+                  let val (str,s) = uptoRbrack (n+1) t
+                   in ("("^str,s)
+                  end
+             | uptoRbrack n (h::t) =
+                  let val (str,s) = uptoRbrack n t
+                   in (h^str,s)
+                  end
+
+           fun readagentpair cmd res =
+               let val (tok,res) = scan res
+                    in if tok=Lbrack then
+                          let val (A,res) = uptoCommaWithBracketCount res
+                              val (B,s) = uptoRbrack 0 res
+                           in (cmd(mkagent A,mkagent B),s)
+                          end
+                       else raise Parse("Expected "^symbol Lbrack
+                                        ^" but found "^symbol tok)
+                   end
+
+           fun strip "" [] = raise Parse("No file specified")
+             | strip s  [] = s
+             | strip "" (" "::t)  = strip "" t
+             | strip "" ("\t"::t) = strip "" t
+             | strip "" ("\n"::t) = strip "" t
+             | strip s  (" "::t)  = strip' s t
+             | strip s  ("\t"::t) = strip' s t
+             | strip s  ("\n"::t) = strip' s t
+             | strip s  (h::t)    = strip (s^h) t
+
+           and strip' s [] = s
+             | strip' s (" "::t)  = strip' s t
+             | strip' s ("\t"::t) = strip' s t
+             | strip' s ("\n"::t) = strip' s t
+             | strip' s _ = raise Parse("Invalid file name")
+
+(* Take a character list, strip whitespace from beginning and end, *)
+(* return string. O how I wish for Perl regexps. *)
+	   fun stripOutsideWhitespace charlist =
+	     let fun strip (" "::t) = strip t
+		   | strip ("\t"::t) = strip t
+		   | strip ("\n"::t) = strip t
+		   | strip l = l
+                in implode(rev(strip(rev(strip charlist))))
+	     end
+               
+	       
+           fun ACT (Actt s,res) =
+               let val a = A.mkact s
+                in if A.eq(a,A.eps) orelse A.eq(a,A.tau) then
+                      raise Parse(s^" cannot be a parameter")
+                   else (Ag.Actparam a,scan res)
+               end
+             | ACT (tok,_) =
+               raise Parse("Expected an action but found "^symbol tok)
+
+           fun VAR (Vart s,res) = (mkvar s,scan res)
+             | VAR (tok,_) =
+               raise Parse("Expected a variable but found "^symbol tok)
+
+(* NB Here we're interested in FORMAL parameters.  *)
+           fun PARAMLIST s =
+               let val (p,s as (tok,res)) = PARAM s
+                in if tok=Comma then
+                      let val (pl,s) = PARAMLIST(scan res)
+                       in (p::pl,s)
+                      end
+                   else ([p],s)
+               end
+
+(* Hackish way of telling the difference between action set variables  *)
+(* (start with 2 capitals) and agent variables (start with one	       *)
+	   (* capital). It's less hackish than my last attempt though! *)
+           and PARAM (Vart s,res) =
+	     if Lib.startsWithTwoCapitals s then
+	       (Ag.Actlistparam(Ag.Actlistvar(V.mkvar s)),scan res)
+	     else (Ag.Agentparam(Ag.Var(V.mkvar s,[])),scan res)
+
+             | PARAM (Actt s,res) =
+               let val a = A.mkact s
+                in if A.eq(a,A.eps) orelse A.eq(a,A.tau) then
+                      raise Parse(s^" cannot be a formal parameter")
+                   else (Ag.Actparam a,scan res)
+               end
+
+             | PARAM (tok,_) =
+               raise Parse("Expected a parameter but found "^symbol tok)
+
+           and PPARAMLIST s =
+               let val (p,s as (tok,res)) = PPARAM s
+                in if tok=Comma then
+                      let val (pl,s) = PPARAMLIST(scan res)
+                       in (p::pl,s)
+                      end
+                   else ([p],s)
+               end
+
+           and PPARAM (Vart s,res) =
+               (L.Propparam(L.Var(V.mkvar s,[])),scan res)
+
+             | PPARAM (Actt s,res) =
+               let val a = A.mkact s
+                in if A.eq(a,A.eps) orelse A.eq(a,A.tau) then
+                      raise Parse(s^" cannot be a formal parameter")
+                   else (L.Modparam(L.modlist [a]),scan res)
+               end
+
+             | PPARAM (tok,_) =
+               raise Parse("Expected a parameter but found "^symbol tok)
+
+           and ACTLIST (Actt ac,res) =
+               let val a = A.mkact ac
+                in if A.eq(a,A.eps) orelse A.eq(a,A.tau) then
+
+(* but tau may be needed in strong modalities. the transition
+   function could ignore taus in restrictions *)
+
+                      raise ActErr ac
+                   else let val s as (tok,res) = scan res
+                         in if tok=Comma then
+                               let val (l,s) = ACTLIST(scan res)
+                                in (a::l,s)
+                               end
+                            else ([a],s)
+                        end
+               end
+
+             | ACTLIST (tok,_) =
+               raise Parse("Expected an action but found "^symbol tok)
+
+           fun ACTSEQ (Actt ac,res) =
+               let val a = A.mkact ac
+                   val (tok,res) = scan res
+                in if tok=Comma then
+                      let val s as (tok,res') = scan res
+                       in case tok of
+                               Actt bc =>
+                                   let val (tok',_) = (scan res')
+                                    in if tok'=Comma then
+                                          let val (l,res) = ACTSEQ s
+                                           in (a::l,res)
+                                          end
+                                       else ([a],res)
+                                   end
+                             | _ => ([a],res)
+                      end
+                   else raise Parse("Expected a comma but found "^(symbol tok))
+               end
+	     | ACTSEQ (tok,_) =
+               raise Parse("Expected an action list but found "^symbol tok)
+
+
+           fun ACTACTLIST (Actt ac,res) =
+	     let val a = A.mkact ac
+	     in
+	       if A.eq(a,A.eps) then raise ActErr ac
+	       else
+		 let val (tok,res) = check(Repl,scan res)
+		 in
+		   case tok of Actt ac =>
+		     let val b = A.mkact ac
+		     in
+		       if A.eq(b,A.eps) orelse A.eq(b,A.tau)
+			 then raise ActErr ac
+		       else let val s as (tok,res) = scan res
+			    in if tok=Comma
+				 then let val (l,s) = ACTACTLIST(scan res)
+				      in ((a,b)::l,s)
+				      end
+			       else ([(a,b)],s)
+			    end
+		     end
+		 | _ => raise Parse("Expected an action but found "
+				    ^(symbol tok))
+		 end
+	     end
+
+             | ACTACTLIST (tok,_) =
+               raise Parse("Expected an action but found "^symbol tok)
+
+           fun readintagent(Command,res) = 
+               let val (tok,res) = check(Lbrack,scan res)
+                in case tok of
+                        Timet t =>
+                           let val (tok,res) = scan res
+                           in if tok=Comma then
+                                 let val (A,s) = uptoRbrack 0 res
+                                  in (Command(t,mkagent A),s)
+                                 end
+                              else raise Parse("Expected  , but found "
+                                               ^(symbol tok))
+                           end
+                      | _ => raise Parse("Expected a Number")
+               end
+
+           fun readagentpair (cmd, res) =
+               let val (tok,res) = scan res
+                    in if tok = Lbrack then
+                          let val (A,res) = uptoCommaWithBracketCount res
+                              val (B,s) = uptoRbrack 0 res
+                           in (cmd(mkagent A,mkagent B),s)
+                          end
+                       else raise Parse("Expected ( but found "^symbol tok)
+                   end
+
+           fun readactlistagent(Command,res) =
+               let val s as (tok,res) = check(Lbrack,scan res)
+                in case tok of
+                     Actt ac =>
+                     let val (l,res) = ACTSEQ s
+                      in if exists
+                             (fn a => A.eq(a,A.tau) orelse A.eq(a,A.eps)) l
+                         then raise Parse("List observable actions only")
+                         else let val (A,s) = uptoRbrack 0 res
+                               in (Command(l,mkagent A),s)
+                              end
+                     end
+                   | _ => raise Parse("Expected an action but found "
+                                      ^symbol tok)
+               end
+
+           fun readvaragent(command,res) = 
+               let val (tok,res) = check(Lbrack,scan res)
+                in case tok of
+                        Vart t =>
+                           let val (tok,res) = scan res
+                           in if tok=Comma then
+                                 let
+				   val (A,s) = uptoRbrack 0 res
+                                  in (command(V.mkvar t,mkagent A),s)
+                                 end
+                              else raise Parse("Expected  , but found "
+                                               ^(symbol tok))
+                           end
+                      | _ => raise Parse("Expected a Number")
+               end
+
+           fun CMD (Actt "agent",res) =
+               ((PrintAgent(mkagent(implode res)),(Eos,[]))
+                handle _ =>
+
+               (* Something raised (mkagent) if "=" appears in the agent *)
+
+               let val (X,(tok,res)) = VAR(scan res)
+                in case tok of
+                     Equals =>
+                       (BindAgent(X,[],mkagent(implode res)),(Eos,[]))
+                   | Lbrack =>
+                       let val (plist,s) = PARAMLIST(scan res)
+                           val (tok,res) = check(Rbrack,s)
+                        in if tok=Equals then
+                            (BindAgent(X,plist, mkagent(implode res)),(Eos,[]))
+                           else raise Parse("Expected = but found "
+                                            ^symbol tok)
+                       end
+                   | Eos => (PrintAgent (Ag.Var(X,[])),(Eos,[]))
+                   | _ => raise Parse("Expected = or ( but found "^symbol tok)
+               end)
+
+	     | CMD (Actt "bi",res) = CMD (Actt "agent",res)
+	     | CMD (Actt "pi",res) = CMD (Actt "agent",res)
+
+	     | CMD (Actt "graph",res) =
+               (PrintAgentGraph(mkagent(implode res)),(Eos,[]))
+	       
+             | CMD (Actt "prop",res) =
+               let val (X,(tok,res)) = VAR(scan res)
+                in case tok of
+                     Equals =>(BindProp(X,[],mkprop(implode res)),(Eos,[]))
+                   | Lbrack =>
+                       let val (plist,s) = PPARAMLIST(scan res)
+                           val (tok,res) = check(Rbrack,s)
+                        in if tok=Equals then
+                            (BindProp(X,plist,
+                                      mkprop(implode res)),(Eos,[]))
+                           else raise Parse("Expected = but found "
+                                            ^symbol tok)
+                       end
+                   | Eos => (PrintProp X,(Eos,[]))
+                   | _ => raise Parse("Expected = or ( but found "^symbol tok)
+               end
+	     
+	     | CMD (Actt "bpi",res) = CMD (Actt "prop",res)
+	     | CMD (Actt "ppi",res) = CMD (Actt "prop",res)
+	       
+             | CMD (Actt "set",res) =
+               let val (X,(tok,res)) = VAR(scan res)
+                in case tok of
+                     Equals =>
+                       let val s as (tok,res) = check(Lset,scan res)
+                        in if tok=Rset then (BindSet(X,[]),scan res)
+                           else let val (l,s) = ACTLIST s
+                                    handle ActErr ac =>
+                                        raise Parse(ac^" cannot be in the set")
+                                 in (BindSet(X,l),check(Rset,s))
+                                end
+                       end
+                   | Eos => (PrintSet X,(Eos,[]))
+                   | _ => raise Parse(symbol tok)
+               end
+	     | CMD (Actt "basi",res) = CMD (Actt "set",res)
+	     | CMD (Actt "pasi",res) = CMD (Actt "set",res)
+	     | CMD (Actt "bpsi",res) = CMD (Actt "set",res)
+	     | CMD (Actt "ppsi",res) = CMD (Actt "set",res)
+
+             | CMD (Actt "relabel",res) =
+               let val (X,(tok,res)) = VAR(scan res)
+                in case tok of
+                     Equals =>
+                       let val s as (tok,res) = check(Lsq,scan res)
+                        in if tok=Rsq then (BindRel(X,[]),scan res)
+                           else let val (l,s) = ACTACTLIST s
+                                     handle ActErr ac =>
+                                         raise Parse("Invalid use of "^ac)
+                                 in (BindRel(X,l),check(Rsq,s))
+                                end
+                       end
+                   | Eos => (PrintRel X,(Eos,[]))
+                   | _ => raise Parse(symbol tok)
+               end
+
+             | CMD (Actt "clear",res) =
+               (ClearEnv,check(Eos,scan res))
+
+             | CMD (Actt "print",res) =
+               (PrintEnv,scan res)
+	     | CMD (Actt "pe",res) = CMD (Actt "print",res)
+	     | CMD (Actt "pae",res) = CMD (Actt "print",res)
+	     | CMD (Actt "pase",res) = CMD (Actt "print",res)
+	     | CMD (Actt "ppe",res) = CMD (Actt "print",res)
+
+	     | CMD (Actt "cwb",res) =
+              (Cwb(stripOutsideWhitespace res),(Eos,[]))
+
+             | CMD (Actt "help",res) =
+              (Help(stripOutsideWhitespace res),(Eos,[]))
+
+             | CMD (Actt "input",res) =
+               let val filename = strip "" res
+                in (Use filename,(Eos,[]))
+               end
+
+             | CMD (Actt "output",res) =
+               let val filename = stripOutsideWhitespace res
+                in if filename = "" then (CancelOutput, (Eos,[]))
+		   else (Output filename,(Eos,[]))
+               end
+
+             | CMD (Actt "save",res) =
+               let val filename = strip "" res
+                in (Save filename,(Eos,[]))
+               end
+
+             | CMD (Actt "savemeije",res) =
+               let val (tok,res) = scan res
+                in case tok of
+                     Lbrack =>
+                     let val (f,res) = uptoComma res
+                         val filename = strip "" (explode f)
+                         val (A,s) = uptoRbrack 0 res
+                      in (SaveMeije(filename,mkagent A),(Eos,[]))
+                     end
+                   | _ => raise Parse("Expected ( but found "
+                                      ^symbol tok)
+               end
+
+             | CMD (Actt "savefc",res) =
+               let val (tok,res) = scan res
+                in case tok of
+                     Lbrack =>
+                     let val (f,res) = uptoComma res
+                         val filename = strip "" (explode f)
+                         val (A,s) = uptoRbrack 0 res
+                      in (SaveFC(filename,mkagent A),(Eos,[]))
+                     end
+                   | _ => raise Parse("Expected ( but found "
+                                      ^symbol tok)
+               end
+
+             | CMD (Actt "reduce",res) =
+               (Reduce,scan res)
+
+             | CMD (Actt "noreduce",res) =
+               (NoReduce,scan res)
+
+             | CMD (Actt "localmc",res) =
+               (LocalMC,scan res)
+
+             | CMD (Actt "globalmc",res) =
+               (GlobalMC,scan res)
+
+             | CMD (Actt "synthesize",res) =
+               (Synthesis,scan res)
+
+             | CMD (Actt "quit",res) =
+               (Quit,scan res)
+	     | CMD (Actt "bye",res) = CMD (Actt "quit",res)
+	     | CMD (Actt "exit",res) = CMD (Actt "quit",res)
+     
+             | CMD (Actt "sim",res) =
+               (Simulate(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "transitions",res) =
+               (Trans(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "tr",res) = CMD (Actt "transitions",res)
+
+             | CMD (Actt "init",res) =
+               (Initial(mkagent(implode res)),(Eos,[]))
+
+(* Derivative of Ag.A.act * Ag.agent == tauders, actders *)
+
+             | CMD (Actt "derivatives",res) =
+               let val (tok,res) = check(Lbrack,scan res)
+                in case tok of
+                     Actt ac =>
+                     let val a = A.mkact ac
+                      in if A.eq(a,A.eps) then
+                            raise Parse(ac^" is an invalid action here")
+                         else case scan res of
+                                (Comma,res) =>
+                                    let val (A,s) = uptoRbrack 0 res
+                                     in (Derivative(a,mkagent A),s)
+                                    end
+                              | (tok,_) =>
+                                    raise Parse("Expected , but found "
+                                                ^(symbol tok))
+                     end
+                   | _ => raise Parse("Expected an action but found "
+                                      ^symbol tok)
+               end
+
+             | CMD (Actt "dr",res) = CMD(Actt "derivatives",res)
+	     | CMD (Actt "actders",res) = CMD(Actt "derivatives",res)
+
+(* Closure of Ag.A.act list * Ag.agent == obsders,taucl,actcl *)
+
+             | CMD (Actt "closure",res) =
+
+               let val s as (tok,res) = check(Lbrack,scan res)
+                in case tok of
+                     Actt ac =>
+                     let val (aseq,res) = ACTSEQ s
+                         val (A,s) = uptoRbrack 0 res
+                      in (Closure(aseq,mkagent A),s)
+                     end
+                   | _ => raise Parse("Expected an action but found "
+                                      ^symbol tok)
+               end
+             | CMD (Actt "cl",res) = CMD (Actt "closure",res)
+	     | CMD (Actt "actcl",res) = CMD (Actt "closure",res)
+
+             | CMD (Actt "obs",res) =
+               readintagent(Observe,res)
+
+             | CMD (Actt "vs",res) =
+               readintagent(VisSeq,res)
+
+             | CMD (Actt "random",res) =
+               readintagent(Random,res)
+
+             | CMD (Actt "prefixform",res) =
+               (PrefixForm(mkagent(implode res)),(Eos,[]))
+      	     | CMD (Actt "pf",res) = CMD (Actt "prefixform",res)
+
+             | CMD (Actt "stable",res) =
+               (Stable(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "diverges",res) =
+               (Diverges(mkagent(implode res)),(Eos,[]))
+	     | CMD (Actt "div",res) = CMD (Actt "diverges",res)
+
+             | CMD (Actt "freevars",res) =
+               (FreeVariables(mkagent(implode res)),(Eos,[]))
+	    | CMD (Actt "fv",res) = CMD (Actt "freevars",res)
+    	    | CMD (Actt "freevariables",res) = CMD (Actt "freevars",res)
+
+             | CMD (Actt "sort",res) =
+               (Sort(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "size",res) =
+               (Size(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "states",res) =
+               (StateSpace(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "statesexp",res) =
+               (StateSpaceExp(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "statesobs",res) =
+               (StateSpaceObs(mkagent(implode res)),(Eos,[]))
+
+             | CMD (Actt "deadlocks",res) =
+               (FindDeadlock(mkagent(implode res)),(Eos,[]))
+             | CMD (Actt "fd",res) = CMD (Actt "deadlocks",res)
+
+             | CMD (Actt "fdobs",res) =
+               (FindDeadlockObs(mkagent(implode res)),(Eos,[]))
+             | CMD (Actt "deadlocksobs",res) = CMD (Actt "fdobs",res)
+
+             | CMD (Actt "findinit",res) =
+               readactlistagent(FindInitial,res)
+
+             | CMD (Actt "findinitobs",res) =
+               readactlistagent(FindInitialObs,res)
+
+             | CMD (Actt "min",res) =
+	       readvaragent (Minimize, res)
+
+             | CMD (Actt "pb",res) =
+               readagentpair (PrintBisim, res)
+
+             | CMD (Actt "strongpre",res) =
+               readagentpair (StrongPre, res)
+
+             | CMD (Actt "strongeq",res) =
+               readagentpair (StrongEq, res)
+
+             | CMD (Actt "pre",res) =
+               readagentpair (WeakPre, res)
+
+             | CMD (Actt "precong",res) =
+               readagentpair (WeakPreCong, res)
+
+             | CMD (Actt "eq",res) =
+               readagentpair (WeakEq, res)
+
+             | CMD (Actt "cong",res) =
+               readagentpair (WeakCong, res)
+
+             | CMD (Actt "diveq",res) =
+               readagentpair (DivEq, res)
+
+             | CMD (Actt "maypre",res) =
+               readagentpair (MayPre, res)
+
+             | CMD (Actt "mustpre",res) =
+               readagentpair (MustPre, res)
+
+             | CMD (Actt "testpre",res) =
+               readagentpair (TestPre, res)
+
+             | CMD (Actt "mayeq",res) =
+               readagentpair (MayEq, res)
+
+             | CMD (Actt "musteq",res) =
+               readagentpair (MustEq, res)
+
+             | CMD (Actt "testeq",res) =
+               readagentpair (TestEq, res)
+
+             | CMD (Actt "twothirdspre",res) =
+               readagentpair (TwoThirdsPre, res)
+
+             | CMD (Actt "twothirdseq",res) =
+               readagentpair (TwoThirdsEq, res)
+
+             | CMD (Actt "branchingeq",res) =
+               readagentpair (BranchingEq, res)
+
+             | CMD (Actt "contraction",res) =
+               readagentpair (ContractionPre, res)
+
+             | CMD (Actt "dfstrong",res) =
+               readagentpair (DistinguishStrong, res)
+	     | CMD (Actt "df",res) = CMD (Actt "dfstrong",res)
+     
+             | CMD (Actt "dfweak",res) =
+               readagentpair (DistinguishWeak, res)
+
+             | CMD (Actt "dftrace",res) =
+               readagentpair (DistinguishTrace, res)
+
+(*.checkprop.*)
+
+             | CMD (Actt "checkprop",res) =
+               let val (tok,res) = scan res
+                in if tok=Lbrack then
+                      let val (A,res) = uptoCommaWithBracketCount res
+                          val (B,res) = uptoRbrack 0 res
+                       in (CheckProp(mkagent A,mkprop B),(Eos,[]))
+                      end
+                   else raise Parse("Expected ( but found "^(symbol tok))
+               end
+
+             | CMD (Actt "cp",res) = CMD (Actt "checkprop",res)
+
+             | CMD (tok,_) =
+               raise Parse("Unrecognised command "^symbol tok)
+
+
+           and SIM (Actt "sim",res) =
+               (Sim_Sim(mkagent(implode res)),(Eos,[]))
+
+             | SIM (Actt "bind",res) =
+               let val (X,(tok,res)) = VAR(scan res)
+                in (Sim_BindId X,check(Eos,(tok,res)))
+               end
+
+             | SIM (Actt "random",res) =
+               let val (tok,res) = scan res
+                in case tok of
+                        Timet t => (Sim_Random t,check(Eos,scan res))
+                      | _ => raise Parse("Expected a Number")
+               end
+
+             | SIM (Eos,res) =
+               (Sim_Random 1,(Eos,res))
+
+             | SIM (Timet t,res) =
+               (Sim_Choose t,check(Eos,scan res))
+
+             | SIM (Actt "return",res) =
+               let val (tok,res) = scan res
+                in case tok of
+                        Timet t => (Sim_BackTrack t,check(Eos,scan res))
+                      | _ => raise Parse("Expected a Number")
+               end
+
+             | SIM (Actt "break",res) =
+               let val (l,s) = ACTLIST (scan res)
+                   handle ActErr ac =>
+                       raise Parse("Invalid use of "^ac)
+               in (Sim_Break l,check(Eos,s))
+               end
+
+             | SIM (Actt "db",res) =
+               let val (l,s) = ACTLIST (scan res)
+                   handle ActErr ac =>
+                       raise Parse("Invalid use of "^ac)
+               in (Sim_DelBreak l,check(Eos,s))
+               end
+
+             | SIM (Actt "lb",res) =
+               (Sim_ListBreaks,check(Eos,scan res))
+
+             | SIM (Actt "quit",res) =
+               (Sim_Halt,check(Eos,scan res))
+
+             | SIM (Actt "help",res) =
+               (Sim_Help,(Eos,[]))
+
+             | SIM (Actt "menu",res) =
+               (Sim_Menu,check(Eos,scan res))
+
+             | SIM (Actt "history",res) =
+               (Sim_History,check(Eos,scan res))
+
+             | SIM (tok,_) =
+                 raise Parse("Unrecognised Sim command "^symbol tok)
+
+           val (cmd,(t,_)) =
+	     let val s as (tok, res) = scan(explode str)
+	       val _ = UI.setcontext (symbol tok)
+	     in
+               case module of "Sim" => SIM s
+               | _ => CMD s
+	     end
+
+        in if t=Eos then cmd
+           else raise Parse("Extra input")
+       end
+
+end
+

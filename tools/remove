@@ -1,0 +1,182 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_name=`basename $0`
+STATUS=0
+cmd="remove"
+bug_id="";test=""; reason="";tmp=""; tmp2="";rm_opts="";
+usage="usage: $script_name [-[ht]+] [-i <bug-id>] [-r <reason>] [-b <branch>] (file1|dir1)+"
+while getopts "i:r:b:tlh" opt; do
+  case $opt in
+    i) bug_id="-bug-number $OPTARG";;
+    b) rm_opts="-branch $OPTARG";;
+    r) reason="$OPTARG";;
+    t) test="test";;
+    h|\?) 
+      echo $usage; 
+      echo "    h for this help"
+      echo "    i <bug-id>"
+      echo "    r <claim reason>"
+      echo "    t run in hope test mode"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage
+  exit 1
+else 
+  : echo ok
+fi
+
+eval `findcomp2 $1`;
+if [ -z "$compound" ]; then
+  entry=;
+  echo "cannot identify compound \"$1\""
+  exit 1
+elif [ -z "$unit" ]; then
+  entry="-subcompound $compound"; tmp=$compound; tmp2="$tmp2 $tmp";
+  eval `findcomp2 $1/..`;
+  if [ -n "$compound" ]; then
+    entry="$entry -c $compound";
+  else
+    echo "$script_name: cannot identify parent compound for subcompound $tmp"
+    exit 1
+  fi
+else
+  test -z "$test" -a -f "$1" && chmod ugo-w "$1"
+  entry="-c $compound -u $unit"
+fi
+shift
+
+for arg in $*; do
+  eval `findcomp2 $arg`;
+  if [ -z "$compound" ]; then
+    echo "$script_name: cannot identify compound \"$arg\""
+    exit 1
+  elif [ -z "$unit" ]; then
+    entry="$entry -a -subcompound $compound"; tmp=$compound; tmp2="$tmp2 $tmp";
+    eval `findcomp2 $arg/..`;
+    if [ -n "$compound" ]; then
+      entry="$entry -c $compound"
+    else
+      echo "$script_name: cannot identify parent compound for subcompound \"$tmp\""
+      exit 1
+    fi
+  else
+    test -z "$test" -a -f "$arg" && chmod ugo-w "$arg"
+    entry="$entry -a -c $compound -u $unit"
+  fi
+done
+
+if [ -n "$tmp2" ]; then
+  echo "Warning: will $cmd subcompounds:"
+  echo "$tmp2"
+  echo "waiting 10 seconds before continuing"
+  sleep 15
+fi
+
+: echo final processing
+
+if [ -z "$TMP" ]; then
+  temp_dir=/tmp
+else
+  temp_dir=`echo $TMP | sed -e 's!\\\\!/!g'`
+fi
+temp_file=$temp_dir/hope_tmp$$
+
+# We need to work out whether we're on Unix or Windows.
+# NT sets the OS variable to Windows_NT.
+# Some MLWorkers set the OS variable themselves.
+# Failing that, bash sets the OSTYPE variable.
+hope_temp_file=""
+case "$OS" in
+  Win*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  NT*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  Solaris*)
+    hope_temp_file=$temp_file;;
+  SunOS*)
+    hope_temp_file=$temp_file;;
+  Irix*)
+    hope_temp_file=$temp_file;;
+  Linux*)
+    hope_temp_file=$temp_file;;
+esac
+
+if [ -z "$hope_temp_file" ]; then
+  case "$OSTYPE" in
+    Win*)
+      hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+    Solaris*)
+      hope_temp_file=$temp_file;;
+    SunOS*)
+      hope_temp_file=$temp_file;;
+    linux*)
+      hope_temp_file=$temp_file;;
+    *)
+      # Assume Unix if we have no other clue.
+      # We could also get here on Win95, but we don't use that
+      # for development.
+      hope_temp_file=$temp_file;;
+  esac
+fi
+
+if [ -z "$entry" ]; then
+  echo skipped everything
+elif [ -n "$reason" ]; then
+  echo $test $cmd $rm_opts $bug_id -reason "$reason" $entry > $temp_file
+  hope source $hope_temp_file
+  rm $temp_file
+else
+  echo $test $cmd $rm_opts $bug_id $entry > $temp_file
+  hope source $hope_temp_file
+  rm $temp_file
+fi
+
+###############################################################################
+# $Log: remove,v $
+# Revision 1.12  1999/03/24 15:38:27  daveb
+# [Bug #190541]
+# Check both the OS and OSTYPE environment variables.
+#
+# Revision 1.11  1998/10/07  12:46:07  jont
+# [Bug #70179]
+# Avoid OSTYPE=linux problems
+#
+# Revision 1.10  1998/09/24  14:33:17  jont
+# [Bug #70179]
+# Make sure temp file name more carefully created to avoid drive letter problems
+#
+# Revision 1.9  1998/08/25  14:44:50  jont
+# [Bug #70162]
+# Use source files to get past hope 44 argument limit under Win32
+#
+# Revision 1.8  1997/04/15  12:01:44  jont
+# Stop using script_path mechanism as this confuses Win32
+#
+# Revision 1.7  1996/10/23  14:43:54  jont
+# [Bug #1669]
+# Add -b option to specify branch
+#
+# Revision 1.6  1996/07/12  12:17:47  io
+# [Bug #1463]
+# support directories and bug-id
+#
+# Revision 1.5  1995/07/27  09:47:08  matthew
+# Replacing -parent with -compound
+#
+# Revision 1.4  1995/03/23  15:14:51  daveb
+# Removed code that set the comment leader.
+#
+# Revision 1.3  1995/02/23  17:21:11  jont
+# Modify for new file structure /u
+#
+# Revision 1.2  1995/02/21  15:47:10  brianm
+# Introducing SML_HOME
+#
+# Revision 1.1  1994/07/12  13:25:41  jont
+# new file

@@ -1,0 +1,103 @@
+# ==== MLWorks runtime system x86/Linux-specific (Gnu) Makefile ====
+#
+# $Log: GNUmake,v $
+# Revision 1.25  1999/03/17 12:20:15  mitchell
+# [Bug #190531]
+# Link in Xp
+#
+# Revision 1.24  1998/10/07  14:45:47  jont
+# [Bug #70108]
+# Add /usr/X11R6/lib/xrt/lib to -L path
+#
+# Revision 1.23  1998/09/18  10:14:10  jont
+# [Bug #70176]
+# Add SPACE_PROFILE_OVERFLOW to DEFINES
+#
+# Revision 1.22  1998/04/28  16:31:36  jkbrook
+# [Bug #30354]
+# Merge from MLWorks_10r3:
+# Port of old FI to Linux
+#
+# Revision 1.15.1.1.3.4  1997/09/13  14:33:40  jont
+# [Bug #30264]
+# Working on getting static linked runtime to deliver executables
+#
+# Revision 1.15.1.1.3.3  1997/09/11  16:07:15  jkbrook
+# [Bug #30264]
+# Make static runtime on Linux
+#
+# Revision 1.15.1.1.3.2  1997/09/11  15:39:37  jkbrook
+# [Bug #30262]
+# Link against libdl to get old FI working under Linux
+# (and add /usr/X11R6/lib to LIBRARIES to get successful compilation
+# under RedHat 4.2)
+#
+# Revision 1.15.1.1.3.1  1997/09/09  14:18:29  daveb
+# branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+#
+# Revision 1.15.1.1  1997/05/12  10:43:51  hope
+# branched from 1.15
+#
+# Revision 1.15  1997/04/04  17:37:45  jont
+# [Bug #1095]
+# [Bug #1095]
+# Adding definitions for realpath and gethostid
+#
+# Revision 1.14  1997/03/13  17:53:37  jont
+# [Bug #0]
+# Fix so default target doesn't incude static runtime
+#
+# Revision 1.13  1997/01/30  18:14:38  jont
+# Add x to list of modules
+#
+#
+
+# Linux is a Unix variant ...
+
+OS_TYPE 	= Unix
+
+# add target-specific modules
+
+MODULES		:= $(MODULES) x unix unixlocal mach_fixup i386_code
+#		poly_equal intmul
+DLLMODULES    := $(DLLMODULES) x unix unixlocal mach_fixup i386_code
+
+# add target-specific targets
+
+TARGETFILES   := $(TARGETFILES) main-static
+
+# add target-specific distributed files
+
+DISTFILES     := $(DISTFILES) main-static
+
+# add target-specific static modules
+
+MODULESSTATIC   := $(MODULES) 
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) MACH_FIXUP LITTLE_ENDIAN _SVID_SOURCE SPACE_PROFILE_OVERFLOW
+
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS) - /usr/X11R6/include /usr/X11/include
+
+# add target-specific options (none for SunOS)
+
+TARGETOPTS	=
+TARGETOPTSDEBUG =
+
+DLLLIBRARIES  =
+DLLFLAGS      = -shared
+
+# add target-specific libraries
+
+LIBRARIES	= -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/lib -L/usr/X11R6/lib/xrt/lib -lm -lXm -lXt -lXext -lX11 -lXpm -lXp -lelf -ldl
+LIBRARIESSTATIC = -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/usr/X11R6/lib/xrt/lib -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lm -lSM -lICE -lXt -lX11 -lXp -lelf -ldl -lXpm -lXext
+
+# other target-specific things
+
+STRIP		= /usr/bin/strip
+
+
+ERRNO_HEADER = /usr/include/linux/errno.h

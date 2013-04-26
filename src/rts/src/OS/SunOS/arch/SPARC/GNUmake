@@ -1,0 +1,45 @@
+# ==== MLWorks runtime system SPARC/SunOS-specific (Gnu) Makefile ====
+#
+# $Id: GNUmake,v 1.22 1998/06/12 15:20:57 johnh Exp $
+
+# SunOS is a Unix variant ...
+
+OS_TYPE 	= Unix
+
+# add target-specific modules
+
+MODULES		:= $(MODULES) x unixlocal unix poly_equal intmul mach_fixup 
+
+# add target-specific static modules
+
+MODULESSTATIC   := $(MODULES) 
+
+# add target-specific targets
+
+TARGETFILES	:= $(TARGETFILES) main-static
+
+# add target-specific distributed files
+
+DISTFILES	:= $(DISTFILES) main-static
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) \
+		MACH_FIXUP MACH_INT_MUL MACH_INT_DIV MACH_POLY_EQ \
+		MACH_STRINGS IMPLICIT_PROFILE_CODE
+
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS) -
+
+# add target-specific options
+
+TARGETOPTS	= 
+TARGETOPTSDEBUG = $(TARGETOPTS)
+
+# add target-specific libraries
+
+LIBRARIES	= -lm -lXm -Xlinker -Bstatic -lXpm -Xlinker -Bdynamic -lXt -lX11
+LIBRARIESSTATIC = -Xlinker -Bdynamic -ldl -lm -Xlinker -Bstatic -lXm -lXpm -Xlinker -Bdynamic -lXt -lX11 -ldl
+
+# other target-specific things (none for SunOS)

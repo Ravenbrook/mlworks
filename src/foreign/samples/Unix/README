@@ -1,0 +1,177 @@
+
+README for foreign/samples  (Unix platforms)
+============================================
+
+CONTENTS:
+
+  1.    Introduction
+  2.    The examples
+  2.1.  hello example
+  2.2.  random example
+  3.    The LD_LIBRARY_PATH
+
+
+
+1. Introduction
+===============
+
+Two examples are given illustrating how the MLWorks(TM) FI operates.
+As examples, they do not do a great deal in their own right.  However,
+we hope that they illustrate the basic concept and suggest the kind of
+thing that is needed to put your own interfaces together via the FI.
+
+There are many coding styles possible within ML and these samples
+merely give particular examples - we neither recommend nor condemn
+them.  In particular, the code given here is advisory and given purely
+to assist you with making use of the MLWorks FI.
+
+
+2. The examples
+===============
+
+The examples should be run from a source directory containing the
+samples in a subdirectory called `foreign/samples'.  This requirement
+can be changed by editing the appropriate filenames used by calls of
+`loadObjectFile' in the ML files.
+
+Before the examples can be executed from MLWorks, the corresponding C
+code has to be compiled.  To do this, type:
+
+   gnumake all
+
+in the foreign/samples directory.  This will generate the code for
+your platform.  When you wish to remove the object files (including
+shared object code), type:
+
+   gnumake clean
+
+We now briefly describe the examples.  These can either be compiled
+and loaded by using the Project Workspace tool in the MLWorks GUI
+and opening the foreign_samples.mlp project file, or
+programmatically as shown below.  The examples assume that
+MLWorks is being run from the installation directory.
+
+    2.1 Hello example
+    =================
+
+    Load by:
+
+        Shell.Project.openProject "foreign/samples/foreign_samples.mlp";
+        Shell.Project.setTargets ["hello.sml"];
+        Shell.Project.compileAll ();
+        Shell.Project.loadAll ();
+
+    Description:
+        A very simple example which calls a simple foreign function
+        with an integer argument.  It prints a message to standard
+        output - this will usually be the controlling tty.
+
+        Note that when this example is loaded, the message
+        printed by the foreign function appears *before* all the ML binding
+        information is printed.  This is because the foreign function is
+        called *during* the load - and the bindings are always printed at the
+        end of the load.
+
+
+    2.2 Random example
+    ==================
+
+    Load by:
+
+        Shell.Project.openProject "foreign/samples/foreign_samples.mlp"; 
+        Shell.Project.setTargets ["random.sml", "__random.sml"];
+        Shell.Project.compileAll ();
+        Shell.Project.loadAll ();
+
+    Description:
+        This example uses a foreign C function to provide a random number
+        generation facility (see the signature file random.sml).
+
+
+
+3. The LD_LIBRARY_PATH
+======================
+
+The MLWorks FI exploits dynamic linking of object files as supported by
+your host operating system.  On UNIX based systems, the LD_LIBRARY_PATH
+environment variable is used to provide a way of locating system-wide
+shared libraries and such like.
+
+Because the FI relies upon dynamic linking, it _may_ be necessary to
+modify your setting of this variable to use the MLWorks FI.
+
+The procedure we recommend you follow is as follows (we use Bourne shell
+syntax):
+
+   0)  Try to run the the examples without changing anything.
+       If the examples run without failing, then all is well.
+
+
+   1)  If the examples fail with some message like:
+
+            Stub interception failed
+            Shared object does not exist
+
+       or similar, then suspect the LD_LIBRARY_PATH setting.
+
+       Try setting the LD_LIBRARY_PATH to the current directory:
+
+            DEFAULT_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+            LD_LIBRARY_PATH=.
+            export LD_LIBRARY_PATH
+
+
+       and rerun the examples.
+
+       Note that the above `saves' your value of LD_LIBRARY_PATH
+       within the environment variable DEFAULT_LD_LIBRARY_PATH.
+       This will be used by the next step, should that become
+       necessary.
+
+
+   2)  If step (1) fails, then try using the following host OS specific
+       steps:
+
+
+       2a)  Restore default value of LD_LIBRARY_PATH:
+
+            LD_LIBRARY_PATH=$DEFAULT_LD_LIBRARY_PATH
+
+
+       2b)  Depending upon your OS version (use `uname -a' to determine
+            this), try the following:
+
+            SunOS 5.* (Solaris) :
+
+                LD_LIBRARY_PATH=".:/usr:/usr/ucblib:$LD_LIBRARY_PATH:/lib"
+
+
+            IRIX 5.* :
+            
+                LD_LIBRARY_PATH=".:/usr/lib:$LD_LIBRARY_PATH:/lib"
+
+
+	    Linux 2.* (e.g., Red Hat 4.*, 5.0):
+
+                LD_LIBRARY_PATH=".:/usr/lib:$LD_LIBRARY_PATH:/lib"
+
+
+
+       2c)  Finally, remember to export the new value of LD_LIBRARY_PATH:
+            
+            export LD_LIBRARY_PATH
+
+
+   3)  If all of the above fails then we suggest contacting your local system
+       administration support team for assistance.  As this would appear to be
+       a local problem, it is very likely that your local system administration
+       support team has already solved this for other users and products.
+
+       Also, please contact MLWorks support at Harlequin - we will do
+       all we can to assist you further.
+
+       mlworks-support@harlequin.co.uk
+          - UK, Europe, Australia, Africa & South East Asia.
+
+       mlworks-support@harlequin.com
+          - North America, Japan & South America.

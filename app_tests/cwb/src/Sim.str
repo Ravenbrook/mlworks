@@ -1,0 +1,210 @@
+(*
+ *
+ * $Log: Sim.str,v $
+ * Revision 1.2  1998/06/02 15:32:06  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Sim.str,v 1.2 1998/06/02 15:32:06 jont Exp $";
+functor Simulate ( structure SL : SORTEDLIST;
+                   structure Inter : INTERFACE;
+                   structure Parse : PARSE;
+                   structure AgIO : AGENTIO
+                     sharing AgIO.Ag = Inter.Ag = Parse.Commands.Ag
+                         and AgIO.Ag.V = Inter.E.V
+                         and type AgIO.Ag.V.var = Inter.var
+                         and type AgIO.Ag.A.act = Inter.act) : SIMULATE =
+struct
+   structure E = Inter.E
+   structure V = E.V
+   structure Ag = AgIO.Ag   
+   structure A = Ag.A
+   structure C = Parse.Commands
+
+   type agent = Ag.agent
+   type act = A.act
+
+   val agtenv = Inter.agentenv
+   val setenv = Inter.setenv
+   val relenv = Inter.relenv
+
+   val hist = ref ([] : (agent * A.act) list)                 (* History *)
+   val unbd = ref "none"
+   val ungd = ref "none"
+
+   val state = ref Ag.Nil                      (* Current state *)
+   val breaks = ref ([] : A.act list)          (* Breakpoints *)
+
+   val continue = ref true                     (* Will halt ? *)
+   val newstate = ref false                    (* Has executed ? *)
+
+   val help_string = 
+      "          Simulation Commands"
+       ^"\n          --------------------\n"
+       ^"\n          sim       <agent>   -   reset simulated agent"
+       ^"\n          menu                -   print transitions"
+       ^"\n          <number>            -   follow given transition"
+       ^"\n          random    <number>  -   carry out random simulation"
+       ^"\n          ;                   -   randomly choose a transition"
+       ^"\n          history             -   show state history"
+       ^"\n          return    <number>  -   backtrack to given state"
+       ^"\n          break     <actions> -   set breakpoint actions"
+       ^"\n          lb                  -   list breakpoint actions"
+       ^"\n          db        <actions> -   delete breakpoint actions"
+       ^"\n          bind      <ident>   -   bind current state to identifier"
+       ^"\n          help                -   print this menu"
+       ^"\n          quit                -   terminate simulation session"
+
+(* 
+   fun translist _ =
+       (unbd := "none"; ungd := "none";
+        Agf.transitions ((!agtenv),(!setenv),(!relenv)) (!state)
+        handle Agf.Unguarded v => (unbd := V.mkstr v; [])
+             | Agf.Unguarded_rec v => (ungd := V.mkstr v; []))
+*)
+
+   fun translist TR = 
+       (unbd := "none"; ungd := "none";
+        let val (tr,ub,ug) = TR(!state)
+        in (unbd := ub; ungd := ug;tr)
+       end)
+
+(* Show transitions *)
+
+   fun menu tn =
+       let fun pt ([],1) = if !unbd <> "none" then
+                              "** Unbound Variable: "^(!unbd)^". **"
+                           else if !ungd <> "none" then
+                              "** Unguarded Variable: "^(!ungd)^". **"
+                           else "** Deadlocked. **"
+             | pt ([],n) = ""
+             | pt ((a,A)::t,n) =
+                  (if n>9 then "     " else "    ")
+                  ^(makestring n)^": --- "^(A.mkstr1 a)^" ---> "
+                  ^(AgIO.mkstr A)^"\n"^(pt(t,n+1))
+        in UI.message("Simulated agent: "^(AgIO.mkstr(!state))
+                   ^"\nTransitions:\n"^(pt tn))
+       end
+
+(* Single step one transition *)
+
+   fun exec_trans (n,[]) = UI.message ("** Transition does not exist. **")
+     | exec_trans (1,(a,A)::_) = (UI.message("  --- "^(A.mkstr1 a)^" --->");
+                                  hist := (!state,a)::(!hist);
+                                  state := A;
+                                  newstate := true)
+     | exec_trans (n,(a,A)::t) = exec_trans (n-1,t)
+
+(* Execute n random transitions *)
+
+   fun random TR (orign,n,transes) = if null transes then
+          if !unbd <> "none" then
+             UI.message("** Simulation terminated: Unbound Variable: "
+                                              ^(!unbd)^". **")
+          else if !ungd <> "none" then
+             UI.message("** Simulation terminated: Unguarded Variable: "
+                                                ^(!ungd)^". **")
+          else UI.message "** Simulation terminated: Deadlock. **"
+       else let fun chk_brk [] = false
+                  | chk_brk ((a,_)::t) =
+                    if SL.member A.le (a,!breaks) then
+                       (UI.message ("** Simulation terminated: action "
+                                 ^(A.mkstr1 a)^" is possible. **");
+                        true)
+                    else chk_brk t
+                val numtrans = length transes
+                val new_transes =
+                    (exec_trans (1+(Lib.random numtrans),transes);
+                     translist TR)
+             in if n=1 then
+                   if orign > 1 then UI.message "Simulation complete."
+                   else ()
+                else if chk_brk new_transes then ()
+                else random TR (orign,n-1,new_transes)
+            end
+
+(* Executes a simulation command *)
+
+   val parse = 
+       Parse.parse "Sim" A.mkact V.mkvar AgIO.mkagent (fn _ => C.L.True)
+
+   fun simulate TR a =
+       (state := a;
+        breaks := [];
+        newstate := true;
+        hist := [];
+        continue := true;
+        while !continue do
+         (let val transes = translist TR
+           in if !newstate then menu(transes,1) else ();
+              newstate := false;
+              case parse(UI.readcommand
+			 ("["^(makestring (length(!hist)))^"]Sim")) of 
+                  C.Sim_Sim agent => (state := agent;     breaks := [];
+                                      newstate := true;   hist := [])
+
+                | C.Sim_Choose n => exec_trans(n,transes)
+
+                | C.Sim_History =>
+                      let fun str_agt(n,A) =
+                          (if n>99 then " "
+                           else if n>9 then "  " else "   ")
+                               ^(makestring n)^": "^(AgIO.mkstr A)
+                          fun str_hist (n,[]) = ""
+                            | str_hist (n,(A,a)::t) =
+                              str_hist(n-1,t)^str_agt(n,A)
+                              ^" --- "^(A.mkstr1 a)^" --->\n"
+                          val hlen = length(!hist)
+                      in UI.message(str_hist(hlen-1,!hist)^str_agt(hlen,!state))
+                      end
+
+                | C.Sim_BackTrack n =>
+                      if n = length(!hist) then
+                        UI.message("** This is already the current state. ** ")
+                      else let fun backup (k,[]) =
+                                   UI.message("** History state "^(makestring n)
+                                           ^" does not exist. **")
+                                 | backup (1,(A,_)::t) = (hist := t;
+                                                          state := A;
+                                                          newstate := true)
+                                 | backup (k,(A,_)::t) = backup(k-1,t)
+                           in backup(length(!hist)-n,!hist)
+                           end
+
+                | C.Sim_Random n => 
+                      if n<1 then UI.message("** Must be a positive "
+                                          ^"number of steps. **")
+                      else random TR (n,n,transes)
+
+                | C.Sim_Break l =>
+                      let fun addb l [] = l
+                            | addb l (a::t) = SL.add A.le true (a,addb l t)
+                      in breaks := addb (!breaks) l
+                      end
+
+                | C.Sim_ListBreaks =>
+                      if null(!breaks) then
+                          UI.message ("There are no break points set.")
+                      else UI.message ("Breakpoints: "
+                                    ^(Lib.mkstr A.mkstr1 ", " (!breaks)))
+
+                | C.Sim_DelBreak l =>
+                      let fun delbrks l [] = l
+                            | delbrks l (a::t) = SL.remove (fn x => x) A.le
+                                                     (a,delbrks l t)
+                      in breaks := delbrks (!breaks) l
+                      end
+
+                | C.Sim_Menu => menu (transes,1)
+
+                | C.Sim_BindId v => agtenv := E.bind (v,([],!state),!agtenv)
+
+                | C.Sim_Halt => continue := false
+
+                | _ (*C.Sim_Help*) =>UI.message(help_string)
+
+           end handle Parse.Parse s => UI.error s))
+end
+

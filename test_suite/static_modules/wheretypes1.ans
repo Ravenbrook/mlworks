@@ -1,0 +1,14 @@
+signature FOO =
+  sig
+    type ind
+    datatype foobar =
+      One of ind
+  end
+functor Foo
+structure IntFoo =
+  struct
+    datatype foobar =
+      One of ind
+    eqtype ind = int
+    val One : int -> IntFoo.foobar
+  end

@@ -1,0 +1,42 @@
+#!/bin/sh
+nonwritable_found=0
+for i in ../LRbasics.sml ../_LRbasics.sml ../_actionfunctions.sml gotos.data actions.data; do
+  if [ -f $i -a ! -w $i ]
+  then
+    echo make-tables: $i is not writable
+    nonwritable_found=1
+  fi
+done
+if [ $nonwritable_found = 1 ]
+then
+    exit 1
+fi
+if [ "$LISPWORKS" = "" ]
+then
+   echo LISPWORKS not defined
+   exit 1
+fi
+#
+# This should make all the parser files.
+$LISPWORKS -i - << EOF
+(load "~sml/parsergen/load")
+(load "defsys")
+(load "new-grammar.lisp")
+(in-package ml)
+(ml::print-the-tables)
+(ml::write-the-actions)
+EOF
+
+# Now we have:
+#   gotos.data : goto table
+#   actions.data : action table
+#   symbols.data : datatype for gsymbol
+#   actionlist.data : list of actions
+#   symbollist.data : list of symbols
+#   action-functions.data : list of action functions
+#
+# need to combine files appropriately:
+
+cat LRbasics-start symbols.data LRbasics-end > ../LRbasics.sml
+cat _LRbasics-start symbols.data _LRbasics-middle1 actionlist.data _LRbasics-middle2 symbollist.data _LRbasics-end > ../_LRbasics.sml
+cat _actionfunctions-start action-functions.data _actionfunctions-end > ../_actionfunctions.sml

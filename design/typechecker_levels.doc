@@ -1,0 +1,347 @@
+% .typechecker.levels.doc
+%
+% "LEVELS" IN THE TYPECHECKER
+%
+% Copyright (C) 1996 Harlequin Ltd
+%
+%  Revision Log
+%  -----------
+%  $Log: typechecker_levels.doc,v $
+%  Revision 1.2  1996/10/08 12:17:55  andreww
+%  [Bug #1592]
+%  Improvements.
+%
+# Revision 1.1  1996/10/08  10:07:27  andreww
+# new unit
+# [1592]
+# documentation for use of levels in the typechecker,
+# and also for their use in the implementation of local datatypes
+# (hidden datatypes can't escape let expressions).
+#
+%
+
+Related files (probably incomplete)
+
+	typechecker/datatypes.sml
+	typechecker/_datatypes.sml         * defns
+	typechecker/basistypes.sml
+	typechecker/_basistypes.sml
+	typechecker/_basis.sml
+	typechecker/_core_rules.sml        * fresh tyvar
+	typechecker/_scheme.sml	           * closing over	
+
+(note, this file is referred to in typechecker/_datatypes.sml, as existing
+ within MLW/design/typechecker_levels.doc)
+
+
+.tyvars:
+
+LEVELS IN TYPE VARIABLES
+
+The typechecking code follows the static semantic rules of the
+definition of standard ML almost exactly.  One of the points where it
+differs is in its implementation of generalization, when a type is
+generalized into a typescheme.
+
+Consider the elaboration (i.e., the typechecking) of a value binding
+
+	val pat = exp
+
+We first compute the type of exp, and this may contain a number of
+free type variables.  In the process of elaborating the binding, we
+would like to close as many type vars as possible.  However, we can
+only close these vars if they do not also occur outside the
+expression. e.g., as in
+
+	fun foo x =
+	let	
+	  val p = x * x
+	  ...
+
+where the free type var associated to x in the expression x * x is not
+limited to the scope of the expression.  
+
+Thus for every type variable in exp, we have to check the entire
+context and ensure that it does not occur there.  This is expensive.
+
+A more efficient test is to stamp type variables with an integer
+indicating their scope.  These integers are called levels, and a full
+treatment can be found in
+
+	Remy, D. 
+	Extension of the ML type system with a sorted equational
+	theory on types.
+	Rapports de Recherche No. 1766, INRIA
+
+	search in 	http://pauillac.inria.fr/~remy
+
+There, every time a new layer of scoping is entered (e.g., in a let
+expression), the level increases by one.  Every typevar which is
+exclusively scoped within this new layer will be stamped with this
+level.  Therefore, any typevar with a smaller level must also occur
+outside this scope.
+
+Therefore, it becomes a simple matter to test whether or not a
+variable can be closed at a valbind ocurring at level n: one simply
+tests whether or not the tyvar has level m>=n.
+
+Of course, this is not quite what we do in MLWorks!  We do not
+associate levels to "depth of scope".  Instead, we associate levels
+with "time".  Every typechecker basis/context carries a level
+argument: whenever we create a type var from this basis/context, we
+stamp *this* number onto the type var.  See
+
+	typechecker/_core_rules.sml: fresh_tyvar
+
+These levels are updated (by the function
+typechecker/_basis.sml: new_level_num) by the functions:
+
+	_basis: context_plus_ve
+	_basis: context_plus_env
+	_basis: basis_plus_env
+	_basis: basis_circle_plus_basis
+	_basis: basis_plus_basis (unused)
+
+And (as far as I know) nowhere else.  Thus, whenever a basis/context
+is updated with a new environment (etc.) the level increases.
+Importantly, the level increases monotonically, so we can assert the
+important invariant
+
+  for all tyvars tv in environment E of basis/context B/C, 
+	                             level_of tv < level_of B/C
+
+(Note that there may be some tyvars in context C which do not have
+strictly smaller level: for instance when we use the function
+_basis:context_plus_tyvarset (used to add explicitly scoped tyvars in
+_core_rules:Absyn.VALdec and _mod_rules:check_valdesc) --- but not
+those in an environment, because whenver we add to the environment,
+the basis level increases.)
+
+To see what this gives us, consider:
+
+			let dec in exp end
+		        C1      C2      C3
+
+The C1,C2,C3 denote the contexts at each point in the evaluation of
+the let expression.  At the beginning, we elaborate in context C1.
+After elaborating the declarations in dec we add them to C1 to get
+context C2.  Now, at this point, every type var occuring solely in dec
+will have level equal to (or greater than when we have nested lets
+whose elaboration will increase the global level counter) the level of
+C1.  Every type var occurring outside the scope of the dec will have
+less less than the level of C1. Thus, as in
+
+	typechecker/_scheme.sml: schemify
+
+the test is simply: type var can be closed (generalized) if its level
+is greater than or equal to the level of the current context.
+
+
+
+
+.tynames:
+
+LEVELS IN TYNAMES
+
+The revised definition of SML'96 adds a "local datatype check" (see
+appendix G.7 of the revised def).  This check is designed to ensure
+that expressions of dubious value like
+
+		let datatype t=c in c end
+and 
+
+		fn x => let datatype t = c in
+			  if true then x else c
+		         in 5
+		        end
+
+are eliminated by the typechecker.   The point of this change is
+to eliminate a soundness problem in the rule for let expressions
+in the old definition.  See
+
+	Stefan Kahrs,
+	Mistakes and ambiguities in the Definition of Standard ML
+	Tech Report. ECS-LFCS-93-257,
+	Dept. Comp. Sci., university of Edinburgh, 1993.
+
+
+To implement local datatype checking, this requires two changes to the
+core rules, adding the following checks at rules 4, 14 and 26 of the
+revised definition.  These correspond to rules 6, 16 and 27 of the old
+definition, which label the code in _core_rules.  Henceforth we shall
+refer to the old rule numbers.
+
+Rule 6:
+         C\- dec => E     C@E\- exp => t    tynames t subset T of C
+	 ----------------------------------------------------------
+		      C\- let dec in exp end => t
+
+
+tynames t returns the set of "primitive" types that occur in t.
+every datatype declaration introduces a new tyname.
+
+We want to check that no typename that occurs in t is scoped within
+the let expression.  We can use levels again.  If we stamp new tynames
+with the level of the current context, then again, when we come to
+update the context (increasing its level) every tyname that occurs
+within it will have level *strictly less than* the context level
+(either because the tyname was already in the old context, and so had
+a smaller level, or because it was new, and was stamped with the level
+of the old context, which is less than the level of the new context).
+
+Therefore, in the diagram
+
+			let dec in exp end
+			C1      C2      
+
+we have to check that every type name in the type of exp has level
+strictly less than that of C1. (Otherwise it would occur in C2 and be
+hidden.)  See the code in _core_rules.sml:check_exp(Absyn.LOCALexp...
+This uses the function
+
+	_basis.sml: tynamesNotIn
+
+which given a type and a context returns the list of tynames in the
+type which do not have level strictly less than that of the context.
+
+The code for the other cases is similarly straightforward (look at the
+code for rules 16 and 27 in _core_rules.  These use the function
+
+	_basis.sml:valEnvTynamesNotIn
+
+which works in exactly the same principle: it simply checks that every
+tyname in the value environment has the correct level.  (A possible
+efficiency increase might be to simply list the levels tynames that
+occur in the valenv explicitly, or even just the maximum level.  Then
+if that maximum level passed the required test, we could proceed
+happily --- otherwise, if it failed, we could search for the escaping
+names.)
+
+
+.tynames.niggle.local:
+
+However, there is a caveat.  The rule for local declarations (rule 21
+in revised definition)
+			local dec1 in dec2 end
+
+contains no such side-condition, so it is perfectly reasonable for
+dec2 to return hidden typenames.  This causes problems, for example
+in
+
+
+C1   let
+       local datatype t1 = c in datatype t2 = b of t1 end;
+C2     fun f var = b var
+C3    in
+     end
+
+The type name t1 is hidden in the environment returned from the
+elaboration of the local dec, i.e., it exists hidden in C2, i.e., it
+has a smaller level than that of C2.  This means that f will
+elaborate, even though it's type consists of a hidden type var.  As
+far as I can make out, the revised definition permits this.
+
+(It wouldn't be hard to either a) forbid escaping type names in the
+local declaration, or b) forbid their use in subsequent defs.)
+
+
+.tynames.niggle.separate-compilation:
+
+Another place where scoping is controlled is in our separate
+compilation mechanism.  The problem here is that even though a module
+has been compiled, it may only be in the scope of a different module
+if it explicitly "required".  Of course, when compiling a subsequent
+module, the context level will be greater than the tynames which are
+not meant to be in scope, and so they will appear to be in scope.
+
+For example, consider the three files foo.sml, bar.sml and baz.sml:
+
+	foo.sml:   datatype fruit = apple | banana;
+
+	bar.sml:   require "foo";
+		   fun f () = apple;
+
+	baz.sml:   require "bar";
+		   fun g x = f();
+
+After evaluating the expression we get 
+
+	val g: 'a -> fruit(hidden) = fn
+
+at the top-level, even though the tyname fruit is not in scope.
+
+We don't address this issue because this "problem" is also a feature
+of the old system before updating, and the change is only for let
+expressions and function bindings in the core.
+
+
+
+
+.tynames.check.timings:
+
+HOW EXPENSIVE THE CHECK
+
+Here we compare the time it takes for the ordinary compiler (without
+local datatype checking) to compile the local datatype-checking code,
+with the augmented compiler.
+
+The time taken measures how long it takes to rebuild everything from
+scratch (I simply remove the pervasive mos and leave the compiler to
+do the rest.)
+
+ORDINARY
+	2589.7 real      1824.7 user       168.8 sys  
+	2351.4 real      1820.7 user       170.8 sys  
+
+AUGMENTED
+        2293.4 real      1847.1 user       167.5 sys  
+        2421.4 real      1825.9 user       171.0 sys  
+	2258.0 real      1814.8 user       162.6 sys  
+
+figures gleaned from Sorrol (SunOS).
+
+
+
+.tynames.files.altered:
+
+FILES CHANGED
+
+If for any reason one wants to alter the tyname levels implementation
+the following is a list of files you have to change:
+
+	typechecker/datatypes.sml
+	typechecker/_datatypes.sml   actual TYNAME constructor defn
+	typechecker/basis.sml
+	typechecker/_basis.sml	     tynameLevelsOK functions
+	typechecker/types.sml        make_tyname
+	typechecker/_types.sml	     initial tynames plus make_tyname
+	typechecker/_core_rules.sml
+	typechecker/_mod_rules.sml
+	typechecker/nameset.sml
+	typechecker/sigma.sml
+
+	interpreter/_shell_structure.sml  instance of Types.make_tyname
+	interpreter/_inspector_values.sml instance of TYNAME
+	main/_encapsulate.sml		  instances of TYNAME
+
+The following merely propagate the information around:
+
+	typechecker/_sigma.sml
+	typechecker/_nameset.sml
+	typechecker/[_]environment.sml
+	typechecker/[_]completion.sml
+
+	debugger/_debugger_print.sml
+	debugger/_debugger_utilities.sml
+	debugger/_value_printer.sml
+
+	interpreter/_entry.sml
+	
+	lambda/_lambda.sml
+
+A number of other files also pass TYNAMES around, but because they use the
+trick
+	TYNAME ({1=...,5=...})
+
+to decompose the tuple, they don't mention the extra sixth argument, and
+so don't have to be altered.

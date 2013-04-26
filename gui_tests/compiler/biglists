@@ -1,0 +1,17 @@
+Need to check if long literal lists compile "reasonably quickly".
+
+Time using the relevant test_suite file:
+
+  Shell.Timer.printTiming {function = use,
+                           name = "Test",
+                           stream = MLWorks.IO.std_out} 
+  "test_suite/static_core/biglist.sml";
+
+or whatever the relevant test suite path is for you.
+
+On bessie, this takes about 10 seconds user time.  Similar for
+dedekind and probably abel (within an order of magnitude
+anyway). Anything slower than this should be cause for alarm.  The
+problem isn't machine dependent so it doesn't matter what it runs on.
+
+

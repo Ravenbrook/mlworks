@@ -1,0 +1,255 @@
+! Dave's .twmrc file.
+
+Color
+{
+	BorderColor		"sky blue"
+
+	BorderTileForeground	"black"
+	BorderTileBackground	"light blue"
+
+	TitleForeground		"black"
+	TitleBackground		"light blue"
+
+	MenuForeground		"black"
+	MenuBackground		"wheat"
+
+	MenuTitleForeground	"black"
+	MenuTitleBackground	"wheat"
+	MenuShadowColor		"Black"
+	IconForeground		"black"
+	IconBackground		"lightblue"
+	IconBorderColor		"lightblue"
+	IconManagerForeground	"black"
+	IconManagerBackground	"gold"
+}
+
+
+Monochrome
+{
+	BorderColor		"Black"
+	BorderTileForeground	"Black"
+	BorderTileBackground	"White"
+	TitleForeground		"Black"
+!	TitleBackground		"White"
+	TitleBackground		"gold"
+}
+
+BorderWidth		5
+
+ResizeFont		"-adobe-courier-medium-r-*-*-14-*-*-*-*-*-*-1"
+
+MenuFont		"-*-times-medium-r-*-*-14-*-*-*-*-*-*-1"
+TitleFont		"-*-times-medium-r-*-*-14-*-*-*-*-*-*-1"
+IconFont		"-*-times-medium-r-*-*-12-*-*-*-*-*-*-1"
+IconManagerFont		"-*-times-medium-r-*-*-12-*-*-*-*-*-*-1"
+
+IconManagerGeometry	"=155x1-5+80"
+! NoRaiseOnMove
+! NoRaiseOnResize
+DecorateTransients
+MoveDelta		3
+RestartPreviousState
+OpaqueMove
+NoGrabServer
+SqueezeTitle
+InterpolateMenuColors
+ForceIcons
+DontSqueezeTitle
+
+IconManagers
+{
+	"Epoch"		"=155x1-5+90"	1
+}
+
+IconifyByUnmapping
+{
+	"Epoch"
+	"Epoch Icon Manager"
+	"TWM Icon Manager"
+}
+
+NoTitle
+{
+	"XClock"
+	"XLoad"
+	"TWM Icon Manager"
+	"Epoch Icon Manager"
+	"Clock"
+	"xtex-page"
+	"XBiff"
+	"VM monitor"
+        "XConsole"
+	"processStatus"
+}
+
+NoHighlight
+{
+	"XClock"
+	"XLoad"
+	"XBiff"
+        "XConsole"
+        "Clock"
+	"processStatus"
+}
+
+IconDirectory	"~/lib/X11/bitmaps"
+Icons
+{
+        "shell"		"scallop.xbm"
+        "smallShell"	"scallop.xbm"
+	"remoteShell"	"remote-scallop.xbm"
+        "Emacs"		"text.xbm"
+	"Xman"		"manual.xbm"
+	"XClipboard"	"clipboard.xbm"
+        "XFontSel"	"font.xbm"
+        "XConsole"	"console.xbm"
+	"XCutsel"	"scissors.xbm"
+	"Bitmap"	"bitmap.xbm"
+}
+
+IconManagerDontShow
+{
+	"XLoad"
+	"XClock"
+        "Clock"
+	"XBiff"
+}
+
+
+!  ==== TITLE BUTTONS ====
+
+NoDefaults
+RightTitleButton "iconify.xbm"	= f.iconify
+RightTitleButton "zoom.xbm"	= f.resize
+LeftTitleButton "tool.xbm"	= f.menu "Tools Button"
+
+Function "raise-and-move" { f.raise f.move }
+Function "raise-and-resize" { f.raise f.resize }
+
+! ==== KEYS AND MOUSE BUTTONS ====
+!
+! Valid button contexts:
+! icon root title frame window iconmgr
+
+Button1 =	:title:				f.function "raise-and-move"
+Button2 =	:title:				f.move
+Button3 =	:title:				f.lower
+
+Button1 =	:frame:				f.function "raise-and-resize"
+Button2 =	:frame:				f.resize
+Button3 =	:frame:				f.resize
+
+Button1 =	:icon:				f.deiconify
+Button2 =	:icon:				f.move
+Button3 =	:icon:				f.lower
+
+Button1 =	:iconmgr:			f.deiconify
+Button3 =	:iconmgr:			f.iconify
+
+Button1 =	:root:				f.menu "Applications"
+Button2 =	:root:				f.menu "Tools"
+Button3 =	:root:				f.menu "Hosts"
+
+Button1 = m	:all:				f.menu "Applications"
+Button2 = m	:all:				f.menu "Tools"
+Button3 = m	:all:				f.menu "Hosts"
+
+Button1 = s	:root:				f.menu "TwmWindows"
+Button2 = s	:root:				f.menu "Colors"
+Button3 = s	:root:				f.menu "Tools Button"
+
+Button1 = s	:window|icon|frame|title:	f.raise
+Button2 = s	:window|icon|frame|title:	f.move
+Button3 = s	:window|icon|frame|title:	f.resize
+
+Button1 = m|c	:iconmgr:			f.raise
+Button3 = m|c	:iconmgr:			f.lower
+
+
+! ==== MENUS ====
+
+! == TOOLS ==
+!
+! This menu is attached to the right title-bar button, and
+! contains window manipulation tools.
+
+
+menu "Tools Button"
+{
+	"Identify"		f.identify
+	"Move"			f.forcemove
+	"Raise"			f.raise
+	"Lower"			f.lower
+	"Iconify"		f.iconify
+	"Toggle auto-raise"	f.autoraise
+	"Focus"			f.focus
+	"Sort icon manager"	f.sorticonmgr
+	"Refresh"		f.winrefresh
+	"Destroy"		f.destroy
+}
+
+
+! === REMOTE HOSTS MENU ===
+
+menu "Hosts"
+{
+	"Other Hosts"	f.title
+	"Abel"		!"xterm -name remoteShell -title Abel -n Abel -e rsh abel &"
+	"Bilbo"		!"xterm -name remoteShell -title Bilbo -n Bilbo -e rsh bilbo &"
+        "Dedekind"              !"xterm -name remoteShell -title Dedekind -n Dedekind -e rsh dedekind &"
+        "Romulus"               !"xterm -name remoteShell -title Romulus -n Romulus -e rsh romulus &"
+        "Sorrol"                !"xterm -name remoteShell -title Sorrol -n Sorrol -e rsh sorrol &"
+ "Zermelo"               !"xterm -name remoteShell -title Zermelo -n Zermelo -e rsh zermelo &"
+}
+
+
+! ==== WINDOW MANAGING TOOLS ====
+
+menu "Tools"
+{
+	"Tools"					f.title
+	"Font selector"				!"xfontsel &"
+	"Clipboard"				!"xclipboard &"
+	"Process Status"			!"nice -15 xterm -name processStatus -e sh -c \"while true; do ps -auxw | head | cut -c1-25,38-64 > tmp/\$\$; cat tmp/\$\$; sleep 10; done\" &"
+	"Cut selector"				!"xcutsel &"
+	"Preferences"				f.menu "Preferences"
+	"Special"				f.menu "Special"
+	"Refresh screen"			f.refresh
+	"Exit twm"				f.quit
+}
+
+menu "Special"
+{
+	"Restart twm"	("Black":"Wheat")	f.restart
+        "Reload resources"              !"xrdb -load $HOME/.Xresources"
+}
+
+menu "Preferences"
+{
+	 "Preferences"	 f.title
+	 "Bell Loud"	 !"xset b 100&"
+	 "Bell Quiet"	 !"xset b 50 &"
+	 "Bell Off"	 !"xset b off&"
+	 "Click Loud"	 !"xset c 8&"
+	 "Click Soft"	 !"xset c on&"
+	 "Click Off"	 !"xset c off&"
+	 "Lock On"	 !"xset l on&"
+	 "Lock Off"	 !"xset l off&"
+	 "Mouse Fast"	 !"xset m 4 2&"
+	 "Mouse Normal"	 !"xset m &"
+	 "Mouse Slow"	 !"xset m 1 1&"
+}
+
+menu "Applications"
+{
+	"Applications"		f.title
+	"Shell"			!"xterm -name shell &"
+	"GNU Emacs"		!"emacs19 &"
+	"Epoch"			!"epoch &"
+	"Manual"		!"xman &"
+        "Calculator"            !"xcalc &"
+        "Screen Dump"           !"xwd > ~/xwd.out &"
+        "Mosaic"                !"mosaic foo &"
+        "Spring"                !"rsh springhost 'export DISPLAY=tek6:0. 0; /usr/local/bin/spring ' &"
+
+}

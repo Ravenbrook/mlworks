@@ -1,0 +1,20 @@
+
+OPTS = /nologo /Gd /W3 /ML
+DEFS	= /DOS_NT /DWIN32 /DLICENSE
+DEFSREL	= $(DEFS)
+DEFSDEB	= $(DEFS) /DDEBUG /DDIAGNOSTICS /DCOLLECT_STATS
+
+OPTSREL = $(OPTS) /O2
+OPTSDEB = $(OPTS) /Od /Zi /FR
+CFLAGSREL = $(OPTSREL) $(DEFSREL)
+CFLAGSDEB = $(OPTSDEB) $(DEFSDEB)
+
+OPTS = /nologo /Gd /ML
+DEFS = /DWIN32
+CFLAGSREL = $(OPTS) $(DEFS)
+
+clean :
+	del *.exe *.obj
+
+tstNT.dll : tstNT.c tstNT.h prototype.h
+	cl $< $(CFLAGSREL) /LD

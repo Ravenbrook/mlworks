@@ -1,0 +1,259 @@
+(*
+ *
+ * $Log: Equiv.str,v $
+ * Revision 1.2  1998/06/02 15:21:56  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Equiv.str,v 1.2 1998/06/02 15:21:56 jont Exp $";
+functor Equiv ( structure PG : POLYGRAPH;
+                structure SL : SORTEDLIST ) : EQUIV =
+struct
+   structure PG = PG
+
+   type act = PG.act
+   type 'a graphs = 'a PG.state ref * 'a PG.state ref list
+   type 'a sucs   = (act * ('a PG.state ref list ref)) list
+
+   exception Panic
+
+   fun sid (ref(PG.S{id,...})) = id
+   fun st_eq (x,y) = sid x = sid y
+
+   fun rmac a [] = []
+     | rmac a ((a',A)::t) = if PG.act_eq(a,a') then t
+                            else (a',A)::(rmac a t)
+
+   fun add _   _  []    =  ()
+     | add suc ac slist =  (* Add the list of states slist to the succesors *)
+                           (* suc under action ac. Never add duplicates,    *)
+                           (* and keep the successors sorted by action.     *)
+       let fun addstates [] l = l
+             | addstates (h::t) l =
+               addstates t (if Lib.member st_eq (h,l) then l else h::l)
+
+           fun insertact _ [] = raise Panic (* why shouldn't this happen? *)
+	     | insertact checked (l as ((ac',l')::t)) =
+               if PG.act_le(ac,ac') then suc := (checked@[(ac,ref slist)]@l)
+               else insertact (checked@[(ac',l')]) t
+
+           fun addact [] = suc := ((!suc)@[(ac,ref slist)])
+             | addact ((ac',l')::t) =
+               if PG.act_eq(ac,ac') then l' := (addstates slist (!l'))
+               else if PG.act_le(ac,ac') then insertact [] (!suc)
+               else addact t
+        in addact (!suc)
+       end
+
+(*****************************************************************************)
+(*          Finding bisimulation by state space partitioning                 *)
+(*                                                                           *)
+(* The code for "equiv", "min" and "bisim" is to a large extent shared in    *)
+(* the function "partition" below. This function will  accept a graph with   *)
+(* two designated states, and perform the partitioning algorithm until       *)
+(* either no more split is needed or the designated states end up in         *)
+(* different blocks. These functions accept polymorphic graphs. Thus a       *)
+(* function "infotest" must be supplied to decide whether two states should  *)
+(* be admitted in the same equivalence class.                                *)
+(*****************************************************************************)
+
+   type 'a block     =  'a PG.state ref list
+   type 'a partition =  'a block ref list
+
+   fun pid (ref(PG.S{p_id,...})) = !p_id
+
+   fun partition (ast: '_a PG.state ref,    (* initial state of first graph  *)
+                  bst: '_a PG.state ref,    (* initial state of second graph *)
+                graph: '_a PG.state ref list,  (* union of graphs  *)
+             infotest: ('_a * '_a) -> bool, (* test on info field*)
+           eqdeciding: bool) =              (* true iff checking equivalence *)
+
+       let val capa_eq = Lib.eq (fn((a,m),(b,n)) => PG.act_eq(a,b) andalso m=n)
+                (* A capability is like a susccessor list, but contains the  *)
+                (* block number of the target states rather than the states. *)
+                (* Thus, when checking for a bisimulation it is sufficient   *)
+                (* to compare capabilities.                                  *)
+
+           exception Again of '_a block   (* raised when a split necessary  *)
+           exception Noneqv
+
+           val blocknum = ref 1   (* Number of next block to be generated *)
+
+           fun resetpid (ref(PG.S{p_id,...})) = p_id:=0
+
+           val parts = (app resetpid graph; [ref graph])
+           val result = ref parts
+
+           fun check ([]:'_a partition) = ()
+             | check (blk1::unchecked) =
+                  (* If it is a bisimulation, return (). If it isn't, then *)
+                  (* split an offending block and raise exception "Again". *)
+               let fun checkblk [] = raise Panic (* shouldn't happen *)
+		     | checkblk (block as ((ref(PG.S{suc,info,...}))::rest)) =
+                     (* Check a block. If no state deviates in capabilities *)
+                     (* or info, then return (); else raise "Again".        *)
+                       let val split = ref false
+                           fun pnums [] = []
+                             | pnums (h::t) =
+                               SL.add (op <=) true (pid h,pnums t)
+                           val caps = map (fn(a,l)=>(a,pnums(!l)))
+
+                           val cap1 = caps (!suc)
+                           val info1 = info
+
+                        (* So cap1/info1 refer to the first state in the   *)
+                        (* block. Any state in the block deviating from    *)
+                        (* these will be marked. If any state is marked,   *)
+                        (* then all marked states will form a new block.   *)
+
+                           fun checkstate (ref(PG.S{suc,info,mark,...})) =
+                               if capa_eq(cap1,caps(!suc)) andalso
+                                  infotest(info1,info) then ()
+                               else (mark:=true; split:=true)
+
+                           fun newblocks ([]:'_a block) = ([],[])
+                             | newblocks (h::t) =
+                               let val (p1,p2) = newblocks t
+                                   val (ref(PG.S{mark, p_id, ...})) = h
+                                in if !mark then (mark:= false;
+                                                  p_id:= !blocknum;
+                                                  (h::p1,p2))
+                                   else (p1,h::p2)
+                               end
+
+                        in (app checkstate rest;
+                            if !split then
+                               let val (p1,p2) = newblocks block
+                                in blk1 := p2; raise Again p1
+                               end
+                            else ())
+                       end
+
+                in (checkblk (!blk1); check unchecked)
+               end
+
+        fun iterate parts =
+            (check parts)
+            handle Again newblock =>
+               if eqdeciding andalso (pid ast <> pid bst) then raise Noneqv
+               else (inc blocknum;
+                     result := (ref newblock)::parts;
+                     iterate(!result))
+     in (iterate parts; (true,!result))
+         handle Noneqv => (false,nil)
+    end
+
+(******************)
+(*   equivalent   *)
+(******************)
+
+    fun equiv (infotest: ('_a * '_a) -> bool)
+              ((agraph as (a, graph1)): '_a graphs,
+               (bgraph as (b, graph2)): '_a graphs) =
+        fst(partition(a,b,graph1@graph2,infotest,true))
+
+(********************)
+(*   bisimulation   *)
+(********************)
+
+    fun bisim (infotest: ('_a * '_a) -> bool)
+              ((init, graph): '_a graphs) =
+        snd(partition(init,init,graph,infotest,false))
+
+(******************)
+(*   minimize     *)
+(******************)
+
+    fun min infotest (init,graph) =
+        let val (_,blocklist) = partition (init,init,graph,infotest,false)
+            val initid = pid init
+
+        fun representatives [] = []     (* Chooses a representative from   *)
+          | representatives (h::t) =    (* each block in a partition       *)
+            let val choice = hd(!h)
+             in if (pid choice) = initid then representatives t
+                else choice::(representatives t)
+            end
+
+        val newgraph = init::(representatives blocklist)
+
+        fun findrep (ref(PG.S{p_id,...})) =
+            let fun find [] = raise Panic
+                  | find (st::t) = if (pid st) = !p_id then st else find t
+             in find newgraph
+            end
+
+        fun newsucs (st as (ref(PG.S{suc,...}))) =
+            let fun addnotau [] = ()     (* Transform a state by redirecting *)
+              | addnotau (h::t) =        (* the suc list by replacing target *)
+                (if sid h = sid st then () (* states with block              *)
+                 else add suc PG.tau [h];   (* representatives, and removing *)
+                 addnotau t)                       (* all tau self-loops.    *)
+
+                fun addirrefl ac slist =
+                    if PG.act_eq(ac,PG.tau) then addnotau slist
+                    else add suc ac slist
+
+                fun suctransform (ac,l) =
+                    let val tmp = !l
+                     in (l:=[];
+                         addirrefl ac (map findrep tmp);
+                         if null (!l) then suc := rmac ac (!suc) else ())
+                    end
+             in app suctransform (!suc); st
+            end
+
+        val newgraph = map newsucs newgraph
+
+        fun mintrans graph =
+            let fun min_state (fromstate as (ref(PG.S{suc,...}))) =
+                    let fun min_act (ac,trans) =
+                        let fun all_states (ref(PG.S{suc,...}),through_ac) =
+                                flatten
+                                (map (fn (ac,trans) =>
+                                      if PG.act_eq(ac,through_ac) then !trans
+                                      else nil) (!suc))
+
+                            fun one_trans (ref(PG.S{suc,...}),via,tost) =
+                                exists (fn (ac,trans) =>
+                                        PG.act_eq (ac,via) andalso
+                                        exists (fn st => st=tost) (!trans))
+                                       (!suc)
+
+                            fun find_trans (fromst,via_ac,tost,via) =
+                                let val intermediate_states =
+                                        all_states (fromst,via_ac)
+                                 in exists (fn s => one_trans(s,via,tost))
+                                        intermediate_states
+                                end
+
+                            fun removable_trans tostate =
+                                find_trans (fromstate,ac,tostate,PG.tau) orelse
+                                find_trans (fromstate,PG.tau,tostate,ac)
+
+                            val ac_trans =
+                                filter (fn st => not (removable_trans st))
+                                           (!trans)
+                         in if ac_trans <> nil then [(ac,ref ac_trans)]
+                            else nil
+                        end
+                     in flatten (map min_act (!suc))
+                    end
+
+                fun map_acts (nil,nil) = nil
+                  | map_acts ((st as (ref(PG.S{suc,mark,...})))::restSt,
+                              ac::restAc) =
+                    (suc := ac; st::(map_acts (restSt,restAc)))
+                  | map_acts _ = raise Panic
+
+                val min_acts = map min_state graph
+
+            in map_acts (graph,min_acts)
+            end
+
+      in (init,mintrans newgraph)
+     end
+end
+

@@ -1,0 +1,7 @@
+datatype ('a, 'b, 'c) HList =
+  Cons of ('a * ('b, 'c, 'a) HList) |
+  Nil
+val Cons : ('a * ('b, 'c, 'a) HList) -> ('a, 'b, 'c) HList
+val Nil : ('a, 'b, 'c) HList
+val heterogeneous : (int, bool, 'a -> 'a) HList = Cons (1, Cons (true, Cons (fn, Nil)))
+val length : ('a, 'a, 'a) HList -> int = fn

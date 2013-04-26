@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Weekly benchmarks script wrapper.
+#
+# This runs the weekly benchmark script, redirecting the output to
+# weekly-log, and mailing the mlworkers if it fails.  This is the
+# script that is actually run from the crontab.
+#
+# Copyright (C) 1998 Harlequin Group plc.  All rights reserved.
+#
+# $Log: weekly-wrapper,v $
+# Revision 1.1  1998/02/02 14:11:06  jkbrook
+# new unit
+# [Bug #20104]
+# Wrapper script for weekly benchmark collection
+#
+#
+
+umask 002
+TERM=xterm; export TERM
+
+SML=/u/sml/MLW; export SML
+
+PATH=/usr/local/bin:/usr/ucb:.:/bin:$PATH; export PATH
+(echo "Checking out weekly benchmark script";
+ hope co -com MLWtools -writable-files skip weekly;
+ $SML/tools/weekly) > $SML/tools/weekly-log 2>&1 ||
+{
+  status=$?
+  {
+    echo "From: Weekly benchmarks script wrapper <sml>"
+    echo "To: mlworkers"
+    echo "Subject: The weekly benchmarks failed on: " `hostname`
+    echo
+    echo "The weekly benchmarks failed with exit code $status.  The end of the "
+    echo "log reads:"
+    echo
+    tail $SML/tools/weekly-log | sed -e 's/^/> /'
+    echo
+    echo "The lines of the log written directly by the weekly script read:"
+    echo
+    sed -n -e "s/^weekly: /> /p" < $SML/tools/weekly-log
+  } |
+  /usr/lib/sendmail -t
+}
+exit 0

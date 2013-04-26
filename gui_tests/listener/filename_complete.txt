@@ -1,0 +1,75 @@
+
+Bug #1985:   Win32: incorrect filename completion
+Fixed by change #2875
+
+Bug description:  Specify a filename by including only one slash between
+directories and then hit the tab key half way through the file name.
+The correct file name is picked up, but is not completed properly (the 
+wrong letters are appended to the end of the file name) due to an 
+erroneous assumption that the user typed two slashes rather than one 
+to separate the directory names.
+
+Proper behaviour:  Not only is the file name completed properly, but any
+single slashes are replaced with a double slash to give a proper, legal
+path on Win32.
+
+
+----------
+
+Bug #1986:  GUI: Uncaught exception in file name completion
+Fixed by change #2876
+
+Description:  This consists of two different exceptions on different
+platforms.  On Win32, if a file name starts with more than two
+slashes, then the exception Path[system._win_ntpath] is raised.  On
+Motif when two or more slashes are used anywhere within the file name,
+the exception Subscript[<Pervasive>:408,17 to 408,25] is raised, but
+this is handled correctly on Win32 by beeping.
+
+Repeat by:
+(Motif) In Listener, type Shell.File.loadSource "basis//   then hit
+the TAB key.
+
+Proper behaviour on Motif:  Any extra slashes are removed one at a time
+when the TAB key is pressed.
+
+(Win32) In Listener, type Shell.File.loadSource "/// then hit the TAB
+key.
+
+Proper behaviour on Win32:  A beep should indicate that no completions
+were found.
+
+
+----------
+
+Bug #1849:  Windows: Filename completion broken
+Fixed by change #2877
+
+Description:  filename completion does not work on the current directory, 
+ie. no path is specified.
+
+Repeat by:  In Listener, type:  Shell.File.loadSource "
+then optionally type part of a valid filename, then press the TAB key.
+
+Bug behaviour:  A beep will indicate that no completions were found - this
+is wrong.
+
+Proper behaviour:  A pop up 'Completions' dialog box will be displayed from
+which the user can choose which completion to use, if there is more than
+one completion possible, otherwise the only completion possible will be
+used without displaying the Completions dialog box.
+
+
+----------
+
+Bug #2006:  Win32: hangs on filename completion specifying wrong slash.
+Fixed by change #2927
+
+Repeat by:
+In Listener, type: Shell.File.loadSource "///      
+then press the TAB key.
+Note the direction of the slashes.
+
+Bug behaviour:  MLWorks hangs, ie. you cannot interact with it at all.
+ 
+Proper behaviour:  A beep indicates that no valid completions were found.

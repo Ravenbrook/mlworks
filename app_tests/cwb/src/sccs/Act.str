@@ -1,0 +1,235 @@
+(*
+ *
+ * $Log: Act.str,v $
+ * Revision 1.2  1998/06/02 15:45:21  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Act.str,v 1.2 1998/06/02 15:45:21 jont Exp $";
+(*****************************************************************************)
+(*  Actions have more structure in SCCS                                      *)
+(*                                                                           *)
+(*  A ::= <eps> | B E                                                        *)
+(*  B ::= <tau> | <part> | <part> "^" <int>                                  *)
+(*  E ::= empty | "#" B E                                                    *)
+(*                                                                           *)
+(*****************************************************************************)
+
+functor Act (structure P : PART) : ACT =
+struct
+   structure P = P
+
+   datatype act  =  Tau
+                 |  Eps
+                 |  Act of (P.part * int) list
+
+   datatype token  = Tick  |  Prod  |  Pow  |  Name of string  |
+                     Coname of string  |  Int of int  |  Eos
+
+   exception Parse of string
+   exception Stop
+
+   val tau = Tau
+   val eps = Eps
+
+   fun mkstrelt (a,n) =
+       let val sn = makestring (if n < 0 then ~n else n)
+           val sp = P.mkstr a
+        in  case n of  1 => sp
+                    | ~1 => "'"^sp
+                    |  _ => if n < 0 then "'"^sp^"^"^sn else sp^"^"^sn
+       end
+
+   fun mkstr Tau = "1"
+     | mkstr Eps = "eps"
+     | mkstr (Act []) = raise Panic	(* shouldn't happen? *)
+     | mkstr (Act [a]) = mkstrelt a
+     | mkstr (Act (a::b::t)) = (mkstrelt a)^"#"^(mkstr (Act (b::t)))
+
+   val mkstr1 = mkstr
+(* I really don't know what I'm doing here. *)
+   fun hashval (Tau) = (ord "t") - (ord "`")
+     | hashval (Eps) = (ord "t") - (ord "'")
+     | hashval (Act partlist) = P.hashval (fst(hd partlist)) (* come back *)
+(* to this! *)
+
+
+   fun eq (Tau,Tau) = true
+     | eq (Eps,Eps) = true
+     | eq (Act l1,Act l2) =
+       Lib.eq (fn ((p1,n1),(p2,n2)) => P.eq(p1,p2) andalso n1=n2) (l1,l2)
+     | eq _ = false
+
+   fun inverse (Act L) = Act(map (fn (p,n) => (p,~n)) L)
+     | inverse a = a
+
+   fun inverses (a,b) = eq(a,inverse b)
+
+   fun ispart (Act [(_,1)]) = true
+     | ispart (Act [(_,~1)]) = true
+     | ispart _ = false
+
+   fun parts Tau = []
+     | parts Eps = []
+     | parts (Act l) = map (fn (p,n) => if n < 1 then P.inverse p else p) l
+
+   fun le (Tau,_) = true
+     | le (_,Tau) = false
+     | le (Eps,_) = true
+     | le (_,Eps) = false
+     | le (Act a,Act b) =
+       Lib.le (fn ((p,m),(q,n)) =>
+               P.le(p,q) andalso (not(P.le(q,p)) orelse m<=n)) (a,b)
+
+   val breaks = ["#","^"]
+
+   fun isbreak e = Lib.member (op =) (e,breaks)
+
+(* write an action in canonical form, i.e. with each particle *)
+(* (generator) occurring at most once and with them in order. *)
+   fun normalise (Act l) =
+       let fun norm (ord,[]) = ord
+             | norm (ord,h::t) =
+               let fun place (p,0) ord = ord
+                     | place (p,n) ord =
+                       let fun pp [] = [(p,n)]
+                             | pp (l as ((q,m)::t)) =
+                               if P.le(p,q) then
+                                  if P.le(q,p) then
+                                     if m+n = 0 then t else (p,m+n)::t
+                                  else (p,n)::l
+                               else (q,m)::(pp t)
+                        in pp ord
+                       end
+                in norm(place h ord,t)
+               end
+           val nl = norm([],l)
+        in if null nl then Tau else Act nl
+       end
+     | normalise a = a
+
+   fun mktoken intexp [] = raise Panic	(* shouldn't happen? *)
+     | mktoken intexp (clist as (c::rest)) =
+       let fun digit "0" = 0  |  digit "1" = 1  |  digit "2" = 2
+             | digit "3" = 3  |  digit "4" = 4  |  digit "5" = 5
+             | digit "6" = 6  |  digit "7" = 7  |  digit "8" = 8
+             | digit "9" = 9  |  digit _ = raise Stop
+           fun atoi acc [] = acc
+             | atoi acc (h::t) = atoi (acc * 10 + digit h) t
+           fun AtoI [] = raise Stop
+             | AtoI l = atoi 0 l
+           fun tokenise clist =
+               Int(AtoI clist) handle Stop => let val s = implode clist
+                                               in if s <> "eps" then Name s
+                                                  else raise Stop
+                                              end
+
+        in case c of "#"  =>  Prod
+                   | "^"  =>  Pow
+                   | "'"  =>  if null rest then raise Stop
+                              else if hd rest = "'" then
+                                      mktoken intexp (tl rest)
+                              else Coname(implode rest)
+                   | "1"  =>  if null rest then
+                                 if intexp then tokenise clist else Tick
+                              else tokenise clist
+                   |  _   =>  tokenise clist
+       end
+
+   fun sc i [] []                 = (Eos,[])
+     | sc i acc []                = (mktoken i acc,[])
+     | sc i [] (c::clist)         = if isbreak c then (mktoken i [c],clist)
+                                    else sc i [c] clist
+     | sc i acc (r as (c::clist)) = if isbreak c then (mktoken i acc,r)
+                                    else sc i (acc@[c]) clist
+
+   val scan = sc false []
+   val scani = sc true []
+
+(*****************************************************************************)
+(*  Recursive descent parser:                                                *)
+(*                                                                           *)
+(*  A ::= <eps> | B E                                                        *)
+(*  B ::= <tau> | <part> | <part> "^" <int>                                  *)
+(*  E ::= empty | "#" B E                                                    *)
+(*                                                                           *)
+(*****************************************************************************)
+
+   fun mkact str = if str = "eps" then Eps else
+       let fun A s = E(B s)
+
+           and B (Tick,rest) = (Tau,scan rest)
+             | B (Name nam,rest) =
+               let val (next_sy,rest') = scan rest
+                in if next_sy = Pow then
+                      let val (i,rest'') = case scani rest' of
+			(Int i, rest'') => (i, rest'')
+		      | _ => raise Bind
+                        in (Act [(P.mkpart nam,i)],scan rest'')
+                       end handle Bind => raise Stop
+                   else (Act [(P.mkpart nam,1)],(next_sy,rest'))
+               end
+
+             | B (Coname nam,rest) =
+               let val (next_sy,rest') = scan rest
+                in if next_sy = Pow then
+                      let val (i,rest'') = case scani rest' of
+			(Int i, rest'') => (i, rest'')
+		      | _ => raise Bind
+                       in (Act [(P.mkpart nam,~i)],scan rest'')
+                      end handle Bind => raise Stop
+                   else (Act [(P.mkpart nam,~1)],(next_sy,rest'))
+               end
+
+             | B _ = raise Stop
+
+           and E (Tau,(Prod,rest)) = E(B(scan rest))
+             | E (Act ac,(Prod,rest)) =
+               let val (ac',(next_sy,rest')) = E(B(scan rest))
+                in if eq(ac',tau) then (Act ac,(next_sy,rest'))
+                   else let val plist = case ac' of
+		     Act plist => plist
+		   | _ => raise Bind
+                         in (Act (plist @ ac),(next_sy,rest'))
+                        end handle Bind => raise Stop
+               end
+             | E s = s
+
+           val (ac,(tok,str')) = A(scan(explode str))
+        in if tok = Eos then normalise ac else raise (Parse "extra input?")
+       end handle Stop => raise (Parse ("Error in action "^str))
+
+(* does the permission list of particles, plist, permit the action? *)
+(* Yes, iff each particle of which the action is comprised occurs in *)
+(* the list. *)
+   fun permit plist (Act ac) =
+       forall (fn (p,n) => Lib.member P.eq (p,plist)) ac
+     | permit plist ac = true
+
+   fun product (Tau,ac) = ac
+     | product (ac,Tau) = ac
+     | product (Act ac1,Act ac2) = normalise(Act(ac1@ac2))
+     | product (Eps,ac) = ac		(* OK? *)
+     | product (ac,Eps) = ac		(* OK? *)
+
+   fun relabel _ Tau = Tau
+     | relabel _ Eps = Eps
+     | relabel L (Act ac) =
+       let fun rel [] = []
+             | rel ((p,n)::t) =
+               let fun lookup [] = [(p,n)]
+                     | lookup ((Tau,q)::t) =
+                       if P.eq(p,q) then [] else lookup t
+                     | lookup ((Act qac,q)::t) =
+                       if P.eq(p,q) then map(fn (r,s) => (r,s*n)) qac
+                       else lookup t
+		     | lookup _ = raise Panic (* Eps shouldn't be in a *)
+                                              (* relabelling.  *)
+                in (lookup L) @ (rel t)
+               end
+        in normalise(Act(rel ac))
+       end
+end
+

@@ -1,0 +1,87 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_path=`dirname $0`
+script_name=`basename $0`
+cmd="set"
+STATUS=0
+test="";comment=" * "; new_comment=""; bug_id="";
+usage="usage: $script_name [-h] [- <bug-id>] [-c <comment>] (file|dir)+"
+
+while getopts "thc:i:" opt; do
+  case $opt in
+    t) test="test";;
+    c) new_comment="$OPTARG";;
+    i) bug_id="-bug-number $OPTARG";;
+    h|\?)
+      echo $usage;
+      echo "    h for this help"
+      echo "    c <comment>"
+      echo "    i <bug-id>"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage
+  exit 1
+else
+  : echo ok
+fi
+
+: echo prime $entry
+
+eval `$script_path/findcomp2 $1`;
+if [ -z "$compound" ]; then
+  entry=;
+  echo "cannot identify compound \"$1\""
+  exit 1
+elif [ -z "$unit" ]; then
+  entry="-c $compound"
+else
+  entry="-c $compound -u $unit"
+fi
+shift
+
+: echo stuff in the separators
+
+for arg in $*; do
+  eval `$script_path/findcomp2 $arg`;
+  if [ -z "$compound" ]; then
+    echo "cannot identify compound \"$arg\""
+    exit 1
+  elif [ -z "$unit" ]; then
+    entry="$entry -a -c $compound"
+  else
+    entry="$entry -a -c $compound -u $unit"
+  fi
+done
+
+: echo final processing
+
+if [ -z "$entry" ]; then
+  echo skipped everythin
+elif [ -n "new_$comment" ]; then
+  hope $test $cmd $bug_id -comment "$new_comment" $entry
+else
+  hope $test $cmd $bug_id -comment "$comment" $entry
+fi
+
+###############################################################################
+# $Log: setcomment,v $
+# Revision 1.3  1996/07/12 11:01:12  io
+# [Bug #1463]
+# beauty treatment and bug-ids
+#
+# Revision 1.2  1995/06/27  15:05:52  jont
+# Add necessary paths
+#
+# Revision 1.1  1995/05/01  10:16:01  daveb
+# new unit
+# Tool for setting comment leaders in Hope files.
+#
+#
+# Copyright Harlequin Ltd. 1995
+#

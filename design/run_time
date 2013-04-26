@@ -1,0 +1,43 @@
+This document addresses the run time calling conventions to be used by
+ML.
+
+It is intended to use a stack at least in part for the run time
+system. Thus function call and local variables will use the stack,
+with locals being transferred into heap memory when they are required
+to form part of a closure.
+
+The stack used will look very similar to that used by C.
+
+The rest of this document is specific to a sparc implementation,
+though some of the ideas may be more generally relevant.
+
+Procedure call will be by jmpl %r,%o7 for some suitable value of %r,
+with argument in %o0, %o6 being the stack pointer and %i6 being the
+previous stack pointer. Global registers %g6 and %g7 will be reserved
+for the exclusive use of the garbage collector and heap allocator, all
+other global registers will be available as scratch registers. At
+function entry (before any save), %o1 - %o5 will also be available as
+scratch registers. After a save, %i1 - %i5 and %l0 - %l7 will be
+available as scratch registers which will be preserved across function
+call, and %o1 - %o5 and %o7 will be avilable as volatile scratch
+registers. The result will be returned in %i0 (before restore), or %o0
+after restore.
+
+The stack and the local variables may contain pointers into the ML
+heap, which must therefore be handled by the garbage collector to
+ensure consistency and to prevent incorrect loss of heap objects.
+However, if the ML stack contains some C stack lower down, it is not
+correct for the garbage collector to search for references within this
+area, if only because any pointers here will not be correctly tagged.
+Hence the C stack will have to contain some upper limit mark which can
+be detected by the garbage collector, in order to distinguish it from
+the ML stack. Since the garbage collector is itself written in C,
+this mark should always be present. We can arrange for there to be
+precisely one such mark by placing it at the precise point of call
+from ML to C (so that in particular, when C itself calls malloc and
+hence the garbage collector, there is no second mark introduced).
+
+Question: Can the garbage collector cope with all the locals and
+temporaries defined above?
+Answer: Yes, provided it does stack flushes.
+

@@ -1,0 +1,97 @@
+#!/bin/sh
+#
+# Daily build script wrapper.
+#
+# This runs the daily build script, redirecting the output to
+# daily-log, and mailing the mlworkers if it fails.  This is the
+# script that is actually run from the crontab.
+#
+# Revision Log
+# ------------
+# $Log: daily-wrapper,v $
+# Revision 1.17  1997/04/25 13:05:32  jont
+# [Bug #20005]
+# Ensure daily is run with -all and -full
+#
+# Revision 1.16  1997/04/21  16:31:35  jont
+# [Bug #20005]
+# Pass parameters from cron script on to daily
+#
+# Revision 1.15  1996/10/22  10:27:06  jont
+# Ensure all path items are explicitly mentioned
+#
+# Revision 1.14  1996/09/11  10:00:48  jont
+# Add /usr/ucb to path
+#
+# Revision 1.13  1996/03/25  12:28:04  io
+# set right Subject line
+#
+# Revision 1.12  1995/07/28  02:47:53  io
+# TERM undefined, add this, might be site-specific...
+#
+# Revision 1.11  1995/07/24  12:02:11  daveb
+# The -working-files argument to the Hope checkout command has changed to
+# -writable-files.
+#
+# Revision 1.10  1995/02/28  19:09:01  io
+# add -working-file skip so it does not fritz file system when
+# daily left accidentally writeable
+#
+# Revision 1.9  1995/02/23  17:26:44  jont
+# Modify for new file structure /u
+#
+# Revision 1.8  1995/02/21  15:47:09  brianm
+# Introducing SML_HOME
+#
+# Revision 1.7  1994/03/18  10:48:26  jont
+# Add explicit path to ensure hope visible
+#
+# Revision 1.6  1994/03/17  18:34:15  jont
+# Add debugging info to find Manchester problem
+#
+# Revision 1.5  1994/02/24  12:20:32  io
+# Manchester build now mailed to mlworkers
+#
+# Revision 1.4  1994/02/08  17:04:17  matthew
+# Check out the build script before executing it.
+#
+# Revision 1.3  1994/01/28  17:57:56  daveb
+# Changed location of source directory.
+#
+# Revision 1.2  1993/08/25  09:42:44  richard
+# Added output of all lines written by the daily script.
+#
+# Revision 1.1  1993/08/24  10:53:17  richard
+# Initial revision
+#
+
+umask 002
+TERM=xterm; export TERM
+# allow test_suite to complete
+
+SML=/u/sml/MLW; export SML
+
+PATH=/usr/local/bin:/usr/ucb:.:/bin:$PATH; export PATH
+(echo "Checking out daily script";
+ cd $SML;
+ hope co -com MLWtools -writable-files skip daily;
+ $SML/tools/daily -all -full $* ) > $SML/tools/daily-log 2>&1 ||
+{
+  status=$?
+  {
+    echo "From: Daily build script wrapper <sml>"
+    echo "To: mlworkers"
+    echo "Subject: The daily build failed on: " `hostname`
+    echo
+    echo "The daily build failed with exit code $status.  The end of the "
+    echo "build log reads:"
+    echo
+    tail $SML/tools/daily-log | sed -e 's/^/> /'
+    echo
+    echo "The lines of the log written directly by the daily script read:"
+    echo
+    sed -n -e "s/^daily: /> /p" < $SML/tools/daily-log
+  } |
+  /usr/lib/sendmail -t
+}
+exit 0

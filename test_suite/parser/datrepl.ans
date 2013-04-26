@@ -1,0 +1,17 @@
+structure Outer =
+  struct
+    structure Inner =
+      struct
+        datatype 'a the_datatype =
+          PLAIN |
+          WITH_DATA of 'a
+        val PLAIN : 'a Outer.the_datatype
+        val WITH_DATA : 'a -> 'a Outer.the_datatype
+      end
+    datatype 'a the_datatype =
+      PLAIN |
+      WITH_DATA of 'a
+    val PLAIN : 'a Outer.the_datatype
+    val WITH_DATA : 'a -> 'a Outer.the_datatype
+    val aFunction : 'a Outer.the_datatype -> bool = fn
+  end

@@ -1,0 +1,26 @@
+signature Real =
+  sig
+    type  t
+  end
+signature Empty =
+  sig
+  end
+structure A =
+  struct
+    eqtype t = real
+  end
+functor FUN
+structure B =
+  struct
+  end
+structure A =
+  struct
+  end
+signature T =
+  sig
+    structure C : sig ... end
+    sharing C = B
+  end
+functor FUN
+Listener Input:27,44 to 27,47: error: failed to share structures C and B:
+  basis does not cover structure

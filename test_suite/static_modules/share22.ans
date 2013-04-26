@@ -1,0 +1,18 @@
+datatype 'a S =
+  RHUBARB of 'a
+val RHUBARB : 'a -> 'a S
+signature S1 =
+  sig
+    type t
+    type s = t S
+  end
+signature S2 =
+  sig
+    structure X : S1
+  end
+signature S3 =
+  sig
+    structure A : S1
+    structure B : S2
+    sharing A = B.X
+  end

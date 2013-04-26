@@ -1,0 +1,346 @@
+(*
+ *
+ * $Log: HMLTran.str,v $
+ * Revision 1.2  1998/06/02 15:25:53  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: HMLTran.str,v 1.2 1998/06/02 15:25:53 jont Exp $";
+functor HMLTran ( structure E   : ENV;
+		  structure LogIO   : LOGIO; (* replacing L for debugging! *)
+                  structure HML : HMLOGIC;
+                    sharing LogIO.L.A = HML.A
+                        and E.V = LogIO.L.V = HML.V ) : HMLTRAN =
+struct
+   structure LogIO = LogIO
+   structure L = LogIO.L
+   structure HML = HML
+   structure A = L.A
+
+   type 'a env = 'a E.env
+
+   exception Error of string
+   exception Debug of string
+
+   open HML
+
+(* Here is some stuff bodily cut and pasted from LogIO so that we can  *)
+(* print HMLogic propositions. There must be lots of better ways to do *)
+(* this.  *)
+(********************)
+(*  Pretty printer  *)
+(********************)
+
+(* prio generates priorities for use in parenthesizing. *)
+
+   fun prio True            = 80
+     | prio (Var _)         = 80
+     | prio (Not _)         = 60
+     | prio (And _)         = 40
+     | prio (Nec _)         = 60
+     | prio (Max _)         = 80
+
+   val listact = Lib.mkstr A.mkstr ","
+
+   fun mkstr True  = "T"
+     | mkstr (Var v) = V.mkstr v
+     | mkstr (P as (Not P')) = "~"^(paren P P')
+     | mkstr (P as (And (P',P''))) =
+       (paren'' P P')^" & "^(paren'' P P'')
+     | mkstr (P as (Nec (modlist l,P'))) =
+       "["^(listact l)^"]"^(paren P P')
+     | mkstr (P as (Nec (negmodlist l,P'))) =
+       "[-"^(listact l)^"]"^(paren P P')
+     | mkstr (Max (v,P')) = "max("^(V.mkstr v)^"."^(mkstr P')^")"
+
+   and paren P Q = if (prio Q) < (prio P) then "("^(mkstr Q)^")"
+                   else mkstr Q
+
+   and paren' P Q = if (prio Q) <= (prio P) then "("^(mkstr Q)^")"
+                    else mkstr Q
+
+   and paren'' P Q = if (prio Q) < (prio P) then "("^(mkstr Q)^")"
+                     else if (prio Q) > (prio P) then mkstr Q
+                     else case (P,Q) of (And _,And _) => mkstr Q
+                                      | _             => "("^(mkstr Q)^")"
+					    
+
+(*****************************************************************************)
+(* The next function renames bound variables uniquely in an outprop. In the  *)
+(* local function "uniqvars", the three arguments correspond to the number   *)
+(* to be assigned to the next variable, an environment containing the bind-  *)
+(* ings of old variables to their new names, and a proposition. The output   *)
+(* of this function is a triple with a number, environment and proposition.  *)
+(*****************************************************************************)
+(* this assumes that trans has been done, so there should be no	variables *)
+(* bar fix-point variables. *)
+   fun renamevars P =
+       let fun uniqvars n e True = (n,True)
+             | uniqvars n e (Var v) =
+               ((n,(Var (E.lookup(v,e))))
+                handle E.Unbound => raise Error("Unbound variable "
+                                                ^(V.mkstr v)))
+             | uniqvars n e (Not P) = let val (n',P') = uniqvars n e P
+                                       in (n',Not P')
+                                      end
+             | uniqvars n e (And (P,Q)) = let val (n',P') = uniqvars n e P
+                                              val (n'',Q') = uniqvars n' e Q
+                                           in (n'',And (P',Q'))
+                                          end
+             | uniqvars n e (Nec (K,P)) = let val (n',P') = uniqvars n e P
+                                           in (n',Nec (K,P'))
+                                          end
+             | uniqvars n e (Max (v,P)) =
+               let val newvar = V.mkvar ("*"^(makestring n))
+                   val (n',P') = uniqvars (n+1) (E.bind(v,newvar,e)) P
+                in (n',Max (newvar,P'))
+               end
+        in snd (uniqvars 0 (E.empty) P)
+       end
+
+(*****************************************************************************)
+(* "rmdn" removes double negations, to increase efficiency of model checking *)
+(*****************************************************************************)
+
+   fun rmdn True = True
+     | rmdn (Var v) = (Var v)
+     | rmdn (Not(Not P)) = rmdn P
+     | rmdn (Not P) = Not(rmdn P)
+     | rmdn (And(P,Q)) = And(rmdn P,rmdn Q)
+     | rmdn (Nec(K,P)) = Nec(K,rmdn P)
+     | rmdn (Max(v,P)) = Max(v,rmdn P)
+
+   fun negocc e parity True = false
+     | negocc e parity (Var v) =
+       (not(E.lookup(v,e)=parity) handle E.Unbound => false)
+     | negocc e parity (Not P) = negocc e (not parity) P
+     | negocc e parity (And(P,Q)) =
+       (negocc e parity P) orelse (negocc e parity Q)
+     | negocc e parity (Nec(K,P)) = negocc e parity P
+     | negocc e parity (Max(v,P)) = negocc (E.bind(v,parity,e)) parity P
+
+(*** translation --  Note that variables are renamed ***)
+
+   fun transmod se (L.modlist l) = modlist l
+     | transmod se (L.negmodlist l) = negmodlist l
+     | transmod se (L.modvar x) =
+       (modlist(E.lookup(x,se)) handle E.Unbound =>
+        raise Error("Unbound set identifier "^(V.mkstr x)))
+     | transmod se (L.negmodvar x) =
+       (negmodlist(E.lookup(x,se))
+        handle E.Unbound => raise Error("Unbound set identifier "^(V.mkstr x)))
+
+(* are 2 modalities equal? NB no connection, here, between X and -X etc *)
+   fun modalityeq ((p as L.modvar v), (q as L.modvar w)) = V.eq (v, w)
+     | modalityeq ((p as L.negmodvar v), (q as L.negmodvar w)) = V.eq (v, w) 
+     | modalityeq ((p as L.modlist l1), (q as L.modlist l2))
+       = Lib.eq A.eq (l1, l2)
+     | modalityeq ((p as L.negmodlist l1), (q as L.negmodlist l2))
+       = Lib.eq A.eq (l1, l2)
+     | modalityeq _ = false
+       
+(* The following code does nothing except turn a prop into something *)
+(* slightly more general! *)
+   datatype extendedParam = ExtendedModparam of L.modality
+     | ExtendedPropparam of extendedProp
+
+   and extendedProp = ExtendedTrue
+     | ExtendedFalse
+     | ExtendedVar of V.var * extendedParam list
+     | FixPointVar of V.var
+     | ExtendedNot of extendedProp
+     | ExtendedAnd of extendedProp * extendedProp
+     | ExtendedOr of extendedProp * extendedProp
+     | ExtendedImp of extendedProp * extendedProp
+     | ExtendedNec of L.modality * extendedProp
+     | ExtendedPos of L.modality * extendedProp
+     | ExtendedWeakNec of L.modality * extendedProp
+     | ExtendedWeakPos of L.modality * extendedProp
+     | ExtendedMax of V.var * extendedProp
+     | ExtendedMin of V.var * extendedProp
+
+   fun extend L.True = ExtendedTrue
+     | extend L.False = ExtendedFalse
+     | extend (L.Var(v,pl)) = ExtendedVar(v, map paramExtend pl)
+     | extend (L.Not P) = ExtendedNot (extend P)
+     | extend (L.And (P,Q)) = ExtendedAnd (extend P, extend Q)
+     | extend (L.Or (P,Q)) = ExtendedOr (extend P, extend Q)
+     | extend (L.Imp (P,Q)) = ExtendedImp (extend P, extend Q)
+     | extend (L.Nec (K,P)) = ExtendedNec (K, extend P)
+     | extend (L.Pos (K,P)) = ExtendedPos (K, extend P)
+     | extend (L.WeakNec (K,P)) = ExtendedWeakNec (K, extend P)
+     | extend (L.WeakPos (K,P)) = ExtendedWeakPos (K, extend P)
+     | extend (L.Max (v,P)) = ExtendedMax (v, extend P)
+     | extend (L.Min (v,P)) = ExtendedMin (v, extend P)
+
+   and paramExtend (L.Modparam K) = ExtendedModparam K
+     | paramExtend (L.Propparam P) = ExtendedPropparam (extend P)
+
+   and envExtend pe = E.map (fn (v,(pl, P)) =>
+			     (v,((map paramExtend pl),(extend P)))) pe
+
+(* Go through a formal parameter list, and whenever you find a formal  *)
+(* proposition parameter, which jolly well should be constructed from  *)
+(* a variable and a parameter list, grab the variable. Return the list *)
+(* of such variables. *)
+   fun var_fp [] = [] : V.var list
+     | var_fp ((ExtendedPropparam (ExtendedVar (v,[])))::pl) = (v::(var_fp pl))
+     | var_fp (a::pl) = var_fp  pl
+
+
+(* ap : param list = actual parameters, fp : param list = formal parameters. *)
+(* So we have lists of actual and formal parameters. We peel them off in    *)
+(* pairs, and build up a pair of functions which you can think of as	    *)
+(* being identity functions except that they map formal params to the	    *)
+(* corresponding actual params. *)
+   fun mksubst ap fp = 
+     let fun zip [] [] s = s
+	   | zip ((a as ExtendedModparam amodality)::ap)
+	     ((f as ExtendedModparam fmodality)::fp)
+	     (modalities, props) =
+	     zip ap fp ((fn z =>
+			 if modalityeq (z, fmodality) then amodality
+			 else modalities z),
+			props)
+	   | zip ((a as ExtendedPropparam prop)::ap)
+	     ((f as ExtendedPropparam (p as ExtendedVar (v, pl1)))::fp)
+	     (modalities, props) =
+	     let fun foo (z as ExtendedVar (w, pl2)) = if V.eq (v, w) then prop
+					       else props z
+		   | foo z = props z
+	     in
+	       zip ap fp (modalities, foo)
+	     end
+(* If we thought we wanted a modality and the user gave us something   *)
+(* we think is a prop, that's OK, we're wrong -- what the user has     *)
+(* given us is actually an action set variable. We hope! It must be    *)
+(* positive, since otherwise we'd have recognised it.  *)
+	   | zip ((a as ExtendedPropparam (p as ExtendedVar (v, [])))::ap)
+	     ((f as ExtendedModparam fmodality)::fp)
+	     (modalities, props) =
+	     zip ((ExtendedModparam(L.modvar v))::ap) (f::fp)
+	     (modalities, props)
+	   | zip [] (s::rest)  _ = raise Error
+	     ("Too few actual parameters")
+	   | zip (s::rest) [] _ = raise Error
+	     ("Too many actual parameters")
+	   | zip _ _ _ = raise Error
+	     ("Formal and actual parameters don't match");
+     in
+       zip ap fp ((fn a => a),(fn a => a))
+     end
+
+   fun apply fpvars (modalities, props) =
+       let fun app ExtendedTrue  : extendedProp = ExtendedTrue : extendedProp
+             | app ExtendedFalse = ExtendedFalse
+
+             | app (V as ExtendedVar (v,plist))   =
+	       (* Is this prop var one of my formal parameters? If so, *)
+               (* substitute for it; if not, leave it alone, but carry *)
+               (* the substitution on through its parameters           *)
+	       if Lib.member V.eq (v,fpvars) then props V
+               else ExtendedVar(v, map subst plist)
+	     | app (FixPointVar v) = FixPointVar v
+             | app (ExtendedNot (p)) = ExtendedNot (app p)
+	     | app (ExtendedAnd (p, q)) = ExtendedAnd (app p, app q)
+	     | app (ExtendedOr (p, q)) = ExtendedOr (app p, app q)
+	     | app (ExtendedImp (p, q)) = ExtendedImp (app p, app q)
+
+	     | app (ExtendedNec (modality, p)) = ExtendedNec (modalities  modality, app p)
+	     | app (ExtendedPos (modality, p)) = ExtendedPos (modalities  modality, app p)
+	     | app (ExtendedWeakNec (modality, p)) =
+	       ExtendedWeakNec (modalities  modality, app p)
+	     | app (ExtendedWeakPos (modality, p)) =
+	       ExtendedWeakPos (modalities  modality, app p)
+
+             | app (ExtendedMax (v, p))   = ExtendedMax (v, app p)
+	     | app (ExtendedMin (v, p))   = ExtendedMin (v, app p)
+(* 	     | app _ = raise Error "Bug in apply, HMLTran.str" *)
+	   and subst (ExtendedPropparam p)   = ExtendedPropparam (app p)
+             | subst (ExtendedModparam modality)  = ExtendedModparam (modalities  modality)
+       in app
+       end
+
+
+   fun lookapp ((fp,prop) : extendedParam list * extendedProp,
+		actualparameters : extendedParam list) =
+     let val subs = (mksubst actualparameters fp) 
+	 val formalpropvars : V.var list
+	   = var_fp fp
+     in
+       (apply formalpropvars subs prop) 
+     end
+
+   fun trans proposition propositionenv setenv =
+     let fun tr ExtendedTrue pe se = True
+	   | tr ExtendedFalse pe se = Not True
+	   | tr (ExtendedVar(v,pl)) pe se =
+	     ((tr (lookapp(E.lookup(v,pe),pl)) pe se)
+	      handle E.Unbound =>
+		raise Error ("Unbound identifier "^(V.mkstr v)))
+	   | tr (FixPointVar v) pe se = Var v
+	   | tr (ExtendedNot P) pe se = Not(tr P pe se)
+	   | tr (ExtendedAnd (P,Q)) pe se = And(tr P pe se,tr Q pe se)
+	   | tr (ExtendedOr (P,Q)) pe se =
+	     Not(And(Not(tr P pe se),Not(tr Q pe se)))
+	   | tr (ExtendedImp (P,Q)) pe se =
+	     Not(And(tr P pe se,Not(tr Q pe se)))
+	   | tr (ExtendedNec (K,P)) pe se = Nec(transmod se K,tr P pe se)
+	   | tr (ExtendedPos (K,P)) pe se =
+	     Not(Nec(transmod se K,Not(tr P pe se)))
+	   | tr (ExtendedWeakNec (K,P)) pe se =
+	     let fun remeps (modlist l) =
+               (modlist(Lib.rm A.eq (A.eps,l)),Lib.member A.eq (A.eps,l))
+		   | remeps (negmodlist l) =
+		     (negmodlist(A.tau::(Lib.rm A.eq (A.eps,l))),
+		      Lib.member A.eq (A.eps,l))
+		 val (I,haseps) = remeps (transmod se K)
+		 val P' = tr P pe se
+		 val Y1 = V.mkvar "Y1"
+		 val Y2 = V.mkvar "Y2"
+		 val PY1 = Var Y1
+		 val PY2 = Var Y2
+	     in case I of
+	       modlist _ =>
+		 if haseps then
+		   Max(Y1,And(And(Nec(modlist [A.tau],PY1),P'),
+			      Nec(I,Max(Y2,And(P',Nec(modlist [A.tau],PY2))))))
+		 else Max(Y1,And(Nec(modlist [A.tau],PY1),
+				 Nec(I,Max(Y2,And(P',Nec(modlist [A.tau],PY2))))))
+	     | negmodlist _ =>
+		 if haseps then
+		   Max(Y1,And(Nec(modlist [A.tau],PY1),
+			      Nec(I,Max(Y2,And(P',Nec(modlist [A.tau],PY2))))))
+		 else Max(Y1,And(And(Nec(modlist [A.tau],PY1),P'),
+				 Nec(I,Max(Y2,And(P',Nec(modlist [A.tau],PY2))))))
+	     end
+	   | tr (ExtendedWeakPos (K,P)) pe se =
+	     Not(tr (ExtendedWeakNec(K,ExtendedNot P)) pe se)
+	   | tr (ExtendedMax (v,P)) pe se =
+	     Max(v,tr P (E.bind(v, ([],FixPointVar v), pe)) se)
+	   | tr (ExtendedMin (v,P)) pe se =
+	     Not(Max(v,Not(tr P (E.bind
+				 (v,([],ExtendedNot(FixPointVar v)),pe)) se)))
+	 val translated = tr proposition propositionenv setenv
+     in (UI.debug ("trans got "^(mkstr translated)); translated)
+     end
+
+(* Strategy: start with an arbitrary formula, in which we can't tell   *)
+(* the difference between fixpoint variables and identifiers. Shove it *)
+(* into another datatype which *has* a constructor for                 *)
+(* FixPointVars. Then translate that, taking advantage of the new      *)
+(* constructor to tell the difference between fixpointvars (which we   *)
+(* should leave alone) and identifiers (which we should look up). Then *)
+(* remove double negatives and rename variables. *)
+(* This is a quick but isolated hack -- outside this file, life goes on...*)
+
+   fun translate P pe se =
+       let val newP = renamevars (rmdn (trans (extend P) (envExtend pe) se))
+        in if negocc E.empty false newP then
+              raise Error "Fixpoint Variables appear negatively"
+           else newP
+       end
+end
+

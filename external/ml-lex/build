@@ -1,0 +1,57 @@
+#!/bin/sh
+#
+# build script for ml-lex using Harlequin MLWorks.
+#
+# options:
+#  -o name            --- specify output executable name, default "sml-lex"
+#  -sml command       --- specify command to invoke sml, mlworks-basis default
+#  -sml-home command  --- specify top-level installation dir of MLWorks, /usr/local/lib/MLworks default
+
+OUTPUT="sml-lex"
+SML="mlworks-basis -tty"
+SML_HOME="`pwd`/.."
+
+#
+# process command-line options
+#
+
+ARGS=""
+while [ "$#" != "0" ]
+do
+    arg=$1
+    shift
+    case $arg in
+	-o)
+	    if [ "$#" = "0" ]; then
+		echo "$CMD: must supply image name for -o option"
+		exit 1
+	    fi
+	    OUTPUT=$1; shift
+	;;
+	-sml)
+	    if [ "$#" = "0" ]; then
+		echo "$CMD: must supply path for -sml option"
+		exit 1
+	    fi
+	    SML=$1; shift
+	;;
+	-sml-home)
+	    if [ "$#" = "0" ]; then
+		echo "$CMD: must supply path for -sml-home option"
+		exit 1
+	    fi
+	    SML_HOME=$1; shift
+	;;
+	*)
+	    ARGS="$ARGS $arg"
+	;;
+    esac
+done
+
+$SML_HOME/bin/$SML <<ZZZ
+  Shell.Project.openProject "mllex.mlp";
+  Shell.Project.forceCompileAll ();
+  Shell.Project.loadAll ();
+  deliver "$OUTPUT";
+ZZZ
+

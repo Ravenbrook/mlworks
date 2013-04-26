@@ -1,0 +1,27 @@
+
+Bug #1973:  Motif: Wrong style of cut and paste behaviour.
+Fixed by change #2865
+
+Bug behaviour:  Cutting and pasting text using the options from the Edit 
+menu was the same as cutting and pasting using mmouse actions.  Also using 
+the options from the Edit menu disbled further uses of the middle mouse
+button in the same window.
+
+Proper behaviour:  There are two different ways of cutting and pasting text. 
+One is to use the options from the Edit menu and the other is to select the 
+text and then paste it by clicking the middle mouse button.  Using these 
+different ways should give different results.  An example of proper 
+behaviour is detailed below.
+
+Example of proper behaviour:  In a Listener window, select some text and 
+then click the middle mouse button to paste the selection after the prompt.
+Call this text A.  Then select a different piece of text (B) and choose 
+Edit->Copy from the Listener menu, then click after the prompt to deselect
+the text.  Choose Edit->Paste from the menu, and text B should be pasted
+at the cursor position.  Click the middle mouse button with nothing 
+selected, and nothing should be pasted, although Edit-> paste should still
+paste text B.  Select a different piece of text and paste it using the 
+middle mouse button, then choose Edit->Paste again, and text B should still
+be pasted.  This behaviour is correct since these two methods use 
+different places to store the selected text.
+

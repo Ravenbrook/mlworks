@@ -1,0 +1,33 @@
+It would be helpful for the ML project to make some use of source
+control, for the following reasons:-
+
+1. Security. It is harder to lose files if there is also a checked in
+copy.
+
+2. Change logging. It is useful to know when changes were made, by
+whom and with what intent.
+
+3. Versioning. We wish to be able to mark a particular state of the
+release as a version, and if necessary roll back to it. This should
+enable us to work with consistent previous versions for the purposes
+of tracing the introduction of bugs, investigating customer problems
+etc. It would be nice to be able to capture the state of the system
+used to make a particular version, however, this is probably out of
+the realms of possibility at present.
+
+We also hope to be able to make some use of unix make, if only for
+determining the recompilation sequence required to bring a program up
+to date. Thus in particular, unix make must be able to interact
+correctly with RCS (or whatever source control system is selected) in
+terms of checking time stamps, temporarily checking out sources if
+necessary and warning if the checked in version is newer than the
+user's current checked out version. Use of make will impose some
+requirements on the compiler, in terms of emitting information
+required by a make depend step, to enable automatic updating of the
+dependency graph represented by a makefile. It is not yet clear
+whether this is even possible, but if it is, then I consider it
+desirable in preference to the Lisp philosophy of "it's not Lisp so
+we'll write a Lisp replacement for it". Such a philosophy, applied
+universally to the Ml project would almost certainly be too expensive,
+and if that were not the case, it were to be considered desirable then
+it could be retro-fitted. Retro-removal would be much more difficult.

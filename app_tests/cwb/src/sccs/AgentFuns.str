@@ -1,0 +1,818 @@
+(*
+ *
+ * $Log: AgentFuns.str,v $
+ * Revision 1.2  1998/06/02 15:47:05  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: AgentFuns.str,v 1.2 1998/06/02 15:47:05 jont Exp $";
+functor AgentFuns (include sig
+		     structure AgIO  : AGENTIO;
+                     structure E   : ENV;
+                     structure SL  : SORTEDLIST
+                      sharing AgIO.Ag.V = E.V
+		   end where type AgIO.Ag.agent = PK.hash_key):AGENTFUNS =
+
+struct
+  structure AgIO = AgIO
+   structure Ag = AgIO.Ag
+   structure E  = E
+   structure A  = Ag.A
+   structure P = A.P
+   structure V  = Ag.V
+
+   val save = ref true			(* whether we save info about  *)
+(* sucessors of agents. Seems to be safe in the same way as in PG, so  *)
+(* do it, by default. *)
+       
+   open Ag
+
+   exception Unguarded of V.var
+   exception Unguarded_rec of V.var
+
+   exception Mismatch of agent
+
+(* returns first list minus elements which appear in second list, using	  *)
+(* action equality.							  *)
+(* Shouldn't this actually be polymorphic like Lib.rm itself??		  *)
+(* val subacts : A.act list -> A.act list -> A.act list			  *)
+(*    fun subacts l [] = l					       *)
+(*      | subacts l (a::t) = subacts (Lib.rm A.eq (a,l)) t	       *)
+
+(* Matthew changed this to the uncurried form *)
+   fun subacts (l,[]) = l
+     | subacts (l,(a::t)) = subacts(Lib.rm A.eq (a,l), t)
+
+(* WARNING: addacts' arguments must be sorted lists *)
+   val addacts = SL.merge A.le true
+
+(* remove the taus from a list of actions				  *)
+(*    val rmtau : A.act list -> A.act list       			  *)
+   fun rmtau l = Lib.rm A.eq (A.tau,l)
+
+(*  V.var * V.var list -> bool      					  *)
+   val memvar  = Lib.member V.eq
+(* it's not true that "a memact (-a)"					  *)
+   val memact  = Lib.member A.eq
+
+   fun rel_le ((_,a),(_,b)) = P.le(a,b)
+
+(* transition-le: compare (action,agent) pairs so that if we sort with *)
+(* this order we get aA aB bA bB etc. *)
+   fun ts_le ((a,A),(b,B)) =
+       A.le(a,b) andalso (not(A.le(b,a)) orelse le(A,B))
+
+   fun obs_le ((actionlist,agent),(actionlist',agent')) =
+       Lib.le A.le (actionlist,actionlist') andalso
+       (not(Lib.le A.le (actionlist',actionlist)) orelse le(agent,agent'))
+
+(* End up with a variable-free list, but better get the right kind of env! *)
+   fun set_lookup env (Actlistvar v) = (E.lookup (v,env)
+                                        handle E.Unbound => raise(Unguarded v))
+     | set_lookup env (Permlist al) = al
+
+   fun rel_lookup env (Relabelvar v) = (E.lookup (v,env)
+                                        handle E.Unbound => raise(Unguarded v))
+     | rel_lookup env (Relabellist ab) = ab
+
+   infix O
+   local
+      fun update ([],ab) = [ab] 
+        | update ((x,y)::t,(a,b)) = 
+          if P.eq(y,b) then (a,y)::t else (x,y)::(update(t,(a,b)))
+      fun ext g [] = g 
+        | ext g ((a,b)::t) = ext (update(g,(a,b))) t
+   in
+      fun f O g = ext f (map (fn (a,b) => (A.relabel f a,b)) g)
+   end
+
+(* Make a list of the agent and action set variables in a formal param *)
+(* list. This loses if the user uses the same identifier twice in      *)
+(* different contexts. Temporary fix!	  *)
+   fun var_fp [] = []
+     | var_fp ((Agentparam (Var (v,[])))::pl) = (v::(var_fp pl))
+     | var_fp ((Actlistparam (Actlistvar (v)))::pl) = (v::(var_fp pl))
+     | var_fp (a::pl) = var_fp  pl
+
+   fun act_fp [] = []
+     | act_fp ((Actparam a)::pl) = (a::(act_fp pl))
+     | act_fp (a::pl) = act_fp pl
+
+(* ap : param list = actual parameters, fp : param list = formal parameters. *)
+(* So we have lists of actual and formal parameters. We peel them off in    *)
+(* pairs, and build up a triple of functions which you can think of as	    *)
+(* being identity functions except that they map formal params to the	    *)
+(* corresponding actual params.						  *)
+fun mksubst ap fp = 
+  let fun zip [] [] s = s
+	| zip ((Timeparam a)::ap) ((Actparam f)::fp) (tim,act,permlist,agt) = 
+	  zip ap fp ((fn z => if A.eq(f,z) then a else tim z),act,permlist,agt)
+	| zip ((Actparam a)::ap) ((Actparam f)::fp) (tim,act,permlist,agt) = 
+	  let
+	    val f = hd (A.parts f)
+	    val act' = fn z => if P.eq(P.name(z),P.name(f)) 
+				 then if P.eq(z,P.inverse(f)) 
+					then A.inverse(a) else a
+			       else act z
+	  in zip ap fp (tim,act',permlist,agt)
+	  end
+	
+	| zip ((Actlistparam a)::ap)((Actlistparam f)::fp)
+	  (tim,act,permlist,agt) =
+	  zip ap fp (tim,act,(fn z => if permlisteq(f,z) then a
+				      else permlist z),agt)
+(* if fp is actlistparam and ap is agentparam, it's probably because   *)
+(* of our attempt to be userfriendly. Try turning the agentparam into  *)
+(* an actlistparam and try again! *)
+	| zip ((Agentparam (Var (v,[])))::ap)((Actlistparam f)::fp)
+	  (tim,act,permlist,agt) = 
+	  zip ((Actlistparam (Actlistvar(v)))::ap) ((Actlistparam f)::fp)
+	       (tim,act,permlist,agt)
+(* and more importantly, vice versa! *)
+	| zip ((Actlistparam a)::ap)((Agentparam (Var (v,[])))::fp)
+	  (tim,act,permlist,agt) = 
+	  zip ((Actlistparam a)::ap) (((Actlistparam (Actlistvar (v))))::fp)
+	  (tim,act,permlist,agt)
+(* Horrors. We don't actually know whether this is an actionset or an  *)
+(* agent. So we enter it into both the maps to be onthe safe side. Of  *)
+(* course this will cause wierd results if the user does daft things   *)
+(* like using the same identifier for an agent and a set param. *)
+	| zip ((Agentparam(a as Var (v,[])))::ap)
+	  ((Agentparam (f as Var (w,[])))::fp)
+	  (tim,act,permlist,agt) = 
+	  zip ap fp (tim,act,
+		     (fn z => if
+		      permlisteq((Actlistvar w),z)
+				then (Actlistvar v)
+			      else permlist z),
+		     (fn z => if eq(f,z) then a else agt z))
+	| zip ((Agentparam a)::ap) ((Agentparam f)::fp)
+	  (tim,act,permlist,agt) = 
+	  zip ap fp (tim,act,permlist,(fn z => if eq(f,z) then a else agt z))
+	| zip _ _ _ = raise Match;
+  in
+    zip ap fp ((fn t => ~1),(fn a => A.mkact(P.mkstr a)),(fn a => a),(fn a => a))
+  end
+
+(* pmap: part -> action, ac:action. This splits ac down into its       *)
+(* constituent parts so that pmap can be applied, then wraps it up     *)
+(* again. *) 
+fun actmap pmap ac =
+  fold (fn (p,a) => A.product(pmap p,a)) (A.parts ac) A.tau
+
+fun apply (set,rel) fpvars (* fpactlistvars *) (tims,prts,actlists,agts) =
+  let
+(* acts effectively extends prts to work on general actions. *)
+    val acts = actmap prts
+    fun app Nil : agent       = Nil : agent
+      | app Bottom            = Bottom
+	
+      | app (V as Var (v,plist))   = 
+	if Lib.member V.eq (v,fpvars) then agts V
+	else Var(v, map subst plist)
+
+      | app (Prefix (a,ag))   = 
+	if (tims a) < 0 then Prefix(acts a, app ag)
+	else Time(tims a, app ag)
+
+      | app (Delta (ag))      = Delta(app ag)
+	
+      | app (Time (t,ag))     = Time(t, app ag)
+      | app (Sum agl)         = Sum(map app agl)
+      | app (Parallel agl)    = Parallel(map app agl)
+
+      | app (Permit (ag,r))   = 
+	let val r = map prts (set_lookup set r)
+	in if forall A.ispart r 
+	     then Permit(app ag, Permlist(map (hd o A.parts) r))
+	   else raise Match
+	end
+
+      | app (Relabel (ag,r))  =
+	let val r = map (fn (a,b) => (acts a,prts b)) (rel_lookup rel r)
+	in if forall (A.ispart o snd) r 
+	     then Relabel(app ag, 
+			  Relabellist (map (fn (a,p) => (a,hd(A.parts p))) r))
+	   else raise Match
+	end
+
+(* subst gets applied to each formal param of agent variables inside   *)
+(* the agent we were looking at, so that bindings to actual parameters *)
+(* get "passed down". e.g. if A(V) = B(V) then A(0) = B(0) *)
+    and subst (Actparam a)   = 
+      if (tims a) < 0 then Actparam (acts a) else Timeparam (tims a)
+      | subst (Actlistparam a) = Actlistparam (actlists a)
+      | subst (Timeparam a)  = Timeparam (a)
+      | subst (Agentparam a) = Agentparam (app a)
+  in app
+  end
+
+(* Take an environment triple which tells you about bindings of agent,	    *)
+(* action set and relabelling variables. Take a (variable, actual parameter *)
+(* list) pair and return the agent which results from substituting the	    *)
+(* actual for the formal parameters.                                        *)
+   fun lookupapply (agt,set,rel) (v,actualparameters) =
+       let val (formalparameters, ag) : param list * agent
+	       = E.lookup (v,agt) 
+	       handle E.Unbound => raise(Unguarded v)
+           val subs (* : (A.act -> int) * (A.act -> A.act) *	       *)
+(* 	     (permission -> permission) * (agent -> agent)	       *)
+	       = (mksubst actualparameters formalparameters) 
+               handle Match => raise Mismatch (Var (v,actualparameters))
+           val fpvars : V.var list
+	       = var_fp formalparameters
+(* 	   val fpactlistvars : V.var list			       *)
+(* 	       = actlist_fp formalparameters			       *)
+       in
+           if null formalparameters andalso null actualparameters
+	     then ag (* don't mess with it, we're sure no mismatch *)
+	   else (apply (set,rel) fpvars (* fpactlistvars *) subs ag) 
+               handle Match => raise Mismatch
+		 (Var(v,actualparameters))
+       end
+
+(**************)
+(*  freevars  *)
+(**************)
+(* HIGHLY suspect. Doesn't count action set variables, for a start. *)
+   fun freevars e A =
+       let fun fv i chk Nil           = ([],chk)
+             | fv i chk Bottom        = ([],chk)
+             | fv i chk (Prefix(_,A)) = fv i chk A
+             | fv i chk (Delta(A))    = fv i chk A
+             | fv i chk (Time(_,A))   = fv i chk A
+
+             | fv i chk (Var (v,ap))  =
+               if memvar(v,i@chk) then ([],chk)
+               else let val (fvap,chk) = fpl i chk [] ap
+                        val (fvag,chk) = 
+                            (let val (fp,ag) = E.lookup(v,e)
+                              in fv (var_fp fp) ((v::chk)) ag
+                             end) handle E.Unbound => ([v],(v::chk))
+                     in (fvag@fvap,chk)
+                    end
+             | fv i chk (Sum [])      = ([],chk)
+             | fv i chk (Sum (h::t))  =
+               let val (hdfv,hdchk) = fv i chk h
+                   val (tlfv,tlchk) = fv i hdchk (Sum t)
+                in ((hdfv@tlfv),tlchk)
+               end
+             | fv i chk (Parallel l)  = fv i chk (Sum l)
+             | fv i chk (Permit(A,_)) = fv i chk A
+             | fv i chk (Relabel(A,_))  = fv i chk A
+
+           and fpl i chk acc [] = (acc,chk)
+             | fpl i chk acc ((Actparam a)::pl) = fpl i chk acc pl
+	     | fpl i chk acc ((Actlistparam a)::pl) = fpl i chk acc pl
+             | fpl i chk acc ((Timeparam t)::pl) = fpl i chk acc pl 
+             | fpl i chk acc ((Agentparam ag)::pl) = 
+               let val (fvag,chk') = fv i chk ag
+                in fpl i chk' (acc@fvag) pl
+               end
+        in fst(fv [] [] A)
+       end
+
+(************)
+(*  subenv  *)
+(************)
+
+   fun subenv e A =
+       let fun vl i chk Nil             = (E.empty,chk)
+             | vl i chk Bottom          = (E.empty,chk)
+             | vl i chk (Prefix(_,A))   = vl i chk A
+             | vl i chk (Delta(A))      = vl i chk A
+             | vl i chk (Time(_,A))     = vl i chk A
+             | vl i chk (Var (v,ap))    =
+(* v(ap)*)     (if memvar(v,(i@chk)) then (E.empty,chk)
+(* v(fp)=ag *)  else (let val A as (fp,ag) = E.lookup(v,e)
+                       in (ignore(mksubst ap fp);
+                           let val ignore = var_fp fp
+(* vs in defn ag *)            val (vag,chk) = vl ignore ((v::chk)) ag
+(* vs in ap *)                 val (vag,chk') = vpl i chk vag ap
+                            in (E.merge(vag,E.bind (v,A,E.empty)),chk')
+                           end) handle Match => raise Mismatch(Var(v,ap))
+                       end) handle E.Unbound => (E.empty,v::chk))
+
+             | vl i chk (Sum [])        = (E.empty,chk)
+             | vl i chk (Sum (h::t))    =
+                  let val (hdvl,hdchk) = vl i chk h
+                      val (tlvl,tlchk) = vl i hdchk (Sum t)
+                   in (E.merge(tlvl,hdvl),tlchk)
+                  end
+             | vl i chk (Parallel l)    = vl i chk (Sum l)
+             | vl i chk (Permit(A,_)) = vl i chk A
+             | vl i chk (Relabel(A,_))  = vl i chk A
+
+           and vpl i chk acc [] = (acc,chk)
+             | vpl i chk acc ((Actparam a)::pl) = vpl i chk acc pl
+	     | vpl i chk acc ((Actlistparam a)::pl) = vpl i chk acc pl 
+             | vpl i chk acc ((Timeparam t)::pl) = vpl i chk acc pl 
+             | vpl i chk acc ((Agentparam ag)::pl) = 
+               let val (vag,chk') = vl i chk ag
+                in vpl i chk' (E.merge(acc,vag)) pl
+               end
+           val newenv = fst(vl [] [] A)
+
+           in case A of Var _ => (A,newenv)
+                   |     _ => let val v = V.mkvar "dummy"
+                               in (Var (v,[]),(*E.bind (v,([],A),newenv)*)
+                                   newenv)
+                              end
+       end
+
+(***********)
+(*  subst  *)
+(***********)
+
+   fun subst (e as (agt,set,rel)) A =
+       let fun ss ag = 
+           case ag of
+               Nil                => Nil
+             | Bottom             => Bottom
+             | Prefix(l,A')       => Prefix(l,ss(A'))
+             | Delta(A')          => Delta(ss(A'))
+             | Time(t,A')         => Time(t,ss(A'))
+             | Var (v,ap)         => (lookupapply e (v,ap)
+                                         handle E.Unbound => Var (v,ap))
+             | Sum l             => Sum (map (fn(x)=>ss(x)) l)
+             | Parallel l         => Parallel (map (fn x => ss(x)) l)
+             | Permit(A',restA) => Permit(ss(A'),restA)
+             | Relabel(A',relA)   => Relabel(ss(A'),relA)
+       in 
+          if E.isempty agt then A else ss A
+       end
+
+(**************)
+(*  diverges  *)
+(**************)
+(* ?? In the environment e, gives a fn agent -> bool for diverges ...	  *)
+   fun diverges e =
+       let fun dv chk Nil = false
+             | dv chk Bottom = true
+             | dv chk (Prefix _) = false
+             | dv chk (Delta A) = dv chk A
+             | dv chk (Time _) = false
+             | dv chk (Var (v,ap)) =
+               if memvar(v,chk) then raise(Unguarded_rec v)
+               else dv (v::chk) (lookupapply e (v,ap))
+             | dv chk (Sum l) = exists (dv chk) l
+             | dv chk (Parallel l) = exists (dv chk) l
+             | dv chk (Permit(A,_)) = dv chk A
+             | dv chk (Relabel(A,_)) = dv chk A
+       in dv []
+      end
+
+(**********)
+(*  sort  *)
+(**********)
+
+(* If fold: ('A * 'B -> 'B) -> 'A list -> 'B -> 'B) then here		  *)
+(*       'A is (V.var * 'a) and						  *)
+(*       'B is (V.var -> 'a option)					  *)
+
+(* So the folding map in there is the one which updates/extends the fn f of    *)
+(* type 'B with reference to a pair (v, sv) of type 'A, by making the image of *)
+(* v be SOME sv.  Then when you use this on the 'A list sortl, seeding it with *)
+(* the "empty" fn: 'B, what you get is the obvious partial map corresponding   *)
+(* to the list of pairs you first thought of. Simple, really.		       *)
+
+fun mkpmap sortl = 
+       fold (fn ((v : V.var,sv : 'a),f : V.var -> 'a option)
+	     => (fn z : V.var => if V.eq(z,v) then SOME sv else f z)) 
+       sortl (fn x => NONE)
+
+(* Take two named relabellings and return true iff they are absolutely	  *)
+(* identical								  *)
+
+fun chkmem ((x,xl),(y,yl)) =
+       V.eq(x,y) andalso
+       (Lib.eq (fn ((a,ax),(b,by)) => A.eq(a,b) andalso P.eq(ax,by)) (xl,yl))
+
+(* Take two named action * parameter lists, return true iff they're identical *)
+fun mapmem ((x,mx),(y,my)) = 
+  V.eq(x,y) andalso
+  (Lib.eq (fn ((a,amx),(b,bmx)) => 
+	   A.eq(a,b) andalso Ag.parameq(amx,bmx)) (mx,my))
+
+(* fold a part list up into an action. Horrid way to do it though! *)
+fun unparts pl = 
+  fold (fn (p,a) => A.product(A.mkact(P.mkstr p),a)) pl A.tau
+
+val id = fn x => x
+fun sort (agt,set,rel) ag =
+      
+  let
+    fun st agp (chks as (maps,chk)) r (Var(v,ap)) =
+      (case (agp v) of NONE => 
+	 let val (fp,ag) = E.lookup(v,agt)
+	   handle E.Unbound => raise(Unguarded v)
+	 in
+	   if null fp andalso null ap then 
+	     if Lib.member chkmem ((v,r),chk) then ([],chks)
+	     else st (fn x => NONE) (maps,(v,r)::chk) r ag
+	   else let val fp_vars = (var_fp fp)
+		    val fp_acts = (act_fp fp)
+		    (* val fpactlistvars  = (actlist_fp fp)	     *)
+		    val (tims,prts,actlists,agts) = mksubst ap fp
+
+		    val a_to_p = 
+		      fn a => (a,if (tims a) < 0 
+				   then Timeparam (tims a) 
+				 else Actparam (actmap prts a))
+		    
+		    val actmap =  map a_to_p fp_acts
+		    
+		    val A = apply (set,rel) fp_vars (* fpactlistvars *)
+		      (tims,prts,actlists,id) ag
+
+		    val sort_ap = st agp chks r
+
+		in if Lib.member chkmem ((v,r),chk) then 
+		  if Lib.member mapmem ((v,actmap),maps) 
+		    then ([],chks)
+		  else let val agtmap = 
+		    mkpmap 
+		    (map (fn v => 
+			  (v,fst(sort_ap(agts(Var(v,[]))))))
+		     fp_vars)
+		       in st agtmap (((v,actmap)::maps), chk) r A
+		       end
+		   else let val agtmap = 
+		     mkpmap
+		     (map (fn v => 
+			   (v,fst(sort_ap(agts(Var(v,[]))))))
+		      fp_vars)
+			in st agtmap (maps, ((v,r)::chk)) r A
+			end
+		end
+	 end
+    | SOME s => (s,chks))
+      | st agp chk r Nil    = ([],chk)
+      | st agp chk r Bottom = ([],chk)
+
+      | st agp chk r (Prefix (a,A)) =
+	let val (st',chk') = st agp chk r A
+	in (SL.sort P.le true ((map P.name (A.parts a))@st'),chk')
+	end
+
+      | st agp chk r (Delta A) = st agp chk r A
+      | st agp chk r (Time(_,A)) = st agp chk r A
+
+      | st agp chk r (Sum []) = ([],chk)
+      | st agp chk r (Sum (h::t)) =
+	let val (hdst,hdchk) = st agp chk r h
+	  val (tlst,tlchk) = st agp hdchk r (Sum t)
+	in ((hdst@tlst),tlchk)
+	end
+      | st agp chk r (Parallel l) = st agp chk r (Sum l)
+	
+      | st agp chk r (Permit(A,rset)) = 
+	(SL.sort P.le true (map P.name (set_lookup set rset)),chk)
+	
+      | st agp chk r (Relabel(A,f)) =
+	let val relA = rel_lookup rel f
+	  val (al,chk') = st agp chk (relA O r) A
+	in (SL.sort P.le true 
+	    (A.parts(A.relabel relA (unparts al))),chk')
+	end
+       
+  in SL.sort P.le true (fst(st (fn x => NONE) ([],[]) [] ag))
+(* NB that's different from the CCS version, probably for no good reason *)
+  end
+
+(*****************)
+(*  transitions  *)
+(*****************)
+
+(* try the concept of keeping knowledge. This is not the best way! *)
+exception NotKnownHere
+val knowledge = ref (PH.mkTable(1024,NotKnownHere))
+  : (A.act * agent) list PH.hash_table ref
+val total = ref 0
+val madenew = ref 0
+fun forgetall () = (total := 0; madenew := 0;
+  knowledge := PH.mkTable(1024,NotKnownHere))
+fun addknowledge agent nextsteps = PH.insert (!knowledge) (agent,nextsteps)
+fun getknowledge agent = PH.find (!knowledge) (agent)
+fun efficiencyInfo _ = fold (fn (string1, string2) => string1^" "^string2)
+  (map makestring (PH.bucketSizes (!knowledge))) ""
+
+fun transitions (agt,set,rel) =
+  let fun expand [] = []
+	| expand (h::t) =
+	  if null t then map (fn (a,A) => (a,[A])) h
+	  else Lib.multiply (fn ((a,P),(b,PL)) => (A.product(a,b),P::PL))
+	    h (expand t)
+      fun ts chk Nil           = []
+	| ts chk Bottom        = []
+	| ts chk (Prefix(a,A)) = [(a,A)]
+	| ts chk (Delta A)     = (A.tau,Delta A)::(ts chk A)
+	| ts chk (Time(t,ag))  = 
+	  [(A.tau,if t = 1 then ag else (Time(t-1,ag)))]
+	| ts chk (Var (v,ap))       =
+	  if memvar(v,chk) then raise(Unguarded_rec v)
+	  else ts ((v::chk)) (lookupapply (agt,set,rel) (v,ap))
+
+             | ts chk (Sum l)       =
+               SL.bigmerge ts_le true (map (ts chk) l)
+             | ts chk (Parallel l)  =
+               let val L = map (ts chk) l
+                in if null L orelse exists null L then []
+                   else map (fn (a,pl) => (a,Parallel pl)) (expand L)
+               end
+             | ts chk (Permit(A,r)) =
+               let val permA = map P.name (set_lookup set r)
+                   fun rmac [] = []
+                     | rmac ((ac,A)::t) =
+                       if A.permit permA ac then (ac,Permit(A,r))::(rmac t)
+                       else rmac t
+                in rmac (ts chk A)
+               end
+             | ts chk (Relabel(A,f)) =
+               let val relA = (rel_lookup rel f)
+                in map (fn (a,A') => (A.relabel relA a,Relabel(A',f)))
+                    (ts chk A)
+               end
+        in ts []
+       end
+
+(*****************)
+(*  prefix form  *)
+(*****************)
+
+   fun prefixform env A =
+       let val pf = map (fn (a,A) => Prefix(a,A)) (transitions env A)
+           val pff = if diverges env A then Bottom::pf else pf
+        in Sum pff
+       end
+
+   fun normform (env as (agt,set,rel)) a =
+       let fun flatsum [] = []
+             | flatsum ((Sum L)::t) = L@(flatsum t)
+             | flatsum (a::t) = a::(flatsum t)
+           fun flatpar [] = []
+             | flatpar ((Parallel L)::t) = L@(flatpar t)
+             | flatpar (a::t) = a::(flatpar t)
+           fun delNils L = filter (fn a => not(eq(a,Nil))) L
+           fun newrest (rset,sset) =
+               SL.sort P.le true (SL.inter P.le (rset,sset))
+           fun newrel (rset,sort) =
+               SL.sort rel_le true
+               (map (fn (a,p) => if SL.member P.le (p,sort) then (a,p) 
+                                 else (A.inverse a,P.inverse p))
+                (filter (fn (_,p) => (SL.member P.le (P.name p,sort))) rset))
+
+           fun red Nil = Nil
+             | red Bottom = Bottom
+             | red (Delta A) = Delta(red A)
+             | red (Prefix(a,A)) = Prefix(a,red A)
+             | red (Time(t,A)) = Time(t,A)
+             | red (Var v) = Var v
+             | red (Sum L) =
+               let val L' = SL.sort le true
+                            (flatsum(delNils(map (fn a => red a) L)))
+                in case L' of  [] => Nil
+                            | [a] => a
+                            |   _ => Sum L'
+               end
+             | red (Parallel L) =
+               let val L' = SL.sort le false
+                            (flatpar(map (fn a => red a) L))
+                in if SL.member eq (Nil,L') then Nil
+                   else case L' of  [] => Nil
+                           | [a] => a
+                           |   _ => Parallel L'
+               end
+             | red (Permit(A,ra)) =
+               let val redA = red A
+                   val ra = map P.name (set_lookup set ra)
+                in case redA of Permit(redB,Permlist rb) =>
+                                  Permit(redB,Permlist ra)
+                      | _ => Permit(redA,Permlist ra)
+               end
+             | red (Relabel(A,ra)) =
+               let val redA = red A
+                   val ra = newrel(rel_lookup rel ra,sort env redA)
+                in if null ra then redA
+                   else case redA of
+                             Relabel(redB,Relabellist rb) =>
+                                Relabel(redB,Relabellist (ra O rb))
+                           | _ => Relabel(redA,Relabellist ra)
+               end
+        in red (prefixform env a)
+       end
+
+(* Give the list of actions which can be initial actions of agent in environment env *)
+(* Remove duplicates and don't mention tau. *)
+   fun initial env agent =
+       SL.del_dups A.le (SL.remove (fn x => x) A.le
+                        (A.tau,map fst (transitions env agent)))
+
+(* give a list of the agents which can be reached from agent via action in env *)
+   fun actders env action agent =
+     let 
+       fun ad ([] : (A.act * agent) list) = [] : agent list
+             | ad ((action',agent')::r) =
+	       if A.eq(action,action') then (agent'::(ad r)) else ad r
+        in ad (transitions env agent)
+       end
+
+   fun tauders env = actders env A.tau
+
+   fun stable env agent = null(tauders env agent)
+
+(* Get list of all tau-descendants of things in the agent list l *)       
+   fun taucl env l =
+       let fun tc (tested : agent list,[] : agent list) = tested : agent list
+             | tc (tested,agent::rest) =
+                  if SL.member le (agent,tested) then tc(tested,rest)
+                  else tc((agent::tested),
+                          SL.merge le true (tauders env agent,rest))
+       in 
+	  tc([],l)
+       end
+
+   fun tauclosure env agent = taucl env [agent]
+
+(* Get list of all agents which can be reached via action and tau *)       
+   fun actclosure env action agent =
+       taucl env (SL.bigmerge le true
+                   (map (actders env action) (tauclosure env agent)))
+
+   fun initobs env P =
+       SL.bigmerge A.le true (map (initial env) (tauclosure env P))
+
+(*******************)
+(*  Statespaceexp  *)
+(*******************)
+(* in deriv, first param is list of (howdidwegethere, wherearewe) *)
+(* pairs such that we have examined the next steps, second param is *)
+(* the same type for places whose next steps we haven't yet examined. *)
+(* deriv isn't interested in testing a place whose next steps we know we've *)
+(* already examined, even if there's more than one way of getting *)
+(* here. The equality is syntactic (Ag.eq) *)
+(* So the list deriv returns will contain one instance of each place *)
+(* we can get to, together with one way to get there. *)
+(* The next-steps are put at the end of the untested list, so it's *)
+(* breadth first. Of course it won't return if statespace infinite!*)       
+fun ders env l =
+  let val _ = UI.debug ("Starting ders Aimed "^makestring (!total)^
+			" Missed "^makestring (!madenew))
+    fun deriv (tested : (A.act list * agent) list,
+	       [] : (A.act list * agent) list) = tested
+      | deriv (tested,untested as ((h as (exp,agent))::t)) =
+	if Lib.member op = (agent,map snd tested) then deriv(tested,t)
+	else deriv(h::tested,
+		   t@(map
+		      (fn(action,agent')=>(exp@[action],agent'))
+		      (transitions env agent)))
+    val answer = deriv([],l)
+  in UI.debug ("ders Aimed "^makestring (!total)^" Missed "^makestring
+	       (!madenew)); answer
+  end
+
+(* List of all descendants of the agent. *)   
+   fun statespace env agent = map snd (ders env [([],agent)])
+
+(* OUT (because normal form is)
+
+   fun ders2 env l =
+       let fun addon (newone as (aseq,P,redP)) newrest [] =
+               ([(aseq,redP,[P])],
+                 newrest@(map(fn (a,Q) => (aseq@[a],Q,normform env Q))
+                                 (transitions env P)))
+             | addon (newone as (aseq,P,redP)) newrest
+                     ((oldone as (aseq',Q,Qlist))::oldrest) =
+               if eq(redP,Q) then
+                  if Lib.member eq (P,Qlist) then (oldone::oldrest,newrest)
+                  else ((aseq',Q,P::Qlist)::oldrest,newrest)
+               else (fn (x,y) => (oldone::x,y)) (addon newone newrest oldrest)
+
+           fun deriv (done,[]) = map (fn (x,_,z) => (x,z)) done
+             | deriv (done,h::t) = deriv(addon h t done)
+        in deriv([],l)
+       end
+
+   fun statespaceexp' env P =
+       map (fn (P,Alist) => (P,rev Alist))
+               (ders2 env [([],P,normform env P)])
+
+   fun statespace2 env P = map snd (statespaceexp' env P)
+
+   fun statespaceexp false env P = ders env [([],P)]
+     | statespaceexp true  env P =
+       map (fn (x,y) => (x,hd y)) (statespaceexp' env P)
+
+   fun statespaceobs reduce env P =
+       map (fn(exp,P)=>(rmtau exp,P)) (statespaceexp reduce env P)
+
+   fun findinit reduce env al P =
+       SL.bigmerge obs_le true
+           (map (fn (exp,A) =>
+                     if Lib.eq A.eq (initobs env A,al) then [(exp,A)]
+                     else [])
+           (statespaceexp reduce env P))
+
+   fun findinitobs reduce env i P =
+       map (fn(exp,P)=>(rmtau exp,P)) (findinit reduce env i P)
+
+*)
+
+(* Here we're interested in having a way to get to the descendants. *)
+   fun statespaceexp env agent = ders env [([],agent)]
+
+(* NB still have all states, including ones that only differ from one *)
+(* another by taus; but now there may be several pairs reached by the *)
+(* same sequence of observable actions, (exp, agent) (exp, agent') *)       
+   fun statespaceobs env agent =
+       map (fn(exp,agent)=>(rmtau exp,agent)) (statespaceexp env agent)
+
+
+(* Find descendants of agent whose possible first actions are exactly *)
+(* those given in actionlist. Return them in an (A.act list * agent) *)
+(* list, so that we know how to get to each such agent. *)
+   fun findinit env actionlist agent =
+     let val answer = SL.bigmerge obs_le true
+           (map (fn (exp : A.act list, agent' : agent) =>
+                     if (initobs env agent') = (actionlist)
+			 then [(exp,agent')] : (A.act list * agent) list
+                     else [])
+           (statespaceexp env agent))
+     in (UI.debug ("findinit Aimed "^makestring (!total)^" Missed "
+		   ^makestring(!madenew));
+	 (* UI.debug (efficiencyInfo ()); *)	(* remove this prerelease *)
+	 answer)
+     end
+
+   fun findinitobs env i agent =
+       map (fn(exp,agent)=>(rmtau exp,agent)) (findinit env i agent)
+
+(* give all agents which can be reached in exactly n observable *)
+(* actions from agent, together with the observable action sequences. *)
+(* NB the same observable action sequence may occur several times, if *)
+(* different states can result. *)
+       
+   fun observations env n agent =
+       let fun os 0 = map (fn agenta => ([],agenta)) (tauclosure env
+						      agent)
+	   : (A.act list * agent) list
+(* so os 0 is the list representing the agents which can be reached *)
+(* after 0 observable actions, together with (for each such agent) a *)
+(* list of 0 observable actions which can lead to that agent :-)*)
+
+	 | os n = SL.bigmerge obs_le true
+	       (map (fn (seq,agentb) =>
+		     flatten(map (fn (action,agentc) =>
+				  map (fn agentd => (seq@[action],agentd))
+				  (tauclosure env agentc))
+(* this map function takes (action, agentc) to the (A.act list * agent) *)
+(* list which describes the agents to which agentc can silently *)
+(* evolve, together with the list of actions seq@[action]... *)
+			     (SL.remove fst A.le (A.tau,transitions
+						  env agentb))))
+
+
+(* and it acts on the list of (action, agent) pairs which describe	  *)
+(* the observable initial actions of agentb, so what we get is a the	  *)
+(* (A.act list * agent) list which describes the agents which can	  *)
+(* be reached from agentb via one observable action plus taus, together with *)
+(* seq@[that observable action].					  *)
+
+	       (os (n-1)))
+(* so when the outer map function acts on os(n-1) we get the list of *)
+(* observed action sequences of length n and resulting agents *)
+
+       in os n
+       end
+
+(* Surely there's one unnecesary level of lists in here? *)
+(* Anyway, end up with the list of visible action sequences of length *)
+(* n *)
+   fun visibleseq env n agent =
+       SL.bigmerge (Lib.le A.le) true (map (fn x =>[fst x])
+                                      (observations env n agent))
+
+
+(* give the list of agents which can be reached via (observable) *)
+(* actionlist *)
+   fun obsderivatives env actionlist agent =
+       let fun od ([], agentlist)  = taucl env agentlist
+             | od (action::t, agentlist) =
+               od(t, (SL.bigmerge le true (map (actders env action)
+                                          (taucl env agentlist))))
+        in od (actionlist,[agent])
+       end
+
+(* return a pseudo-random n-sequence of observable actions from agent*)   
+   fun randseq env n agent =
+       let val fstacts = initobs env agent
+       in if n=0 orelse null(fstacts) then []
+	  else let val action = nth (fstacts, (Lib.random(length fstacts)))
+		   val derivs = actclosure env action agent
+		   val agent' = nth (derivs, (Lib.random(length derivs)))
+	       in action::(randseq env (n-1) agent')
+	       end
+       end
+end

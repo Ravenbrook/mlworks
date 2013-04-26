@@ -1,0 +1,29 @@
+# ==== MLWorks runtime system x86/WinNT-specific (Gnu) Makefile ====
+#
+# $Id: GNUmake,v 1.28 1998/12/15 15:08:03 johnh Exp $
+
+# Windows NT supports Win32
+
+OS_TYPE := Win32
+
+# add target-specific defines
+
+DEFINES		:= $(DEFINES) MACH_FIXUP OS_NT WIN32 NATIVE_THREADS LICENSE LITTLE_ENDIAN
+
+# add target-specific includes
+
+INCLUDEDIRS	:= $(INCLUDEDIRS)
+
+# add target-specific options (none for Windows)
+
+TARGETOPTS	=
+TARGETOPTSDEBUG =
+
+# other target-specific things
+
+STRIP		= /usr/bin/strip
+
+#runtime dll-ization specific details
+
+DLLFLAGS	= /LD
+DLLLIBRARIES	= libc.lib

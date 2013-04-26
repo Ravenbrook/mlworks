@@ -1,0 +1,1418 @@
+#!/bin/sh
+#
+#	==== DAILY BUILD SCRIPT ====
+#
+# Revision Log
+# ------------
+# $Log: daily,v $
+# Revision 1.191  1999/05/27 13:50:21  johnh
+# [Bug #190553]
+# Don't use Exit_ structure, use MLWorksExit structure.
+#
+# Revision 1.190  1999/04/29  14:57:08  johnh
+# [Bug #190558]
+# Don't include DEPEND directory when searching for demo files.
+#
+# Revision 1.189  1999/03/10  11:56:36  johnh
+# [Bug #190506]
+# remove old FI but reinstate foreign.img
+#
+# Revision 1.188  1999/03/08  14:11:31  mitchell
+# [Bug #30286]
+# Add platform_specific_exports target for basis
+#
+# Revision 1.187  1999/02/12  15:52:29  sml
+# [Bug #190505]
+# Make sure basis.mlp gets processed before batch.mlp on all platforms
+#
+# Revision 1.186  1999/02/11  16:47:49  mitchell
+# [Bug #190504]
+# Modify to generate dumps of mo dependencies
+#
+# Revision 1.185  1999/02/09  16:53:53  mitchell
+# [Bug #190505]
+# Modify to deal with precompilation/additional targets
+#
+# Revision 1.184  1998/10/19  15:13:33  jont
+# [Bug #70203]
+# Modify for new argument passing
+#
+# Revision 1.183  1998/09/17  15:03:45  jont
+# [Bug #70175]
+# Modify test on result from spawned jobs
+#
+# Revision 1.182  1998/08/10  12:15:53  jont
+# [Bug #70128]
+# Run demos etc -no-init
+#
+# Revision 1.181  1998/08/07  15:06:52  jont
+# [Bug #70148]
+# Fix application tests to use load.sml as stdin
+#
+# Revision 1.180  1998/06/11  13:13:08  jont
+# Make demos function correctly again
+#
+# Revision 1.179  1998/06/09  14:12:34  jont
+# [Bug #70130]
+# Make sure checks for error and warning can't be triggered by correct code
+#
+# Revision 1.178  1998/06/01  16:17:20  johnh
+# [Bug #30369]
+# Replace source path with a list of files.
+#
+# Revision 1.177  1998/06/01  10:38:50  jont
+# Modify to add testing of external applications
+#
+# Revision 1.176  1998/05/27  07:59:27  mitchell
+# [Bug #30413]
+# Change calls to exit to use abstract status
+#
+# Revision 1.175  1998/05/07  11:34:37  johnh
+# [Bug #30292]
+# Fix demos to use Shell.Project loading.
+#
+# Revision 1.174  1998/04/29  09:50:09  jont
+# [Bug #30401]
+# Sort out further problems with pervasive object files
+#
+# Revision 1.173  1998/04/28  17:48:55  johnh
+# [Bug #30401]
+# Fix cross compilation.
+#
+# Revision 1.172  1998/04/24  17:29:25  jkbrook
+# [Bug #30401]
+# Make sure incompatible pervasive mos don't get left around
+# before spawned builds
+# And fix some Y2K-isms
+#
+# Revision 1.171  1998/04/24  16:32:52  johnh
+# [Bug #30229]
+# turn on local functions when using batch compiler for full optimisation.
+#
+# Revision 1.170  1998/04/08  09:54:02  jont
+# [Bug #30312]
+# Remove NT cross compile as this can no longer be done
+# since we can't make the generated file keys.sml on unix
+#
+# Revision 1.169  1998/03/12  16:20:26  johnh
+# [Bug #30365]
+# daily build can now use subprojects.
+#
+# Revision 1.168  1998/02/20  14:13:02  jont
+# [Bug #30364]
+# Run benchmarks under guib.img
+#
+# Revision 1.167  1998/02/20  12:28:18  jont
+# [Bug #30357]
+# Run mlworks-basis with -no-init
+#
+# Revision 1.166  1998/02/16  16:32:59  johnh
+# [Bug #30071]
+# Fix cross compilation problems.
+#
+# Revision 1.165  1998/02/09  18:52:21  johnh
+# [Bug #30071]
+# Use new Project Workspace to build MIPS/Irix, I386/Linux and I386/NT mos.
+#
+# Revision 1.164  1998/02/06  14:54:18  johnh
+# [Bug #30071]
+# Convert daily build to work with the new project model.
+#
+# Revision 1.163  1997/12/16  10:58:47  jont
+# [Bug #30334]
+# Ensure TEST.LOG files are made ARCH/OS specific
+# so they don't get overwritten by a later part of the same build
+#
+# Revision 1.162  1997/12/15  13:35:23  jont
+# [Bug #70024]
+# Add option to suppress structure contents when building
+# bootstrap compiler
+#
+# Revision 1.161  1997/11/19  13:24:56  daveb
+# [Bug #30324]
+# Added check that image files exist before backing them up.
+# Added code to set spawn_status before exiting in spawned builds.
+#
+# Revision 1.160  1997/11/03  11:32:49  jont
+# [Bug #30285]
+# Ensure spawn_status valid before testing
+#
+# Revision 1.159  1997/10/31  10:36:40  daveb
+# [Bug #30316]
+# Added missing "export LD_LIBRARY_PATH".
+#
+# Revision 1.158  1997/10/30  10:05:17  daveb
+# [Bug #70016]
+# Generated files should only be cleaned by the original build, not by
+# spawned builds.  Spawned builds need the .mo files (cross-)compiled
+# by the main build.
+#
+# Revision 1.157  1997/10/24  13:03:31  jont
+# [Bug #70016]
+# Ensure rts build cleans generated files first
+#
+# Revision 1.156  1997/08/11  12:18:59  jont
+# [Bug #70000]
+# Add /bin/sh to all rsh lines to attempt to get round Irix rshd bug
+# Stop gnumake using multiple processes during rts make in a further
+# attempt to get around Irix rshd problems.
+#
+# Revision 1.155  1997/07/24  09:22:27  stephenb
+# [Bug #30066]
+# Ensure that Desktop libraries are used under Solaris.
+#
+# Revision 1.154  1997/07/23  09:28:56  andreww
+# [Bug #30045]
+# Altering daily build script to set LD_LIBRARY_PATH appropriately.
+#
+# Revision 1.153  1997/07/08  14:09:08  jont
+# Experiment to try to solve rsh failures
+#
+# Revision 1.152  1997/06/25  09:54:27  stephenb
+# ensure that /usr/openwin/lib is added to any existing
+# LD_LIBRARY_PATH setting rather than overwriting it.
+# This will enable the build to run on binatone.
+#
+# Revision 1.151  1997/06/17  10:34:23  jont
+# Check return status of spawned builds
+# Fix grep so as to work under Irix
+# Stop making utils/__stringlib which was only required by the old FI
+#
+# Revision 1.150  1997/06/11  11:14:26  stephenb
+# [Bug #30166]
+# Add -s option to coutall call to ensure writable files are skipped.
+#
+# Revision 1.149  1997/05/23  08:12:33  stephenb
+# [Bug #30121]
+# Move to new FI: remove foreign.img, ttyi.img and guii.img.
+#
+# Revision 1.148  1997/05/14  11:20:05  stephenb
+# [Bug #20035]
+# Ensure that the demos for the foreign interface are tested.
+#
+# Revision 1.147  1997/05/13  11:16:48  daveb
+# [Bug #20050]
+# structure Io_ is now called MLWorksIo_ .
+#
+# Revision 1.146  1997/05/09  13:12:17  stephenb
+# [Bug #20042]
+# Ensure that foreign demos aren't using the default mechanism
+# for running demos.
+#
+# Revision 1.145  1997/04/21  09:19:09  jont
+# Modify to cope with running on other architectures
+#
+# Revision 1.144  1997/04/04  11:15:57  jont
+# [Bug #2011]
+# Do benchmark tests during overnight build
+#
+# Revision 1.143  1997/04/03  14:10:12  jont
+# [Bug #2011]
+# Update to compile all demos and warn of any failures
+#
+# Revision 1.142  1997/01/07  11:07:16  matthew
+# New build mechanism
+#
+# Revision 1.141  1996/12/18  17:33:34  daveb
+# Moved MLW/src/test_suite to MLW/test_suite.
+#
+# Revision 1.140  1996/12/10  16:46:36  daveb
+# Set MLWORKS_LICENSE to "server", as the registration scheme is now default.
+#
+# Revision 1.139  1996/11/15  10:21:47  jont
+# [Bug #1766]
+# Ensure all object files necessary for distribution are built overnight
+#
+# Revision 1.138  1996/11/03  16:07:08  io
+# remove compilation of stringlib during interpreter build
+#
+# Revision 1.137  1996/10/27  14:33:50  io
+# remove LD_LIBRARY_PATH workaround for sorrol's SunOS
+#
+# Revision 1.136  1996/10/22  10:41:15  jont
+# [Bug #1684]
+# Extend paths to find make
+# Don't try to build images if the rts build failed
+#
+# Revision 1.135  1996/09/09  22:01:37  jont
+# Moving build to Solaris
+#
+# Revision 1.134  1996/08/16  09:55:43  io
+# remove lock files on checkout failure
+#
+# Revision 1.133  1996/08/01  12:25:26  io
+# hope checkout should succeed first
+#
+# Revision 1.132  1996/06/28  10:07:35  jont
+# Stop making foreign interface too early
+#
+# Revision 1.131  1996/06/19  10:19:11  brianm
+# Changing mk_interface to mk_interface.sh
+#
+# Revision 1.130  1996/06/05  13:18:22  brianm
+# Changed foreign/__foreign to foreign/__interface and also added
+# some code to rebuild __interface.sml
+#
+# Revision 1.129  1996/06/03  09:32:00  jont
+# Fix bug in final section of build for NT
+#
+# Revision 1.128  1996/05/31  13:42:21  jont
+# Fix links corectly when compiling for NT
+#
+# Revision 1.127  1996/05/17  14:25:14  jont
+# Add guib.img to list of images built for distribution
+#
+# Revision 1.126  1996/05/17  08:11:23  stephenb
+# Replace MLWorks.exit with Exit_.exit now that MLWorks.exit has been removed
+# from the pervasive library.
+#
+# Revision 1.125  1996/05/15  08:58:16  daveb
+# Added -batch option to invocations of runtime.
+#
+# Revision 1.124  1996/05/07  12:28:18  daveb
+# Made this script mail mlworkers the details of any failures in the test suite.
+#
+# Revision 1.123  1996/05/02  17:01:03  jont
+# Add foreign.img to list of images made
+#
+# Revision 1.122  1996/05/02  15:04:06  jont
+# Build foreign/__foreign for all platforms
+#
+# Revision 1.121  1996/04/22  09:37:54  matthew
+# Changing initbasis to basis
+#
+# Revision 1.120  1996/04/17  09:50:04  jont
+# Use consistent language when reporting creation of symbolic links
+# Fix link creation for NT object files to use mswindwos rather than motif
+#
+# Revision 1.119  1996/04/10  13:24:23  jont
+# Adding some diagnostic output when removing mo files
+#
+# Revision 1.118  1996/04/04  16:10:28  jont
+# Ensure a full build deletes all object files
+#
+# Revision 1.117  1996/04/04  14:43:37  jont
+# Modify PATH so that we can put mlworks scripts in tools
+#
+# Revision 1.116  1996/04/02  13:10:22  jont
+# Modifications to run using MLWorks as compilation bootstrap mechanism
+# instead of New Jersey.
+#
+# Revision 1.115  1996/04/01  14:13:05  io
+# add ARCH OS for mlworks-server build
+#
+# Revision 1.114  1996/03/27  11:07:49  io
+# compile mlworks server
+#
+# Revision 1.113  1996/03/25  12:21:28  io
+# add LD_LIBRARY_PATH
+#
+# Revision 1.112  1996/03/18  09:56:50  daveb
+# Corrected previous log entry.
+#
+# Revision 1.111  1996/03/18  09:53:13  daveb
+# Replaced Info.default_options with (Info.make_default_options ()).
+#
+# Revision 1.110  1996/03/16  16:46:56  daveb
+# Removed /u/matthew/... pathname.
+#
+# Revision 1.109  1996/03/15  14:34:33  matthew
+# New hyphenization convention for command line argument
+# s
+#
+# Revision 1.108  1996/01/31  10:56:41  jont
+# Ensure lock deleted when exiting from a full build
+#
+# Revision 1.107  1996/01/30  15:30:39  jont
+# Add building of FFI capable images
+#
+# Revision 1.106  1996/01/09  12:27:47  matthew
+# Renaming motif.img to gui.img
+#
+# Revision 1.105  1995/12/06  18:43:22  daveb
+# Updated this to use the new project system.
+#
+# Revision 1.104  1995/11/01  17:36:06  jont
+# Add use of optimize_handlers in batch compiler invocation
+# Use MLWorks for cross compilation to MIPS and I386
+#
+# Revision 1.103  1995/10/05  16:21:55  jont
+# Modify to do interpreter compilation using MLWorks instead of NJ
+#
+# Revision 1.102  1995/09/19  10:25:23  daveb
+# Made this script only remove pervasive mo files when called with the -full
+# argument, so that we can catch up with problems without recompiling everything.
+#
+# Revision 1.101  1995/09/15  09:38:45  daveb
+# The rm commands that I added yesterday used relative paths from the
+# wrong directory.  I have changed them to use absolute paths.
+#
+# Revision 1.100  1995/09/14  16:00:38  daveb
+# Stopped this script from running the test suite if the SPARC build fails.
+# Also made it remove all pervasive mo files, so that it rebuilds everything
+# from scratch.
+#
+# Revision 1.99  1995/09/11  14:06:34  jont
+# Remove compilation of win_int.sml during NT build.
+# Compile interpreter/{x,}interpreter.sml instead
+# Ensure all three links are correctly set up for each compilation phase
+#
+# Revision 1.98  1995/08/21  09:15:55  matthew
+# Adding diagnostic for mips compilation failure
+#
+# Revision 1.97  1995/08/02  12:18:28  daveb
+# Diffs between test suite results are now stored in a log.
+#
+# Revision 1.96  1995/08/01  10:41:41  matthew
+# Since (...) gets executed in a subshell, changed new diagnostics to use { ...; }
+# so the change to status is visible
+#
+# Revision 1.95  1995/07/31  09:40:11  matthew
+# Adding diagnostics for build failures
+#
+# Revision 1.94  1995/07/20  09:25:28  jont
+# Ensure that lambda build failures cause complete build failures
+#
+# Revision 1.93  1995/06/15  15:22:14  jont
+# Remove deletion of auto-generated stuff
+#
+# Revision 1.92  1995/05/23  09:28:26  jont
+# Add information to say when build finished
+#
+# Revision 1.91  1995/05/19  16:38:49  jont
+# Add Intel object file build in the same way as the MIPS one
+#
+# Revision 1.90  1995/05/19  15:53:01  jont
+# Modifications to build object files for other targets
+#
+# Revision 1.89  1995/05/04  14:20:10  jont
+# Add building of revised initial basis
+# and basis.img and xm.img
+#
+# Revision 1.88  1995/04/26  07:46:38  matthew
+# Changed calls to Io_.set_pervasive_dir_from_env and Io_.set_source_path_from_env
+# in MIPS and 386 builds
+#
+# Revision 1.87  1995/04/25  09:44:02  matthew
+# Remove dependencies and generated files when building the runtime system
+#
+# Revision 1.86  1995/04/24  09:27:10  daveb
+# set_pervasive_dir_from_env and set_source_path_from_env now take a
+# location argument.
+#
+# Revision 1.85  1995/04/01  13:30:14  io
+# trap handler to get rid of lock files
+#
+# Revision 1.84  1995/03/28  12:46:49  jont
+# Split cleaning part of rts build from remkaing part of the build
+#
+# Revision 1.83  1995/03/03  11:02:49  nickb
+# Add gnumake generated in the runtime.
+#
+# Revision 1.82  1995/03/02  11:59:48  io
+# changed compress to gzip
+#
+# Revision 1.81  1995/02/28  15:18:55  brianm
+# Suspended generation of static runtime (e.g. main-static)
+# since this clashes with runtime dynamic linking.
+#
+# Revision 1.80  1995/02/27  22:18:59  io
+# removing dependencies on ~sml/bin/make
+#
+# Revision 1.79  1995/02/23  17:19:55  jont
+# Modify for new file structure /u
+#
+# Revision 1.78  1995/02/21  15:47:09  brianm
+# Introducing SML_HOME
+#
+# Revision 1.77  1995/02/09  14:58:14  jont
+# Add i386 build. Move to new image directory structure.
+#
+# Revision 1.76  1995/01/26  10:43:22  daveb
+# Changed module names to use . separator.
+#
+# Revision 1.75  1994/12/09  16:04:31  jont
+# Change use of make in image building for gnumake
+#
+# Revision 1.74  1994/06/13  15:18:21  nickh
+# Fix csh-ism.
+#
+# Revision 1.73  1994/06/13  10:49:14  jont
+# Remove attempted extra checkout of daily
+#
+# Revision 1.72  1994/06/09  16:21:13  nickh
+# New runtime structure.
+#
+# Revision 1.71  1994/03/28  18:23:14  daveb
+# Recompile_.recompile -> Recompile_.recompile_modules.
+#
+# Revision 1.70  1994/03/24  19:02:48  daveb
+# Added options to select certain phases only.
+#
+# Revision 1.69  1994/03/14  11:34:50  jont
+# Remove pretty formatting to ensure EOF is at line start
+#
+# Revision 1.68  1994/03/11  16:16:04  jont
+# Made image builds dependent on the success of the compilation in question
+#
+# Revision 1.67  1994/03/03  16:48:43  daveb
+# New version of cout.
+#
+# Revision 1.66  1994/03/02  17:56:52  jont
+# Add mkstruct after coutall
+#
+# Revision 1.65  1994/03/02  14:05:00  jont
+# Remove hopeless attempts to build under NJ
+#
+# Revision 1.64  1994/03/02  10:46:38  jont
+# Ensure in correct directory before dealing with symbolic links
+#
+# Revision 1.63  1994/03/01  15:37:51  jont
+# Added stuff to compile mips code as well
+#
+# Revision 1.62  1994/02/08  15:14:55  matthew
+# Changed hope-coutall to coutall
+#
+# Revision 1.61  1994/02/08  13:46:26  matthew
+# Changed default search path to "."
+#
+# Revision 1.60  1994/02/04  18:20:50  daveb
+# Changed to use tools/cout instead of scripts/hope-cout.
+#
+# Revision 1.59  1994/02/03  12:32:15  matthew
+# Fixing filenames for recompile.
+#
+# Revision 1.58  1994/01/28  18:14:19  daveb
+# Changed location of src directory.
+# Temporary change to use ../scripts/hope-coutall instead of tools/coutall.
+#
+# Revision 1.57  1993/09/09  13:36:36  daveb
+# Merged in bug fix.
+#
+# Revision 1.56.1.2  1993/09/08  13:17:36  daveb
+# Now exits with non-zero status if any error occurs, including recoverable
+# ones (such as failing to build smlk).
+#
+# Revision 1.56.1.1  1993/08/31  14:19:41  jont
+# Fork for bug fixing
+#
+# Revision 1.56  1993/08/31  14:19:41  daveb
+# Fixed calls to Recompile_.recompile.
+#
+# Revision 1.55  1993/08/31  09:24:14  matthew
+# Changed call to Recompile.recompile.
+#
+# Revision 1.54  1993/08/28  19:16:42  daveb
+# Added call to Io_.set_source_path_from_env ();
+#
+# Revision 1.53  1993/08/27  11:39:31  richard
+# Changed the names of the environment variables pointing to the
+# pervasive directory and source path.  Added instruction to the MLWorks
+# build under NJ to set the pervasive dir from the environment.
+#
+# Revision 1.52  1993/08/19  14:42:23  daveb
+# Made UNIX environment variables begin with MLWORKS_ .
+#
+# Revision 1.51  1993/08/19  14:13:48  daveb
+# Fixed name of ML_SOURCE_PATH.
+#
+# Revision 1.50  1993/08/17  18:47:34  daveb
+# Changes for module naming scheme.
+#
+# Revision 1.49  1993/04/28  10:21:09  richard
+# Added an echo to distinguish test-suite diffs from test-suite output.
+#
+# Revision 1.48  1993/04/23  15:44:03  richard
+# Rewritten from scratch in Bourne shell with much more robust error
+# checking and backup.  The script now has more of a succeed-at-all-costs
+# attitude.
+#
+
+
+# === ENVIRONMENT ===
+#
+# Set up the environment for the build
+
+status=0
+script=`basename $0`
+SML=/u/sml/MLW; export SML
+umask 002
+PATH=$SML/tools:/usr/local/lib/MLWorks/bin:/bin:/usr/local/bin:/usr/ucb:/usr/ccs/bin:$PATH; export PATH
+MLWORKS_PERVASIVE=$SML/src/pervasive; export MLWORKS_PERVASIVE
+MLWORKS_LICENSE=server; export MLWORKS_LICENSE
+usage="USAGE: $script [-full] [-rts] [-bootstrap] [-sparc] [-mips] [-i386] [-test_suite] [-demos] [-foreign_demos] [-benchmarks] [-applications] [-no_mail] [-mlworks_server] [-base_os <OS:default Solaris>] [-base_arch <ARCH:default SPARC>] [-spawned] [-mips_build_machine <MACHINE>] [-sunos_build_machine <MACHINE>] [-i386_build_machine <MACHINE>] [-all]"
+rts=0
+bootstrap=0
+sparc=0
+mips=0
+i386=0
+test_suite=0
+demos=0
+foreign_demos=0
+benchmarks=0
+applications=0
+no_mail=0
+full=0
+all=0
+mlworks_server=0
+base_os=Solaris
+base_arch=SPARC
+spawned=0
+sparc_solaris_built=0
+mips_irix_built=0
+i386_linux_built=0
+
+
+# Handle SIGINT and delete lock file
+# 2 SIGINT
+# 3 SIGQUIT
+# 9 SIGKILL uncatchable
+# 15 SIGTERM
+trap "rm -f $SML/tools/daily-lock; echo Received interrupt and deleting locks...; exit 1" 2 3 15
+
+if [ $# -eq 0 ]; then
+  all=1
+  full=1
+else
+  while [ $# -ge 1 ]; do
+    case $1 in
+      -rts)	rts=1;;
+      -sparc)	sparc=1;;
+      -bootstrap)	bootstrap=1;;
+      -mips)	mips=1;;
+      -i386)	i386=1;;
+      -test_suite) test_suite=1;;
+      -demos)   demos=1;;
+      -foreign_demos)   foreign_demos=1;;
+      -benchmarks) benchmarks=1;;
+      -applications) applications=1;;
+      -no_mail) no_mail=1;;
+      -mlworks_server) mlworks_server=1;;
+      -full) 	full=1;;
+      -all) 	all=1;;
+      -spawned)	spawned=1;;
+      -base_os)
+	if [ $# -le 1 ]; then
+	  echo "$usage";
+	  exit 8;
+	else
+	  shift;
+	  base_os=$1;
+	fi;;
+      -base_arch)
+	if [ $# -le 1 ]; then
+	  echo "$usage";
+	  exit 8;
+	else
+	  shift;
+	  base_arch=$1;
+	fi;;
+      -mips_build_machine)
+	if [ $# -le 1 ]; then
+	  echo "$usage";
+	  exit 8;
+	else
+	  shift;
+	  mips_build_machine=$1;
+	fi;;
+      -sunos_build_machine)
+	if [ $# -le 1 ]; then
+	  echo "$usage";
+	  exit 8;
+	else
+	  shift;
+	  sunos_build_machine=$1;
+	fi;;
+      -i386_build_machine)
+	if [ $# -le 1 ]; then
+	  echo "$usage";
+	  exit 8;
+	else
+	  shift;
+	  i386_build_machine=$1;
+	fi;;
+      *) echo "$usage"; exit 8;;
+    esac
+    shift
+  done
+fi
+
+# Assert an exclusive lock on the build
+
+if [ $all -eq 1 ] ; then
+  cd $SML
+  if test -f tools/daily-lock
+  then
+    echo "$script: The lock is already set:"
+    cat tools/daily-lock 1>&2
+    exit 1
+  fi
+
+  (echo "$script: Daily build"
+   echo "$script: started `date '+%Y-%m-%d %H:%M:%S'` on `hostname`") |
+  tee tools/daily-lock
+
+
+# === BACK UP ===
+
+# Also back up precious files
+
+  echo "$script: Backing up precious object files."
+  cd $SML/src
+  (tar cvf - `find . '(' -name '*.mo' -o -name '*.o' ')' -print` | gzip --fast -c ) > object-backup.tar.gz
+
+
+# === CHECK OUT ===
+
+  echo "$script: Checking out MLWorks sources."
+  cd $SML/..
+  if $SML/tools/coutall -s -V; then
+    : echo "Hope checkout successful"
+  else
+    echo "Hope checkout failed and subsequent compiles have been aborted"
+    rm $SML/tools/daily-lock
+    exit 9
+  fi
+
+  echo "$script: Ensure all links present."
+  $SML/tools/mkstruct
+fi
+
+ARCH=$base_arch;export ARCH
+OS=$base_os;export OS
+if [ "$ARCH" = "I386" -a "$OS" = "Linux" ]; then
+  make_command=make
+else
+  make_command=gnumake
+fi
+
+# === RUNTIME SYSTEM ===
+
+# first, set up LD_LIBRARY_PATH to point to location of runtime DLL/SO
+#
+LD_LIBRARY_PATH=$SML/src/rts/bin/$ARCH/$OS${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+#
+if [ $spawned -eq 0 ]; then
+  LD_LIBRARY_PATH=/usr/openwin/lib:/usr/dt/lib:$LD_LIBRARY_PATH
+fi
+
+
+rts_status=0
+if [ $all -eq 1 -o $rts -eq 1 -o $spawned -eq 1 ]; then
+  echo "$script: Making the runtime system."
+  cd $SML/src/rts
+  rm depend/$ARCH/$OS/*.d
+  echo "$script: *.d removed."
+  if [ $spawned -eq 1 ]; then
+    # Don't clean generated files in a spawned build.
+    if ($make_command clean && $make_command -e -k all) then
+      rts_status=0
+    else
+      rts_status=1
+      status=6
+    fi
+  else
+    if ($make_command clean cleangen && $make_command -e -k all) then
+      rts_status=0
+    else
+      rts_status=1
+      status=6
+    fi
+  fi
+  echo "$script: Made the runtime system."
+fi
+
+# === MLWORKS SERVER ===
+
+if [ $all -eq 1 -o $mlworks_server -eq 1 -o $spawned -eq 1 ]; then
+  echo $script: Making the mlworks server.
+  cd $SML/src/emacs/lisp && $make_command ARCH=$ARCH OS=$OS
+  cd $SML/src/emacs/etc && $make_command ARCH=$ARCH OS=$OS
+fi
+
+if test \! -d $SML/src/pervassive/SPARC/Solaris 
+then
+  mkdir -p $SML/src/pervasive/SPARC/Solaris
+fi
+if test \! -d $SML/src/pervassive/MIPS/Irix 
+then
+  mkdir -p $SML/src/pervasive/MIPS/Irix
+fi
+if test \! -d $SML/src/pervassive/I386/Linux 
+then
+  mkdir -p $SML/src/pervasive/I386/Linux
+fi
+if test \! -d $SML/src/pervassive/I386/NT 
+then
+  mkdir -p $SML/src/pervasive/I386/NT
+fi
+
+if [ $spawned -eq 0 ]; then
+
+  if [ $all -eq 1 -o $bootstrap -eq 1 ]; then
+    # === SET UP SYMBOLIC LINK ===
+
+    if [ $all -eq 1 -o $sparc -eq 1 ]; then
+      cd $SML/src
+      echo "$script: Removing machine link in ML source:"
+      echo "$script: Creating new link machine -> sparc:"
+      rm -f machine; ln -s sparc machine
+      echo "$script: Removing winsys link in ML source:"
+      echo "$script: Creating new link winsys -> motif:"
+      rm -f winsys; ln -s motif winsys
+      echo "$script: Removing system link in ML source:"
+      echo "$script: Creating new link system -> unix:"
+      rm -f system; ln -s unix system
+    fi
+
+    # === MLWORKS BUILD FROM RELEASED MLWORKS ===
+
+    cd $SML
+    if [ $full -eq 1 ]; then
+      echo "$script: Removing all ml object files"
+      find . -name \*.mo -exec rm {} \;
+    fi
+    cd $SML/src
+    boot_status=1
+    echo "$script: Compiling MLWorks batch system under MLWorks."
+    if (mlworks-basis -tty -no-init << EOF
+      use"make/change_mlworks.sml";
+      use"make/dummy_make.sml";
+      Shell.Options.set(Shell.Options.ValuePrinter.maximumStrDepth, 0);
+      make "system/__mlworks_exit";
+      make "main/__toplevel";
+      Shell.Options.set(Shell.Options.Compiler.generateLocalFunctions, true);
+      MLWorksIo_.set_pervasive_dir("pervasive", Location_.FILE "daily build");
+      MLWorksIo_.set_source_path_from_string(".", Location_.FILE "daily build");
+      TopLevel_.recompile_pervasive (TopLevel_.Info.make_default_options ()) Options_.default_options handle _ => MLWorksExit.exit MLWorksExit.failure;
+      MLWorksIo_.set_object_path("../objects", Location_.FILE "daily build");
+      ProjFile_.open_proj "basis.mlp";
+      ProjFile_.setCurrentConfiguration (TopLevel_.Info.make_default_options (), Location_.FILE "daily build") (SOME "$ARCH/$OS");
+      ProjFile_.setCurrentTargets (TopLevel_.Info.make_default_options (), Location_.FILE "daily build") ["require_all.sml", "platform_specific_exports.sml"];
+      TopLevel_.build (TopLevel_.Info.make_default_options ()) Options_.default_options () handle _ => MLWorksExit.exit MLWorksExit.uncaughtIOException;
+      ProjFile_.open_proj "batch.mlp";
+      ProjFile_.setCurrentConfiguration (TopLevel_.Info.make_default_options (), Location_.FILE "daily build") (SOME "$ARCH/$OS");
+      ProjFile_.setCurrentTargets (TopLevel_.Info.make_default_options (), Location_.FILE "daily build") ["__batch.sml", "batch_common_export_filter.sml", "batch_export_filter.sml"];
+      TopLevel_.build (TopLevel_.Info.make_default_options ()) Options_.default_options () handle _ => MLWorksExit.exit MLWorksExit.uncaughtIOException;
+
+EOF
+      ) then
+      boot_status=0
+    fi
+
+    cp -p $SML/src/pervasive/*.mo $SML/src/pervasive/$ARCH/$OS
+
+    if [ $boot_status -eq 0 ]; then
+      echo
+
+    # === MLWORKS IMAGE BUILD ===
+
+      cd $SML/src/images/$ARCH/$OS
+      if ls -l *.img 1>/dev/null 2>&1; then
+        for image in *.img
+        do
+          echo "$script: Zipping MLWorks image $image into $image.old.gz."
+          ls -l $image
+          if mv -f $image $image.old
+          then
+            rm -f $image.old.gz
+            nice gzip --fast $image.old &
+          fi
+        done
+      fi
+      if [ $rts_status -eq 0 ]; then
+        echo "$script: Making MLWorks batch image from the mo files."
+      $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g batch.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+        echo
+      else
+        echo "$script: Not making batch image, rts build failed."
+      fi
+    fi
+  fi
+
+  if [ $all -eq 1 -o $sparc -eq 1 ]; then
+    cd $SML/src/images/$ARCH/$OS
+    # Now build interpreters and initial basis, using compiler just produced
+    if [ $status -eq 0 ]; then
+      echo "$script: Using MLWorks to compile interpreters and revised initial basis"
+      # default configuration and targets should be those we want here.
+
+      # only xinterpreter should be made here in future as this should recursively 
+      # make the interpreter and require_all targets from the subprojects.
+      ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -build -dump-objects $SML/objects/$ARCH/$OS/basis.dep || { echo "$script: initial basis compilation failed, setting status to 6"; status=6; }
+      ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -project $SML/src/batch.mlp -target batch_common_export_filter.sml -target batch_export_filter.sml -dump-objects $SML/objects/$ARCH/$OS/compiler.dep || { echo "$script: initial basis compilation failed, setting status to 6"; status=6; }
+      ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -project $SML/src/interpreter.mlp -target interpreter.sml -target interpreter_export_filter.sml -build || { echo "$script: interpreter compilation failed, setting status to 6"; status=6; }
+      ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -project $SML/src/interpreter.mlp -target interpreter_export_filter.sml -dump-objects $SML/objects/$ARCH/$OS/interpreter.dep || { echo "$script: interpreter compilation failed, setting status to 6"; status=6; }
+      ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -project $SML/src/xinterpreter.mlp -dump-objects $SML/objects/$ARCH/$OS/xinterpreter.dep -target xinterpreter.sml -build || { echo "$script: xinterpreter compilation failed, setting status to 6"; status=6; }
+
+      if [ $status -eq 0 ]; then
+        echo "$script: Making MLWorks interpreter and initial basis images from the mo files."
+#         $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k basis.img xm.img foreign.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+        $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k basis.img foreign.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+
+# At this point we wish to do the SunOS build and test
+	if [ $spawned -eq 0 -a "$sunos_build_machine" != "" ]; then
+	  echo "$script: Spawning SPARC/SunOS rts, image build and tests on $sunos_build_machine"
+	  rsh -n $sunos_build_machine /bin/sh /u/sml/MLW/tools/daily -spawned -base_arch SPARC -base_os SunOS
+	  sunos_status=`cat /u/sml/MLW/tools/spawn_status`
+	  echo $sunos_status
+          if [ -z "$sunos_status" ] ; then sunos_status=1 ; fi
+          if [ $sunos_status -ne 0 ]; then
+	    echo "$script: spawned job failed on $sunos_build_machine"
+	    if [ $sunos_status -gt $status ]; then
+	      status=$sunos_status
+	    fi
+	  fi
+	fi
+      fi
+    else
+      echo "$script: sparc compilation failed"
+      status=5
+    fi
+  fi
+fi
+
+if [ $spawned -eq 1 ]; then
+  # BUILD IMAGES FROM OBJECT FILES PRODUCED BY SPAWNING PROCESS
+  if [ $status -eq 0 ]; then
+    cd $SML/src/images/$ARCH/$OS
+    cp -p $SML/src/pervasive/$ARCH/$OS/*.mo $SML/src/pervasive
+    if [ "$OS" = "SunOS" -a "$ARCH" = "SPARC" ]; then
+# Special case, same object files as for Solaris
+#       $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k basis.img xm.img foreign.img tty.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+      $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k basis.img foreign.img tty.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+    else
+      # Need to remove existing images as these will cause confusion (wrong architecture)
+      if ls -l *.img 1>/dev/null 2>&1; then
+        rm *.img
+      fi
+#       $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k ARCH_OS=$ARCH/$OS basis.img xm.img foreign.img batch.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+      $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k ARCH_OS=$ARCH/$OS basis.img foreign.img batch.img gui.img guib.img || { echo "$script: $ARCH/$OS image build failed, setting status to 6"; status=6; }
+    fi
+  fi
+fi
+
+# === TEST SUITE ===
+
+if [ $all -eq 1 -o $test_suite -eq 1 -o $spawned -eq 1 ]; then
+  cd $SML/src/images
+  if [ $status -ge 5 ]; then
+    echo "$script: Skipping the test suite because of earlier errors"
+  elif test -f $ARCH/$OS/gui.img
+  then
+    echo "$script: Running the test suite using this image:"
+    ls -l $ARCH/$OS/gui.img
+    cd $SML/test_suite
+    mv -f OUTPUT.$ARCH.$OS OUTPUT.$ARCH.$OS.old
+    ./CHECK_RESULT_ALL -src ../src -dir $ARCH/$OS | tee OUTPUT.$ARCH.$OS | grep ' failed'
+    if test -f OUTPUT.$ARCH.$OS.old
+    then
+      if diff OUTPUT.$ARCH.$OS.old OUTPUT.$ARCH.$OS > OUTPUT.$ARCH.$OS.diff
+      then
+        echo "$script: There are no differences from the previous run"
+      else
+        echo "$script: Here are the differences from the previous run:"
+        cat OUTPUT.$ARCH.$OS.diff
+        date >> TEST.LOG.$ARCH.$OS
+        cat OUTPUT.$ARCH.$OS.diff >> TEST.LOG.$ARCH.$OS
+        echo >> TEST.LOG.$ARCH.$OS
+      fi
+      rm -f OUTPUT.$ARCH.$OS.old.gz OUTPUT.$ARCH.$OS.diff
+      nice gzip --fast OUTPUT.$ARCH.$OS.old &
+    fi
+    if [ $no_mail -eq 0 ]; then
+      rm -f FAILED.$OS.$ARCH
+      grep ' failed' OUTPUT.$ARCH.$OS > FAILED.$OS.$ARCH &&
+      {
+	{
+          echo "From: Daily build script <sml>"
+          echo "To: mlworkers"
+          echo "Subject: The test suite failed on: " `hostname`
+          echo
+	  echo "While running the daily build in: " $SML
+          echo "The following tests failed:"
+          echo
+	  cat FAILED.$OS.$ARCH | sed -e 's/^/> /'
+          echo
+        } |
+        /usr/lib/sendmail -t
+      }
+    fi
+  else
+    echo "$script: Lawks!  No MLWorks image.  I can't work under these conditions!"
+    if [ $all -eq 1 ]; then
+      rm $SML/tools/daily-lock
+    fi
+    if [ $spawned -eq 1 ]; then
+      echo 7 > /u/sml/MLW/tools/spawn_status
+    fi
+    exit 7
+  fi
+fi
+
+# === DEMOS ===
+
+if [ $all -eq 1 -o $demos -eq 1 -o $spawned -eq 1 ]; then
+cd $SML/src/images
+  if [ $status -ge 5 ]; then
+    echo "$script: Skipping the demos because of earlier errors"
+  elif test -f $ARCH/$OS/gui.img
+  then
+    echo "$script: Testing the demos using this image:"
+    ls -l $ARCH/$OS/gui.img
+    cd $SML/demo
+    mv -f OUTPUT.$ARCH.$OS OUTPUT.$ARCH.$OS.old
+    find $SML/demo/objects -name \*.mo -exec rm {} \;
+    find . -type d \( -name win32 -o -name DEPEND -o -name mswindows -o -name foreign \) -prune -o -type f -name \*.sml -print | egrep -v "^.$" 1> poo 2>&1
+    files=`sed -e "s?./??" < poo`
+    file_list=`cat poo files | sed -e "s?\\./??g;s?^?,\"?g;s?\\.sml?.sml\"?"`
+
+# This removes the first comma and is used to construct a list of source files
+# to be used as part of the demo project file.
+    new_file_list=`echo *$file_list | sed -e "s?*,??"`
+
+    rm poo 
+    for x in $files ; do
+      STATUS=0
+      (../src/rts/bin/$ARCH/$OS/main -MLWpass MLWargs -load ../src/images/$ARCH/$OS/gui.img MLWargs -no-init -tty -pervasive-dir ../src/pervasive/ -source-path ../src:. << EOF) 1> poo 2>&1 || STATUS=1
+      Shell.Project.openProject "$SML/demo/demos.mlp";
+      Shell.Project.setFiles [$new_file_list];
+
+      Shell.Project.setTargetDetails "$x";
+      Shell.Project.setTargets ["$x"];
+      Shell.Project.setConfiguration "$ARCH/$OS";
+      Shell.Project.compileAll();
+      Shell.Project.loadAll();
+EOF
+      OUT_FILE=poo
+      NULL_FILE=/dev/null
+      if [ $STATUS -eq 0 ]
+      then
+        if egrep 'compiler fault|Intolerable signal' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: demo failed, compiler fault.
+    	  STATUS=3
+        elif egrep ': error:|Uncaught exception' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: demo failed, unexpected error.
+          STATUS=1
+        elif egrep ': warning:' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: demo failed, unexpected warning.
+          STATUS=1
+        else
+          echo $x: demo succeeded.
+        fi
+      else
+        echo $x: demo failed: compiler crashed
+      fi
+      rm poo
+    done | tee OUTPUT.$ARCH.$OS | grep ' failed'
+    if test -f OUTPUT.$ARCH.$OS.old
+    then
+      if diff OUTPUT.$ARCH.$OS.old OUTPUT.$ARCH.$OS > OUTPUT.$ARCH.$OS.diff
+      then
+        echo "$script: There are no differences from the previous run"
+      else
+        echo "$script: Here are the differences from the previous run:"
+        cat OUTPUT.$ARCH.$OS.diff
+        date >> TEST.LOG.$ARCH.$OS
+        cat OUTPUT.$ARCH.$OS.diff >> TEST.LOG.$ARCH.$OS
+        echo >> TEST.LOG.$ARCH.$OS
+      fi
+      rm -f OUTPUT.$ARCH.$OS.old.gz OUTPUT.$ARCH.$OS.diff
+      nice gzip --fast OUTPUT.$ARCH.$OS.old &
+    fi
+    if [ $no_mail -eq 0 ]; then
+      rm -f FAILED.$OS.$ARCH
+      grep ' failed' OUTPUT.$ARCH.$OS > FAILED.$OS.$ARCH &&
+      {
+	{
+          echo "From: Daily build script <sml>"
+          echo "To: mlworkers"
+          echo "Subject: Testing demos failed on: " `hostname`
+          echo
+	  echo "While running the daily build in: " $SML
+          echo "The following demos failed:"
+          echo
+	  cat FAILED.$OS.$ARCH | sed -e 's/^/> /'
+          echo
+        } |
+        /usr/lib/sendmail -t
+      }
+    fi
+  else
+    echo "$script: Lawks!  No MLWorks image.  I can't work under these conditions!"
+    if [ $all -eq 1 ]; then
+      rm $SML/tools/daily-lock
+    fi
+    if [ $spawned -eq 1 ]; then
+      echo 7 > /u/sml/MLW/tools/spawn_status
+    fi
+    exit 7
+  fi
+fi
+
+# === FOREIGN DEMOS ===
+
+if [ $all -eq 1 -o $foreign_demos -eq 1 -o $spawned -eq 1 ]
+then
+  cd $SML/demo/foreign
+  MLWORKS_INCLUDE=$SML/src/rts/src; export MLWORKS_INCLUDE
+  output="`./check_foreign_results.sh $SML/src`"
+  if test -n "$output" -a $no_mail -eq 0
+  then
+    { echo "From: Daily build script <sml>"
+      echo "To: mlworkers"
+      echo "Subject: Testing foreign demos failed on: " `hostname`
+      echo
+      echo "While running the daily build in: " $SML
+      echo "The following demos failed:"
+      echo
+      echo $output
+      echo
+     } | /usr/lib/sendmail -t
+  fi
+fi
+
+
+# === BENCHMARKS ===
+
+if [ $all -eq 1 -o $benchmarks -eq 1 -o $spawned -eq 1 ]; then
+  cd $SML/src/images
+  if [ $status -ge 5 ]; then
+    echo "$script: Skipping the benchmarks because of earlier errors"
+  elif test -f $ARCH/$OS/guib.img
+  then
+    echo "$script: Testing the benchmarks using this image:"
+    ls -l $ARCH/$OS/guib.img
+    cd $SML/benchmarks
+    mv -f OUTPUT.$ARCH.$OS OUTPUT.$ARCH.$OS.old
+    for x in *.sml ; do
+      STATUS=0
+      OUT_FILE=poo
+      (../src/rts/bin/$ARCH/$OS/main -MLWpass MLWargs -load ../src/images/$ARCH/$OS/guib.img MLWargs -no-init -tty -pervasive-dir ../src/pervasive/ -source-path ../src:. < $x) 1> $OUT_FILE 2>&1 || STATUS=1
+      NULL_FILE=/dev/null
+      if [ $STATUS -eq 0 ]
+      then
+        if egrep 'compiler fault|Intolerable signal' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: benchmark failed, compiler fault.
+      	STATUS=3
+        elif egrep ': error:|Uncaught exception' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: benchmark failed, unexpected error.
+          STATUS=1
+        elif egrep ': warning:' $OUT_FILE 1> $NULL_FILE 2>&1
+        then
+          echo $x: benchmark failed, unexpected warning.
+          STATUS=1
+        else
+          echo $x: benchmark succeeded.
+        fi
+      else
+        echo $x: benchmark failed: compiler crashed
+      fi
+      rm poo
+    done | tee OUTPUT.$ARCH.$OS | grep ' failed'
+    if test -f OUTPUT.$ARCH.$OS.old
+    then
+      if diff OUTPUT.$ARCH.$OS.old OUTPUT.$ARCH.$OS > OUTPUT.$ARCH.$OS.diff
+      then
+        echo "$script: There are no differences from the previous run"
+      else
+        echo "$script: Here are the differences from the previous run:"
+        cat OUTPUT.$ARCH.$OS.diff
+        date >> TEST.LOG.$ARCH.$OS
+        cat OUTPUT.$ARCH.$OS.diff >> TEST.LOG.$ARCH.$OS
+        echo >> TEST.LOG.$ARCH.$OS
+      fi
+      rm -f OUTPUT.$ARCH.$OS.old.gz OUTPUT.$ARCH.$OS.diff
+      nice gzip --fast OUTPUT.$ARCH.$OS.old &
+    fi
+    if [ $no_mail -eq 0 ]; then
+      rm -f FAILED.$OS.$ARCH
+      grep ' failed' OUTPUT.$ARCH.$OS > FAILED.$OS.$ARCH &&
+      {
+	{
+          echo "From: Daily build script <sml>"
+          echo "To: mlworkers"
+          echo "Subject: Testing benchmarks failed on: " `hostname`
+          echo
+	  echo "While running the daily build in: " $SML
+          echo "The following benchmarks failed:"
+          echo
+	  cat FAILED.$OS.$ARCH | sed -e 's/^/> /'
+          echo
+        } |
+        /usr/lib/sendmail -t
+      }
+    fi
+  else
+    echo "$script: Lawks!  No MLWorks image.  I can't work under these conditions!"
+    if [ $all -eq 1 ]; then
+      rm $SML/tools/daily-lock
+    fi
+    if [ $spawned -eq 1 ]; then
+      echo 7 > /u/sml/MLW/tools/spawn_status
+    fi
+    exit 7
+  fi
+fi
+
+# === APPLICATIONS ===
+
+if [ $all -eq 1 -o $applications -eq 1 ]; then
+  if [ $spawned -eq 0 ]; then
+# Don't do this stuff in the spawned builds, as it will take too long
+    cd $SML/src/images
+    if [ $status -ge 5 ]; then
+      echo "$script: Skipping the applications because of earlier errors"
+    elif test -f $ARCH/$OS/guib.img
+    then
+      echo "$script: Testing the applications using this image:"
+      ls -l $ARCH/$OS/guib.img
+      cd $SML/app_tests
+      mv -f OUTPUT.$ARCH.$OS OUTPUT.$ARCH.$OS.old
+      for x in `cat dirs` ; do
+        STATUS=0
+        OUT_FILE=poo
+        ((echo "OS.FileSys.chDir\"$x\";";cat $x/load.sml ) | ../src/rts/bin/$ARCH/$OS/main -MLWpass MLWargs -load ../src/images/$ARCH/$OS/guib.img MLWargs -no-init -tty -pervasive-dir ../src/pervasive/ -source-path ../src:.) 1> $OUT_FILE 2>&1 || STATUS=1
+        NULL_FILE=/dev/null
+        if [ $STATUS -eq 0 ]
+        then
+          if egrep 'compiler fault|Intolerable signal' $OUT_FILE 1> $NULL_FILE 2>&1
+          then
+            echo $x: application failed, compiler fault.
+        	STATUS=3
+          elif egrep ': error:|Uncaught exception' $OUT_FILE 1> $NULL_FILE 2>&1
+          then
+            echo $x: application failed, unexpected error.
+            STATUS=1
+          elif egrep ': warning:' $OUT_FILE 1> $NULL_FILE 2>&1
+          then
+            echo $x: application failed, unexpected warning.
+            STATUS=1
+          else
+            echo $x: application succeeded.
+          fi
+        else
+          echo $x: application failed: compiler crashed
+        fi
+      done | tee OUTPUT.$ARCH.$OS | grep ' failed'
+      if test -f OUTPUT.$ARCH.$OS.old
+      then
+        if diff OUTPUT.$ARCH.$OS.old OUTPUT.$ARCH.$OS > OUTPUT.$ARCH.$OS.diff
+        then
+          echo "$script: There are no differences from the previous run"
+        else
+          echo "$script: Here are the differences from the previous run:"
+          cat OUTPUT.$ARCH.$OS.diff
+          date >> TEST.LOG.$ARCH.$OS
+          cat OUTPUT.$ARCH.$OS.diff >> TEST.LOG.$ARCH.$OS
+          echo >> TEST.LOG.$ARCH.$OS
+        fi
+        rm -f OUTPUT.$ARCH.$OS.old.gz OUTPUT.$ARCH.$OS.diff
+        nice gzip --fast OUTPUT.$ARCH.$OS.old &
+      fi
+      if [ $no_mail -eq 0 ]; then
+        rm -f FAILED.$OS.$ARCH
+        grep ' failed' OUTPUT.$ARCH.$OS > FAILED.$OS.$ARCH &&
+        {
+  	{
+            echo "From: Daily build script <sml>"
+            echo "To: mlworkers"
+            echo "Subject: Testing applications failed on: " `hostname`
+            echo
+  	  echo "While running the daily build in: " $SML
+            echo "The following applications failed:"
+            echo
+  	  cat FAILED.$OS.$ARCH | sed -e 's/^/> /'
+            echo
+          } |
+          /usr/lib/sendmail -t
+        }
+      fi
+    else
+      echo "$script: Lawks!  No MLWorks image.  I can't work under these conditions!"
+      if [ $all -eq 1 ]; then
+        rm $SML/tools/daily-lock
+      fi
+      exit 7
+    fi
+  fi
+fi
+
+# We're going to use the stuff built so far
+# so give up if it didn't work
+# We also give up if this was a spawned job, as we've done all we would do anyway.
+
+if [ $status -ne 0 -o $spawned -eq 1 ]; then
+  if [ $all -eq 1 ]; then
+    rm $SML/tools/daily-lock
+  fi
+  if [ $spawned -eq 1 ]; then
+    echo $status > /u/sml/MLW/tools/spawn_status
+  fi
+  exit $status
+fi
+
+# === NOW DO THE MIPS BUILD ===
+
+if [ $all -eq 1 -o $mips -eq 1 ]; then
+  cd $SML/src
+
+  echo "$script: Using MLWorks to build sparc->mips mos:"
+
+  if ( rts/runtime -MLWpass MLWargs -batch -load images/$ARCH/$OS/batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration MIPS/Irix -build &&
+       rts/runtime -MLWpass MLWargs -batch -load images/$ARCH/$OS/batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -project $SML/src/batch.mlp -target __batch.sml -target batch_common_export_filter.sml -target batch_export_filter.sml -configuration MIPS/Irix -build
+  ) then
+    # === MIPS IMAGE BUILD ===
+
+    cd $SML/src/images/MIPS/Irix
+    if ls -l *.img 1>/dev/null 2>&1; then
+      for image in *.img
+      do
+        echo "$script: Zipping mips image $image into $image.old.gz."
+        ls -l $image
+        if mv -f $image $image.old
+        then
+          rm -f $image.old.gz
+          nice gzip --fast $image.old &
+        fi
+      done
+    fi
+
+    echo "$script: Making Mips images from the mo files."
+   $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k batch.img || { echo "$script: mips compiler image build failed, setting status to 6"; status=6; }
+    echo
+
+    # Now build mips object files (ie to run on the mips)
+    if [ $status -eq 0 ]; then
+
+      # Remove mos needed by the cross compiler which is already made.
+      find $SML/objects/MIPS/Irix -name \*.mo -exec rm {} \;
+
+      # Now invoke the batch compiler we just made to do the compilation
+      echo "$script: Using MLWorks to compile mips based object files"
+      if [ $full -eq 1 ]; then
+        rm -f $SML/src/pervasive/*.mo
+      fi
+      { ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -compile-pervasive -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration MIPS/Irix -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/batch.mlp -target __batch.sml -target batch_common_export_filter.sml -target batch_export_filter.sml -configuration MIPS/Irix -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration MIPS/Irix -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/interpreter.mlp -target interpreter.sml -target interpreter_export_filter.sml -configuration MIPS/Irix -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/xinterpreter.mlp  -target xinterpreter.sml -configuration MIPS/Irix -build; } || { echo "$script: mips compilation failed, setting status to 6"; status=6; }
+
+    fi
+    if [ $status -eq 0 ] ; then
+      mips_irix_built=1
+      rm -f $SML/src/pervasive/MIPS/Irix/*.mo
+      cp -p $SML/src/pervasive/*.mo $SML/src/pervasive/MIPS/Irix
+    fi
+  else
+    echo "$script: mips compiler compilation failed, setting status to 5"
+    status=5
+  fi
+# Now restore the $ARCH/$OS pervasive object files
+# needed to make the next cross compiler
+cp -p $SML/src/pervasive/$ARCH/$OS/*.mo $SML/src/pervasive
+fi
+
+# === NOW DO THE I386 BUILD ===
+
+if [ $all -eq 1 -o $i386 -eq 1 ]; then
+  cd $SML/src
+
+  echo "$script: Using MLWorks to build sparc->i386 mos:"
+
+  if ( rts/runtime -MLWpass MLWargs -batch -load images/$ARCH/$OS/batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration I386/Linux -build &&
+       rts/runtime -MLWpass MLWargs -batch -load images/$ARCH/$OS/batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -project $SML/src/batch.mlp -target __batch.sml -target batch_common_export_filter.sml -target batch_export_filter.sml -configuration I386/Linux -build
+  ) then
+    echo
+  # === I386 IMAGE BUILD ===
+
+    cd $SML/src/images/I386/Linux
+    if ls -l *.img 1>/dev/null 2>&1; then
+      for image in *.img
+      do
+        echo "$script: Zipping i386 image $image into $image.old.gz."
+        ls -l $image
+        if mv -f $image $image.old
+        then
+          rm -f $image.old.gz
+          nice gzip --fast $image.old &
+        fi
+      done
+    fi
+
+    echo "$script: Making I386 images from the mo files."
+    $make_command RUNTIME=$SML/src/rts/bin/$ARCH/$OS/main-g -k batch.img || { echo "$script: i386 compiler image build failed, setting status to 6"; status=6; }
+    echo
+
+    # Now build i386 object files (ie to run on the i386)
+    # These come in two flavours, for Linux and for NT
+    if [ $status -eq 0 ]; then
+
+      # Remove mos needed by the cross compiler which is already made.
+      find $SML/objects/I386/Linux -name \*.mo -exec rm {} \;
+
+      # Now invoke the batch compiler we just made to do the compilation
+      echo "$script: Using MLWorks to compile i386 based object files for Linux"
+      if [ $full -eq 1 ]; then
+        rm -f $SML/src/pervasive/*.mo
+      fi
+      { ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -compile-pervasive -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration I386/Linux -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers on -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/batch.mlp -target __batch.sml -target batch_common_export_filter.sml -target batch_export_filter.sml -configuration I386/Linux -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/basis.mlp -target require_all.sml -target platform_specific_exports.sml -configuration I386/Linux -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/interpreter.mlp -target interpreter.sml -target interpreter_export_filter.sml -configuration I386/Linux -build && ../../../rts/runtime -MLWpass MLWargs -batch -load batch.img MLWargs -local-functions on -opt-handlers off -pervasive-dir $SML/src/pervasive -source-path $SML/src -verbose -project $SML/src/xinterpreter.mlp  -target xinterpreter.sml -configuration I386/Linux -build; } || { echo "$script: i386 compilation for Linux failed, setting status to 6"; status=6; }
+
+      if [ $status -eq 0 ] ; then
+	i386_linux_built=1
+        rm -f $SML/src/pervasive/I386/Linux/*.mo
+        cp -p $SML/src/pervasive/*.mo $SML/src/pervasive/I386/Linux	
+      fi
+
+    fi
+  else
+    echo "$script: i386 compiler compilation failed, setting status to 5"
+    status=5
+  fi
+# Now restore the $ARCH/$OS pervasive object files
+# needed to make the next cross compiler
+cp -p $SML/src/pervasive/$ARCH/$OS/*.mo $SML/src/pervasive
+fi
+
+
+if [ $spawned -eq 0 -a $mips_irix_built -eq 1 -a "$mips_build_machine" != "" ]; then
+  echo "$script: Spawning MIPS/Irix rts, image build and tests on $mips_build_machine"
+  # make sure pervasive mos are recompiled
+  rm -f $SML/src/pervasive/*.mo
+  rsh -n $mips_build_machine /bin/sh /u/sml/MLW/tools/daily -spawned -base_arch MIPS -base_os Irix
+  mips_status=`cat /u/sml/MLW/tools/spawn_status`
+  echo $mips_status
+  if [ -z "$mips_status" ] ; then mips_status=1 ; fi
+  if [ $mips_status -ne 0 ]; then
+    echo "$script: spawned job failed on $mips_build_machine"
+    if [ $mips_status -gt $status ]; then
+      status=$mips_status
+    fi
+  fi
+fi
+
+if [ $spawned -eq 0 -a $i386_linux_built -eq 1 -a "$i386_build_machine" != "" ]; then
+  echo "$script: Spawning I386/Linux rts, image build and tests on $i386_build_machine"
+  # make sure pervasive mos are recompiled
+  rm -f $SML/src/pervasive/*.mo
+  rsh -n $i386_build_machine /bin/sh /u/sml/MLW/tools/daily -spawned -base_arch I386 -base_os Linux
+  i386_status=`cat /u/sml/MLW/tools/spawn_status`
+  if [ -z "$i386_status" ] ; then i386_status=1 ; fi
+  if [ $i386_status -ne 0 ]; then
+    echo "$script: spawned job failed on $i386_build_machine"
+    if [ $i386_status -gt $status ]; then
+      status=$i386_status
+    fi
+  fi
+fi
+
+if [ $all -eq 1 ]; then
+  (echo "$script: Daily build"
+   echo "$script: finished `date '+%Y-%m-%d %H:%M:%S'`")
+  rm $SML/tools/daily-lock
+fi
+echo "$script: Daily build status : $status"
+exit $status

@@ -1,0 +1,26 @@
+Bug #20014: implementing the CommandLine structure.
+---------------------------------------------------
+
+In a listener, type
+
+	Shell.File.loadSource "basis/__command_line";
+	fun f () = 
+	  let fun printList [] = ""
+	        | printList (h::t) = h^" "^(printList t)
+	  in
+	     print ("name: "^(CommandLine.name())^"\n");
+	     print ("args: "^(printList(CommandLine.arguments()))^"\n")
+	  end;
+
+Then
+
+	MLWorks.Deliver.deliver(<filename>,f,true);
+
+(where <filename> is any string you choose).  Then, at the unix prompt,
+type
+	<filename> -pass a <a string> a
+
+and the output should be:
+
+name: <filename>
+args: <a string>

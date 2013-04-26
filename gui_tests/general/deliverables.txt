@@ -1,0 +1,66 @@
+Request #30226: BinIO streams not flushed on program exit
+8/10/97
+
+Run the following program in a Listener, then from the command line,
+execute the deliverable 'test.mlx' as specified in the program below.
+The output file should contain what was sent to it, whereas before,
+the output file was empty which was wrong.
+
+------
+
+(* With or without the call to BinIO.closeOut, the output file should
+still contain the same thing and never be empty. *)
+
+require "system/__os";
+require "basis/__text_io";
+require "basis/__bin_io";
+require "basis/__byte";
+
+fun printError error =
+  case error of
+    h :: r =>
+    (TextIO.output(TextIO.stdErr, h);
+     printError r)
+  | [] => ();
+
+
+fun testWrite(outFile, string) =
+  let
+    val outStream = BinIO.openOut outFile
+      handle OS.SysErr(errorString, _) =>
+        (printError ["Can't open output file: ", outFile, "\n",
+                     errorString, "\n"];
+         OS.Process.exit(OS.Process.failure))
+  in
+    BinIO.output(outStream, Byte.stringToBytes string)
+
+    (* BinIO.closeOut outStream *)
+  end;
+
+fun main () =
+  case MLWorks.arguments() of
+    [outFile] => testWrite(outFile, "hello")
+  | _ => 
+      (printError ["usage: test.mlx -pass args outfile args\n"];
+       OS.Process.exit(OS.Process.failure));
+
+MLWorks.Deliver.deliver("test.mlx", main, true);
+
+------
+
+Request #20084:  no default .exe file extension
+
+On Win32 platforms only:  when creating an executable, a .exe filename
+extension is added to the filename if no extension is already given.
+
+------
+
+Request #30134: Console executable on Windows.
+
+MLWorks.Deliver.deliver now has the type:
+string * (unit -> unit) * app_style -> unit    
+where 
+datatype app_style = CONSOLE | WINDOWS
+so the user can now specify whether to save an executable which is to
+be used as a console application or a windows application.
+

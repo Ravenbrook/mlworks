@@ -1,0 +1,143 @@
+#!/bin/sh
+# $Log: add,v $
+# Revision 1.19  1997/09/24 17:16:42  jont
+# [Bug #70007]
+# Ensure the output of egrep isn't printed. This already works under
+# unix, but the gnu-win32 port of egrep doesn't understand -s
+#
+#  Revision 1.18  1997/01/16  15:02:25  io
+#  [Bug #1893]
+#  dont chmod file if in test mode or when hope fails
+#
+#  Revision 1.16  1996/10/18  14:25:40  io
+#  [Bug #1668]
+#  alter binary mode -b to -B, utilising -b for branch
+#
+#  Revision 1.15  1996/08/12  11:31:38  daveb
+#  Ensured that expr can handle files called "index", etc.
+#
+#  Revision 1.14  1996/07/11  17:23:13  io
+#  [Bug #1463]
+#  beef up options for help, bug-id, binary and reason
+#
+#  Revision 1.13  1996/02/26  12:27:38  jont
+#  Modify to preserve file date on add
+#
+#  Revision 1.12  1995/12/08  11:23:30  daveb
+#  Added a check that the file to be added contains the strings "Copyright"
+#  and "$Log".
+#
+#  Revision 1.11  1995/09/18  11:47:09  daveb
+#  The -comment argument to hope's add command is broken.
+#
+#  Revision 1.9  1995/07/21  15:44:28  matthew
+#  Changing -parent option to -compound
+#
+#  Revision 1.8  1995/03/31  10:55:48  daveb
+#  Made comment string be " *  " for .sml files.
+#
+#  Revision 1.7  1995/02/23  17:15:03  jont
+#  Modify for new file structure /u
+#
+#  Revision 1.6  1995/02/21  15:47:09  brianm
+#  Introducing SML_HOME
+#
+#  Revision 1.5  1994/06/21  10:53:36  jont
+#  Add path setting code
+#
+#  Revision 1.4  1994/06/09  15:27:00  nickh
+#  Better .compound awareness
+#
+#  Revision 1.3  1994/04/05  11:24:52  daveb
+#  Now handles trailing / in arguments.
+#
+#  Revision 1.2  1994/03/23  17:55:46  daveb
+#  Fixing bug in test.
+#
+#  Revision 1.1  1994/03/21  12:41:35  daveb
+#  new file
+#
+# 
+# Copyright (c) Harlequin Ltd. 1994
+
+SML=/u/sml/MLW; export SML
+PATH=$SML/tools:$SML/images:/usr/local/bin:$PATH; export PATH
+script=`basename $0`
+usage="USAGE: $script [-[Bfth]+] [-b <branch>] [-c <comment header>] [-i <bug-id>] [-r <reason>] file+"
+cmd="add";
+comment=""; bug_id="";test="";reason="";binary=""; branch="";
+force=0
+while getopts "b:tr:hi:fc:B" option
+do
+  case $option in
+    B) binary="-binary";;
+    i) bug_id="-bug-number $OPTARG";;
+    r) reason="$OPTARG";;
+    f) force=1;;
+    b) branch="-branch $OPTARG";;
+    c) comment="$OPTARG" ;;
+    t) test="test";;
+    h|\?)
+      echo "$usage";
+      echo "     h for this help"
+      echo "     i <bug-id>"
+      echo "     b <branch>"
+      echo "     f to force $cmd"
+      echo "     c <comment-string>"
+      echo "     t run in hope test mode"
+      echo "     B for binary mode $cmd"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+if [ "$#" -lt 1 ]; then
+    echo $usage
+    exit
+fi
+
+add_file () {
+       # strip trailing /
+       tmp=`expr match X$1 X'\(.*[^/]\)'`
+       eval `findcomp $tmp`
+	  # defines $dir, $compound, $unit
+       if [ -z "$compound" ]
+       then
+         $script failed : .compound file not found
+       else
+         test -z "$test" && chmod ugo-w $tmp
+         cd $dir
+         if [ -z "$reason" ]; then
+           hope $test $cmd -filedate $bug_id $binary $branch -compound $compound -unit $unit || (test -z "$test" && chmod u+w $tmp)
+	 else
+	   hope $test $cmd -filedate $bug_id -reason "$reason" $binary $branch -compound $compound -unit $unit || (test -z "$test" && chmod u+w $tmp)
+	 fi
+         if [ ! -z ""$comment ] 
+         then
+           hope $test set $branch -compound $compound -unit $unit -comment "$comment"
+         else
+	   case $1 in
+	     *.sml) hope $test set $branch -compound $compound -unit $unit -comment " *  "
+	   esac
+         fi
+       fi
+}
+
+for i in $*
+do
+  (if [ $i = '/' ]; then
+     echo $script: ignoring /
+   elif [ $force -eq 1 -o -n "$binary" ]; then
+     add_file $i
+   elif egrep -s Copyright $i 1>/dev/null 2>1; then
+     if egrep -s '\$Log.*\$' $i 1>/dev/null 2>1; then
+       add_file $i
+     else
+       echo $i: header omits \$Log\$ string
+     fi
+   else
+     echo $i: header omits Copyright string
+   fi)
+done
+
+exit

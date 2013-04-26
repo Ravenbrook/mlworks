@@ -1,0 +1,613 @@
+(*
+ *
+ * $Log: Help.str,v $
+ * Revision 1.2  1998/06/02 15:48:41  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Help.str,v 1.2 1998/06/02 15:48:41 jont Exp $";
+functor Help () : HELP =
+struct
+     fun help "syntax" = UI.message "\
+\  SCCS Syntax supported in this version is as follows:\
+\\n\
+\\n  PARTICLE p  ::=  name        :  not beginning with upper case\
+\\n             |  'p          :  coname\
+\\n\
+\\n  ACT      a  ::=  eps          :  empty observation, not allowed in agents\
+\\n             |  1           :  tick\
+\\n             |  n           :  n ticks, n a positive integer\
+\\n             |  p           :  particle\
+\\n             |  p^n         :  exponentiation, n a positive integer\
+\\n             |  a#a         :  product\
+\\n\
+\\n  AGENT    A  ::=  0           :  deadlock\
+\\n             |  $A          :  delay, $P = P + 1:$P\
+\\n             |  (A)\
+\\n             |  @           :  divergence\
+\\n             |  X           :  variables begin with upper case\
+\\n             |  X(P,...)    :  parameterised agent\
+\\n             |  a:A         :  action prefix\
+\\n             |  A + A       :  choice\
+\\n             |  A | A       :  parallel composition\
+\\n             |  A\\S         :  permission, S a particle set identifier\
+\\n             |  A\\{p,...}   :  permission of a set of particles\
+\\n             |  A[F]        :  relabelling, F a function identifier\
+\\n             |  A[a/p,...]  :  relabelling\
+\\n\
+\\n  PARAM P  ::=  FP | AP\
+\\n\
+\\n        FP ::=  p | X        : particles, and process variables\
+\\n\
+\\n        AP ::=  a | A        : actions and agents\
+\\n\
+\\n  SET    S ::= {a,...}      : action/particle set (not including eps or 1)\
+\\n             | V            : variable beginning with upper case\
+\\n\
+\\n  See also: logic"
+
+       | help "logic" = UI.message "\
+\  Modal mu-calculus Syntax is as follows:\
+\\n\
+\\n  PARTICLE p  ::=  name         :  not beginning with Upper case\
+\\n             |  'name        :  coname\
+\\n\
+\\n  ACT      a  ::=  eps          :  empty observation (for weak modalities)\
+\\n             |  1            :  tick (for strong modalities)\
+\\n             |  p            :  particle\
+\\n             |  p^n          :  exponentiation, n a positive integer\
+\\n             |  a#a          :  product\
+\\n\
+\\n  FORMULA  P  ::=  T            :  true\
+\\n             |  F            :  false\
+\\n             |  ~P           :  negation\
+\\n             |  P & P        :  conjunction\
+\\n             |  P | P        :  disjunction\
+\\n             |  P => P       :  implication\
+\\n             |  [a,...]P     :  strong necessity\
+\\n             |  [-a,...]P    :  strong complement necessity\
+\\n             |  [[a,...]]P   :  weak necessity\
+\\n             |  [[-a,...]]P  :  weak complement necessity\
+\\n             |  <a,...>P     :  strong possibility\
+\\n             |  <-a,...>P    :  strong complement possibility\
+\\n             |  <<a,...>>P   :  weak possibility\
+\\n             |  <<-a,...>>P  :  weak complement possibility\
+\\n             |  min(X.P)     :  least fixpoint temporal formula\
+\\n             |  max(X.P)     :  greatest fixpoint temporal formula\
+\\n\
+\\n  Action set identifiers can appear in modalities.\
+\\n\
+\\n  See also: syntax"
+
+       | help "agent" = UI.message "\
+\  Format: agent X = A;       binds agent A to identifier X\
+\\n  Format: agent X(FP) = A;   binds a parameterised agent\
+\\n  Format: agent X;           prints the definition of X\
+\\n\
+\\n  An agent identifier must begin with an upper case letter.\
+\\n  If P is a formal parameter, it is an error to use P(anything)\
+\\n  in the body of the definition.\
+\\n  If a formal parameter name starts with a lower case letter, it stands\
+\\n  for an action. If it starts with an upper case letter, it stands for\
+\\n  an agent or for a particle set, depending on context.\
+\\n\
+\\n  Synonyms: bi,pi\
+\\n  See also: syntax, set, relabel"
+      | help "bi" = help "agent"
+      | help "pi" = help "agent"
+
+       | help "set" = UI.message "\
+\\n  Format: set S = {p,q,...};   binds a set of particles\
+\\n  Format: set S = {a,b,...};   binds a set of actions\
+\\n  Format: set S;               prints set(s) bound to S\
+\\n\
+\\n  A particle set will be bound only if all entities between braces are\
+\\n  particles, otherwise an action set is bound. Note that permission is\
+\\n  on sets of particles; action sets may appear in the logic.\
+\\n\
+\\n  Synonyms: basi, pasi, bpsi, ppsi\
+\\n  See also: syntax, agent, relabel, prop, logic"
+      | help "basi" = help "set"
+      | help "pasi" = help "set"
+      | help "bpsi" = help "set"
+      | help "ppsi" = help "set"
+
+       | help "prop" = UI.message "\
+\  Format: prop P = F;       binds proposition F to identifier P\
+\\n  Format: prop P(FP) = Q;   binds a parameterised proposition\
+\\n  Format: prop P;           prints the definition of P\
+\\n\
+\\n  A proposition identifier must begin with an upper case letter.\
+\\n  If a formal parameter name starts with a lower case letter, it stands\
+\\n  for a modality. (The corresponding actual parameter can be positive\
+\\n  or negative  and can be an action set identifier, or an explicit list,\
+\\n  e.g. Set, -Set, {a,b}, {-a,b}.)\
+\\n  If it starts with an upper case letter, it stands for a proposition.\
+\\n\
+\\n  Synonyms: bpi,ppi\
+\\n  See also: logic"
+      | help "bpi" = help "prop"
+      | help "ppi" = help "prop"
+
+
+       | help "relabel" = UI.message "\
+\  Format: relabel R = [a/p,...];   binds a relabelling function\
+\\n  Format: relabel R;               prints function bound to R\
+\\n\
+\\n  See also: syntax, set, relabel"
+
+       | help "print" = UI.message "\
+\  Format: print;\
+\\n\
+\\n  Prints all definitions to the screen.\
+\\n  To print just one binding, say that of agent A, use `agent A;'. Etc.\
+\\n\
+\\n (The capability of printing, e.g., the action environment without the\
+\\n set environment has been removed. Send a message if you want it\
+\\n back.)\
+\\n\
+\\n  Synonyms: pe,pae,pase,ppe\
+\\n  See also: agent, set, relabel, prop, save"
+	| help "pe" = help "print"
+	| help "pae" = help "print"
+	| help "pase" = help "print"
+	| help "ppe" = help "print"
+
+
+       | help "clear" = UI.message "\
+\  Format: clear; \
+\\n\
+\\n  Removes all bindings (a fresh start).\
+\\n\
+\\n  See also: syntax, agent, set, relabel, prop"
+
+       | help "input" = UI.message "\
+\  Format: input file;\
+\\n\
+\\n  Execute the CWB commands in the given file."
+
+       | help "output" = UI.message "\
+\  Format: output file; output;\
+\\n\
+\\n  From now on, send the output to the given file.\
+\\n  With no argument, start sending output to stdout again. \
+\\n  See also: save, savemeije"
+
+       | help "save" = UI.message "\
+\  Format: save file;\
+\\n\
+\\n  Saves the current environment in the given file.\
+\\n\
+\\n  See also: print, agent, set, relabel, prop"
+
+       | help "graph" = UI.message "\
+\  Format: graph A;\
+\\n\
+\\n  Lists the whole graph of an agent. This may be big!\
+\\n\
+\\n  See also: transitions, sim, derivatives, closure, obs, vs, random, init"
+
+       | help "transitions" = UI.message "\
+\  Format: transitions A;\
+\\n\
+\\n  Lists the (single-step) transitions of an agent.\
+\\n\
+\\n  Synonyms: tr\
+\\n  See also: sim, derivatives, closure, obs, vs, random, init"
+       | help "tr" = help "transitions"
+
+       | help "derivatives" = UI.message "\
+\  Format: derivatives(a,A);\
+\\n\
+\\n  Lists the agents reachable from the agent A via action a.\
+\\n\
+\\n  Synonyms: dr, actders\
+\\n  See also: sim, transitions, closure, obs, vs, random, init"
+       | help "dr" = help "derivatives"
+       | help "actders" = help "derivatives"
+       | help "tauders" = help "derivatives"
+
+       | help "closure" = UI.message "\
+\  Format: closure(a,A);        lists the agents reachable from A via action a\
+\\n  Format: closure(a,b,...,A);  ditto, but via the observation a,b,...\
+\\n\
+\\n  In the first case the action may be eps (`tau closure'), 1 or a\
+\\n  visible action; in the second case the sequence of actions should all\
+\\n  be observable.\
+\\n\
+\\n  Synonyms: cl,actcl\
+\\n  See also: sim, transitions, derivatives, obs, vs, random, init"
+       | help "cl" = help "closure"
+       | help "actcl" = help "closure"
+       | help "taucl" = help "closure"
+       | help "obsders" = help "closure"
+
+
+
+
+       | help "init" = UI.message "\
+\  Format: init A;\
+\\n\
+\\n  Lists the observable actions an agent can perform immediately.\
+\\n\
+\\n  See also: sim, transitions, derivatives, closure, obs, vs, random"
+
+       | help "obs" = UI.message "\
+\  Format: obs(n,A);\
+\\n\
+\\n  Lists all observations of length n, and the final state of each.\
+\\n\
+\\n  See also: sim, transitions, derivatives, closure, vs, random, init"
+
+       | help "vs" = UI.message "\
+\  Format: vs(n,A);\
+\\n\
+\\n  Lists all observations (visible sequences) of length n from A.\
+\\n\
+\\n  See also: sim, transitions, derivatives, closure, obs, random, init"
+
+       | help "random" = UI.message "\
+\  Format: random(n,A);\
+\\n\
+\\n  Selects an observation of length <= n at random. The observation may\
+\\n  be shorter than n if the agent deadlocks.\
+\\n\
+\\n  See also: sim, transitions, derivatives, closure, obs, vs, init"
+
+       | help "stable" = UI.message "\
+\  Format: stable A;\
+\\n\
+\\n  Returns true iff the agent can initially proceed through tick.\
+\\n\
+\\n  See also: sim, transitions, checkprop"
+
+       | help "diverges" = UI.message "\
+\  Format: diverges A;\
+\\n\
+\\n  Returns true iff there is an unguarded occurrence bottom (@).\
+\\n\
+\\n  Synonyms: div\
+\\n  See also: checkprop"
+       | help "div" = help "diverges"
+
+       | help "freevars" = UI.message "\
+\  Format: freevars A;\
+\\n\
+\\n  Lists the free agent variables of an agent.\
+\\n\
+\\n  Synonyms: fv,freevariables\
+\\n  See also: agent, print"
+       | help "fv" = help "freevars"
+       | help "freevariables" = help "freevars"
+
+       | help "sort" = UI.message "\
+\  Format: sort A;\
+\\n\
+\\n  Prints the syntactic sort of an agent. This simply lists the particle\
+\\n  set from which the (semantic) sort may be generated. Free variables\
+\\n  are ignored.\
+\\n\
+\\n  See also: freevars"
+
+       | help "size" = UI.message "\
+\  Format: size A;\
+\\n\
+\\n  Prints the number of states of an agent, if it is finite.\
+\\n\
+\\n  See also: states, statesexp, statesobs"
+
+       | help "states" = UI.message "\
+\  Format: states A;\
+\\n\
+\\n  Lists the state space of an agent, if it is finite.\
+\\n\
+\\n  See also: size, statesexp, statesobs"
+
+       | help "statesexp" = UI.message "\
+\  Format: statesexp A;\
+\\n\
+\\n  Lists the state space of an agent, if it is finite, and for each state\
+\\n  a sequence of actions by which it may be reached from the initial state\
+\\n  will be printed.\
+\\n\
+\\n  See also: size, statesexp, statesobs"
+
+       | help "statesobs" = UI.message "\
+\  Format: statesobs A;\
+\\n\
+\\n  Lists the state space of an agent, if it is finite, and for each state\
+\\n  a sequence of observable actions by which it may be reached from the\
+\\n  initial state will be printed.\
+\\n\
+\\n  See also: size, statesexp, statesobs"
+
+       | help "deadlocks" = UI.message "\
+\  Format: deadlocks A;\
+\\n\
+\\n  Prints the deadlocked states of an agent, if any. For each such state\
+\\n  the sequence of actions by which it may be reached will be printed.\
+\\n\
+\\n  Synonyms: fd\
+\\n  See also: deadlocksobs, fdobs, findinit, findinitobs"
+       | help "fd" = help "deadlocks"
+
+       | help "deadlocksobs" = UI.message "\
+\  Format: deadlocksobs A;\
+\\n\
+\\n  Prints the deadlocked states of an agent, if any. For each such state the\
+\\n  sequence of observable actions by which it may be reached will be printed.\
+\\n  Synonyms: fdobs\
+\\n  See also: deadlocks, findinit, findinitobs"
+       | help "fdobs" = help "deadlocksobs"
+
+       | help "findinit" = UI.message "\
+\  Format: findinit(a,b,...,A);\
+\\n\
+\\n  Print the states of an agent which have the given set of possible first\
+\\n  observable actions.\
+\\n\
+\\n  See also: fd, fdobs, findinitobs"
+
+       | help "findinitobs" = UI.message "\
+\  Format: findinitobs(a,b,...,A);\
+\\n\
+\\n  Print the states of an agent which have the given set of possible first\
+\\n  observable actions, listing an observation by which each may be reached.\
+\\n\
+\\n  See also: fd, fdobs, findinit"
+
+       | help "min" = UI.message "\
+\  Format: min(X,A);\
+\\n\
+\\n  Minimises the state space of the agent A with respect to weak equivalence,\
+\\n  binding the result to the identifier X.\
+\\n\
+\\n  See also: eq"
+
+       | help "pb" = UI.message "\
+\  Format: pb(A,B);\
+\\n\
+\\n  Prints the largest bisimulation over the state space of two agents.\
+\\n\
+\\n  See also: eq, strongeq, cong"
+
+       | help "eq" = UI.message "\
+\  Format: eq(A,B);\
+\\n\
+\\n  Determines if two agents are observationally equivalent (weakly bisimilar)\
+\\n\
+\\n  See also: cong, strongeq, pre, mayeq, musteq, testeq,\
+\\n twothirdseq, branchingeq"
+
+       | help "cong" = UI.message "\
+\  Format: cong(A,B);\
+\\n\
+\\n  Determines if two agents are observationally congruent (equal)\
+\\n\
+\\n  See also: eq, strongeq, precong, mayeq, musteq, testeq, \
+\\n twothirdseq, branchingeq"
+
+       | help "strongeq" = UI.message "\
+\  Format: strongeq(A,B);\
+\\n\
+\\n  Determines if two agents are strongly bisimilar.\
+\\n\
+\\n  See also: eq, cong, strongpre, mayeq, musteq, testeq, twothirdseq, branchingeq"
+
+       | help "strongpre" = UI.message "\
+\  Format: strongpre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the strong bisimulation pre-order relation.\
+\\n\
+\\n  See also: strongeq, pre, precong, maypre, mustpre, testpre, twothirdspre, contract"
+
+       | help "pre" = UI.message "\
+\  Format: pre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the bisimulation pre-order relation.\
+\\n\
+\\n  See also: eq, strongpre, precong, maypre, mustpre, testpre, twothirdspre, contract"
+
+       | help "precong" = UI.message "\
+\  Format: precong(A,B);\
+\\n\
+\\n  Determines if A is related to B by the bisimulation pre congruence relation.\
+\\n\
+\\n  See also: cong, strongpre, pre, maypre, mustpre, testpre, twothirdspre, contract"
+
+       | help "diveq" = UI.message "\
+\  Format: diveq(A,B);\
+\\n\
+\\n  Determines if two agents are `divergence equivalent'.\
+\\n\
+\\n  See also: pre, precong, "
+
+       | help "maypre" = UI.message "\
+\  Format: maypre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the standard testing may-pre-order.\
+\\n\
+\\n  See also: strongpre, pre, precong, mayeq, mustpre, testpre, twothirdspre"
+
+       | help "mustpre" = UI.message "\
+\  Format: mustpre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the standard testing must-pre-order.\
+\\n\
+\\n  See also: strongpre, pre, precong, musteq, maypre, testpre, twothirdspre"
+
+       | help "testpre" = UI.message "\
+\  Format: testpre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the standard testing pre-order.\
+\\n\
+\\n  See also: strongpre, pre, precong, testeq, maypre, mustpre, twothirdspre"
+
+       | help "mayeq" = UI.message "\
+\  Format: mayeq(A,B);\
+\\n\
+\\n  Determines if two agents are may-equivalent.\
+\\n\
+\\n  See also: eq, cong, strongeq, maypre, musteq, testeq, twothirdseq, branchingeq"
+
+       | help "musteq" = UI.message "\
+\  Format: musteq(A,B);\
+\\n\
+\\n  Determines if two agents are must-equivalent.\
+\\n\
+\\n  See also: eq, cong, strongeq, mustpre, mayeq, testeq, twothirdseq, branchingeq"
+
+       | help "testeq" = UI.message "\
+\  Format: testeq(A,B);\
+\\n\
+\\n  Determines if two agents are testing equivalent.\
+\\n\
+\\n  See also: eq, cong, strongeq, testpre, mayeq, musteq, twothirdseq, branchingeq"
+
+       | help "twothirdspre" = UI.message "\
+\  Format: twothirdspre(A,B);\
+\\n\
+\\n  Determines if A is related to B by the two thirds bisimulation pre-order relation.\
+\\n\
+\\n  See also: strongpre, pre, precong, maypre, mustpre, testpre, twothirdseq"
+
+       | help "twothirdseq" = UI.message "\
+\  Format: twothirdseq(A,B);\
+\\n\
+\\n  Determines if two agents are related in both directions by the two thirds-pre-order.\
+\\n\
+\\n  See also: eq, cong, strongeq, mayeq, musteq, testeq, twothirdspre"
+| help "2" = help "twothirdseq"
+
+       | help "branchingeq" = UI.message "\
+\  Format: branchingeq(A,B);\
+\\n\
+\\n  Determines if two agents are branching bisimilar.\
+\\n\
+\\n  See also: eq, cong, strongeq"
+
+       | help "contraction" = UI.message "\
+\  Format: contraction(A,B);\
+\\n\
+\\n  Determines if A is related to B by the contraction pre-order.\
+\\n\
+\\n  See also: strongpre, pre, precong"
+
+       | help "checkprop" = UI.message "\
+\  Format: checkprop(A,P);\
+\\n\
+\\n  Checks if an agent A satisfies a logical property P.\
+\\n\
+\\n  Synonyms: cp\
+\\n  See also: logic, dfstrong, dfweak, dftrace"
+| help "cp" = help "checkprop"
+
+       | help "dfstrong" = UI.message "\
+\  Format: dfstrong(A,B);\
+\\n\
+\\n  Produces a strong HML formula which distinguishes between the two\
+\\n  agents if they are not strongly bisimilar. The formula is true of the\
+\\n  first agent and false of the second.\
+\\n\
+\\n  Synonyms: df\
+\\n  See also: dfstrong, dfweak, dftrace"
+| help "df" = help "dfstrong"
+
+       | help "dfweak" = UI.message "\
+\  Format: dfweak(A,B);\
+\\n\
+\\n  Produces a weak HML formula which distinguishes the two agents if\
+\\n  they are not observationally equivalent.  The formula is true of the\
+\\n  first agent and false of the second.\
+\\n\
+\\n  See also: dfstrong, dfweak, dftrace"
+
+      | help "dftrace" = UI.message "\
+\  Format: dftrace(A,B);\
+\\n\
+\\n  Produces an action string which is generated by one agent but not\
+\\n  another if they are not may equivalent. If the agents are trace \
+\\n  equivalent, says true!\
+\\n\
+\\n  See also: dfstrong, dfweak, dftrace"
+
+       | help "prefixform" = UI.message "\
+\  Format: prefixform A;\
+\\n\
+\\n  Prints an agent in prefix form.\
+\\n\
+\\n  See also: sim, transitions"
+| help "pf" = help "prefixform"
+
+       | help "reduce" = UI.message "\
+\  Format: reduce;\
+\\n\
+\\n  Does nothing. Not yet implemented.\
+\\n\
+\\n  See also: noreduce, localmc"
+
+       | help "noreduce" = UI.message "\
+\  Format: noreduce;\
+\\n\
+\\n  Does nothing either. Not yet implemented.\
+\\n\
+\\n  See also: reduce, localmc"
+
+       | help "localmc" = UI.message "\
+\  Format: localmc;\
+\\n\
+\\n  Enables lazy evaluation of the transition system.\
+\\n\
+\\n  See also: globalmc, reduce"
+
+       | help "globalmc" = UI.message "\
+\  Format: globalmc;\
+\\n\
+\\n  Disables lazy evaluation of the transition system.\
+\\n\
+\\n  See also: localmc, reduce"
+
+       | help "quit" = UI.message "\
+\  Format: quit;\
+\\n\
+\\n  Terminates the workbench session.\
+\\n\
+\\n  Synonyms: exit, bye"
+| help "exit" = help "quit"
+| help "bye" = help "quit"
+
+       | help "sim" = UI.message "\
+\  Format: sim A;\
+\\n\
+\\n  Starts the interactive simulation of an agent."
+
+       | help "commands" = UI.message "\
+\  Environment Commands:  agent, set, relabel, prop, print, clear, save\
+\\n\
+\\n  Derivative Commands:   transitions, derivatives, closure, init, obs, vs\
+\\n\
+\\n  Useful Agent Commands: sort, size, states, fd\
+\\n\
+\\n  Equivalences Commands: eq, cong, strongeq, mayeq, musteq, testeq\
+\\n\
+\\n  Pre-order Commands:     pre, precong, strongpre, maypre, mustpre, testpre\
+\\n\
+\\n  Model Checking:        checkprop, dfstrong, dfweak, dftrace\
+\\n\
+\\n  There are more. Some natural abbreviations are allowed. `help command'\
+\\n  will provide a little more information on each CWB command. Note that\
+\\n  all commands are terminated by semi-colon."
+
+       | help s = UI.message "\
+\  Format: help syntax     - Syntax of SCCS supported\
+\\n  Format: help logic      - Syntax of the logic\
+\\n  Format: help commands   - Brief list of useful commands\
+\\n  Format: help <command>  - Brief help on each command\
+\\n\
+\\n  Limited on-line help facility (no more than an aide-memoir).\
+\\n\
+\\n  See also: The CWB user's manual, Books by Milner, Hoare, Hennessy,..."
+end
+

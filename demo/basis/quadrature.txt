@@ -1,0 +1,37 @@
+   Load File: __quadrature.sml
+
+   This module performs automatic quadrature using Simpson's rule.  It
+   illustrates the use of the Real structure in the basis library.
+   The module provides two functions, Quadrature.integrate and 
+   Quadrature.differentiate.
+
+   The function Quadrature.integrate takes arguments f, a, b, and accuracy and
+   integrates the function f between limits a and b to accuracy specified.  
+   If accuracy is NONE then maximum accuracy will be used.  If either of 
+   the limits is infinity or NaN, then the exceptions Overflow or Div will 
+   be raised respectively.  If any value in the integral cannot be evaluated 
+   then the exception Eval will be raised for that point.  (These precautions 
+   stop the calculation going into an infinite loop.)
+
+   For example:
+
+       Quadrature.integrate((fn x => 1.0 / x),1.0, 2.0,NONE);
+
+   gives
+
+       val it : real = 0.6931471806
+
+   and
+
+       Quadrature.differentiate (fn x => 1.0 / x) 3.0;
+ 
+   gives
+ 
+       val it : real = ~0.1111111082
+
+
+   This module is also used to calculate probabilities in the Normal 
+   distribution demo module.
+
+
+

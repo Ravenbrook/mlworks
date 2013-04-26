@@ -1,0 +1,345 @@
+(*
+ *
+ * $Log: Df.str,v $
+ * Revision 1.2  1998/06/02 15:18:06  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Df.str,v 1.2 1998/06/02 15:18:06 jont Exp $";
+functor Df ( structure PG  : POLYGRAPH;
+             structure SL  : SORTEDLIST;
+             structure L   : LOGIC;
+               sharing type PG.act = L.A.act) : DF =
+struct
+   structure PG = PG
+
+   type 'a state = 'a PG.state
+   type prop = L.prop
+   type 'a graphs = 'a state ref * 'a state ref list
+
+   datatype 'a blockNode = empty
+                         | leaf of {id    : int,
+                                    cont  : 'a state ref list}
+                         | node of {id    : int,
+                                    split : (PG.act * int),
+                                    right : 'a blockNode ref,
+                                    left  : 'a blockNode ref}
+
+   fun blockNo empty = ~1
+     | blockNo (leaf{id,...}) = id
+     | blockNo (node{id,...}) = id
+
+   fun pid (ref(PG.S{p_id,...})) = !p_id
+
+   val int_le = ((op <=) : int*int -> bool)
+
+(*****************************************************************************)
+(*          Finding bisimulation by state space partitioning                 *)
+(*****************************************************************************)
+
+    fun partition (ast: '_a state ref,    (* initial state of first graph *)
+                   bst: '_a state ref,    (* initial state of second graph *)
+                 graph: '_a state ref list)=  (* union of graphs  *)
+    let datatype split_type = can of PG.act * int | cannot of PG.act * int
+
+        exception diffcap of split_type
+        exception splitblock of split_type * (bool ref) * ('_a state ref list)
+        exception Again of ('_a blockNode)
+				   (* raised when a split necessary  *)
+        exception Noneqv of int * int
+
+        val topNode = ref (leaf {cont = graph,id = 0})
+        val blocknumber = ref 1      (* Number of next block to be generated *)
+        val _ = map (fn (ref(PG.S{p_id,...})) => p_id := 0) graph
+
+        fun pnums [] = []
+          | pnums (h::t) = SL.add int_le true (pid h,pnums t)
+
+        val caps = map (fn(a,l)=>(a,pnums(!l)))
+
+        fun capa_eq ([],[]) = ()
+          | capa_eq ((ac,b::_)::_,[]) = raise (diffcap (cannot (ac,b)))
+          | capa_eq ([],((ac,b::_)::_)) = raise (diffcap (can (ac,b)))
+          | capa_eq ((ac1,b1::restb1)::rest1,(ac2,b2::restb2)::rest2) =
+            if PG.act_eq(ac1,ac2) then
+               let fun check_blocks ([],[]) = ()
+                     | check_blocks (b::_,[]) = raise(diffcap(cannot(ac1,b)))
+                     | check_blocks ([],b::_) = raise(diffcap(can(ac1,b)))
+                     | check_blocks (b1::restb1,b2::restb2) =
+                       if b1 = b2 then check_blocks(restb1,restb2)
+                       else if b1 < b2 then raise(diffcap(cannot(ac1,b1)))
+                       else raise(diffcap(can(ac1,b2)))
+                in (check_blocks(b1::restb1,b2::restb2);
+                    capa_eq(rest1,rest2))
+               end
+            else if PG.act_le(ac1,ac2) then raise(diffcap(cannot(ac1,b1)))
+            else raise(diffcap(can(ac2,b2)))
+          | capa_eq _ = raise Panic
+
+        fun checkblock (empty,_) = ()
+(* hope the next case can't happen: maybe it corresponds to empty      *)
+(* graph? I don't pretend to understand. Need to overhaul all this.    *)
+	  | checkblock (leaf {cont = [], id}, _) = raise Panic
+          | checkblock (cblock as
+                        (leaf {cont=(block as ((ref(PG.S{suc,...}))::rest)),
+                               id}),ancestor) =
+            let
+	      val rightcapa = caps(!suc)
+	      fun checkcap (can_status,(ac,b),states) =
+		app (fn (ref(PG.S{suc,mark,...})) =>
+		     let
+		       fun chcap (ac2,b2) =
+			 PG.act_eq(ac,ac2) andalso
+			 (Lib.member (op =) (b,b2))
+		       val xist =
+			 fold (fn (cap,st) => st orelse (chcap cap))
+			 (caps (!suc)) false
+		     in
+		       if (xist andalso can_status) orelse
+		       ((not xist) andalso (not can_status))
+			 then mark := true else ()
+		     end) states
+
+	      fun checkstates [] = ()
+		| checkstates ((st as (ref(PG.S{suc,mark,...})))::rest) =
+		  (capa_eq(rightcapa,caps(!suc)); checkstates rest)
+		  handle diffcap diff =>
+		    raise (splitblock (diff,mark,rest))
+
+	      fun newblocks blk =
+		let
+		  fun newblocks' [] = ([],[])
+		    | newblocks' (h::t) =
+		      let
+			val (p1,p2) = newblocks' t
+			val (ref(PG.S {mark,p_id,...})) = h
+		      in if !mark then (mark := false;
+					p_id := !blocknumber + 1;
+					((h::p1),p2))
+			 else (p_id := !blocknumber; (p1,h::p2))
+		      end
+
+		  val (blk1,blk2) = newblocks' blk
+		in (((!blocknumber)+1,blk1),(!blocknumber,blk2))
+		end
+
+	    in ((checkstates rest)
+		handle splitblock (split,mark,rest) =>
+		  (mark := true;
+		   (case split of
+		      can c => checkcap(true,c,rest)
+		    | cannot c => checkcap(false,c,rest));
+		      ( raise Again
+			  ( let
+			      val (p1,p2) = (newblocks block)
+			      fun mkleaf (no,blk) =
+				leaf {cont = blk,id = no}
+			      val (leftCh,rightCh,c) =
+				case split of
+				  can c => (mkleaf p1,mkleaf p2,c)
+				| cannot c => (mkleaf p2,mkleaf p1,c)
+
+			      val newNode =
+				node {id = id,
+				      split = c,
+				      right = ref rightCh,
+				      left = ref leftCh}
+			    in (case ancestor of
+				  empty => topNode := newNode
+				| node {right,left,...} =>
+				    if blockNo(!right) = blockNo(cblock)
+				      then right := newNode
+				    else left := newNode
+				| leaf {...} => raise Panic);
+				    (* ancestor shouldn't be leaf!?!*)
+			      leftCh
+			    end))))
+            end
+          | checkblock (blk as (node {right,left,...}),ancestor) =
+            (checkblock (!right,blk); checkblock (!left,blk))
+
+        fun blk_neq (ref(PG.S{p_id=apid,...}),ref(PG.S{p_id=bpid,...})) =
+            ((!apid) <> (!bpid)) andalso (raise Noneqv (!apid,!bpid))
+
+        fun iterate () =
+            checkblock (!topNode,empty)
+            handle Again newleaf =>
+		 (blocknumber := !blocknumber + 2;
+                 if blk_neq(ast,bst) then raise Panic else iterate ())
+     in (iterate (); (true,!topNode,(0,0)))
+         handle Noneqv blocks => (false,!topNode,blocks)
+    end
+
+(****************************************************************************)
+
+    (* Satisfaction check for a subset of the Mu-calculus on graphs. *)
+    (* The routines in HMLSat unfortunately only work on agents.     *)
+    fun satisfies (st as (PG.S {suc,...}),df) =
+        let fun check_pos (ac,df) =
+            let val acstates =
+                Lib.del_dups (op =)
+                (flatten
+                 (map (fn (a,statelist) => !statelist)
+                    (filter (fn(a,statelist) => PG.act_eq(a,ac)) (!suc))))
+            in fold (fn (st,restval) => restval orelse satisfies(!st,df))
+                acstates false
+            end
+        in case df of
+                L.True => true
+              | L.Pos (L.modlist [ac],df) => check_pos(ac,df)
+              | L.Not (L.Pos (L.modlist [ac],df)) => not(check_pos(ac,df))
+              | L.And (df1,df2) => satisfies(st,df1) andalso satisfies(st,df2)
+              | _ => raise Panic
+        end
+
+    (* Simplistic simplifier for a subset of the modal mu-calculus *)
+    fun simp (L.Not (L.True)) = L.False
+      | simp (L.Not (L.False)) = L.True
+      | simp (L.Not (L.Not p)) = simp p
+      | simp (L.Pos (ac,L.False)) = L.False
+      | simp (L.Not (L.Pos (ac,L.False))) = L.True
+      | simp (L.Not (L.Pos (ac,p))) = L.Nec (ac,simp (L.Not p))
+      | simp (L.Pos (ac,p)) = L.Pos (ac,simp p)
+      | simp (L.And (p1,p2)) = L.And (simp p1,simp p2)
+      | simp hml = hml
+
+    (* Translate (a subset of the calculus) to weak (observation) logic *)
+    fun trans_mod (L.modlist [ac]) =
+      L.modlist [if PG.act_eq(ac,PG.tau) then PG.eps else ac]
+      | trans_mod _ = raise Panic	(* hope this can't happen. Why not? *)
+    fun trans_obs (L.Pos (ac,df)) = L.WeakPos (trans_mod ac,trans_obs df)
+      | trans_obs (L.Nec (ac,df)) = L.WeakNec (trans_mod ac,trans_obs df)
+      | trans_obs (L.Not df) = L.Not (trans_obs df)
+      | trans_obs (L.And(df1,df2)) = L.And (trans_obs df1,trans_obs df2)
+      | trans_obs hml = hml
+
+    (* Generates a sequence of actions that only one agent can perform *)
+    fun trans_may L.True = (false,[])
+      | trans_may (L.Pos (L.modlist [ac],hml)) =
+        let val (res,hml_res) = trans_may hml
+        in (res,ac::hml_res) end
+      | trans_may (L.Not hml) =
+        let val (res,hml_res) = trans_may hml
+         in if res then (false,hml_res)
+            else (true,hml_res)
+        end
+      | trans_may _ = raise Panic
+
+    (* Returns the block with blocknumber bno (or raises Panic) *)
+    fun find_block (bno,empty) = raise Panic
+      | find_block (bno,blk as (leaf {id,...})) =
+        if bno<>id then raise Panic else blk
+      | find_block (bno,blk as (node {id,right,left,...})) =
+        if bno<>id then
+          (find_block (bno,!right)
+           handle Panic => find_block (bno,!left))
+        else blk
+
+    (* Checks if the block with blocknumber bno is in the (argument two) tree *)
+    fun isinTree (bno,empty) = false
+      | isinTree (bno,leaf {id,...}) = (bno = id)
+      | isinTree (bno,node {id,left,right,...}) =
+        (bno = id) orelse (isinTree (bno,!left)) orelse
+         (isinTree (bno,!right))
+
+    (* Returns a three-tuple (l,split,r) where l is the left *)
+    (* child of a node where blk1 occurs as a subtree, and r is the right *)
+    (* subtree, split is the split of the node. If no such node exists, *)
+    (* Panic is raised. *)
+    fun find_labr (blk1,blk2,empty) = raise Panic
+      | find_labr (blk1,blk2,leaf {cont,...}) = raise Panic
+      | find_labr (blk1,blk2,blk as (node {left,right,split,...})) =
+        if isinTree(blk1,!left) then
+           if isinTree(blk2,!right) then (!left,split,!right)
+           else find_labr (blk1,blk2,!left)
+        else if isinTree(blk1,!right) then
+                if isinTree(blk2,!left) then (!left,split,!right)
+                else find_labr (blk1,blk2,!right)
+             else raise Panic
+
+    (* Computes a mu-calculus formula distinguishing states st1 and st2 *)
+    (* according to Cleaveland's algorithm (see LNCS 531) *)
+    fun delta (st1,st2,blkTree) =
+      let
+	val (l,(a,bno),r) = find_labr (pid st1,pid st2,blkTree)
+	val (lstate,rstate) =
+	  if isinTree (pid st1,l) then (st1,st2) else (st2,st1)
+
+	(* Computes all states reachable via an a-transition from `state' *)
+	fun a_suc_states (a,ref (PG.S {suc,...})) =
+	  Lib.del_dups (op =)
+	  (flatten
+	   (map (fn (ac,statelist) =>
+		 if PG.act_eq(ac,a) then !statelist else []) (!suc)))
+
+	val rstates = a_suc_states (a,rstate)
+      in
+	if null rstates then
+	  if st1 = lstate then L.Pos (L.modlist [a],L.True)
+	  else L.Not (L.Pos (L.modlist [a],L.True))
+	else
+	  let
+	    val blk = find_block (bno,blkTree)
+	    val lstates = filter (fn st => isinTree(pid(st),blk))
+	      (a_suc_states (a,lstate))
+
+	    fun compute_gamma lstate' =
+	      let
+		val gamma =
+		  map (fn rstate' => delta(lstate',rstate',blkTree)) rstates
+
+(* rather perverse use of list in second arg? come back to this *)
+		(* Removes unneccessary distinguishing formulas *)
+		fun check_gamma(necessary,[],[]) = necessary
+		  | check_gamma(necessary,[],g1::restg)=
+		    check_gamma(necessary,[g1],restg)
+		  | check_gamma(necessary,[g],untested)=
+		    let val rstatedf =
+                                    filter
+                                    (fn rstate' =>
+                                       not(satisfies(!rstate',g)) andalso
+                                       not(exists
+                                           (fn df =>
+                                              not(satisfies(!rstate',df)))
+                                              (necessary@untested))) rstates
+		    in if null rstatedf then
+		      check_gamma (necessary,[],untested)
+		       else check_gamma (g::necessary,[],untested)
+		    end
+		  | check_gamma (_, _, _) = raise Panic	(* can't happen *)
+	      in check_gamma ([],[],gamma)
+	      end
+
+	    fun HMLAnd [] = L.True
+	      | HMLAnd [df] = df
+	      | HMLAnd (df::rest) = L.And (df,HMLAnd rest)
+
+	    val gamma =
+	      L.Pos
+	      (L.modlist [a],if null lstates then raise Panic
+			     else HMLAnd(compute_gamma (hd lstates)))
+	  in if st1 = lstate then gamma else L.Not gamma
+	  end
+      end
+
+   fun eqdf ((a,graph1),(b,graph2)) =
+       let val (res,tree,_) = partition(a,b,graph1@graph2)
+        in if res then (true,L.True) else (false,delta(a,b,tree))
+       end
+
+   fun str_eq (g1,g2) = let val (status,df) = eqdf(g1,g2)
+                         in (status,simp df)
+                        end
+
+   fun obs_eq (g1,g2) = let val (status,df) = eqdf(g1,g2)
+                         in (status,trans_obs(simp df))
+                        end
+
+   fun may_eq (g1,g2) = let val (status,df) = eqdf(g1,g2)
+                         in (status,trans_may df)
+                        end
+
+end
+

@@ -1,0 +1,35 @@
+#!/bin/sh
+# Copyright (c) Harlequin Ltd 1996 (All rights reserved)
+
+case $#
+in
+   1) file=$1;;
+   *) 
+cat - <<%%%%
+Usage: copyright_hdr <file>
+
+This replaces the source control header by a standard copyright header
+(the date is maintained automatically).
+
+**NOTE** : The specified file is _replaced_ - it is imperative (sorry).
+
+%%%%
+     exit 0
+     ;;
+esac
+
+tmp=%tmp_file.$$%
+rm -f $tmp
+
+set `date`
+year=$6
+
+cat - <<%%%% > $tmp
+(*
+ * Copyright (c) $year Harlequin Ltd.
+ *
+ *)
+%%%%
+
+remove_src_hdr < $file >> $tmp
+mv $tmp $file

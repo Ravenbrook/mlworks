@@ -1,0 +1,47 @@
+# Makefile fragment for RS/6000 under AIX3.2
+#
+# $Id: ibm_aux,v 1.1 1995/03/22 11:24:20 nick Exp $
+#
+# This makefile bit just exports a whole bundle of macros.  It also includes
+# common.unx to export a bundle of default rules.  See the README file to
+# see what macros this is obligated to provide.
+#
+##################################################
+
+OLDCC=cc -c -qnoro -qchars=signed -U__STR__
+ANSICC=${OLDCC} -qlanglvl=ansi
+CCOM=${OLDCC}
+LDCOM=cc
+LINT=lint
+CPPCOM=cc -E
+MAKE=make
+RANLIB=ranlib
+AR=ar
+
+ARFLAGS=cr
+MCFLAGS=-Drs6000=1 -DRS6000 -DUNIX=1
+SPEEDFLAGS=-O -Q
+DEBUGFLAGS=-g
+
+SYSINC=-I/usr/include
+DEFS=${MCFLAGS} ${CDEFINES}
+CPPFILE=${CPPCOM} ${INCDIRS} ${DEFS} ${SYSINC}
+CCSPEED=${CCOM} ${SPEEDFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+CCDBG=${CCOM} ${DEBUGFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+LNFILE=	${LINT} -i ${LNFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+
+#The licensing tools all require the same libs so they're here
+LS_SYSLIBS=
+
+##################################################
+# $Log: ibm_aux,v $
+# Revision 1.1  1995/03/22 11:24:20  nick
+# new unit
+# accomodate new lude class ibm4.1_powerpc by sharing the makedef
+#
+# Revision 1.2  1994/06/01  14:16:25  chrism
+# add LS_SYSLIBS here since all licensing tools require the same libs
+#
+# Revision 1.1  1994/05/10  16:14:58  freeland
+# new file
+#

@@ -1,0 +1,40 @@
+# Makefile for testing dynamic linking stuff ... (SunOS version)
+
+CC 		= gcc
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -pedantic -g -Wall
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+XLIBS           = -lXm -lXt -lX11
+
+LD              = ld
+LD-FLAGS        = -Bdynamic
+
+LIB             =
+
+PROGS		= tst.so xtst.so xtst1.so nickb.so
+
+all : $(PROGS)
+
+xtst.so : xtst.o
+	$(LD) $(LD-FLAGS) $< -o $@
+
+# Note the $(XLIBS) has been removed for the above case,
+# because it works and I dont know why
+# Perhaps, the SunOS linker is slightly stupid
+
+memo : memo.c
+	$(CC) $(CFLAGS) $< $(XLIBS) -o $@
+
+%.so : %.o
+	$(LD) $(LD-FLAGS) $< -o $@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f core $(TARGETS) *.o *.so
+

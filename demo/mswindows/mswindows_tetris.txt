@@ -1,0 +1,47 @@
+  Load File: tetris.sml
+  
+  To play from inside MLWorks, at the listener prompt type 
+
+    tetris_test ();
+
+  or 
+  	
+    tetris ("Your Name", <level number>);
+  
+  where <level number> is an integer from 1 to 5 inclusive, and "Your
+  Name" is your name as you want it to appear in the high-score table.
+  The high-score table is written to a file `highscores.tet' which is 
+  re-loaded when the game is run again, or, if the file cannot be
+  found a new file is created.
+  
+  Controls for the game are:
+  
+        S   start / restart
+
+  	l   move piece right
+  	h   move piece left
+  	i   rotate piece anticlockwise
+  	o   rotate piece clockwise
+  
+  	<space> (hold down)  move piece down more quickly
+  
+  	X   quit
+  	
+
+  To run as a standalone executable first compile and load the
+  module as usual using the project workspace.  Then create an
+  executable file, for instance by doing
+
+    MLWorks.Deliver.deliver ("tetris",tetris_appl("Me",4),MLWorks.Deliver.WINDOWS);
+
+  (tetris_appl("Me",4) is a function of type unit -> unit which allows
+  the demo to be run without invoking MLWorks).  After delivery,
+  the MLWorks session will exit.  The file `tetris.exe' can then be 
+  run from the command-line.  
+  
+  Note that MLWorks executables depend on the MLWorks runtime shared
+  library (DLL).  If the DLL cannot be found, either add the bin
+  subdirectory of the current directory to your path environment
+  variable, or run the executable from either the bin directory or the
+  directory in which it is located.
+

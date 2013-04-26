@@ -1,0 +1,33 @@
+   Load File: __scramble.sml
+
+   This module illustrates some of the lower level binary IO features provided
+   by the basis library.  It defines functions to scramble and unscramble
+   files into a different order.  It demonstrates the BinIO structure,
+   in particular the underlying functional streams used in the BinIO.StreamIO
+   structure.  It also demonstrates the use of the BinPrimIO, Position and
+   Word8Array structures.
+
+   The functions Scramble.scramble and Scramble.unscramble open an
+   in-file and an out-file, convert them into their underlying functional
+   streams and either scramble or unscramble them using the given 
+   permutation function. Examples of such functions are provided by this 
+   module as the functions Scramble.rotate, which takes an integer argument
+   and rotates to the right by that number of bytes, Scramble.reverse,
+   which reverses elements, and Scramble.shuffle
+
+   For example
+
+	Scramble.scramble (Scramble.reverse) ("foo","foo.s");
+      
+   reverses the order of the file `foo' and writes the result to `foo.s', 
+   while 
+
+        Scramble.scramble (Scramble.shuffle) ("foo","foo.s");
+ 
+   performs a shuffle operation on the order of elements in the file,
+   ard
+
+        Scramble.unscramble (Scramble.shuffle) ("foo.s","foo");
+ 
+   unscrambles a file scrambled using Scramble.shuffle, and so on.
+   

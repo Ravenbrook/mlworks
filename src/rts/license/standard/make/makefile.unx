@@ -1,0 +1,176 @@
+#------------------------------------------------------------------------------
+#
+# File:           $HopeName: HQNc-standard!make:makefile.unx(trunk.18) $
+# Copyright:      Copyright C 1994 The Harlequin Group Limited.
+# Description:
+#   UNIX Makefile for HQNc-standard
+#
+#
+#------------------------------------------------------------------------------
+
+all: doit
+
+# Get the platform-specific bits
+
+include ${MAKEBIT}
+
+LIB=${TARGETDIR}/standard.a
+
+doit: makeObjDir ${LIB}
+
+# Use the STRICT ANSI compiler for all new source
+CCOM=$(ANSICC_STRICT)
+
+INCDIRS=-I./export -I./src
+
+CDEFINES=${PROD_DEFS}
+
+OBJECTS= \
+	${LIB}(hq32x2.o) \
+	${LIB}(hqassert.o) \
+	${LIB}(hqmemcpy.o) \
+	${LIB}(hqstr.o) \
+	${LIB}(volatile.o)
+
+MOREOBJS=
+
+CFILES_DEPLIB= \
+	src/hq32x2.c \
+	src/hqassert.c \
+	src/hqmemcpy.c \
+	src/hqstr.c \
+	src/volatile.c
+
+LNFILES= \
+	${TARGETDIR}/hq32x2.ln \
+	${TARGETDIR}/hqassert.ln \
+	${TARGETDIR}/hqmemcpy.ln \
+	${TARGETDIR}/hqstr.ln \
+	${TARGETDIR}/volatile.ln
+
+#-------------------- The actual rules begin here -----------------------------
+
+depend: libDepend
+
+clean:
+	rm -f ${TARGETDIR}/*.o ${TARGETDIR}/*.a ${TARGETDIR}/*.ln
+
+${TARGETDIR}/hq32x2.ln: src/hq32x2.c
+	${LNFILE} ${LNFLAGS}  src/hq32x2.c | tee hq32x2.lint
+	mv hq32x2.ln ${TARGETDIR}
+
+${LIB}(hq32x2.o): src/hq32x2.c
+	${ANSICCCOMMAND} -o ${TARGETDIR}/$% src/hq32x2.c
+	${AR} ${ARFLAGS} $@ ${TARGETDIR}/$%
+	rm ${TARGETDIR}/$%
+
+${TARGETDIR}/hqassert.ln: src/hqassert.c
+	${LNFILE} ${LNFLAGS}  src/hqassert.c | tee hqassert.lint
+	mv hqassert.ln ${TARGETDIR}
+
+${LIB}(hqassert.o): src/hqassert.c
+	${ANSICCCOMMAND} -o ${TARGETDIR}/$% src/hqassert.c
+	${AR} ${ARFLAGS} $@ ${TARGETDIR}/$%
+	rm ${TARGETDIR}/$%
+
+${TARGETDIR}/hqmemcpy.ln: src/hqmemcpy.c
+	${LNFILE} ${LNFLAGS}  src/hqmemcpy.c | tee hqmemcpy.lint
+	mv hqmemcpy.ln ${TARGETDIR}
+
+${LIB}(hqmemcpy.o): src/hqmemcpy.c
+	${ANSICCCOMMAND} -o ${TARGETDIR}/$% src/hqmemcpy.c
+	${AR} ${ARFLAGS} $@ ${TARGETDIR}/$%
+	rm ${TARGETDIR}/$%
+
+${TARGETDIR}/hqstr.ln: src/hqstr.c
+	${LNFILE} ${LNFLAGS}  src/hqstr.c | tee hqstr.lint
+	mv hqstr.ln ${TARGETDIR}
+
+${LIB}(hqstr.o): src/hqstr.c
+	${ANSICCCOMMAND} -o ${TARGETDIR}/$% src/hqstr.c
+	${AR} ${ARFLAGS} $@ ${TARGETDIR}/$%
+	rm ${TARGETDIR}/$%
+
+${TARGETDIR}/volatile.ln: src/volatile.c
+	${LNFILE} ${LNFLAGS}  src/volatile.c | tee volatile.lint
+	mv volatile.ln ${TARGETDIR}
+
+${LIB}(volatile.o): src/volatile.c
+	${ANSICCCOMMAND} -o ${TARGETDIR}/$% src/volatile.c
+	${AR} ${ARFLAGS} $@ ${TARGETDIR}/$%
+	rm ${TARGETDIR}/$%
+
+${LIB}: ${OBJECTS} ${MOREOBJS}
+	${RANLIB} ${LIB}
+
+# $Log: makefile.unx,v $
+# Revision 1.19  1998/01/08 17:14:12  jonw
+# [Bug #20913]
+# Add hqmemcpy.c.
+#
+# Revision 1.18  1997/03/05  10:54:42  nickr
+# [Bug #30117]
+# remove bogus product specific fragment
+#
+# Revision 1.17  1996/12/23  11:12:47  luke
+# [Bug #20078]
+# file position and extents require 64 bits
+#
+# Revision 1.16  1996/02/27  14:27:54  andrewi
+# [Bug #7487]
+# add hqstr.c to library
+#
+# Revision 1.15  1996/01/18  14:07:44  nickr
+# [Bug #7401]
+# remove SYSINC from INCDIRS
+#
+# Revision 1.14  1995/11/03  12:33:37  angus
+# [Bug #6715]
+# Remove references to v20 export where possible.
+#
+# Revision 1.13  1995/05/26  16:53:49  davidg
+# [Bug #5643]
+# SMP rip - support WRITE_SHM() correctly on SPARC platforms
+#
+# Revision 1.12  1995/01/05  14:15:35  davidh
+# [Bug #4288]
+# Adding -DHQASSERT_USEPRINTF so that hqassert can be compiled for use
+# with pgbcomp
+#
+# Revision 1.11  1994/07/25  14:17:05  nickr
+# dependency details moved to common.unx
+#
+# Revision 1.10  1994/07/24  19:48:38  davidg
+# ensure object directories are created when building dependencies
+#
+# Revision 1.9  1994/07/22  13:16:45  nickr
+# make dependencies flavoured
+#
+# Revision 1.8  1994/07/18  13:53:48  luke
+# include coregui export
+#
+# Revision 1.7  1994/07/18  08:31:51  luke
+# include /v20/export
+#
+# Revision 1.6  1994/07/15  20:20:04  luke
+# include PROD_DEFS in the CINCLUDES
+#
+# Revision 1.5  1994/07/15  17:22:00  luke
+# add flavours to allow linked builds
+#
+# Revision 1.4  1994/06/30  15:56:13  luke
+# add depend target
+#
+# Revision 1.3  1994/06/20  18:04:14  davide
+# object target directory missing
+#
+# Revision 1.2  1994/05/10  20:15:46  freeland
+# changed ${CCDBG} in Makefiles back to ${CCSPEED}.  People can still revert
+# this manually; however, swmake now notices the environment variable DEBUG,
+# so there's less cause to.
+#
+# Revision 1.1  1994/05/05  05:40:22  davidg
+# new file
+#
+
+# eof makefile.unx

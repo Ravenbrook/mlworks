@@ -1,0 +1,118 @@
+;;;	==== MLWORKS EMACS SERVER ====
+;;;
+;;; Copyright (C) 1993 Harlequin Ltd
+;;;
+;;; This file is part of MLWorks.  Consult MLWorks documentation for
+;;; details of how to use the MLWorks server.
+;;;
+;;; $Id: mlworks-server.el.in,v 1.2 1996/02/16 15:01:41 daveb Exp $
+
+(defvar mlworks-server:program "$LIBDIR/emacs/etc/mlworks-server"
+  "The path of the program which listens for MLWorks Emacs server requests.")
+
+(defvar mlworks-server:process nil
+  "The Emacs process object of the server process, or nil if never started.")
+
+(defvar mlworks-server:buffer "*MLWorks server*"
+  "The name of a buffer to which server requests and messages are appended.
+This facility is provided purely for the information of the user.  No
+buffer is used if this variable is nil.")
+
+(defun mlworks-server ()
+  "Start the MLWorks Emacs server.
+The server listens for requests from MLWorks to edit files and pops
+them up in a buffer."
+  (interactive)
+  (and mlworks-server:process
+       (delete-process mlworks-server:process))
+  (setq mlworks-server:process
+	(start-process "mlworks-server" nil
+		       mlworks-server:program))
+  (set-process-filter mlworks-server:process 'mlworks-server:filter)
+  (process-kill-without-query mlworks-server:process)
+  (if mlworks-server:buffer
+      (bury-buffer (get-buffer-create mlworks-server:buffer)))
+  mlworks-server:process)
+
+(defun mlworks-server:filter (process string)
+  "Filter function for the MLWorks Emacs server process.
+The server process sends Emacs lisp expressions.  These are appended
+to the buffer mlworks-server:buffer if it is non-nil, then evaluated."
+  (if mlworks-server:buffer
+      (save-excursion
+	(switch-to-buffer mlworks-server:buffer)
+	(goto-char (point-max))
+	(insert "[")
+	(insert string)
+	(insert "]")
+	(bury-buffer)))
+  (eval (read string)))
+
+(defun mlworks-x-y-to-pos (x y)
+   "Converts a line and column in MLWorks co-ordinates to an emacs position"
+   (save-excursion
+      (goto-char (point-min))
+      (next-line (1- x))
+      (+ (point) (1- y))))
+   
+(defvar mlworks-overlay nil "The current highlighted overlay")
+
+(defun mlworks-unhighlight ()
+   "Removes an existing mlworks highlight"
+   (interactive)
+   (if (null mlworks-overlay) () (delete-overlay mlworks-overlay)))
+
+(defun mlworks-undo-highlight (begin end)
+   "Version of mlworks-unhighlight for installation on the before-changes hook"
+   (if (null mlworks-overlay)
+       ()
+       (if (eq (overlay-buffer mlworks-overlay) (current-buffer))
+           (mlworks-unhighlight)
+           ())))
+	
+(make-variable-buffer-local 'mlworks-undo-highlight-installed)
+
+(defvar mlworks-undo-highlight-installed nil
+   "True if we have installed a change function")
+
+(defun mlworks-install-change-fn ()
+   "Installs a function that removes the highlight when the buffer is changed"
+    (interactive)
+    (if mlworks-undo-highlight-installed
+	()
+        (progn
+           (make-local-variable 'before-change-functions)
+           (setq before-change-functions
+                 (cons 'mlworks-undo-highlight before-change-functions))
+	   (put 'before-change-functions 'permanent-local t)
+           (setq mlworks-undo-highlight-installed t)
+	   (put 'mlworks-undo-highlight-installed 'permanent-local t))))
+
+(defun mlworks-highlight (s_line s_col e_line e_col)
+   "Highlights a section of text specified by two points given in MLWorks
+co-ordinates"
+   (let* ((start-pos (mlworks-x-y-to-pos s_line s_col))
+          (end-pos (mlworks-x-y-to-pos e_line (1+ e_col)))
+          (overlay (make-overlay start-pos end-pos)))
+      (mlworks-unhighlight)
+      (overlay-put overlay 'face 'highlight)
+      (mlworks-install-change-fn)
+      (setq mlworks-overlay overlay)
+      'highlight))
+
+;; Raises the window showing a specified buffer
+
+(defun raise-window (buffer)
+     "Raise the frame showing BUFFER to the top."
+     (interactive "bRaise buffer: ")
+     (let ((window (get-buffer-window buffer 0)))
+          (cond (window (raise-frame (window-frame window)))
+                (t (error "Current buffer not in any frame")))))
+
+;; Raises the window showing the current buffer
+
+(defun raise-this-window ()
+     "Raise the frame showing the current buffer to the top."
+     (interactive)
+     (raise-window (current-buffer)))
+

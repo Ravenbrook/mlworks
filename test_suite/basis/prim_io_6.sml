@@ -1,0 +1,168 @@
+(* preliminary Test suite for binprimio functions.
+ *
+
+   Result: OK
+
+ * $Log: prim_io_6.sml,v $
+ * Revision 1.10  1997/11/21 10:47:15  daveb
+ * [Bug #30323]
+ *
+ *  Revision 1.9  1997/08/05  09:42:53  brucem
+ *  [Bug #30004]
+ *  Suppress printing structure contents to prevent spurious failure.
+ *
+ *  Revision 1.8  1997/05/28  11:15:06  jont
+ *  [Bug #30090]
+ *  Remove uses of MLWorks.IO
+ *
+ *  Revision 1.7  1997/01/30  16:20:43  andreww
+ *  [Bug #1904]
+ *  monovectors no longer equality types.
+ *
+ *  Revision 1.6  1997/01/15  15:53:06  io
+ *  [Bug #1892]
+ *  rename __word{8,16,32}{array,vector} to __word{8,16,32}_{array,vector}
+ *
+ *  Revision 1.5  1996/08/14  12:11:06  io
+ *  switch off Compiling messages...
+ *
+ *  Revision 1.4  1996/07/18  14:08:09  andreww
+ *  [Bug #1453]
+ *  updating to respect the modernisation of the IO library (May 96)
+ *
+ *  Revision 1.3  1996/06/04  12:16:48  andreww
+ *  adding BinPrimIO.
+ *  ,
+ *
+ *  Revision 1.2  1996/05/24  15:14:00  andreww
+ *  fix bugs relating to answer files.
+ *
+ *  Revision 1.1  1996/05/24  10:19:38  andreww
+ *  new unit
+ *
+ * Copyright (c) 1996 Harlequin Ltd.
+ *
+ *)
+
+
+local
+  open General;
+  open BinPrimIO;
+
+  infix ==;
+  fun a == b =
+    let
+      val len = Word8Vector.length a
+      fun scan i = if i=len then true
+                   else (Word8Vector.sub(a,i) = Word8Vector.sub(b,i)
+                         andalso scan (i+1))
+    in
+      len = Word8Vector.length b
+      andalso scan 0
+    end
+
+
+in
+
+(*functions to supply output *)
+
+  val number = ref (Word8.fromInt 0);
+  val result = ref (Word8Vector.fromList [])
+
+  fun nextno () = (number:=(Word8.fromInt(1+Word8.toInt(!number)));
+                   !number);
+
+  fun reset () = number:=Word8.fromInt 0;
+
+  fun makelist x = if x<=0 then [] 
+                   else nextno()::(makelist(x-1));
+
+
+
+(* Meet Cornelia, who is a lovely writer *)
+
+
+  val w=WR{ name = "Cornelia",
+              chunkSize = 5,
+              writeVec = NONE,
+              writeArr = NONE,
+
+              writeVecNB = SOME (fn {buf=b,i=p,sz=s} => SOME (
+                                 result:=Word8Vector.extract(b,p,s);
+                                 case s of
+                                   NONE => Word8Vector.length b -p
+                                 | SOME(si) => si)),
+              writeArrNB=NONE,
+              block=SOME(fn ()=>()),
+              canOutput= SOME(fn ()=>true),
+              getPos = SOME(fn ()=> 0),
+              setPos = SOME(fn x => ()),
+              endPos = SOME(fn ()=> ~1),
+              verifyPos = NONE,
+              close = fn () => (),
+              ioDesc = NONE};
+
+
+  val w'= augmentWriter w;
+
+
+(* test synthesized vector write *)
+
+  val f = (fn WR({writeVec=SOME(f),...}) => f
+            | WR({writeVec=NONE,...}) => raise Div) w';
+                                 (* a hack to overcome warning messages
+                                  * about unexhaustive matches.  Div
+                                  * should never be raised *)
+
+  val v = (reset(); Word8Vector.fromList (makelist 10));
+
+  val x = f{buf = v, i=0, sz=NONE};
+  
+
+  fun compare x = if v== !result then print"Vector write succeeded.\n"
+                  else print"Vector write failed.\n"
+
+  val test1 = compare 1;
+
+
+(* test synthesized array write *)
+
+
+  val f = (fn WR({writeArr=SOME(f),...}) => f
+            | WR({writeArr=NONE,...}) => raise Div) w';
+
+  val a = (reset(); Word8Array.fromList (makelist 10));
+
+  val x = f{buf = a, i=0, sz=NONE};
+  
+    fun compare x = if x = 10 then print"Array write succeeded.\n"
+                  else if Word8.toInt(Word8Vector.sub(!result,x-1))<>x
+                       then print"Array write failed.\n"
+                         else compare (x+1);
+
+  val test2 = compare 1;
+
+
+(* test synthesized array NB write *)
+
+  val f = (fn WR({writeArrNB=SOME(f),...}) => f
+            | WR({writeArrNB=NONE,...}) => raise Div) w';
+
+  val a = (reset(); Word8Array.fromList (makelist 10));
+
+  val x = f{buf = a, i=0, sz=NONE};
+  
+    fun compare x = if x = 10 then print"ArrayNB write succeeded.\n"
+                  else if Word8.toInt(Word8Vector.sub(!result,x-1))<>x
+                       then print"ArrayNB write failed.\n"
+                         else compare (x+1);
+
+  val test3 = compare 1;
+
+end;
+
+
+
+
+
+

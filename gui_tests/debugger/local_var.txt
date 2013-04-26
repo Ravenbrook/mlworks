@@ -1,0 +1,73 @@
+
+Bug #1421: stack browser: turning off variable display doesn't work
+Fixed by change #2817
+
+Bug Description: If the stack browser is currrently displaying the local
+variables of a function and then you turn off displaying of local variables 
+(from Settings menu), the local variables window is not updated.  
+That is, the are not deleted and when you select another function, they 
+are not updated, those of the previous frame remain.
+
+Repeat by:
+
+In Listener window, type:-
+use "../demo/btree";
+Btree.fromList ([1,42], op<);
+
+This will pop up a stack browser when the Div exception is raised.  If
+yo select the "list fold argument 2 [42]" line in the Stack, you
+should see something like :-
+
+  Exception Div[<Pervasive> ...
+
+   Local Variables
+
+   listfold argument 2 [...
+
+   val frame argument: int list = [42]
+   val _id233: int list = [42]
+   val f: (int *'a) -> 'a = fn
+   val b: 'a = _
+   val h: int = 42
+   val t: int list = []
+
+   Stack (grows upwards)
+   add' argument 1 (E, 42)
+   add argument 1 (T, (1, !, E, E), 42)
+   listfold argument 2 [42]
+   listfold argument 2 [1,42]
+   fromList ([1,42], fn)
+
+Turn off the display of of variables by clicking on
+Settings/Information/Show variable info.  The variables do no go away.
+Select another frame, say the "fromList ([1,42], fn)" line and the
+display changes to :- 
+
+  Exception Div[<Pervasive> ...
+
+   Local Variables
+
+   fromList [...
+
+   val _id233: int list = [42]
+   val f: (int *'a) -> 'a = fn
+   val b: 'a = _
+   val h: int = 42
+   val t: int list = []
+
+   Stack (grows upwards)
+   add' argument 1 (E, 42)
+   add argument 1 (T, (1, !, E, E), 42)
+   listfold argument 2 [42]
+   listfold argument 2 [1,42]
+   fromList ([1,42], fn)
+
+
+Note that although "listfold .." has changed to "foldList ...", the
+variables themselves are still those of listfold.
+
+
+Proper behaviour:  local variables window is updated when the appropriate
+settings are applied.
+
+

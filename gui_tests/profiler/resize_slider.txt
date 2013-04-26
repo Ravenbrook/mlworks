@@ -1,0 +1,39 @@
+
+Bug #1954:  Win32: Profiler messy when resized to be smaller and slider not
+	    working properly.
+Fixed by change #2869
+
+Repeat by:  In Listener, invoke the profiler by typing an expression and
+pressing 'Profile'.
+
+Bug report :
+
+1. On the Time/Space scroll bar, the arrow buttons at the ends are not
+synchronised with the slider bar.  For example, move the slider all the way
+along to the right hand end, then press the right arrow button - the slider
+jumps back close to the left hand end.  Keep pressing the right arrow
+button, and after the slider has returned to the right hand end, some of the
+bars on the graph start to show negative values, and after a while the scale
+changes so that the tallest bars show over 100%.  A similar effect can be
+seen by pressing the left arrow button when the slider is at the left hand
+end of the bar.
+
+Proper behaviour: arrow buttons are synchronized, and the values of the 
+tallest bars are never over 100%.  Also the Time/Space scroll bar can now
+be adjusted by clicking in the space between one end of the bar and the 
+slider button on the bar.
+
+2. If the profiler window is resized, making it narrower, 
+a) the Time/Space scroll bar does not shrink to fit the window, so the right
+hand end is inaccessible
+b) the horizontal scroll bar that appears on the graph covers the graph
+baseline.
+
+3. After resizing the profiler window a few times (has happened as early as
+the second resize operation, but may take several more), the profiler window
+becomes blank (white) and MLWorks hangs.  This is a little more difficult to
+reproduce, but does seem to happen quite regularly, particularly when
+resizing by grabbing the bottom right corner of the window and shrinking it.
+
+Proper behaviour: Profiler window cannot be resized below a certain minimum
+size which ensures that the above doesn't happen.

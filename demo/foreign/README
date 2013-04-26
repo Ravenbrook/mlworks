@@ -1,0 +1,243 @@
+			     -*- Text -*-
+
+# Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# Revision Log
+# ------------
+# $Log: README,v $
+# Revision 1.4  1997/06/04 13:32:46  stephenb
+# [Bug #30029]
+# Add .platform.sunos
+#
+# Revision 1.3  1997/05/23  13:34:02  stephenb
+# [Bug #30121]
+# Correct "possibly" typo.
+# JonT did spot this when approving and I did change it.
+# Unfortunately I didn't save the buffer inside Emacs and
+# so the version without the fix was checked in.
+#
+# Revision 1.2  1997/05/22  14:28:01  stephenb
+# [Bug #30121]
+# Add instructions on how to ensure that a demo is distributed.
+#
+# Revision 1.1  1997/05/14  12:37:44  stephenb
+# new unit
+# [Bug #20035]
+#
+#
+
+.title: C<->ML (aka Foreign) Interface Examples
+
+.intro: This directory contains examples for the foreign interface
+ most/all of which are distributed to customers.
+
+
+ADDING A NEW EXAMPLE
+
+.add.dir: Create a directory for the test.  In the following assume
+ that the test is called 'foo'.
+
+.add.test: Create a test for the example, see .test.
+
+.add.ans: If the example can be tested automatically, then construct
+ an answer, see .make.ans.
+
+.add.ans.add: When adding the answer to hope, include "-binary" if
+ using hope directly, or pass "-B" to the add script
+ <URI:hope://MLW/tools/add> to ensure that the answer is added in
+ binary format.
+
+.add.dist: If the example is to be distributed to customers, then it
+ needs to be included in the distribution, see .dist for
+ information on how to do this.
+
+
+
+FORMAT OF EXAMPLE TEST
+
+.test: There are two types of tests, manual and automatic.
+
+.test.man: If it is not possible to construct a fully automatic test
+ for a particular example (say it has a GUI component), then create a
+ file called foo/MANUAL containing instructions on how to manually test
+ the example. 
+
+.test.auto: If the example can be tested automatically, then it needs
+ the following components :-
+
+.test.auto.platform: A script called foo/PLATFORM.sh which indicates
+ which platforms the test can run on.  This script should read the
+ environment variables $OS and $ARCH to determine if the test is
+ applicable to that combination and return success (0) if it is.
+
+.test.auto.main: The main script must be called foo/TEST.sh
+
+.test.auto.out: For the test to be useful it needs to create some output.
+ At a minimum this can just be something that indicates whether the
+ test succeeded or not (e.g. "yes" or "no").
+
+.test.auto.out.sink: script should write any output stdout.
+
+.test.auto.out.sml: By convention any SML commands that need to fed
+ into MLWorks are stored in foo/TEST.sml, but you are free to alter
+ that as necessary when you create foo/TEST.sh.
+
+.test.auto.ans: The correct result of running a test should be stored
+ in foo/TEST.ans -- see .make.ans.
+
+.test.auto.form: foo/TEST.sh building the .so/.dll, running MLWorks
+ loading 
+
+.test.auto.form.version: Do some OS/ARCH testing to work out which
+ Makefile and source-path to use.
+
+.test.auto.form.make: Run make to build the .so/.dll
+
+.test.auto.form.sml: Run MLWorks taking its input from foo/TEST.sml
+
+.test.auto.form.exec: If .test.auto.form.sml involves dumping an
+ executable, then run the executable.
+
+.test.auto.sh: all the scripts should be written in sh and have the
+ extension ".sh".  The ".sh" extension isn't strictly necessary
+ anymore and could be removed if desired.  It harks back to the time
+ when MKS sh was used which required this extension.
+
+
+TESTING AN EXAMPLE
+
+.testing.man: For a manual test, follow the instructions in foo/MANUAL.
+
+
+.testing.auto.test.one: To check that the result of a test is correct,
+ run check_foreign_result.sh from this directory.  For example, to
+ test foo do 
+
+   $ ./check_foreign_result.sh foo
+
+ There will not be any output unless a test fails.  
+
+
+.testing.auto.test.all: To run all automatic tests, use
+ check_foreign_results.sh  
+
+   $ ./check_foreign_results.sh
+
+
+.testing.auto.test.daily: All automatic tests are also run from the daily
+ script <URI:hope//MLW/tools/daily>.
+
+
+.testing.auto.fail: If a test fails, it will leave behind a file
+ called TEST.out in the test directory which contains the output from
+ the last run of the test.  For example, if testing foo fails, 
+ the file foo/TEST.out will contain the output from the last run.
+
+
+
+MAKING A TEST ANSWER
+
+.make.ans: The preferred method for constructing test answers is to
+ use either of the following approaches.
+
+
+.make.ans.one: To construct the answer for a particular example, use
+ make_foreign_answer.sh.  For example, to create the answer for foo :-
+
+   $ ./make_foreign_answer.sh foo
+
+ If an answer already exists, then make_foreign_answer will only
+ overwrite the file if it is writable.
+
+
+.make.ans.all: To construct answer files for all automatic tests, use
+ make_foreign_answers.sh.  For example :-
+
+  $ ./make_foreign_answers.sh
+
+
+
+PLATFORMS
+
+.platform: To save writing the same type of platform testing code 
+ in each test, a few of the more common varieties have been written
+ and can be called directly from foo/PLATFORM.sh
+
+.platform.all: platform_all.sh succeeds for any platform.
+
+.platform.unix: platform_unix.sh succeeds if the platform is running Unix.
+
+.platform.win32: platform_win32.sh succeeds if the platform is running
+ NT/Win95. 
+
+As an example of a less common type of platform :-
+
+.platform.unix: platform_unix.sh succeeds if the platform is running SunOS.
+
+.platform.opengl: platform_opengl.sh succeeds if the platform supports
+ OpenGL (at least in theory, I haven't checked to see if we really
+ have the libraries installed).
+
+
+
+DISTRIBUTING AN EXAMPLE
+
+.dist: To ensure that an example is included in a distribution, you
+ need to create an example specific distribution script (.dist.sh) and
+ possibly alter the PC install script (.dist.pc.inst).
+
+.dist.sh: Each example has its own distribution script called foo/DIST.sh
+
+.dist.sh.dir: The script should expect to be run from the directory foo.
+
+.dist.sh.arg: This script should expect three arguments: the directory
+ in which the files should be deposited, the OS setting and the ARCH
+ settting.  The OS and ARCH are optional under Unix, but necessary
+ under NT.
+
+.dist.pc.inst: If the example runs under Win95/NT, then you will also
+ need to update the PC install script
+ <URI:hope://MLW/tools/inst.bat> to ensure that the example is copied
+ correctly -- just make a copy of the line that adds the "add" example
+ and replace "add" with whatever the new example is called.
+
+.dist.all: The distribution of all the foreign examples is taken care
+ of by dist_foreign_files.sh which is called from
+ <URI:hope://MLW/src/Makefile>.
+
+
+
+DESIGN
+
+.design.ancestor: The design of the testing mechanism is based loosely
+ on that used in the test-suite.
+
+.design.options: Unlike the test-suite scripts, the foreign test
+ scripts take few if any options.  This is because I've rarely used
+ any of the options available in those scripts, the exceptions being 
+ the -src and -dir options.  The former is an optional argument to the
+ foreign scripts and the latter is controlled by the $OS and $ARCH
+ environment variable settings.  If you find this too limiting, by all
+ means add more options as you see fit.
+
+.design.platform.alt: An alternative to the foo/PLATFORM.sh approach
+ is to use the find based mechanism that is used in the test-suite.
+ There isn't much to choose between them.  The deciding factor is that
+ in the foo/PLATFORM.sh approach it is relatively easy to indicate
+ which platforms a test can run on whereas in the find based approach
+ it is necessary to work out which tests cannot be run on a given
+ platform (rather than which can, which is arguably easier to determine).
+
+.design.platform-indepedent: The scripts have been written under the
+ assumption that the answer for a test is the same for any platform
+ on which the test can be run.
+
+.design.single-threaded: A consequence of .design.platform-independent
+ is that it is not possible to run the foreign tests for two different
+ platforms concurrently.  However, given that except in the case of
+ SunOS and Solaris it isn't possible to have two MLWorks for different
+ OSes running at the same time, this doesn't seem to be an important
+ restriction at present.  If/When the all uses of (soft) links are
+ removed from the MLWorks development tree, it will be possible to run
+ multiple versions of MLWorks and so .design.platform-independent will
+ been to be revisited.

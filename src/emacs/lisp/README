@@ -1,0 +1,57 @@
+SML-MODE (3.2) -- Major Emacs mode for editing Standard ML.
+
+Files:
+
+  sml-mode.el     (SML mode elisp code)
+  sml-proc.el     (ML interaction code)
+  sml-hilite.el   (hilit19 functions)
+  sml-font.el     (font-lock functions)
+  sml-menus.el    (Simple menus)
+
+  sml-mlworks.el    (Additional library code to run mlworks)
+
+  sml-mode.info   (Softcopy manual -- Info for (X)Emacs19)
+
+Extras:
+
+  sml-mode.dvi    (Hardcopy manual)
+  sml-mouse.el    (Nice mouse feature for GNU Emacs)
+
+Warning:
+
+  Well tested (and used) on GNU Emacs 19.2{6,7,8,9}, less well tried
+  with XEmacs 19.1{1,2}.
+
+  XEmacs 19.11 is known to hang on sending regions to the interaction
+  buffer -- so leave variable SML-TEMP-THRESHOLD = 0 and, fingers
+  crossed, this problem won't appear. Seems to be fixed in 19.12.
+
+Installation Guide:
+
+  Create a directory like "/home/xxx/lib/emacs/sml", if your login
+  name is xxx, and copy the sml-*.el files to there. Then:
+  
+  (setq load-path (cons "/home/xxx/lib/emacs/sml" load-path))
+
+  (autoload 'sml-mode "sml-mode" "Major mode for editing ML programs." t)
+
+  in your .emacs file. Add:
+
+  (setq auto-mode-alist
+        (append '(("\\.sml$" . sml-mode) 
+                  ("\\.ML$"  . sml-mode)) auto-mode-alist))
+
+  to your .emacs then whenever you visit a file with a .sml or .ML
+  extension, you will automatically be placed in sml-mode. 
+
+  Put the info file (sml-mode.info) somewhere convenient like
+  "/home/xxx/lib/info/sml-mode.info", and add
+
+  (setq sml-mode-info "/home/xxx/lib/info/sml-mode.info")
+
+  again to your .emacs -- this gives access to on-line help.
+
+  READ IT!
+
+Matthew Morley <morley@gmd.de>
+07/95

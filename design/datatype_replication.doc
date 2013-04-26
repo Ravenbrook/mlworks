@@ -1,0 +1,230 @@
+%
+% DATATYPE REPLICATION IMPLEMENTATION DOCUMENTATION
+%
+%  Copyright (C) 1996 Harlequin Ltd
+%
+%   Revision Log
+%   -------------
+%   $Log: datatype_replication.doc,v $
+%   Revision 1.2  1996/10/30 11:21:43  andreww
+%   [Bug #1708]
+%   altered syntax of datatype replication.
+%
+# Revision 1.1  1996/09/20  15:57:39  andreww
+# new unit
+# Documentation explaining the addition of datatype replication.
+#
+#
+# Internal documentation for my implementation of datatype replication
+#
+
+
+Related files:
+
+	parser/ml-tables/new-grammar.lisp         *
+	parser/ml-tables/_actionfunctions-start
+	parser/ml-tables/_LRbasics-start
+	parser/ml-tables/_LRbasics-end
+
+	basics/absyn.sml
+	basics/_absyn.sml			  *
+	basics/absynprint.sml
+	basics/_absynprint.sml
+
+	typechecker/_core_rules.sml		  *
+	typechecker/_mod_rules.sml		  *
+	typechecker/_type_debugger.sml
+
+	lambda/_lambda.sml			  *
+	lambda/_interprint.sml
+	lambda/_topdecprint.sml
+	
+	interpreter/_inter_envtypes.sml
+	
+	images/GNUmake
+
+Files annotated with an asterisk denote the really important files:
+all the others were changed as a result of these.
+
+
+
+WHAT IS DATATYPE REPLICATION?
+-----------------------------
+
+See section G.6 of the revised definition of SML.  We include a
+new form of declaration (specification):
+
+	datatype tycon = datatype longtycon
+
+When elaborated, this binds tycon to the entire type structure (value
+constructors included) to which longtycon is bound inthe context.
+Datatype replication does *not* generate a new datatype: the original
+and the replicated datatype share.
+
+It implicitly introduces the value constructors of longtycon into
+the current scope.
+
+CHANGES TO ABSTRACT SYNTAX
+--------------------------
+
+important files: basics/absyn.sml basics/_absyn.sml
+
+We add two new constructors:
+
+*to the Dec datatype:
+
+	DATATYPErepl of Ident.Location.T *
+                        (Ident.TyCon * Ident.LongTyCon) *
+                         Datatypes.Valenv option ref
+
+The first specifies where the datatype replication was declared
+(in which file/window, which structure/function etc. as standard.
+It's used in error messages.
+
+The second is a pair specifying the 
+
+	tycon
+	longtycon
+
+components of the replication, and the last is a hook onto which we
+will hang the replicated value environment (i.e., the values which
+belong to the original typeconstructor longtycon.  At parsing time,
+this is set to ref NONE, and is set to (ref SOME ...) by the
+typechecker.  See the section on Lambda translation for its
+motivation.  (See typechecker/_core_rules.sml, "rule 18 of the SML'96
+definition".)
+
+CHANGES TO THE PARSER
+=====================
+
+Important files: parser/ml-tables/new-grammar.lisp
+
+(note that this file has to be generated from parser/_actionfunctions.sml
+using the function parser/ml-tables/back-convert.  It does not exist
+in the ml distribution proper.)
+
+In this section, I'll only document the changes rquired to add the
+datatype replication declaration.  Those required for the replication
+specification are similar.
+
+To add the new production, one can't simple add a production of the form
+
+     <DEC1> -> 
+	datatype <TYCON> = datatype <LONGTYCON>
+
+to the grammar, as suggested by the definition.  Doing this will
+conflict with the rule for normal datatype declaration:
+
+     <DEC1> -> datatype <DATBIND>
+
+The problem being that whichever comes first in the list of rules
+will override the other.  This is due to the fact that single
+datatype bindings (<DATBIND1>) were specified by
+
+     <DATBIND1> -> <TYVARSEQ><TYCON> = <CONBIND>
+
+which shares the first three items of the datatype replication
+production (when the tyvarseq is empty).  To help the parser this, I
+introduce a new nonterminal <DATAHEADER> with rule
+
+     <DATAHEADER> -> <TYVARSEQ><TYCON>=
+
+from which the relevant rules become:
+
+     <DEC1> -> datatype <DATREPL>
+     <DEC1> -> datatype <DATBIND>
+     ...
+
+     <DATREPL> -> <DATHEADER> datatype <LONGTYCON>
+
+     <DATBIND1> -> <DATHEADER> <CONBIND>
+      ...
+
+Note that the first rule contains a check that we are currently
+in SML'96 mode: it will fail if trying to parse replication in
+SML'90 mode.  Note also that in the replication, we have to check
+that the tyvarseq of the datheader is empty.
+
+
+CHANGES TO THE TYPECHECKER
+==========================
+
+important files: typechecker/_core_rules.sml
+		 typechecker/_mod_rules.sml
+
+Again, I'll only describe the changes to the core rules
+("rule 18 of SML'96 definition").  The changes to the module rules
+("rule 72 of SML'96 definition") are mostly similar.
+
+This new clause to check_dec mirrors the rule given in the definition
+almost exactly. The type checking stage consists of:
+
+	1. lookup longtycon (error if it doesn't exist),
+	2. attach the value environment associated with the
+	   longtycon's type structure to the hook on the
+	   abstract syntax (used in the lambda generation
+	   stage)
+	3. return the environment consisting of the type
+	   environment assigning the type structure to tycon
+	   and the value environment of the type structure.
+
+which apart from step 2 exactly matches rule 18 of the revised definition.
+
+
+CHANGES TO THE LAMBDA TRANSLATOR
+================================
+
+important file: lambda/_lambda.sml
+
+This only concerns the replication declaration: the replication
+specification seems to be ignored after typechecking.
+
+We add a new case to the trans_dec function. (Search for
+Absyn.DATATYPErepl to find the new code.)  This new code simply takes
+the value environment attached to the hook on the abstract syntax and
+translates it into a series of constructor bindings, suitable to be
+passed to the pre-existing datatype processing functions.
+
+Why did I choose to attach the replicated value environment to the
+abstract syntax?  After all, the argument to the lambda translation
+function Lambda.trans_topdec carries around a typechecker basis
+argument.  Surely one could look up the longtycon in that?  I tried
+this, but didn't succeed.  The reason is that the basis passed to the
+lambda translator is the basis obtained at the end of the typechecking
+phase.  At that stage, there is no guarantee that longtycon actually
+does exist in the environment (it may have been a temporary
+declaration).
+
+Note that I can't seem to relabel the type constructors associated with
+the replicated datatypes.  Thus if a constructor has type int -> 'a foo
+then replicating 'a foo will not change the type: the replicated
+constructor will also have type int -> 'a foo, even if the new datatype
+is called "'a bar" (unless the replicated datatype belongs to a different
+structure).  I've tried the following code:
+
+
+            fun renameTypeName 
+              (Datatypes.TYNAME(stamp,_,arity,equalityAttribute,
+                                valEnvRef,_,boolRef, valEnvRef')) =
+              Datatypes.TYNAME(stamp,IdentPrint.printTyCon tycon,
+                               arity,equalityAttribute,valEnvRef,
+                               SOME (Location.to_string location),
+                               boolRef, valEnvRef')
+              
+              | renameTypeName 
+                (Datatypes.METATYNAME(tfr,_,arity,eqAt,valEnvRef,boolRef)) =
+                (Datatypes.METATYNAME(tfr,IdentPrint.printTyCon tycon,
+                                      arity,eqAt,valEnvRef,boolRef))
+                
+                
+           fun renameType (Datatypes.FUNTYPE(ty1,ty2)) =
+                           Datatypes.FUNTYPE(renameType ty1,renameType ty2)
+             | renameType (Datatypes.CONSTYPE(tl,tyname)) =
+                           Datatypes.CONSTYPE(tl,renameTypeName tyname)
+             | renameType t = t
+               
+
+to no avail.  Therefore, I propose we call this renaming a "feature" and be
+done with it.
+                
+

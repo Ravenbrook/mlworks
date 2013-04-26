@@ -1,0 +1,570 @@
+(* "$Header: /Users/nb/info.ravenbrook.com/project/mlworks/import/2013-04-25/xanalys-tarball/MLW/src/corba/idl-compiler/RCS/idl.grm,v 1.11 1999/03/10 15:49:07 clive Exp $" *)
+
+open Absyn
+
+fun mk_module_def (name, definitions) =
+  module_def { module_name = name, definitions = definitions };
+
+%%
+%header (require "absyn";
+	 functor IDLLrValsFun(structure Token : TOKEN structure Absyn : ABSYN))
+
+%name IDL
+%term
+ABSTRACT | ANY | ATTRIBUTE | BOOLEAN | CASE |
+CHAR | CONST | CONTEXT | CUSTOM | DEFAULT |
+DOUBLE | ENUM | EXCEPTION | FALSE |
+FLOAT | IN | INIT | INOUT |
+INTERFACE | LONG | MODULE | NORMAL | OBJECT |
+OCTET | ONEWAY | OUT | PRIVATE |
+PUBLIC | RAISES | READONLY | SAFE |
+SEQUENCE | SHORT | STRING | STRUCT |
+SUPPORTS | SWITCH | TRUE | TYPECODE |
+TYPEDEF | UNION | UNSIGNED | VALUETYPE |
+VALUEBASE | VOID |
+
+IDENTIFIER of string |
+INTEGER_LITERAL of string |
+CHARACTER_LITERAL of string |
+FLOATING_PT_LITERAL of string |
+STRING_LITERAL of string |
+PRAGMA of string | INCLUDEBEGIN | INCLUDEEND |
+
+LPAREN | RPAREN |
+LBRACE | RBRACE |
+LBRA | RBRA |
+COMMA | SEMICOLON |
+COLON | COLON_COLON | LESS | LSHIFT | GREATER | RSHIFT | EQUAL | VBAR |
+HAT | AMPERSAND | PLUS | MINUS | STAR | 
+TWIDDLE | SLASH | PERCENT | EOF
+
+
+%start top 
+%pos int
+%eop EOF
+%noshift EOF
+%verbose 
+
+%nonterm 
+top of definition list | 
+specification of definition list | 
+definition of definition | 
+definition_plus of definition list | 
+module of definition |
+pragma of definition |
+include_begin of definition |
+include_end of definition |
+interface of definition | 
+interface_dcl of definition | 
+forward_dcl of definition | 
+interface_header of interface_header_type |
+interface_body of definition list |
+export_star of definition list | 
+export of definition | 
+inheritance_spec of scoped_name list|
+inheritance_spec_opt of scoped_name list |
+scoped_name_list of scoped_name list |
+scoped_name of scoped_name | 
+internal_scoped_name of string list |
+const_dcl of definition | 
+const_type of type_description | 
+const_exp of const_exp_def |
+or_expr of const_exp_def | 
+xor_expr of const_exp_def | 
+and_expr of const_exp_def | 
+shift_expr of const_exp_def |
+add_expr of const_exp_def | 
+mult_expr of const_exp_def | 
+unary_expr of const_exp_def | 
+unary_operator of int | 
+primary_expr of const_exp_def |
+literal of const_exp_def | 
+boolean_literal of const_exp_def | 
+full_string_literal of string list |
+positive_int_const of const_exp_def | 
+type_dcl of definition |
+type_def of definition | 
+type_spec of type_description | 
+simple_type_spec of type_description |
+base_type_spec of type_description | 
+template_type_spec of type_description |
+constr_type_spec of type_description | 
+declarator of declarator_def | 
+declarators of declarator_def list | 
+declarator_list of declarator_def list |
+simple_declarator of declarator_def | 
+floating_pt_type of type_description |
+integer_type of type_description | 
+signed_int of type_description |
+signed_long_int of type_description | 
+signed_short_int of type_description |
+unsigned_int of type_description | 
+unsigned_long_int of type_description | 
+unsigned_short_int of type_description |
+char_type of type_description | 
+boolean_type of type_description | 
+octet_type of type_description |
+any_type of type_description | 
+object_type of type_description | 
+typecode_type of type_description |
+struct_type of type_description | 
+member_plus of member_def list |
+member of member_def | 
+union_type of type_description | 
+switch_type_spec of type_description |
+switch_body of  union_case_def list | 
+case_plus of union_case_def list | 
+case_rule of union_case_def |
+case_label_plus of case_label_def list | 
+case_label of case_label_def |
+element_spec of case_element_spec | 
+enum_type of type_description | 
+enumerator_list of string list |
+enumerator of string | 
+sequence_type of type_description |
+string_type of type_description | 
+array_declarator of declarator_def |
+fixed_array_size_plus of const_exp_def list | 
+fixed_array_size of const_exp_def |
+readonly_opt of bool | 
+except_dcl of definition |
+member_star of member_def list | 
+op_dcl of definition | 
+op_attribute_opt of bool |
+raises_exp_opt of raises_def | 
+context_expr_opt of context_def |
+op_attribute of bool | 
+op_type_spec of type_description | 
+parameter_dcls of parameter_declaration_def list |
+param_dcl_list of parameter_declaration_def list | 
+param_dcl of parameter_declaration_def |
+param_attribute of parameter_attribute_def | 
+raises_expr of scoped_name list |
+context_expr of string list | 
+full_string_literal_list of string list |
+param_type_spec of type_description | 
+value of definition | 
+value_forward_decl of definition |
+value_box_decl of definition | 
+value_abs_decl of definition |
+value_dcl of definition | 
+value_header of bool * (string * value_info) | 
+value_header_rest of string * value_info |
+value_inheritance_spec of value_info | 
+value_inheritance_spec_rest of value_info |
+value_inheritance_spec_supports of scoped_name list |
+value_body of value_element_def list | 
+value_element of value_element_def |  
+state_member_public of bool |
+state_member of value_element_def | 
+init_dcl of value_element_def | 
+init_param_decls of (type_description * declarator_def) list |
+init_param_decl of type_description * declarator_def | 
+value_type_spec of type_description |
+attr_dcl of definition 
+%%
+
+top: 		  specification 			(specification)
+
+specification: 	  definition_plus			((rev definition_plus))
+
+definition:	  type_dcl SEMICOLON			(type_dcl)
+		| const_dcl SEMICOLON			(const_dcl)
+		| except_dcl SEMICOLON			(except_dcl)
+		| interface SEMICOLON			(interface)
+		| module SEMICOLON			(module)
+		| value	SEMICOLON			(value)
+		| pragma				(pragma)
+		| include_begin   			(include_begin)
+		| include_end				(include_end)
+
+pragma:		  PRAGMA				((pragma_placeholder PRAGMA1))
+
+include_begin:	  INCLUDEBEGIN STRING_LITERAL		(include_begin_placeholder STRING_LITERAL)
+
+include_end:	  INCLUDEEND STRING_LITERAL		(include_end_placeholder STRING_LITERAL)
+
+definition_plus:  definition 				([definition])
+		| definition_plus definition		((definition::definition_plus))
+
+module:		  MODULE IDENTIFIER LBRACE definition_plus RBRACE  
+			((mk_module_def(IDENTIFIER1,rev definition_plus)))
+		| MODULE IDENTIFIER LBRACE RBRACE  
+			((mk_module_def(IDENTIFIER1,[])))
+
+interface:	  interface_dcl				(interface_dcl)
+		| forward_dcl				(forward_dcl)
+
+interface_dcl:	  interface_header LBRACE interface_body RBRACE			
+			(let val (name, inheritance_spec, abstractp) = interface_header
+			 in
+				interface_def {interface_name = name, supers = inheritance_spec, 
+						abstractp = abstractp, definitions = interface_body}
+			 end)
+
+forward_dcl:	  INTERFACE IDENTIFIER		((forward_def IDENTIFIER1))
+
+interface_header: ABSTRACT INTERFACE IDENTIFIER inheritance_spec_opt	((IDENTIFIER1,inheritance_spec_opt,true))
+		| INTERFACE IDENTIFIER inheritance_spec_opt		((IDENTIFIER1,inheritance_spec_opt,false))
+
+interface_body:	  export_star				((rev export_star))
+
+export_star:						([])
+		| export_star export			((export::export_star))
+
+export:		  type_dcl   SEMICOLON			(type_dcl)
+		| const_dcl  SEMICOLON			(const_dcl)
+		| except_dcl SEMICOLON			(except_dcl)
+		| attr_dcl  SEMICOLON			(attr_dcl)
+		| op_dcl     SEMICOLON			(op_dcl)
+
+inheritance_spec_opt: 					([])
+		| inheritance_spec			(inheritance_spec)
+
+inheritance_spec: COLON scoped_name scoped_name_list	((scoped_name::scoped_name_list))
+
+scoped_name_list: 					([])
+		| scoped_name_list COMMA scoped_name 	((scoped_name::scoped_name_list))
+
+scoped_name:	  internal_scoped_name			(name_path internal_scoped_name)
+
+internal_scoped_name: IDENTIFIER 			([IDENTIFIER1])
+		| COLON_COLON IDENTIFIER  		(["::", IDENTIFIER1])
+		| internal_scoped_name COLON_COLON IDENTIFIER 		(internal_scoped_name @ [IDENTIFIER1])
+
+const_dcl:	  CONST const_type IDENTIFIER EQUAL const_exp		
+			((const_def {the_type=const_type,name=IDENTIFIER1,value=const_exp}))
+
+const_type:	  integer_type				(integer_type)
+		| char_type				(char_type)
+		| boolean_type				(boolean_type)
+		| floating_pt_type			(floating_pt_type)
+		| string_type 				(string_type)
+		| octet_type				(octet_type)
+		| any_type				(any_type)
+		| object_type				(object_type)
+		| scoped_name 				((type_named scoped_name))
+
+const_exp:	  or_expr				(or_expr)
+
+or_expr:	  xor_expr				(xor_expr)
+		| or_expr VBAR xor_expr			((vbar (or_expr,xor_expr)))
+
+xor_expr:	  and_expr				(and_expr)
+		| xor_expr HAT and_expr			((hat (xor_expr,and_expr)))
+
+and_expr:	  shift_expr 				(shift_expr)
+		| and_expr AMPERSAND shift_expr		((ampersand(and_expr,shift_expr)))
+
+shift_expr: 	  add_expr				(add_expr)
+		| shift_expr LSHIFT add_expr		((lshift(shift_expr,add_expr)))
+		| shift_expr RSHIFT add_expr		((rshift(shift_expr,add_expr)))
+
+add_expr:	  mult_expr				(mult_expr)
+		| add_expr PLUS mult_expr		((plus(add_expr,mult_expr)))
+		| add_expr MINUS mult_expr		((minus(add_expr,mult_expr)))
+
+mult_expr:	  unary_expr				(unary_expr)
+		| mult_expr STAR unary_expr		((star(mult_expr,unary_expr)))
+		| mult_expr SLASH unary_expr		((slash(mult_expr,unary_expr)))
+		| mult_expr PERCENT unary_expr		((percent(mult_expr,unary_expr)))
+
+unary_expr:	  primary_expr				(primary_expr)
+		| unary_operator primary_expr		((case unary_operator of
+								0    => (unary_minus primary_expr)
+  							     |  1    => (unary_plus primary_expr)
+  							     |  _    => (twiddle primary_expr)))
+
+unary_operator:	  MINUS					(0)
+		| PLUS					(1)
+		| TWIDDLE				(2)
+
+primary_expr:	  scoped_name				((const_val_name scoped_name))
+		| literal				(literal)
+		| LPAREN const_exp RPAREN		((const_val_exp const_exp))
+
+literal:	  INTEGER_LITERAL			((const_val_int INTEGER_LITERAL1))
+		| full_string_literal			((const_val_string_concat (rev full_string_literal)))
+		| CHARACTER_LITERAL	 		((const_val_char CHARACTER_LITERAL1))
+		| FLOATING_PT_LITERAL 			((const_val_fp FLOATING_PT_LITERAL1))
+		| boolean_literal			(boolean_literal)
+
+boolean_literal:  TRUE					((const_val_boolean true))
+		| FALSE					((const_val_boolean false))
+
+full_string_literal: STRING_LITERAL				([STRING_LITERAL1])
+		| full_string_literal STRING_LITERAL		((STRING_LITERAL1 :: full_string_literal))
+
+positive_int_const: const_exp				(const_exp)
+
+type_dcl:	  type_def				(type_def)
+		| struct_type				((structure_def struct_type))
+		| union_type				((union_def union_type))
+		| enum_type				((enum_def enum_type))
+
+type_def:	  TYPEDEF type_spec declarators		((typedef_def {the_type = type_spec, names = declarators}))
+
+type_spec:	  simple_type_spec 			(simple_type_spec)
+		| constr_type_spec			(constr_type_spec)
+
+simple_type_spec: base_type_spec 			(base_type_spec)
+		| template_type_spec			(template_type_spec)
+		| scoped_name				((type_named scoped_name))
+
+base_type_spec:	  floating_pt_type			(floating_pt_type)
+		| integer_type				(integer_type)
+		| char_type				(char_type)
+		| boolean_type				(boolean_type)
+		| octet_type				(octet_type)
+		| any_type				(any_type)
+		| object_type				(object_type)
+		| typecode_type				(typecode_type)
+		| value_type_spec			(value_type_spec)
+
+template_type_spec: sequence_type			(sequence_type)
+		| string_type				(string_type)
+
+constr_type_spec: struct_type				(struct_type)
+		| union_type				(union_type)
+		| enum_type				(enum_type)
+
+declarators:	  declarator declarator_list		((declarator::declarator_list))
+
+declarator_list:  					([])
+		| declarator_list COMMA declarator 	((rev (declarator::declarator_list)))
+
+declarator:	  simple_declarator			(simple_declarator)
+		| array_declarator			(array_declarator)
+
+simple_declarator: IDENTIFIER			((simple_declarator_def IDENTIFIER1))
+
+floating_pt_type: FLOAT					(type_float)
+		| DOUBLE				(type_double)
+
+integer_type:	  signed_int 				(signed_int)
+		| unsigned_int				(unsigned_int)
+
+signed_int:	  signed_long_int 			(signed_long_int)
+		| signed_short_int			(signed_short_int)
+
+signed_long_int:  LONG					(type_signed_long)
+
+signed_short_int: SHORT					(type_signed_short)
+
+unsigned_int:	  unsigned_long_int			(unsigned_long_int)
+		| unsigned_short_int			(unsigned_short_int)
+
+unsigned_long_int: UNSIGNED LONG			(type_unsigned_long)
+
+unsigned_short_int: UNSIGNED SHORT			(type_unsigned_short)
+
+char_type:	  CHAR					(type_char)
+
+boolean_type:	  BOOLEAN				(type_boolean)
+
+octet_type:	  OCTET					(type_octet)
+
+any_type:	  ANY					(type_any)
+
+object_type:	  OBJECT				(type_object)
+
+typecode_type:	  TYPECODE				(type_typecode)
+
+struct_type:	  STRUCT IDENTIFIER LBRACE member_plus RBRACE	((type_struct{name=IDENTIFIER1,members=member_plus}))
+
+member_plus:	  					([])
+		| member_plus member 			((member::member_plus))
+
+member:		  type_spec declarators SEMICOLON	((member_description{the_type=type_spec,names=declarators}))
+
+union_type:	  UNION IDENTIFIER SWITCH LPAREN switch_type_spec RPAREN LBRACE switch_body RBRACE	
+			((type_union {name=IDENTIFIER1, switch_type=switch_type_spec, cases=switch_body}))
+
+switch_type_spec: integer_type				(integer_type)
+		| char_type				(char_type)
+		| boolean_type				(boolean_type)
+		| enum_type				(enum_type)
+		| scoped_name				((type_named scoped_name))
+
+switch_body:	  case_plus				((rev case_plus))
+
+case_plus:	  					([])
+		| case_plus case_rule			((case_rule::case_plus))
+
+case_rule:	  case_label_plus element_spec SEMICOLON	((case_description(case_label_plus, element_spec)))
+
+case_label_plus:  					([])
+		| case_label_plus case_label		((case_label::case_label_plus))
+
+case_label:	  CASE const_exp COLON			((constant const_exp))
+		| DEFAULT COLON				(default)
+
+element_spec:	  type_spec declarator			((case_element(type_spec,declarator)))
+
+enum_type:	  ENUM IDENTIFIER LBRACE enumerator enumerator_list RBRACE			
+				((type_enum(IDENTIFIER, enumerator::(rev enumerator_list))))
+
+enumerator_list:  					([])
+		| enumerator_list COMMA enumerator 	((enumerator::enumerator_list))
+
+enumerator:	  IDENTIFIER 			(IDENTIFIER1)
+
+sequence_type:	  SEQUENCE LESS simple_type_spec COMMA positive_int_const GREATER		
+						((type_sequence_bounded {the_type=simple_type_spec, 
+									  bound=positive_int_const}))
+		| SEQUENCE LESS simple_type_spec GREATER					
+						((type_sequence_unbounded simple_type_spec))
+
+string_type:	  STRING LESS positive_int_const GREATER	((type_string_bounded positive_int_const))
+		| STRING					(type_string_unbounded)
+
+array_declarator: IDENTIFIER fixed_array_size_plus	((array_declarator_def (IDENTIFIER1,fixed_array_size_plus)))
+
+fixed_array_size_plus: fixed_array_size				([fixed_array_size])
+		| fixed_array_size_plus fixed_array_size	((fixed_array_size_plus @ [fixed_array_size]))
+
+fixed_array_size: LBRA positive_int_const RBRA			(positive_int_const)
+
+attr_dcl:	  readonly_opt ATTRIBUTE simple_type_spec declarator declarator_list			
+				((attribute_def {readonly=readonly_opt, 
+						the_type=simple_type_spec, 
+						slots=declarator::declarator_list}))
+
+readonly_opt:							(false)
+		| READONLY					(true)
+
+except_dcl:	  EXCEPTION IDENTIFIER LBRACE member_star RBRACE				
+					((exception_def{name=IDENTIFIER1, members=member_star}))
+
+member_star:	  						([])
+		| member_star member				((member::member_star))
+
+op_dcl:		  op_attribute_opt op_type_spec IDENTIFIER parameter_dcls raises_exp_opt context_expr_opt 
+				((operation_def	{oneway=op_attribute_opt,
+						result_type=op_type_spec,
+						name=IDENTIFIER1,
+						parameters=parameter_dcls,
+						raises=raises_exp_opt,
+						context=context_expr_opt}))
+
+op_attribute_opt:						(false)
+		| ONEWAY					(true)
+
+raises_exp_opt:	  						(no_raises)
+		| raises_expr					((raises (rev raises_expr)))
+
+context_expr_opt:						(no_context)
+		| context_expr					((context context_expr))
+
+op_type_spec:	  simple_type_spec				(simple_type_spec)
+		| VOID						(type_void)
+
+parameter_dcls:	  LPAREN param_dcl param_dcl_list RPAREN	((param_dcl::param_dcl_list))
+		| LPAREN RPAREN					([])
+
+param_dcl_list:	  						([])
+		| param_dcl_list COMMA param_dcl		((param_dcl::param_dcl_list))
+
+param_dcl:	  param_attribute simple_type_spec declarator	
+				((param_decl_def{attribute=param_attribute,
+						the_type=simple_type_spec,
+						name=declarator}))
+
+param_attribute:  IN						(param_in)
+		| INOUT						(param_inout)
+		| OUT						(param_out)
+
+raises_expr:	  RAISES LPAREN scoped_name scoped_name_list RPAREN 	(scoped_name::scoped_name_list)
+
+context_expr:	  CONTEXT LPAREN full_string_literal full_string_literal_list RPAREN 
+				((full_string_literal @ full_string_literal_list))
+
+full_string_literal_list:					([])
+		| full_string_literal_list COMMA full_string_literal		(full_string_literal_list @ full_string_literal)
+
+param_type_spec:  base_type_spec				(base_type_spec)
+		| string_type					(string_type)
+		| scoped_name					((type_named scoped_name))
+
+value:		  value_dcl					(value_dcl)
+		| value_abs_decl				(value_abs_decl)
+		| value_box_decl				(value_box_decl)
+		| value_forward_decl				(value_forward_decl)
+
+value_forward_decl:  VALUETYPE IDENTIFIER 			((value_forward_def{name=IDENTIFIER1,abstract=false}))
+		| ABSTRACT VALUETYPE IDENTIFIER 		((value_forward_def{name=IDENTIFIER1,abstract=true}))
+
+value_box_decl:	  VALUETYPE IDENTIFIER type_spec		((value_box_def {name=IDENTIFIER1,the_type=type_spec}))
+
+value_abs_decl:	  ABSTRACT VALUETYPE IDENTIFIER LBRACE export_star RBRACE				
+			((value_abs_def{name=IDENTIFIER1,inherits_from=[],supports=[],safe=false,
+				definitions=export_star}))
+		| ABSTRACT VALUETYPE IDENTIFIER value_inheritance_spec LBRACE export_star RBRACE	
+			((value_abs_def{name=IDENTIFIER1,
+					inherits_from = #inherits_from value_inheritance_spec,
+					supports = #supports value_inheritance_spec,
+					safe = #safe value_inheritance_spec,
+					definitions = export_star}))
+
+value_dcl:	  value_header LBRACE value_body RBRACE		((let val (custom,(name,value_info)) = value_header
+								 in
+								  value_def{
+									custom=custom,
+									name=name,
+									safe= #safe value_info,
+									inherits_from= #inherits_from value_info,
+									supports= #supports value_info,
+									elements=value_body}
+								 end))
+
+value_header:	  CUSTOM value_header_rest			((true,value_header_rest))
+		| value_header_rest				((false,value_header_rest))
+
+value_header_rest: VALUETYPE IDENTIFIER 				((IDENTIFIER1,
+									{inherits_from=nil,supports=nil,safe=false}))
+		| VALUETYPE IDENTIFIER value_inheritance_spec		((IDENTIFIER1,value_inheritance_spec))
+
+value_inheritance_spec: COLON SAFE value_inheritance_spec_rest					
+				((let val result = value_inheritance_spec_rest 
+					in
+						{inherits_from= #inherits_from result,
+						 supports= #supports result,
+						 safe=true}
+					end))
+		| COLON value_inheritance_spec_rest						
+				(value_inheritance_spec_rest)
+		| scoped_name COMMA scoped_name_list value_inheritance_spec_supports		
+				({inherits_from=scoped_name::scoped_name_list, 
+				  supports=value_inheritance_spec_supports, 
+				  safe=false})
+
+value_inheritance_spec_rest: scoped_name COMMA scoped_name_list value_inheritance_spec_supports
+			({inherits_from=scoped_name::scoped_name_list, supports=value_inheritance_spec_supports,
+				safe=false})
+
+value_inheritance_spec_supports:				([])
+		| SUPPORTS scoped_name COMMA scoped_name_list	((scoped_name::scoped_name_list))
+
+value_body:	  						([])
+		| value_body value_element			((value_element::value_body))
+
+value_element:	  export					((value_element_export export))
+		| state_member					(state_member)
+		| init_dcl					(init_dcl)
+
+state_member_public: PUBLIC					(true)
+		| PRIVATE					(false)
+
+state_member:	  state_member_public type_spec declarators SEMICOLON		
+			((value_element_state_member 
+				{public=state_member_public,the_type=type_spec,names=declarators}))
+
+init_dcl:	  INIT LPAREN init_param_decls RPAREN SEMICOLON	((value_element_init_list (rev init_param_decls)))
+
+init_param_decls: init_param_decl				([init_param_decl])
+		| init_param_decls COMMA init_param_decl	((init_param_decl::init_param_decls))
+
+init_param_decl:  IN param_type_spec simple_declarator		((param_type_spec,simple_declarator))
+
+value_type_spec:  VALUEBASE	(type_value)
+

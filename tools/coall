@@ -1,0 +1,89 @@
+#!/bin/sh
+# === CHECK OUT ML SOURCES AND COPY SOME OTHER STUFF ===
+#
+# $Log: coall,v $
+# Revision 1.36  1997/07/24 11:44:51  jont
+# [Bug #50014]
+# Remove ability to check out branches, as this will often do the wrong
+# thing. Instead, coutall followed by mkstruct from
+# the checked out branch should be used
+#
+# Revision 1.35  1995/07/20  13:49:52  jont
+# Ensure machine specific generated files are copies
+#
+# Revision 1.34  1995/06/09  10:08:22  daveb
+# Now passes options to coutall.
+#
+# Revision 1.33  1995/03/24  15:17:57  jont
+# Add .c files to list to be copied from rts/gen
+#
+# Revision 1.32  1995/02/23  16:10:13  jont
+# Modify for new file structure /u
+#
+# Revision 1.31  1995/02/21  15:47:09  brianm
+# Introducing SML_HOME
+#
+# Revision 1.30  1995/01/10  12:21:49  brianm
+# Removing redundent version args from Usage message
+# Fixed bug 850
+#
+# Revision 1.29  1994/08/15  17:00:07  jont
+# Fix bug 763. Create rts/gen if necessary.
+#
+# Revision 1.28  1994/06/14  15:24:21  nickh
+# Don't want to copy .mo files from rts/gen
+#
+# Revision 1.27  1994/06/14  14:40:48  nickh
+# New directory structure.
+#
+# Revision 1.26  1994/02/17  21:01:30  hope
+# Checking in JonT's new version (I assume), to work  around a hope bug (fka3)
+#
+#
+
+script=`basename $0`
+usage="Usage: $script [-V] [-b <branch>] [-d <date>]"
+PWD=`pwd`
+top=`basename $PWD`
+ok=0
+SML_HOME=/u/sml; export SML_HOME
+SML=$SML_HOME/MLW; export SML
+
+if [ "$top" = "MLW" ]; then
+    cd .. && ok=1
+fi
+
+if [ -d "MLW" ]; then
+    ok=1
+fi
+
+if [ "$ok" = "0" ]; then
+  echo "coall: Are you in or above your MLW tree?"
+  exit 2
+fi
+
+# Check the arguments before passing them to coutall, so that the usage
+# message names the right script.
+args=""
+while getopts b:d:V option
+do
+  case $option in
+    V) args="$args -V";;
+    b) args="$args -b $OPTARG" ;;
+    d) args="$args -d $OPTARG" ;;
+    *) echo "$usage"; exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+if [ "$#" -ne 0 ]; then
+    echo "$usage"; exit 1
+fi
+
+# Get all the normal sources
+$SML/tools/coutall $args
+
+# Now create all necessary links
+./MLW/tools/mkstruct
+
+exit

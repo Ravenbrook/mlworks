@@ -1,0 +1,39 @@
+# Example makefile (Irix variant)
+
+CC 		= gcc
+# for cc/Developer Option case, use:
+#CC		= cc
+
+# for cc/Developer Option case, use:
+#CFLAGS		= -ansiposix -g
+
+#GNU options
+CFLAGS		= -g -mgas
+#CFLAGS		= -ansi -pedantic -g -Wall
+# The GNU cc compiler can emit either MIPS assembler syntax or GNU assembler syntax.
+# for gnu assembler options, ensure PATH is set so gnu assembler is seen first
+#CFLAGS		= -g -mgas
+# for mips assembler options, ensure PATH is set so mips assembler is seen first
+#CFLAGS		= -g -mmips-as
+
+
+XLIBS		= -lXm -lXt -lX11
+
+LD		=/bin/ld
+
+LDFLAGS		= -Bdynamic -shared -exports -U
+
+LIB		= -lelf -lc
+
+PROGS		= hello.so random.so regexp.so xtst.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+#%.o : %.c
+#	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) *.so *.o

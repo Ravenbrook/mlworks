@@ -1,0 +1,25 @@
+% The pervasive initialization file for Elf
+% Author: Frank Pfenning
+% $Log: init.elf,v $
+% Revision 1.2  1998/06/04 19:28:09  jont
+% Automatic checkin:
+% changed attribute _comment to ' % '
+%
+
+% Backquote is used for tracing purposes.
+% ` a M1...Mn : type
+% will behave like a M1...Mn as a goal, excepted that the
+% goal is printed before it is solved.
+
+% NOTE: this may not be supported in all releases of Elf
+
+` : type -> type.  %prefix 1 `
+#`# : A -> ` A.
+
+% Sigma is only allowed on the top-level of queries
+% and illegal in terms.  If the underlying type theory
+% were to contain sigma-types, it would be accorded
+% first-class status.
+
+sigma : (A -> type) -> type.
+#pr# : {x:A} (B x) -> 'sigma' B.

@@ -1,0 +1,34 @@
+   Load File: __int_hash.sml (example structure for hashing with integer keys)
+
+   This module defines functions for creating and using a hash table.  It
+   illustrates the use of the Array structure in the basis library.
+
+   The file __int_hash.sml provides an example of the HashTable functor
+   applied to integer keys.  The structure IntHash provides functions
+   for creating a table, and for inserting, removing and looking up
+   items in it.  The exception Full is raised if the table fills up.
+
+   For example, to create a table of size 11 containing strings:
+
+     val ht = IntHash.create (11,""); (* size should be a prime number *)
+
+   (the type of the second argument is used to determine the type of all
+   future table entries).  To insert some items:
+
+     IntHash.insert (ht,3,"apple");  
+     IntHash.insert (ht,10,"banana");  
+     IntHash.insert (ht,53,"carrot");  
+
+   Looking one of these entries up
+
+     IntHash.lookUp (ht,53);  
+
+   gives
+
+     val it : string option = SOME "carrot" 
+
+   while looking up an unused key returns NONE.  Items can be deleted
+   using
+
+     IntHash.remove (<table>,<key>):
+

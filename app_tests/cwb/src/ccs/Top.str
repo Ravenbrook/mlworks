@@ -1,0 +1,800 @@
+(*
+ *
+ * $Log: Top.str,v $
+ * Revision 1.2  1998/06/02 15:41:44  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Top.str,v 1.2 1998/06/02 15:41:44 jont Exp $";
+(* MLA -- changed makestring to bool_makestring *)
+functor Top ( structure AgIO     : AGENTIO;
+              structure Agf      : AGENTFUNS;
+              structure DivP     : DIVPRE;
+              structure Cont     : CONTRACT;
+              structure Eq       : EQUIV;
+              structure TO       : TESTOPS;
+              structure TG       : TGRAPH;
+              structure Tr       : HMLTRAN;
+              structure Sat      : HMLSAT;
+              structure Check    : HMLCHECK;
+              structure LogIO    : LOGIO;
+              structure Inter    : INTERFACE;
+              structure Parse    : PARSE;
+              structure Sim      : SIMULATE;
+              structure Help     : HELP;
+              structure Df       : DF;
+(* Several sharing constraint changes because of changes in what the   *)
+(* modules export -- this really needs a thorough overhaul.	       *)
+	      sharing      AgIO.Ag.A = Tr.HML.A = Tr.L.A
+
+                    and      AgIO.Ag.V = Tr.HML.V
+
+                    and      Inter.Ag  = Agf.Ag
+	                            (* = Sat.Ag = Eq.PG.Ag *)
+                                       = AgIO.Ag  = Parse.Commands.Ag
+
+                    and      Agf.E  (*  = Tr.L.E   = Sat.E *) = Inter.E
+
+                    and      Cont.PG   = Eq.PG    = TG.PG  = DivP.Elem.PG
+                                       = Check.PG = Df.PG
+
+                    and      Tr.L      = LogIO.L = Parse.Commands.L = Inter.L
+
+                    and type Sim.act = Inter.act = AgIO.Ag.A.act 
+                                     = Eq.PG.act = TG.AS.act
+				     = Sat.act (* cf removed Sat.Ag *)
+
+                    and type Inter.var = Eq.PG.var
+
+                    and type Agf.E.env = Eq.PG.env (* = LogIO.env *)
+			               = Tr.env
+
+                    and type Sim.agent = Eq.PG.agent = AgIO.Ag.agent
+			               = Sat.agent (* cf removed Sat.Ag *)
+
+                    and type Eq.PG.state = TO.state
+
+                    and type (* Inter.prop = *)
+			Tr.L.prop   = Df.prop  (* = LogIO.prop *)
+
+                    and type Tr.HML.prop = Sat.prop = Check.prop
+
+            ) : TOP =
+struct
+
+   open Parse.Commands
+
+(*   structure Ag = Eq.PG.Ag *)
+   structure Ag = Agf.Ag
+   structure E = Agf.E
+   structure Elem = DivP.Elem
+   structure A = Ag.A
+   structure V = E.V
+   structure PG = Eq.PG
+
+   val agtenv = Inter.agentenv
+   val setenv = Inter.setenv
+   val relenv = Inter.relenv
+
+   val propenv = Inter.propenv
+
+   val reduce  = ref false
+   val localmc = ref false
+   fun trivinit _ = ()
+   fun trivtest _ = true
+
+   val resettable = fn () => (UI.message "Resetting tables...\n";
+			      Agf.forgetall();
+			      PG.mktable())
+
+(***************************************************************************)
+
+(*    fun print s = Lib.print(std_out,s) *) (* bogus! *)
+
+   fun printagtid v =
+       Inter.printagentenv (E.bind (v,E.lookup(v,!agtenv),E.empty))
+       handle E.Unbound => Inter.print "\nAgent Undefined\n"
+
+   fun printsetid v =
+       Inter.printsetenv (E.bind (v,E.lookup(v,!setenv),E.empty))
+       handle E.Unbound => Inter.print "\nSet Undefined\n"
+
+   fun printrelid v =
+       Inter.printrelenv (E.bind (v,E.lookup(v,!relenv),E.empty))
+       handle E.Unbound => Inter.print "\nSet Undefined\n"
+
+   fun printpropid v =
+       Inter.printpropenv (E.bind (v,E.lookup(v,!propenv),E.empty))
+       handle E.Unbound => Inter.print "\nProposition Undefined\n"
+
+   fun sid (ref(PG.S{id,...})) = id
+
+   fun SGraph init envs = 
+       PG.mkgraph init 
+       (Agf.diverges envs) (Agf.prefixform envs) (Agf.transitions envs)
+
+(* pes: make a graph suitable for checking weak bisimulation *)
+   fun WGraph init envs = 
+       PG.mkweakgraph init 
+       (Agf.diverges envs) (Agf.prefixform envs) (Agf.transitions envs)
+
+   fun minimize (a,v) =
+       let val gr = WGraph trivinit (!agtenv,!setenv,!relenv) a
+           val (init,strct) = Eq.min trivtest gr
+           val vstr = V.mkstr v
+           fun vvar(ref(PG.S{id,...})) =
+               V.mkvar(vstr^"minState"^(makestring id))
+           fun emptysuc (ref(PG.S{suc,...})) = null (!suc)
+           fun mktrans a s = Ag.Prefix([a],Ag.Var (vvar s,[]))
+           fun mkacttrans(ac,l) = map (mktrans ac) (!l)
+           fun mkag [] = []
+             | mkag ((ac,l)::t) = mkacttrans(ac,l)@(mkag t)
+           fun mksum [] = Ag.Nil
+             | mksum [h] = h
+             | mksum l = Ag.WSum l
+           val initv = V.mkvar(vstr^"minState"^(makestring(sid init)))
+           fun mkenv [] = E.empty
+             | mkenv ((ref(PG.S{suc,id,...}))::t) =
+               E.bind(V.mkvar(vstr^"minState"^(makestring id)),
+                      ([],mksum(mkag(!suc))),(mkenv t))
+        in (if Lib.member V.eq (v,E.getvars (!agtenv))
+            then resettable() else ();
+            agtenv := E.bind(v,([],(Ag.Var (initv,[]))),
+                        E.merge((!agtenv),(mkenv strct)));
+                Inter.print("\n"^vstr^" has "
+                      ^(makestring(length strct))^" states.\n"))
+       end
+
+   fun setmkstr mkstrelt l = "{"^(Lib.mkstr mkstrelt "," l)^"}"
+
+   fun freevars a = 
+       Inter.print (setmkstr V.mkstr (Agf.freevars (!agtenv) a))
+
+   fun diverges a = 
+       Inter.print(bool_makestring(Agf.diverges (!agtenv,!setenv,!relenv) a))
+
+   fun sort a = 
+       Inter.print(setmkstr A.mkstr(Agf.sort (!agtenv,!setenv,!relenv) a))
+
+   fun initial a = 
+       Inter.print (setmkstr A.mkstr (Agf.initial (!agtenv,!setenv,!relenv) a))
+
+   fun transitions a = 
+       Inter.printders (Agf.transitions (!agtenv,!setenv,!relenv) a)
+
+   fun prefixform a = 
+       Inter.printagent (Agf.prefixform (!agtenv,!setenv,!relenv) a)
+
+   fun statesp a = 
+       Inter.printagents(Agf.statespace (!agtenv,!setenv,!relenv) a)
+
+   fun actders a P = 
+       Inter.printagents (Agf.actders (!agtenv,!setenv,!relenv) a P)
+
+   fun tauders a =  
+       Inter.printagents (Agf.tauders (!agtenv,!setenv,!relenv) a)
+
+   fun taucl a = 
+       Inter.printagents (Agf.tauclosure (!agtenv,!setenv,!relenv) a)
+
+   fun actcl ac a = 
+       Inter.printagents (Agf.actclosure (!agtenv,!setenv,!relenv) ac a)
+
+   fun initobs a = 
+       Inter.print (setmkstr A.mkstr (Agf.initobs (!agtenv,!setenv,!relenv) a))
+
+   fun strongeq (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (Eq.equiv trivtest (gr a, gr b)))
+       end
+
+   fun weakeq (a,b) =
+       let val gr = WGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring(Eq.equiv trivtest (gr a, gr b)))
+       end
+
+   fun congruent (a,b) =
+       let val gr = (PG.congrcl ())o(SGraph trivinit (!agtenv,!setenv,!relenv))
+        in Inter.print(bool_makestring(Eq.equiv trivtest (gr a, gr b)))
+       end
+
+(* pes: takes agents a and b and prints the coarsest weak bisimulation on *)
+(* their combined state space. Hence the original agents are bisimilar *)
+(* iff they appear in the same element of the partition. *)
+   fun printbisim (a,b) =
+       let val gr = WGraph trivinit (!agtenv,!setenv,!relenv)
+           val (i1,g1) = gr a
+           val (i2,g2) = gr b
+
+           val bis = Eq.bisim trivtest (i1,g1@g2)
+
+           fun getagent (ref(PG.S{keycopy,...})) = (!keycopy)
+
+           fun printeqclass cl =
+               (Inter.print"\n-------------------------------------\n";
+                Inter.printagents (Lib.del_dups Ag.eq (map getagent (!cl))))
+        in (Inter.print "The largest bisimulation on these agents:\n";
+            app printeqclass bis;())
+       end
+
+   fun btimeb (a1,a2) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+
+           val (i1,g1) = gr a1
+           val (i2,g2) = gr a2
+           val (j1,h1) = gr a1
+           val (j2,h2) = gr a2
+
+           val bis1 = Eq.bisim trivtest (PG.obscl (i1,g1))
+           val bis2 = Eq.bisim trivtest (PG.obscl (i2,g2))
+
+           val newtau = A.mkact "~~~tau~~~"
+           fun remtaus [] = ([],[])
+             | remtaus ((a,slr)::t) =
+               let val (dl,tl) = remtaus t
+                in if A.eq(a,PG.tau) orelse A.eq(a,newtau) then
+                        (dl,tl@(!slr))
+                   else ((a,slr)::dl,tl)
+               end
+           fun btgraph bis [] = ()
+             | btgraph bis (s::t) =
+               let fun st_in_class i [] = false
+                     | st_in_class i ((ref(PG.S{id,...})::t)) =
+                       i=id orelse st_in_class i t
+                   fun getclass i [] = raise Panic
+		     | getclass i (h::t) = if st_in_class i (!h) then !h
+                                           else getclass i t
+                   fun tausplit (s as ref(PG.S{id,suc,...})) =
+                       let val class = getclass id bis
+                           val (dl,tl) = remtaus (!suc)
+                           fun split [] = ([],[])
+                             | split ((s as ref(PG.S{id,...}))::t) =
+                               let val (tlist,newtlist) = split t
+                                in if st_in_class id class then
+                                      (s::tlist,newtlist)
+                                   else (tlist,s::newtlist)
+                               end
+                           val (tlist,newtlist) = split tl
+                           val dl' = if null tlist then dl
+                                     else (PG.tau,ref tlist)::dl
+                           val dl'' = if null newtlist then dl'
+                                      else (newtau,ref newtlist)::dl'
+                        in (suc := dl'')
+                       end
+                in ((tausplit s);(btgraph bis t))
+               end
+           val _ = btgraph bis1 (j1::h1)
+           val _ = btgraph bis2 (j2::h2)
+           val _ = PG.obscl (j1,h1)
+           val _ = PG.obscl (j2,h2)
+           fun untau [] = ()
+             | untau (s::t) =
+               let fun renew derlist = let val (dl,tl) = remtaus derlist
+                                        in if null tl then dl
+                                           else (PG.tau,ref tl)::dl
+                                       end
+                   fun taureset(s as ref(PG.S{suc,...})) =
+                          suc := renew(!suc)
+                in (taureset s);(untau t)
+               end
+           val _ = untau (j1::h1)
+           val _ = untau (j2::h2)
+        in Inter.print (bool_makestring
+                        (Eq.equiv trivtest ((j1,h1),(j2,h2))))
+       end
+
+   fun dquivalent(a,b) =
+       let fun divinit a = ref (Agf.diverges (!agtenv,!setenv,!relenv) a)
+           val gr = SGraph divinit (!agtenv,!setenv,!relenv)
+           
+           fun divtest (a,b) = (!a) = (!b)
+
+           fun globdivstate (ref(PG.S{info,taus,...})) =
+               let fun alltausucs []  = ()
+                    |  alltausucs ((ref(PG.S{info=info',...}))::t) =
+                          if (!info') then info:=true else alltausucs t
+                in alltausucs (!taus)
+               end
+
+           fun tauloops (ref(PG.S{info,taus,id,...})) =
+               let fun alltausucs [] = ()
+                    |  alltausucs ((ref(PG.S{id=id',...}))::t) =
+                          if (id'=id) then info:=true else alltausucs t
+                in alltausucs (!taus)
+               end
+           fun globdiv (init,graph) = (app tauloops graph;
+                                       app globdivstate graph;
+                                       (init,graph))
+           val g1 = PG.reflexcl (PG.actcl (globdiv (PG.transcl (gr a))))
+           val g2 = PG.reflexcl (PG.actcl (globdiv (PG.transcl (gr b))))
+        in Inter.print(bool_makestring (Eq.equiv divtest (g1,g2)))
+       end
+
+(* Added by Bernhard Steffen *)
+
+   val setpreinf = fn _ => Elem.setpreinf
+
+   fun checkstrongpreorder(a,b) =
+       let val gr = SGraph setpreinf (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (DivP.strongpreorder (gr a, gr b) ))
+       end
+
+   fun checkweakpreorder(a,b) =
+       let val gr = SGraph setpreinf (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (DivP.weakpreorder (gr a, gr b) ))
+       end
+
+   fun checkprecongruence(a,b) =
+       let val gr = SGraph setpreinf (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (DivP.precongruence (gr a, gr b) ))
+       end
+
+   fun stable a = 
+       Inter.print(bool_makestring (Agf.stable (!agtenv,!setenv,!relenv) a))
+
+   fun statespexp a =
+       Inter.printdersseq 
+        (Agf.statespaceexp (*!reduce*) (!agtenv,!setenv,!relenv) a)
+
+   fun statespobs a =
+       Inter.printexps 
+        (Agf.statespaceobs (*!reduce*) (!agtenv,!setenv,!relenv) a)
+
+   fun observations n a =
+       Inter.printexps (Agf.observations (!agtenv,!setenv,!relenv) n a)
+
+   fun findinit al a =
+       Inter.printdersseq 
+        (Agf.findinit (*!reduce*) (!agtenv,!setenv,!relenv) al a)
+
+   fun findinito al a =
+       Inter.printexps 
+        (Agf.findinitobs (*!reduce*) (!agtenv,!setenv,!relenv) al a)
+
+   fun finddeadlock a =
+       Inter.printdersseq 
+        (Agf.findinit (*!reduce*) (!agtenv,!setenv,!relenv) [] a)
+
+   fun finddeadlocko a =
+       Inter.printexps 
+        (Agf.findinitobs (*!reduce*) (!agtenv,!setenv,!relenv) [] a)
+
+   fun visibleseq n a = 
+       Inter.printseq (Agf.visibleseq (!agtenv,!setenv,!relenv) n a)
+
+   fun rand n a = 
+       Inter.printoneseq (Agf.randseq (!agtenv,!setenv,!relenv) n a)
+
+   fun obsder al a =
+       Inter.printagents 
+        (Agf.obsderivatives (!agtenv,!setenv,!relenv) al a)
+
+   fun checkprop (a,p) =
+       (Inter.print (bool_makestring 
+               (Sat.check (Agf.transitions (!agtenv,!setenv,!relenv)) a
+                (Tr.translate p (!propenv) (!setenv)))))
+
+   fun checkpropglobal (a,p) =
+       (Inter.print(bool_makestring(Check.check
+                   (SGraph Check.setmcinfo (!agtenv,!setenv,!relenv) a)
+                   (Tr.translate p (!propenv) (!setenv)))))
+
+(* Added by Rance Cleaveland *)
+
+   fun may_eq (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.may_eq(gr a, gr b)))
+       end
+
+   fun must_eq (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.must_eq(gr a, gr b)))
+       end
+
+   fun test_eq (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.test_eq(gr a, gr b)))
+       end
+
+   fun may_pr (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.may_pr(gr a, gr b)))
+       end
+
+   fun must_pr (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.must_pr(gr a, gr b)))
+       end
+
+   fun test_pr (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+        in Inter.print(bool_makestring (TO.test_pr(gr a, gr b)))
+       end
+
+   fun df_str (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+           val (res,df) = Df.str_eq(gr a, gr b)
+        in if res then Inter.print("The two agents are indistinguishable")
+           else Inter.print(LogIO.mkstr df)
+       end
+
+   fun df_obs (a,b) =
+       let val gr = WGraph trivinit (!agtenv,!setenv,!relenv)
+           val (res,df) = Df.obs_eq(gr a, gr b)
+        in if res then Inter.print("The two agents are indistinguishable")
+           else Inter.print(LogIO.mkstr df)
+       end
+
+   fun df_may (a,b) =
+       let fun may_eq_info _ accset = accset
+           val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+           val g1 = gr a
+           val g2 = gr b
+           val dg1 = TG.mkDgraph g1 may_eq_info
+           val dg2 = TG.mkDgraph g2 may_eq_info
+           val (res,(cannot,actlst)) = Df.may_eq(dg1,dg2)
+        in (Inter.print (bool_makestring res);
+            if res then ()
+            else let val (ag_can,ag_cannot) = if cannot then (b,a) else (a,b)
+                  in Inter.print "\nAgent ";
+                     Inter.printagent ag_can;
+                     Inter.print "can perform action sequence ";
+                     Inter.printoneseq actlst;
+                     Inter.print "\nwhich agent ";
+                     Inter.printagent ag_cannot;
+                     Inter.print "cannot"
+                 end)
+       end
+
+   fun checktwothirds (a,b) =
+       let val gr = SGraph setpreinf (!agtenv,!setenv,!relenv)
+        in Inter.print (bool_makestring (DivP.twothirds (gr a, gr b)))
+       end
+
+   fun checktwothirdsEq (a,b) =
+       let val gr = SGraph setpreinf (!agtenv,!setenv,!relenv)
+           val g1 = gr a
+           val g2 = gr b
+        in Inter.print (bool_makestring ((DivP.twothirds (g1,g2))
+                        andalso (DivP.twothirds (g2,g1))))
+       end
+
+   fun size a = 
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+       in 
+           Inter.print("\n"^(AgIO.mkstr a)^" has "^
+                 (makestring(1 + sid(hd(snd(gr a)))))^" states.\n")
+(* (gr a) is a pair (root, successorlist) so we're getting the state id of  *)
+(* the first successor of a, which oddly enough is the size...(but     *)
+(* from 0, so add 1)  *)
+       end
+
+   fun contraction (a,b) =
+       let val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+         in Inter.print (bool_makestring (Cont.contraction (gr a, gr b)))
+        end
+
+   fun format("fc",filename,a) =
+       let fun sname (ref(PG.S{keycopy,...})) = AgIO.mkstr2 (!keycopy)
+(* tr takes a stateref and returns a pair (name, list of (action, *)
+(* agentname) pairs) i.e. semi-stringified next-step list*) 
+           fun tr (ref(PG.S{keycopy,suc,...})) =
+               (AgIO.mkstr2 (!keycopy),
+                flatten(map (fn (a,slref) =>
+                             map (fn s => (a,sname s)) (!slref))
+			(!suc)))
+           fun mkfcgraph (sref,srlist) = (sname sref,map tr srlist)
+           val gr = SGraph trivinit (!agtenv,!setenv,!relenv)
+           val (init,g) = mkfcgraph (gr a)
+        in Inter.dumpfc filename a init (rev g)
+       end
+     | format("meije",filename,a) =
+       Inter.dumpmeije filename (Agf.subenv (!agtenv) a)
+(* we shouldn't *get* strange format names because its our code that *)
+(* chooses them ... but let's be defensive! *)
+     | format(someformat, filename, a) =
+       UI.error ("Bug? Unknown format "^someformat)
+
+(* This is inefficient, but it's for graphing and shouldn't be being *)
+(* called on big graphs.*)
+ fun wholegraph (agent) =
+   let fun tr (ref(PG.S{keycopy,suc,...})) =
+     (!keycopy,
+      flatten(map (fn (a,slref) =>
+		   map (fn ref(PG.S{keycopy,suc,...})
+			=> (a,!keycopy)) (!slref))
+	      (!suc)))
+       fun makegraph (ref(PG.S{keycopy,suc,...}),srlist)
+	 = (!keycopy, map tr srlist)
+(* give (agent, (agent, (action, agent)list)list) ! *)
+   in Inter.printgraph (makegraph (SGraph trivinit
+				   (!agtenv,!setenv,!relenv) agent))
+   end
+
+   fun match v (Ag.Actlist _) = false
+     | match v (Ag.Actlistvar u) = V.eq(u,v)
+
+(* return true iff the given agent ag depends on the given set chk  *)
+   fun res_depends chk ag =
+       let fun dp Ag.Nil = false
+             | dp Ag.DNil = false
+             | dp Ag.Bottom = false
+             | dp (Ag.Prefix (_,A)) = dp A
+             | dp (Ag.Delta (_,A)) = dp A
+             | dp (Ag.Time (_,A)) = dp A
+             | dp (Ag.Var _) = false
+             | dp (Ag.WSum l) = exists dp l
+             | dp (Ag.SSum l) = exists dp l
+             | dp (Ag.Parallel l) = exists dp l
+             | dp (Ag.SMerge l) = exists dp (map fst l) orelse
+                                  exists (match chk) (map snd l)
+             | dp (Ag.Restrict(A,Ag.Actlist l)) = dp A
+             | dp (Ag.Restrict(A,Ag.Actlistvar v)) = V.eq(v,chk) orelse (dp A)
+             | dp (Ag.Relabel(A,_)) = dp A
+       in dp ag
+      end
+(* return true iff the given agent ag depends on the given relabelling chk  *)
+   fun rel_depends chk ag =
+       let fun dp Ag.Nil = false
+             | dp Ag.DNil = false
+             | dp Ag.Bottom = false
+             | dp (Ag.Prefix (_,A)) = dp A
+             | dp (Ag.Delta (_,A)) = dp A
+             | dp (Ag.Time (_,A)) = dp A
+             | dp (Ag.Var _) = false
+             | dp (Ag.WSum l) = exists dp l
+             | dp (Ag.SSum l) = exists dp l
+             | dp (Ag.Parallel l) = exists dp l
+             | dp (Ag.SMerge l) = exists dp (map fst l)
+             | dp (Ag.Restrict(A,_)) = dp A
+             | dp (Ag.Relabel(A,Ag.Relabellist l)) = dp A
+             | dp (Ag.Relabel(A,Ag.Relabelvar v)) = V.eq(v,chk) orelse (dp A)
+       in dp ag
+      end
+
+   fun translist ag =
+       (Agf.transitions ((!agtenv),(!setenv),(!relenv)) ag,"none","none")
+       handle Agf.Unguarded v => ([],V.mkstr v,"none")
+            | Agf.Unguarded_rec v => ([],"none",V.mkstr v)
+
+   fun errorWithHelp s = (UI.error s;
+			  let val context = UI.getcontext ()
+			  in if not (context = "")
+			       then Help.help context
+			     else ()
+			  end)
+(*********************  Top-level loop  *********************)
+
+   val continue = ref true
+
+   fun toploop _ =
+     (UI.banner (false);
+      continue := true;
+      while !continue do
+         (Lib.capturetopcont();
+          case Parse.parse "Command" A.mkact V.mkvar AgIO.mkagent LogIO.mkprop
+               (UI.readcommand("Command")) of
+       BindAgent(X,FP,A) =>
+           (if Lib.member V.eq (X,E.getvars (!agtenv))
+            then resettable() else ();
+            agtenv := E.bind(X,(FP,A),!agtenv))
+     | BindProp(X,FP,P) =>
+          propenv := E.bind(X,(FP,P),!propenv)
+     | BindSet(X,S) =>
+(* must reset iff both X is bound and some agent depends on X *)
+          (if Lib.member V.eq (X, E.getvars (!setenv)) andalso
+               E.exists (fn (v,ag) => (res_depends X (snd ag))) (!agtenv)
+           then resettable() else ();
+           setenv := E.bind(X,S,!setenv))
+     | BindRel(X,S) =>
+          (if Lib.member V.eq (X, E.getvars (!relenv)) andalso
+               E.exists (fn (v,ag) => (rel_depends X (snd ag))) (!agtenv)
+           then resettable() else ();
+           relenv := E.bind(X,S,!relenv))
+     | Minimize(X,A) =>
+          minimize(A,X)
+     | ClearEnv =>
+          (agtenv := E.empty;
+           setenv := E.empty;
+           relenv := E.empty;
+           propenv := E.empty;
+           resettable())
+     | PrintEnv =>
+          (Inter.printagentenv(!agtenv);
+           Inter.printsetenv(!setenv);
+           Inter.printrelenv(!relenv);
+           Inter.printpropenv(!propenv))
+(* This prints out agents on which your agent depends: but it's buggy, *)
+(* (because formal params and actual params have same type, which      *)
+(* causes utter confusion) and I don't think I like it anyway, so take *)
+(* it out for now. *) 
+(*      | PrintAgent (Ag.Var(X,[])) => 				       *)
+(*           (Inter.printagentenv				       *)
+(*            (snd(Agf.subenv (!agtenv) (Ag.Var(X,fst(E.lookup(X,!agtenv)))))) *)
+(*            handle E.Unbound => UI.message((V.mkstr X)^" is unbound"))  *)
+(*      | PrintAgent ag =>					       *)
+(*           Inter.printagentenv(snd(Agf.subenv (!agtenv) ag))	       *)
+     | PrintAgent (Ag.Var(X,[])) =>
+	 (Inter.printagentenv(E.bind(X, E.lookup(X,!agtenv), E.empty))
+	   handle E.Unbound => UI.message((V.mkstr X)^" is unbound"))
+     | PrintAgentGraph (A) =>
+	 wholegraph A
+
+     | PrintSet(X) =>
+          (Inter.printsetenv(E.bind(X,E.lookup(X,!setenv),E.empty))
+           handle E.Unbound => UI.message((V.mkstr X)^" is unbound"))
+     | PrintRel(X) =>
+          (Inter.printrelenv(E.bind(X,E.lookup(X,!relenv),E.empty))
+           handle E.Unbound => UI.message((V.mkstr X)^" is unbound"))
+    | PrintProp(X) =>
+          (Inter.printpropenv(E.bind(X,E.lookup(X,!propenv),E.empty))
+           handle E.Unbound => UI.message((V.mkstr X)^" is unbound"))
+(**)
+    | Cwb s => UI.cwb s
+
+    | Help s =>
+          Help.help s
+     | Use s =>
+          UI.newinfile s
+     | Output s =>
+          UI.newoutfile s
+     | CancelOutput  =>
+          UI.canceloutfile ()
+     | Save s =>
+          Inter.dumpallenvs s
+     | SaveMeije (s,ag) =>
+          format("meije",s,ag)
+     | SaveFC (s,ag) =>
+          format("fc",s,ag)
+     | Reduce =>
+          reduce := true
+     | NoReduce =>
+          reduce := false
+     | LocalMC =>
+          localmc := true
+     | GlobalMC =>
+          localmc := false
+     | Synthesis => (UI.message " *** Sorry, this command not available ***")
+(*          agtenv := Eqs.synt (!reduce) (!agtenv,!setenv,!relenv)*)
+     | Quit =>
+          continue := false
+     | Simulate A => 
+          (let val origenv = !agtenv
+               fun AgEq ((pla,a),(plb,b)) = 
+                   (Lib.eq Ag.parameq (pla,plb)) andalso Ag.eq(a,b)
+            in (Sim.simulate translist A;
+                if E.eq AgEq (origenv,!agtenv) then () else resettable())
+                handle e => 
+                  (if E.eq AgEq (origenv,!agtenv) then () else resettable();
+                   raise e)
+           end)
+
+(* Trans of Ag.agent == transitions *)
+     | Trans A =>
+          transitions A
+
+(* Initial of Ag.agent == init *)
+     | Initial A =>
+           initial A
+
+(* Deriv of Ag.A.act * Ag.agent == tauders, actders *)
+     | Derivative(a,A) =>
+          (if A.eq(A.tau,a) then tauders A else actders a A)
+
+(* Closure of Ag.A.act list * Ag.agent == obsders,taucl,actcl *)
+     | Closure(l,A) =>
+          (case l of
+                [a] => if A.eq(A.eps,a) then taucl A
+                       else actcl a A
+              | al => obsder (filter 
+                       (fn a => not(A.eq(a,A.tau) orelse A.eq(a,A.eps))) al) A)
+
+(* Observe of int * Ag.agent == obs *)
+     | Observe(n,A) =>
+           observations n A
+
+(* VisSeq of int * Ag.agent == vs *)
+     | VisSeq(n,A) =>
+         visibleseq n A
+
+(* Random of int * Ag.agent == random *)
+     | Random(n,A) =>
+           rand n A
+
+
+
+     | PrefixForm A =>
+          prefixform A
+     | Stable A =>
+           stable A
+     | Diverges A =>
+           diverges A
+     | FreeVariables A =>
+           freevars A
+     | Sort A =>
+           sort A
+     | Size A =>
+           size A
+     | StateSpace A =>
+           statesp A
+     | StateSpaceExp A =>
+           statespexp A
+     | StateSpaceObs A =>
+           statespobs A
+     | FindDeadlock A =>
+           finddeadlock A
+     | FindDeadlockObs A =>
+           finddeadlocko A
+     | FindInitial(al,A) =>
+           findinit al A
+     | FindInitialObs(al,A) =>
+           findinito al A
+     | StrongPre(A,B) =>
+           checkstrongpreorder(A,B)
+     | StrongEq(A,B) =>
+           strongeq(A,B)
+     | WeakPre(A,B) =>
+           checkweakpreorder(A,B)
+     | WeakPreCong(A,B) =>
+           checkprecongruence(A,B)
+     | WeakEq(A,B) =>
+           weakeq(A,B)
+     | WeakCong(A,B) =>
+           congruent(A,B)
+     | PrintBisim(A,B) =>
+           printbisim(A,B)
+     | DivEq(A,B) =>
+           dquivalent(A,B)
+     | MayPre(A,B) =>
+           may_pr(A,B)
+     | MayEq(A,B) =>
+           may_eq(A,B)
+     | MustPre(A,B) =>
+           must_pr(A,B)
+     | MustEq(A,B) =>
+           must_eq(A,B)
+     | TestPre(A,B) =>
+           test_pr(A,B)
+     | TestEq(A,B) =>
+           test_eq(A,B)
+     | TwoThirdsPre(A,B) =>
+           checktwothirds(A,B)
+     | TwoThirdsEq(A,B) =>
+           checktwothirdsEq(A,B)
+     | BranchingEq(A,B) =>
+           btimeb(A,B)
+     | ContractionPre(A,B) =>
+           contraction(A,B)
+     | CheckProp(A,P) =>
+           if !localmc then checkprop(A,P)
+           else checkpropglobal(A,P)
+     | DistinguishStrong(A,B) =>
+           df_str(A,B)
+     | DistinguishWeak(A,B) =>
+           df_obs(A,B)
+     | DistinguishTrace(A,B) =>
+           df_may(A,B)
+     | _ => UI.error("Bug? Unrecognised internal command"))
+   handle Agf.Unguarded  v =>
+                 UI.error("The free identifier "^(V.mkstr v)^" makes"
+                            ^" it impossible to compute this result")
+        | Agf.Unguarded_rec v =>
+                 UI.error("Unguarded recursion in "^(V.mkstr v))
+        | Agf.Mismatch (ag as Ag.Var(v,a)) => 
+                 UI.error("Use of "^(V.mkstr v)
+                             ^" doesn't match its definition")
+        | Tr.Error s => UI.error s
+        | Inter.IO s => UI.error s
+	| UI.IO s => UI.error s
+        | Parse.Parse s => errorWithHelp s
+        | AgIO.Parse s =>  errorWithHelp s
+        | LogIO.Parse s =>  errorWithHelp s
+	| Tr.Debug s => UI.debug s
+	| Panic => UI.error ("BUG! Sorry. Please report what made it happen")
+        | Interrupt => let val _ = resettable () (* why this way? *)
+		       in UI.fatalerror "System Interrupt raised" end 
+    )
+end
+

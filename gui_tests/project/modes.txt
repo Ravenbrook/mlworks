@@ -1,0 +1,35 @@
+Request #30362:  Setting mode has no effect.
+
+You can now set modes from within the Project Workspace to be applied
+to the project.  Within the Project Properties dialog for modes
+(select Project->Properties->Modes from the menu) you can now define
+your own mode by adding the new mode and setting the options for it,
+or you can choose an existing mode and make it current.  Note that the
+list of modes is only a list of available modes and the only mode
+which has any effect is the current mode.  The current mode also
+affects where object files go, and changing the current mode should
+update the object file location displayed in the Project Workspace.
+Object files are now placed in the following hierarchy:
+
+<basic_object_location>/<configuration>/<mode>
+
+so that for a configuration set to I386/NT and mode set to Release, 
+the object files go to:
+
+objects/I386/NT/Release/
+
+Within the project file there should be a setting to specify the
+current mode which should always be Release.  
+
+
+---------------
+
+Request #30385: Changing mode should force compiler to look elsewhere 
+for object files.
+
+Changing the mode in the Project Workspace should result in the object
+file information displayed in the Project Workspace to be updated when 
+the dependencies are read.  This also means issuing a compile command
+after changing the mode should compile the object files to the new
+objects directory (changing the mode changes where the objects go/are
+found).

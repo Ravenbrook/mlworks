@@ -1,0 +1,176 @@
+
+C Function Interface
+--------------------
+
+We currently only deal with C, since we are initially aiming at Unix
+systems. If we use the standard C library functions then we have the
+chance that our software will still be portable, even to non-unix
+machines, as long as they have a standard C compiler available.
+
+The standard C library is very large so it doesn't make sense to
+duplicate every library function in ML. The intention is to provide a
+general `call C function' function which can implement any number of
+different C functions. The ML type for this function could be defined
+as below. It is not intended that this function should be available to
+the user at all.
+
+		call : int * 'a -> 'b
+
+This type is obviously massively unsafe. The first argument to `call'
+is the name of the C function (see later) and the second argument is
+intended to be the arguments to the C function.  Note that arguments
+are passed in an unsafe manner to allow different numbers and types of
+arguments. Note also that the result type is unconstrained.
+
+Data conversion
+---------------
+
+In order to call C functions from ML we will need to do some data
+format conversions. In particular, strings must be zero terminated
+rather than having lengths associated with them and integers will have
+to become untagged by being shifted right two bits.  There is also a
+corresponding problem with interpreting the results of C function
+calls. It makes sense for this translation to be done in C because we
+only have to know how ML lays out its values (which we do know),
+instead of having to know the C calling conventions (which we don't
+know, because we want to be portable across different C compilers).
+Note that it is impossible to untag integers within ML because this
+could generate a value indistinguishable (to the garbage colector)
+from a pointer.
+
+String termination could be done in ML (introducing a new abstract
+type `cstring' of C strings) but would be inefficient because
+concatenation of a terminating zero onto a string requires the whole
+string to be copied. In fact, it is possible to make ML strings always
+be zero terminated (as well as having a length) and so not require any
+conversion (remembering that a ML string pointer points at the first
+character of the string, not the header word). Some slight
+complications may be introduced if we have the optimisation that
+single character strings are represented as integers.
+
+This still leaves the more thorny problems of the internal structure
+of objects passed by reference. Firstly, such objects might contain
+integers, which need shifting. Secondly, ML does not order its records
+in the declared order, but in an order of its own choosing. I think we
+should probably disallow this but provide the user with conversion
+functions instead. These functions would probably only convert tuples
+(which have a predictable ordering), strings and simple objects such
+as booleans and integers.
+
+Linking
+-------
+
+It is possible that C functions should be linked in dynamically,
+but I think this is probably too difficult since we may require not
+only the linking of ML to the C function, but also the linking
+of the C function into the run-time system (so that it can do
+memory allocation). Hence, we assume that all C functions are
+already linked into the run-time system.
+
+It is suggested that this static linking be done by some indirection
+system where the run-time system contains a static vector containing
+the addresses of the relevant functions. For example, in non-type
+correct C.
+
+static void
+*foreign[] = { fopen, fclose, fprintf, fread, fwrite, fgetc }
+
+Memory allocation
+-----------------
+
+There are also problems in the interaction of C functions with the
+garbage collector. In order to avoid heap fragmentation we shall need
+our own version of malloc, which will interact sensibly with the
+garbage collector. Thus if a C function calls malloc, it may cause a
+garbage collection which in turn may move objects which the C wishes
+to reference. But since C pointers will not be tagged, the garbage
+collector cannot fix up these references within the stack and local
+registers. We may also run into problems if the library itself calls
+malloc and has been statically linked already. this can be a common
+problem with shared libraries, where the static linking is done to
+avoid the overhead of an extra indirection on every function call
+within the library. This may be avoidable on most unix systems, if
+only by linking with non-shared libraries. On other systems (MS-DOS,
+RISC OS) the problem may be harder.
+
+Wrapper functions
+-----------------
+
+This stuff should be done as functions which are provided in the
+run-time system. We probably want to be able to raise exceptions as
+well.
+
+#define MLtrue  ...
+#define MLfalse ...
+
+fun MLint (Cint : u_int32) = ...
+fun MLstring (Cstring) = ...
+fun MLcptr (Cptr : (void *)) = ...
+fun MLtuple (MLval1,MLval2,...) = ...
+
+fun Cint (MLint : u_int32) = ...
+fun Cstring (MLstring) = ...
+fun Ccptr (MLval) = ...
+fun Ctuple (MLval,Cptr) = ...
+
+Assumptions
+-----------
+
+I am assuming that we replace the malloc used by C functions by
+a call to the run-time system. This will allocate an area within a
+static (non-collectable) region. It is assumed that pointers from the
+ML heap into this region are simply ignored. Thus, we need to able to
+link C functions into the run-time system.
+
+Examples
+--------
+
+Some example simple wrapped up functions are shown below. They
+illustrate the need for a system error exception. The error number
+returned should perhaps be converted to the error string found in
+sys_errlist. Alternatively, error numbers could be associated with the
+appropriately named variable as per the macros used in C for error
+numbers.
+
+	ml_open (MLvalue) =
+	{
+	  int res;
+	  if ((res = open(Cstring(MLvalue))) >= 0) then {
+	    return MLint(res)
+	  } else {
+	    MLraise(errno) /* Assuming exception System of int */
+	  }
+	}
+
+	ml_close (MLvalue) =
+	{
+	  int res;
+	  if ((res = close(Cint(MLvalue))) == 0) then {
+	    return MLint(0)
+	  } else {
+	    MLraise(errno) /* Assuming exception System of int */
+	  }
+	}
+
+	ml_read (MLvalue) =
+	{
+	  int res;
+	  struct fd : MLvalue, buffer : MLvalue end tuple;
+	  Ctuple(MLvalue,tuple);
+	  if ((res = read(Cint(tuple.fd),Cptr(tuple.buffer))) == 0) then {
+	    return MLint(0)
+	  } else {
+	    MLraise(errno) /* Assuming exception System of int */
+	  }
+	}
+
+	ml_opendir (MLvalue) =
+	{
+	  int res;
+	  DIR *dir;
+	  if ((dir = opendir(Cstring(MLvalue))) != NULL) {
+	    return MLcptr(dir)
+	  } else {
+	    MLraise(errno)
+	  }
+	}

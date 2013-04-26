@@ -1,0 +1,15 @@
+;;; GNU Emacs environment initialization for MLWorks
+;;; Copyright (C) 1993 Harlequin Ltd
+
+;; Add the MLWorks Emacs lisp directory to the load path.
+(setq load-path (cons "$MLWORKSDIR/lib/emacs/lisp" load-path))
+
+;; Set up autoload hooks for the MLWorks server and SML mode.
+(autoload 'mlworks-server "mlworks-server" "The MLWorks server" t)
+(autoload 'sml-mode "sml-mode" "Major mode for editing Standard ML programs." t)
+(autoload 'sml "sml-proc" "Run an inferior ML process." t)
+
+(setq sml-mode-info "$MLWORKSDIR/lib/emacs/lisp/sml-mode.info")
+
+;; Use SML mode to edit files with the `sml' suffix.
+(setq auto-mode-alist (cons '("\\.sml$" . sml-mode) auto-mode-alist))

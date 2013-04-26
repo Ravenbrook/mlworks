@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# defaults
+MONO=
+STACK_ARG=5
+
+GUI_ARGS=
+
+GUI_OPTS="-mono -stack n -tty -gui -debug-mode -optimize-mode -no-init -help"
+
+delimiter=@
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -mono) MONO=-mono ;;
+    -stack) shift ; STACK_ARG=$1 ;;
+    -gui) GUI_ARGS="$GUI_ARGS -gui" ;;
+    -tty) GUI_ARGS="$GUI_ARGS -tty"  ;;
+    -debug-mode) GUI_ARGS="$GUI_ARGS -debug-mode" ;;
+    -optimize-mode) GUI_ARGS="$GUI_ARGS -optimize-mode" ;;
+    -no-init) GUI_ARGS="$GUI_ARGS -no-init" ;;
+    -help) GUI_ARGS="$GUI_ARGS -help" ;;
+    -silent) GUI_ARGS="$GUI_ARGS -silent" ;;
+
+    *) echo "Invalid option $1 -- valid options are:"; echo $GUI_OPTS; exit 1 ;;
+  esac ;
+  shift 
+done
+
+
+exec $BINDIR/mlrun -MLWpass MLWargs -stack $STACK_ARG $RUNTIMEOPTS $MONO -load $IMAGEDIR/gui.img MLWargs $GUI_ARGS
+

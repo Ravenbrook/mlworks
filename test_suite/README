@@ -1,0 +1,84 @@
+# $Log: README,v $
+# Revision 1.8  1997/03/26 10:18:52  jont
+# Add information about use of perl_script by some tests
+#
+# Revision 1.7  1996/01/09  12:48:43  matthew
+# Renaming motif.img to gui.img
+#
+# Revision 1.6  1994/03/15  14:53:36  jont
+# Change default source directory to /usr/users/sml/MLW/src
+#
+# Revision 1.5  1993/04/15  10:03:39  daveb
+# Added info about CHECK_SUCCESS. RUN_TESTS and RUN_ALL_TESTS have been
+# renamed CHECK_RESULT and CHECK_RESULT_ALL.
+#
+# Revision 1.4  1993/01/27  11:45:56  daveb
+# Added info about COMPILE_FILE.
+#
+# Revision 1.3  1993/01/22  18:49:55  daveb
+# Revised.
+#
+# Revision 1.2  1993/01/18  19:05:08  daveb
+# Added details of RUN_ALL_TESTS, MAKE_ANS and MAKE_ALL_ANS.
+#
+# Revision 1.1  1992/11/04  17:21:51  daveb
+# Initial revision
+
+
+This directory tree contains a test suite for MLWorks.  Each test
+is in a separate file.  There are seven commands: COMPILE_FILE,
+CHECK_SUCCESS, CHECK_SUCCESS_ALL, CHECK_RESULT, CHECK_RESULT_ALL,
+MAKE_ANS and MAKE_ALL_ANS.
+
+To check a compiler against existing tests, use CHECK_SUCCESS and
+CHECK_RESULT.  These commands take an optional argument pair of the
+form "-src <dir>", and a list of .sml files to evaluate.  If the
+optional arguments are given, <dir> is a directory containing
+rts/runtime and images/gui.img.  The default directory is 
+/usr/users/sml/MLW/src.
+
+Tests include a specification of whether they should succeed, fail,
+or generate a warning.  CHECK_SUCCESS checks that the test performs
+correctly in this respect.  CHECK_RESULT does more; after calling
+CHECK_SUCCESS it also compares the output of the tests against
+previously generated answer files.  It uses simple file comparison
+to do this.  It also passes a "-keep" argument to CHECK_SUCCESS,
+to instruct it not to remove its output file.  This argument is
+not intended for users to use directly.
+
+To check all the tests in the suite, use CHECK_SUCCESS_ALL and
+CHECK_RESULT_ALL.  These commands take optional "-src <dir>"
+arguments as for CHECK_SUCCESS, and also optional "-test <dir>"
+arguments, in which <dir> is a directory containing the tests.
+The default value for this is the current directory.
+
+COMPILE_FILE evaluates a single file and puts the result on the
+standard output, after stripping prompts and header information.
+It is useful for examining the output of a test for visual
+comparison with an installed answer file.  It is also used by the
+other commands.  COMPILE_FILE takes optional "-src <dir>" arguments.
+
+To add a test to the suite, put the .sml file in an appropriate
+directory and generate an answer file for it using MAKE_ANS.
+MAKE_ANS takes the same arguments as CHECK_SUCCESS.  It calls
+CHECK_SUCCESS, and only creates the answer file if the test succeeds.
+The header of the .sml file should contain, in addition to the usual
+RCS Log and copyright notice, a line of the form:
+
+Result: <status>+
+
+Where possible statuses are: OK, FAIL, WARNING and INTERPRETATION.
+Most files will have just one status.  CHECK_SUCCESS complains if
+the status of the generated answer is not included in the specified
+status.  If the specified status includes INTERPRETATION,
+CHECK_SUCCESS prints "The correct behaviour in this case is open
+to question", as a reminder.
+
+To regenerate answer files for all the tests in the suite, use
+MAKE_ALL_ANS.  This takes the same arguments as CHECK_SUCCESS_ALL.
+
+Additional assumptions:
+Some tests require a file which can be opened. Since Win32 does not
+understand . in this respect, we use perl_script instead. This means
+that perl_script is not only vital for its contents, but also for its
+name.

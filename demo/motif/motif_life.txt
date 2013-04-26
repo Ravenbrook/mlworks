@@ -1,0 +1,61 @@
+  Load File: life.sml
+
+  Implements Conway's game of Life.
+
+  To run from within the MLWorks GUI, type in a listener
+
+    life_test ();
+
+  This starts a new game.  
+
+  Other controls are:
+
+           s   run continuously (toggle)
+	   r   return to initial configuration 
+           x   quit 
+  other keys   get next generation
+
+  
+  The setting of particular points can also be toggled using the mouse.
+
+  From the command-line it is also possible to start games using different
+  initial configurations.  Examples are given in `forms.sml' (which first 
+  needs to be loaded).
+
+  For instance:
+
+    life (100,100,move (50,50) rabbit);
+
+  starts a game with a 'rabbit' pattern at position (50,50) and in a
+  grid of size 100 by 100.
+
+  
+  To run as a standalone executable, after compiling create an executable
+  file, for instance by doing
+
+      MLWorks.Deliver.deliver ("life",life_appl,MLWorks.Deliver.CONSOLE);
+
+  (life_appl is a function of type unit -> unit which starts X and then runs the
+  demo.)  The file `life' can then be run from the command-line
+  without invoking MLWorks.  
+
+  Note that MLWorks executables depend on the MLWorks shared library.
+  If the executable fails to run you may need to check that
+  your LD_LIBRARY_PATH environment variable is set correctly to
+  include the bin subdirectory of your installation directory.
+
+
+  To run life from a copy of MLWorks started from the command line
+  using `mlworks -tty', having compiled and loaded life.sml using the 
+  project workspace, type into the TTY listener
+
+    life_test ()
+
+  This initialises X and tells the program to start the game in a window
+  of the default size.  Then type
+
+    life_runx ();
+
+  to start the program.  Alternatively, use the "life" function as
+  above, and then call life_runx ().
+

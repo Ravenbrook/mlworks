@@ -1,0 +1,97 @@
+#!/bin/sh
+# === CHECK OUT ALL FILES ===
+#
+# Searches in and below the current directory for RCS files and checks
+# them out as read-only working files.  This will not overwrite files
+# with writable modes, and so does not overwrite locked working files.
+#
+# $Log: coutall,v $
+# Revision 1.13  1997/06/11 11:23:21  stephenb
+# [Bug #30166]
+# Aargh!  Fix bad interaction between -V and -s.
+#
+# Revision 1.11  1997/06/05  09:52:47  daveb
+# [Bug #30166]
+# Hope 1.24 replaced -force with more precise options.
+#
+# Revision 1.10  1996/01/30  16:59:47  jont
+# Add extra-files delete to the checkout script to remove stale units
+#
+# Revision 1.9  1996/01/24  11:03:25  matthew
+# Adding special checkout of runtime system
+#
+# without the -ci-date option
+#
+# Revision 1.8  1995/07/24  11:22:28  daveb
+# The -working-files argument to the Hope checkout command has changed to
+# -writable-files.
+#
+# Revision 1.7  1995/06/09  10:08:56  daveb
+# Updated usage string.
+#
+# Revision 1.6  1995/02/28  12:50:56  jont
+# Modify use of version (deprecated) to branch
+#
+# Revision 1.5  1994/08/31  14:55:35  jont
+# Add -force option to hope checkout command
+#
+# Revision 1.4  1994/06/22  13:47:51  nickh
+# Add new hope switches.
+#
+# Revision 1.3  1994/02/04  17:33:54  daveb
+# Converted to hope.
+#
+# Revision 1.2  1993/01/15  13:12:02  richard
+# Added -d option and corrected option passing.
+#
+# Revision 1.1  1992/10/23  13:36:40  richard
+# Initial revision
+#
+
+script=`basename $0`
+usage="Usage: $script [ -s ] [-V] [-b <branch>] [-d <date>]"
+PWD=`pwd`
+top=`basename $PWD`
+ok=0
+
+if [ "$top" = "MLW" ]; then
+    cd .. && ok=1
+fi
+
+if [ -d "MLW" ]; then
+    ok=1
+fi
+
+if [ "$ok" = "0" ]; then
+  echo "coutall: Are you in or above your MLW tree?"
+  exit 2
+fi
+
+coopts=""
+args=""
+writable_files="warn"
+
+while getopts b:d:s:V option
+do
+  case $option in
+    s) writable_files="skip";;
+    V) args="$args verbose";;
+    b) coopts="$coopts -branch $OPTARG" ;;
+    d) coopts="$coopts -date $OPTARG" ;;
+    *) echo "$usage"; exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+if [ "$#" -ne 0 ]; then
+    echo "$usage"; exit 1
+fi
+
+# Check out the runtime system with dates being set to cout time
+(cd MLW/src;
+ hope $args co $coopts -recursive -diff-branch-files force -diff-unit-files warn -writable-files $writable_files -missing-dir create -extra-files delete -compound MLWrts)
+
+# Check out everything else with dates set to cin time
+hope $args co $coopts -recursive -diff-branch-files force -diff-unit-files warn -writable-files $writable_files -missing-dir create -extra-files delete -ci-date -compound MLW
+
+exit

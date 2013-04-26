@@ -1,0 +1,45 @@
+#!/bin/sh
+#
+# Create runtime system structure for new architecture and OS
+# Parameter 1 = ARCH, parameter 2 = OS
+# $Log: newarch,v $
+# Revision 1.3  1995/02/23 17:24:54  jont
+# Modify for new file structure /u
+#
+# Revision 1.2  1995/02/21  15:47:10  brianm
+# Introducing SML_HOME
+#
+# Revision 1.1  1994/06/28  13:19:54  jont
+# new file
+#
+#
+script=`basename $0`
+PWD=`pwd`
+top=`basename $PWD`
+ok=0
+SML_HOME=/u/sml; export SML_HOME
+SML=$SML_HOME/MLW; export SML
+
+if [ "$#" -ne 2 ]; then
+  echo Usage: newarch \<ARCH\> \<OS\>
+  exit 1
+fi
+if [ "$top" = "MLW" ]; then
+    cd .. && ok=1
+fi
+
+if [ -d "MLW" ]; then
+    ok=1
+fi
+
+if [ "$ok" = "0" ]; then
+  echo "newarch: Are you in or above your MLW tree?"
+  exit 2
+fi
+
+ARCH=$1;export ARCH
+OS=$2;export OS
+mkdir MLW/src/rts/src/OS/$OS
+mkdir MLW/src/rts/src/OS/$OS/arch
+mkdir MLW/src/rts/src/OS/$OS/arch/$ARCH
+mkdir MLW/src/rts/src/arch/$ARCH

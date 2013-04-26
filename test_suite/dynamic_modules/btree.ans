@@ -1,0 +1,20 @@
+structure Btree =
+  struct
+    datatype 'a Tree =
+      Tree of ('a TreeRep * (('a * 'a) -> bool))
+    datatype 'a TreeRep =
+      E |
+      T of ('a * int * 'a TreeRep * 'a TreeRep)
+    val E : 'a Btree.TreeRep
+    val T : ('a * int * 'a Btree.TreeRep * 'a Btree.TreeRep) -> 'a Btree.TreeRep
+    val Tree : ('a Btree.TreeRep * (('a * 'a) -> bool)) -> 'a Btree.Tree
+    val add : (int Btree.Tree * int) -> int Btree.Tree = fn
+    val delete : ('a Btree.Tree * 'a) -> 'a Btree.Tree = fn
+    val eg : int Btree.Tree = Tree (T (12, 7, T (1, 4, T .., T ..), T (23, 2, E, T ..)), fn)
+    val empty : (('a * 'a) -> bool) -> 'a Btree.Tree = fn
+    val fromList : (int list * ((int * int) -> bool)) -> int Btree.Tree = fn
+    val member : ('a * 'a Btree.Tree) -> bool = fn
+    val members : 'a Btree.Tree -> 'a list = fn
+    val size : 'a Btree.Tree -> int = fn
+  end
+val x : int Btree.Tree = Tree (T (2, 3, T (3, 1, E, E), T (1, 1, E, E)), fn)

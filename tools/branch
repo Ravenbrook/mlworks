@@ -1,0 +1,19 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+# $Log: branch,v $
+# Revision 1.1  1996/10/07 16:46:15  jont
+# new unit
+# A script for making branches, since I expect to be doing a lot of this.
+#
+#
+script_path=`dirname $0`
+script_name=`basename $0`
+cmd="branch"
+STATUS=0
+usage="usage: $script_name <branch_name>"
+if [ $# -ne 1 ] ; then
+  echo "branch name missing or overspecified"
+  echo $usage
+  exit 1
+fi
+hope branch -recursive -label $1 -compound MLW

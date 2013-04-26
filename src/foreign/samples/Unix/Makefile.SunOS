@@ -1,0 +1,28 @@
+# Example makefile (SunOS variant)
+
+CC 		= gcc
+
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -g
+#CFLAGS		= -ansi -pedantic -g -Wall
+
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+LDFLAGS		= -Bdynamic
+
+PROGS		= hello.so random.so
+
+all : $(PROGS)
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+clean:
+	$(RM) *.so *.o

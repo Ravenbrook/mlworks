@@ -1,0 +1,282 @@
+(*
+ * $Log: comma,v $
+ * Revision 1.2  1998/05/28 15:27:33  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *)               
+
+                    (* CATEGORICAL PROGRAMS 2 *)
+
+(* This file contains comma categories, colimits  and limits within them and
+    examples like a category of graphs *)
+
+                   (* Needs "basic" and "cat" *)
+
+(* 16. Constructions of Categories: The Comma Category. *)
+
+   datatype ('o,'m,'o1,'m1,'o2,'m2)Comma_Mor  =
+          comma_mor of ('o*'m1*'o2)*('m*'m2)*('o*'m1*'o2);
+
+
+   fun comma_cat(L: ('o,'m,'o1,'m1)Functor,R: ('o2,'m2,'o1,'m1)Functor) =
+	   let val A = domain(L) 
+	       val C = domain(R)
+           in
+	cat( fn comma_mor(Y,_,_) => Y ,
+	     fn comma_mor(_,_,Y) => Y ,
+	     fn Z as (a,_,c) =>			
+			comma_mor( Z,
+				   (identity(A)(a),identity(C)(c)),
+				   Z) ,
+	     fn (comma_mor(Y,(f,g),_),comma_mor(_,(h,j),Z)) =>
+			comma_mor( Y,
+				   (compose(A)(f,h),compose(C)(g,j)),
+				   Z)   )
+            : (('o*'m1*'o2),('o,'m,'o1,'m1,'o2,'m2)Comma_Mor)Cat
+            end;
+
+							
+   (*   left : ('o,'m,'o1,'m1)Functor * ('o2,'m2,'o1,'m1)Functor ->
+		  ((o*m1*o2),('o,'m,'o1,'m1,'o2,'m2)Comma_Mor,'o,' m)Functor *)
+   fun left(L,R) = 
+	  ffunctor( comma_cat(L,R),
+	            fn (a,_,_) => a ,
+		    fn comma_mor(_,(f,_),_) => f ,
+		    domain(L) );
+
+   (*   right : ('o,'m,'o1,'m1)Functor * ('o2,'m2,'o1,'m1)Functor ->
+	   ((o*m1*o2),('o,'m,'o1,'m1,'o2,'m2)Comma_Mor,'o2,'m2)Functor *)
+   fun right(L,R) = 
+	  ffunctor( comma_cat(L,R),
+		    fn (_,_,c) => c ,
+		    fn comma_mor(_,(_,g),_) => g ,
+		    domain(R) );
+
+(* end *)
+
+
+(* 17. Special Cases of Comma Categories. *)
+
+(* module special_comma_categories *)
+   (* uses category, functor, comma_category, functor_examples,
+	unit_category *)
+
+   type ('o,'m,'o1,'m1)Left_Comma_Mor = ('o,'m,'o1,'m1,'o1,'m1)Comma_Mor;
+
+   (*   left_comma_cat : ('o,'m,'o1,'m1)Functor ->
+		(('o*'m1*'o1),('o,'m,'o1,'m1)Left_Comma_Mor)Cat *)
+   fun left_comma_cat(L) = comma_cat(L,I(range(L)));
+
+   type ('o1,'m1,'o2,'m2)Right_Comma_Mor = ('o1,'m1,'o1,'m1,'o2,'m2)Comma_Mor;
+
+   (*   right_comma_cat : ('o2,'m2,'o1,'m1)Functor ->
+		(('o1*'m1*'o2),('o1,'m1,'o2,'m2)Right_Comma_Mor)Cat *)
+   fun right_comma_cat(R) = comma_cat(I(range(R)),R);
+
+   type ('o1,'m1)Left_Obj_Comma_Mor = 
+	   (UnitObj,UnitMor,'o1,'m1,'o1,'m1)Comma_Mor;
+
+   (*   left_obj_comma_cat : ('o1,'m1)Cat*'o1 -> 
+		((UnitObj*'m1*'o1),('o1,'m1)Left_Obj_Comma_Mor)Cat *)
+   fun left_obj_comma_cat(B,b) = comma_cat(K B b,I B);
+
+   type ('o1,'m1)Right_Obj_Comma_Mor = 
+		('o1,'m1,'o1,'m1,UnitObj,UnitMor)Comma_Mor;
+
+   (*   right_obj_comma_cat : ('o1,'m1)Cat*'o1 -> 
+		(('o1*'m1*UnitObj),('o1,'m1)Right_Obj_Comma_Mor)Cat *)
+   fun right_obj_comma_cat(B,b) = comma_cat(I B,K B b);
+
+   type ('o,'m,'o1,'m1)Functor_Obj_Comma_Mor = 
+		('o,'m,'o1,'m1,UnitObj,UnitMor)Comma_Mor;
+
+   (*   functor_obj_comma_cat : ('o,'m,'o1,'m1)Functor * 'o1 ->
+		(('o*'m1*UnitObj),('o,'m,'o1,'m1)Functor_Obj_Comma_Mor)Cat *)
+   fun functor_obj_comma_cat(L,b) =
+		comma_cat(L,K(range(L))(b));
+
+   type ('o,'m,'o1,'m1)Obj_Functor_Comma_Mor = 
+		(UnitObj,UnitMor,'o,'m,'o1,'m1)Comma_Mor;
+
+   (*   obj_functor_comma_cat : 'o * ('o1,'m1,'o,'m)Functor ->
+		((UnitObj*m*o1),('o,'m,'o1,'m1)Obj_Functor_Comma_Mor)Cat *)
+   fun obj_functor_comma_cat(a,R) =
+		comma_cat(K(range R) a,R);
+
+   type ('o,'m)Morphism_Mor = ('o,'m,'o,'m,'o,'m)Comma_Mor;
+
+   (*   morphism_cat : ('o,'m)Cat -> (('o*'m*'o),('o,'m)Morphism_Mor)Cat *)
+   fun morphism_cat(C) = comma_cat(I C,I C);
+
+(* end *)
+
+
+(* 18. The Comma Category of Graphs. *)
+
+(* module crossproduct_functor *)
+   (* uses category_of_sets, functor, names, category_with_products,
+	category, complete_category, complete_category_of_sets *)
+
+   (*   cross_product: ( ('alpha Tag)Set,Set_Mor(Tag alpha),
+		               ('alpha Tag)Set,('alpha Tag)Set_Mor )Functor *)
+   val cross_product = 
+   	  let val lC as complete_cat(C,_) = complete_FinSet
+          in 
+       ffunctor( C,
+		 fn a => o_prod_o_within lC (a,a),
+		 fn f => m_prod_m_within lC (f,f),
+		 C )
+          end;
+(* end *)
+
+(* module category_of_graphs *)
+   (* uses basic, names, category, category_of_sets, functor, 
+	crossproduct_functor, comma_category, special_comma_categories *)
+
+   type 'alpha Gr = 'alpha Set * 'alpha Set_Mor * 'alpha Set;
+
+   type 'alpha Gr_Mor =
+       ('alpha Set, 'alpha Set_Mor, 'alpha Set, 'alpha Set_Mor)Right_Comma_Mor;
+
+   (*   cat_of_graphs : (('alpha Tag )Gr,('alpha Tag)Gr_Mor)Cat *)
+   val cat_of_graphs = right_comma_cat(cross_product);
+
+(* end *)
+
+
+(* 19. Colimits in Comma Categories. *)
+
+(* module cocomplete_comma_category *)
+   (* uses basic, category, cocomplete_category, graphs_diagrams_cocones,
+	functor, cocontinuous_functor, comma_category, 
+	special_comma_categories, colimit, cocontinuous_functor_examples *)
+
+local
+
+   (*   lift_colimit: ('o,'m)CoComplete_Cat * ('o2,'m2)CoComplete_Cat ->
+	   (('o,'m,'o1,'m1)CoContinuous_Functor * ('o2,'m2,'o1,'m1)Functor 
+		 -> (('o*'m1*'o2),('o,'m,'o1,'m1,'o2,'m2)Comma_Mor)Colimit ) *)
+
+   fun lift_colimit(cA as cocomplete_cat(A,colimA),cC as cocomplete_cat(C,colimC)) 
+                   (cL as cocontinuous_functor(L,preserve), R) 
+		   (D as diagram(_,fo,_))  =
+	let val proj_L = left(L,R) 
+	    val proj_R = right(L,R) 
+	    val leftD = apply_Fun_Diag(proj_L,D) 
+	    val rightD = apply_Fun_Diag(proj_R,D) 
+	    val colimit_in_A as (c_A,univ_A) = colimA(leftD) 
+	    val colimit_in_C as (c_C,univ_C) = colimC(rightD)
+	    val (Lc,Luniv) = preserve(colimit_in_A) 
+	    val Rc = apply_Fun_CoCone(R,c_C)
+	    val c1 =
+	      	cocone( co_apex(Rc),
+		        base(Lc),
+		        fn n => let val (_,h,_) = fo(n) 
+                                 in        
+			         compose(range(L))(h,sides(Rc)(n))
+                                 end ) 
+	    val u = co_apex_morphism(Luniv c1) 
+	    val colim_obj = (co_apex(c_A), u, co_apex(c_C) ) 
+	    val result_cocone =       
+		cocone( colim_obj,
+		        D, 
+		        fn n => 
+			  comma_mor( fo(n),
+			  	     (sides(c_A)(n),sides(c_C)(n)),
+				     colim_obj)  ) 
+	    val universal =
+	  fn c2 => 	   
+	    let val uA = co_apex_morphism(univ_A(apply_Fun_CoCone(proj_L,c2))) 
+	        val uC = co_apex_morphism(univ_C(apply_Fun_CoCone(proj_R,c2))) 
+            in  cocone_mor( result_cocone,
+		            comma_mor(colim_obj,(uA,uC),co_apex(c2)),
+			    c2)   
+            end
+      in (result_cocone,universal)
+      end
+
+in
+
+
+   (*   cocomplete_comma_cat : 
+	( ('o,'m)CoComplete_Cat *	('o2,'m2)CoComplete_Cat ) ->
+	      ( ('o,'m,'o1,'m1)CoContinuous_Functor * 
+		('o2,'m2,'o1,'m1)Functor ->
+          (('o*'m1*'o2),('o,'m,'o1,'m1,'o2,'m2)Comma_Mor)CoComplete_Cat ) *)
+
+   fun cocomplete_comma_cat(cA,cC) 
+			   (cL as cocontinuous_functor(L,_),R) =
+	 cocomplete_cat(comma_cat(L,R),lift_colimit(cA,cC)(cL,R)) ;
+
+   (*   cocomplete_right_comma_cat : ( ('o,'m)CoComplete_Cat *
+				      ('o1,'m1,'o,'m)Functor *
+				      ('o1,'m1)CoComplete_Cat ) ->
+		(('o*'m*'o1),('o,'m,'o1,'m1)Right_Comma_Mor)CoComplete_Cat *)
+   fun cocomplete_right_comma_cat(cB as cocomplete_cat(B,_),R,cC)
+	 = cocomplete_comma_cat(cB,cC)(cocontinuous_I(B),R);
+
+end;
+
+   val cocomplete_cat_of_graphs =
+           let val C = cocomplete_FinSet()
+           in cocomplete_right_comma_cat (C,cross_product,C)
+           end;
+(* end *)
+
+
+
+
+(* 25. Limits in Constructed Categories by Duality. *)
+
+(* module complete_comma_category *)
+   (* uses category, functor, comma_category, dual_category, 
+	dual_of_colimits, cocomplete_category, cocontinuous_functor, 
+	cocomplete_comma_category, complete_category, 
+	cocontinuous_functor_examples,graphs_diagrams_cocones *)
+
+   local
+
+       fun I1(F,G) =
+    	   let val object_function = fn (c,f,a) => (a,f,c)
+               in
+    	ffunctor( comma_cat(dual_Fun(G),dual_Fun(F)),
+    		 object_function,
+    		 fn comma_mor(S,(mc,ma),T) =>
+    		   comma_mor( object_function(T),
+    			      (ma,mc),
+    			      object_function(S) ) ,
+    		 dual_Cat(comma_cat(F,G)) )
+               end;
+     
+       fun I2(F,G) =
+    	   let val object_function = fn (a,f,c) => (c,f,a)
+               in
+    	ffunctor( dual_Cat(comma_cat(F,G)),
+      		 object_function,
+    		 fn (comma_mor(S,(ma,mc),T)) =>
+    		   comma_mor( object_function(T),
+    			      (mc,ma),
+    			      object_function(S) ) ,
+    		 comma_cat(dual_Fun(G),dual_Fun(F)) )
+               end;
+    
+   in
+   (*   comma_isomorphism :
+	('o,'m,'o1,'m1)Functor * ('o2,'m2,'o1,'m1)Functor ->
+            ( ('o2*'m1*'o), ('o2,'m2,'o1,'m1,'o,'m)Comma_Mor,
+          ('o*'m1*'o2), ('o,'m,'o1,'m1,'o2,'m2)Comma_Mor )Isomorphism  *)
+   fun comma_isomorphism(F,G) = isomorphism(I1(F,G),I2(F,G))
+   end;
+
+   (*   complete_comma_cat : 
+	( ('o,'m)Complete_Cat * ('o2,'m2)Complete_Cat ) ->
+	( ('o,'m,'o1,'m1)Functor * ('o2,'m2,'o1,'m1)Continuous_Functor ->
+	     ( (o*m1*o2), ('o,'m,'o1,'m1,'o2,'m2)Comma_Mor )Complete_Cat) *)
+
+   fun complete_comma_cat(lA,lC) (F,(lG as continuous_functor(G,_))) =
+	let val (dlC,dlA) = (dual_Comp_Cat(lC),dual_Comp_Cat(lA))
+            val cC = cocomplete_comma_cat(dlC,dlA)(dual_Con_Fun(lG),dual_Fun(F))
+        in dual_via_Iso(comma_cat(F,G),comma_isomorphism(F,G),cC)
+        end;
+(* end *)

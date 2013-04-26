@@ -1,0 +1,53 @@
+# Makefile fragment for alpha 
+#
+# $Id: alpha,v 1.1 1995/01/27 12:02:00 nick Exp $
+#
+# This makefile bit just exports a whole bundle of macros.  It also includes
+# common.unx to export a bundle of default rules.  See the README file to
+# see what macros this is obligated to provide.
+#
+# nick 27Jan95 - this file is used in common by all osf-foo-alpha platforms. 
+# I gather there's a standard warning about using your common.
+##################################################
+
+OLDCC=cc -c -signed -D_NO_PROTO -DANSI_OSPROTOS=1
+ANSICC=cc -c -signed -std1
+CCOM=${OLDCC}
+LDCOM=cc
+LINT=lint
+CPPCOM=/lib/cpp
+MAKE=make
+RANLIB=ranlib
+AR=ar
+
+ARFLAGS=cr
+MCFLAGS=-Dalpha=1 -DUNIX=1
+SPEEDFLAGS=-O2 -Olimit 5000
+DEBUGFLAGS=-g
+
+SYSINC=-I/usr/include -I/usr/sys/include -I/usr/sys/include/sys
+DEFS=${MCFLAGS} ${CDEFINES}
+CPPFILE=${CPPCOM} ${INCDIRS} ${DEFS} ${SYSINC}
+CCSPEED=${CCOM} ${SPEEDFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+CCDBG=${CCOM} ${DEBUGFLAGS} ${CFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+LNFILE=	${LINT} -i ${LNFLAGS} ${DEFS} ${INCDIRS} ${SYSINC}
+
+#The licensing tools all require the same libs so they're here
+LS_SYSLIBS=
+
+
+##################################################
+# $Log: alpha,v $
+# Revision 1.1  1995/01/27 12:02:00  nick
+# new unit
+# distinguish various varieties of alpha
+#
+# Revision 1.3  1994/06/01  14:16:29  chrism
+# add LS_SYSLIBS here since all licensing tools require the same libs
+#
+# Revision 1.2  1994/05/12  15:38:57  freeland
+# fixing typo for definitions of alpha (was aplha instead)
+#
+# Revision 1.1  1994/05/10  16:15:05  freeland
+# new file
+#

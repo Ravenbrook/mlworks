@@ -1,0 +1,105 @@
+(*
+ *
+ * $Log: Elem.str,v $
+ * Revision 1.2  1998/06/02 15:20:25  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Elem.str,v 1.2 1998/06/02 15:20:25 jont Exp $";
+functor Elem ( structure PG  : POLYGRAPH;
+               structure SL : SORTEDLIST;
+               structure AS : ACCSET ) : ELEM =
+struct
+   structure PG = PG
+   type Div = PG.act list ref        (* lists the local divergence potential *)
+   type accset = AS.accset           (* information for testing equivalence  *)
+   datatype Preinf = PI of (Div * Preinf PG.state ref list ref * accset ref)
+                                     (* entire additional information com-   *)
+                                     (* ponent for preorder checking         *)
+   type App = Preinf PG.state ref list ref (* list the states wich are upper *)
+                                     (* approximates of the considered state *)
+
+(*****************************************************************************)
+(* some access functions for the state components I use                      *)
+(*****************************************************************************)
+
+    fun compid (ref(PG.S{id=id,...})) = id
+    fun compgldivref (ref(PG.S{gldiv=gldiv,...})) = gldiv
+    fun compprdiv (ref(PG.S{prdiv=prdiv,...})) = prdiv
+    fun compsuc (ref(PG.S{suc=suc,...})) = suc
+    fun compinfo (ref(PG.S{info=info,...})) = info
+    fun divinf sr =
+        let fun prdivinf (PI(divref,appref,accsetref)) = (!divref)
+         in prdivinf(compinfo sr)
+        end
+    fun approxinf sr =
+        let fun prappinf (PI(divref,appref,accsetref)) = (!appref)
+         in prappinf(compinfo sr)
+        end
+    fun accsetinf sr =
+        let fun praccsetinf (PI(divref,appref,accsetref)) = (!accsetref)
+         in praccsetinf(compinfo sr)
+        end
+    fun infocompdivref (ref(PG.S{info=info,...})) =
+        let fun icd (PI(divref,appref,accsetref)) = divref
+         in icd info
+        end
+    fun infocompappref (ref(PG.S{info=info,...})) =
+        let fun ica (PI(divref,appref,accsetref)) = appref
+         in ica info
+        end
+    fun infocompaccsetref (ref(PG.S{info=info,...})) =
+        let fun icas (PI(divref,appref,accsetref)) = accsetref
+         in icas info
+        end
+   fun actsuclist (act1,sr) =
+       let fun findactsuclist (act1,nil) = nil
+             | findactsuclist (act1,(act2,actsuclistref)::tl) =
+               if PG.act_eq(act1,act2) then !actsuclistref
+               else if PG.act_le(act1,act2) then nil
+               else findactsuclist(act1,tl)
+        in findactsuclist(act1,!(compsuc sr))
+       end
+   fun getaccsetref (PI(_,_,accsetref)) = accsetref
+
+(*****************************************************************************)
+(* the next functions "generate the info component for Preinf states         *)
+(*****************************************************************************)
+
+  val setpreinf = PI(ref nil,ref nil,ref AS.empty)
+
+(*****************************************************************************)
+(*  Initializationfunction for the inf component of the copied Preinf state  *)
+(*  in the context of the transformation for the congruence analysis         *)
+(*****************************************************************************)
+
+  fun preinfcongrcl sr = PI(ref(divinf sr),ref(approxinf sr),ref(accsetinf sr))
+
+(*****************************************************************************)
+(* the next functions provide some simple action list transformations        *)
+(* Documentation can be found in signature PRESIG                            *)
+(* They use the order on the action list (small first)                       *)
+(*****************************************************************************)
+
+   fun actmem x = SL.member PG.act_le x
+
+   fun actlistinclusion x = SL.sublist PG.act_le x
+
+(*****************************************************************************)
+(*    the next functions provide some simple state list transformations      *)
+(*    Documentation can be found in signature PRESIG                         *)
+(*****************************************************************************)
+
+   fun stateeq (ref(PG.S{id=id1,...}),ref(PG.S{id=id2,...})) = id1 = id2
+
+   fun statemem x = Lib.member stateeq x
+
+   fun statelistinclusion (L,srlist) =
+       forall (fn x => statemem(x,srlist)) L
+
+   fun statelistinters (L1,L2) =
+       forall (fn x => not(statemem(x,L2))) L1
+end
+

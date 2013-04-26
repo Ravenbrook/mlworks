@@ -1,0 +1,31 @@
+   Load file: __search.sml
+
+   This module searches a stream for a string by using a simple brute force
+   algorithm.  It demonstrates the use of the TextIO structure, in particular
+   the underlying functional streams used in the TextIO.StreamIO structure.
+ 
+   The module provides three functions: Search.searchInput, 
+   Search.searchStream, and Search.searchFile, which search standard
+   input, the specified stream, and the specified file respectively.
+
+   For example
+
+      Search.searchInput ();
+
+   gives
+ 
+      Enter string to search through:
+      The quick brown fox . . .              [typed by user]
+      Enter string to search for:
+      brown                                  [typed by user]
+      String found at:
+      brown fox . . .
+
+   while
+
+      Search.searchFile("foo","fox");
+
+   returns true if the string 'fox' is found in file `foo', raising 
+   exception Io if the file is not found, and Search.searchStream takes
+   a string and a stream and searches for the first in the second.
+

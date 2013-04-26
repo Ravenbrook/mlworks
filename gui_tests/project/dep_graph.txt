@@ -1,0 +1,83 @@
+Request 30244 (@ 30/9/97): Give the dependency graph the full menus.
+
+Note: This change now invalidates the gui test for request 30155 below for
+releases 2.0m1 and beyond.
+
+On Motif the dependency graph now has the same menu structure as other
+windows.  Common menu options such as the Tools menu, and a few items
+ on the File menu, and a few items on the Usage menu (including the
+Find option) should be available.  New items in the Usage menu include
+'Make Selection Root' and 'Revert to Original Root', and the graph
+option in Usage->ToolSettings now contains some layout styles applying
+only to the dependency graph.
+
+On Windows, again the dependency graph now behaves like any other
+window and has no menu of its own (ie. attached to the dependecy graph
+window itself).
+
+--------------------------------------------------------------------------
+
+Request 30155: Removing 'action' and 'view' cascade menu items from Windows graph.
+
+On Windows: Create a dependency graph from the Compilation Manager / Project
+Browser.  No warning messages should be printed which did say that the action
+and view menu items did not appear in the menu reference list.
+
+On Motif: The dependency graph should still have two menus - "Action" and "View".
+
+-------------------------------------------------------------------------------
+
+Request 30202: Dependency Graph Functionality
+
+Dependency graph window has been completely restyled since it was last
+changed.
+
+You can open a dependency graph window by either double-clicking on an
+entry on the project browser or by selecting an entry then selecting
+Project -> Show Dependency Graph.  You can have more than one
+dependency graph open at a time.  Dependency Graphs remain visible
+even if you close the Project Browser.
+
+Two nodes in the graph are distinguished, the `root node' appears at
+the top of the screen, the `selection' is the node (if any) which has
+been highlighted.
+
+A node's children are the modules it `requires'.
+
+When a dependency graph window opens, the root node should be visible
+at the top of the graphics area.  The root node's children should be
+visible below the root and if they have children then there should be
+short lines descending from them to indicate this.  The window title
+contains the name of the root node (e.g. `Dependency graph for
+basis.__text_io').
+
+Nodes with hidden children should always have short lines indicating
+where the children would be.  In motif the short lines are dotted.
+
+Click on a node and it will be highlighted, the entries list in the
+project browser should update to have the same item selected.
+
+There are two menus, `Window' contains only the item `Close' (this closes
+the window).  `Dependency Graph' contains:
+  Expand All Children -- show every node on the graph;
+  Show only root -- hide all nodes apart from the root and its
+                    children;
+  Make selection root -- if a node other than the root is selected
+                         then this node will be moved to the top of
+                         the screen and only its subgraph will be shown;
+  Revert to original root -- return the original root node (mentioed
+                             in the window title) to the top;
+  Layout Style -> Cascading Layout -- Draw filemanager style;
+               -> Tree Layout -- draw as a conventional tree;
+  Find... -- Search for nodes (see the file
+             gui_tests/browsers/search.txt).
+
+Except after selecting Dependency Graph -> Expand All Children,
+clicking on the selection should toggle whether its children are visible.
+When you select a menu option expanded branches will be collapsed
+showing either the entire graph or only root and its children
+(depending on the last menu selection).
+
+Menu items should only be available when applicable (except that
+Show Only Root may be available if you show and then hide children).
+

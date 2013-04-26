@@ -1,0 +1,34 @@
+# Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# SunOS makefile
+#
+# Revision Log
+# ------------
+# $Log: Makefile.SunOS,v $
+# Revision 1.1  1997/06/30 15:35:07  stephenb
+# new unit
+# ** No reason given. **
+#
+
+# As default, mlw_ci.h lives in the enclosing (..) directory.
+# Alter this if mlw_ci.h is somewhere else.
+#
+MLWORKS_INCLUDE=..
+
+CC=gcc
+#CC=acc
+CFLAGS=-I$(MLWORKS_INCLUDE)
+
+MAKE_MLWorks_LIB= ld -Bdynamic
+
+OBJ= dirent_stub.o
+
+.PHONEY: all clean
+
+all: dirent_stub.so
+
+dirent_stub.so:	$(OBJ)
+	$(MAKE_MLWorks_LIB) -o $@ $(OBJ)
+
+clean:
+	rm -f dirent_stub.so $(OBJ)

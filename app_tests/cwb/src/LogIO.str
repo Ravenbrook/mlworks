@@ -1,0 +1,426 @@
+(*
+ *
+ * $Log: LogIO.str,v $
+ * Revision 1.2  1998/06/02 15:28:06  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: LogIO.str,v 1.2 1998/06/02 15:28:06 jont Exp $";
+functor LogIO ( structure L : LOGIC ) : LOGIO =
+struct
+   structure L = L
+   structure V = L.V
+
+   open L
+
+(********************)
+(*  Pretty printer  *)
+(********************)
+
+(* prio generates priorities for use in parenthesizing. *)
+
+   fun prio True            = 80
+     | prio False           = 80
+     | prio (Var _)         = 80
+     | prio (Not _)         = 60
+     | prio (And _)         = 40
+     | prio (Or _)          = 40
+     | prio (Imp _)         = 20
+     | prio (Nec _)         = 60
+     | prio (Pos _)         = 60
+     | prio (WeakNec _)     = 60
+     | prio (WeakPos _)     = 60
+     | prio (Max _)         = 80
+     | prio (Min _)         = 80
+
+   val listact = Lib.mkstr A.mkstr ","
+
+   fun mkstrparam (Modparam(modlist [a])) = (A.mkstr a)
+     | mkstrparam (Modparam(modlist l)) = "{"^(listact l)^"}"
+     | mkstrparam (Modparam(negmodlist [])) = "-"
+     | mkstrparam (Modparam(negmodlist [a])) = "-"^(A.mkstr a)
+     | mkstrparam (Modparam(negmodlist l)) = "{-"^(listact l)^"}"
+     | mkstrparam (Modparam(modvar v)) = (V.mkstr v)
+     | mkstrparam (Modparam(negmodvar v)) = "-"^(V.mkstr v)
+     | mkstrparam (Propparam P) = (mkstr P)
+
+   and mkstr True  = "T"
+     | mkstr False = "F"
+     | mkstr (Var(v,[])) = V.mkstr v
+     | mkstr (Var(v,vl)) =
+       (V.mkstr v)^"("^(Lib.mkstr mkstrparam "," vl)^")"
+     | mkstr (P as (Not P')) = "~"^(paren P P')
+     | mkstr (P as (And (P',P''))) =
+       (paren'' P P')^" & "^(paren'' P P'')
+     | mkstr (P as (Or (P',P''))) =
+       (paren'' P P')^" | "^(paren'' P P'')
+     | mkstr (P as (Imp (P',P''))) =
+       (paren' P P')^" => "^(paren P P'')
+     | mkstr (P as (Nec (modlist l,P'))) =
+       "["^(listact l)^"]"^(paren P P')
+     | mkstr (P as (Nec (modvar v,P'))) =
+       "["^(V.mkstr v)^"]"^(paren P P')
+     | mkstr (P as (Nec (negmodlist l,P'))) =
+       "[-"^(listact l)^"]"^(paren P P')
+     | mkstr (P as (Nec (negmodvar v,P'))) =
+       "[-"^(V.mkstr v)^"]"^(paren P P')
+     | mkstr (P as (Pos (modlist l,P'))) =
+       "<"^(listact l)^">"^(paren P P')
+     | mkstr (P as (Pos (modvar v,P'))) =
+       "<"^(V.mkstr v)^">"^(paren P P')
+     | mkstr (P as (Pos (negmodlist l,P'))) =
+       "<-"^(listact l)^">"^(paren P P')
+     | mkstr (P as (Pos (negmodvar v,P'))) =
+       "<-"^(V.mkstr v)^">"^(paren P P')
+     | mkstr (P as (WeakNec (modlist l,P'))) =
+       "[["^(listact l)^"]]"^(paren P P')
+     | mkstr (P as (WeakNec (modvar v,P'))) =
+       "[["^(V.mkstr v)^"]]"^(paren P P')
+     | mkstr (P as (WeakNec (negmodlist l,P'))) =
+       "[[-"^(listact l)^"]]"^(paren P P')
+     | mkstr (P as (WeakNec (negmodvar v,P'))) =
+       "[[-"^(V.mkstr v)^"]]"^(paren P P')
+     | mkstr (P as (WeakPos (modlist l,P'))) =
+       "<<"^(listact l)^">>"^(paren P P')
+     | mkstr (P as (WeakPos (modvar v,P'))) =
+       "<<"^(V.mkstr v)^">>"^(paren P P')
+     | mkstr (P as (WeakPos (negmodlist l,P'))) =
+       "<<-"^(listact l)^">>"^(paren P P')
+     | mkstr (P as (WeakPos (negmodvar v,P'))) =
+       "<<-"^(V.mkstr v)^">>"^(paren P P')
+     | mkstr (Max (v,P')) = "max("^(V.mkstr v)^"."^(mkstr P')^")"
+     | mkstr (Min (v,P')) = "min("^(V.mkstr v)^"."^(mkstr P')^")"
+
+   and paren P Q = if (prio Q) < (prio P) then "("^(mkstr Q)^")"
+                   else mkstr Q
+
+   and paren' P Q = if (prio Q) <= (prio P) then "("^(mkstr Q)^")"
+                    else mkstr Q
+
+   and paren'' P Q = if (prio Q) < (prio P) then "("^(mkstr Q)^")"
+                     else if (prio Q) > (prio P) then mkstr Q
+                     else case (P,Q) of (And _,And _) => mkstr Q
+                                      | (Or _,Or _)   => mkstr Q
+                                      | _             => "("^(mkstr Q)^")"
+					    
+
+(***********)
+(* Scanner *)
+(***********)
+
+   exception Token of string * string
+   exception Parse of string
+
+   datatype token = Eos | Truet | Falset | Nott | Andt | Ort | Impt
+     | Comma | Point | Dash | Lparen | Rparen
+     | Lsquare | LLsquare | Rsquare | RRsquare
+     | Langle | LLangle | Rangle | RRangle | Lbrack | Rbrack
+     | Maxt | Mint | Actt of string | Vart of string
+
+   fun mktok [] = raise Parse ""
+     | mktok (clist as (c::_)) =
+       case c of "~" => Nott
+               | "&" => Andt
+               | "|" => Ort
+               | "<" => Langle
+               | ">" => Rangle
+               | "[" => Lsquare
+               | "]" => Rsquare
+               | "(" => Lparen
+               | ")" => Rparen
+               | "{" => Lbrack
+               | "}" => Rbrack
+               | "." => Point
+               | "," => Comma
+               | "-" => Dash
+               |  _  => let val s = (implode clist)
+                         in case s of
+                            "T"   => Truet
+                          | "F"   => Falset
+                          | "max" => Maxt
+                          | "min" => Mint
+                          | "=>"  => Impt
+                          | _     => if (Lib.startsWithCapital s)
+					   then (Vart s)
+					      else (Actt s)
+                        end
+
+   fun tokstr Eos      = "End of input"
+     | tokstr Truet    = "T"
+     | tokstr Falset   = "F"
+     | tokstr Nott     = "~"
+     | tokstr Andt     = "&"
+     | tokstr Ort      = "|"
+     | tokstr Impt     = "=>"
+     | tokstr Comma    = ","
+     | tokstr Point    = "."
+     | tokstr Dash     = "-"
+     | tokstr Lparen   = "("
+     | tokstr Rparen   = ")"
+     | tokstr Lsquare  = "["
+     | tokstr LLsquare = "[["
+     | tokstr Rsquare  = "]"
+     | tokstr RRsquare = "]]"
+     | tokstr Langle   = "<"
+     | tokstr LLangle  = "<<"
+     | tokstr Rangle   = ">"
+     | tokstr RRangle  = ">>"
+     | tokstr Lbrack   = "{"
+     | tokstr Rbrack   = "}"
+     | tokstr Maxt     = "max"
+     | tokstr Mint     = "min"
+     | tokstr (Actt a) = a
+     | tokstr (Vart v) = v
+
+   val breaks = [" ", "\t" , "\n", "(", ")", "{", "}", "<", ">", "[", "]",
+                 ".", ",", "-", "|", "&", "~"];
+
+   fun isbreak c = Lib.member (op =) (c,breaks)
+
+   fun sc [] [] = (Eos,[])
+     | sc [] (" "::res) = sc [] res
+     | sc [] ("\t"::res) = sc [] res
+     | sc [] ("\n"::res) = sc [] res
+     | sc [] ("["::"["::res) = (LLsquare,res)
+     | sc [] ("]"::"]"::res) = (RRsquare,res)
+     | sc [] ("<"::"<"::res) = (LLangle,res)
+     | sc [] (">"::">"::res) = (RRangle,res)
+     | sc [] ("="::">"::res) = (Impt,res)
+     | sc [] ("m"::"a"::"x"::res) = (Maxt,res)
+     | sc [] ("m"::"i"::"n"::res) = (Mint,res)
+     | sc [] (c::res) = if isbreak c then (mktok [c],res)
+                         else sc [c] res
+     | sc acc [] = (mktok acc,[])
+     | sc acc (r as ("="::">"::_)) = (mktok acc,r)
+     | sc acc (r as (c::res)) = if isbreak c then (mktok acc,r)
+                                 else sc (acc@[c]) res
+
+   val scan = sc []
+
+(*****************************************************************************)
+(* Parser  -  The grammar to be parsed is the following.                     *)
+(*      P  ::=  Q  |  Q => P                                                 *)
+(*                                                                           *)
+(*      Q  ::=  R  |  R & Q  |  R | Q                                        *)
+(*                                                                           *)
+(*      R  ::=  ~R  |  [AL]R  |  [-AL]R  |  [[AL]]R  |  [[-AL]]R             *)
+(*                  |  <AL>R  |  <-AL>R  |  <<AL>>R  |  <<-AL>>R             *)
+(*                  |  T  |  F  |  (P)  |  X  |  X (PL)                      *)
+(*                  |  max(X.P)  |  min(X.P)                                 *)
+(*                                                                           *)
+(*     AL  ::=  e  |  X  |  a AL'                                            *)
+(*                                                                           *)
+(*     AL'  ::=  e  |  ,a AL'                                                *)
+(*                                                                           *)
+(*     PL   ::=  a  |  -a  |  -  |  { AL }  |  {- AL }                       *)
+(*                                                                           *)
+(* Parsing is recursive descent. Exception Token is used for relaying	  *)
+(* information about errors that occur during parsing; the 1st component  *)
+(* of the pair contains what is expected by the parser, and the 2nd	  *)
+(* component contains what has been found. Exception Parse is raised	  *)
+(* whenever an error occurs; it is the only exception visible to the	  *)
+(* outside.								  *)
+(*****************************************************************************)
+
+   fun check (tok,(t,s)) = if tok = t then scan s
+                           else raise Token(tokstr tok,tokstr t)
+
+   fun negate (modlist l) = negmodlist l
+     | negate (negmodlist l) = modlist l
+     | negate (modvar v) = negmodvar v
+     | negate (negmodvar v) = modvar v
+
+   fun mkprop str =
+       let fun inmod a (modvar _) = false
+             | inmod a (modlist l) = Lib.member A.eq (a,l)
+	     | inmod _ _ = raise Parse "Bug in mkprop, LogIO?"
+	       
+           fun P s = let val (p,s as (tok,res)) = Q s
+                      in if tok=Impt then
+                            let val (q,s) = P(scan res)
+                             in (Imp(p,q),s)
+                            end
+                         else (p,s)
+                     end
+
+           and Q s = let val (p,s as (tok,res)) = R s
+                      in if tok=Andt then
+                            let val (q,s) = Q(scan res)
+                             in (And(p,q),s)
+                            end
+                         else if tok=Ort then
+                                 let val (q,s) = Q(scan res)
+                                  in (Or(p,q),s)
+                                 end
+                         else (p,s)
+                     end
+
+           and R (Nott,res) = let val (p,s) = R(scan res)
+                                in (Not p,s)
+                               end
+
+             | R (Lsquare,res) =
+                     let val (t,r) = scan res
+                      in if t=Dash then
+                            let val (K,s) = AL(scan r)
+                                val (p,s) = R(check(Rsquare,s))
+                             in (Nec(negate K,p),s)
+                            end
+                         else let val (K,s) = AL(t,r)
+                                  val (p,s) = R(check(Rsquare,s))
+                               in if inmod A.eps K then raise (Parse
+                                     ("epsilon is not allowed "
+                                              ^"in a strong modality"))
+                                  else (Nec(K,p),s)
+                              end
+                     end
+
+             | R (LLsquare,res) =
+                     let val (t,r) = scan res
+                      in if t=Dash then
+                            let val (K,s) = AL(scan r)
+                                val (p,s) = R(check(RRsquare,s))
+                             in (WeakNec(negate K,p),s)
+                            end
+                         else let val (K,s) = AL(t,r)
+                                  val (p,s) = R(check(RRsquare,s))
+                               in if inmod A.tau K then raise (Parse
+                                     ("tau is not allowed "
+                                              ^"in a weak modality"))
+                                  else (WeakNec(K,p),s)
+                              end
+                     end
+
+             | R (Langle,res) =
+                     let val (t,r) = scan res
+                      in if t=Dash then
+                            let val (K,s) = AL(scan r)
+                                val (p,s) = R(check(Rangle,s))
+                             in (Pos(negate K,p),s)
+                            end
+                         else let val (K,s) = AL(t,r)
+                                  val (p,s) = R(check(Rangle,s))
+                               in if inmod A.eps K then raise(Parse
+                                     ("epsilon is not allowed "
+                                              ^"in a strong modality"))
+                                  else (Pos(K,p),s)
+                              end
+                     end
+
+             | R (LLangle,res) =
+                     let val (t,r) = scan res
+                      in if t=Dash then
+                            let val (K,s) = AL(scan r)
+                                val (p,s) = R(check(RRangle,s))
+                             in (WeakPos(negate K,p),s)
+                            end
+                         else let val (K,s) = AL(t,r)
+                                  val (p,s) = R(check(RRangle,s))
+                               in if inmod A.tau K then raise(Parse
+                                     ("tau is not allowed in "
+                                              ^"a weak modality"))
+                                  else (WeakPos(K,p),s)
+                              end
+                     end
+
+             | R (Truet,res) = (True,scan res)
+
+             | R (Falset,res) = (False,scan res)
+
+             | R (Lparen,res) = let val (p,s) = P(scan res)
+                                  in (p,check(Rparen,s))
+                                 end
+
+             | R (Maxt,res) =
+                     let val (t,r) = check(Lparen,scan res)
+                      in case t of
+                            Vart v => let val (p,s) = P(check(Point,scan r))
+                                       in (Max(V.mkvar v,p),check(Rparen,s))
+                                      end
+                          |   _    => raise Token("variable",tokstr t)
+                     end
+
+             | R (Mint,res) =
+                     let val (t,r) = check(Lparen,scan res)
+                      in case t of
+                            Vart v => let val (p,s) = P(check(Point,scan r))
+                                       in (Min(V.mkvar v,p),check(Rparen,s))
+                                      end
+                          |   _    => raise Token("variable",tokstr t)
+                     end
+
+             | R (Vart v,res) =
+                     let val s as (tok,res) = scan res
+                      in case tok of
+                         Lparen => let val (pl,s) = PL(scan res)
+                                    in (Var(V.mkvar v,pl),check(Rparen,s))
+                                   end
+                       | _ => (Var(V.mkvar v,[]),s)
+                     end
+
+             | R (tok,_) = raise Token("variable",tokstr tok)
+
+           and PL s =
+               let val (p,s as (tok,res)) = Param s
+                in if tok=Comma then
+                      let val (pl,s) = PL(scan res)
+                       in (p::pl,s)
+                      end
+                   else ([p],s)
+               end
+
+           and Param (Actt ac,res) = (Modparam(modlist [A.mkact ac]),scan res)
+
+             | Param (Dash,res) =
+               let val s as (tok,res) = scan res
+	       in case tok of
+		 Actt ac => (Modparam(negmodlist [A.mkact ac]),scan res)
+	       | Vart v => (Modparam(negmodvar (V.mkvar v)),scan res)
+	       | Lbrack => let val (K,s) = AL(scan res)
+			   in (Modparam(negate K),check(Rbrack,s))
+                           end
+	       | _ => (Modparam(negmodlist []),s)
+               end
+
+             | Param (Lbrack,res) =
+               let val s as (tok,res) = scan res
+                in case tok of
+                   Dash => let val (K,s) = AL(scan res)
+                            in (Modparam(negate K),check(Rbrack,s))
+                           end
+                 |   _  => let val (K,s) = AL s
+                            in (Modparam K,check(Rbrack,s))
+                           end
+               end
+
+             | Param s = let val (p,s) = P s
+                          in (Propparam p,s)
+                         end
+
+           and AL (Actt a,res) = let val (l,s) = AL'(scan res)
+                                   in (modlist((A.mkact a)::l),s)
+                                  end
+             | AL (Vart v,res) = (modvar(V.mkvar v),scan res) 
+             | AL s = (modlist [],s)
+
+           and AL' (Comma,res) =
+                       let val (t,r) = scan res
+                        in case t of Actt a => let val (K,s) = AL'(scan r)
+                                               in ((A.mkact a)::K,s)
+                                              end
+                                   |   _   => raise Token("action",tokstr t)
+                       end
+             | AL' s = ([],s)
+
+        val (p,(nexttok,res)) = P(scan(explode str))
+
+     in if nexttok=Eos then p
+        else raise Token ((tokstr Eos,implode ((tokstr nexttok)::res)) )
+    end
+    handle Token (exp,actual) => raise (Parse
+      ("\n   Expecting: "^exp^"\n   Found:     "^actual))
+
+end
+

@@ -1,0 +1,27 @@
+This is an attempt to deal with the problems posed by real numbers. It
+merely addresses the calling/preservation problems.
+
+Across a procedure call there are some registers that will be
+preserved, and some that will be corrupted. For example, for Sparc
+integers, assuming the register windowing mechanisms are used, these
+are respectively the I and L registers, and the O registers. The G
+registers are somewhat indeterminate here. This convention is
+implemented by the SAVE/RESTORE instructions, however, it could
+equally well be done explicitly (though less efficiently).
+
+It therefore seems reasonable to propose to split the available fp
+registers into two sets, one of which will be preserved across
+procedure calls, and the other of which will be corrupted. The
+register allocator can allocate given this discipline, and the code
+generator can produce the appropriate preservation instructions at
+procedure entry and restoration instructions at procedure exit.
+
+Thus the problem is handled by a combination of the register allocator
+and the third stage code generator (mach_cg). Given the lack of any
+automatic register saving for floating point registers, it can be done
+manually using suitable quantities of STF and STDF instructions,
+storing only those fp registers used by the procedure in question
+(information supplied by the register allocator (it is more vital here
+that such information be correct)) whose preservation is expected by a
+caller (ie callee save by need). The manipulation of the rest of the
+offsets within the stack will be done automatically by mach_cg.

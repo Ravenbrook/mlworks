@@ -1,0 +1,345 @@
+(*
+ *
+ * $Log: TestOps.str,v $
+ * Revision 1.2  1998/06/02 15:34:43  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: TestOps.str,v 1.2 1998/06/02 15:34:43 jont Exp $";
+functor TestOps ( structure Eq   : EQUIV;
+                  structure SL   : SORTEDLIST;
+                  structure TG   : TGRAPH;
+                  structure GenP : GENPRE
+                    sharing Eq.PG = TG.PG = GenP.DivC.Elem.PG
+                        and type GenP.DivC.Elem.accset = TG.AS.accset
+                ) : TESTOPS =
+struct
+   structure PG = TG.PG
+   structure AS = TG.AS
+   structure Elem = GenP.DivC.Elem
+
+   type 'a state = 'a PG.state
+
+(*****************************************************************************)
+(*                                                                           *)
+(* M I S C E L L A N E O U S   F U N C T I O N S                             *)
+(*                                                                           *)
+(* "is_open" returns a boolean reflecting whether or not the given state is  *)
+(*       open; this information is contained in the "gldiv" field.           *)
+(* "is_closed returns a boolean reflecting whether or not the given state is *)
+(*       closed; this information is also contained in the "gldiv" field.    *)
+(* "trivpred" is the trivially true binary relation.                         *)
+(* "must_eq_info" computes the "info" field for STgraph and Tgraph states    *)
+(*       when must (and testing) equivalences are being tested for.          *)
+(* "test_pr_info" computes the "info" field for STgraph and Tgraph states    *)
+(*       when must (and testing) preorders are being tested for.             *)
+(*                                                                           *)
+(*****************************************************************************)
+
+   fun is_open (ref(PG.S {gldiv,...})) = (!gldiv)
+   fun is_closed (ref(PG.S {gldiv,...})) = not (!gldiv)
+   fun trivpred _ = true
+   fun must_eq_info _ accset = accset
+   fun may_eq_info _ accset = accset
+
+   fun test_pr_info [] _ = raise Panic	(* shouldn't happen *)
+     | test_pr_info ((ref(PG.S {...}))::_) accset =
+       let val preinf = Elem.setpreinf
+           val accsetref = Elem.getaccsetref preinf
+        in accsetref := accset;
+           preinf
+       end
+
+(*****************************************************************************)
+(* M A Y _ E Q                                                               *)
+(*                                                                           *)
+(* "may_eq" determines whether two polygraphs are may equivalent by calling  *)
+(* the bisimulation equivalence checker on the associated Dgraphs with the   *)
+(* trivial predicate.                                                        *)
+(*****************************************************************************)
+
+   fun may_eq (g1,g2) =
+       let val dg1 = TG.mkDgraph g1 may_eq_info
+           val dg2 = TG.mkDgraph g2 may_eq_info
+        in Eq.equiv trivpred (dg1,dg2)
+       end
+
+(*****************************************************************************)
+(* M U S T _ E Q                                                             *)
+(*                                                                           *)
+(* "must_eq" determines whether two polygraphs are "must equivalent" by      *)
+(* calling bisimulation equivalence checker, with a predicate for testing    *)
+(* equality of accsets, on the appropriate STgraphs.                         *)
+(*****************************************************************************)
+
+   fun must_eq (g1,g2) =
+       let val stg1 = TG.mkSTgraph g1 must_eq_info
+           val stg2 = TG.mkSTgraph g2 must_eq_info
+        in Eq.equiv AS.eq (stg1,stg2)
+       end
+
+(*****************************************************************************)
+(* T E S T _ E Q                                                             *)
+(*                                                                           *)
+(* "test_eq" determines whether two polygraphs are "testing equivalent" by   *)
+(* calling the bisimulation equivalence checker, with a predicate for        *)
+(* testing the equality of acceptance sets, on the appropriate Tgraphs.      *)
+(*****************************************************************************)
+
+   fun test_eq (g1,g2) =
+       let val tg1 = TG.mkTgraph g1 must_eq_info
+           val tg2 = TG.mkTgraph g2 must_eq_info
+        in Eq.equiv AS.eq (tg1,tg2)
+       end
+
+(*****************************************************************************)
+(* M A Y _ P R                                                               *)
+(*                                                                           *)
+(* "may_pr" determines whether polygraph "g1" precedes polygraph "g2" in the *)
+(* may preorder by calling the prebisimulation checker with a trivial predi- *)
+(* cate as the first component of the first argument so that "simulation" is *)
+(* checked for. This works because the may preorder on deterministic         *)
+(* graphs corresponds to simulation.                                         *)
+(*****************************************************************************)
+
+   fun may_pr (g1,g2) =
+       let fun may_pr_info [] = raise Panic (* shouldn't happen *)
+	     | may_pr_info ((ref(PG.S {...}))::_) = Elem.setpreinf
+           val dg1 = TG.mkDgraph g1 may_pr_info
+           val dg2 = TG.mkDgraph g2 may_pr_info
+        in GenP.genpreord (trivpred,trivpred) (dg1,dg2)
+       end
+
+(*****************************************************************************)
+(* T E S T _ P R                                                             *)
+(*                                                                           *)
+(* "test_pr" determines if "g1" precedes "g2" in the testing preorder by     *)
+(* the prebisimulation checker on "g1" and "g2", with the second of the pair *)
+(* of predicates used to test for acceptance set containment between states. *)
+(*****************************************************************************)
+
+   fun test_pr (g1,g2) =
+       let fun compare_accsets (st1,st2) =
+               (is_open st1) orelse
+               ((is_closed st2) andalso
+                (AS.subaccset(Elem.accsetinf st2,Elem.accsetinf st1)))
+           val tg1 = TG.mkTgraph g1 test_pr_info
+           val tg2 = TG.mkTgraph g2 test_pr_info
+        in GenP.genpreord (is_open, compare_accsets) (tg1,tg2)
+       end
+
+(*****************************************************************************)
+(* C O M P U T I N G   T H E   M U S T   P R E O R D E R                     *)
+(*                                                                           *)
+(* The must preorder is an instance of a polymorphic presimulation relation  *)
+(* on STgraphs.  A P-presimulation is a relation R such that:                *)
+(*     s R t =>                                                              *)
+(*     if s is closed then                                                   *)
+(*         (1) t is closed, and                                              *)
+(*         (2) t P s, and                                                    *)
+(*         (3) if t -a-> t' then there is an s' with s -a->s' and s' R t'.   *)
+(* States s and t are P-presimular iff there is a P-presimulation relating   *)
+(* them. In the case of the must preorder, the P relation is acceptance set  *)
+(* containment.  The "genpreord" function cannot be used to test for         *)
+(* presimulations, so the remainder of the code is devoted to computing the  *)
+(* must preorder.                                                            *)
+(*****************************************************************************)
+
+(*****************************************************************************)
+(* F U N C T I O N S   F O R   M A N I P U L A T I N G   I N F O             *)
+(*                                                                           *)
+(* "giveinitmovesref" returns the DIV component of a Preinf state. It should *)
+(* be noted that this component is used for storing lists of actions, as in  *)
+(* other preorder checking, but that the list of actions here corresponds to *)
+(* the list of moves a state may initially engage in.                        *)
+(*                                                                           *)
+(* "giveinitmoves" returns the dereferenced "DIV" component.                 *)
+(*****************************************************************************)
+
+   val giveinitmovesref = Elem.infocompdivref
+   val giveinitmoves = Elem.divinf
+
+(*****************************************************************************)
+(* M I S C E L L A N E O U S   F U N C T I O N S                             *)
+(*                                                                           *)
+(* "init_moves" computes the list of initial moves available to a state.     *)
+(* "assign_init_moves" computes the list of initial moves of a Preinf state  *)
+(*    and assigns the result to the "Div" field of the info component        *)
+(* "is_act_subset" is a function that accepts two sets (ordered lists) of    *)
+(*    actions and determines if the first is a subset of the second.         *)
+(* "st_ge" is a ">=" ordering on states.                                     *)
+(* "is_lt" is a binary relation on states that determines if the first state *)
+(*    "is less than" the second state. It does so by testing if the second   *)
+(*    state is on the list of states in the first state's "App" component.   *)
+(*****************************************************************************)
+
+   fun init_moves (ref(PG.S {suc,...})) = map fst (!suc)
+   fun assign_init_moves st = (giveinitmovesref st) := (init_moves st)
+   val is_act_subset = SL.sublist PG.act_le
+   fun st_ge (ref(PG.S {id=id1,...}),ref(PG.S {id=id2,...})) = id1 >= id2
+   fun is_lt st1 st2 = SL.member st_ge (st2,Elem.approxinf st1)
+
+(*****************************************************************************)
+(* C O M P U T E _ I N C O M P A T I B L E _ S T A T E S                     *)
+(*                                                                           *)
+(* "compute_incompatible_states" is used by function "initialize" to compute *)
+(* the set of (right-hand) states that should initially be considered as     *)
+(* possibly "greater than" (in the must preorder) the given left-hand state  *)
+(* "st". If "st" is open then every state is greater than it. Otherwise, a   *)
+(* state "st'" can follow "st" in the preorder only if:                      *)
+(*     1) st' is closed (i.e. not open), and                                 *)
+(*     2) the accset associated with st' compares positively with the accset *)
+(*        associated with st, and                                            *)
+(*     3) the initial moves of st' are all initial moves of st also.         *)
+(* Accordingly, if "st" is open then the entire "stlist" is returned; other- *)
+(* wise, only the states on "stlist" satisfying conditions 1-3 are returned. *)
+(* This calculation is performed by the internal function "cis".             *)
+(*****************************************************************************)
+
+   fun compute_incompatible_states st stlist =
+       let fun cis [] = []
+             | cis (st'::tl) =
+               if (not (is_open st')) andalso
+                  (AS.subaccset(Elem.accsetinf st',Elem.accsetinf st)) andalso
+                  (is_act_subset (giveinitmoves st',giveinitmoves st)) then
+                     st'::(cis tl)
+               else cis tl
+        in if (is_open st) then stlist else cis stlist
+       end
+
+(*****************************************************************************)
+(* I N I T I A L I Z E                                                       *)
+(*                                                                           *)
+(* "initialize" is used to generate the first approximation for the must     *)
+(* preorder; that is, it assigns to the "App" component of each state in     *)
+(* "stlist1" a list of states taken from "stlist2" that might be larger than *)
+(* the state in the must preorder.                                           *)
+(*****************************************************************************)
+
+   fun initialize stlist1 stlist2 =
+       let fun init st =
+               let val appref = Elem.infocompappref st
+                in appref := (compute_incompatible_states st stlist2)
+               end
+        in map init stlist1
+       end
+
+(*****************************************************************************)
+(* M U S T _ P R                                                             *)
+(*                                                                           *)
+(* "must_pr" computes the must preorder by using a "partition refinement"    *)
+(* technique similar to the one used in "genpreord".  Given an initial       *)
+(* approximation to the must preorder, "must_pr" has a function that gener-  *)
+(* ates a new approximation (which is smaller than the previous one), until  *)
+(* the new approximaition is the same as a previous one, indicating that a   *)
+(* fixed point has been reached.  The approximations are stored in the "App" *)
+(* components of the Preinf states in "g1".                                  *)
+(*****************************************************************************)
+
+   fun must_pr (g1,g2) =
+       let val (stref1, stlist1) = TG.mkSTgraph g1 test_pr_info
+           val (stref2, stlist2) = TG.mkSTgraph g2 test_pr_info
+           val left_state = stref1
+           val right_state = stref2
+
+           val continue = ref true
+(*****************************************************************************)
+(* "checkstates" determines if the "simulation condition" holds between the  *)
+(* second state and the first state.  This condition is the following.       *)
+(*     st2 --a--> st2' => there is a st1' such that                          *)
+(*                        (i)  st1 --a--> st1', and                          *)
+(*                        (ii) st1' <= st2'.                                 *)
+(* Note that "st1' <= st2'" here means that "st2'" is a member of the        *)
+(* list contained in the "App" component of the info field of "st1'".  Note  *)
+(* that because the states come from STgraphs, each successor list in "suc"  *)
+(* has exactly one element in it.                                            *)
+(*****************************************************************************)
+
+           fun checkstates (ref(PG.S {suc=suc1,...}))
+	     (ref(PG.S {suc=suc2,...})) =
+	     let fun cs _ [] = true
+		   | cs [] _ = false
+		   | cs ((a1,slref1)::t1) (l2 as ((a2,slref2)::t2)) =
+		     if PG.act_le(a1,a2) then
+		       if PG.act_le(a2,a1) then
+(* Yrch! The following gave only a warning but all the same...         *)
+(*                              (let val [st1] = !slref1	       *)
+(*                                   val [st2] = !slref2	       *)
+(*                                in is_lt st1 st2		       *)
+(*                               end				       *)
+(*                               andalso cs t1 t2)		       *)
+(* still pretty nasty, but hygienic: *)
+			 (let fun list_is_lt (hd1::tl1) (hd2::tl2) =
+			                                       is_lt hd1 hd2
+				| list_is_lt _ _ = raise Panic
+			  in list_is_lt (!slref1) (!slref2)
+			  end
+			    andalso  cs t1 t2)
+		       else cs t1 l2
+		     else false
+	     in cs (!suc1) (!suc2)
+	     end
+
+(*****************************************************************************)
+(* "rm_bad_state" weeds out the states from "applist" that fail the presimu- *)
+(* lation condition with respect to "st"; that is, all states "st'" on       *)
+(* "applist" such that it cannot be the case that "st <= st'" are removed.   *)
+(* The flag "continue" is set to "true" if a state is removed, signifying    *)
+(* the fact that the new approximation differs from the previous one.        *)
+(*****************************************************************************)
+
+           fun rm_bad_states st applist =
+               let fun rbs [] = []
+                     | rbs (st'::tl) =
+                       if (checkstates st st') then st'::(rbs tl)
+                       else (continue := true; rbs tl)
+                in rbs applist
+               end
+
+(*****************************************************************************)
+(* "new_app_for_state" generates a new approximation for the <= ordering for *)
+(* a given state; it does so by removing the "bad states" for "st" from its  *)
+(* approximation list (which is contained in the "App" component).           *)
+(*****************************************************************************)
+
+           fun new_app_for_state st =
+               if (is_open st) then ()
+               else let val appref = Elem.infocompappref st
+                     in appref := rm_bad_states st (!appref)
+                    end
+
+(*****************************************************************************)
+(* "new_app" is used to generate a new approximation to the <= ordering; it  *)
+(* does so by generating a new approximation for each state in the list of   *)
+(* (left-hand) states that will be supplied as an argument.                  *)
+(*****************************************************************************)
+
+           val new_app = map new_app_for_state
+
+        in app assign_init_moves stlist1;
+           app assign_init_moves stlist2;
+           ignore(initialize stlist1 stlist2);
+(*****************************************************************************)
+(* If, as a result, the left-hand state has been determined not to be less   *)
+(* than the right-hand state, we can terminate with false.                   *)
+(*****************************************************************************)
+           (is_lt left_state right_state) andalso
+(*****************************************************************************)
+(* Otherwise we begin computing the fixed point by successively approximat-  *)
+(* ing it. Each approximation is generated from the previous approximation   *)
+(* by applying "new_app" to it. If in an approximation it is determined that *)
+(* the left-hand state is not less than the right-hand state, we terminate   *)
+(* the loop by setting "continue" to false.  At the end, the appropriate     *)
+(* value is returned.                                                        *)
+(*****************************************************************************)
+           (while (!continue) do
+               (continue := false;
+                ignore(new_app stlist1);
+                if not (is_lt left_state right_state) then continue := false
+                else ());
+           (is_lt left_state right_state))
+       end
+end
+

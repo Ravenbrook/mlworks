@@ -1,0 +1,42 @@
+# Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# SunOS makefile
+#
+# Revision Log
+# ------------
+# $Log: Makefile.SunOS,v $
+# Revision 1.3  1997/05/20 09:02:51  stephenb
+# [Bug #30121]
+# Add a default value for MLWORKS_INCLUDE.
+#
+# Revision 1.2  1997/05/12  13:25:02  stephenb
+# [Bug #20035]
+# Add a 'clean' target.
+#
+# Revision 1.1  1997/04/29  15:28:37  stephenb
+# new unit
+# [Bug #30030]
+#
+
+# As default, mlw_ci.h lives in the enclosing (..) directory.
+# Alter this if mlw_ci.h is somewhere else.
+#
+MLWORKS_INCLUDE=..
+
+CC=gcc
+#CC=acc
+CFLAGS=-I$(MLWORKS_INCLUDE)
+
+MAKE_MLWorks_LIB= ld -Bdynamic
+
+OBJ= ndbm_stub.o
+
+.PHONEY: all clean
+
+all: ndbm_stub.so
+
+ndbm_stub.so:	$(OBJ)
+	$(MAKE_MLWorks_LIB) -o $@ $(OBJ)
+
+clean:
+	rm -f ndbm_stub.so $(OBJ)

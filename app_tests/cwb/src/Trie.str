@@ -1,0 +1,245 @@
+(*
+ *
+ * $Log: Trie.str,v $
+ * Revision 1.2  1998/06/02 15:35:55  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: Trie.str,v 1.2 1998/06/02 15:35:55 jont Exp $";
+functor Trie () : TRIE =
+struct
+   datatype ('a,'b) branch = EOS of 'b  |  B of 'a * (('a,'b) branch list)
+
+   type ('a,'b) trie = ('a,'b) branch list
+
+   val empty = []
+
+   exception Already_in_trie
+   exception Not_in_trie
+
+   fun insert le (alist,bval) =
+       let fun add [] ((EOS _)::_) = raise Already_in_trie
+             | add [] tr = (EOS bval)::tr
+             | add (h::t) [] = [B (h,add t [])]
+             | add l ((EOS b)::tr) = (EOS b)::(add l tr)
+             | add (l as (a::t)) (tr as ((B (a',tr'))::tr'')) =
+               if le(a,a') then
+                  if le(a',a) then (B(a',add t tr'))::tr''
+                  else (B(a,add t []))::tr
+               else (B(a',tr'))::(add l tr'')
+        in add alist
+       end
+
+   fun lookup le (alist,tr) =
+       let fun lu  _ [] = raise Not_in_trie
+             | lu [] ((EOS b)::tr) = b
+             | lu [] _ = raise Not_in_trie
+             | lu  l ((EOS _)::tr) = lu l tr
+             | lu (l as (a::t)) ((B (a',tr'))::tr'') =
+               if le (a,a') then
+                  if le (a',a) then lu t tr' else raise Not_in_trie
+               else lu l tr''
+        in lu alist tr
+       end
+
+   fun member le (alist,tr) =
+       (ignore(lookup le (alist,tr));true) handle Not_in_trie => false
+
+   fun remove le =
+       let fun rm _ [] = []
+             | rm [] ((EOS _)::tr) = tr
+             | rm [] tr = tr
+             | rm  l ((EOS b)::tr) = (EOS b)::(rm l tr)
+             | rm (l as (a::t)) (tr as ((B (a',tr'))::tr'')) =
+               if le(a,a') then
+                  if le(a',a) then
+                     let val tr''' = rm t tr'
+                      in case tr''' of [] => tr''
+                                     | _  => (B (a',tr'''))::tr''
+                     end
+                  else tr
+               else (B (a',tr'))::(rm l tr'')
+        in rm
+       end
+
+   fun eq a_eq b_eq =
+       let fun equal ([],[]) = true
+             | equal ((EOS b1)::tr1,(EOS b2)::tr2) =
+               b_eq (b1,b2) andalso equal(tr1,tr2)
+             | equal ((B(a1,tr1'))::tr1,(B(a2,tr2'))::tr2) =
+               a_eq (a1,a2) andalso equal(tr1',tr2') andalso equal(tr1,tr2)
+             | equal _ = false
+        in equal
+       end
+
+   fun merge le =
+       let fun jn [] tr = tr
+             | jn tr [] = tr
+             | jn ((EOS b)::_) ((EOS _)::_) = raise Already_in_trie
+             | jn ((EOS b)::tr1) tr2 = (EOS b)::(jn tr1 tr2)
+             | jn tr1 ((EOS b)::tr2) = (EOS b)::(jn tr1 tr2)
+             | jn (tr1 as ((B (a1,tr1'))::tr1''))
+                  (tr2 as ((B (a2,tr2'))::tr2'')) =
+               if le(a1,a2) then
+                  if le(a2,a1) then (B(a1,jn tr1' tr2'))::(jn tr1'' tr2'')
+                  else (B(a1,tr1'))::(jn tr1'' tr2)
+              else (B(a2,tr2'))::(jn tr1 tr2'')
+        in jn
+       end
+
+   fun has_sublist le =
+       let fun cs [] _ = false
+             | cs ((EOS _)::_) _ = true
+             | cs ((B _)::_) [] = false
+             | cs (tr as ((B (a',tr'))::tr'')) (s as (a::s')) =
+               if le(a,a') then
+                  if le(a',a) then (cs tr' s) orelse (cs tr'' s)
+                  else cs tr s'
+              else cs tr'' s
+        in cs
+       end
+
+   fun rm_superlists le =
+       let fun rs [] _ = []
+             | rs _ [] = []
+             | rs s ((EOS b)::tr) = (EOS b)::(rs s tr)
+             | rs (s as (a::s')) (tr as ((B (a',tr'))::tr'')) =
+               if le (a,a') then
+                  if le (a',a) then let val tr1 = rs s' tr'
+                                     in case tr1 of [] => tr''
+                                                  | _  => (B (a',tr1))::tr''
+                                    end
+                  else tr
+               else let val tr1 = rs s tr'
+                     in case tr1 of [] => rs s tr''
+                                  | _  => (B (a',tr1))::(rs s tr'')
+                    end
+        in rs
+       end
+
+   fun subaccset le =
+       let fun rm [] _  = []     (* If the first set is empty, there are  *)
+                                 (* no supersets to be removed.           *)
+
+             | rm l [] = l       (* Otherwise, if the second set is empty *)
+                                 (* then "l1" contains no sets having     *)
+                                 (* subsets in the second set.            *)
+
+             | rm _  ((EOS())::_) = []
+                                 (* If the second set contains the empty  *)
+                                 (* set then every set in the first set   *)
+                                 (* has a subset in the second set; so the*)
+                                 (* empty set should be returned.         *)
+(*****************************************************************************)
+(* Otherwise, if the first set contains the empty set then it will be in the *)
+(* result.                                                                   *)
+(*****************************************************************************)
+
+             | rm ((EOS())::l1') l2 = (EOS())::(rm l1' l2)
+
+(*****************************************************************************)
+(* The next case involves several subcases.  Note that we wish to prune away *)
+(* "empty branches" in the trie that represents a set, where an empty branch *)
+(* is one that does not contain any "EOS" indicator below it.                *)
+(*****************************************************************************)
+
+             | rm (l1 as ((B(a1,s1))::l1')) (l2 as ((B(a2,s2))::l2')) =
+               if le(a1,a2) then
+                  if le(a2,a1) then
+
+(*****************************************************************************)
+(* If "a1 = a2" then there might be subsets of "s1" in either "s2" or in     *)
+(* "l2'", so "rm" is called twice.  In order to prune empty branches, a case *)
+(* analysis on the result of this "double removal" is performed; if the      *)
+(* result is empty then the branch is pruned; otherwise, it is not.          *)
+(*****************************************************************************)
+
+                     let val ls1' = rm (rm s1 s2) l2'
+                      in case ls1' of
+                              [] => rm l1' l2'
+                            | _  => (B(a1,ls1'))::(rm l1' l2')
+                     end
+
+(*****************************************************************************)
+(* If "a1 < a2" then there might be subsets of "s1" anywhere in "l2", so     *)
+(* "rm" is called appropriately.  Again, the branch is pruned if the result  *)
+(* of the removal is empty.                                                  *)
+(*****************************************************************************)
+
+                  else let val ls1' = rm s1 l2
+                        in case ls1' of
+                                [] => rm l1' l2
+                              | _  => (B(a1,ls1'))::(rm l1' l2)
+                       end
+
+(*****************************************************************************)
+(* If "a2 > a1" then there can be no subsets of "l1" anywhere in the first   *)
+(* branch of "l2", so "rm" is called recursively.                            *)
+(*****************************************************************************)
+
+               else rm l1 l2'
+
+           fun sas ([],_) = true   (* If set1 is empty, the condition holds *)
+             | sas (_,[]) = false  (* If set2 is empty, the condition can't *)
+
+             | sas (_,(EOS())::_) = true
+                                    (* Otherwise, if set2 contains the empty *)
+                                    (* set, the condition holds.             *)
+
+             | sas ((EOS())::_,_)   =  false
+                                    (* Otherwise, if set1 contains the empty *)
+                                    (* set, the condition cannot hold.       *)
+
+(*****************************************************************************)
+(* In the following case, the general strategy is to remove supersets of     *)
+(* sets in "set2" from "set1", terminating as soon as possible.  There are   *)
+(* several subcases to consider.                                             *)
+(*****************************************************************************)
+
+             | sas (l1 as ((B(a1,s1))::l1'), l2 as ((B(a2,s2))::l2')) =
+
+(*****************************************************************************)
+(* Subcase 1: a1 = a2.                                                       *)
+(* Then for "set1" and "set2" to enjoy the condition it must be the case     *)
+(* that every set in "s1" must have a subset either in "s2" or in "l2'", the *)
+(* list representation of the remainder of "set2".  Accordingly, remove all  *)
+(* supersets of elements in "s2" and "l2'" from "s1"; if the result is empty,*)
+(* then continue checking.  Otherwise, the result is false, since there is   *)
+(* a set in "s1" (and hence "in" "B(a1,s1)", and hence in "set1") for which  *)
+(* "set2" contains no subset.  Notice that the types of "l1'" and "l2'" must *)
+(* be coerced.                                                               *)
+(*****************************************************************************)
+
+               if le(a1,a2) then
+                  if le(a2,a1) then
+                     case (rm (rm s1 s2) l2') of
+                          [] => sas (l1',l2')
+                        | _  => false
+
+(*****************************************************************************)
+(* Subcase 2: a1 < a2.                                                       *)
+(* Then for "set1" and "set2" to enjoy the condition it must be the case     *)
+(* that every set in "s1" has a subset in "l2".  So remove all supersets     *)
+(* of sets in "l2" from "s1".  If the result is empty, carry on checking;    *)
+(* otherwise return false.  Note that the type of "l1'" must be coereced.    *)
+(*****************************************************************************)
+
+                  else case (rm s1 l2) of
+                            [] => sas (l1',l2)
+                          | _  => false
+
+(*****************************************************************************)
+(* Subcase 3: a1 > a2.                                                       *)
+(* There can be no subsets of set1 in the set of sets denoted by the first   *)
+(* "branch" of "set2" (owing to our assumptions about ordering).  Hence      *)
+(* carry on checking "set2" against "l2'"; note that the type of "l2'" must  *)
+(* be coerced.                                                               *)
+(*****************************************************************************)
+
+               else sas (l1,l2')
+        in sas
+       end
+end
+

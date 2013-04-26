@@ -1,0 +1,28 @@
+The following directory contains simple demos for the mutual exclusion
+primitives defined in $.utils.__mutex:
+
+    Dining Philosophers Problem       dining_philosophers.sml
+    Producer-Consumer Problem         bounded_buffer.sml
+    Sleeping Barber Problem           sleeping_barber.sml
+    Cigarette Smokers Problem         cigarette_smokers.sml
+    Readers and Writers Problem       readers_writers.sml
+
+each of these save bounded_buffer.sml write an output log to a file.
+
+When loaded, each is run using the function
+
+	<run function> interval timeLimit
+
+where <run function> is one of:
+
+	runPhilosophers
+	runProdCons
+	runBarber
+	runSmokers
+	runReadWrite
+
+and interval is the number of milliseconds each thread is run before
+preemption.  A suitable interval for the Unix machines is 10, and for
+the PC, 1.  timeLimit is the number of seconds the demo runs for.  A
+suitable timeLimit is 10.
+

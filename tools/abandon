@@ -1,0 +1,173 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_name=`basename $0`
+cmd="abandon"
+STATUS=0
+recursive=""; test=""; branch=""; user="";
+usage="usage: $script_name [-[hzt]+] [-b <branch>] [-u <username>] (file|dir)+"
+while getopts "u:ztb:h" opt; do
+  case $opt in
+    u) user="-user $OPTARG";;
+    t) test="test";;
+    z) recursive="-recursive";;
+    b) branch="-branch $OPTARG";;
+    h|\?) 
+      echo $usage; 
+      echo "    h for this help"
+      echo "    t for hope test mode"
+      echo "    z zzz... $cmd recursively on subcompounds"
+      echo "    b <branch>"
+      exit 1;;
+  esac
+done
+shift `expr $OPTIND - 1`
+
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage
+  exit 1
+fi
+
+: echo prime $entry
+
+eval `findcomp2 $1`;
+if [ -z "$compound" ]; then
+  entry=;
+  echo "cannot identify compound \"$1\""
+  exit 1	
+elif [ -z "$unit" ]; then
+  entry="-c $compound -fn $1"
+else
+  entry="-c $compound -u $unit -fn $1"
+fi
+shift
+
+: echo stuff in the separators
+
+for arg in $*; do
+  eval `findcomp2 $arg`; 
+  if [ -z "$compound" ]; then
+    echo "cannot identify compound \"$arg\""
+    exit 1
+  elif [ -z "$unit" ]; then
+    entry="$entry -a -c $compound -fn $arg"
+  else
+    entry="$entry -a -c $compound -u $unit -fn $arg"
+  fi
+done
+
+: echo final processing
+
+if [ -z "$TMP" ]; then
+  temp_dir=/tmp
+else
+  temp_dir=`echo $TMP | sed -e 's!\\\\!/!g'`
+fi
+temp_file=$temp_dir/hope_tmp$$
+
+# We need to work out whether we're on Unix or Windows.
+# NT sets the OS variable to Windows_NT.
+# Some MLWorkers set the OS variable themselves.
+# Failing that, bash sets the OSTYPE variable.
+hope_temp_file=""
+case "$OS" in
+  Win*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  NT*)
+    hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+  Solaris*)
+    hope_temp_file=$temp_file;;
+  SunOS*)
+    hope_temp_file=$temp_file;;
+  Irix*)
+    hope_temp_file=$temp_file;;
+  Linux*)
+    hope_temp_file=$temp_file;;
+esac
+
+if [ -z "$hope_temp_file" ]; then
+  case "$OSTYPE" in
+    Win*)
+      hope_temp_file=`echo $temp_file | sed -e 's!/!\\\\!g'`;;
+    Solaris*)
+      hope_temp_file=$temp_file;;
+    SunOS*)
+      hope_temp_file=$temp_file;;
+    linux*)
+      hope_temp_file=$temp_file;;
+    *)
+      # Assume Unix if we have no other clue.
+      # We could also get here on Win95, but we don't use that
+      # for development.
+      hope_temp_file=$temp_file;;
+  esac
+fi
+
+echo $test $cmd $user $recursive $branch $entry > $temp_file
+if [ -z "$entry" ]; then
+  echo skipped everything
+else
+  hope source $hope_temp_file
+  rm $temp_file
+fi
+
+###############################################################################
+# $Log: abandon,v $
+# Revision 1.17  1999/03/24 15:38:08  daveb
+# [Bug #190541]
+# Check both the OS and OSTYPE environment variables.
+#
+# Revision 1.16  1998/10/07  12:45:28  jont
+# [Bug #70179]
+# Avoid OSTYPE=linux problems
+#
+# Revision 1.15  1998/09/24  14:29:54  jont
+# [Bug #70179]
+# Make sure temp file name more carefully created to avoid drive letter problems
+#
+# Revision 1.14  1998/08/25  14:38:50  jont
+# [Bug #70162]
+# Use source files to get past hope 44 argument limit under Win32
+#
+# Revision 1.13  1997/04/15  12:00:21  jont
+# Stop using script_path mechanism as this confuses Win32
+#
+# Revision 1.12  1996/10/25  16:51:28  io
+# add user
+#
+# Revision 1.11  1996/07/15  19:00:29  io
+# added recursive option
+#
+# Revision 1.10  1996/07/12  11:37:45  io
+# [Bug #1463]
+# add support for directories
+#
+# Revision 1.9  1995/05/16  15:44:39  daveb
+# Changed this script drastically to take advantage of the greater speed
+# offered by passing all arguments to hope at once.
+#
+# Revision 1.8  1995/02/28  12:52:35  jont
+# Modify use of version (deprecated) to branch
+#
+# Revision 1.7  1995/02/23  17:14:04  jont
+# Modify for new file structure /u
+#
+# Revision 1.6  1995/02/21  15:47:09  brianm
+# Introducing SML_HOME
+#
+# Revision 1.5  1994/06/22  13:15:54  jont
+# Add path setting code
+#
+# Revision 1.4  1994/06/09  15:27:45  nickh
+# New runtime.
+#
+# Revision 1.3  1994/04/05  11:26:39  daveb
+# Now handles trailing / in arguments.
+#
+# Revision 1.2  1994/03/21  11:31:05  daveb
+# Added chmod to unset write permission.
+#
+# Revision 1.1  1994/03/02  13:11:52  daveb
+# new file

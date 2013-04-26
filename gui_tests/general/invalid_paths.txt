@@ -1,0 +1,67 @@
+
+Bug #1965:  Invalid paths not handled properly for pervasive-dir and source-path
+Fixed by change #2881
+
+Repeat by:  On command line type:  ml_batch -pervasive-dir foo
+where foo is an invalid directory, ie one that does not exist.
+
+Bug behaviour:  A NotSet[main._io] exception reaches the top level without 
+being caught - this is wrong. 
+
+MLWorks 1.0
+Copyright (C) 1996 The Harlequin Group Limited.  All rights reserved.
+MLWorks is a trademark of The Harlequin Group Limited.
+
+Command Line: warning: Problem setting pervasive directory - foo is not a valid path
+[Thread 1 dying due to uncaught exception "NotSet[main._io]" of "pervasive_dir"
+Stack backtrace
+  202f9f8 closure 0x040000FD
+  203fe20 closure 0x00000010: raise
+  203fe60 closure 0x04000225: <handle>[ main._batch:723]<Entry1>
+  203fea0 closure 0x00000010: raise
+  203fee0 closure 0x04000215: aux[ main._batch:417]
+  203ff30 closure 0x0400022D: obey[ main._batch:722]
+  203ff80 closure 0x040001F5: <anon>[ main._batch:707]<Entry1>
+  203ffc0 closure 0x00000004: stack start
+]
+
+
+Proper behaviour:   The following output should be produced:
+
+MLWorks 1.0
+Copyright (C) 1996 The Harlequin Group Limited.  All rights reserved.
+MLWorks is a trademark of The Harlequin Group Limited.
+
+Command Line: warning: Problem setting pervasive directory - foo is not a valid path
+Pervasive directory not set.
+
+
+----------
+
+Bug #2024: GUI+UNIX: Source Path dialog and invalid directories 
+
+Bug Description: If you type the name of a directory that does not exist
+into the Selection area of a Source Path, then the directory is
+accepted and added to the Source Path, but a warning is displayed in
+the shell from which MLWorks was invoked.  
+
+Proper behaviour:  A message box should pop up to indicate that an 
+invalid path was given, and the file dialog stays open to allow the 
+user to try another path.  The invalid path is not added to the source
+path.
+
+Repeat by:
+
+  Start up MLWorks and select Podium>Path>Source Path
+
+This should pop up a Source Path window.  From that select
+Action>Insert Entry.
+
+Type the following into the Selection area :-
+
+  /nosuchdir/
+
+and press OK.  The entry is added to the source path but the following
+appears in the shell :-
+
+  unknown location: warning: Bad path '/nosuchdir/', ignoring

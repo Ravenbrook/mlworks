@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+# $HopeName: HQNlicshar!do-make(trunk.6) $
+#
+# This just runs make after ensuring that MACH, MAKEDEPEND, BUILDROOT
+# and MAKEDEFSDIR are set
+#################################
+
+# default BUILDROOT to .., and set up MAKEDEFSDIR
+if [ -z "${BUILDROOT}" ]
+then
+  BUILDROOT=..
+fi
+
+MAKEDEFSDIR=${BUILDROOT}/licshar/makedefs
+
+if [ -z "$BUILD_MACH" ]
+then
+  if [ -n "$MACH" ]
+  then
+     BUILD_MACH=$MACH
+  elif [ -f /usr/local/bin/class ]  # Ultrix doesn't have a -x test?
+  then   # class gives OS_ARCH, like "sun4.2_sparc"
+     BUILD_MACH=`/usr/local/bin/class`
+  else   # mach gives ARCH[-ansi], like "sparc" or "SGI4K-ansi"
+     BUILD_MACH=`mach | awk -F- '{ print $1; }'`  # strip any -ansi
+  fi
+fi
+
+# $VAR:-default is broken on ultrix, or we'd use that here
+TARGET_MACH=${TARGET_MACH-${BUILD_MACH}}
+if [ -z "${TARGET_MACH}" ]
+then
+   TARGET_MACH=${BUILD_MACH}
+fi
+
+if [ -z "${MAKEDEPEND}" ]
+then
+   MAKEDEPEND=makedepend
+fi
+
+SHELL=/bin/sh
+export BUILDROOT MAKEDEFSDIR BUILD_MACH TARGET_MACH SHELL MAKEDEPEND
+
+${MAKE-make} -f makefile $*
+exit $?
+
+##########################################
+# $Log: do-make,v $
+# Revision 1.9  1999/11/02 15:50:46  peterg
+# Automatic checkin:
+# changed attribute _mode to '0555'
+#
+# Revision 1.6  1996/01/03  11:32:20  nickr
+# [Bug #4420]
+# default BUILDROOT to .., and setup MAKEDEFS
+#
+# Revision 1.5  1994/09/29  12:43:47  martin
+# [Bug #4355]
+# Use make if $MAKE is undefined.
+#
+# Revision 1.4  1994/09/28  15:39:17  nickr
+# [Bug #4355]
+# replace make by ${MAKE}
+#
+# Revision 1.3  1994/08/05  11:54:44  nickr
+# set environment variable MAKEDEPEND if unset
+#
+# Revision 1.2  1994/05/17  21:05:12  freeland
+# Fixes for ultrix4.2: the syntax ${VAR:-default} doesn't work on ultrix,
+# although ${VAR-default} does (the difference is what value you get if $VAR
+# is assigned but empty).  So we cheat and simulate it here.
+#
+# Revision 1.1  1994/05/04  14:04:56  freeland
+# new file
+#
+
+# eof do-make

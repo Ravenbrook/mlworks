@@ -1,0 +1,75 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd
+#
+# $Log: findcomp2,v $
+# Revision 1.3  1997/09/24 17:04:47  jont
+# [Bug #70005]
+# Avoid loops by stopping at root
+#
+# Revision 1.2  1997/06/27  14:54:57  jont
+# [Bug #20089]
+# Change to use .version file instead of .compound file
+#
+# Revision 1.1  1996/07/11  15:25:14  io
+# new unit
+# [Bug #1463]
+# tweaked findcomp but did not wish to disturb dependent scripts, so added it as this...
+#
+# Revision 1.2  1995/03/17  22:01:14  daveb
+# Returned the parent of the directory containing the .compound file
+# instead of the directory itself, so that check-ins and check-outs
+# of multiple files can be based in the same directory.
+#
+# Revision 1.1  1994/06/09  15:31:25  nickh
+# new file
+#
+#
+
+# Climbs the directory tree up from the argument, searching for a
+# .compound file. When it finds one, constructs compound and unit names
+# accordingly.
+# 
+# Meant for use as eval `findcomp foo/bar`, in which case it defines 3
+# shell variables: 
+#
+# $unit: the unit name
+# $compound: the compound name
+# $dir: the compound directory
+#
+if [ -d "$1" ]; then
+  unit=;
+  dir="$1";
+else
+  unit=`basename $1`
+  dir=`dirname $1`
+fi
+cd $dir
+dir=`pwd`
+while [ ! -r .version ]; do
+  thisdir=`basename $dir`
+  if [ -z "$thisdir" ]; then
+    # echo empty answers; need to test for this case
+    echo compound=
+    echo unit=
+    echo dir=
+    exit
+  else 
+    dir=`dirname $dir`
+    unit=$thisdir:$unit
+    cd $dir
+    if [ "$dir" = "/" ] ; then
+      # stop here to avoid infinite loop
+      echo compound=
+      echo unit=
+      echo dir=
+      exit
+    fi
+  fi
+done
+compound=`sed -e "1s/,.*//g;2,$ s/.*//g" .version`
+
+# output the results so that eval will get them
+
+echo compound=$compound
+echo unit=$unit
+echo dir=`dirname $dir`

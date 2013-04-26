@@ -1,0 +1,80 @@
+(* $Log: benchmark,v $
+ * Revision 1.5  1998/02/20 09:00:47  mitchell
+ * [Bug #30349]
+ * Fix to avoid non-unit sequence warnings
+ *
+ *  Revision 1.4  1998/02/19  18:30:24  jont
+ *  [Bug #30364]
+ *  Remove use of loadSource, no longer necessary
+ *
+ *  Revision 1.3  1997/11/14  15:58:44  jont
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ * Revision 1.1  1997/01/07  13:38:17  matthew
+ * new unit
+ *
+ *)
+
+(* Copyright (C) 1996, The Harlequin Group Limited *)
+
+local
+  exception NoResultsFile
+
+  fun results_stream () =
+    let
+      val results_file = 
+        case OS.Process.getEnv "MLWORKS_RESULTS_FILE" of
+          SOME s => s
+        | _ => raise NoResultsFile
+    in
+      TextIO.openAppend results_file
+    end
+
+  fun wrap f =
+    let
+      val s = results_stream ()
+      fun finish () = TextIO.closeOut s
+      val result = f s handle exn => (finish(); raise exn)
+    in
+      finish ();
+      result
+    end
+
+  fun print_timing (function,name,stream) arg =
+    let
+      val cpu_timer = Timer.startCPUTimer()
+      val real_timer = Timer.startRealTimer()
+        
+      fun print_time () =
+        let
+	  val {usr, sys, gc} = Timer.checkCPUTimer cpu_timer
+	  val real_elapsed = Timer.checkRealTimer real_timer
+        in
+          TextIO.output(stream,
+                        concat ["Time for ", name, " : ",
+				Time.toString real_elapsed,
+				" (user: ",
+				Time.toString usr,
+				", system: ",
+				Time.toString sys,
+				", gc: ",
+				Time.toString gc,
+				")\n"])
+        end
+      
+      val result = 
+        function arg
+        handle exn => (print_time () ; raise exn)
+    in
+      (print_time () ; result)
+    end
+
+  fun t1 s f a = print_timing (f,s,TextIO.stdErr) a
+
+  fun t2 s f a = wrap (fn stream => print_timing (f,s,stream) a)
+  fun doone f 1 x = f x | doone f n x = (ignore(f x); doone f (n-1) x);
+in
+  fun test s n f x = t2 s (doone f n) x
+end
+

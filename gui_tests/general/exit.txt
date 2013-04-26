@@ -1,0 +1,25 @@
+
+Bug #1923: Win32: MLWorks locks if exit dialog dismissed using system menu
+Fixed by change #2863
+
+Behaviour:  MLWorks locks (has to be killed using task manager) when
+the exit dialog is invoked and then dismissed by clicking on the 'x'
+on the top right of the dialog (or by using the system menu from the top
+left of the dialog).
+
+Repeat by:  Select File->Exit
+	    Dismiss the exit dialog by selecting the 'x' button
+	    Attempt to close MLWorks, or select any menu item: MLW has
+locked up and can only be closed by killing the task.
+
+Proper behaviour:  The exit dialog should not have a system menu or an 
+'x' at the top right of the dialog.
+
+----------------------------
+
+Change 2842:  Quitting MLWorks on MIPS/Irix sometimes causes a SIGSEGV
+
+Start MLWorks, create a listener, close the listener, and exit MLWorks.
+All should work fine.
+
+

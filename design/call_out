@@ -1,0 +1,43 @@
+On unix (at least) the main sensible way to access kernel functions is
+via libc. This is a massive interface, with hundreds of external
+symbols.  It would therefore not seem sensible to duplicate all of
+this as first class ML function declarations. Instead, some minimal
+useful subset should probably provided, along with a call external
+function function, declared in ML, and all implemented in C or
+something else.  These will require a make external arguments
+function, of type 'a * arg list -> arg list, also externally
+implemented, to generate argument lists for these functions. For
+example, a call to printf requires a variable length list of
+polymorphic items.
+
+The implementation of call external function needs to translate from
+ML's own calling convention to the calling convention of libc, ie C,
+so it would make sense for call external function and make external
+arguments to be implemented in C, with only a minimal amount of
+assembler to glue them together.
+
+Since ML object files are not linked into the run time system (in the
+sense of ld), call external function will require some form of dynamic
+linking to link to its target, as will the ML named external
+functions, unless they are built into the run time system.
+
+For the initial bootstrap we need to choose some minimal subset of the
+interface which is implemented in a manner avoiding the need for the
+dynamic linking mentioned above. It is suggested that this be done by
+some indirection system whereby the compiler knows about certain names
+as being alien function <n>, and the run time system contains a static
+vector translating these "written on the wall" numbers back to the
+addresses of the relevant functions (said translation being achieved
+by ld during the link of the run time system). For example, in
+non-type correct C.
+static void *codevec[] = {
+fopen,
+fclose,
+fprintf,
+fread,
+fwrite,
+fgetc
+}
+It will then be the job of the compiler to recognise calls to things
+like printf as being of type 'a -> unit, and being translated to
+something like call alien function(int, 'a) -> unit

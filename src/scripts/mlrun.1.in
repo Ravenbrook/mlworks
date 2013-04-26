@@ -1,0 +1,161 @@
+'\" t
+.TH MLRUN 1 1996-08-15 Harlequin MLWORKS
+.SH NAME
+mlrun \- MLWorks runtime system
+.SH SYNOPSIS
+.B mlrun
+[
+.I options
+]
+.I object-file-names
+.SH DESCRIPTION
+.LP
+.B mlrun
+provides the run-time environment support for executing MLWorks object
+files.  Object files have a
+.B .mo
+suffix.  The object files are loaded in the order listed.
+The order in which you list the object files for loading is important,
+since an object file may only refer to code from files that have
+already been loaded.  
+.SH FILE OPTIONS
+.TP 6
+.B --
+This option does nothing, but nothing after it on the command line
+is treated as an option.
+.TP
+.B -load \fIfilename
+Load an image from
+.I filename
+before loading any object files.
+.TP
+.B -from \fIfilename
+Read object-file names from the file
+.I filename
+before reading them from the command line.
+.TP
+.B -save \fIfilename
+Load all object files specified and then save the image in
+.I filename.
+.TP
+.B -MLWpass \fIdelimiter argument... delimiter
+Passes the arguments between the
+.I delimiter
+strings through to the runtime. Any arguments passed after the closing
+delimiter will be passed through to the runtime environment. When
+running with the standard pervasive library these further arguments
+will appear as the result of the basis function CommandLine.arguments,
+or the MLWorks function MLWorks.arguments. The delimiter may be any
+string.
+.SH MEMORY MANAGEMENT OPTIONS
+.TP 6
+.B -c \fIn
+Report garbage collections at level
+.I n
+and above.
+.TP
+.B -limit \fIn,
+Specifies an advisory arena extent size in Mb (default 100).
+Collection frequency will increase as the amount of
+virtual memory used by the process approaches this amount.
+.TP
+.B -stack \fIn,
+Set the initial maximum number of stack blocks to
+.I n\fR.
+.TP
+.B -batch,
+Run in non-interactive mode; i.e. do not prompt when
+virtual memory is exhausted.
+.SH PROFILING OPTIONS
+.TP 6
+.B -profile \fIfilename
+Profile the entire run, recording profiling information in
+.I filename.
+.TP
+.B -profile-scan \fIn
+When profiling, scan the stack every
+.I n
+virtual milliseconds to
+gather information.  An interval of zero disables scanning.
+Scanning is not enabled by default.
+.TP
+.B -profile-depth \fIn
+When profiling with scanning, record patterns of caller functions
+to a depth of
+.I n
+callers.  The default is zero.
+.TP
+-profile-select \fIstring
+When profiling, only record information about functions which include
+.I string
+in their names.  By default, all functions are profiled.
+.TP
+.B -profile-manner \fIn
+A bit value to determine which forms of profiling are to be done.
+Relevant bits are: 
+.RS 8
+.TP
+Bit 0 - set for call counting
+.TP
+Bit 1 - set for time profiling
+.TP
+Bit 2 - set for space profiling
+.TP
+Bit 3 - set for space profile copying analysis 
+.RS 8
+(survival times for allocated values) 
+.RE
+.TP
+Bits 8-15 - set for space profile runtime type analysis
+.RS 6
+(allocation and copying broken down according to "type")
+.RE
+.RE
+.SH MISCELLANEOUS OPTIONS
+.TP 6
+.B -mono
+Use the X resources for a monochrome screen.
+.TP
+.B -verbose
+Display information about the activities of the runtime system.
+.TP
+.B -statistics
+Display various internal statistics at the end of the run.
+.TP
+.B -help
+Display information about command usage.
+.SH MESSAGE OUTPUT
+.LP
+Any messages output by the runtime system will be sent to the
+standard error stream.  Messages which are not fatal errors are
+enclosed in brackets (\fB[\fR and \fB]\fR) and printed on a new line.
+These are not usually nested.
+.SH FILES
+.PD 0
+.LP
+.B $MLWORKSDIR/pervasive/__builtin_library.mo
+.LP
+.B $MLWORKSDIR/pervasive/__pervasive_library.mo
+.LP
+.RS 4
+MLWorks pervasive library object files necessary for executing all SML
+sources compiled by MLWorks. 
+.PD
+.RE
+.PD 0
+.LP
+.B $IMAGEDIR/pervasive.img
+.LP
+.RS 4
+The pervasive image.
+.PD
+.RE
+.SH SEE ALSO
+.BR mlpervasive (1),
+.BR mlimage (1),
+.BR mlbatch (1),
+.BR mlworks (1),
+.BR mlworks-basis (1)
+.LP
+.I MLWorks User Guide
+

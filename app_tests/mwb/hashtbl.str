@@ -1,0 +1,155 @@
+(*
+ *
+ * $Log: hashtbl.str,v $
+ * Revision 1.2  1998/06/11 13:37:39  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+(* Rehacked to auto-resize when full *)
+
+functor HashTable() : HASHTABLE =
+struct
+
+    type ('a , 'b) bucket = ('a * 'b) list
+    type ('a , 'b) hashtable =
+    	{ size : int ref,
+    	  nbuckets : int ref,
+    	  hashfun : 'a -> int,
+    	  eqfun : 'a * 'a -> bool,
+    	  array : ('a , 'b) bucket Array.array ref,
+    	  hits: int ref,
+	  entries: int ref}
+	(* size, nbuckets, hashfun, eqfun, array, hits *)
+
+    val rehash_threshold = ref 0.3;
+    fun get_rehash_threshold () = !rehash_threshold
+    fun set_rehash_threshold(f) = rehash_threshold := f
+
+
+    fun badd(k,v,buck,eq) =
+	case bfind(k,buck,eq) of
+	    NONE => (k,v)::buck
+	  | SOME x =>
+		(if !Flags.tracelevel > 0 then
+		     print ("* adding something already in hash table - not overwriting\n")
+		 else ();
+		 buck)
+    and bfind(k,buck,eq) = assoc eq (k,buck)
+    and assoc eq (k,l) =
+	let fun assq [] = NONE
+	      | assq ((h,v)::t) =
+		if eq (k,h) then SOME v
+		else assq t
+	in assq l
+	end
+    and bmap(efun,buck) =
+	let fun buckmap [] = []
+	      | buckmap ((k,v)::t) =
+		(efun(k,v))::(buckmap t)
+	in buckmap buck
+	end
+	    
+    fun nextsize(n) =
+	let fun next [] = n-1
+	      | next (i::r) =
+		if n >= i then next r
+		else i
+	    val hash_prime_list =
+		[3,11,41,149,1361,3989,11897,20563,42641]
+		(* From LISPM hashing - this is too dense *)
+		(* ****
+		[23, 41, 71, 103, 149, 179, 223,
+		 257, 311, 373, 449, 541, 643, 773, 929, 1117, 1361,
+		 1601, 1931, 2309, 2767, 3319, 3989, 4783, 5737, 6883, 8263,
+		 9923, 11897, 14281, 17137, 20563, 24671, 29599, 35521, 42641, 51151,
+		 61379, 73651, 88397, 106087, 127271, 152729, 183283, 219931, 263909, 316691,
+		 380041, 456037, 547241, 656701, 788027, 945647, 1134769, 1361713, 1634069, 1960867,
+		 2353049, 2823661, 3388379, 4066063, 4879267, 5855141, 7026167]
+		**** *)
+
+	in next hash_prime_list
+	end
+
+    fun maketable(size,hfun,eqfun,samplekey,sampleval) =
+	let val sz = nextsize (size-1)
+	in
+	    { size=ref(sz), nbuckets=ref(0), hashfun=hfun, eqfun=eqfun, 
+	      array=ref(Array.array(sz, tl [(samplekey,sampleval)])), 
+	      hits=ref(0),
+	      entries = ref (0)}
+	end
+
+    fun bucketcount({nbuckets,...}:('a,'b) hashtable) = !nbuckets
+
+    fun empty({nbuckets=n,...}:('a,'b) hashtable) = !n = 0
+
+    fun size({size=sz,...}:('a,'b) hashtable) = !sz
+
+    fun hits({hits=h,...}:('a,'b) hashtable) = !h
+
+
+    (* maphash : ('a * 'b -> 'c) * ('a , 'b) hashtable -> 'c list *)
+    fun maphash efun ({size=sz,nbuckets=n,array=tbl,...}:('a,'b) hashtable) =
+	let fun arrmap i =
+		if i = (!sz) then []
+		else (bmap (efun,(Array.sub(!tbl,i))))@(arrmap (i+1))
+	in
+	    arrmap 0
+	end
+
+    fun rehash(newsz,H as {size=sz,nbuckets=n,hashfun=hfun,eqfun,array=tbl,...}:('_a,'_b) hashtable) =
+	let val _ = if !Flags.tracelevel > 3 then 
+		       print("*Rehashing size "^(makestring (!n))^"/"^(makestring (!sz))
+			     ^" => "^(makestring newsz)^"\n") else ()
+	    fun endof(X as []) = X (* this is just to preserve the type *)
+	      | endof(h::t) = endof t
+	    val narr = Array.array(newsz,endof(Array.sub(!tbl,0)))
+	    fun upd(k,v) =
+		let val h = hfun(k) mod newsz
+		in
+		    Array.update(narr,h,badd(k,v,Array.sub(narr,h),eqfun))
+		end
+	in
+	    ignore(maphash upd H);
+	    sz := newsz;
+	    tbl := narr;
+	    H
+	end
+
+    (* puthash : 'a * 'b * ('a * 'b) hashtable -> unit *)
+    fun puthash(key,kval,H as {size=sz,nbuckets=n,hashfun=hfun,eqfun,array=tbl,entries,...}:('_a,'_b) hashtable) =
+	if real(!entries) >= (!rehash_threshold)*(real(!sz)) (* real(!n)/real(!sz) > !rehash_threshold *)
+	    andalso nextsize(!sz) > !sz
+	    then
+		puthash(key,kval,rehash(nextsize(!sz),H))
+	else
+	    let val hval = hfun(key) mod (!sz)
+		val entry = Array.sub(!tbl,hval)
+		val _ = Array.update(!tbl,hval,badd(key,kval,entry,eqfun))
+	    in
+		if null(entry) then inc n else ();
+		inc entries
+	    end
+
+    (* gethash : 'a * ('a , 'b) hashtable -> 'b option *)
+    fun gethash(key,{size=sz,hashfun=hfun,eqfun,array=tbl,hits,...}:('a,'b) hashtable) =
+	let val buck = Array.sub(!tbl,hfun(key) mod (!sz))
+	    val found = bfind(key,buck,eqfun)
+	in
+	    (case found of
+		 SOME x => inc hits
+	       | _ => ());
+	     found
+	end
+	    
+    fun entrycount ({entries,...}:('a,'b) hashtable) = !entries
+    fun realentrycount htbl =
+	let val x = ref 0
+	in
+	    (ignore(maphash (fn (k,v) => inc x) htbl);
+	     !x)
+	end
+
+end

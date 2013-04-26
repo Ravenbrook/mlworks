@@ -1,0 +1,40 @@
+$Log: realpath,v $
+Revision 1.2  1994/03/24 19:08:03  daveb
+Adding note about calloc.
+
+# Revision 1.1  1994/03/23  17:51:28  daveb
+# new file
+#
+
+How to add realpath to SML/NJ.
+
+Add to ~sml/NewJersey/75/src/runtime/cfuns.c:
+
+void ml_realpath (msp, arg)
+        MLState_ptr     msp;
+        ML_val_t        arg;
+{
+    char *path = (char *)PTR_MLtoC(arg);
+    char resolved_path[MAXPATHLEN];
+    char *result;
+    ML_val_t answer;
+
+    result = realpath (path, resolved_path);
+    if (result == NULL) {
+        raise_syserror (msp, 0);
+    }
+    else {
+        answer = ML_alloc_string (msp,result);
+        RETURN(msp,answer);
+    }
+}
+
+and add the following entry to the externlist0[] table in the same file:
+
+        FUNCTION (ml_realpath,      "realpath"),
+
+Also change malloc.c so that malloc, calloc, etc. are defined for all
+architectures.  Just remove the relevant preprocessor directives and
+stub functions.
+
+Then cd ~sml/NewJersey/75/src/ and run makeml.

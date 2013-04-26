@@ -1,0 +1,31 @@
+# Makefile for testing dynamic linking stuff ... (SGI MIPS/Irix version)
+
+CC 		= gcc
+# for cc/Developer Option case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -pedantic -Wall
+# for cc/Developer Option case, use:
+#CFLAGS		= -ansiposix -g
+
+XLIBS           = -lXm -lXt -lX11
+
+LD              = ld
+#LDFLAGS        = -Bdynamic -shared -exports
+LDFLAGS        = -Bdynamic -ignore_unresolved -call_shared -elf -z
+
+
+LIB             = -lelf -lc
+
+PROGS		= tst.so xtst.so xtst1.so nickb.so hello.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+#%.o : %.c
+#	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f core $(TARGETS) *.o *.so

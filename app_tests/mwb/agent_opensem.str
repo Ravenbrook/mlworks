@@ -1,0 +1,684 @@
+(*
+ *
+ * $Log: agent_opensem.str,v $
+ * Revision 1.2  1998/06/11 13:42:02  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+(* Open semantics of deBruinified agents.
+   -- Bjorn Victor *)
+functor BruinOpenSem(structure B : AGENT;
+		     structure D : DISTINCTION;
+		     structure H : HASHTABLE;
+		     sharing B.Act.N = B.T.N
+		     sharing D.T = B.T) : OPENSEM =
+struct
+    structure B = B
+    structure D = D
+
+    structure T = B.T
+    structure Act = B.Act
+    structure N = B.Act.N
+
+    exception SemanticsError of string * B.agent
+
+    datatype commitment = Comm of B.T.test * B.Act.action * B.agent
+
+    (* debugging code *)
+    val dbglvl = ref 0
+    fun dprint(direction,str) =
+	let fun indent(st,i) =
+	        let fun mkp 0 = []
+		      | mkp i = " "::(mkp (i-1))
+		    val pfx = mkp i
+		    fun ind [] = []
+		      | ind [c] = [c]
+		      | ind (c::r) =
+			if c = "\n" then c::pfx@(ind r) else c::(ind r)
+		in implode(ind (explode str))
+		end
+	    val _ = if direction > 0 then inc dbglvl else ()
+	in
+	print
+	((makestring (!dbglvl))^
+	 (case direction of
+	     ~1 => "<"
+	   | 0  => "-"
+	   | 1  => ">"
+	   | _ => raise Match)^" "^
+	  (indent(str,3)));
+	if direction < 0 then dec dbglvl else ()
+	end
+
+    (* String of a commitment *)
+    fun c_mkstr (Comm(t,a,p)) =
+	"|"^(if T.eq(t,T.True) then "" else (T.mkstr t))
+	^">"^(Act.mkstr a)^"."^(B.mkstr p)
+    fun cw_mkstr (Comm(t,a,p)) =
+	"|"^(if T.eq(t,T.True) then "" else (T.mkstr t))
+	^">>"^(Act.mkstr a)^"."^(B.mkstr p)
+    fun c_makstr (Comm(t,a,p),fr) =
+	"|"^(if T.eq(t,T.True) then "" else (T.makstr(t,fr)))
+	^">"^(Act.makstr(a,fr))^"."^(B.makstr (p,fr))
+    fun cw_makstr (Comm(t,a,p),fr) =
+	"|"^(if T.eq(t,T.True) then "" else (T.makstr(t,fr)))
+	^">>"^(Act.makstr(a,fr))^"."^(B.makstr(p,fr))
+
+    (* commitment equality *)
+    fun comm_eq(Comm(a,b,c),Comm(d,e,f)) = T.eq(a, d) andalso Act.eq(b, e) andalso B.eq(c, f)
+
+    (* These are the hash tables that hold the "cache" of commitments, *)
+    (* tau closures, and weak commitments. *)
+    (* It is the caller's obligation to flush the tables *)
+    (* (by calling cleartbls()) when the environment is changed. *)
+    fun mktranstbl(sz) = H.maketable(sz,B.hashval,B.eq,B.mk_nil(),
+				     [Comm(T.True,Act.mk_tau(),B.mk_nil())])
+    val commtbl = ref(mktranstbl(3))
+    val tautbl = ref(mktranstbl(3))
+    val weaktbl = ref(mktranstbl(3))
+
+    fun cleartbls () =
+	(commtbl := mktranstbl(3);
+	 tautbl := mktranstbl(3);
+	 weaktbl := mktranstbl(3))
+    (* for debugging. *)
+    fun desctbls() =
+	let fun round(f) = ((makestring (truncate f))^"."
+			    ^(makestring(truncate (100.0*
+						   (f - (real (truncate f)))))))
+	    fun desc(tb) =
+	    (makestring (H.entrycount(tb)))
+	    ^"/"^(makestring (H.bucketcount (tb)))
+	    ^(if (H.entrycount (tb) > 0) then
+	      " ("^(round (real (H.entrycount (tb))/real (H.bucketcount (tb))))^")"
+	      else "")
+	    ^" entries/buck"
+	    ^", size "^(makestring (H.size (tb)))
+	    ^(if (H.bucketcount (tb) > 0) then
+	      " ("^(round (100.0*(real (H.bucketcount (tb))/real (H.size (tb)))))^"% full)"
+	      else "")	    
+	    ^(if (H.entrycount (tb) > 0) then
+	      " ("^(round (real (H.entrycount (tb))/real (H.size (tb))))^" ent/size)"
+	      else "")	    
+	    ^", hits: "^(makestring (H.hits tb))
+	    ^(if !Flags.tracelevel < 2 orelse (H.entrycount tb) > 10
+		  then			(* just count empty slots *)
+		      let val mpty = ref 0
+		      in
+			  (ignore(H.maphash (fn (k,v)=>
+					     if null v then inc mpty else ()) tb));
+			  if !mpty = 0 then ""
+			  else ", "^(makestring (!mpty))^" empty"
+		      end
+	      else			(* print all slots *)
+		  implode (H.maphash (fn (k,v)=>
+				      "\n"
+				      ^(B.mkstr k)
+				      ^"\n "
+				      ^(if null v then "[]"
+					else (Lib.mapconcat c_mkstr v "\n ")))
+			   tb))
+	in
+	    print("comm tbl: "^(desc (!commtbl))^"\n");
+	    print("tau tbl: "^(desc (!tautbl))^"\n");
+	    print("weak tbl: "^(desc (!weaktbl))^"\n")
+	end
+    val enabletbld = ref true
+    fun enabletbls(b) = enabletbld := b
+    fun enabledtbls() = !enabletbld
+
+    (* val commitments : B.agent * B.env -> commitment list *)
+    fun commitments(ag,env) =
+	let fun icommitments(ag,env) =
+	    if B.is_process(ag,env) then
+		if B.is_nil(ag,env) then []
+
+		else if B.is_prefix(ag,env) then
+		    [Comm(T.True,B.prefix_act(ag,env),B.prefix_agent(ag,env))]
+
+		else if B.is_match(ag,env) then
+		    let val cs = commitments(B.match_positive(ag,env),env)
+			val t0 = B.match_test(ag,env)
+		    in
+			map (fn Comm(t,a,p) => Comm(T.join(t0,t),a,p)) cs
+		    end
+
+		else if B.is_conditional(ag,env) then
+		    
+		    raise SemanticsError("Trying to compute commitments of a conditional in open semantics - undefined!",ag)
+
+		else if B.is_sum(ag,env) then
+		    Lib.mapcan (fn p=>commitments(p,env))
+		     (B.sum_summands(ag,env))
+
+		else if B.is_parallel(ag,env) then
+		    let fun par(Comm(t,a,p),q,revp) =
+			Comm(t,a,B.mk_parallel(if revp then [q,p] else [p,q]))
+			fun merge([],_) = []
+			  | merge((pc as Comm(tp,ap,p))::cps,cqs) =
+			    (let val pa = B.arity(p,env)
+				 val pin = Act.is_input(ap)
+				 val pout = Act.is_output(ap)
+			     in
+			     Lib.mapcan
+			     (fn (Comm(tq,aq,q)) =>
+			      let val qa = B.arity(q,env)
+			      in
+				  if ((pin andalso Act.is_output(aq))
+				      orelse
+				      (pout andalso Act.is_input(aq)))
+				      (* #### this disallows 'x<a>|x(b,c) -t-> *)
+				      (* an alternative is |in| >= |out| *)
+				      (* No, I don't think that's wanted. /BV 950314 *)
+				      andalso pa = ~(qa)
+				      then
+				  (* check that the
+				   polarity of the prefix matches the arity of
+				   the derivate *)
+				  if (pin andalso pa < 0) orelse
+				      (pout andalso pa > 0) then
+				      (print("*** polarity mixup:\n   "^(c_mkstr pc)^"\n"); []) else
+				  let val x =
+				  [Comm(T.join(T.match(Act.name(ap),
+						       Act.name(aq)),
+					       T.join(tp,tq)),
+					Act.mk_tau(),
+					B.pseudo_apply(p,q,env))]
+				  in if !Flags.tracelevel > 3 then print("*merge "^(c_mkstr (Comm(tp,ap,p)))^"\n       "^(c_mkstr (Comm(tq,aq,q)))^"\n=>     "^(c_mkstr (hd x))^"\n") else ();
+				      x end
+				  else []
+			      end) cqs
+			     end)
+			    @(merge(cps,cqs))
+			val (p, qq) = case B.parallel_pars(ag,env) of
+			  (p::qq) => (p, qq)
+			| _ => raise Bind
+			val cp = commitments(p,env)
+			val cqs = commitments(B.mk_parallel(qq),env)
+		    in
+			(merge(cp,cqs))
+			@(map (fn c=> par(c,B.mk_parallel(qq),false)) cp)
+			@(map (fn c=> par(c,p, true)) cqs)
+		    end
+
+		else if B.is_restriction(ag,env) then
+		    let val cs = commitments(B.restriction_agent(ag,env),env)
+		    in
+			if !Flags.tracelevel > 4 then print("RES: "^(B.mkstr ag)^"\n "^(Lib.mapconcat c_mkstr cs "\n ")^"\n") else ();
+			(Lib.mapcan
+			 (fn (c as (Comm(t0,a0,p))) =>
+			  let val a = Act.beta_reduce a0 ([N.mkname("",~1)],0)
+			      val t = T.beta_reduce t0 ([N.mkname("",~1)],0)
+			  in
+			      if Lib.exists (fn n=>not(N.le(N.Zero,n))) ((T.names t)@(Act.names a))
+				  (* restricted name in n(t,a) *)
+				  then (if !Flags.tracelevel > 4 then print("RES: filtering "^(c_mkstr c)^" because of "^(Act.mkstr a)^" and "^(T.mkstr t)^"\n") else ();
+					    nil)
+			      else
+				  let val f = B.free_names(p)
+				  in
+				      if not (Lib.exists N.zerop f) then
+					  (* restricted name not free, get rid of restriction *)
+					  [Comm(t,a,B.beta_reduce p ([N.Zero],0))]
+				      else
+					  [Comm(t,a,B.mk_restriction(N.Zero,p))]
+				  end
+			  end)
+			 cs)
+		    end
+
+		else if B.is_application(ag,env) then
+		    (* this is an optimization - take all args at once *)
+		    let val p = B.application_abstrs(ag,env)
+			val a = B.application_args(ag,env)
+			val _ = if !Flags.tracelevel > 5 then print("apply "^(B.mkstr p)^" to ["^(Lib.mapconcat N.mkstr a ",")^"]\n") else ()
+		    in
+			commitments(B.apply(p,a,env),
+				    env)
+		    end
+		     (* never happens *)
+		     else raise Lib.disaster("unseen case in commitments("^(B.mkstr ag)^")")
+	    else (* abstraction or concretion *)
+		[]
+
+          fun rewrite env a  =
+	      (if !Flags.tracelevel > 2 then print("rewrite "^(B.mkstr a)^"\n") else ();
+		   let val x =
+	      (if not (!Flags.rewrite)
+		  then a
+	      else if B.is_match(a,env) then
+		  if T.eq(B.match_test(a,env),T.True)
+		      then B.match_positive(a,env)
+		  else a
+	      else if B.is_restriction(a,env) andalso B.is_process(a,env) then
+		  let val Q = B.restriction_agent(a,env)
+		      val f = B.free_names(Q) (* what a waste of time *)
+		  in
+		      if not (Lib.exists N.zerop f) then
+			  (* restricted name not free, get rid of restriction *)
+			  B.beta_reduce Q ([N.Zero],0)
+		      else
+			  let val c = commitments(Q,env)
+			  in if Lib.forall (fn Comm(t,a,Q')=>
+					    not(Act.is_tau(a)) andalso
+					    N.zerop(Act.name a)) c
+				 (* only actions with restricted subject *)
+				 then B.mk_nil()
+			     else
+				 a
+			  end
+		  end
+	      else if B.is_parallel(a,env) then 
+		  B.mk_parallel(map (rewrite env) (B.parallel_pars(a,env)))
+	      else if B.is_sum(a,env) then
+		  B.mk_sum(map (rewrite env) (B.sum_summands(a,env)))
+		   else a)
+
+	      in if !Flags.tracelevel > 2 then print("=> "^(B.mkstr x)^"\n") else ();x end)
+
+	in
+	    if !Flags.tracelevel > 3 then dprint(1,"Comm "^(B.mkstr ag)^"\n") else ();
+		let val cmt =
+	    case (if !enabletbld then H.gethash(ag,!commtbl) else NONE) of
+		(* in the cache? *)
+		SOME x => x
+	      | NONE => 
+		    (* no, compute it. *)
+		    let val rc = icommitments(ag,env)
+			val _ = if !Flags.tracelevel > 4 then dprint(0,"Raw:\n"^(Lib.mapconcat c_mkstr rc "\n")^"\n") else ()
+			val c =
+			map (fn (Comm(t,a,p)) =>
+			     Comm(t,a,rewrite env (B.std_form(p,env)))) rc
+		    in
+			(* save it and return it *)
+			if !enabletbld then
+			H.puthash(ag,c,!commtbl) else ();
+			c
+		    end
+		in if !Flags.tracelevel > 3 then dprint(~1,"Comm:\n"^(Lib.mapconcat c_mkstr cmt "\n")^"\n") else ();
+		    cmt
+		end
+	end
+
+    (* #### replace mapunion by hashtables - unless it uses too much space? *)
+    fun weakcomm (P,env) =
+	(if !Flags.tracelevel > 3 then dprint(1,"Wcomm "^(B.mkstr P)^"\n") else (); let val cmts =
+	 case (if !enabletbld then H.gethash(P,!weaktbl) else NONE) of
+	    SOME x => x
+	  | NONE =>
+		let fun mkabs (0,p) = p
+		      | mkabs (n,p) = B.mk_abstraction(N.Zero,mkabs(n-1,p))
+		    and mkcon (0,vl,p) = fold (fn (v,p)=>B.mk_concretion(v,p)) vl p
+		      | mkcon (n,v,p) = B.mk_restriction(N.Zero,mkcon(n-1,v,p))
+		    and mknames(0) = []
+		      | mknames(n) = N.mkname("",~n)::(mknames (n-1))
+		    fun fixend t0 (Comm(t,a,p)) =
+			let val t1 = T.join(t,t0)
+			in
+			    if Act.is_tau(a) then []
+			    else if Act.is_input(a) then
+				let val (nv,b) = B.abs_all(p,env)
+				    val ns = mknames(nv)
+				in
+				    Comm(t1,a,p)::
+				    (Lib.mapcan (fn Comm(t,tau,p2) =>
+					  (* beta reduce t by nv *)
+					  let val tt = if nv=0 then t else T.beta_reduce t (ns,0)
+					  in
+					      if Lib.exists (fn n=>not(N.le(N.Zero,n))) (T.names tt) then []
+					      else     
+						  [Comm(T.join(tt,t1),a,
+							if nv=0 then p2
+							else
+							    B.std_form(mkabs(nv,p2),env))]
+					  end)
+				     (tauclose(b,env)))
+				end
+			    else (* if Act.is_output(a) then *)
+				let val (nr,v,b) = B.conc_all(p,env)
+				    val ns = mknames(nr)
+				in
+				    Comm(t1,a,p)::
+				    (Lib.mapcan (fn Comm(t,tau,p2) =>
+						 (* beta reduce t by nr *)
+					  let val tt = if nr=0 then t else T.beta_reduce t (ns,0)
+					  in
+					      if Lib.exists (fn n=>not(N.le(N.Zero,n))) (T.names tt) then []
+					      else
+						  [Comm(T.join(tt,t1),a,
+							B.std_form(mkcon(nr,v,p2),env))]
+					  end)
+				     (tauclose(b,env)))
+				end
+			end
+
+		    val c = 
+			(Lib.mapunion comm_eq (fn (c as Comm(t0,tau,p0)) =>
+					       c::(Lib.mapcan (fixend t0)
+						   (commitments(p0,env))))
+
+			 ((Comm(T.True,Act.mk_tau(),B.std_form(P,env)))
+			  ::(tauclose (P,env))))
+		in
+		    if !enabletbld then H.puthash(P,c,!weaktbl) else ();
+		    c
+		end
+    in if !Flags.tracelevel > 3 then dprint(~1,"Wcomm:\n"^(Lib.mapconcat cw_mkstr cmts "\n")^"\n") else ();
+        cmts
+    end)
+
+    and tauclose(P,env) =
+	(if !Flags.tracelevel > 3 then dprint(1,"Tclose "^(B.mkstr P)^"\n") else ();
+	 let val cmt =
+	 case (if !enabletbld then H.gethash(P,!tautbl) else NONE) of
+	    SOME x => x
+	  | NONE => 
+		let val vtab = [] (* H.maketable(3,B.hashval,B.eq,B.mk_nil(),true) *)
+		    fun member(x,y) =  Lib.member B.eq (x,y)
+			(* case H.gethash(x,y) of
+			    NONE => false 
+			  | SOME z => z *)
+		    fun add(x,y) = x::y (* (H.puthash(x,true,y); y) *)
+		    fun tc vis P =
+			if member (P,vis) then []
+			else
+			    Lib.mapunion comm_eq
+			    (fn (C as Comm(t,a,p)) =>
+			     if Act.is_tau(a) then
+(* *)				 C::(map (fn (Comm(t1,a1,p1)) =>
+					  Comm(T.join(t,t1),a1,p1))
+				     (tc (add(P,vis)) p))
+			     else [])
+			    (commitments(P,env))
+
+		    val c = (tc vtab P)
+		in
+		    if !enabletbld then H.puthash(P,c,!tautbl) else ();
+		    c
+		end
+	 in if !Flags.tracelevel > 3 then dprint(~1,"Tclose:\n"^(Lib.mapconcat c_mkstr cmt "\n")^"\n") else (); cmt
+	 end)
+
+(* ****************
+    and tauclosett(P,env) =
+	case (if !enabletbld then H.gethash(P,!tautbl) else NONE) of
+	    SOME x => x
+	  | NONE => 
+		let val vtab = [] (* H.maketable(3,B.hashval,B.eq,B.mk_nil(),true) *)
+		    val rtab = []
+		    fun member(x,y) =  Lib.member B.eq (x,y)
+			(* case H.gethash(x,y) of
+			    NONE => false 
+			  | SOME z => z *)
+		    fun vcons(x,y) = x::y (* (H.puthash(x,true,y); y) *)
+		    fun rcons(x,y) = x::y
+		    fun tc vis P =	(* -> (comms,recpts) *)
+			if member (P,vis) then ([],[])
+			else
+			    map (fn (C as Comm(t,a,p)) =>
+			     if Act.is_tau(a) then
+				 case H.gethash(p,!tautbl) of
+				     SOME cl => 
+					 (C::(map (fn (Comm(t1,a1,p1)) =>
+						  Comm(T.join(t,t1),a1,p1))
+					      cl),
+					  [])
+				   | NONE => 
+					 if member (p,vis) then
+					     ([C],[p])
+					 else
+					     let val (cl,recp) =
+						 tc (vcons(P,vis)) p
+						 val ccl = 
+						     C::(map (fn (Comm(t1,a1,p1)) =>
+							      Comm(T.join(t,t1),a1,p1))
+							 cl)
+					     in
+						 app (fn q =>
+						      if B.eq(P,q) then
+							  let val qc = H.gethash(q,!tautbl)
+							  in
+							      H.puthash(q,union(ccl,qc),!tautbl)
+							  end
+						      else ()) recp;
+						 H.puthash(p,cl,!tautbl);
+						 (ccl,if not null recp then p::recp else recp)
+					     end
+			     else ([],[]))
+			    (commitments(P,env))
+
+		    val c = (tc vtab P)
+		in
+		    if !enabletbld then H.puthash(P,c,!tautbl) else ();
+		    c
+		end
+**************** *)
+
+(* **** *)
+
+    datatype CMatch = Succ of B.agent * B.agent * D.distinction
+      		    | NoCMatch
+
+    exception Fail
+
+    fun comm_match (c1 as Comm(M,a,p),c2 as Comm(N,b,q), D,env) =
+	let fun act_match(a1,a2) =
+	    (Act.is_tau(a1) andalso Act.is_tau(a2)) orelse
+	    (Act.is_input(a1) andalso Act.is_input(a2)
+	     andalso T.implies(M,T.match(Act.name(a1),Act.name(a2)))) orelse
+	    (Act.is_output(a1) andalso Act.is_output(a2)
+	     andalso T.implies(M,T.match(Act.name(a1),Act.name(a2))))
+	    fun mkSucc(p,q) =
+		let val sM = T.sigma(M)
+		    val P' = B.substitute(sM,p)
+		    val Q' = B.substitute(sM,q)
+		    val D'' = D.substitute(sM,D)
+		    val f = (B.free_names P')@(B.free_names Q')
+		    val D' = D.prune(f,D'')
+		in
+		    Succ(P',Q',D')
+		end
+	    val ns = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","u","v","w","x","y","z"]
+	in
+	  if !Flags.tracelevel > 3 then
+	    dprint(0,"match("^
+		   (c_mkstr c1)^
+		   ",\n      "^
+		   (c_mkstr c2)^
+		   ") => "^
+		     (if T.implies(M,N) andalso act_match(a,b) then
+			("true,\n matcher = "^
+			 (let val (a,b,c) = case mkSucc(p,q) of
+			    Succ x => x
+			  | _ => raise Bind
+			      val f = (B.free_names a)@(B.free_names b)
+			      val l = if null f then 0 else N.code(Lib.max N.le f)
+			      fun bmks(p) = B.mkstr p (* B.makstr(p,ns) *)
+			      fun dmks(d) = D.mkstr d (* D.makstr(c,l,ns) *)
+			  in
+			    ((bmks a)^
+			     "\n           "^
+			     (bmks b)^
+			     "\n           "^
+			     (dmks c)^
+			     "\n")
+			  end))
+		      else
+			"false\n"))
+	  else ();
+	    if T.implies(M,N) andalso act_match(a,b)
+		then mkSucc(p,q)
+	    else NoCMatch
+	end
+
+(* **** *)
+
+
+    fun somebisimulation succfn wsuccfn (P,Q,env,Dist) =
+	let val rmember =
+	    (* Lemma 6.3:
+	     if D' \subseteq D then P eqD' Q implies P eqD Q *)
+	    Lib.member (fn ((a,c,e),(b,d,f)) =>
+			B.eq(a, b) andalso B.eq(c, d) andalso
+			(* #### *)
+			D.le(f,e))
+	    fun imember (x,l) =
+		case H.gethash(x,l) of
+		    NONE => false
+		  | SOME z => z
+
+	    val ihash = H.maketable(11,(fn(a,b,d)=>Bits.xorb(B.hashval(a),B.hashval(b))),
+				    (* Proposition:
+				     if D' \subseteq D then P noteqD Q implies P noteqD' Q *)
+				    (fn ((a,c,e),(b,d,f)) =>
+				     B.eq(a, b) andalso B.eq(c, d) andalso
+				     D.le(e,f)),
+				    (B.mk_nil(),B.mk_nil(),D.EMPTY),true)
+	    fun icons(tr as (P,Q,D),I) =
+		((case H.gethash(tr,I) of
+		      NONE => H.puthash(tr,true,I)
+		    | SOME x => ());
+		 I)
+	    (* val ns = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","r","s","u","v","w","x","y","z"] *)
+
+	    fun succ P D = Lib.filter (fn Comm(t,a,p) =>
+				       D.respects(t,D)) (succfn(P,env))
+	    and wsucc P D = wsuccfn(P,env)
+
+	    and iadd (P,Q,D) (R,I) =
+		let fun match _ _ [] _ _ (R,I) = (R,I) (* Done *)
+		      | match _ _ pc [] _ _ = (* no poss match *)
+			(if !Flags.tracelevel > 3 then dprint(0,"No possible match for\n["^(Lib.mapconcat c_mkstr pc ",")^"]\n") else ();
+			 raise Fail)	(* I consing is done below *)
+		      | match pair Qsuc ((cP as Comm(m,a,p))::Pc) (cQ::Qc) D (R,I) =
+			case comm_match(cP,cQ,D,env) of
+			    NoCMatch => (* find other match *)
+				match pair Qsuc (cP::Pc) Qc D (R,I)
+			  | Succ(P',Q',D') => (* matches so far *)
+				let val (r,i) = (add (pair(P',Q',D')) (R,I)
+						 handle Fail => (* Didn't, after all *)
+						     (if !Flags.tracelevel > 3 then dprint(0,"successors of\n"^(c_mkstr cP)^"\n"^(c_mkstr cQ)^"\ndidn't match - adding them to I:\n"^(B.mkstr P')^"\n"^(B.mkstr Q')^"\n"^(D.mkstr D')^"\n") else ();
+						      ([],I)))
+				in
+				    if null r then
+					match pair Qsuc (cP::Pc) Qc D (R,icons(pair(P',Q',D'),I))
+				    else
+					match pair Qsuc Pc Qsuc D (r,i)
+				end
+		in
+		if rmember((P,Q,D),R) then
+		    (if !Flags.tracelevel > 3 then dprint(0,"Already in R\n") else ();
+		     (R,I))
+		else if imember((P,Q,D),I) then
+		    (if !Flags.tracelevel > 3 then dprint(0,"In inequality set\n") else ();
+		     raise Fail)
+		else if B.is_process(P,env) andalso B.is_process(Q,env) then
+		    let val Psuc = succ P D
+			val wPsuc = wsucc P D
+			val Qsuc = succ Q D
+			val wQsuc = wsucc Q D
+
+(* 			val Pmatch = match (fn (a,b,c) => (a,b,c)) wQsuc    *)
+(* 			val Qmatch = match (fn (a,b,c) => (b,a,c)) wPsuc    *)
+			fun Pmatch pc qc d (r,i) =
+			    (if !Flags.tracelevel > 3 then
+				 dprint(0,"Pmatch:\n["^(Lib.mapconcat c_mkstr pc ",")^"]\n["^(Lib.mapconcat c_mkstr qc ",")^"]\n") else ();
+			     match (fn (a,b,c) => (a,b,c)) wQsuc pc qc d (r,i))
+			fun Qmatch pc qc d (r,i) =
+			    (if !Flags.tracelevel > 3 then
+				 dprint(0,"Qmatch:\n["^(Lib.mapconcat c_mkstr pc ",")^"]\n["^(Lib.mapconcat c_mkstr qc ",")^"]\n") else ();
+			     match (fn (a,b,c) => (b,a,c)) wPsuc pc qc d (r,i))
+		    in
+			(if !Flags.tracelevel > 3 then dprint(0,"P successors: "^(makestring (length Psuc))^", Q successors: "^(makestring (length Qsuc))^"\nweak P successors: "^(makestring (length wPsuc))^", weak Q successors: "^(makestring (length wQsuc))^"\n") else ();
+					      (* match P successors *)
+			Qmatch Qsuc wPsuc D (Pmatch Psuc wQsuc D ((P,Q,D)::R,I))
+		        (* then match Q successors *)
+			)
+		    end
+
+		else if B.is_abstraction(P,env) andalso B.is_abstraction(Q,env) then
+		    let val (vp,P'') = B.abs_all(P,env)
+			val (vq,Q'') = B.abs_all(Q,env)
+		    in
+			if vp = vq then
+			    let val _ = if vp = 0 then raise Lib.disaster("vp=0 in "^(B.mkstr P)) else ()
+				val nns = N.n_newNamesNotin(vp,(B.free_names P)@(B.free_names Q))
+				val _ = if !Flags.tracelevel > 3 then dprint(0,"Abstractions of arity "^(makestring vp)^", nns ["^(Lib.mapconcat N.mkstr nns ",")^"]\n") else ()
+				val P' = B.beta_reduce P'' (nns,0)
+				val Q' = B.beta_reduce Q'' (nns,0)
+			    in
+				if !Flags.tracelevel > 5 then print("ABS: nns = ["^(Lib.mapconcat N.mkstr nns ",")^"],\n     P = "^(B.mkstr P)^"\n     Q = "^(B.mkstr Q)^"\n     P' = "^(B.mkstr P')^"\n     Q' = "^(B.mkstr Q')^"\n") else ();
+				add (P',Q',D) (R,I)
+			    end
+			else (if !Flags.tracelevel > 4 then print("**abstraction mismatch: "^(makestring vp)^"<>"^(makestring vq)^"\n in "^(B.mkstr P)^"\n    "^(B.mkstr Q)^"\n") else ();
+			      raise Fail)
+		    end
+
+		else if B.is_concretion(P,env) andalso B.is_concretion(Q,env) then
+		    let val (np,vp,P'') = B.conc_all(P,env)
+			val (nq,vq,Q'') = B.conc_all(Q,env)
+		    in
+			if np = nq andalso Lib.eq N.eq (vp,vq) then
+			    let val nns = N.n_newNamesNotin(np,(B.free_names P)@(B.free_names Q))
+				val _ = if !Flags.tracelevel > 3 then dprint(0,"Concretions of arity "^(makestring np)^", nns ["^(Lib.mapconcat N.mkstr nns ",")^"]\n") else ()
+				val P' = if np = 0 then P''
+					 else B.beta_reduce P'' (nns,0)
+				val Q' = if np = 0 then Q''
+					 else B.beta_reduce Q'' (nns,0)
+				val f = (B.free_names P')@(B.free_names Q')
+				val D' = D.add_distinct_names(nns,f,D.prune(f,D))
+			    in
+				if !Flags.tracelevel > 5 then print("CON: nns = ["^(Lib.mapconcat N.mkstr nns ",")^"],\n     P = "^(B.mkstr P)^"\n     Q = "^(B.mkstr Q)^"\n     P' = "^(B.mkstr P')^"\n     Q' = "^(B.mkstr Q')^"\n") else ();
+				add (P',Q',D') (R,I)
+			    end
+			else (if !Flags.tracelevel > 4 then print("**concretion mismatch: "^(makestring np)^"<>"^(makestring nq)^" or ["^(Lib.mapconcat N.mkstr vp ",")^"]<>["^(Lib.mapconcat N.mkstr vq ",")^"]\n") else ();
+				  raise Fail)
+		    end
+		else
+		    (print(">>Trying to match concretion with abstraction:\n>> "^(B.mkstr P)^"\n>> "^(B.mkstr Q)^"\n");
+		     raise Fail)
+	        end
+
+	    and add (P,Q,D) (R,I) =
+		if !Flags.tracelevel > 2 then
+		    let (* val f = (B.free_names P)@(B.free_names Q) *)
+			(* val n = (if null f then 0
+				 else (N.code(Lib.max N.le f))) *)
+			fun bmak(p) = B.mkstr p (* B.makstr(p) *)
+			and dmak(d) = D.mkstr d (* D.makstr(d,n) *)
+			val s = ("add("^(bmak P)^",\n    "
+				 ^(bmak Q)^",\n    "
+				 ^(dmak D)^")\n")
+			val _ = (dprint (1,s))
+			val (r,i) = iadd(P,Q,D) (R,I) handle Fail => ([],I)
+		    in
+			if null(r) then
+			    (dprint (~1,s^" => fail\n");
+			     if !dbglvl = 0 then
+				 print("*Inequality set: "^(makestring (H.entrycount i))^" entries in "^(makestring (H.bucketcount i))^" buckets in "^(makestring (H.size i))^" slots, "^(makestring (H.hits i))^" hits\n") else ();
+			     raise Fail)
+			else (dprint (~1,s^" => ok\n"));
+			(r,i)
+		    end
+		else iadd(P,Q,D) (R,I)
+
+	    val _ = dbglvl := 0
+	    val (R,I) = add (P,Q,Dist) ([],ihash)
+	in
+	    if Flags.trace() then
+		print("*Inequality set: "^(makestring (H.entrycount I))^" entries in "^(makestring (H.bucketcount I))^" buckets in "^(makestring (H.size I))^" slots, "^(makestring (H.hits I))^" hits\n") else ();
+	    R
+	end
+    handle Fail => []
+
+    fun somebisimilar succfn wsuccfn args =
+	not (null (somebisimulation succfn wsuccfn args))
+
+    val bisimulation = somebisimulation commitments commitments
+    and bisimilar = somebisimilar commitments commitments
+    and weakbisimulation = somebisimulation commitments weakcomm
+    and weakbisimilar = somebisimilar commitments weakcomm
+	
+end

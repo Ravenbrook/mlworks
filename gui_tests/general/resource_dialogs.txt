@@ -1,0 +1,30 @@
+Request #30059: Implement interface to Win32 resource dialogs.
+
+All dialogs under the menu Usage->GeneralPreferences, with the
+exception of the Editor Preferences are now stored as resources, but
+should still work as exactly as before.  The difference this change
+makes is to allow more flexibility in the layout of controls on the
+dialogs created as resources.  All dialogs will eventually be stored
+as resources, but this is a separate task.
+
+-----
+
+Request #30318: Add createDialog to WindowsGui structure
+
+The following functions have been added to the WindowsGui structure:
+
+    val findResource : hinst * string * res_type -> word
+    val lockResource : word -> unit
+    val loadResource : hinst * word -> word
+
+    val getModuleHandle : string -> hinst
+    val loadLibrary : string -> hinst
+    val freeLibrary : hinst -> bool
+
+including the addition of the res_type and hinst.
+
+Test that users can get a handle to resource dialogs from any 
+executable or library by calling LoadLibrary to get the handle to 
+the library followed by a call to WindowsGui.createDialog (new for 
+this request) specifying the library handle, parent window of the
+dialog, and the resource name of the dialog.

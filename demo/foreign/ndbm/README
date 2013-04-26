@@ -1,0 +1,35 @@
+			     -*- Text -*-
+
+Note this example is Unix specific, it does not (currently) work under
+NT or Win95 (due to lack of an ndbm library -- shouldn't be too hard
+to find).
+
+See README.txt for the explanation that customers get on how to run
+the example.
+
+Given that the directory structure is different in a development tree,
+those instructions don't work unaltered here.
+
+The changes you need to make are :-
+
+* It is up to you to know which platform you are on and choose the
+  correct Makefile and also set MLWORKS_INCLUDE.  For example, under
+  under SunOS, you can build the library by doing :-
+
+    $ make -f Makefile.SunOS MLWORKS_INCLUDE=../../../src/rts/src
+
+* To run the example from this directory you need to set up the
+  source-path to point at the src directory of your development tree.
+  Assuming you want to point to the one contained in the same tree as
+  the demo directory, then under Solaris you'd type something like :-
+
+    $ ../../../src/rts/bin/SPARC/Solaris/main-g -load ../../../src/images/SPARC/Solaris/gui.img -pass args -tty -source-path .:../../../src args
+
+  Under SunOS, you need to add the SunOS directory to the front of the
+  source-path to ensure that the correct version of __open_flags.sml is
+  found :-
+
+    $ ../../../src/rts/bin/SPARC/SunOS/main-g -load ../../../src/images/SPARC/SunOS/gui.img -pass args -tty -source-path SunOS:.:../../../src args
+
+
+From then on the instructions are as per README.txt

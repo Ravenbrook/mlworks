@@ -1,0 +1,31 @@
+Request #30365: Implement subprojects in Project Workspace.
+
+Projects can now be hierarchical.  Things to test:
+
+1)	There should be no circular references between projects.  
+For instance, a project A cannot be a sub-project of project B if
+project B is a sub-project of A.  Entering sub-projects via the 
+project properties in the GUI should check for this and not allow
+it.
+
+2)	A project cannot have two sub-projects which are the same
+file.  Again project properties should check for this.
+
+3)	If project A has a current configuration of CC and project
+B is a sub-project of A then the configuration CC is used when 
+checking dependencies and compiling sub-project B regardless of 
+what the current configuration of B is.
+
+4)	If project A has current mode set to Debug and sub-project 
+B has current mode set to Release, Project B will be compiled in
+Release mode and project A will be compiled in Debug mode.
+
+5)	When compiling project A which has project B as a sub-project,
+the units displayed in the Project Workspace should only include 
+those which are required by project A and not required by project B,
+even although files from the sub-project may still be compiled if 
+need be.
+
+6)	Using the original project file, mlworks.mlp, which does not
+include any sub-projects, should still work.
+

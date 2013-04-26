@@ -1,0 +1,32 @@
+			     -*- Text -*-
+
+Bugs tested: 1822
+
+1. Create a listener and either type the following into it or create a
+   file contain the following and "use" it :-
+
+     Shell.Options.set (Shell.Options.Mode.debugging, true);
+
+     fun foldl f z [] = z
+       | foldl f z (x::xs) = foldl f (f (z, x)) xs;
+
+     fun sum xs = foldl op+ 0 xs;
+
+     Shell.Trace.breakpoint "sum";
+
+     sum [1,2,3];
+
+2. This should pop up a GUI stack browser.
+
+3. Look at the local variables section in the stack browser.
+
+4. If it is empty or contains "<empty>" then the test has passed and
+   you can stop.  
+
+5. If it contains one or more anomalous values, then submit a bug
+   report.  An anomalous value should look like "<<invalid integer>:_>",
+   "<<invalid list>:_>", ... etc., but due to 2911, you are
+   unlikely to see such a value and instead are likely to see a "_"
+   instead.
+
+6. Press the <step> button at the top of the stack browser and goto 3.

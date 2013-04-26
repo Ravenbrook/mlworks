@@ -1,0 +1,87 @@
+/* Copyright 1996 The Harlequin Group Limited.  All rights reserved.
+ *
+ * The NT implementation of runtime routines to support the 
+ * Timer structure as defined in the basis.
+ *
+ * $Log: mlw_timer.c,v $
+ * Revision 1.3  1998/02/24 11:19:29  jont
+ * [Bug #70018]
+ * Modify declare_root to accept a second parameter
+ * indicating whether the root is live for image save
+ *
+ * Revision 1.2  1997/05/21  13:56:17  johnh
+ * [Bug #01702]
+ * Added a call to mlw_raise_win32_syserr and mlw_win32_strerror
+ * now lives in win32_error.h
+ *
+ * Revision 1.1  1996/06/17  12:01:57  stephenb
+ * new unit
+ *
+ * Revision 1.3  1996/06/17  10:28:35  stephenb
+ * Flesh out the mlw_timer_now stub.
+ *
+ * Revision 1.2  1996/06/12  09:38:45  stephenb
+ * Update wrt changes in the time_date interface.
+ *
+ * Revision 1.1  1996/05/30  10:26:26  stephenb
+ * new unit
+ *
+ */
+
+#include <windows.h>
+#include "environment.h"	/* env_function ... etc. */
+#include "allocator.h"		/* allocate_record */
+#include "gc.h"			/* gc_clock, declare_root, ... etc. */
+#include "win32_error.h"        /* mlw_win32_strerror */
+#include "time_date.h"		/* mlw_time_from_double, ... */
+#include "mlw_timer.h"
+#include "mlw_timer_init.h"
+
+
+
+/*
+ * Timer.now : unit -> cpu_timer
+ *
+ * This is an auxiliary function that it used to support the implementation
+ * of Timer.startCPUTimer and Timer.checkCPUTimer.  It just returns the
+ * current user, system and gc time.
+ *
+ * Note that this raises OS.SysErr if the time cannot be determined.
+ * This does not match the spec., but seems a reasonable thing to do.
+ */
+
+static mlval mlw_timer_now(mlval unit)
+{
+  mlval gc_time, usr_time, sys_time, cpu_time;
+
+  gc_time= mlw_time_from_double(gc_clock/1000.0);
+  declare_root(&gc_time, 0);
+
+  {
+    HANDLE process= GetCurrentProcess();
+    FILETIME creation_time, exit_time, kernel_time, user_time;
+    if (GetProcessTimes(process, &creation_time, &exit_time, &kernel_time, &user_time) == FALSE) {
+      mlw_raise_win32_syserr(GetLastError());
+    }
+    usr_time= mlw_time_from_file_time(&user_time);
+    declare_root(&usr_time, 0);
+    sys_time= mlw_time_from_file_time(&kernel_time);
+    declare_root(&sys_time, 0);
+  }
+
+  cpu_time= mlw_timer_cpu_make();
+  mlw_timer_cpu_usr(cpu_time)= usr_time;
+  mlw_timer_cpu_sys(cpu_time)= sys_time;
+  mlw_timer_cpu_gc(cpu_time)= gc_time;
+  retract_root(&sys_time);
+  retract_root(&usr_time);
+  retract_root(&gc_time);
+  return cpu_time;
+}
+
+
+
+void mlw_timer_init(void)
+{
+  env_function("Timer.now", mlw_timer_now);
+}

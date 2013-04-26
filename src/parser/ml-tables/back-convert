@@ -1,0 +1,15 @@
+#!/bin/sh
+if [ "$LISPWORKS" = "" ]
+then
+   echo LISPWORKS not defined
+   exit 1
+fi
+#
+# This should set up the partial files ready for modification
+$LISPWORKS -i - << EOF
+(load "~sml/parsergen/load")
+(load "defsys")
+(in-package ml)
+(ml::back-convert-basics)
+(ml::back-convert-grammar)
+EOF

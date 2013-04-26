@@ -1,0 +1,30 @@
+(*
+
+Result: OK
+ 
+$Log: bytearray_reducel.sml,v $
+Revision 1.4  1997/05/28 11:49:00  jont
+[Bug #30090]
+Remove uses of MLWorks.IO
+
+ * Revision 1.3  1996/09/11  14:32:16  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+ * Revision 1.2  1996/05/01  17:05:15  jont
+ * Fixing up after changes to toplevel visible string and io stuff
+ *
+ * Revision 1.1  1993/03/25  17:30:35  jont
+ * Initial revision
+ *
+
+Copyright (c) 1993 Harlequin Ltd.
+*)
+
+val a = MLWorks.Internal.ByteArray.arrayoflist[1,2,3,4,5,6,7,8,9]
+
+fun f(acc, x:int) = (acc+x)*x
+
+val b = MLWorks.Internal.ByteArray.reducel f (0, a)
+
+val _ = print(if b = 1972809 then "Pass\n" else "Fail\n")

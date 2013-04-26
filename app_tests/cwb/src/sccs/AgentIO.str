@@ -1,0 +1,424 @@
+(*
+ *
+ * $Log: AgentIO.str,v $
+ * Revision 1.2  1998/06/02 15:48:11  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+RCS "$Id: AgentIO.str,v 1.2 1998/06/02 15:48:11 jont Exp $";
+functor AgentIO ( structure Ag : AGENT ) : AGENTIO =
+struct
+   structure Ag = Ag
+   structure A  = Ag.A
+   structure V  = Ag.V
+   structure P = A.P
+
+   open Ag
+
+   fun prio Nil               = 99
+     | prio Bottom            = 99
+     | prio (Var _)           = 99
+     | prio (Prefix _)        = 50
+     | prio (Delta _)         = 50
+     | prio (Time _)          = 50
+     | prio (Sum [])          = prio Nil
+     | prio (Sum [A])         = prio A
+     | prio (Sum _)           = 20
+     | prio (Parallel [])     = prio Nil
+     | prio (Parallel [A])    = prio A
+     | prio (Parallel _)      = 40
+     | prio (Permit _)        = 60
+     | prio (Relabel _)       = 60
+
+   fun mkstr A =
+       let val mkstract = A.mkstr
+
+           val mkstrrel =
+               let fun mkstrelt (a,b) = A.mkstr a^"/"^P.mkstr b
+                in Lib.mkstr mkstrelt ","
+               end
+
+	   fun mkstr_al (Permlist l) = "{"^(Lib.mkstr P.mkstr "," l) ^ "}"
+             | mkstr_al (Actlistvar v) = V.mkstr v
+
+           fun mkstrparam (Actparam a) = mkstract a
+	     | mkstrparam (Actlistparam A) = mkstr_al A
+             | mkstrparam (Agentparam A) = mstr A
+             | mkstrparam (Timeparam t) = makestring t
+
+           and mstr Nil = "0"
+             | mstr Bottom = "@"
+             | mstr (Var(v,[])) = V.mkstr v
+             | mstr (Var(v,l)) =
+               (V.mkstr v)^"("^(Lib.mkstr mkstrparam "," l)^")"
+             | mstr (a as Prefix(ac,a')) =
+               (mkstract ac) ^ ":" ^ (bracket a a')
+             | mstr (a as Delta a') = "$"^(mstr a')
+             | mstr (a as Time(i,a')) =
+               (makestring i) ^ ":" ^ (bracket a a')
+             | mstr (Sum []) = mstr Nil
+             | mstr (Sum [A]) = mstr A
+             | mstr (P as Sum [A,B]) =
+               (bracket2 P A) ^ " + " ^ (bracket2 P B)
+             | mstr (P as Sum (A::t)) =
+               (bracket2 P A) ^ " + " ^ (mstr (Sum t))
+             | mstr (Parallel []) = mstr Nil
+             | mstr (Parallel [A]) = mstr A
+             | mstr (P as Parallel [A,B]) =
+               (bracket2 P A) ^ " | " ^ (bracket2 P B)
+             | mstr (P as Parallel (A::t)) =
+               (bracket2 P A) ^ " | " ^ (mstr (Parallel t))
+             | mstr (P as Permit(A,Actlistvar v)) =
+               (bracket P A)^"\\"^(V.mkstr v)
+             | mstr (P as Permit(A,Permlist resA)) =
+               (bracket P A) ^
+               (if null resA then "{}"
+                else if null(tl resA) then "\\"^(P.mkstr(hd resA))
+                else "\\{"^(Lib.mkstr P.mkstr "," resA)^"}")
+             | mstr (P as Relabel(A,Relabellist relA)) =
+               (bracket P A)^"["^(mkstrrel relA)^"]"
+             | mstr (P as Relabel(A,Relabelvar v)) =
+               (bracket P A)^"["^(V.mkstr v)^"]"
+
+           and bracket a a' = if prio a <= prio a' then mstr a'
+                              else "(" ^ (mstr a') ^")"
+
+           and bracket2 a a' = if prio a < prio a' then mstr a'
+                               else "(" ^ (mstr a') ^ ")"
+        in mstr A
+       end
+
+   exception Parse of string
+   exception ActErr of string
+
+   datatype token = Lbrack  | Rbrack  | Lsq   | Rsq   | Lset    | Rset    
+                  | Plus    | Para    | Rest  | Repl
+                  | Equals  | Point   | Comma 
+                  | Bottomt | Deltat  | Nilt  | Eos
+                  | Vart of string    | Actt of string | Timet of int
+  | Actlistt of string
+
+   fun symbol Lbrack    = "("
+     | symbol Rbrack    = ")"
+     | symbol Lsq       = "["
+     | symbol Rsq       = "]"
+     | symbol Lset      = "{"
+     | symbol Rset      = "}"
+     | symbol Plus     = "+"
+     | symbol Para      = "|"
+     | symbol Rest      = "\\"
+     | symbol Repl      = "/"
+     | symbol Equals    = "="
+     | symbol Point     = ":"
+     | symbol Comma     = ","
+     | symbol Bottomt   = "@"
+     | symbol Deltat    = "$"
+     | symbol Nilt      = "0"
+     | symbol Eos       = "end of input"
+     | symbol (Vart v)  = v
+     | symbol (Actt a)  = a
+     | symbol (Timet t) = makestring t
+     | symbol (Actlistt a)  = a
+
+   fun mkagent str =
+       let val breaks = ["(" , ")" , "[" , "]" , "{" , "}" ,
+                         "+" , "|" , "\\", "/" , "=" , "," , ":" , 
+                         " " , "\t", "\n", "@" , "$" ]
+
+           fun isbreak e = Lib.member (op =) (e,breaks)
+
+           fun sc "" []            = (Eos,[])
+             | sc "" (" "::t)      = sc "" t
+             | sc "" ("\t"::t)     = sc "" t
+             | sc "" ("\n"::t)     = sc "" t
+             | sc "" ("("::t)      = (Lbrack,t)
+             | sc "" (")"::t)      = (Rbrack,t)
+             | sc "" ("["::t)      = (Lsq,t)
+             | sc "" ("]"::t)      = (Rsq,t)
+             | sc "" ("{"::t)      = (Lset,t)
+             | sc "" ("}"::t)      = (Rset,t)
+             | sc "" ("+"::t)      = (Plus,t)
+             | sc "" ("|"::t)      = (Para,t)
+             | sc "" ("\\"::t)     = (Rest,t)
+             | sc "" ("/"::t)      = (Repl,t)
+             | sc "" ("="::t)      = (Equals,t)
+             | sc "" (":"::t)      = (Point,t)
+             | sc "" (","::t)      = (Comma,t)
+             | sc "" ("@"::t)      = (Bottomt,t)
+             | sc "" ("$"::t)      = (Deltat,t)
+             | sc s l              = if null l orelse isbreak(hd l) then
+                                        (if s="0" then Nilt
+                                         else if ord s >= ord "A" andalso
+                                                 ord s <= ord "Z" then Vart s
+                                         else Timet (Lib.atoi s)
+                                              handle Lib.AtoI => Actt s,l)
+                                     else sc (s^(hd l)) (tl l)
+
+           val scan = sc ""
+
+(*****************************************************************************)
+(*                                                                           *)
+(*  Recursive descent parser:                                                *)
+(*                                                                           *)
+(*  AGENT        ::=  SUM                                                    *)
+(*                 |  SUM + AGENT                                            *)
+(*                                                                           *)
+(*  SUM          ::=  PREFIX                                                 *)
+(*                 |  PREFIX | SUM                                           *)
+(*                                                                           *)
+(*  PREFIX       ::=  <act> : PREFIX                     (act =/= eps)       *)
+(*                 |  <time> : PREFIX                                        *)
+(*                 |  BASIC POST                                             *)
+(*                                                                           *)
+(*  BASIC        ::=  <Nil>                                                  *)
+(*                 |  <Bottom>                                               *)
+(*                 |  <var>                                                  *)
+(*                 |  <var> ( PARAMLIST )                                    *)
+(*                 |  ( AGENT )                                              *)
+(*                 |  <Delta> AGENT                                          *)
+(*                                                                           *)
+(*  PARAMLIST    ::=  PARAM                                                  *)
+(*                 |  PARAM , PARAMLIST                                      *)
+(*                                                                           *)
+(*  PARAM        ::=  <act>                              (act =/= eps)       *)
+(*                 |  <time>					       *)
+(*                 |  <var>                                                 *)
+(*                 |  AGENT					       *)
+(*                 |  { PARTLIST}                                             *)
+(*                                                                           *)
+(*  POST         ::=  e                                                      *)
+(*                 |  [] POST                                                *)
+(*                 |  [ <var> ] POST                                         *)
+(*                 |  [ RELABELLIST ] POST                                   *)
+(*                 |  \ <var> POST                                           *)
+(*                 |  \ { } POST                                             *)
+(*                 |  \ { PARTLIST } POST                                    *)
+(*                                                                           *)
+(*  PARTLIST     ::=  <part>                                                 *)
+(*                 |  <part> , PARTLIST                                      *)
+(*                                                                           *)
+(*  RELABELLIST  ::=  RELABEL                                                *)
+(*                 |  RELABEL , RELABELLIST                                  *)
+(*                                                                           *)
+(*  RELABEL      ::= <act> / <part>                          (act =/= eps)   *)
+(*                                                                           *)
+(*****************************************************************************)
+
+           fun check (tok,(t,res)) =
+               if tok=t then scan res
+               else raise Parse("Expected "^symbol tok^" but found "^symbol t)
+
+           fun AGENT s =
+               let val (A,s as (tok,res)) = SUM s
+                in if tok=Plus then
+                      let val (B,s) = AGENT(scan res)
+                       in case B of
+                          (Sum l)  => (Sum (A::l),s)
+                        |    _      => (Sum [A,B],s)
+                      end
+                   else (A,s)
+               end
+
+           and SUM s =
+               let val (A,s as (tok,res)) = PREFIX s
+                in if tok=Para then
+                      let val (B,s) = SUM(scan res)
+                       in case B of
+                          (Parallel l)  => (Parallel (A::l),s)
+                        |        _      => (Parallel [A,B],s)
+                      end
+                   else (A,s)
+               end
+
+           and PREFIX (Actt ac,res) =
+               let val a = A.mkact ac
+                in if A.eq(a,A.eps) then
+                      raise Parse("Cannot have "^ac^" as an action prefix")
+                   else let val (A,s) = PREFIX(check(Point,scan res))
+                         in (Prefix(a,A),s)
+                        end
+               end
+
+             | PREFIX (Timet t,res) =
+               let val (A,s) = PREFIX(check(Point,scan res))
+                in (Time(t,A),s)
+               end
+
+             | PREFIX s = POST(BASIC s)
+
+           and BASIC (Nilt,res) = (Nil,scan res)
+
+             | BASIC (Bottomt,res) = (Bottom,scan res)
+
+             | BASIC (Vart v,res) =
+               let val s as (tok,res) = scan res
+                in case tok of
+                        Lbrack => let val (pl,s) = PARAMLIST(scan res)
+                                   in (Var(V.mkvar v,pl),check(Rbrack,s))
+                                  end
+                      | _ => (Var(V.mkvar v,[]),s)
+               end
+
+             | BASIC (Lbrack,res) =
+               let val(A,s) = AGENT(scan res)
+                in (A,check(Rbrack,s))
+               end
+
+             | BASIC (Deltat,res) = 
+               let val (A,s) = AGENT(scan res)
+                in (Delta A,s)
+               end
+
+             | BASIC (tok,_) =
+               raise Parse("Unexpected "^symbol tok)
+
+           and PARAMLIST s =
+               let val (p,s as (tok,res)) = PARAM s
+                in if tok=Comma then
+                      let val (pl,s) = PARAMLIST(scan res)
+                       in (p::pl,s)
+                      end
+                   else ([p],s) 
+               end (* check Rbrack ? *)
+
+           and PARAM (s as (Actt ac,res)) =
+               let val a = A.mkact ac
+                   val s' as (tok,res) = scan res
+                in if A.eq(a,A.eps) then
+                      raise Parse(ac^" cannot be a parameter")
+                   else if tok=Point then let val (A,s) = AGENT s
+                                           in (Agentparam A,s)
+                                          end
+                   else (Actparam a,s')
+               end
+
+             | PARAM (s as (Timet t,res)) =
+               let val s' as (tok,res) = scan res
+                in if tok=Point then
+                      let val (A,s) = AGENT s
+                       in (Agentparam A,s)
+                      end
+                   else (Timeparam t,s')
+               end
+
+(* it's a particle set, and we're being given it explicitly as a list *)
+	     | PARAM (s as (Lset,res)) =
+	       let val s' as (tok, res) = scan res
+	       in if tok=Rset then (Actlistparam (Permlist []), scan res)
+		  else let val (l,s) = PARTLIST s'
+		       in (Actlistparam (Permlist l), check(Rset, s))
+		       end
+	       end
+
+(* This variable param may actually turn out to be an action set, but  *)
+(* we'll handle that in lookupapply. Hack hack! *)
+             | PARAM s = let val (A,s) = AGENT s
+                          in (Agentparam A,s)
+                         end
+
+(* this is a particle list with no restrictions on what can be in       *)
+(* it. These two should be coalesced. DOESN'T SEEM TO BE USED!*)
+(*           and PARAMPARTLIST (Actt ac,res) =			       *)
+(*                let val a = A.mkact ac			       *)
+(*                 in let val s as (tok,res) = scan res		       *)
+(*                         in if tok=Comma then			       *)
+(*                               let val (l,s) = PARAMPARTLIST(scan res) *)
+(*                                in (a::l,s)			       *)
+(*                               end				       *)
+(*                            else ([a],s)			       *)
+(*                        end					       *)
+(*                end						       *)
+
+(*              | PARAMACTLIST (tok,_) =			       *)
+(*                raise Parse("Unexpected "^symbol tok)		       *)
+
+           and POST (A,(Lsq,res)) =
+               (case scan res of
+                    (Rsq,res) => POST(Relabel(A,Relabellist []),scan res)
+                  | (Vart v,res) =>
+                    POST(Relabel(A,Relabelvar(V.mkvar v)),check(Rsq,scan res))
+                  | s =>
+                    let val (l,s) = RELABELLIST s
+                     in POST(Relabel(A,Relabellist l),check(Rsq,s))
+                    end )
+
+             | POST (A,(Rest,res)) =
+               (case scan res of
+		  (Actt ac,res)
+		  => let val a = A.mkact ac
+		     in
+		       if A.eq(a,A.eps) orelse A.eq(a,A.tau) orelse
+			 not (A.ispart a) then
+			 raise Parse(ac^" cannot be the permission set")
+		       else POST(Permit(A, Permlist [((P.mkpart o
+						       A.mkstr)
+						      a)]),scan res)  
+		     end
+		| (Lset,res) => 
+		   (case scan res of
+		      (Rset,res) => POST(Permit(A,Permlist []),scan res)
+		    | s => let val (l,s) = PARTLIST s 
+			handle ActErr a =>
+			  raise Parse(a^" cannot be in "
+				      ^"the permission set")
+			   in POST(Permit(A,Permlist l),check(Rset,s))
+			   end )
+		| (Vart v,res) =>
+		    POST(Permit(A,Actlistvar(V.mkvar v)),scan res)
+		 | (tok,_) => raise Parse("Unexpected "^symbol tok) )
+
+             | POST x = x
+
+           and PARTLIST (Actt ac,res) =
+               let val a = A.mkact ac
+                in if A.eq(a,A.eps) orelse A.eq(a,A.tau) 
+                                    orelse not(A.ispart a) then
+                      raise ActErr ac
+                  else let val s as (tok,res) = scan res
+                        in if tok=Comma then
+                              let val (l,s) = PARTLIST(scan res)
+                               in (((P.mkpart o A.mkstr) a)::l,s)
+                              end
+                           else ([(P.mkpart o A.mkstr) a],s)
+                       end
+               end
+
+             | PARTLIST (tok,_) =
+               raise Parse("Unexpected "^symbol tok)
+
+           and RELABELLIST s =
+               let val (relab,s as (tok,res)) = RELABEL s
+                in if tok=Comma then
+                      let val (l,s) = RELABELLIST(scan res)
+                       in (relab::l,s)
+                      end
+                   else ([relab],s)
+               end
+
+           and RELABEL (Actt ac,res) =
+               let val (tok,res) = check(Repl,scan res)
+                in case tok of
+                      Actt ac' =>
+                        let val a = A.mkact ac
+                            val b = A.mkact ac'
+                         in if not(A.ispart b) then
+                               raise Parse(ac'^" cannot be relabelled")
+                            else if A.eq(a,A.eps) then
+                               raise Parse(ac^" cannot be a relabelling")
+                            else ((a,(P.mkpart o A.mkstr) b),scan res)
+                        end
+                    | _      => raise Parse("Unexpected "^symbol tok)
+               end
+
+             | RELABEL (tok,_) =
+               raise Parse("Unexpected "^symbol tok)
+
+           val (A,(tok,_)) = AGENT(scan(explode str))
+
+        in if tok=Eos then A
+           else raise Parse("Extra input")
+       end
+end
+

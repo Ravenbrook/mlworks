@@ -1,0 +1,38 @@
+In order to call foreign functions from ML (such as the run time
+library) we will need to do some data format conversions. In
+particular, strings will need to become zero terminated rather than
+having lengths associated with them, and integers will have to become
+untagged by being shifted right two bits. Whilst the first function
+(make C string) can effectively be produced in ML simply by appending
+a zero in the appropriate place, the second can't, since it would
+produce a value looking (potentially) like a pointer.
+
+There is also a corresponding problem with interpreting the results of
+function calls.
+
+At the very least, integer parameters may be recognised by their tags,
+and suitably converted. Similarly, pointer parameters need their tag
+bits clearing.
+
+This still leaves the more thorny problems of the internal structure
+of objects passed by reference. Firstly, such objects might contain
+integers, which need shifting. Secondly, ML does not order its records
+in the declared order, but in an order of its own choosing. What we
+will need in order to overcome these problems is something like the
+LISP concept of an alien object, with constructors and destructors,
+all of which are of course horribly type unsafe.
+
+There are also problems in the interaction of C functions with the
+garbage collector. In order to avoid heap fragmentation we shall need
+our own version of malloc, which will interact sensibly with the
+garbage collector. Thus if a C function calls malloc, it may cause a
+garbage collection which in turn may move objects which the C wishes
+to reference. But since C pointers will not be tagged, the garbage
+collector cannot fix up these references within the stack and local
+registers. We may also run into problems if the library itself calls
+malloc and has been statically linked already. this can be a common
+problem with shared libraries, where the static linking is done to
+avoid the overhead of an extra indirection on every function call
+within the library. This may be avoidable on most unix systems, if
+only by linking with non-shared libraries. On other systems (MS-DOS,
+RISC OS) the problem may be harder.

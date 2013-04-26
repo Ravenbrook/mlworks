@@ -1,0 +1,75 @@
+(*
+ *
+ * $Log: sagent.str,v $
+ * Revision 1.2  1998/06/11 13:03:03  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+functor StringAgent(structure T : STEST;
+	      structure Act : SACTION;
+	      sharing Act.N = T.N) : SAGENT =
+struct
+	
+   structure T = T
+   structure N = T.N
+   structure Act = Act
+
+   datatype agent = Nil
+     		  | Prefix of Act.action * agent
+		  | Abs of N.name * agent
+		  | Conc of N.name * agent
+		  | Test of T.test * agent
+		  | Cond of T.test * agent * agent
+                  | Sum of agent list
+                  | Parallel of agent list
+		  | Nu of N.name * agent
+                  | AgentRef of string
+		  | Applic of agent * N.name
+
+   exception WrongArgs of string
+
+   (* this should print polyadicity prettier *)
+   fun mkstr(Nil) = "0"
+     | mkstr(Prefix(a,P)) = (Act.mkstr a) ^ "." ^ (mkstr P)
+     | mkstr(Abs(n,P)) = "(\\"^(N.mkstr n)^")"^(mkstr P)
+     | mkstr(Conc(n,P)) = "["^(N.mkstr n)^"]"^(mkstr P)
+     | mkstr(Test(t,P)) = (T.mkstr t) ^ (mkstr P)
+     | mkstr(Cond(t,P,Q)) = (T.mkstr t)^(mkstr P)^","^(mkstr Q)
+     | mkstr(Sum(P)) = "(" ^ (Lib.mapconcat mkstr P " + ") ^ ")"
+     | mkstr(Parallel(P)) = "(" ^ (Lib.mapconcat mkstr P " | ") ^ ")"
+     | mkstr(Nu(n,P)) = "(^"^(N.mkstr n)^")"^(mkstr P)
+     | mkstr(AgentRef(I)) = I
+     | mkstr(Applic(P,arg)) =
+       (case P of
+	   AgentRef(I) => (mkstr P)
+	 | Applic(P,n) => (mkstr P)
+	 | _ => "("^(mkstr P)^")") ^ "<" ^ (N.mkstr arg) ^ ">"
+
+   and id x = x
+
+   fun eq (Nil,Nil) = true
+     | eq (Prefix(a,P),Prefix(b,Q)) =
+       Act.eq(a,b) andalso eq(P,Q)
+     | eq (Abs(a,P),Abs(b,Q)) =
+       N.eq (a,b) andalso eq(P,Q)
+     | eq (Conc(a,P),Conc(b,Q)) =
+       N.eq (a,b) andalso eq(P,Q)
+     | eq (Test(t1,P),Test(t2,Q)) =
+       T.eq(t1,t2) andalso eq(P,Q)
+     | eq (Cond(t1,P1,Q1),Cond(t2,P2,Q2)) =
+       T.eq(t1,t2) andalso eq(P1,P2) andalso eq(Q1,Q2)
+     | eq (Sum(P),Sum(Q)) =
+       Lib.eq eq (P,Q)
+     | eq (Parallel(P),Parallel(Q)) =
+       Lib.eq eq (P,Q)
+     | eq (Nu(n1,P1),Nu(n2,P2)) =
+       N.eq (n1,n2) andalso eq(P1,P2)
+     | eq (AgentRef(I1),AgentRef(I2)) = I1 = I2 
+     | eq (Applic(P1,N1),Applic(P2,N2)) =
+       eq (P1,P2) andalso N.eq (N1,N2)
+     | eq (_,_) = false
+
+end
+

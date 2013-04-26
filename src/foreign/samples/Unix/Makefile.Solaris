@@ -1,0 +1,30 @@
+# Example makefile (Solaris variant)
+
+CC 		= gcc
+
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -g
+#CFLAGS		= -ansi -pedantic -g -Wall
+
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+LDFLAGS		= -G -B dynamic -lgen
+
+LIB		= -ldl -lelf
+
+PROGS		= hello.so random.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	$(RM) *.so *.o

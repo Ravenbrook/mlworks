@@ -1,0 +1,19 @@
+(*
+ *
+ * $Log: sname.str,v $
+ * Revision 1.2  1998/06/11 13:01:26  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+functor StringName() : SNAME =
+struct
+    datatype name = Name of string
+
+    fun mkname (s) = Name(s)
+    fun mkstr(Name(s)) = s
+
+    fun eq(Name(s), Name(t)) = s = t
+    fun le(Name(s), Name(t)) = s <= t
+end

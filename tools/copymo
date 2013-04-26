@@ -1,0 +1,98 @@
+#!/bin/sh
+# Copyright (c) 1996 Harlequin Ltd.
+script_path=`dirname $0`
+script_name=`basename $0`
+usage="usage: $script_name (-a|-p ARCH/OS)+ <src-dir> <dest-dir>"
+ALL=0
+PHASE=0
+ARCH_OS="";
+arch_os_dirs_file=$script_path/arch_os_dirs
+tmpfile=/tmp/$script_name-$$
+tmppipe=$tmpfile-pipe
+
+trap "echo removing temp files; rm -f $tmpfile $tmppipe; exit 1" 2 3 15
+while getopts "ap:h" opt; do
+  case $opt in
+    h) echo $usage; 
+      echo "    copies mo files from one source tree to another."
+      echo "    An mo file is only copied if there is a corresponding"
+      echo "    source file in the destination tree."
+      echo
+      echo "    a for all ARCH/OS/*.mo and *.mo combinations"
+      echo "    p for specific ARCH/OS prefix"
+      echo "    h for this help"
+      exit 1;;
+    a) ALL=1;;
+    p) PHASE=1; test -z "$ARCH_OS" && ARCH_OS="$OPTARG" || ARCH_OS="$ARCH_OS $OPTARG";;
+    \?) echo $usage; exit 1;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+
+: echo $script_name: checking arguments...
+if [ $# -eq 0 ]; then
+  echo "nothing to $script_name"
+  echo $usage; exit 1
+elif [ $# -ne 2 ]; then
+  echo $usage; exit 1
+elif [ ! -d $1 -o ! -d $2 ]; then
+  echo $usage; exit 1
+elif [ $ALL -eq 1 -a $PHASE -eq 1 ]; then
+  echo $usage; exit 1
+else
+  : echo ok
+fi
+
+if [ -z "$ARCH_OS" ]; then
+  ARCH_OS=`cat $arch_os_dirs_file`
+fi
+echo -n "$script_name: Finding sources... " 1>&2
+FILE=`cd $2 && find . -name \*.sml -print | sed "s/^\.\///g;s/\.sml$//g"`
+echo "done." 1>&2
+(cd $2 &&
+for file in $FILE; do
+  test "$PHASE" -eq 0 && echo $file.mo
+  if [ $ALL -eq 1 -o $PHASE -eq 1 ]; then
+    for archos in $ARCH_OS; do
+      mofile=`dirname $file`/$archos/`basename $file`.mo
+      echo $mofile 
+    done
+  fi
+done > $tmpfile)
+
+if /etc/mknod $tmppipe p; then
+  {
+    sed -e '/^.*No such file or directory$/d
+            /^a / d
+            s/\(^.*\)$/source: \1/' < $tmppipe
+    rm $tmppipe
+  } &
+fi
+(cd $1 && gnutar -cvf - -T $tmpfile 2> $tmppipe
+ rm $tmpfile) |
+(cd $2 && gnutar pxvf - |
+ sed -e "s!^x \./\([^,]*\).*\$!\1!")
+
+
+# $Log: copymo,v $
+# Revision 1.7  1996/07/16 16:21:56  io
+# copymo assumes you are running in the target directory,
+# alter it to make that assumption invalid,
+# You can now pass -p SPARC/SunOS -p SPARC/Solaris arguments
+#
+# Revision 1.6  1996/03/22  00:02:12  io
+# handle [selected|all] object paths via optional arguments
+#
+# Revision 1.5  1995/03/23  18:16:41  jont
+# Fix bug 838
+#
+# Revision 1.4  1993/06/17  13:18:07  richard
+# Rewrote this script to use tar instead of checking all the files
+# individually.  It makes use of the fact that tar doesn't really
+# mind if an input file doesn't exist.
+#
+# Revision 1.3  1993/01/08  15:15:39  richard
+# Added rm before cp -p so that permissions don't affect the
+# copy.
+#

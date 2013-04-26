@@ -1,0 +1,317 @@
+(*
+ * $Log: topos,v $
+ * Revision 1.2  1998/05/28 15:30:12  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *)               
+
+           (* CARTESIAN CLOSED CATEGORIES and TOPOSES *)
+
+    (* Including programs for logical connectives and quantifiers;
+           and constructions within toposes 
+           such as power objects and epi-mono factorisation *)
+
+                (* FinSet provides an example *)
+
+
+(* Needs "basic" and "cat" *)
+
+(* module cartesian_closed_category *)
+   (* uses category, complete_category, cocomplete_category *)
+
+   type ('o,'m)Exponential = ('o*'o) -> ( ('o*'m) * (('o*'m) -> 'm) );
+
+   datatype ('o,'m)Cartesian_Closed_Cat  =  
+	   cartesian_closed_cat of ('o,'m)Cat *
+			 	   ('o,'m)Limit *
+				   ('o,'m)Exponential ;
+
+(* end *)
+
+     (* EXPONENTIALS in FinSet *)
+
+(* module cc_category_of_sets *)
+   (* uses cartesian_closed_category, names, category_of_sets, basic,
+	complete_category_of_sets, cocomplete_category_of_sets,
+	complete_category, cocomplete_category *)
+
+local
+
+   (*   function_space : 
+	(('alpha Tag)Set * ('alpha Tag)Set) -> ('alpha Tag)Set *)
+   fun function_space(a,b) = 
+           let val pl = pair_lists (list_set a) (list_set b)
+           in set (map function pl)
+           end;
+
+   (*   exponential : Exponential(('alpha Tag)Set,('alpha Tag)Set_Mor) *)
+   fun exponential(a,b) =
+	let val fs = function_space(a,b)
+            val ((fs_X_a,proj_fs,proj_a),_) = product complete_FinSet (fs,a)
+	    val eval = set_mor(fs_X_a,
+		               fn pr => let val l = case proj_fs OF pr of
+			       function l => l | _ => raise Bind
+                                            and z = proj_a OF pr
+                                         in pair_list_to_fn l z
+                                         end,
+			       b)
+        in ( (fs,eval),
+	     fn (c,m) =>
+                let val ((_,_,_),univ) = product complete_FinSet (c,a)
+                    val term = terminal_obj complete_FinSet
+                    val tt = set [ttrue]
+                    val tt_1 = terminal_mor complete_FinSet tt
+                    val comp = compose FinSet
+                in set_mor( c,
+                            fn y => 
+                               let val ey = set_mor(term,constant y,c)
+                                   fun f z =
+                                      let val ez = set_mor(term,constant z,a)
+                                          val m1 = comp (univ(term,ey,ez),m)
+                                      in (z,(comp(tt_1,m1)) OF ttrue)
+                                      end
+                               in function (map f (list_set a))
+                               end,
+                            fs)
+                   end)
+       end   
+in
+
+   (*  cc_FinSet : (('alpha Tag)Set,('alpha Tag)Set_Mor)Cartesian_Closed_Cat *)
+   val cc_FinSet = 
+		let val complete_cat(_,lim) = 
+				complete_FinSet
+                in cartesian_closed_cat( FinSet, lim, exponential )
+                end
+end;
+(* end *)
+
+
+    (* TOPOSES *)
+
+(* module topos *)
+   (* uses category, cocomplete_category, complete_category, 
+	cartesian_closed_category *)
+
+   type ('o,'m)Square = 'm * 'm * 'm * 'm;
+
+   type ('o,'m)PullBack_Square = ('o,'m)Square * (('m*'m) -> 'm);
+
+   type ('o,'m)Subobject_Classifier = 
+		('o*'m) * ('m -> ('o,'m)PullBack_Square);
+  
+   datatype ('o,'m)Topos   =   topos of  ('o,'m)Cat *
+			                 ('o,'m)Limit *
+			                 ('o,'m)Colimit *
+			                 ('o,'m)Exponential *
+			                 ('o,'m)Subobject_Classifier ;
+
+   (*   character : ('o,'m)Topos -> ('m -> 'm) *)
+   fun character( topos(_,_,_,_,(_,sc_univ)) ) m  =
+	let val ((_,chi,_,_),_) = sc_univ m	
+        in chi
+        end;
+
+   fun name (topos(C,lim,_,exp,_)) f =
+        let val cC = complete_cat(C,lim)
+            val term = terminal_obj cC
+            val a = source C f
+            val b = target C f
+            val pr_a_f = let val ((_,_,pr_a),_) = product cC (term,a)
+                         in compose C (pr_a,f)
+                         end
+            val (_,exp_adj) = exp (a,b)
+        in exp_adj (term,pr_a_f)
+        end;
+
+   fun true_ (T as topos(C,lim,_,_,((_,truth),_))) a =
+        let val cC = complete_cat (C,lim)
+        in compose C (terminal_mor cC a,truth)
+        end;
+(* end *)
+
+
+      (* FinSet as a TOPOS *)
+
+(* module topos_of_sets *)
+   (* uses basic, category_of_sets, category, names, topos, 
+	complete_category_of_sets, cocomplete_category_of_sets, 
+	cocomplete_category, complete_category, 
+	limit_examples, cc_category_of_sets, 
+	cartesian_closed_category, category_with_products,
+	category_with_coproducts *)
+
+local
+
+   (*   image_set : 'alpha Set_Mor -> 'alpha Set *)
+   fun image_set(set_mor(a,f,b)) = f mapset a;
+
+   (*   inv : 'alpha Set_Mor -> 'alpha Set_Mor *)
+   fun  inv(set_mor(S,f,T)) =
+           set_mor( T,
+		    fn y =>
+	    	      let val (z,S1) = singleton_split(S)
+                      in if (f(z)=y) then z
+                         else (inv(set_mor(S1,f,T))) OF y end,
+                    S ) ;
+
+   (*   subobject_classifier : 
+	(('alpha Tag)Set,('alpha Tag)Set_Mor)Subobject_Classifier *)
+   val subobject_classifier =
+	let val lC as complete_cat(C,_) = complete_FinSet
+	    val truvals = set [ttrue,ffalse]
+	    val truth = set_mor(set [ttrue],identity_fn,truvals)
+	    val chi =
+	   fn m =>
+	      set_mor(target(C)(m),
+		      fn z => if z is_in (image_set m) then ttrue else ffalse ,
+		      truvals )
+       in ( (truvals,truth),
+	    fn m => let val t = terminal_mor(lC)(source(C)(m))
+                     in ((truth,chi(m),t,m),
+	                 fn (f,g) => compose C (g,inv m) )
+                     end  )
+       end
+
+in
+
+   (*   topos_of_sets : (('alpha Tag)Set,('alpha Tag)Set_Mor)Topos *)
+   val FinSet_topos =
+	   let val cartesian_closed_cat(C,lim,exp) = cc_FinSet 
+	       val cocomplete_cat(_,colim) = cocomplete_FinSet()
+           in topos(C,lim,colim,exp,subobject_classifier)
+           end
+end;
+
+(* end *)
+
+
+     (* POWER OBJECTS in a topos *)
+
+(* module power *)
+   (* uses topos, complete_category, limit_examples, category,
+	category_with_products, category_with_coproducts *)
+
+   type ('o,'m)Power = 
+	    'o -> 
+            ('o * 'm * ('m ->
+                        ('m * ('o,'m)PullBack_Square) ));
+	
+   (*   power : ('o,'m)Topos -> ('o,'m)Power *)
+
+   fun power(topos(C,lim,colim,exp,sc)) =
+	   let val ((truvals,truth),character_square) = sc
+	       val lC = complete_cat(C,lim) 
+           in fn a =>
+	          let val ((P_of_a,eval),exp_adjoint) = exp(a,truvals)
+	              val ((h,membership),pb_univ) = pullback(lC)(truth,eval) 
+	              val universal = 
+	               fn m =>
+		         let val ((_,chi,t,_),sc_univ) = character_square(m)
+	                     val f = exp_adjoint(source(C)(chi),chi) 
+		             val fxa = m_prod_o_within lC (f,a)
+		             val u = pb_univ(t,compose(C)(m,fxa))
+		             val square = (membership,fxa,u,m)
+		             val univ = fn (p,q) => sc_univ(compose(C)(p,h),q)
+                         in (f,(square,univ))
+                         end
+                  in (P_of_a,membership,universal) 
+                  end
+           end;
+
+   fun P_obj T a =
+           let val (P_of_a,_,_) = power T a
+           in P_of_a
+           end;
+
+(* end *)
+
+
+     (* EPI-MONO FACTORISATION in a TOPOS *)
+
+(* module factor_topos *)
+   (* uses topos, basic, complete_category, 
+	cocomplete_category, category, limit_examples, 
+	colimit_examples, subcategory *)
+
+
+   (*   factorise : ('o,'m)Topos -> ('m -> ('m*'m))  *)
+   fun factorise(topos(C,lim,colim,_,_)) (f)  =
+	   let val ((p,q),po_univ) = pushout(cocomplete_cat(C,colim))(f,f) ;
+	       val ((a,e),eq_univ) = equaliser(complete_cat(C,lim))(p,q) ;
+	       val f1 = eq_univ(source(C)(f),f)
+           in (f1,e) end;
+
+(* end *)
+
+
+      (* LOGICAL CONNECTIVES in a TOPOS *)
+
+(* module logic_in_topoi *)
+   (* uses topos, category, cocomplete_category, complete_category, 
+	factor_topos, limit_examples, 
+	colimit_examples, category_with_products, 
+	category_with_coproducts *)
+
+   (*   false : ('o,'m)Topos -> 'm	 *)
+   (*   not   : ('o,'m)Topos -> 'm	 *)
+   (*   and   : ('o,'m)Topos -> 'm 	 *)
+   (*   or    : ('o,'m)Topos -> 'm	 *)
+   (*   imply : ('o,'m)Topos -> 'm	 *)
+
+
+   fun FALSE (T as topos(C,lim,colim,_,_)) =
+	   let val (init,_) = initial(cocomplete_cat(C,colim))
+	       val m = terminal_mor(complete_cat(C,lim))(init)
+           in character(T)(m)
+           end;
+
+   fun NOT(T) = character(T)(FALSE T);
+
+   fun AND(T as topos(C,lim,colim,_,sc) ) =
+	let val lC = complete_cat(C,lim) 
+	    val ((truvals,truth),_) = sc
+	    val (_,p_univ) = product(lC)(truvals,truvals)
+	    val m = p_univ(terminal_obj(lC),truth,truth) 
+        in character(T)(m)
+        end;
+
+   fun OR(T as topos(C,lim,colim,_,((truvals,truth),_))) =
+	let val lC = complete_cat(C,lim)
+	    val cC = cocomplete_cat(C,colim)
+	    val ((coprod,p,q),cp_univ) = coproduct(cC)(truvals,truvals)  
+	    val ((prod,r,s),pr_univ) = product (lC) (truvals,truvals)
+	    val t = compose(C)(terminal_mor(lC)(truvals),truth) 
+	    val p1 = pr_univ(truvals,truth,t) 
+	    val p2 = pr_univ(truvals,t,truth)
+	    val m  = cp_univ(prod,p1,p2) 
+	    val (_,im_of_m) = factorise(T)(m)
+        in character(T)(im_of_m)
+        end;
+
+   fun IMPLY(T as topos(C,lim,colim,_,( (truvals,truth),_) )) =
+	let val lC = complete_cat(C,lim)
+	    val ((prod,r,s),pr_univ) = product(lC)(truvals,truvals) 
+	    val m = pr_univ(terminal_obj(lC),truth,truth) 
+	    val conj = character(T)(m) 
+	    val ((_,m1),_) = equaliser(lC)(conj,r)
+        in character(T)(m1)
+        end;
+
+
+       (* QUANTIFICATION in a TOPOS *)
+
+   fun FOR_ALL T a = character T (name T (true_ T a));
+
+   fun EXISTS (T as topos(C,lim,_,_,_)) a =
+        let val (P_of_a,a_membership,_) = power T a
+            val ((_,pr,_),_) = product (complete_cat (C,lim)) (P_of_a,a)
+            val m = compose C (a_membership,pr)
+            val (_,im_of_m) = factorise (T) m
+        in character T im_of_m
+        end;
+
+(* end *)
+
+

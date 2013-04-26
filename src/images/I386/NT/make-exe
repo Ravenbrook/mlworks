@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Copyright (c) 1998, Harlequin Group plc
+# All rights reserved
+#
+# $Log: make-exe,v $
+# Revision 1.1  1998/09/28 10:08:58  jont
+# new unit
+# Shell script for building executables
+#
+#
+# make-exe [-g] <exe-name> [<libraries>]
+#
+usage="make-exe: usage: make-exe [-g] <exe-name> [<libs>]"
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+if [ "$1" = "-g" ]; then
+  debug=-g
+  shift
+else
+  debug=
+fi
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+exe=$1
+echo "make ${exe}${debug}.exe"
+sed -e "s/SETUP/${exe}\$closure\$setup/g;s/DECLARE/${exe}\$closure\$declare/g" exe_glue.S > poo.S
+gcc -c ${exe}_text.S
+gcc -c ${exe}_data.S
+gcc -c poo.S
+extend poo.o
+shift
+cl /Fe${exe}${debug}.exe poo.o ${exe}_text.o ${exe}_data.o  $* /nologo -link /MAP:${exe}${debug}.map /ENTRY:main

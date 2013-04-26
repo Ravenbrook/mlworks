@@ -1,0 +1,87 @@
+		  MLWORKS: UNIX INSTALLATION INSTRUCTIONS
+
+The shell script `install-mlworks' in this directory does all the work
+of building a correct MLWorks installation anywhere you choose. The
+script optionally takes a directory into which to install MLWorks. By
+default it installs MLWorks in /usr/local/lib/MLWorks. The directory
+argument, if given, must be a full absolute path name. Relative
+directory names, including those relative to home directories, are not
+sufficient.
+
+At the start of the install-mlworks script you will find a number of
+settings of shell variables naming directories. If you wish finer
+control over where the various components of the system are placed,
+you can tailor these variables to your local site before running the
+script.
+
+The install-mlworks script does not need to be run as root, unless you
+wish to install in a place where only root can write. Files will be
+installed to be owned by the current user and with the current umask.
+You can install over a previous installation; files are removed before
+being replaced, so they will also be owned by the current user.
+
+If you have special requirements, such as a partial installation, you
+may need to modify the install script further or perform a manual
+installation.
+
+For Irix and Solaris, a dynamically linked executable is supplied for
+MLWorks.  This requires a Motif shared library to operate.  On
+Linux a statically linked executable is supplied.  You do not
+need to own a copy of Motif to run MLWorks on Linux.
+
+On Solaris 2.4, 2.5 and 2.6, MLWorks expects to find the
+OpenWindows version of X11 and Xt, as distributed with Solaris by Sun.
+On machines run "out of the box", MLWorks should work with no further
+installation.  If you have installed another implementation of X as
+well (e.g. MIT X), you will need to set your LD_LIBRARY_PATH
+environment variable to include /usr/dt/lib when running MLWorks.
+
+When using a statically linked executable, you may have to modify
+the standard settings placed into all installed scripts in order to
+add a setting to enable X to find XKeysymDB. This is done by modifying
+the line similar to:-
+
+XKEYSYMDB=/usr/lib/X11/XKeysymDB
+
+You will need to replace /usr/lib/X11/XKeysymDB with the exact full
+path of XKeysymDB on your system.
+
+
+For each of the above options, here are the files which the dynamic
+linked version requires:-
+
+Irix:
+ libm.so
+ libXm.so.1
+ libXt.so
+ libXmu.so
+ libX11.so.1
+ libc.so.1
+ libXext.so
+
+Solaris 2.3:
+ libm.so.1
+ libXt.so.5.0
+ libX11.so.5.0
+ libsocket.so.1
+ libnsl.so.1
+ libintl.so.1
+ libelf.so.1
+ libdl.so.1
+ libc.so.1
+ libw.so.1
+
+Solaris 2.4, 2.5 and 2.6:
+ libm.so.1
+ libXm.so.2.12
+ libXt.so.4
+ libX11.so.4
+ libXext.so.0
+ libsocket.so.1
+ libnsl.so.1
+ libintl.so.1
+ libelf.so.1
+ libdl.so.1
+ libc.so.1
+ libw.so.1
+ libmp.so.1
