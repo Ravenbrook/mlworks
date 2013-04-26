@@ -118,7 +118,7 @@ extern size_t space_extent[NR_SPACES];
    For other spaces, it is at the disposal of the client. */
 
 extern void *space_info[NR_SPACES];
-#define SPACE_MAP(space)	((byte*) space_info[space])
+#define SPACE_MAP(space)	(*(byte **)&space_info[space])
 
 #define TYPE(addr) \
    (space_type[SPACE(addr)] != TYPE_BLOCKS ?	\

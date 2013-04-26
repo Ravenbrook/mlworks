@@ -379,6 +379,7 @@ OBJECTDIR	= obj/$(ARCH)/$(OS)
 
 include src/OS/$(OS)/arch/$(ARCH)/GNUmake
 include src/OS/$(OS_TYPE)/GNUmake
+-include src/OS/$(OS)/GNUmake
 
 GENERATED      = $(GENFILES:%=gen/%)
 OBJECTS         = $(MODULES:%=$(OBJECTDIR)/%.o)
@@ -485,7 +486,7 @@ $(OBJECTDIR)/%-dll.o: %.c
 $(OBJECTDIR)/%.o: %.c
 	@echo 'MAKE: $< -> $@'
 	@$(MKDIR) $(OBJECTDIR) $(MKDIREND)
-	@$(COMPILE) $(COMPILEFLAGS)$@ $<
+	$(COMPILE) $(COMPILEFLAGS)$@ $<
 
 $(OBJECTDIR)/%-dll-g.o: %.c
 	@echo 'MAKE: $< -> $@'

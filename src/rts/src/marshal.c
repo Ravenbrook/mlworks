@@ -76,7 +76,7 @@ char *marshal(char *out, const char *desc, ...)
       /* Characters are encoded as themselves. */
 
       case 'c':
-      *out++ = va_arg(arg, char);
+      *out++ = va_arg(arg, int);
       break;
 
       /* Integers are encoded in 7-bit chunks with the eighth bit indicating */
