@@ -10,6 +10,9 @@ history. This repository will be *replaced* by one with a full history,
 and any work will need to be migrated.  Please consider this before cloning
 or forking.
 
+Please join the MLWorks discussion mailing list 
+<http://mailman.ravenbrook.com/mailman/listinfo/mlworks-discussion>.
+
 MLWorks is a commercially developed "industrial strength" ML development
 system, developed by Harlequin in the 1990s.  Harlequin broke up in
 1998, and MLWorks became property of Xanalys Limited.  Ravenbrook
