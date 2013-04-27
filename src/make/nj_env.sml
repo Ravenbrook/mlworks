@@ -14,18 +14,21 @@ local
   (* A handful of environment functions that we need *)
   (* We only need the functions that actually get called by the compiler here *)
 
-  val environment = NewJersey.System.environ
-  val setwd = System.Directory.cd
-  val getwd = NewJersey.System.Directory.getWD
-  fun realpath (s: string) :string =
-    NewJersey.System.Unsafe.CInterface.c_function
-    "realpath"
-    (NewJersey.System.Unsafe.CInterface.c_string s)
-    handle NewJersey.System.Unsafe.CInterface.SysError _ =>
-      raise Io ("realpath: " ^ s)
+  (* http://www.standardml.org/Basis/os-process.html#SIG:OS_PROCESS.getEnv:VAL *)
+  val environment = OS.Process.getEnv
+  
+  (* http://www.standardml.org/Basis/os-file-sys.html#SIG:OS_FILE_SYS.chDir:VAL *)
+  val setwd = OS.FileSys.chDir
 
+  (* http://www.standardml.org/Basis/os-file-sys.html#SIG:OS_FILE_SYS.getDir:VAL *)
+  val getwd = OS.FileSys.getDir
+
+  (* http://www.standardml.org/Basis/os-file-sys.html#SIG:OS_FILE_SYS.realPath:VAL *)
+  val realpath = OS.FileSys.realPath
+
+  (* http://www.smlnj.org/doc/SMLofNJ/pages/unsafe.html#SIG:UNSAFE.cast:VAL *)
   type T = int ref
-  val tcast : 'a -> T = NewJersey.System.Unsafe.cast
+  val tcast : 'a -> T = Unsafe.cast
 
   val env_refs = ref [] : (string * T) list ref
 
@@ -41,7 +44,7 @@ local
 
   exception UnimplementedEnv of string
   fun unimplemented name =
-    (output (std_out, "unimplemented env function: " ^ name ^ "\n");
+    (TextIO.output (TextIO.stdOut, "unimplemented env function: " ^ name ^ "\n");
      raise UnimplementedEnv name)
 
 in
