@@ -225,20 +225,10 @@
 #include "image.h"
 #include "exec_delivery.h"
 #include "export.h"
-#include "mlw_mklic.h"
-#include "license.h"
 
 static mlval ml_save_image(mlval argument)
 {
   mlval global, filename;
-
-  /* license_edition is a global C enum */
-
-  if ((license_edition == PERSONAL) || act_as_free) {
-    display_simple_message_box(
-      "Saving images is not enabled in the Personal edition of MLWorks");
-    return MLUNIT;
-  }
 
   filename = FIELD(argument, 0);
   image_continuation = FIELD(argument, 1);
@@ -285,12 +275,6 @@ static mlval ml_save_exec_image(mlval argument)
 {
   mlval global, filename;
 
-  if ((license_edition == PERSONAL) || act_as_free) {
-    display_simple_message_box(
-      "Saving executables is not enabled in the Personal edition of MLWorks");
-    return MLUNIT;
-  }
-
   filename = FIELD(argument, 0);
   image_continuation = FIELD(argument, 1);
   declare_root(&filename, 1);
@@ -331,14 +315,6 @@ static mlval ml_save_exec_image(mlval argument)
 
 static mlval ml_deliver_function(mlval argument)
 {
-  if ((license_edition == PERSONAL) || act_as_free) {
-    display_simple_message_box(
-      "Delivering executables is not enabled in the Personal edition of MLWorks");
-    /* exn_raise_string(perv_exn_ref_save, 
-         "Delivery not enabled for this edition"); */
-    return MLUNIT;
-  }
-
   declare_root(&argument, 1);
   gc_collect_all(); /* Do a full gc before forking */
   retract_root(&argument);

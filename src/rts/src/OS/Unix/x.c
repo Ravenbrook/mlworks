@@ -1521,16 +1521,6 @@ extern void x_handle_expose_events(void)
   }
 }
 
-/* Called when we send a message to the podium which must get seen */
-extern void x_reveal_podium(void)
-{
-}
-
-/* Called when we reacquire a network license and no longer want the podium on view */
-extern void x_hide_podium(void)
-{
-}
-
 static Widget message_widget;
 static XmTextPosition message_widget_position;
 

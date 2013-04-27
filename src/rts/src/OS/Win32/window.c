@@ -452,7 +452,6 @@
 #include "diagnostic.h"
 #include "event.h"
 #include "signals.h"
-#include "license.h"
 
 #include <windows.h>   /* required for all Windows applications */
 #include <commctrl.h>
@@ -812,17 +811,10 @@ static BOOL do_help (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case IDM_ABOUT:
       lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
 
-      if ((license_edition != PERSONAL) && (!act_as_free)) {
-	DialogBox(hInst,                 /* current instance */
-		  "ABOUTPROFESSIONAL",   /* dlg resource to use */
-		  hWnd,                  /* parent handle */
-		  (DLGPROC)lpProcAbout);  /* About() instance address */
-      } else {
-	DialogBox(hInst,                 /* current instance */
-		  "ABOUTPERSONAL",   /* dlg resource to use */
-		  hWnd,                  /* parent handle */
-		  (DLGPROC)lpProcAbout);  /* About() instance address */
-      }
+      DialogBox(hInst,                 /* current instance */
+                "ABOUTPROFESSIONAL",   /* dlg resource to use */
+                hWnd,                  /* parent handle */
+                (DLGPROC)lpProcAbout);  /* About() instance address */
 
       FreeProcInstance(lpProcAbout);
       return (TRUE);

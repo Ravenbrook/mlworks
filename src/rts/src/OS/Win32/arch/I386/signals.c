@@ -143,7 +143,6 @@
 #include "syscalls.h"
 #include "exceptions.h"
 #include "event.h"
-#include "license.h"
 #include "profiler.h"
 #include "ansi.h"
 #include "reals.h"
@@ -292,13 +291,6 @@ static void timer_thread(void)
     timer_thread_wait();
     signal_interval_alarm();
   }
-}
-
-/* == Licensing support == */
-
-extern void signal_license_timer(int interval)
-{
-  error("Licensing not operative on Win32");
 }
 
 /* == Profiling support == */

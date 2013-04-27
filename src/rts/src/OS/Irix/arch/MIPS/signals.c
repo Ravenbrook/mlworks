@@ -178,7 +178,6 @@
 #include "syscalls.h"
 #include "exceptions.h"
 #include "event.h"
-#include "license.h"
 #include "profiler.h"
 #include "ansi.h"
 #include "reals.h"
@@ -677,40 +676,6 @@ static void signal_arithmetic_exception_handler
     SC_PC(scp) = (word) exn_raise;
     SC_ARG(scp) = perv_exn_ref_overflow;
   }
-}
-
-/* == Licensing support == 
- * 
- * SIGALRM is handled by refreshing the license. */
-
-static void signal_timer_handler
-  (int sig, int code, struct sigcontext *scp)
-{
-  refresh_license();
-
-  if (signal_handled[sig] & SIGNAL_HANDLED_IN_ML)
-    signal_ml_handler(sig,code,scp);
-}
-
-extern void signal_license_timer (int interval) 
-{
-  struct itimerval period;
-
-  /* establish real interval timer signal handler */
-  if(set_signal_handler(SIGALRM, signal_timer_handler))
-    error("Unable to set up real interval timer signal handler.");
-
-  signal_handled[SIGALRM]   |= SIGNAL_HANDLED_IN_C;	/* licensing */
-
-  /* Establish timer for refreshing the license */
-  period.it_value.tv_sec = interval;
-  period.it_value.tv_usec = 0;
-  period.it_interval.tv_sec = interval;
-  period.it_interval.tv_usec = 0;
-  
-  if(setitimer(ITIMER_REAL, &period, NULL) == -1)
-    error("Unable to set up licensing timer.  "
-	  "setitimer set errno to %d.", errno);
 }
 
 /* == Interrupt Support ==
