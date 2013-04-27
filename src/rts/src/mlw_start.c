@@ -55,7 +55,6 @@
 
 #include "values.h"
 #include "profiler.h"
-#include "license.h"
 #include "options.h"
 #include "mem.h"
 #include "gc.h"
@@ -143,8 +142,6 @@ static const char usage_message[] =
   "          Display some messages about runtime activities.\n"
   "  -statistics\n"
   "          Display various internal statistics at the end of the run.\n"
-  "  -free-edition\n"
-  "          Behave as a free edition (i.e., as if no license available).\n"
   "  -help   Display this message and exit.\n"
 
 #ifdef DEBUG
@@ -210,7 +207,6 @@ static struct option
   option_mono	         = {"mono", 0, 0, NULL},
   option_verbose         = {"verbose", 0, 0, NULL},
   option_statistics      = {"statistics", 0, 0, NULL},
-  option_free_edition    = {"free-edition", 0, 0, NULL},
   option_help            = {"help", 0, 0, NULL},
 
 /* Hidden Options */
@@ -248,7 +244,7 @@ static struct option *options[] =
  &option_profile_select, &option_profile_manner,
 
 /* Miscellaneous Options */
- &option_mono, &option_verbose, &option_statistics, &option_free_edition,
+ &option_mono, &option_verbose, &option_statistics,
  &option_help,
 
 /* Hidden Options */
@@ -402,7 +398,6 @@ extern void stop_mlworks(void)
   report_fixup();
   #endif
 #endif
-  license_release();
 }
 
 extern mlval asm_trampoline(mlval);
@@ -481,10 +476,6 @@ extern int start_mlworks(int argc, const char *const *argv, mlval setup, void (*
     diagnostic_level = to_unsigned(option_diagnostic.arguments[0]);
 #endif
 
-#ifdef LICENSE
-  license_init();
-#endif
-
   /* Now we're ready to initialize the runtime */
 
   initialise();
@@ -500,9 +491,7 @@ extern int start_mlworks(int argc, const char *const *argv, mlval setup, void (*
   if (option_backtrace_depth.specified)
     max_backtrace_depth = to_int(option_backtrace_depth.arguments[0]);
 
-  if (option_batch.specified) {
-    license_failure_hang = 0;
-  } else {
+  if (!option_batch.specified) {
     out_of_memory_dialog = standard_out_of_memory_dialog;
   }
 
@@ -533,14 +522,6 @@ extern int start_mlworks(int argc, const char *const *argv, mlval setup, void (*
     print_defaults.indent = to_int(option_print.arguments[2]);
     print_defaults.tags = to_int(option_print.arguments[3]);
   }
-
-  if (option_free_edition.specified) {
-    DIAGNOSTIC(1,"Setting act_as_free to 1", 0, 0);
-    act_as_free = 1;
-  } else {
-    DIAGNOSTIC(1,"Setting act_as_free to 0", 0, 0);
-    act_as_free = 0;
-  };
 
 
   /* Load initial image */

@@ -220,39 +220,3 @@ $(TARGETDIR)/make_statuses:	obj/$(ARCH)/$(OS)/make_statuses.o
 gen/$(ARCH)/$(OS)/statuses.sml:	$(TARGETDIR)/make_statuses
 	@echo 'MAKE: $@'
 	$< > $@
-
-
-# validate_license.dll is made here
-
-VALIDATE_SOURCES= \
-	src/OS/$(OS_TYPE)/validate_license.c \
-	sha/mlw_mklic.h \
-	sha/sha.h \
-	src/license.h \
-	src/license_offset.h \
-	src/version.h
-
-VALIDATE_OBJS= \
-	$(OBJECTDIR)/sha.o \
-	$(OBJECTDIR)/license_offset.o \
-	$(OBJECTDIR)/validate_license.o
-
-VALIDATE_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
- advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
- odbccp32.lib /nologo /subsystem:windows /dll \
- /pdb:"$(TARGETDIR)\validate_license.pdb" \
- /out:"$(TARGETDIR)\validate_license.dll" 
- /implib:"$(TARGETDIR)\validate_license.lib" 
-
-$(OBJECTDIR)/validate_license.o : $(VALIDATE_SOURCES)
-
-$(TARGETDIR)/validate_license.dll: $(TARGETDIR)/mlw_mklic $(VALIDATE_OBJS)
-	link.exe $(VALIDATE_FLAGS) $(VALIDATE_OBJS)
-
-validate_license.dll:	force $(TARGETDIR)/validate_license.dll
-	@rm -f $(TARGETDIR)/validate_license.exp
-
-$(OBJDIR)/mlworks_license.o:	mlworks_license.c
-	@$(COMPILE) $(COMPILEFLAGS) $@ $<
-
-

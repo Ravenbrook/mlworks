@@ -177,8 +177,6 @@ extern int standard_out_of_memory_dialog(unsigned long int attempt,
 					 size_t extent,
 					 size_t size);
 
-extern void check_elapsed_time(void);
-
 extern void display_simple_message_box(const char *message);
 
 extern mlval format_to_ml_string(const char *format, ...);

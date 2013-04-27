@@ -2080,7 +2080,6 @@ void gc(size_t space_required, mlval closure)
   size_t modified = 0;
 
   ++in_GC;
-  check_elapsed_time();
   start = user_clock();
 
   /* Is this the initial call to the GC?  If so, set up the heap */
