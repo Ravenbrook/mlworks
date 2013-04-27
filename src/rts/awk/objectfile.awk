@@ -4,7 +4,7 @@ BEGIN {
 	print " * Object file opcodes";
 	print " * Machine generated file : DO NOT ALTER";
 	print " * Generated from : objectfile.h";
-	print " * Copyright (c) 1991 Harlequin Ltd.";
+	print " * Copyright 2013 Ravenbrook Limited";
 	print " *)";
 	print ("\nsignature OBJECTFILE =");
 	print ("sig");

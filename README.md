@@ -4,6 +4,13 @@ MLWorks is a compiler and interactive development environment for the
 Standard ML language, developed by Harlequin in the 1990s and now owned by
 Ravenbrook Limited.
 
+The main project page is at http://www.ravenbrook.com/project/mlworks/
+
+MLWorks does not currently build.  The compiler is written in Standard
+ML and should be easy to bootstrap.  The run-time system is a mixture of
+C and assembler but is neither large nor complicated, and should be easy
+to port.  Get involved!
+
 **IMPORTANT**: This is a temporary Git repository starting at the latest
 revision of the MLWorks sources, and does not include the full version
 history. This repository will be *replaced* by one with a full history,
