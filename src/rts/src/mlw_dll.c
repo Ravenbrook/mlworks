@@ -87,7 +87,6 @@
 
 #include "values.h"
 #include "profiler.h"
-#include "license.h"
 #include "options.h"
 #include "mem.h"
 #include "gc.h"

@@ -75,10 +75,4 @@ extern int awaiting_x_event;
 /* Called when starting up the runtime */
 extern void x_init(void);
 
-/* Called when we send a message to the podium which must get seen */
-extern void x_reveal_podium(void);
-
-/* Called when we reacquire a network license and no longer want the podium on view */
-extern void x_hide_podium(void);
-
 #endif

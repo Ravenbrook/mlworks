@@ -93,12 +93,6 @@ extern void signals_init (void);
 
 extern void signals_finalise (void);
 
-/* This item used by the licenser. It should set up a real-time timer
- * with the specified interval, which will call refresh_license on
- * each tick. See license.h */
-
-extern void signal_license_timer (int /* license interval */);
-
 /* These values and functions control the interval timer. The actions
  * when it goes off are determined by whether we are profiling and
  * whether we are pre-empting threads. If we are profiling, the

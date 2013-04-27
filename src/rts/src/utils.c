@@ -194,8 +194,6 @@
 #include "extensions.h"
 #include "exceptions.h"
 #include "allocator.h"
-#include "license.h"
-#include "mlw_mklic.h"
 #include "environment.h"
 
 #include <stdio.h>
@@ -373,42 +371,6 @@ int standard_out_of_memory_dialog(unsigned long int attempt,
   }
 }
 
-
-/* Bounded elapsed time */
-
-#define COUNT_DOWN  5        /* MINUTES */
-#define MAX_ELAPSED_TIME 60  /* MINUTES */
-
-static time_t  start_time = 0;
-static int     max_elapsed_time = (MAX_ELAPSED_TIME - COUNT_DOWN) * 60;
-static int     count_down = COUNT_DOWN;
-
-void check_elapsed_time(void)
-{
-  if ((license_edition != PERSONAL) && !act_as_free) /* Do nothing */;
-  else if (start_time == 0) start_time = time(NULL);
-  else {
-    long so_far;
-    so_far = (long)(difftime(time(NULL), start_time));
-    if (so_far > max_elapsed_time) {
-      char message[80];
-      if (count_down > 0) {
-        if (count_down == 1) 
-          sprintf(message, "This session of Free MLWorks will stop in 1 minute\n");
-        else
-          sprintf(message, "This session of Free MLWorks will stop in %d minutes\n",
-                           count_down);
-        display_simple_message_box(message);
-        count_down--;
-        start_time = time(NULL);
-        max_elapsed_time = 60; 
-      } else {
-        display_simple_message_box("Free MLWorks time limit has been exceeded\n");
-        exit(EXIT_FAILURE);
-      }
-    }   
-  }
-}
 
 mlval format_to_ml_string(const char *format, ...)
 {

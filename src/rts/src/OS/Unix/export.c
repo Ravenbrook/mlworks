@@ -103,8 +103,6 @@
 #include "export.h"
 #include "exec_delivery.h"
 #include "utils.h"
-#include "license.h"
-#include "mlw_mklic.h"
 
 
 /* The child process is in charge of saving the image/executable to disk.

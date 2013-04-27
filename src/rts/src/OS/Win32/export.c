@@ -100,8 +100,6 @@
 #include "ansi.h"
 #include "exec_delivery.h"
 #include "utils.h"
-#include "license.h"
-#include "mlw_mklic.h"
 
 #include <string.h>
 #include <stdio.h>
