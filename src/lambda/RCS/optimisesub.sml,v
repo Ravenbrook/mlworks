@@ -1,0 +1,163 @@
+head	1.5;
+access;
+symbols
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.5
+	Ten15_release_21-08-91:1.2
+	Ten15_release_19-08-91:1.1;
+locks; strict;
+
+
+1.5
+date	91.10.22.12.51.39;	author davidt;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	91.09.04.11.43.12;	author davida;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.08.27.15.20.57;	author davida;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.19.13.50.17;	author davida;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.08.06.14.52.31;	author davida;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	91.10.22.12.51.39;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Subfunctions for the second phase of lambda-optimisation.
+@
+
+
+1.5
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@(*       _optimisesub.sml         *)
+(* Sub-phases in lambda-optimiser *)
+
+(*
+$Log:	optimisesub.sml,v $
+Revision 1.4  91/09/04  11:43:12  davida
+Added heuristic parameter for constant folding map
+
+Revision 1.3  91/08/27  15:20:57  davida
+Removed select_lift
+
+Revision 1.2  91/08/19  13:50:17  davida
+Added constant folding.
+
+Revision 1.1  91/08/06  14:52:31  davida
+Initial revision
+
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "lambdatypes";
+
+signature OPTIMISESUB =
+  sig
+    structure LT : LAMBDATYPES
+
+    val max_map_fold_length : int ref
+
+    val common_subexpr_elim : LT.LambdaExp -> LT.LambdaExp
+    val fold_constants : LT.LambdaExp -> LT.LambdaExp
+  end;
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@d5 1
+a5 4
+$Log: optimisesub.sml,v $
+Revision 1.5  1991/10/22  12:51:39  davidt
+Replaced impossible exception with Crash.impossible calls.
+
+@
+
+
+1.4
+log
+@Added heuristic parameter for constant folding map
+@
+text
+@d6 3
+d25 2
+a26 2
+    sig
+	structure LT : LAMBDATYPES
+d28 1
+a28 1
+	exception impossible of string
+d30 3
+a32 5
+	val max_map_fold_length : int ref
+
+	val common_subexpr_elim : LT.LambdaExp -> LT.LambdaExp
+	val fold_constants : LT.LambdaExp -> LT.LambdaExp
+    end
+@
+
+
+1.3
+log
+@Removed select_lift
+@
+text
+@d6 3
+d26 2
+@
+
+
+1.2
+log
+@Added constant folding.
+@
+text
+@d6 3
+a24 1
+	val select_lift : LT.LambdaExp -> LT.LambdaExp
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 3
+a7 1
+$Log$
+d9 1
+d19 2
+d23 1
+@

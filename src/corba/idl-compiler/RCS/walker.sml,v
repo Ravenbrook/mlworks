@@ -1,0 +1,171 @@
+head	1.4;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.4.1
+	MLWorks_21c0_1999_03_25:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	99.03.10.15.49.32;	author clive;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	99.03.09.15.04.33;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.03.09.09.23.59;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.03.17.24.18;	author clive;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	99.04.01.17.52.59;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #170104]
+Walk the parse tree, accumulating an environment, calling a user function at each point
+@
+
+
+1.4
+log
+@Export lookup_scoped_name
+@
+text
+@(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/walker.sml,v 1.3 1999/03/09 15:04:33 clive Exp $" *)
+
+require "absyn";
+
+signature WALKER =
+ 
+sig
+
+  structure Absyn : ABSYN
+
+  datatype scope_discriminator = INTERFACE | MODULE | FORWARD | STRUCT | OPERATION | MEMBER | ENUM | ENUM_MEMBER 
+				| EXCEPTION | ATTRIBUTE of bool | CONST | TYPEDEF
+
+  datatype 'a environment_element = 
+    non_scoped of { name : string, path : string list, disc : scope_discriminator, data : 'a }  
+  | dataless_non_scoped of { name : string }
+  | scoped     of { name : string, path : string list, disc : scope_discriminator, 
+			data : 'a, environment : 'a environment_element list }
+ 
+  type ''a environment = ''a environment_element list
+
+  type current_walker_state = { include_path : string list, current_pragmas : string list, depth : int }
+ 
+  type ''a data_generator =
+     (Absyn.definition              	(* The definition concerned *)
+	* Absyn.type_description    	(* a type if relevant (attribute, tyepdef or const) *)
+	* current_walker_state      	(* state of the walking at the moment (includes and pragmas) *)
+	* ''a environment 		(* Things we're going to add to the environment *)
+	* ''a environment 		(* Environment before this construct *)
+	* string list 			(* path to this definition *)
+	* Absyn.const_exp_def list	(* array values   *)
+       -> ''a)
+
+  val walk_the_tree :
+    Absyn.definition list * 
+    ''a environment * 
+    ''a data_generator
+   -> ''a environment
+
+  exception LookupFailed of string list
+
+  val lookup_scoped_name : Absyn.scoped_name * ''a environment -> ''a environment_element
+
+end
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/walker.sml,v 1.4 1999/03/10 15:49:32 clive Exp $" *)
+@
+
+
+1.3
+log
+@[Bug #170104]
+Keep information about include path and pragma status
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/walker.sml,v 1.2 1999/03/09 09:23:59 clive Exp $" *)
+d12 1
+a12 1
+				| EXCEPTION | ATTRIBUTE | CONST | TYPEDEF
+d39 4
+@
+
+
+1.2
+log
+@[Bug #170104]
+Call the walker to emit some code
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/walker.sml,v 1.1 1999/03/03 17:24:18 clive Exp $" *)
+d11 2
+a12 1
+  datatype scope_discriminator = FORWARD | INTERFACE | MODULE | STRUCT | OPERATION | MEMBER | ENUM | ENUM_MEMBER | EXCEPTION
+d15 1
+a15 1
+    non_scoped of { name : string, disc : scope_discriminator, data : 'a }  
+d17 2
+a18 1
+  | scoped     of { name : string, disc : scope_discriminator, data : 'a, environment : 'a environment_element list }
+d21 2
+d24 10
+d35 3
+a37 4
+
+    Absyn.definition list * ''a environment * 
+     (Absyn.definition * ''a environment * ''a environment * string list -> ''a) *
+     (Absyn.definition * Absyn.type_description * ''a environment * Absyn.const_exp_def list -> ''a)
+@
+
+
+1.1
+log
+@new unit
+[Bug #170104]
+Walk the parse tree, accumulating an environment, calling a user function at each point
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/absyn.sml,v 1.1 1999/02/19 17:05:41 clive Exp $" *)
+d11 1
+a11 1
+  datatype scope_discriminator = INTERFACE | MODULE
+d14 2
+a15 1
+    non_scoped of { name : string, data : 'a }  
+d23 3
+a25 1
+     (Absyn.definition * ''a environment * ''a environment * string list -> ''a) -> ''a environment
+@

@@ -1,0 +1,188 @@
+head	1.6;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+
+
+1.6
+date	92.02.11.13.17.09;	author richard;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	91.11.19.14.53.06;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.17.11.31.34;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.10.11.06.52;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.23.11.52.39;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.18.12.21.21;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.02.11.13.17.09;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The MirFlow module traces the flow of control in a MirOptTypes.procedure
+and adds this information to the data structure. This is the structure.
+@
+
+
+1.6
+log
+@Changed the application of the Diagnostic functor to take the Text
+structure as a parameter.  See utils/diagnostic.sml for details.
+@
+text
+@(* __mirflow.sml the structure *)
+(*
+$Log: __mirflow.sml,v $
+Revision 1.5  1991/11/19  14:53:06  richard
+Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+
+Revision 1.4  91/10/17  11:31:34  richard
+Added Switches structure.
+
+Revision 1.3  91/10/10  11:06:52  richard
+Fixed debugging output to use Print module.
+
+Revision 1.2  91/09/23  11:52:39  richard
+Added crash module to dependencies.
+
+Revision 1.1  91/09/18  12:21:21  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/__text";
+require "../utils/__lists";
+require "../utils/__crash";
+require "__mirtypes";
+require "__miropttypes";
+require "__switches";
+require "../utils/_diagnostic";
+require "_mirflow";
+
+
+structure MirFlow_ = MirFlow(
+  structure MirTypes = MirTypes_
+  structure MirOptTypes = MirOptTypes_
+  structure Lists = Lists_
+  structure Crash = Crash_
+  structure Switches = Switches_
+  structure Diagnostic = Diagnostic( structure Text = Text_ )
+)
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 4
+Revision 1.6  1992/02/11  13:17:09  richard
+Changed the application of the Diagnostic functor to take the Text
+structure as a parameter.  See utils/diagnostic.sml for details.
+
+@
+
+
+1.5
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d3 6
+a8 1
+$Log:	__mirflow.sml,v $
+d24 1
+a24 1
+require "../utils/__print";
+d40 1
+a40 1
+  structure Diagnostic = Diagnostic( structure Print = Print_ )
+@
+
+
+1.4
+log
+@Added Switches structure.
+@
+text
+@d4 3
+d25 1
+a33 1
+  structure Print = Print_
+d35 2
+a36 1
+);
+@
+
+
+1.3
+log
+@Fixed debugging output to use Print module.
+@
+text
+@d4 3
+d21 1
+d31 1
+@
+
+
+1.2
+log
+@Added crash module to dependencies.
+@
+text
+@d4 3
+d13 1
+d26 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log:$
+d11 1
+d21 1
+@

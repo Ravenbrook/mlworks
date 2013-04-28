@@ -1,0 +1,70 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	91.07.31.10.04.45;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.07.31.10.04.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Set the given name on the latest version
+@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/bin/csh
+# $Log$
+# Copyright (c) 1991 Harlequin Ltd.
+if ($#argv != 2) then
+  echo Usage: setname \<name\> \<filename\>
+  exit(1)
+endif
+set arg = `echo $argv[2]:t | sed -e 's/,v//'`
+#echo arg = $arg
+set tmpfile = /tmp/.setname$arg
+cat << EOF > $tmpfile
+/^head/{
+s/^head: *\([^ ]\)/\1/
+q
+}
+d
+EOF
+set name = `rlog $argv[2] | sed -f $tmpfile`
+echo rcs -q -N$argv[1]":$name" $argv[2] > $tmpfile
+/bin/csh $tmpfile
+/bin/rm -f $tmpfile
+
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 1
+a2 4
+# $Log: setname,v $
+# Revision 1.1  1991/07/31  10:04:45  jont
+# Initial revision
+#
+@

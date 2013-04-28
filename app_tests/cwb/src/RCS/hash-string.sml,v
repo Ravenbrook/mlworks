@@ -1,0 +1,90 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.42.59;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* hash-string.sml
+ *
+ * COPYRIGHT (c) 1992 by AT&T Bell Laboratories
+ *)
+
+structure HashString : sig
+
+    val hashString : string -> int
+
+  end = struct
+
+  (* A function to hash strings with (from the SML/NJ compiler) *)
+    local
+      val prime = 8388593 (* largest prime less than 2^23 *)
+      (* val base = 128 *)
+      fun scale i = Bits.lshift(i, 7)  (* multiply by base (128) *)
+    in
+    fun hashString str = let
+        val l = size str
+        in
+          case l
+            of 0 => 0
+             | 1 => ord str
+             | 2 => ordof(str,0) + scale(ordof(str, 1))
+             | 3 => ordof(str,0) + scale((ordof(str, 1) + scale(ordof(str, 2))))
+             | _ => let
+                fun loop (0,n) = n
+                  | loop (i,n) = let
+                      val i = i-1
+                      val n' = ((scale n) + ordof(str,i)) 
+                      in
+                        loop (i, (n' - prime * (n' quot prime)))
+                      end
+                in
+                  loop (l,0)
+                end
+        end
+    end (* local *)
+          
+  end (* HashString *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

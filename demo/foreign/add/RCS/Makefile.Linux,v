@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.10.06.12.29.33;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #70184]
+Port FI demos to Linux
+@
+
+
+1.1
+log
+@new unit
+[Bug #70184]
+Port FI demos to Linux
+@
+text
+@# Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# Solaris makefile
+#
+# Revision Log
+# ------------
+# $Log: foreign:add:Makefile.Solaris,v $
+# Revision 1.3  1997/05/20  09:00:14  stephenb
+# [Bug #30121]
+# Add a default value for MLWORKS_INCLUDE.
+#
+# Revision 1.2  1997/05/12  15:43:43  stephenb
+# [Bug #20035]
+# Add a 'clean' target.
+#
+# Revision 1.1  1997/04/29  15:27:23  stephenb
+# new unit
+# [Bug #30030]
+#
+
+# As default, mlw_ci.h lives in the enclosing (..) directory.
+# Alter this if mlw_ci.h is somewhere else.
+#
+MLWORKS_INCLUDE=..
+
+CC=gcc
+#CC=acc
+
+CFLAGS=-I$(MLWORKS_INCLUDE)
+
+MAKE_MLWorks_LIB= ld -G -Bdynamic -ldl -lelf
+
+OBJ= add.o add_stub.o
+
+.PHONEY: all clean
+
+all:	add_stub.so
+
+add_stub.so:	$(OBJ)
+	$(MAKE_MLWorks_LIB) -o $@@ $(OBJ)
+
+clean:
+	rm -f $(OBJ) add_stub.so
+@

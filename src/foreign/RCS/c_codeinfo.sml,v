@@ -1,0 +1,163 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.03.28.14.14.03;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.09.08.14.00.15;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.09.07.22.45.38;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Rename due to reorganisation & documentation of FI.
+@
+
+
+1.3
+log
+@Sharing changes
+@
+text
+@(*  ==== FOREIGN INTERFACE : C HEADERS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: c_codeinfo.sml,v $
+ * Revision 1.2  1995/09/08  14:00:15  brianm
+ * Further modification for updates and general reorganisation.
+ *
+# Revision 1.1  1995/09/07  22:45:38  brianm
+# new unit
+# Rename due to reorganisation & documentation of FI.
+#
+ *  Revision 1.1  1995/04/25  11:41:43  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "c_data";
+require "fi_types";
+
+signature C_CODEINFO =
+  sig
+
+    structure CData   : C_DATA
+    structure FITypes : FOREIGN_TYPES
+
+       sharing FITypes = CData.FITypes
+
+    type 'a box    = 'a FITypes.box
+    type name       = FITypes.name  
+    type filename   = FITypes.filename
+    type c_type     = CData.c_type
+
+  (* DECLARATION ENTRY *)
+
+    datatype c_decl_entry =
+        UNDEF_DI
+    |
+        VAR_DI of { name : name, ctype : c_type box }
+    |
+        CODE_DI of { name   : name,
+                     source : c_type list box,
+                     target : c_type box }
+    |
+        TYPE_DI of { name : name,
+                     defn : c_type box,
+                     size : int box }
+    |
+        CONST_DI of { name : name, ctype : c_type box }
+
+
+    (* C CODEINFO operations *)
+
+    type c_codeinfo
+
+    val new_codeinfo      : unit -> c_codeinfo
+
+    val lookup_entry : c_codeinfo -> name -> c_decl_entry
+    val def_entry    : c_codeinfo * c_decl_entry -> unit
+    val hide_entry   : c_codeinfo * name -> unit
+
+    val show_entries : c_codeinfo -> c_decl_entry list
+
+    val elaborate_type : c_codeinfo -> (c_type -> c_type)
+
+    val load_header : filename -> c_codeinfo
+
+  end; (* signature C_CODEINFO *)
+@
+
+
+1.2
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d12 3
+d37 4
+a40 10
+    type 'a box
+    type name
+    type filename
+    type c_type
+
+       sharing type box   = FITypes.box
+       sharing type name       = FITypes.name  
+       sharing type filename   = FITypes.filename
+       sharing type c_type     = CData.c_type
+
+@
+
+
+1.1
+log
+@new unit
+Rename due to reorganisation & documentation of FI.
+@
+text
+@d11 5
+a15 1
+ *  $Log: c_sig.sml,v $
+d26 1
+a26 1
+signature C_SIGNATURE =
+d45 1
+a45 1
+  (* SIGNATURE ENTRY *)
+d63 1
+a63 1
+    (* C SIGNATURE operations *)
+d75 2
+d79 1
+a79 1
+  end; (* signature C_SIGNATURE *)
+@

@@ -1,0 +1,114 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	91.06.20.13.02.40;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.06.20.13.02.40;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Accurate writing of timestamps of files
+for RCS
+@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+ * writetime.c
+ * Set the time stamp of a file
+ * $Log$
+ * Copyright (c) 1991 Harlequin Ltd.
+ * 
+ */
+
+#include <sys/types.h>
+#include <sys/time.h>
+#include <stdio.h>
+#include <errno.h>
+#include <ctype.h>
+
+static int get_value(string_value)
+char **string_value;
+{
+char ch1 = **string_value,
+     ch2 = (*string_value)[1];
+if (ch1 < 0 || ch2 < 0 || !isdigit(ch1) || !isdigit(ch2)) {
+  fprintf(stderr, "Bad time value %s\n", string_value);
+  exit(1);
+}
+*string_value += 3;
+return 10*(ch1 - '0') + ch2 - '0';
+}
+
+int main(argc, argv)
+int argc;
+char *argv[];
+{
+struct tm the_time;
+int retc;
+char *arg = argv[2];
+time_t timep[2];
+if (argc != 3) {
+  fprintf(stderr,
+    "Wrong number of parameters, usage writetime <file> <time>\n");
+  exit(1);
+}
+if (strlen(arg) < 17) {
+  fprintf(stderr, "Time argument '%s' not long enough\n", arg);
+  exit(1);
+}
+the_time.tm_year = get_value(&arg);
+the_time.tm_mon = get_value(&arg)-1; /* Start at zero!! */
+the_time.tm_mday = get_value(&arg);
+the_time.tm_hour = get_value(&arg);
+the_time.tm_min = get_value(&arg);
+the_time.tm_sec = get_value(&arg);
+/*
+printf("The time = '%d.%d.%d.%d.%d.%d'\n", the_time.tm_year, the_time.tm_mon, the_time.tm_mday, the_time.tm_hour, the_time.tm_min, the_time.tm_sec);
+*/
+*timep = timegm(&the_time);
+timep[1] = *timep;
+retc = utime(argv[1], timep);
+if (retc == 0) {
+  exit(0);
+} else {
+  perror(argv[0]);
+  exit(1);
+};
+}
+
+/* End writetime.c */
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d4 1
+a4 4
+ * $Log: writetime.c,v $
+ * Revision 1.1  1991/06/20  13:02:40  jont
+ * Initial revision
+ *
+@

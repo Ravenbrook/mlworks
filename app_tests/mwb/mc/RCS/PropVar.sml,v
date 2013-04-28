@@ -1,0 +1,67 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.13.22.23;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.10.17.12.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+functor PropVar(Agent: McAGENT):PROPVAR =
+struct
+
+  structure A = Agent
+
+  datatype propvar = mk_propvar of int
+
+  fun mkstr (mk_propvar n) = "P"^(makestring n)
+
+  fun eq (mk_propvar n) (mk_propvar m) = n=m
+
+  fun next l =
+        mk_propvar((McList.max (fn x => fn y => x<=y)
+             (map (fn (mk_propvar n) => n) l) 0) + 1)
+
+end; (* PropVar *)
+
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

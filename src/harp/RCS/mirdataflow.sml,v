@@ -1,0 +1,348 @@
+head	1.8;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.8
+	mlworks-28-01-1994:1.8
+	Release:1.8
+	mlworks-beta-01-09-1993:1.8
+	MLWorks-1-0-4-29/01/1993:1.8
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.8;
+locks; strict;
+
+
+1.8
+date	91.09.17.15.18.21;	author richard;	state Exp;
+branches
+	1.8.1.1;
+next	1.7;
+
+1.7
+date	91.09.16.10.00.53;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.09.13.13.08.59;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.09.11.14.39.15;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.09.10.15.11.41;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.10.09.34.16;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.06.15.52.37;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.05.11.24.05;	author richard;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	91.09.17.15.18.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Data flow analysis module for MIR code. This is the signature.
+@
+
+
+1.8
+log
+@Module split up. Expression analysis moved to mirexpression.sml.
+The datatypes for available expressions are no longer exhibited to the
+outside world.
+@
+text
+@(* mirdataflow.sml the signature *)
+
+(*
+$Log:	mirdataflow.sml,v $
+Revision 1.7  91/09/16  10:00:53  richard
+Narrowed the range of expressions covered by LOADEXP, as REFS are
+no longer optimised.
+
+Revision 1.6  91/09/13  13:08:59  richard
+Copy propagation made more distinct from available expression
+substitution.
+Consolidation and documentation of code.
+
+Revision 1.5  91/09/11  14:39:15  richard
+Further development of data structures. See functor.
+
+Revision 1.4  91/09/10  15:11:41  richard
+Further work on data structure related to available expression
+analysis. See functor changes.
+
+Revision 1.3  91/09/10  09:34:16  richard
+Implemented function to find live variables, with large table.
+Altered the way in which available expressions are matched.
+Partial implementation of function to perform analysis of an entire
+procedure.
+
+Revision 1.2  91/09/06  15:52:37  richard
+Data structures modified. Started matching for available
+expressions and live variables.
+
+Revision 1.1  91/09/05  11:24:05  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "miropttypes";
+
+
+signature MIRDATAFLOW = 
+sig
+
+  structure MirOptTypes	: MIROPTTYPES
+
+
+  (*  === PERFORM DATA FLOW ANALYSIS ===
+   *
+   *  This function must be passed a list of MirTypes.blocks which
+   *  consists of a complete procedure. The block containing the
+   *  procedure entry instruction must be the first.
+   *)
+
+  val analyse : MirOptTypes.procedure -> MirOptTypes.procedure
+
+end
+@
+
+
+1.8.1.1
+log
+@Fork for bug fixing
+@
+text
+@d4 1
+a4 6
+$Log: mirdataflow.sml,v $
+Revision 1.8  1991/09/17  15:18:21  richard
+Module split up. Expression analysis moved to mirexpression.sml.
+The datatypes for available expressions are no longer exhibited to the
+outside world.
+
+@
+
+
+1.7
+log
+@Narrowed the range of expressions covered by LOADEXP, as REFS are
+no longer optimised.
+@
+text
+@d5 4
+d37 1
+a37 1
+require "mirtypes";
+d39 1
+d43 1
+a43 2
+  structure MirTypes : MIRTYPES
+  structure Set      : SET
+a44 1
+  (*  === DATA TYPES ===  *)
+a45 53
+  (*  == Data structure for Available Expression analysis ==
+   *
+   *  BINARYEXP and UNARYEXP denote the use of binary or unary
+   *  operators. LOADEXP denotes the equality of a register and a
+   *  memory location, which is more useful in ML than in imperative
+   *  languages.
+   *)
+
+  datatype expression =
+    COPY of MirTypes.gp_operand |
+    BINARYEXP of MirTypes.binary_op *
+                 MirTypes.gp_operand *
+		 MirTypes.gp_operand |
+    UNARYEXP of MirTypes.unary_op * MirTypes.gp_operand |
+    MEMALIAS of MirTypes.reg_operand *
+	        MirTypes.gp_operand
+
+  datatype exp_set = EXPSET of (MirTypes.any_register * expression) list
+
+
+  (*  == Data structure for Live Variable Analysis ==
+   *
+   *  Three sets of registers are used. The births are the registers
+   *  defined by an operation, marriages are those referenced, and
+   *  deaths are those which are not used again and are therefore dead
+   *  after the operation.
+   *)
+
+  datatype reg_set =
+    REGSET of
+      MirTypes.any_register Set.Set *	(* Births *)
+      MirTypes.any_register Set.Set *   (* Marriages *)
+      MirTypes.any_register Set.Set;    (* Deaths *)
+
+
+  (*  == Annotated code ==
+   *
+   *  This is the analog of MirTypes.block, except that each opcode
+   *  has available expressions and live variables attached. The block
+   *  also has the set of expressions available on entry attached. The
+   *  procedure type also records the tag of the entry block, because
+   *  the ordering of the blocks may be changed during optimisation.
+   *)
+
+  datatype block = BLOCK of
+    MirTypes.tag *		(* Label for the block *)
+    exp_set *			(* Available expressions on entry *)
+    (MirTypes.opcode * exp_set * reg_set) list
+				(* Opcodes with dataflow information *)
+
+  datatype procedure = PROC of MirTypes.tag * block list
+
+
+d53 1
+a53 1
+  val analyse : MirTypes.block list -> procedure
+@
+
+
+1.6
+log
+@Copy propagation made more distinct from available expression
+substitution.
+Consolidation and documentation of code.
+@
+text
+@d5 5
+d57 2
+a58 3
+    LOADEXP of MirTypes.store_op *
+               MirTypes.reg_operand *
+	       MirTypes.gp_operand
+@
+
+
+1.5
+log
+@Further development of data structures. See functor.
+@
+text
+@d5 3
+d36 3
+a38 1
+  (*  Data structure for Available Expression analysis
+d40 4
+a43 3
+   *  A set of available expressions is attached to each opcode. The
+   *  structure used is bound_exp of a register and an expression.
+   *  NOTE: Very few expressions implemented yet.
+d47 1
+d59 1
+a59 1
+  (*  Data structure for Live Variable Analysis
+d61 4
+a64 4
+   *  A set of live variables is attached to each opcode. The final
+   *  arrangement is undecided. At the moment it's a set of
+   *  MirTypes.any_register, but will probably need annotating with
+   *  other information.
+d74 1
+a74 1
+  (*  Annotated code block
+d77 4
+a80 1
+   *  has available expressions and live variables attached.
+d92 6
+a97 1
+  (* Perform data flow analysis of MIR code blocks *)
+@
+
+
+1.4
+log
+@Further work on data structure related to available expression
+analysis. See functor changes.
+@
+text
+@d5 4
+d44 4
+a47 1
+    UNARYEXP of MirTypes.unary_op * MirTypes.gp_operand
+d74 2
+a75 1
+    MirTypes.tag *
+d77 1
+@
+
+
+1.3
+log
+@Implemented function to find live variables, with large table.
+Altered the way in which available expressions are matched.
+Partial implementation of function to perform analysis of an entire
+procedure.
+@
+text
+@d5 6
+d42 1
+a42 4
+  datatype bound_exp =
+    BOUNDEXP of MirTypes.any_register * expression
+
+  datatype exp_set = EXPSET of bound_exp Set.Set
+@
+
+
+1.2
+log
+@Data structures modified. Started matching for available
+expressions and live variables.
+@
+text
+@d5 4
+d31 4
+a34 1
+    COPY of MirTypes.gp_operand
+d67 1
+a67 1
+  datatype procedure = PROC of block list
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log:$
+d19 6
+a24 1
+  datatype reg_set = REGSET of MirTypes.any_register Set.Set
+d26 30
+d58 1
+a58 1
+    (MirTypes.opcode * reg_set) list
+d60 3
+d65 1
+a65 1
+  val analyse : MirTypes.block list -> block list
+@

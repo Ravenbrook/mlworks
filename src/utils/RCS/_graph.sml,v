@@ -1,0 +1,632 @@
+head	1.7;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.7;
+locks; strict;
+
+
+1.7
+date	92.08.04.11.10.47;	author jont;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	91.10.15.12.32.35;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.14.14.56.09;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.08.11.16.29;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.02.09.39.02;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.01.14.24.32;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.27.14.43.51;	author richard;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	92.08.04.11.10.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Manipulation and colouring of undirected graphs.
+@
+
+
+1.7
+log
+@Removed an unnecessary parameter
+@
+text
+@(* graph.sml the functor *)
+
+(* $Log: _graph.sml,v $
+Revision 1.6  1991/10/15  12:32:35  richard
+Added add_one_to_many and add_many_to_many. Fixed bug in
+precolouring.
+
+Revision 1.5  91/10/14  14:56:09  richard
+Added precolouring and forbidden colours for vertices.
+
+Revision 1.4  91/10/08  11:16:29  richard
+Changed to use two representations which are efficient in different
+circumstances.
+
+Revision 1.3  91/10/02  09:39:02  richard
+Added facilities for directed graphs.
+
+Revision 1.2  91/10/01  14:24:32  richard
+Converted code to use a more time-efficient table representation
+rather than simple lists.
+
+Revision 1.1  91/09/27  14:43:51  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "set";
+require "lists";
+require "table";
+require "graph";
+
+
+functor Graph (
+  structure Set : SET
+  structure Lists : LISTS
+  structure Table : TABLE
+) : GRAPH =
+
+  struct
+
+
+    structure Table = Table
+    structure Set = Set
+
+
+
+    (*  === DATA STRUCTURE ===
+     *
+     *  A graph can have two representations: an list of edges or a
+     *  lookup table associating a vertex with adjacent vertices. The
+     *  former is quick to build and the latter is quick to scan.
+     *)
+
+    datatype ''a T =
+      LIST of (''a * ''a) list
+    | TABLE of (''a, ''a Set.Set) Table.table
+
+
+
+    (*  === GRAPH CONSTRUCTION ===  *)
+
+
+    (*  == Make an empty graph ==
+     *
+     *  Given an irreflexive ordering function on vertices, this
+     *  function returns a graph with no vertices or edges. Two
+     *  representations are available: BUILDABLE and SCANNABLE. The
+     *  former is efficient to build. A SCANNABLE graph requires an
+     *  ordering function.
+     *)
+
+    datatype ''a representation =
+      BUILDABLE
+    | SCANNABLE of (''a * ''a -> bool)
+
+    fun empty BUILDABLE = LIST []
+      | empty (SCANNABLE ordering) =
+	TABLE
+	(Table.empty_table (Table.TableSpec {order = ordering, eq = op=}))
+
+
+    (* Add directed edge *)
+
+    fun add_directed_edge (LIST list, edge) = LIST (edge :: list)
+
+      | add_directed_edge (TABLE table, (vertex, vertex')) =
+      let
+	val edges =
+	  Table.lookup (vertex, table)
+	  handle Table.Lookup => Set.empty_set
+      in
+	TABLE
+	(Table.overwrite ((vertex, Set.add_member (vertex', edges)), table))
+      end
+
+
+    (* Add edge to graph *)
+
+    fun add_edge (graph, (vertex, vertex')) =
+      add_directed_edge (add_directed_edge (graph, (vertex', vertex)),
+			 (vertex, vertex'))
+
+    fun add_one_to_many add_function (graph, vertex, vertices') =
+      let
+	fun add (graph, []) = graph
+	  | add (graph, vertex'::vertices') =
+	    add (add_function (graph, (vertex,vertex')), vertices')
+      in
+	add (graph, vertices')
+      end
+
+    fun add_many_to_many add_function (graph, vertices, vertices') =
+      let
+	fun add (graph, []) = graph
+	  | add (graph, vertex::vertices) =
+	    add (add_one_to_many add_function (graph, vertex, vertices'),
+		 vertices)
+      in
+	add (graph, vertices)
+      end
+
+
+    (* Return a set of vertices *)
+
+    fun vertices (TABLE table) =
+        Set.list_to_set (map #1 (Table.alist_of_table table))
+
+      | vertices (LIST list) =
+	Set.list_to_set ((map #1 list) @@ (map #2 list))
+
+
+    (* Return adjacent vertices *)
+
+    fun adjacent (vertex, TABLE table) =
+        (Table.lookup (vertex, table)
+	 handle Table.Lookup => Set.empty_set)
+
+      | adjacent (vertex, LIST list) =
+	let
+	  val l = map #2 (Lists.filterp (fn (v,_) => v=vertex) list)
+	  val r = map #1 (Lists.filterp (fn (_,v) => v=vertex) list)
+	in
+	  Set.list_to_set (l @@ r)
+	end
+	  
+
+    (*  == Convert graph representation ==
+     *
+     *  Coverts the graph to the representation given.
+     *)
+
+    fun convert BUILDABLE (done as LIST _) = done
+
+      | convert (SCANNABLE _) (done as TABLE _) = done
+
+      | convert (SCANNABLE ordering) (graph as LIST list) =
+	Lists.reducel add_directed_edge (empty (SCANNABLE ordering), list)
+
+      | convert BUILDABLE (graph as TABLE table) =
+	(*
+	 * For each vertex in the old graph:
+	 *   For each vertex' adjacent to it:
+	 *     Add a directed edge from vertex to vertex' in the new
+	 *     graph
+	 *)
+
+	Lists.reducel
+	(fn (new_graph, vertex) =>
+	 Lists.reducel
+	 (fn (new_graph', vertex') =>
+	  add_directed_edge (new_graph', (vertex, vertex')))
+	 (new_graph, Set.set_to_list (adjacent (vertex, graph))))
+	(empty BUILDABLE, Set.set_to_list(vertices graph))
+
+
+    (* Print graph *)
+
+    fun print (vertex_print, graph) =
+      Lists.to_string
+      (fn vertex =>
+       "(" ^ vertex_print vertex ^
+       ", {" ^ Set.set_print (adjacent (vertex, graph), vertex_print) ^ "})")
+      (Set.set_to_list(vertices graph))
+
+
+
+    (* At the moment there is a rather ropey implementation of the *)
+    (* greedy algorithm. This is only intended as a stop-gap while *)
+    (* other modules are written. *)
+
+    datatype colouring_algorithm =
+      PERFECT |
+      GREEDY |
+      NORCROFT
+
+    fun colours_near (vertex, graph, coloured) =
+      let
+	fun near (colours, []) = colours
+	  | near (colours, v::vs) =
+	    near (Table.lookup(v, coloured) :: colours, vs)
+	    handle Table.Lookup =>
+	      near (colours, vs)
+      in
+	near ([], Set.set_to_list (Table.lookup (vertex, graph)))
+      end
+
+
+    fun colour algorithm {graph as LIST _, colours, ordering,
+			  precoloured, forbidden} =
+        colour algorithm {graph = convert (SCANNABLE ordering) graph,
+			  colours = colours,
+			  ordering = ordering,
+			  precoloured = precoloured,
+			  forbidden = forbidden}
+
+      | colour _ {graph as TABLE table, colours, ordering,
+		  precoloured, forbidden} =
+        let
+
+	  fun c (coloured, failed, []) = (coloured, failed)
+
+	    | c (coloured, failed, vertex::vertices) =
+	      let
+		fun find_colours_for vertex =
+		  let
+		    val forbidden =
+		      Set.set_to_list(Table.lookup (vertex, forbidden))
+		      handle Table.Lookup => []
+		  in
+		    Lists.difference(colours,
+				     forbidden @@ 
+				     colours_near(vertex, table, coloured))
+		  end
+	      in
+		(Table.lookup (vertex, coloured);
+		 c (coloured, failed, vertices))
+
+		handle Table.Lookup =>
+		  case find_colours_for vertex
+		    of [] => c (coloured, vertex::failed, vertices)
+		     | colour::_ =>
+			 c (Table.add_new ((vertex, colour), coloured),
+			    failed,
+			    vertices)
+	      end
+
+
+	  val vertices = vertices graph
+
+	  (* First, colour all the precoloured vertices that actually *)
+	  (* exist in the graph. *)
+
+	  val precolour_table =
+	    let
+	      val precolour_alist =
+		Lists.filterp
+		(fn (vertex, _) => Set.is_member (vertex, vertices))
+		precoloured
+
+	      val tablespec = Table.TableSpec {order = ordering, eq = op=}
+	    in
+	      Table.table_of_alist (precolour_alist, tablespec)
+	    end
+
+	in
+	  (* Colour the remaining vertices *)
+
+	  c (precolour_table, [], Set.set_to_list(vertices))
+	end
+
+  end
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.7  1992/08/04  11:10:47  jont
+Removed an unnecessary parameter
+
+@
+
+
+1.6
+log
+@Added add_one_to_many and add_many_to_many. Fixed bug in
+precolouring.
+@
+text
+@d3 5
+a7 1
+(* $Log:	_graph.sml,v $
+a30 1
+require "crash";
+a34 1
+
+a37 2
+  structure Crash : CRASH
+
+@
+
+
+1.5
+log
+@Added precolouring and forbidden colours for vertices.
+@
+text
+@d4 3
+d104 8
+d113 11
+d225 6
+a230 13
+		val precolour = Table.lookup (vertex, precoloured)
+	      in
+		c (Table.add_new ((vertex, precolour), coloured),
+		   failed,
+		   vertices)
+	      end
+	      handle Table.Lookup =>
+		let
+		  val forbidden =
+		    Set.set_to_list(Table.lookup (vertex, forbidden))
+		    handle Table.Lookup => []
+
+		  val colours_allowed =
+d234 7
+a240 2
+		in
+		  case colours_allowed
+d246 1
+a246 1
+		end
+d248 18
+d267 3
+a269 3
+	  c (Table.empty_table (Table.TableSpec {order = ordering, eq = op=}),
+	     [],
+	     Set.set_to_list(vertices graph))
+@
+
+
+1.4
+log
+@Changed to use two representations which are efficient in different
+circumstances.
+@
+text
+@d4 4
+d187 7
+a193 4
+    fun colour algorithm (graph as LIST _, colours, ordering) =
+        colour algorithm (convert (SCANNABLE ordering) graph,
+			  colours,
+			  ordering)
+d195 2
+a196 1
+      | colour _ (graph as TABLE table, colours, ordering) =
+d203 1
+a203 3
+		val colours_allowed =
+		  Lists.difference(colours,
+				   colours_near(vertex, table, coloured))
+d205 3
+a207 6
+		case colours_allowed
+		  of [] => c (coloured, vertex::failed, vertices)
+		   | colour::_ =>
+		       c (Table.add_new ((vertex, colour), coloured),
+			  failed,
+			  vertices)
+d209 18
+@
+
+
+1.3
+log
+@Added facilities for directed graphs.
+@
+text
+@d4 3
+d43 3
+a45 3
+     *  This is a very naive implementation using Sets. A more
+     *  efficient verison using look-up tables or possibly refs may be
+     *  required to make colouring efficient.
+d48 3
+a50 2
+    type ''a T =
+      (''a, ''a Set.Set) Table.table	(* Vertices and edges from them *)
+a52 1
+    (* Construct an empty graph *)
+d54 1
+a54 3
+    fun empty ordering_function =
+      Table.empty_table (Table.TableSpec {order = ordering_function,
+					  eq = op=})
+d57 8
+a64 1
+    (* Add vertex to graph *)
+d66 3
+a68 3
+    fun add_vertex (vertex, graph : ''a T) =
+      Table.add_new ((vertex, Set.empty_set), graph)
+      handle Table.Exists => graph
+d70 4
+d75 1
+d78 3
+a80 1
+    fun add_directed_edge ((vertex, vertex'), graph : ''a T) =
+d83 1
+a83 1
+	  Table.lookup (vertex, graph)
+d86 2
+a87 1
+	Table.overwrite ((vertex, Set.add_member (vertex', edges)), graph)
+d93 3
+a95 3
+    fun add_edge ((vertex, vertex'), graph : ''a T) =
+      add_directed_edge ((vertex, vertex'),
+			 add_directed_edge ((vertex', vertex), graph))
+d98 9
+d109 3
+a111 3
+    fun adjacent (vertex, graph : ''a T) =
+      Table.lookup (vertex, graph)
+      handle Table.Lookup => Set.empty_set
+d113 8
+d122 4
+d127 24
+d153 6
+a158 11
+    fun print (vertex_print, graph : ''a T) =
+      let
+	val alist = Table.alist_of_table graph
+      in
+	Lists.to_string
+	(fn (vertex,edges) =>
+	 "(" ^ vertex_print vertex ^
+	 ", {" ^ Set.set_print(edges, vertex_print) ^
+	 "})")
+	alist
+      end
+d161 1
+d183 6
+a188 1
+    fun colour _ (graph : ''a T, colours) =
+a189 1
+	  val vertices = map #1 (Table.alist_of_table graph)
+d197 1
+a197 1
+				   colours_near(vertex, graph, coloured))
+a206 2
+	  val none_coloured = Table.empty_table (Table.spec graph)
+
+d208 3
+a210 1
+	  c (none_coloured, [], vertices)
+@
+
+
+1.2
+log
+@Converted code to use a more time-efficient table representation
+rather than simple lists.
+@
+text
+@d4 4
+d34 1
+d63 1
+a63 1
+    (* Add edge to graph *)
+d65 1
+a65 1
+    fun add_edge (edge as (vertex, vertex'), graph : ''a T) =
+a69 4
+
+	val edges' =
+	  Table.lookup (vertex', graph)
+	  handle Table.Lookup => Set.empty_set
+d71 1
+a71 5
+	Table.overwrite
+	((vertex, Set.add_member (vertex', edges)),
+	 Table.overwrite
+	 ((vertex', Set.add_member (vertex, edges')),
+	  graph))
+d73 15
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+(* $Log$
+d41 1
+a41 3
+      (''a * ''a -> bool) *	(* Ordering function *)
+      ''a Set.Set *		(* Vertices *)
+      (''a * ''a) Set.Set	(* Edges *)
+d47 2
+a48 1
+      (ordering_function, Set.empty_set, Set.empty_set) : ''a T
+d53 3
+a55 2
+    fun add_vertex (vertex, (order, vertices, edges) : ''a T) =
+      (order, Set.add_member(vertex, vertices), edges)
+d60 1
+a60 2
+    fun add_edge (edge as (vertex, vertex'),
+		  graph as (order, vertices, edges) : ''a T) =
+d62 7
+a68 5
+	val ordered_edge =
+	  if order (vertex, vertex') then
+	    edge
+	  else
+	    (vertex', vertex)
+d70 5
+a74 4
+	if Set.is_member(ordered_edge, edges) then
+	  graph
+	else
+	  (order, vertices, Set.add_member(ordered_edge, edges))
+d80 11
+a90 7
+    fun print (vertex_print, (_, vertices, edges) : ''a T) =
+      "( {" ^
+      Set.set_print(vertices, vertex_print) ^
+      "}, {" ^
+      Set.set_print(edges, fn (v1,v2) =>
+		             vertex_print v1 ^ " - " ^ vertex_print v2) ^
+      "} )"
+d102 1
+a102 1
+    fun colours_near (vertex, edges, coloured) =
+d110 1
+a110 4
+	near ([],
+	      map
+	      (fn (v1,v2) => if v1=vertex then v2 else v1)
+	      (Lists.filterp (fn (v1,v2) => v1=vertex orelse v2=vertex) edges))
+d114 3
+a116 3
+    fun colour _ ((order, vertices, edges) : ''a T, colours) =
+	let
+	  val edge_list = Set.set_to_list edges
+d124 1
+a124 1
+				   colours_near(vertex, edge_list, coloured))
+d134 1
+a134 2
+	  val none_coloured =
+	    Table.empty_table (Table.TableSpec {order = order, eq = op=})
+d137 1
+a137 1
+	  c (none_coloured, [], Set.set_to_list vertices)
+@

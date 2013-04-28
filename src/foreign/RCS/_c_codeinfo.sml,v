@@ -1,0 +1,369 @@
+head	1.4;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.4
+	MLWorks_Beta_1996_05_31:1.4
+	MLWorks_Beta_1996_05_30:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.05.16.14.11.06;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.04.18.16.55.45;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.09.08.14.00.15;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.09.07.22.46.46;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Rename due to reorganisation & documentation of FI.
+@
+
+
+1.4
+log
+@Removing dependency on Crash etc. for beta release.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C HEADERS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _c_codeinfo.sml,v $
+ * Revision 1.3  1996/04/18  16:55:45  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.2  1995/09/08  14:00:15  brianm
+ * Further modification for updates and general reorganisation.
+ *
+ * Revision 1.1  1995/09/07  22:46:46  brianm
+ * new unit
+ * Rename due to reorganisation & documentation of FI.
+ *
+ *  Revision 1.1  1995/04/25  11:31:57  brianm
+ *  new unit
+ *  New file.
+ *
+ *)
+
+
+require "../utils/lists";
+
+require "../basis/__general";
+
+require "c_data";
+require "fi_codeinfo";
+
+require "c_codeinfo";
+
+functor CCodeInfo(
+
+   structure CData       : C_DATA
+   structure FICodeInfo  : FOREIGN_CODEINFO
+   structure Lists       : LISTS
+) : C_CODEINFO =
+  struct
+
+    open General
+
+    structure CData = CData
+    structure FITypes = CData.FITypes
+    open FITypes
+    open CData
+
+    type c_type = CData.c_type
+
+  (* Mapping *)
+
+    type 'l_type foreign_codeinfo = 'l_type FICodeInfo.foreign_codeinfo
+
+    val FInew_codeinfo  =  FICodeInfo.new_codeinfo
+    val FIlookup_entry  =  FICodeInfo.lookup_entry 
+    val FIdef_entry     =  FICodeInfo.def_entry 
+    val FIhide_entry    =  FICodeInfo.hide_entry 
+    val FIshow_entries  =  FICodeInfo.show_entries
+
+    val unzip    =  Lists.unzip
+    val iterate  =  Lists.iterate
+    val member   =  Lists.member
+    val tl       =  Lists.tl
+
+    val extract_default  =  fn a => fn x => General.getOpt(x,a)
+
+  (* CODEINFO ENTRY *)
+
+    datatype c_decl_entry =
+        UNDEF_DI
+    |
+        VAR_DI of { name : name, ctype : c_type box }
+    |
+        CODE_DI of { name   : name,
+                     source : c_type list box,
+                     target : c_type box }
+    |
+        TYPE_DI of { name : name,
+                     defn : c_type box,
+                     size : int box }
+    |
+        CONST_DI of { name : name, ctype : c_type box }
+
+
+
+    (* C CODEINFO operations *)
+
+    abstype c_codeinfo = AC of c_decl_entry foreign_codeinfo
+    with
+
+       val new_codeinfo : unit -> c_codeinfo = fn () => AC(FInew_codeinfo())
+
+       val lookup_entry : c_codeinfo -> string -> c_decl_entry =
+	   fn (AC(cinfo)) => fn (s) =>
+	      extract_default UNDEF_DI (FIlookup_entry(cinfo,s))
+
+
+       local
+          exception NameOfEntry
+       in
+	  fun name_of_entry(UNDEF_DI)             = raise NameOfEntry
+	    | name_of_entry(VAR_DI{name, ...})    = name
+	    | name_of_entry(CODE_DI{name, ...})   = name
+	    | name_of_entry(TYPE_DI{name, ...})   = name
+	    | name_of_entry(CONST_DI{name, ...})  = name
+       end
+
+       val def_entry    : c_codeinfo * c_decl_entry -> unit =
+	   fn (_,UNDEF_DI) => ()
+	    | (AC(cinfo),ent) =>
+		let val str = name_of_entry(ent)
+		in
+		    FIdef_entry(cinfo,(str,ent))
+		end
+
+       val hide_entry   : c_codeinfo * string -> unit =
+	   fn (AC(cinfo),str) => FIhide_entry(cinfo,str)
+
+       val show_entries : c_codeinfo -> c_decl_entry list =
+	   fn (AC(cinfo)) => map (fn (_,ent) => ent) (FIshow_entries cinfo)
+
+       local
+          exception LoadHeaderUnimplemented
+       in
+          val load_header : filename -> c_codeinfo =
+	      fn (_) => raise LoadHeaderUnimplemented
+       end
+    end
+
+    fun elaborate_type(c_cinfo) =
+	let val lookup'  =  lookup_entry(c_cinfo)
+
+	    val names_seen  =  ref([] : string list)
+
+	    fun check_name_seen(nm)  =  member(nm,!names_seen)
+
+	    fun push_name(nm)  =  (names_seen := nm :: !names_seen)
+	    fun pop_name()     =  (names_seen := tl (!names_seen))
+
+	    fun excluding_name(nm,body) =
+		fn arg =>
+		   ( push_name(nm);
+		     body(arg);
+		     pop_name()
+		   )
+
+	    fun elab_type ( ty : c_type ) =
+		case ty of
+		  SIZE_OF{ctype=cty, ...} => ignore( elab_type(cty) )
+		|
+		  TYPENAME_CT{defn=BOX(ref(SOME(_))), ...} => ()
+		|
+		  TYPENAME_CT{name=nm,defn,size=ty_size} =>
+		    if check_name_seen(nm) then () else
+		    ( case lookup'(nm) of
+			TYPE_DI{defn=BOX(ref(SOME(cty))), size=rhs_size, ...} =>
+			  ( (setBOX defn cty);
+			    excluding_name(nm,elab_type)(cty);
+			    let val sz = size_of(cty)
+			    in
+			      (setBOX rhs_size sz);
+			      (setBOX ty_size sz)
+			    end
+			  )
+		      |
+			_ => raise Fail "not a typename"
+		    )
+		|
+		  STAR_CT{ctype, ...} => ignore( elab_type(ctype) )
+		|
+		  STRUCT_CT{fields, ...} => iterate elab_field fields
+		|
+		  UNION_CT{variants,current,...} =>
+		    ( iterate elab_variant (!variants);
+		      ( case extractBOX(current) of
+			  NONE => ()
+			|
+			  SOME(CVNT{ctype, ...}) => ignore( elab_type(ctype) )
+		      )
+		    )
+		|
+		  ARRAY_CT{ctype, ...} => ignore( elab_type(ctype) )
+		| _ => ()
+
+	    and elab_variant (CVNT{ctype, ...}) = ignore( elab_type(ctype) )
+
+	    and elab_field (CFLD{ctype, ...})   = ignore( elab_type(ctype) )
+
+	in
+	    fn ty => ( elab_type(ty); ty )                  
+	end
+
+
+
+  end;
+@
+
+
+1.3
+log
+@initbasis becomes basis
+@
+text
+@d12 3
+a28 1
+require "../utils/crash";
+a42 3
+
+   structure Crash       : CRASH
+
+a71 4
+    val impossible     =  Crash.impossible
+    val unimplemented  =  Crash.unimplemented
+
+
+d102 10
+a111 5
+       fun name_of_entry(UNDEF_DI)             = impossible("name_of_entry")
+	 | name_of_entry(VAR_DI{name, ...})    = name
+	 | name_of_entry(CODE_DI{name, ...})   = name
+	 | name_of_entry(TYPE_DI{name, ...})   = name
+	 | name_of_entry(CONST_DI{name, ...})  = name
+d127 6
+a132 2
+       val load_header : filename -> c_codeinfo =
+	   fn (_) => unimplemented("load_header")
+@
+
+
+1.2
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d12 7
+a18 4
+# Revision 1.1  1995/09/07  22:46:46  brianm
+# new unit
+# Rename due to reorganisation & documentation of FI.
+#
+a22 1
+ *
+d29 1
+a29 1
+require "../initbasis/__general";
+@
+
+
+1.1
+log
+@new unit
+Rename due to reorganisation & documentation of FI.
+@
+text
+@d11 5
+a15 1
+ *  $Log: _c_sig.sml,v $
+d36 1
+a36 1
+   structure CData     : C_DATA
+d38 1
+a38 1
+   structure Lists     : LISTS
+d40 1
+a40 1
+   structure Crash     : CRASH
+d42 1
+a42 1
+) : C_SIGNATURE =
+d50 1
+a53 1
+
+d58 1
+a58 1
+    val FInew_codeinfo       =  FICodeInfo.new_codeinfo
+d64 5
+a68 1
+    val unzip            =  Lists.unzip
+d75 1
+a75 1
+  (* SIGNATURE ENTRY *)
+d94 1
+a94 3
+    (* C SIGNATURE operations *)
+
+    type c_codeinfo = c_decl_entry foreign_codeinfo
+d96 2
+a97 1
+    val new_codeinfo : unit -> c_codeinfo = fn () => FInew_codeinfo()
+d99 1
+a99 17
+    val lookup_entry : c_codeinfo -> string -> c_decl_entry =
+        fn (csig) => fn (s) =>
+           extract_default UNDEF_DI (FIlookup_entry(csig,s))
+
+    fun name_of_entry(UNDEF_DI)             = impossible("name_of_entry")
+      | name_of_entry(VAR_DI{name, ...})    = name
+      | name_of_entry(CODE_DI{name, ...})   = name
+      | name_of_entry(TYPE_DI{name, ...})   = name
+      | name_of_entry(CONST_DI{name, ...})  = name
+
+    val def_entry    : c_codeinfo * c_decl_entry -> unit =
+        fn (_,UNDEF_DI) => ()
+         | (csig,ent) =>
+             let val str = name_of_entry(ent)
+             in
+                 FIdef_entry(csig,(str,ent))
+             end
+d101 90
+a190 2
+    val hide_entry   : c_codeinfo * string -> unit =
+        FIhide_entry
+a191 2
+    val show_entries : c_codeinfo -> c_decl_entry list =
+        fn (csig) => map (fn (_,ent) => ent) (FIshow_entries csig)
+a192 2
+    val load_header : filename -> c_codeinfo =
+        fn (_) => unimplemented("load_header")
+@

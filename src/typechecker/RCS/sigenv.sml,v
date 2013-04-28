@@ -1,0 +1,360 @@
+head	1.11;
+access;
+symbols
+	ML_beta_release_12/08/94:1.11
+	ML_beta_release_03/08/94:1.11
+	ML_revised_beta_release_25/05/94:1.11
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.11
+date	93.03.04.10.44.05;	author matthew;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.02.19.16.10.22;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.02.08.16.09.49;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.02.01.16.13.30;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.11.26.17.14.30;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.10.02.16.07.41;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.11.18.11.25;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.04.10.07.16;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.54.11;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.19.12.19.16;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.45.42;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.13.05;	author jont;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.03.04.10.44.05;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Signature Environment (G)
+See The Definition (section 5.1)
+@
+
+
+1.11
+log
+@Options & Info changes
+@
+text
+@
+(* sigenv.sml the signature *)
+(*
+$Log: sigenv.sml,v $
+Revision 1.10  1993/02/19  16:10:22  matthew
+removed names_of_sigenv
+
+Revision 1.9  1993/02/08  16:09:49  matthew
+Removed open Datatypes, Changes for BASISTYPES signature
+
+Revision 1.8  1993/02/01  16:13:30  matthew
+Commented out no_imptyvars.  This function is not needed
+
+Revision 1.7  1992/11/26  17:14:30  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.6  1992/10/02  16:07:41  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.5  1992/08/11  18:11:25  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.4  1992/08/04  10:07:16  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.3  1991/11/21  16:54:11  jont
+Added copyright message
+
+Revision 1.2  91/11/19  12:19:16  jont
+Merging in comments from Ten15 branch to main trunk
+
+Revision 1.1.1.1  91/11/19  11:13:05  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  11:45:42  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(* a SigEnv is a signature environment, a 'G' as defined in the
+Definition (page 31), a mapping from SigId's to Sigma's. This module
+defines the type Sigenv and the functions that act upon it (all these
+functions are simple and as described in the Definition. *)
+
+require "basistypes";
+require "../main/options";
+
+signature SIGENV =
+  sig
+    structure BasisTypes : BASISTYPES
+    structure Options : OPTIONS
+
+    exception Lookup_SigId
+
+    val empty_sigenv : BasisTypes.Sigenv
+    val sigid_order : BasisTypes.Datatypes.Ident.SigId * BasisTypes.Datatypes.Ident.SigId -> bool
+    val sigid_equal : BasisTypes.Datatypes.Ident.SigId * BasisTypes.Datatypes.Ident.SigId -> bool
+    val add_to_sigenv : BasisTypes.Datatypes.Ident.SigId * BasisTypes.Sigma * BasisTypes.Sigenv -> BasisTypes.Sigenv
+    val lookup : BasisTypes.Datatypes.Ident.SigId * BasisTypes.Sigenv -> BasisTypes.Sigma
+    val sigenv_plus_sigenv : BasisTypes.Sigenv * BasisTypes.Sigenv -> BasisTypes.Sigenv 
+    val string_sigenv : Options.print_options -> BasisTypes.Sigenv -> string
+  end
+
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+Revision 1.11  1993/03/04  10:44:05  matthew
+Options & Info changes
+
+@
+
+
+1.10
+log
+@removed names_of_sigenv
+@
+text
+@d1 1
+d5 3
+d49 1
+a49 1
+require "../main/info";
+d54 1
+d64 1
+a64 1
+    val string_sigenv : BasisTypes.Info.options -> BasisTypes.Sigenv -> string
+@
+
+
+1.9
+log
+@Removed open Datatypes, Changes for BASISTYPES signature
+@
+text
+@d4 3
+a59 2
+    val names_of_sigenv : BasisTypes.Sigenv -> BasisTypes.Nameset
+
+@
+
+
+1.8
+log
+@Commented out no_imptyvars.  This function is not needed
+@
+text
+@d4 3
+d41 2
+a42 1
+require "sigma";
+d46 1
+a46 5
+    structure Sigma : SIGMA
+
+    open Sigma.Nameset.Datatypes
+
+    datatype Sigenv = SIGENV of (Ident.SigId,Sigma.Sigma) NewMap.T
+d50 8
+a57 9
+    val empty_sigenv : Sigenv
+    val sigid_order : Ident.SigId * Ident.SigId -> bool
+    val sigid_equal : Ident.SigId * Ident.SigId -> bool
+    val add_to_sigenv : Ident.SigId * Sigma.Sigma * Sigenv -> Sigenv
+    val lookup : Ident.SigId * Sigenv -> Sigma.Sigma
+(*    val no_imptyvars : Sigenv -> bool *)
+    val sigenv_plus_sigenv : Sigenv * Sigenv -> Sigenv 
+    val string_sigenv : Sigma.Nameset.Info.options -> Sigenv -> string
+    val names_of_sigenv : Sigenv -> Sigma.Nameset.Nameset
+@
+
+
+1.7
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d55 1
+a55 1
+    val no_imptyvars : Sigenv -> bool
+@
+
+
+1.6
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d53 1
+a53 1
+    val string_sigenv : Sigenv -> string
+@
+
+
+1.5
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d44 2
+a45 1
+    val sigid_order : Ident.SigId * Ident.SigId -> NewMap.relation
+@
+
+
+1.4
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+a26 2
+
+require "datatypes";
+a30 2
+
+    structure Datatypes : DATATYPES
+a31 1
+    sharing Datatypes = Sigma.Datatypes 
+d33 1
+a33 1
+    open Datatypes
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	sigenv.sml,v $
+d37 1
+a37 1
+    datatype Sigenv = SIGENV of (Ident.SigId,Sigma.Sigma) Mapping.Map
+d42 3
+a44 2
+    val add_to_sigenv : (Ident.SigId * Sigma.Sigma * Sigenv) -> Sigenv
+    val lookup_sigid : Ident.SigId * Sigenv -> Sigma.Sigma
+@
+
+
+1.2
+log
+@Merging in comments from Ten15 branch to main trunk
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 7
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	sigenv.sml,v $
+Revision 1.1  91/06/07  11:45:42  colin
+Initial revision
+
+a3 7
+
+(* a SigEnv is a signature environment, a 'G' as defined in the
+Definition (page 31), a mapping from SigId's to Sigma's. This module
+defines the type Sigenv and the functions that act upon it (all these
+functions are simple and as described in the Definition. *)
+
+
+@

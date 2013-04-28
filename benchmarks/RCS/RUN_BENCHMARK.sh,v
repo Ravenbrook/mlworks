@@ -1,0 +1,389 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.4
+	MLWorks_20b2_Windows_1998_06_12:1.4
+	MLWorks_20b1c1_1998_05_07:1.4
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.4
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	98.10.19.13.02.17;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.11.20.12.21.56;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.11.14.16.13.45;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.01.23.13.41.53;	author matthew;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	96.12.17.11.15.48;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.10.23.17;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.09.14;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.11.33.05;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.02.38;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.13.57.16;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New unit
+@
+
+
+1.5
+log
+@[Bug #70203]
+Modify for new argument passing mechanism
+@
+text
+@#!/bin/sh
+# 
+# $Log: RUN_BENCHMARK.sh,v $
+# Revision 1.4  1997/11/20  12:21:56  daveb
+# [Bug #30323]
+# Replaced the use of gui.img by guib.img.
+#
+# Revision 1.3  1997/11/14  16:13:45  jont
+# [Bug #70019]
+# Ensure Unix LD_LIBRARY_PATH setting correct for main being used
+#
+# Revision 1.2  1997/01/23  13:41:53  matthew
+# Improving
+#
+# Revision 1.1  1996/12/17  11:15:48  matthew
+# new unit
+# New unit
+#
+#
+# Copyright Harlequin Ltd. 1996.
+#
+
+id=$$
+
+tempfile=compile$id.tmp
+
+IMAGE=guib.img
+
+silent="-silent"
+
+usage='Usage: RUN_BENCHMARK -src <source dir> -dir <architecture/OS> [-not-silent] [-new] [-results <results file>] <file>'
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -src)
+      shift
+      if [ "$1" != "" ]
+      then
+        SRCDIR=$1
+	shift
+      else
+  	echo $usage
+	exit 1
+      fi;;
+    -not-silent)
+      silent=""
+      shift;;
+    -dir)
+      shift
+      if [ "$1" != "" ]
+      then
+        ARCH_OS_DIR=$1
+        shift
+      else
+        echo $usage
+        exit 1
+      fi;;
+    -results)
+      shift
+      if [ "$1" != "" ]
+      then
+        RESULTSFILE=$1
+	shift
+      else
+	echo $usage
+	exit 1
+      fi;;
+    -new)
+       new="yes"
+       shift;;
+    *)
+      break;;
+  esac
+done
+
+if [ "$ARCH_OS_DIR" = "" ]
+then
+   echo "-dir option not given"
+   echo $usage
+   exit 1
+fi
+
+if [ "$SRCDIR" = "" ]
+then
+   echo "-src option not given"
+   echo $usage
+   exit 1
+fi
+
+if [ "$RESULTSFILE" = "" ]
+then
+   RESULTSFILE="$ARCH_OS_DIR/`date '+%y%m%d'`"
+   echo Results file set to $RESULTSFILE
+fi
+
+OS_NAME=`basename $ARCH_OS_DIR`
+
+if [ "$OS_NAME" = "NT" -o "$OS_NAME" = "Win95" ]
+then
+  RTS_NAME=main.exe
+else
+  RTS_NAME=main
+  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SRCDIR/rts/bin/$ARCH_OS_DIR;export LD_LIBRARY_PATH
+fi
+
+if [ ! -x $SRCDIR/rts/bin/$ARCH_OS_DIR/$RTS_NAME ]
+then
+  echo Can\'t find $SRCDIR/rts/bin/$ARCH_OS_DIR/$RTS_NAME
+  exit 1
+fi
+
+if [ ! -r $SRCDIR/images/$ARCH_OS_DIR/$IMAGE ]
+then
+  echo Can\'t find $SRCDIR/images/$ARCH_OS_DIR/$IMAGE
+  exit 1
+fi
+
+MLWORKS_SRC_PATH=$SRCDIR;export MLWORKS_SRC_PATH
+MLWORKS_RESULTS_FILE=$RESULTSFILE;export MLWORKS_RESULTS_FILE
+
+if [ $# -eq 0 ]
+then
+  echo $usage
+  exit 1
+fi
+
+#Create the results directory if necessary
+RESULTSDIR=`dirname $RESULTSFILE`
+if [ ! -d $RESULTSDIR ]
+then
+  echo Creating $RESULTSDIR
+  mkdir -p $RESULTSDIR
+fi
+
+#Clean out the results file if necessary
+if [ "$new" = "yes" ]
+then
+  cat > $RESULTSFILE < /dev/null
+fi
+
+echo `hostname`: `date` >> $RESULTSFILE
+
+STATUS=0
+for i in $*
+do
+  echo ${i}:
+  $SRCDIR/rts/bin/$ARCH_OS_DIR/main -MLWpass MLWargs -batch -c 15 -load $SRCDIR/images/$ARCH_OS_DIR/$IMAGE MLWargs $silent -tty -no-init < $i  || set STATUS=1
+done
+exit $STATUS
+@
+
+
+1.4
+log
+@[Bug #30323]
+Replaced the use of gui.img by guib.img.
+@
+text
+@d4 4
+d148 1
+a148 1
+  $SRCDIR/rts/bin/$ARCH_OS_DIR/main -batch -c 15 -load $SRCDIR/images/$ARCH_OS_DIR/$IMAGE -pass args $silent -tty -no-init args < $i  || set STATUS=1
+a149 1
+# rm $tempfile
+a150 1
+
+@
+
+
+1.3
+log
+@[Bug #70019]
+Ensure Unix LD_LIBRARY_PATH setting correct for main being used
+@
+text
+@d4 4
+d23 2
+d109 1
+a109 1
+if [ ! -r $SRCDIR/images/$ARCH_OS_DIR/gui.img ]
+d111 1
+a111 1
+  echo Can\'t find $SRCDIR/images/$ARCH_OS_DIR/gui.img
+d144 1
+a144 1
+  $SRCDIR/rts/bin/$ARCH_OS_DIR/main -batch -c 15 -load $SRCDIR/images/$ARCH_OS_DIR/gui.img -pass args $silent -tty -no-init args < $i  || set STATUS=1
+@
+
+
+1.2
+log
+@Improving
+@
+text
+@d4 3
+a90 7
+  PATH="$PATH;c:/hqbin/nt/x86"
+fi
+
+RTS_NAME=main
+
+if [ "$OS_NAME" = "NT" -o "$OS_NAME" = "Win95" ]
+then
+d92 3
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a3 3
+# Revision 1.2  1997/01/23  13:41:53  matthew
+# Improving
+#
+@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a3 3
+# Revision 1.2.1.1  1997/05/12  10:23:17  hope
+# branched from 1.2
+#
+@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a3 3
+# Revision 1.2.1.1  1997/05/12  10:23:17  hope
+# branched from 1.2
+#
+@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a3 3
+# Revision 1.2.1.1  1997/05/12  10:23:17  hope
+# branched from 1.2
+#
+@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a3 3
+# Revision 1.2.1.1.1.1  1997/07/28  18:09:14  daveb
+# branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+#
+@
+
+
+1.1
+log
+@new unit
+New unit
+@
+text
+@d4 4
+a14 1
+RESULTSFILE="results"
+d18 1
+a18 1
+usage='Usage: RUN_BENCHMARK -src <source dir> -dir <architecture/OS> [-not-silent] [-results <results file>] <file>'
+d56 3
+d78 6
+a97 6
+if [ $# -eq 0 ]
+then
+  echo $usage
+  exit 1
+fi
+
+d112 22
+@

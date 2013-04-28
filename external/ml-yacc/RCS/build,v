@@ -1,0 +1,116 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.09.10.15.07.58;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.18.15.11;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.2
+log
+@[Bug #30412]
+Update for projects and new delivery syntax
+@
+text
+@#!/bin/sh
+#
+# build script for ml-yacc using Harlequin MLWorks.
+#
+# options:
+#  -o name            --- specify output executable name, default "sml-yacc"
+#  -sml command       --- specify command to invoke sml, mlworks-basis default
+#  -sml-home command  --- specify top-level installation dir of MLWorks, /usr/local/lib/MLWorks default
+
+OUTPUT="sml-yacc"
+SML="mlworks-basis -tty"
+SML_HOME="`pwd`/.."
+
+#
+# process command-line options
+#
+
+ARGS=""
+while [ "$#" != "0" ]
+do
+    arg=$1
+    shift
+    case $arg in
+	-o)
+	    if [ "$#" = "0" ]; then
+		echo "$CMD: must supply image name for -o option"
+		exit 1
+	    fi
+	    OUTPUT=$1; shift
+	;;
+	-sml)
+	    if [ "$#" = "0" ]; then
+		echo "$CMD: must supply path for -sml option"
+		exit 1
+	    fi
+	    SML=$1; shift
+	;;
+        -sml-home)
+            if [ "$#" = "0" ]; then
+                echo "$CMD: must supply path for -sml-home option"
+                exit 1
+            fi
+            SML_HOME=$1; shift
+        ;;
+	*)
+	    ARGS="$ARGS $arg"
+	;;
+    esac
+done
+
+$SML_HOME/bin/$SML <<ZZZ
+  Shell.Project.openProject "mlyacc.mlp";
+  Shell.Project.forceCompileAll ();
+  Shell.Project.loadAll ();
+  deliver "$OUTPUT";
+ZZZ
+
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@d8 1
+d11 2
+a12 1
+SML="mlworks-basis"
+d38 7
+d51 4
+a54 4
+
+
+$SML <<ZZZ
+  Shell.File.loadSource "src/deliver-yacc";
+a57 3
+#note that we don't have to extend the source-path with the directory
+#containing the ml-yacc library, because this directory *is* the said
+#directory.@

@@ -1,0 +1,139 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.02.11.13.17.07;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.01.21.12.02.02;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.25.11.15.49;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.21.14.40.35;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.02.11.13.17.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Structure of the register interference graph module.
+@
+
+
+1.4
+log
+@Changed the application of the Diagnostic functor to take the Text
+structure as a parameter.  See utils/diagnostic.sml for details.
+@
+text
+@(*  ==== REGISTER INTERFERENCE GRAPH ====
+ *               STRUCTURE
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __interferencegraph.sml,v $
+ *  Revision 1.3  1992/01/21  12:02:02  richard
+ *  Added missing require of __array.
+ *
+ *  Revision 1.2  1991/11/25  11:15:49  richard
+ *  Tidied up the documentation comment.
+ *
+ *  Revision 1.1  91/11/21  14:40:35  richard
+ *  Initial revision
+ *)
+
+
+require "../utils/__lists";
+require "../utils/__text";
+require "../utils/__integer";
+require "../utils/__array";
+require "../utils/_diagnostic";
+require "_interferencegraph";
+
+
+structure InterferenceGraph_ = InterferenceGraph (
+  structure Array = Array
+  structure Diagnostic = Diagnostic ( structure Text = Text_ )
+  structure Integer = Integer_
+  structure Lists = Lists_
+)
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 4
+ *  Revision 1.4  1992/02/11  13:17:07  richard
+ *  Changed the application of the Diagnostic functor to take the Text
+ *  structure as a parameter.  See utils/diagnostic.sml for details.
+ *
+@
+
+
+1.3
+log
+@Added missing require of __array.
+@
+text
+@d9 3
+d21 1
+a21 1
+require "../utils/__print";
+d30 1
+a30 1
+  structure Diagnostic = Diagnostic ( structure Print = Print_ )
+@
+
+
+1.2
+log
+@Tidied up the documentation comment.
+@
+text
+@d8 4
+a11 1
+ *  $Log:	__interferencegraph.sml,v $
+d20 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d6 5
+a10 1
+ *  Revision Log: $Log$
+@

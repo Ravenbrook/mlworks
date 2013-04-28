@@ -1,0 +1,963 @@
+head	1.31;
+access;
+symbols
+	Final_version_of_old_runtime:1.31
+	ML_revised_beta_release_25/05/94:1.31
+	ML_final_beta_release_02/03/94:1.31
+	mlworks-28-01-1994:1.31
+	Release:1.31
+	mlworks-beta-01-09-1993:1.31
+	MLWorks-1-0-3-21/12/1992:1.25
+	MLWorks-1-0-2-15/12/1992:1.25
+	MLWorks-1-0-1-04/12/1992:1.25
+	checkpoint_17_08_92:1.22;
+locks; strict;
+comment	@ * @;
+
+
+1.31
+date	93.06.22.11.04.53;	author richard;	state Exp;
+branches
+	1.31.1.1;
+next	1.30;
+
+1.30
+date	93.06.02.13.03.26;	author richard;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	93.04.30.14.31.01;	author jont;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	93.04.30.12.36.43;	author richard;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	93.04.28.15.33.23;	author jont;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	93.03.11.16.44.30;	author richard;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.11.16.13.34.04;	author clive;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.10.26.14.07.15;	author richard;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.08.19.14.01.12;	author clive;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.08.17.10.56.24;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.07.31.13.32.08;	author clive;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.07.29.14.28.48;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.07.24.10.41.12;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.07.23.11.51.17;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.07.20.14.13.36;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.07.16.16.14.46;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.07.14.10.59.51;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.07.03.09.31.44;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.07.01.14.45.44;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.06.11.11.48.03;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.03.12.16.06.33;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.03.12.12.32.24;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.01.22.12.55.17;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.01.14.10.13.38;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.12.23.15.12.37;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.12.17.16.31.28;	author nickh;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.29.14.11.06;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.28.12.22.02;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.24.17.16.56;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.24.16.07.59;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.23.15.44.25;	author davidt;	state Exp;
+branches;
+next	;
+
+1.31.1.1
+date	93.06.22.11.04.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initialise the run-time system.
+@
+
+
+1.31
+log
+@Moved and tidied the code to produce the static top-level exception
+handler record.  This code was formerly _before_ the initialization
+of the global root package, so it tended to forget the address.
+@
+text
+@/*
+ * initialise.c
+ * Initialise the run-time system.
+ * $Log: initialise.c,v $
+ * Revision 1.30  1993/06/02  13:03:26  richard
+ * Improved the use of const in the argv argument type.
+ *
+ * Revision 1.29  1993/04/30  14:31:01  jont
+ * Changed to distinguish the real base of the stack from the stack limit pointer
+ *
+ * Revision 1.28  1993/04/30  12:36:43  richard
+ * Multiple arguments can now be passed to the storage manager in a general
+ * way.
+ *
+ * Revision 1.27  1993/04/28  15:33:23  jont
+ * Make the top level handler a real handler
+ *
+ * Revision 1.26  1993/03/11  16:44:30  richard
+ * Removed an unused root in the implicit vector.
+ *
+ * Revision 1.25  1992/11/16  13:34:04  clive
+ * Need to declare the trace_hook as a root
+ *
+ * Revision 1.24  1992/10/26  14:07:15  richard
+ * Removed stuff related to debugger and added initialisation of
+ * the event handler.
+ *
+ * Revision 1.23  1992/08/19  14:01:12  clive
+ * The fix for the ^C exiting problem
+ *
+ * Revision 1.22  1992/08/17  10:56:24  richard
+ * Corrected the initialisation of the interrupt handler.  This must
+ * use sigvec() to be well defined.
+ *
+ * Revision 1.21  1992/07/31  13:32:08  clive
+ * Set up interrupt signal handler
+ *
+ * Revision 1.20  1992/07/29  14:28:48  richard
+ * Added profile_init().
+ *
+ * Revision 1.19  1992/07/24  10:41:12  richard
+ * Added NULL hooks to calls to declare_global().
+ *
+ * Revision 1.18  1992/07/23  11:51:17  richard
+ * Changed several declare_roots to declare_global so that they are
+ * preserved over image saves and restores.  (See global.h and main.c.)
+ *
+ * Revision 1.17  1992/07/20  14:13:36  richard
+ * The initial ML stack and signal stack are allocated here rather
+ * than in the memory manager.  This simplifies the requirements on the
+ * memory manager, and allows several signals to share the signal stack.
+ *
+ * Revision 1.16  1992/07/16  16:14:46  richard
+ * Initialised ml_state.base and GC_SP.
+ *
+ * Revision 1.15  1992/07/14  10:59:51  richard
+ * Added missing load_init(), and removed obsolete profiler
+ * interrupt setup.  Initialised gc_clock to zero.
+ *
+ * Revision 1.14  1992/07/03  09:31:44  richard
+ * Set up the interrupt flag in the implicit vector.
+ *
+ * Revision 1.13  1992/07/01  14:45:44  richard
+ * Declared garbage collectible things in ml_state as C roots so
+ * that the GC doesn't need to know about them.  Changed module
+ * table initialisation.
+ *
+ * Revision 1.12  1992/06/11  11:48:03  clive
+ * Moved the setting up of the interrupt stack to this function
+ *
+ * Revision 1.11  1992/03/12  16:06:33  richard
+ * Added pervasives_init().
+ *
+ * Revision 1.9  1992/01/22  12:55:17  richard
+ * Added code to empty the modified ref chain.
+ *
+ * Revision 1.8  1992/01/14  10:13:38  richard
+ * Removed top-level handler record initialization.  The top-level handler is
+ * now represented by a zero.
+ *
+ * Revision 1.7  1991/12/23  15:12:37  richard
+ * Added code to generate and initialize a top level handler record.
+ *
+ * Revision 1.6  91/12/17  16:31:28  nickh
+ *  Now calls mem_init (from mem.c) which does most of the actual work. Note
+ * that malloc will not work until mem_init has been called, so this must be
+ * done before anything else.
+ * 
+ * Revision 1.5  91/10/29  14:11:06  davidt
+ * Heap initialisation is now done in the garbage collector. The initial
+ * ML state is now set up here to have a zero sized heap.
+ * 
+ * Revision 1.4  91/10/28  12:22:02  davidt
+ * Trivial changes to comments.
+ * 
+ * Revision 1.3  91/10/24  17:16:56  davidt
+ * Now initialises the toplevel exception handler.
+ * 
+ * Revision 1.2  91/10/24  16:07:59  davidt
+ * Now sets up the pointer to the implicit vector.
+ * 
+ * Revision 1.1  91/10/23  15:44:25  davidt
+ * Initial revision
+ * 
+ * 
+ * Copyright (c) Harlequin 1991.
+ */
+
+
+#include "initialise.h"
+#include "modules.h"
+#include "storeman.h"
+#include "implicit.h"
+#include "state.h"
+#include "utils.h"
+#include "values.h"
+#include "pervasives.h"
+#include "profiler.h"
+#include "handler.h"
+#include "loader.h"
+#include "main.h"
+#include "global.h"
+#include "event.h"
+#include "environment.h"
+#include "tags.h"
+#include "diagnostic.h"
+
+#define INITIAL_STACK_AREA	65536
+
+static mlval toplevel_handler_frame[6];
+
+void initialise(int storeman_argc, const char *const *storeman_argv)
+{
+  mlval closure;
+  struct stack *initial_stack;
+  /* Initialise the storage manager */
+  sm_init(storeman_argc, storeman_argv);
+
+  initial_stack = make_stack(NULL, INITIAL_STACK_AREA);
+  GC_STACK = STACK_LIMIT(initial_stack);
+  ml_state.base = initial_stack->top;
+  GC_SP = NULL;
+
+  ml_state.implicit = &implicit_vector;
+  GC_MODIFIED_LIST = NULL;
+
+  ml_state.g7 = MLUNIT;
+  declare_root(&ml_state.g7);
+
+  modules = mt_empty();
+  declare_global("module table", &modules, NULL);
+
+  image_continuation = MLUNIT;
+  declare_global("image continuation", &image_continuation, NULL);
+
+  profile_init();
+  load_init();
+  pervasives_init();
+  ev_init();
+
+  closure = env_function("top level exception handler", handler);
+  DIAGNOSTIC(4, "  handler stub closure 0x%X", closure, 0);
+  toplevel_handler_frame[3] = closure;
+  ml_state.handler = MLPTR(PAIRPTR, toplevel_handler_frame);
+  declare_root(&ml_state.handler);
+  declare_global("toplevel exception handler stub",
+		 toplevel_handler_frame+3, NULL);
+
+  gc_clock = 0;
+  in_GC = 0;
+}
+@
+
+
+1.31.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 5
+ * Revision 1.31  1993/06/22  11:04:53  richard
+ * Moved and tidied the code to produce the static top-level exception
+ * handler record.  This code was formerly _before_ the initialization
+ * of the global root package, so it tended to forget the address.
+ *
+@
+
+
+1.30
+log
+@Improved the use of const in the argv argument type.
+@
+text
+@d5 3
+a146 7
+  closure = env_function("Top level handler", handler);
+  DIAGNOSTIC(4, "  handler stub closure 0x%X", closure, 0);
+  toplevel_handler_frame[3] = closure;
+  ml_state.handler = ((int)toplevel_handler_frame)+PAIRPTR;
+  declare_root(&ml_state.handler);
+  declare_global("toplevel handler stub closure", toplevel_handler_frame+3, NULL);
+
+d160 8
+@
+
+
+1.29
+log
+@Changed to distinguish the real base of the stack from the stack limit pointer
+@
+text
+@d5 3
+d129 1
+a129 1
+void initialise(int storeman_argc, const char *storeman_argv[])
+@
+
+
+1.28
+log
+@Multiple arguments can now be passed to the storage manager in a general
+way.
+@
+text
+@d5 4
+d129 1
+a129 1
+
+d133 3
+a135 2
+  GC_STACK = make_stack(NULL, INITIAL_STACK_AREA);
+  ml_state.base = GC_STACK->top;
+@
+
+
+1.27
+log
+@Make the top level handler a real handler
+@
+text
+@d5 3
+d122 1
+a122 1
+void initialise(size_t size)
+d126 2
+a127 1
+  sm_init(size);		/* Initialise the storage manager */
+@
+
+
+1.26
+log
+@Removed an unused root in the implicit vector.
+@
+text
+@d5 3
+d111 3
+a114 1
+
+d117 1
+d121 2
+d132 4
+a135 1
+  ml_state.handler = 0;
+d137 1
+@
+
+
+1.25
+log
+@Need to declare the trace_hook as a root
+@
+text
+@d5 3
+a131 2
+
+  declare_root(&implicit_vector.trace_hook);
+@
+
+
+1.24
+log
+@Removed stuff related to debugger and added initialisation of
+the event handler.
+@
+text
+@d5 4
+d129 2
+@
+
+
+1.23
+log
+@The fix for the ^C exiting problem
+@
+text
+@d5 3
+d100 1
+a101 4
+#include <sys/signal.h>
+extern int sigstack(struct sigstack *ss, struct sigstack *oss);
+extern int sigvec(int sig, struct sigvec *vec, struct sigvec *ovec);
+#include <errno.h>
+a102 1
+
+a103 1
+#define SIGNAL_STACK_SIZE 	8192
+a107 4
+  struct sigstack ss;
+  char *signal_stack;
+  struct sigvec vec ;
+
+a109 9
+  signal_stack =
+    (char *)alloc(SIGNAL_STACK_SIZE, "Unable to allocate signal stack in profiler.");
+
+  ss.ss_sp = signal_stack + SIGNAL_STACK_SIZE;
+  ss.ss_onstack = 0;
+
+  if(sigstack(&ss, NULL) == -1)
+    error("Unable to set up signal stack (sigstack set errno to %d).", errno);
+
+a116 4
+  implicit_vector.interrupt = 0;
+  implicit_vector.interrupt_exception = MLUNIT;
+  declare_global("interrupt exception", &implicit_vector.interrupt_exception, NULL);
+
+a128 5
+  debugger_hook = MLUNIT;
+  declare_global("debugger hook", &debugger_hook, NULL);
+  single_step_hook = MLUNIT;
+  declare_global("single step hook", &single_step_hook, NULL);
+
+d132 1
+a135 7
+
+  /* Set for entry to the interrupt handler */
+  vec.sv_handler  = interrupt_handler;
+  vec.sv_mask = 0;
+  vec.sv_flags = SV_ONSTACK;
+  if(sigvec(SIGINT, &vec, NULL))
+    error("Unable to set interrupt handler.  sigvec() set errno to %d.", errno);
+@
+
+
+1.22
+log
+@Corrected the initialisation of the interrupt handler.  This must
+use sigvec() to be well defined.
+@
+text
+@d5 4
+d112 1
+a112 1
+  struct sigvec vec = {interrupt_handler, 0, SV_ONSTACK};
+d161 3
+@
+
+
+1.21
+log
+@Set up interrupt signal handler
+@
+text
+@d5 3
+d96 1
+d108 1
+d157 2
+a158 5
+  {
+    extern void interrupt_handler(int sig,int code,struct sigcontext *scp,char *addr);	
+    signal(SIGINT,interrupt_handler);
+  }
+
+@
+
+
+1.20
+log
+@Added profile_init().
+@
+text
+@d5 3
+d150 7
+@
+
+
+1.19
+log
+@Added NULL hooks to calls to declare_global().
+@
+text
+@d5 3
+d141 2
+a143 1
+  load_init();
+@
+
+
+1.18
+log
+@Changed several declare_roots to declare_global so that they are
+preserved over image saves and restores.  (See global.h and main.c.)
+@
+text
+@d5 4
+d119 1
+a119 1
+  declare_global("interrupt exception", &implicit_vector.interrupt_exception);
+d128 1
+a128 1
+  declare_global("module table", &modules);
+d131 1
+a131 1
+  declare_global("image continuation", &image_continuation);
+d134 1
+a134 1
+  declare_global("debugger hook", &debugger_hook);
+d136 1
+a136 1
+  declare_global("single step hook", &single_step_hook);
+@
+
+
+1.17
+log
+@The initial ML stack and signal stack are allocated here rather
+than in the memory manager.  This simplifies the requirements on the
+memory manager, and allows several signals to share the signal stack.
+@
+text
+@d5 5
+d78 2
+d114 2
+a115 1
+  declare_root(&implicit_vector.interrupt_exception);
+d124 4
+a127 1
+  declare_root(&modules);
+d129 4
+a132 2
+  declare_root(&debugger_hook);
+  declare_root(&single_step_hook);
+@
+
+
+1.16
+log
+@Initialised ml_state.base and GC_SP.
+@
+text
+@d5 3
+d74 7
+d82 2
+a83 1
+void initialise(size_t top_generation)
+d85 2
+a86 2
+  /* Setup the top level handler to zero (see ml_raise in interface.s) */
+  ml_state.handler = 0;
+d88 1
+a88 2
+  /* Setup pointer to the `implicit' vector (see implicit.h) */
+  ml_state.implicit = (mlval *)&implicit_vector;
+d90 2
+a91 2
+  /* Make sure that the chain of modified REFs is initially empty. */
+  GC_MODIFIED_LIST = NULL;
+d93 2
+a94 1
+  mem_init(top_generation);
+d96 2
+a97 2
+  pervasives_init();
+  load_init();
+d99 2
+a100 1
+  /* There is no ML stack initially. */
+d102 3
+a104 2
+  ml_state.base = GC_STACK->top;
+  gc_clock = 0;
+a105 1
+  /* Don't set off any interrupts yet. */
+d109 1
+a109 1
+  /* Declare the collectible registers in the ml_state as roots */
+d111 1
+a114 1
+  /* Initialise the module table and root it */
+d120 6
+@
+
+
+1.15
+log
+@Added missing load_init(), and removed obsolete profiler
+interrupt setup.  Initialised gc_clock to zero.
+@
+text
+@d5 4
+d88 5
+d107 1
+a107 1
+  gc_clock = 0;
+@
+
+
+1.14
+log
+@Set up the interrupt flag in the implicit vector.
+@
+text
+@d5 3
+d65 1
+d82 1
+a96 1
+  /* Set up the debugger hook */
+d98 1
+a98 3
+
+  /* Set up the signal stack for the profiler */
+  set_up_profiler_interrupt();
+a99 4
+
+
+
+
+@
+
+
+1.13
+log
+@Declared garbage collectible things in ml_state as C roots so
+that the GC doesn't need to know about them.  Changed module
+table initialisation.
+@
+text
+@d5 5
+d70 1
+a70 1
+  ml_state.implicit = implicit_vector;
+d79 4
+d85 1
+@
+
+
+1.12
+log
+@Moved the setting up of the interrupt stack to this function
+@
+text
+@d5 3
+d47 3
+a49 1
+#include "mem.h"
+a50 2
+#include "initialise.h"
+#include "interface.h"
+a53 1
+#include "allocator.h"
+a55 1
+#include "gc.h"
+d58 1
+a60 3
+  mem_init(top_generation);
+  pervasives_init();
+
+d64 3
+d68 3
+a70 1
+  MODIFIED_REF_LINK = NULL;
+d72 9
+a80 2
+  /* Setup pointer to the `implicit' vector (see implicit.h) */
+  ml_state.implicit = (word)&implicit_vector;
+@
+
+
+1.11
+log
+@Added pervasives_init().
+@
+text
+@d5 3
+d53 3
+a55 1
+
+d70 6
+d77 4
+@
+
+
+1.10
+log
+@Added top_generation parameter.
+@
+text
+@d49 1
+d55 1
+@
+
+
+1.9
+log
+@Added code to empty the modified ref chain.
+@
+text
+@d5 3
+d50 2
+a51 1
+void initialise (void)
+d53 1
+a53 1
+  mem_init();
+@
+
+
+1.8
+log
+@Removed top-level handler record initialization.  The top-level handler is
+now represented by a zero.
+@
+text
+@d5 4
+d53 3
+@
+
+
+1.7
+log
+@Added code to generate and initialize a top level handler record.
+@
+text
+@d4 4
+a7 1
+ * $Log:	initialise.c,v $
+a44 1
+  mlval handler_record;
+d47 2
+a48 9
+  /* Setup pointer to the toplevel exception handler record */
+  handler_record = allocate_record(6);
+  (void)SETFIELD(handler_record, 0, MLINT(0));
+  (void)SETFIELD(handler_record, 1, MLINT((word)ml_toplevel_handler));
+  (void)SETFIELD(handler_record, 2, MLUNIT);
+  (void)SETFIELD(handler_record, 3, MLUNIT);
+  (void)SETFIELD(handler_record, 4, MLUNIT);
+  (void)SETFIELD(handler_record, 5, MLUNIT);
+  ml_state.handler = handler_record;
+d50 1
+a50 1
+  /* Setup pointer to the `implicit' vector */
+@
+
+
+1.6
+log
+@ Now calls mem_init (from mem.c) which does most of the actual work. Note
+that malloc will not work until mem_init has been called, so this must be
+done before anything else.
+@
+text
+@d5 5
+d38 1
+d42 1
+d45 9
+a53 2
+  /* Setup pointer to the toplevel exception handler */
+  ml_state.handler = (word)&ml_toplevel_handler;
+@
+
+
+1.5
+log
+@Heap initialisation is now done in the garbage collector. The initial
+ML state is now set up here to have a zero sized heap.
+@
+text
+@d5 4
+d25 2
+a33 2
+#define STACK_SIZE 100000
+
+d36 1
+a36 10
+  /* Get a stack */
+  word ml_stack = double_align(malloc(STACK_SIZE));
+  if (ml_stack == NULL) runtime_error("Couldn't allocate space for ML");
+
+  /* Setup stack (-8 in case we lost memory doing alignment) */
+  ml_state.sp = ml_stack + STACK_SIZE - 8;
+
+  /* Setup empty heap */
+  ml_state.heap_start = 0;
+  ml_state.heap_limit = 0;
+@
+
+
+1.4
+log
+@Trivial changes to comments.
+@
+text
+@d5 3
+a20 2
+#include <malloc.h>
+
+d28 1
+a28 1
+#define BLOCK_SIZE 100000
+d32 3
+a34 3
+  /* Get a stack and a heap */
+  word ml_stack = double_align(malloc(BLOCK_SIZE));
+  word ml_heap  = double_align(malloc(BLOCK_SIZE));
+d36 2
+a37 3
+  if (ml_stack == NULL || ml_heap == NULL) {
+    runtime_error("Couldn't allocate space for ML");
+  };
+d39 3
+a41 8
+  /* Setup heap start */
+  ml_state.heap_start = ml_heap;
+
+  /* Setup heap limit (-8 in case we lost memory doing alignment) */
+  ml_state.heap_limit = ml_heap + BLOCK_SIZE - 8;
+
+  /* Setup stack (-8 in case we lost memory doing alignment) */
+  ml_state.sp = ml_stack + BLOCK_SIZE - 8;
+@
+
+
+1.3
+log
+@Now initialises the toplevel exception handler.
+@
+text
+@d5 3
+d42 1
+a42 1
+  /* Setup heap limit (-7 in case we lost memory doing alignment) */
+d45 1
+a45 1
+  /* Setup stack (-7 in case we lost memory doing alignment) */
+@
+
+
+1.2
+log
+@Now sets up the pointer to the implicit vector.
+@
+text
+@d5 3
+d19 1
+d44 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+ * $Log$
+d8 1
+d14 1
+d40 3
+@

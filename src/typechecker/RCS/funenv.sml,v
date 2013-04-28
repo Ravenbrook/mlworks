@@ -1,0 +1,350 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.10
+date	93.03.04.10.48.38;	author matthew;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	93.02.19.15.36.36;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.02.08.16.47.32;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.11.26.17.08.32;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.10.02.16.10.05;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.12.12.57.02;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.04.10.07.17;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.51.50;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.19.12.18.55;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.44.16;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.12.56;	author jont;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.03.04.10.48.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor Environment
+@
+
+
+1.10
+log
+@Options & Info changes
+@
+text
+@(* funenv.sml the signature *)
+(*
+$Log: funenv.sml,v $
+Revision 1.9  1993/02/19  15:36:36  matthew
+Removed names_of_funenv
+
+Revision 1.8  1993/02/08  16:47:32  matthew
+Removed open Datatypes, Changes for BASISTYPES signature
+
+Revision 1.7  1992/11/26  17:08:32  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.6  1992/10/02  16:10:05  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.5  1992/08/12  12:57:02  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.4  1992/08/04  10:07:17  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.3  1991/11/21  16:51:50  jont
+Added copyright message
+
+Revision 1.2  91/11/19  12:18:55  jont
+Merging in comments from Ten15 branch to main trunk
+
+Revision 1.1.1.1  91/11/19  11:12:56  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  11:44:16  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+
+The type Funenv corresponds to the class FunEnv of semantic objects
+defined in the Definition (p31): a functor environment, which maps
+FunIds to FunSigs (Phis).  There aren't many useful functions on
+FunEnvs, and they are all defined here.
+
+*)
+
+
+require "basistypes";
+require "../main/options";
+
+signature FUNENV =
+  sig
+    structure BasisTypes : BASISTYPES
+    structure Options : OPTIONS
+
+    exception Lookup_FunId
+
+    val empty_funenv : BasisTypes.Funenv
+    val funid_order : BasisTypes.Datatypes.Ident.FunId * BasisTypes.Datatypes.Ident.FunId -> bool
+    val funid_equal : BasisTypes.Datatypes.Ident.FunId * BasisTypes.Datatypes.Ident.FunId -> bool
+    val add_to_funenv : BasisTypes.Datatypes.Ident.FunId * BasisTypes.Phi * BasisTypes.Funenv -> BasisTypes.Funenv
+    val lookup : BasisTypes.Datatypes.Ident.FunId * BasisTypes.Funenv -> BasisTypes.Phi
+    val no_imptyvars : BasisTypes.Funenv -> bool
+    val string_funenv : Options.print_options -> BasisTypes.Funenv -> string
+    val funenv_plus_funenv : BasisTypes.Funenv * BasisTypes.Funenv -> BasisTypes.Funenv 
+  end
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.10  1993/03/04  10:48:38  matthew
+Options & Info changes
+
+@
+
+
+1.9
+log
+@Removed names_of_funenv
+@
+text
+@d4 3
+d50 1
+d55 1
+d65 1
+a65 1
+    val string_funenv : BasisTypes.Info.options -> BasisTypes.Funenv -> string
+@
+
+
+1.8
+log
+@Removed open Datatypes, Changes for BASISTYPES signature
+@
+text
+@d4 3
+a61 1
+    val names_of_funenv : BasisTypes.Funenv -> BasisTypes.Nameset
+@
+
+
+1.7
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d43 1
+a43 1
+require "phi";
+d47 1
+a47 3
+    structure Phi : PHI
+
+    open Phi.Sigma.Nameset.Datatypes
+a48 2
+    datatype Funenv = FUNENV of (Ident.FunId,Phi.Phi) NewMap.T
+
+d51 9
+a59 10
+    val empty_funenv : Funenv
+    val funid_order : Ident.FunId * Ident.FunId -> bool
+    val funid_equal : Ident.FunId * Ident.FunId -> bool
+    val add_to_funenv : Ident.FunId * Phi.Phi * Funenv -> Funenv
+    val lookup : Ident.FunId * Funenv -> Phi.Phi
+    val no_imptyvars : Funenv -> bool
+    val string_funenv : Phi.Sigma.Nameset.Info.options -> Funenv -> string
+    val funenv_plus_funenv : Funenv * Funenv -> Funenv 
+    val names_of_funenv : Funenv -> Phi.Sigma.Nameset.Nameset
+
+@
+
+
+1.6
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d57 1
+a57 1
+    val string_funenv : Funenv -> string
+@
+
+
+1.5
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d49 2
+a50 1
+    val funid_order : Ident.FunId * Ident.FunId -> NewMap.relation
+@
+
+
+1.4
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+a31 2
+require "nameset";
+require "datatypes";
+a35 1
+    structure Datatypes : DATATYPES
+a36 1
+    structure Nameset : NAMESET
+d38 1
+a38 1
+    sharing Datatypes = Phi.Datatypes = Nameset.Datatypes
+a39 2
+    open Datatypes
+
+d51 1
+a51 1
+    val names_of_funenv : Funenv -> Nameset.Nameset
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	funenv.sml,v $
+d29 1
+a30 1
+require "nameset";
+d43 1
+a43 1
+    datatype Funenv = FUNENV of (Ident.FunId,Phi.Phi) Mapping.Map
+d48 1
+@
+
+
+1.2
+log
+@Merging in comments from Ten15 branch to main trunk
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 11
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	funenv.sml,v $
+Revision 1.1  91/06/07  11:44:16  colin
+Initial revision
+
+a3 11
+
+(*
+
+The type Funenv corresponds to the class FunEnv of semantic objects
+defined in the Definition (p31): a functor environment, which maps
+FunIds to FunSigs (Phis).  There aren't many useful functions on
+FunEnvs, and they are all defined here.
+
+*)
+
+
+@

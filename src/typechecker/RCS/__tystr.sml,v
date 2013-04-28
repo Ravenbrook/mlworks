@@ -1,0 +1,152 @@
+head	1.4;
+access;
+symbols
+	ML_beta_release_12/08/94:1.4
+	ML_beta_release_03/08/94:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.4
+date	92.07.16.19.01.34;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.01.27.18.49.47;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.42.42;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.30.45;	author colin;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.07.16.19.01.34;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Type Structures (type function + constructor environment)
+(see datatypes.sml for datatype)
+@
+
+
+1.4
+log
+@added btree parameter
+@
+text
+@(* __tystr.sml the structure *)
+(*
+$Log: __tystr.sml,v $
+Revision 1.3  1992/01/27  18:49:47  jont
+Added ty_debug parameter
+
+Revision 1.2  1991/11/21  16:42:42  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:30:45  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/__btree";
+require "../utils/__print";
+require "../utils/__debug";
+require "__ty_debug";
+require "__datatypes";
+require "__valenv";
+require "__types";
+require "_tystr";
+
+structure Tystr_ = Tystr(
+  structure NewMap     = BTree_
+  structure Debug     = Tystr_Debug_
+  structure Print     = Print_
+  structure Ty_Debug = Ty_Debug_
+  structure Datatypes = Datatypes_
+  structure Conenv    = Valenv_
+  structure Types     = Types_
+);
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.4  1992/07/16  19:01:34  jont
+added btree parameter
+
+@
+
+
+1.3
+log
+@Added ty_debug parameter
+@
+text
+@d4 3
+d16 1
+d26 1
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	__tystr.sml,v $
+d12 2
+d15 1
+a18 1
+require "../utils/__print";
+d21 8
+a28 6
+structure Tystr_ =
+  Tystr (structure Datatypes = Datatypes_
+	 structure Conenv    = Valenv_
+	 structure Types     = Types_
+	 structure Debug     = Tystr_Debug_
+	 structure Print     = Print_);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

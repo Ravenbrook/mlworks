@@ -1,0 +1,339 @@
+head	1.6;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.6
+date	96.06.15.14.18.26;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.06.14.12.39.59;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.06.11.13.14;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.06.05.15.51.32;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.24.14.45.07;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.24.14.17.33;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.6
+log
+@Removing diagnostic output statement ...
+@
+text
+@#!/bin/sh
+# (Copyright) Harlequin Ltd 1996 (All rights reserved)
+
+PATH=/bin:/usr/bin:$PATH
+export PATH
+
+case $#
+in
+   2) struct=$1
+      filelist=$2
+      ;;
+   *)
+cat- <<\%%%%
+Usage : flatten <struct> <filelist>
+
+This takes a structure name <struct> and a file name <filelist> which
+contains a (non-empty) list of source files.  The source files are
+used in sequence to produce a single source file containing a single
+implementing structure in which all others are syntactically embedded.
+Each source file should contain a single structure at top-level
+(i.e. no functors here).
+
+The last file in the file list contains the structure that is opened to
+provide the implementation.
+
+Note that the header comment containing source code control
+information will be stripped off.
+
+The <struct> argument is used to construct the names for the resulting
+structure, the signature file (which must exist) and the output
+structure file (which mustn't).  If <struct> = "foo" then these
+filenames are:
+
+     - foo.sml    --- signature file
+
+     - __foo.sml  --- structure file
+
+The name of the signature contained inside the signature file is
+extracted from the signature file and need not have any correspondance
+with <struct>.
+
+%%%%
+
+     exit0
+     ;;
+esac
+
+# Lets get started ...
+
+# echo flatten : PATH=$PATH
+
+tmp=%tmp_file%.$$
+tmp1=%tmp1_file%.$$
+require=%require_file%.$$
+header=%header_file%.$$
+rm -f $tmp $tmp1 $require $header
+> $require
+
+trap 'rm -f $tmp $tmp1 $require $header; exit' 1 2 3 9 15
+
+
+struct="`echo $struct | tr A-Z a-z`"
+struct="`basename $struct .sml`"
+     
+sig_file=$struct.sml
+output=__$struct.sml
+
+
+if test -f $sig_file
+then :
+else echo Signature file $sig_file doesnt exist 
+     exit 3
+fi
+
+if test -f $output
+then echo File $output already exists.
+     exit 3
+fi
+
+if test -f $filelist
+then :
+else echo File $filelist is not available.
+     exit 3
+fi
+
+echo Making file $output ...
+
+date=`date`
+set `echo $date`
+month=$2
+day=$3
+year=$6
+
+cat - <<%%%% > $header
+(*   ==== GENERATED ML SOURCE FILE : $output =====
+ *
+ *   Generated on $date
+ *
+ *   (C) The Harlequin Group, $year (All rights reserved)
+ *)
+
+%%%%
+
+if test -f $sig_file
+then echo "   Inspecting signature file $sig_file ..."
+else echo File $i not found ...
+     rm -f $tmp $tmp1 $require $header $output
+     exit 1
+fi
+
+# Solaris doesn't like multi-line piped commands so ....
+ptmp1=%ptmp1%.$$ 
+
+expand $sig_file | remove_src_hdr.sh > $ptmp1
+awk '$1 ~ /signature/ {print $2 ; exit}' $ptmp1 | tr 'a-z-' 'A-Z_' > $tmp1
+sig_name="`cat $tmp1`"
+rm -f $tmp1 $ptmp1
+
+first="`echo $struct | sed -e 's;^\(.\).*;\1;' | tr 'a-z' 'A-Z'`"
+rest="`echo $struct | sed -e 's;^.;;' | tr 'A-Z-' 'a-z_'`"
+struct_name="$first$rest"
+
+cat - <<%%%% >> $output
+require "$struct";
+structure $struct_name : $sig_name =
+   struct
+%%%%
+
+
+files=`cat $filelist`
+
+for i in $files
+do
+   if test -f $i
+   then echo "   Adding $i ..."
+   else echo File $i not found ...
+	rm -f $tmp $tmp1 $require $header $output
+	exit 1
+   fi
+
+   rm -f $tmp $tmp1
+
+   expand $i                      |
+   remove_src_hdr.sh              |
+   sed -e '/structure/s;:; : ;'   |
+   awk '
+   $1 ~ /structure/ && $3 ~ /\:/ && $5 ~ /\=/ && $6 ~ /[A-Za-z0-9_]*/ {
+       printf "a         structure %s = %s\n", $2, $6
+       next
+   }
+   $1 ~ /structure/ && $3 ~ /\:/ && $5 ~ /\=/ {
+       printf "astructure %s =\n", $2
+       next
+   }        
+   $1 ~ /require/ && $2 ~ /\"\.\.\/.*/ {
+       printf "b%s\n", $0
+       next
+   }
+   $1 ~ /require/ && $2 ~ /\"\^\..*/ {
+       printf "b%s\n", $0
+       next
+   }
+   $1 ~ /require/ {
+       next
+   }
+   $0 ~ /^[ ]*$/  {
+       next
+   }
+   { printf "a%s\n", $0 }
+   '  > $tmp
+
+   sed -n -e 's;^a;      ;p' $tmp > $tmp1
+   sed -n -e 's;^b;;p' $tmp >> $require
+   mv $tmp1 $tmp
+
+   struct_name="`awk '$1 ~ /structure/ {print $2 ; exit}' $tmp`"
+
+   echo     >> $output
+   cat $tmp >> $output
+done
+
+cat - <<%%%% >> $output
+       open $struct_name
+    end;
+%%%%
+rm -f $tmp $tmp1
+
+sed -e 's; [ ]*; ;g' $require | sort | uniq > $tmp
+mv $tmp $require
+
+cat $header $require $output > $tmp
+rm -f $header $require $output
+mv $tmp $output
+@
+
+
+1.5
+log
+@Changing remove_src_hdr to remove_src_hdr.sh
+@
+text
+@d50 1
+a50 1
+echo flatten : PATH=$PATH
+@
+
+
+1.4
+log
+@Investigations ...
+@
+text
+@d114 1
+a114 1
+expand $sig_file | remove_src_hdr > $ptmp1
+d144 1
+a144 1
+   remove_src_hdr                 |
+@
+
+
+1.3
+log
+@Removed multi-pipe command for Solaris ...
+@
+text
+@d50 2
+@
+
+
+1.2
+log
+@Minor correction.
+@
+text
+@d9 1
+a9 2
+   2) struct="`echo $1 | tr A-Z a-z`"
+      struct="`basename $struct .sml`"
+d48 15
+d70 1
+a70 1
+     exit 1
+d75 1
+a75 1
+     exit 1
+d81 1
+a81 1
+     exit 1
+d84 1
+a84 8
+tmp=%tmp_file%.$$
+tmp1=%tmp1_file%.$$
+require=%require_file%.$$
+header=%header_file%.$$
+rm -f $tmp $tmp1 $require $header
+> $require
+
+trap 'rm -f $tmp $tmp1 $require $header; exit' 1 2 3 9 15
+a91 2
+echo Making file $output ...
+
+d109 5
+a113 4
+expand $sig_file                          |
+remove_src_hdr                            |
+awk '$1 ~ /signature/ {print $2 ; exit}'  |
+tr 'a-z-' 'A-Z_' > $tmp1
+d115 1
+a115 1
+rm -f $tmp1        
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d4 1
+a4 1
+PATH=/bin:/usr/bin:$PATH"
+@

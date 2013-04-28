@@ -1,0 +1,1347 @@
+head	1.6;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	96.02.14.16.23.54;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.02.14.14.46.20;	author nickb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.01.16.13.54.19;	author nickb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.01.11.17.20.38;	author nickb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.11.28.14.21.21;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.10.17.13.41.39;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.6
+log
+@Changing ERROR to MLERROR
+@
+text
+@/*  === TOP LEVEL OF RUNTIME SYSTEM ===
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This file contains the main() function, which parses the command
+ *  line, loads and invokes the modules, and displays the results of
+ *  running the last module.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:Win95:main.c,v $
+ * Revision 1.5  1996/02/14  14:46:20  nickb
+ * Add exploration option.
+ *
+ * Revision 1.4  1996/01/16  13:54:19  nickb
+ * Getting rid of sm_interface().
+ *
+ * Revision 1.3  1996/01/11  17:20:38  nickb
+ * Runtime error message buffer problem.
+ *
+ * Revision 1.2  1995/11/28  14:21:21  jont
+ * Add stuff to use loading/saving of executables
+ *
+ * Revision 1.1  1995/10/17  13:41:39  jont
+ * new unit
+ *
+ * Revision 1.7  1995/09/13  12:37:10  jont
+ * Add parameter to sm_interface to control whether stack_crawl is done
+ *
+ * Revision 1.6  1995/07/26  14:37:46  nickb
+ * Add MEASURE_FIXUP instrumentation.
+ *
+ * Revision 1.5  1995/07/17  15:42:57  nickb
+ * Change to profiler interface.
+ *
+ * Revision 1.4  1995/06/01  11:47:47  nickb
+ * Use atexit to ensure proper exit behaviour.
+ *
+ * Revision 1.3  1995/04/05  14:14:27  nickb
+ * Add maximum memory use reporting.
+ *
+ * Revision 1.2  1995/03/15  15:08:57  nickb
+ * Introduce the threads system.
+ *
+ * Revision 1.1  1994/12/12  14:26:00  jont
+ * new file
+ *
+ * Revision 1.2  1994/10/21  11:10:11  nickb
+ * Change CLK_TCK to CLOCKS_PER_SEC
+ *
+ * Revision 1.1  1994/10/04  16:27:15  jont
+ * new file
+ *
+ * Revision 1.6  1994/07/11  16:07:11  matthew
+ * Added (commented out) change to image starting code.  This is for convenience
+ * of new lambda optimiser.
+ *
+ * Revision 1.5  1994/06/22  13:01:12  nickh
+ * Add image analysis option to debugging runtime.
+ *
+ * Revision 1.4  1994/06/21  15:57:58  nickh
+ * New ancillary structure.
+ *
+ * Revision 1.3  1994/06/13  11:59:36  nickh
+ * Spelling errors.
+ *
+ * Revision 1.2  1994/06/09  14:26:56  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:51:27  nickh
+ * new file
+ *
+ *  Revision 1.75  1994/01/28  17:23:11  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.74  1994/01/10  13:42:41  matthew
+ *  Changed load_link to call internal_load_link in loader.c
+ *
+ *  Revision 1.73  1993/12/22  11:41:21  jont
+ *  Added delivery option which discards code vector names
+ *
+ *  Revision 1.72  1993/11/23  12:06:27  jont
+ *  Added extra option to turn off mo consistency checking
+ *
+ *  Revision 1.71  1993/10/12  16:06:39  matthew
+ *  Merging bug fixes
+ *
+ *  Revision 1.70  1993/09/02  15:23:54  daveb
+ *  Added -mono option.
+ *
+ *  Revision 1.69.1.3  1993/10/12  14:26:46  matthew
+ *  Added the -stack option to control the stack overflow limit
+ *
+ *  Revision 1.69.1.2  1993/09/07  10:53:21  daveb
+ *  Added -mono option.
+ *
+ *  Revision 1.69.1.1  1993/08/26  18:44:26  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.69  1993/08/26  18:44:26  daveb
+ *  module names are now read from the files' consistency information.
+ *  The -path option isn't needed.
+ *
+ *  Revision 1.68  1993/08/19  16:40:50  daveb
+ *  Changed name of program in error message.
+ *
+ *  Revision 1.67  1993/08/12  14:18:10  daveb
+ *  Added -path parameter.
+ *
+ *  Revision 1.66  1993/06/22  15:05:18  daveb
+ *  Minor improvement to error message.
+ *
+ *  Revision 1.65  1993/06/02  13:05:15  richard
+ *  Improved the use of const on the argv parameter type.
+ *  Added missing include of stdio.h.
+ *
+ *  Revision 1.64  1993/06/01  15:36:17  richard
+ *  Added missing #include of stdio.h.
+ *
+ *  Revision 1.63  1993/05/13  11:15:58  richard
+ *  Added documentation of the `--' option to the help string.
+ *
+ *  Revision 1.62  1993/04/30  12:49:28  richard
+ *  Multiple arguments can now be passed to the storage manager in a general
+ *  way.
+ *
+ *  Revision 1.61  1993/04/19  11:16:44  richard
+ *  New profiler and value printer.
+ *
+ *  Revision 1.60  1993/03/12  10:08:43  richard
+ *  Made the call to the license server conditional so that it
+ *  can be debugged without disturbing other developers.
+ *
+ *  Revision 1.59  1993/02/24  14:10:06  nosa
+ *  Implemented a multi-level profiler
+ *
+ *  Revision 1.58  1993/02/03  16:37:21  jont
+ *  Changes for code vector reform
+ *
+ *  Revision 1.57  1993/02/01  14:47:19  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.56  1993/01/06  13:22:47  richard
+ *  Moved the call to the license enforcer so that it notices the
+ *  diagnostic level.
+ *
+ *  Revision 1.55  1992/12/21  15:24:40  richard
+ *  Added call to license enforcer.
+ *
+ *  Revision 1.54  1992/12/18  15:20:40  clive
+ *  Made the profiler take the generalised streams
+ *
+ *  Revision 1.53  1992/11/02  13:06:58  richard
+ *  Changed the way the image load and save operations are done.
+ *
+ *  Revision 1.52  1992/10/02  09:40:46  richard
+ *  Added missing consts.
+ *
+ *  Revision 1.51  1992/10/01  15:36:45  richard
+ *  Added ansi.h.
+ *
+ *  Revision 1.50  1992/09/01  11:25:44  richard
+ *  Implemented argument passing to the modules.
+ *
+ *  Revision 1.49  1992/08/27  10:57:55  richard
+ *  The module table is now a reference cell.
+ *
+ *  Revision 1.48  1992/08/26  15:46:18  richard
+ *  The module table is now a pervasive value.
+ *
+ *  Revision 1.47  1992/08/25  13:27:20  richard
+ *  Changed or corrected some messages.
+ *
+ *  Revision 1.46  1992/08/19  07:06:12  richard
+ *  Corrected the documentation string.
+ *
+ *  Revision 1.45  1992/07/31  07:44:01  richard
+ *  Moved initialisation of diagnostic level to beginning of main().
+ *
+ *  Revision 1.44  1992/07/29  14:26:14  richard
+ *  Added error checking on profile start and end.
+ *
+ *  Revision 1.43  1992/07/27  12:48:11  richard
+ *  Removed references to redundant external_invocation_count.
+ *  Corrected spelling of privilege.
+ *
+ *  Revision 1.42  1992/07/23  15:52:05  richard
+ *  Changed image saving and loading to use the global root manager.
+ *
+ *  Revision 1.41  1992/07/21  14:14:30  richard
+ *  Removed redundant `-generations' option, and changed `-preallocate'
+ *  to `-size' to make it more general.  Imported the help string for
+ *  `-size' from the memory manager.  Added an extra field to images which
+ *  is called if set.  (See ml_image_save() in pervasives.c.)
+ *
+ *  Revision 1.40  1992/07/15  17:53:30  richard
+ *  The loader no longer calls the code it loads, so load_link() now does it.
+ *
+ *  Revision 1.38  1992/07/14  15:37:02  richard
+ *  Changed the way profiling is done, and simplified control structure
+ *  now that we can assume the module table won't disappear.
+ *
+ *  Revision 1.37  1992/07/02  09:12:40  richard
+ *  returns ERROR to indicate error rather than IMPOSSIBLE.
+ *
+ *  Revision 1.36  1992/07/01  14:14:54  richard
+ *  The module table is now a single global root.
+ *
+ *  Revision 1.35  1992/06/25  09:16:50  richard
+ *  Added -plock option.
+ *
+ *  Revision 1.34  1992/06/22  14:54:25  clive
+ *  Error in profiler timer code - used to start timer before initialising
+ *  the signal handler
+ *
+ *  Revision 1.33  1992/06/11  15:43:57  clive
+ *  Fixes to the profiler
+ *
+ *  Revision 1.32  1992/05/18  08:30:31  clive
+ *  Added timers and code for compiling the make system
+ *
+ *  Revision 1.31  1992/05/13  13:08:40  clive
+ *  Added some code for memory profiling and corrected some bugs
+ *
+ *  Revision 1.30  1992/05/06  13:00:09  clive
+ *  In the -save case, profiling information was not being taken
+ *
+ *  Revision 1.29  1992/05/05  13:07:24  clive
+ *  Added stack backtrace depth
+ *
+ *  Revision 1.28  1992/04/14  13:31:19  clive
+ *  First version of the profiler
+ *
+ *  Revision 1.27  1992/04/03  08:43:58  richard
+ *  Corrected timing code.
+ *
+ *  Revision 1.26  1992/03/26  15:29:28  richard
+ *  Removed `nothing to do' error (does nothing instead).  Added new
+ *  statistics from callc_codes.h.
+ *
+ *  Revision 1.25  1992/03/24  15:57:22  richard
+ *  Added `-statistics' option to display internal statistics.
+ *
+ *  Revision 1.24  1992/03/20  14:47:53  richard
+ *  Added code to deal with ELOADVERSION error.
+ *
+ *  Revision 1.23  1992/03/20  10:49:33  richard
+ *  Added `-show' option.
+ *
+ *  Revision 1.22  1992/03/19  17:15:59  richard
+ *  Added more robust error checking of parameters and input.  Removed
+ *  extraneous includes.
+ *
+ *  Revision 1.21  1992/03/18  15:02:19  richard
+ *  Added -verbose option.
+ *
+ *  Revision 1.20  1992/03/18  14:39:53  richard
+ *  Added -from option.
+ *
+ *  Revision 1.17  1992/03/10  12:28:29  clive
+ *  Added call to initialise the new Io system
+ *
+ *  Revision 1.16  1992/02/25  15:46:28  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.15  1992/02/24  16:20:40  clive
+ *  Needed to add the module_name as a root during the loading process, else
+ *  the string it pointed too went walkabout
+ *
+ *  Revision 1.14  1992/02/14  17:16:10  richard
+ *  Added `-i' option.
+ *
+ *  Revision 1.13  1992/02/12  11:24:11  richard
+ *  Removed the assumption that the result of an execution is a record.
+ *
+ *  Revision 1.12  1992/01/24  11:35:20  richard
+ *  Added -c option to control collection messages.
+ *
+ *  Revision 1.11  1991/12/23  14:36:57  richard
+ *  Changed the name of the fatal runtime error handler to error().
+ *  Moved the code to extract base file names to utils.
+ *
+ *  Revision 1.10  91/12/20  16:51:16  richard
+ *  Rewrote to produce more diagnostic output and accept a diagnostic output
+ *  level on the command line as an option.
+ *  
+ *  Revision 1.9  91/12/13  12:30:00  richard
+ *  Changed result printing to use the val_print so that the structure
+ *  of the results can be seen.
+ *  
+ *  Revision 1.8  91/12/06  16:48:58  jont
+ *  Added pathname stripping for module names
+ *  
+ *  Revision 1.7  91/10/28  17:29:57  davidt
+ *  Put in timer function.
+ *  
+ *  Revision 1.6  91/10/23  15:30:14  davidt
+ *  Took out some initialisation code and moved into into the
+ *  file initialise.c which is especially for that purpose.
+ *  
+ *  Revision 1.5  91/10/22  13:48:34  davidt
+ *  Increased size of initial stack and heap. Now calculates the ml_stack
+ *  pointer correctly (used to assign the stack pointer a non-aligned
+ *  address, this didn't show up immediately because of another bug).
+ *  
+ *  Revision 1.4  91/10/21  10:47:35  davidt
+ *  Improved the printing function to show the type of pointer which
+ *  was returned instead of just an address.
+ *  
+ *  Revision 1.3  91/10/18  18:27:19  davidt
+ *  Moved all the allocation stuff into allocate.c
+ *  Moved all the C and ML state preserving stuff into state.c
+ *  Did general tidy up and printing of result values.
+ *  
+ *  Revision 1.2  91/10/17  15:48:08  davidt
+ *  Put in various hacks to get a testable version of the run-time system.
+ */
+
+#include "win32_main.c"
+@
+
+
+1.5
+log
+@Add exploration option.
+@
+text
+@d14 3
+d321 1
+a321 800
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
+#include <time.h>
+#ifndef OS_NT
+#include <sys/time.h>
+#endif
+#ifdef PLOCK
+#include <sys/lock.h>
+#include <pwd.h>
+#endif
+#include "ansi.h"
+#include "syscalls.h"
+#include "loader.h"
+#include "modules.h"
+#include "utils.h"
+#include "values.h"
+#include "diagnostic.h"
+#include "initialise.h"
+#include "global.h"
+#include "options.h"
+#include "profiler.h"
+#include "state.h"
+#include "allocator.h"
+#include "interface.h"
+#include "gc.h"
+#include "utils.h"
+#include "pervasives.h"
+#include "license.h"
+#include "print.h"
+#include "mltime.h"
+#include "stacks.h"
+#include "lists.h"
+#include "main.h"
+#include "threads.h"
+#include "image.h"
+#include "exec_delivery.h"
+
+#ifndef MACH_FIXUP
+  #ifdef MEASURE_FIXUP
+    #include "fixup.h"
+  #endif
+#endif
+
+static const char *usage_message[] =
+/* 0         1         2         3         4         5         6         7        | */
+{
+  "Usage:   mlrun [options...] module...\n"
+  "Options:\n"
+  "  --      This option does nothing, but nothing after it on the command line\n"
+  "          will be treated as an option.\n"
+  "  -mono   Use the X resources for a monochrome screen.\n"
+
+#ifdef DIAGNOSTICS
+  "  -d n    Set diagnostic level to n.\n"
+#endif
+
+  "  -c n    Set collection message level to n.\n"
+  "  -stack n\n"
+  "          Set initial maximum number of stack blocks to n.\n"
+  "  -gc-statistics filename\n"
+  "          Write garbage collection statistics to file.\n"
+  "  -show   Display the result of the final module.\n"
+  "  -profile filename\n"
+  "          Profile the entire run, writing the results to filename.  This\n"
+  "          option overrides previous profiling options with the defaults.\n"
+  "  -profile-scan n\n"
+  "          When profiling, scan the stack every n virtual milliseconds to\n"
+  "          gather information.  An interval of zero disables scanning.\n"
+  "          Scanning is not enabled by default.\n"
+  "  -profile-depth n\n"
+  "          When profiling with scanning, record patterns of caller functions\n"
+  "          to a depth of n callers.  The default is zero.\n"
+  "  -profile-select string\n"
+  "          When profiling, only record information about functions which\n"
+  "          include this string in their names.  By default, all functions are\n"
+  "          profiled.\n"
+  "  -backtrace-depth depth\n"
+  "          Maximum depth of the backtrace if an exception occurs.\n",
+  "  -print depth length indent tags\n"
+  "          Control the way values are output by default.  Depth is the maximum\n"
+  "          nesting of structures (zero for no limit and by default), length is\n"
+  "          the maximum length of strings (also zero for no limit and by\n"
+  "          default), indent, if non-zero, causes values to be printed on\n"
+  "          separate lines using indentation to show structure, tags,\n"
+  "          if non-zero, causes internal value information to be displayed.\n"
+  "  -load filename\n"
+  "          Load an image from the file before loading any modules.\n"
+
+#ifdef DEBUG
+/* image file analysis option */
+
+  "  -image-analysis\n"
+  "          Print a heap analysis when loading an image file\n"
+
+#endif
+
+#ifdef EXPLORER
+/* heap exploration option */
+
+  "  -explore\n"
+  "          Run the heap explorer\n" 
+
+#endif
+
+  "  -save filename\n"
+  "          Load modules specified then save the image in a file.\n"
+  "  -from filename\n"
+  "          Read module file names from this file before reading them from\n"
+  "          the command line.\n",
+  "  -save_exec filename\n"
+  "          Load modules specified then save the image in an executable file.\n"
+  "          Rerunning this file will automatically reload your image.\n"
+
+#ifdef DEBUG
+
+/* delivery is only an option in Harlequin's internal debugging image;
+ * it's not mature or sophisticated enough to send to customers. */
+
+  "  -delivery\n"
+  "          Abbreviate code vector names on loading.\n"
+#endif
+
+  "  -verbose\n"
+  "          Display information about the activities of the runtime system.\n"
+  "  -statistics\n"
+  "          Display various internal statistics at the end of the run.\n"
+
+#ifdef PLOCK
+  "  -plock\n"
+  "          Attempt to lock process in real memory, then set effective uid of\n"
+  "          the process to real uid.  This option requires root privilege.\n"
+#endif
+
+  "  -pass s arg... s\n"
+  "          Propagate arguments between the delimiter strings to the modules.\n"
+  "          The delimiter may be any string.\n"
+  "  -storeman s arg... s\n"
+  "          Pass arguments between the delimiter strings to the storage manager.\n"
+  "%s"
+  "  -help   Display this message.\n",
+  NULL
+};
+
+
+static struct option
+#ifdef DIAGNOSTICS
+  option_diagnostic      = {"d", 1, 0, NULL},
+#endif
+  option_messages        = {"c", 1, 0, NULL},
+  option_stacksize       = {"stack", 1, 0, NULL},
+  option_print           = {"print", 4, 0, NULL},
+  option_storeman        = {"storeman", -1, 0, NULL},
+  option_gc_stats        = {"gc-statistics", 1, 0, NULL},
+  option_modules         = {"from", 1, 0, NULL},
+  option_load            = {"load", 1, 0, NULL},
+  option_save            = {"save", 1, 0, NULL},
+  option_help            = {"help", 0, 0, NULL},
+  option_verbose         = {"verbose", 0, 0, NULL},
+  option_show	         = {"show", 0, 0, NULL},
+  option_profile         = {"profile", 1, 0, NULL},
+  option_profile_scan    = {"profile-scan", 1, 0, NULL},
+  option_profile_depth   = {"profile-depth", 1, 0, NULL},
+  option_profile_select  = {"profile-select", 1, 0, NULL},
+  option_profile_manner  = {"profile-manner", 1, 0, NULL},
+  option_backtrace_depth = {"backtrace-depth", 1, 0, NULL},
+  option_statistics      = {"statistics", 0, 0, NULL},
+  option_mono	         = {"mono", 0, 0, NULL},
+#ifdef PLOCK
+  option_plock           = {"plock", 0, 0, NULL},
+#endif
+  option_pass	         = {"pass", -1, 0, NULL},
+  option_dont_check      = {"relaxed", 0, 0, NULL}, 
+#ifdef DEBUG
+  option_delivery        = {"delivery", 0, 0, NULL},
+  option_analysis        = {"image-analysis", 0, 0, NULL},
+#endif
+#ifdef EXPLORER
+  option_explore         = {"explore", 0, 0, NULL},
+#endif
+  option_save_exec       = {"save_exec", 1, 0, NULL},
+  option_no_load_exec    = {"no_load_exec", 0, 0, NULL},
+  option_end	         = {NULL, 0, 0, NULL};
+
+static struct option *options[] =
+{
+  &option_messages, &option_stacksize, &option_print, &option_storeman,
+  &option_modules, &option_load, &option_save, &option_help, &option_verbose,
+  &option_show, &option_profile, &option_profile_scan, &option_profile_depth,
+  &option_profile_select, &option_profile_manner, &option_backtrace_depth,
+  &option_mono, &option_gc_stats, &option_statistics, &option_pass,
+  &option_dont_check,
+#ifdef DIAGNOSTICS
+  &option_diagnostic, 
+#endif
+#ifdef PLOCK
+  &option_plock,
+#endif
+#ifdef DEBUG
+  &option_delivery,
+  &option_analysis,
+#endif
+#ifdef EXPLORER
+  &option_explore,
+#endif
+  &option_save_exec,
+  &option_no_load_exec,
+  &option_end
+};
+
+
+
+mlval image_continuation = MLUNIT;
+int module_argc = 0;
+const char *const *module_argv = NULL;
+int mono = 0;
+
+
+
+/*  == Load and link a module and add it to the module table ==
+ *
+ *  The module is loaded onto the heap by load_module() and linked by
+ *  calling the resulting top-level function.
+ */
+
+static mlval load_link(const char *filename)
+{
+  mlval mod_name = MLUNIT;
+  mlval result = internal_load_link (filename,&mod_name,option_verbose.specified, 
+				     option_dont_check.specified,
+#ifdef DEBUG
+				     option_delivery.specified
+#else
+				     0
+#endif
+				     );
+  if(result == ERROR)
+    switch(errno)
+    {
+      case ELOADREAD:
+      error("The loader was unable to read from the file `%s' "
+	    "despite being able to open it.", filename);
+
+      case ELOADOPEN:
+      error("The loader was unable to open the file `%s'.", filename);
+
+      case ELOADALLOC:
+      error("The loader was unable to allocate enough memory while "
+	    "loading the file `%s'.", filename);
+
+      case ELOADVERSION:
+      error("The file `%s' contains a module of a version the loader does "
+	    "not understand.", filename);
+
+      case ELOADFORMAT:
+      error("The file `%s' is not in the correct loader format.", filename);
+
+      case ELOADEXTERNAL:
+      error("The module in the file `%s' references an unloaded external "
+	    "module called `%s'.", filename, CSTRING(load_external));
+
+      default:
+      error("The loader returned %d, which is not a valid error code.", errno);
+    }
+  else
+    return(result);
+}
+
+static FILE *profile_stream;
+static const char *profile_selector = NULL;
+static unsigned int profile_depth = 0;
+static int profile_specified_manner = 0;
+
+static int profile_manner(mlval code)
+{
+  if(profile_selector == NULL ||
+     strstr(CSTRING(CCODENAME(code)), profile_selector) != NULL)
+    return profile_specified_manner;
+  else
+    return 0;
+}
+
+/* Now we define a function to be called when MLWorks exits; we use
+ * atexit() to register this, so that images can call MLWorks.exit()
+ * without avoiding this stuff. */
+
+static clock_t start = 0, stop = 0;
+
+static void stop_mlworks(void)
+{
+  /* if we have not completed the load process, stop will still be 0 */
+  if (stop == 0)
+    stop = clock();
+
+  /* if we're profiling... */
+
+  if(option_profile.specified)
+  {
+    mlval discard;
+    profile_end(&discard);
+    if (discard != MLUNIT)
+      error("Bad return value from the profiler.");
+    if(fclose(profile_stream) == EOF)
+      error("Unable to close profiler output file.");
+  }
+
+  /* GC statistics stream has to be flushed */
+  if(gc_stat_stream != NULL)
+    if(fclose(gc_stat_stream) == EOF)
+      error("Unable to close statistics file.");
+
+  /* and some statistics to be printed */
+
+  if(option_verbose.specified)
+    message("Total loading time %lums.",
+	    (long)(((double)(stop - start))*1000.0/(CLOCKS_PER_SEC)));
+
+  if(option_statistics.specified)
+#ifdef COLLECT_STATS
+    printf("Runtime system statistics:\n"
+	   "  Raise count: %u\n"
+	   "  Stack extension count: %u\n"
+	   "  Maximum transient arena size: %ldk\n"
+	   "  Maximum heap size: %ldk\n",
+	   raise_count, stack_extension_count,
+	   max_arena_extent>>10, max_heap_size>>10);
+#else
+    printf("No runtime statistics were gathered.\n");
+#endif
+
+#ifndef MACH_FIXUP
+  #ifdef MEASURE_FIXUP
+  report_fixup();
+  #endif
+#endif
+}
+
+/* Now the main function run in the top thread */
+
+const char *runtime;
+
+static int start_mlworks(int argc, const char *const *argv)
+{
+  int loop;
+  mlval result = MLUNIT;
+  struct profile_options profile_options;
+  runtime = argv[0];
+
+  --argc; ++argv;	/* Skip the command name argument */
+
+  if(!option_parse(&argc, &argv, options))
+    switch(errno)
+    {
+      case EOPTIONARGS:
+      error("The wrong number of arguments were specified for the "
+	    "option `%s'.  Use `-help' for help.", argv[0]);
+
+      case EOPTIONUNKNOWN:
+      error("An unknown option `%s' was specified.  Use `-help' for help.", argv[0]);
+
+      case EOPTIONDELIM:
+      error("Missing closing delimiter for option `%s'.  Use `-help' for help.", argv[0]);
+
+      default:
+      error("The option parser returned an unknown error code %d.", errno);
+    }
+
+#ifdef DIAGNOSTICS
+  if(option_diagnostic.specified)
+    diagnostic_level = to_unsigned(option_diagnostic.arguments[0]);
+#endif
+
+  if(option_backtrace_depth.specified)
+    max_backtrace_depth = to_int(option_backtrace_depth.arguments[0]);
+
+#ifdef LICENSE
+  license();
+#endif
+
+#ifdef PLOCK
+  if(option_plock.specified)
+  {
+    int uid = getuid();
+
+    if(plock(PROCLOCK))
+      switch(errno)
+      {
+	case EAGAIN:
+	message("Warning: Insufficient memory to lock process.");
+	break;
+
+	case EPERM:
+	error("Insufficient privilege to lock process.");
+
+	default:
+	message("Warning: plock() returned an unknown error.");
+      }
+    else
+      message("Process locked in real memory.");
+
+    if(seteuid(getuid()))
+       switch(errno)
+       {
+	 case EINVAL:
+	 error("Invalid numeric uid specified (%d).", uid);
+	 
+	 case EPERM:
+	 error("Not enough privilege to set effective uid.");
+	 
+	 default:
+	 message("Warning: seteuid() returned an unknown error code.");
+       }
+  }
+#endif
+
+  if(option_mono.specified)
+    mono = 1;
+
+  if(option_storeman.specified)
+    initialise(option_storeman.nr_arguments, option_storeman.arguments);
+  else
+    initialise(0, NULL);
+
+  if(option_help.specified)
+  {
+    int i = 0;
+    while (usage_message[i] != NULL) printf(usage_message[i++], sm_help);
+    exit(EXIT_SUCCESS);
+  }
+
+  if(option_pass.specified)
+  {
+    if(option_verbose.specified)
+      message("Passing arguments to modules.");
+
+    module_argc = option_pass.nr_arguments;
+    module_argv = option_pass.arguments;
+  }
+
+  if(option_gc_stats.specified)
+  {
+    gc_stat_stream = fopen(option_gc_stats.arguments[0], "w");
+
+    if(gc_stat_stream == NULL)
+      error("Unable to open `%s' for writing.", option_gc_stats.arguments[0]);
+
+    if(option_verbose.specified) {
+      message_start();
+      message_string("Writing garbage collection statistics to file `");
+      message_string (	      option_gc_stats.arguments[0]);
+      message_string("'.");
+      message_end();
+    }
+  }
+
+  if(option_print.specified)
+  {
+    print_defaults.depth_max = to_int(option_print.arguments[0]);
+    print_defaults.string_length_max = to_unsigned(option_print.arguments[1]);
+    print_defaults.indent = to_int(option_print.arguments[2]);
+    print_defaults.tags = to_int(option_print.arguments[3]);
+  }
+
+  /* Load initial image */
+  /* First try for an image in the executable, if not prohibited */
+  /* If none found, load from command line if one specified */
+  {
+    mlval root;
+    int loaded = 1;
+    if (!option_no_load_exec.specified) {
+      loaded = load_heap_from_executable(&root, runtime);
+    }
+    if (loaded == 1) {
+      if(option_load.specified) {
+
+	if(option_verbose.specified) {
+	  message_start();
+	  message_string("Loading image from file `");
+	  message_string (	      option_load.arguments[0]);
+	  message_string("'.");
+	  message_end();
+	}
+
+	root = image_load(ml_string(option_load.arguments[0]));
+    
+	if(root == ERROR)
+	  switch(errno) {
+	  case EIMPL:
+	    error("Image loading is not implemented by this storage manager.");
+
+	  case EIMAGEFORMAT:
+	    error("The file `%s' is not in the correct image format.",
+		  option_load.arguments[0]);
+
+	  case EIMAGEOPEN:
+	    error("The image loader was unable to open the file `%s'.",
+		  option_load.arguments[0]);
+
+	  case EIMAGEREAD:
+	    error("The image loader was unable to read from the file `%s' "
+		  "despite being able to open it.", option_load.arguments[0]);
+
+	  case EIMAGEALLOC:
+	    error("The image loader was unable to allocate enough memory while "
+		  "loading the file `%s'.", option_load.arguments[0]);
+
+	  case EIMAGEVERSION:
+	    error("The image file `%s' is incompatable with the current version "
+		  "of the image loader.", option_load.arguments[0]);
+
+	  default:
+	    error("The image loader returned %d, "
+		  "which is not a valid error code.", errno);
+	  }
+
+#ifdef DEBUG
+	if (option_analysis.specified)
+	  gc_analyse_heap();
+#endif
+#ifdef EXPLORER
+	if (option_explore.specified)
+	  explore(root);
+#endif
+	loaded = 0; /* Success loading image */
+      }
+    } else if (loaded == 2) {
+      /* An error occurred in the from executable loaded */
+      /* Need some more info here */
+      fprintf(stderr, "switching on errno = %d\n", errno);
+      switch(errno) {
+      case EIMPL:
+	error("Image loading is not implemented by this storage manager.");
+
+      case EIMAGEFORMAT:
+	error("The file `%s' is not in the correct image format.",
+	      runtime);
+
+      case EIMAGEOPEN:
+	error("The image loader was unable to open the file `%s'.",
+	      runtime);
+
+      case EIMAGEREAD:
+	error("The image loader was unable to read from the file `%s' "
+	      "despite being able to open it.", runtime);
+
+      case EIMAGEALLOC:
+	error("The image loader was unable to allocate enough memory while "
+	      "loading the file `%s'.", runtime);
+
+      case EIMAGEVERSION:
+	error("The image file `%s' is incompatable with the current version "
+	      "of the image loader.", runtime);
+
+      default:
+	error("The image loader returned %d, "
+	      "which is not a valid error code.", errno);
+      }
+    }
+    if(loaded == 0 && !global_unpack(root))
+      error("The global state in the image file `%s' does not correspond to "
+	    "that of this runtime system.", option_load.arguments[0]);
+
+  }
+
+  if(option_messages.specified)
+    MLUPDATE(gc_message_level, 0, MLINT(to_int(option_messages.arguments[0])));
+
+  if (option_stacksize.specified)
+    MLUPDATE (max_stack_blocks, 0,MLINT(to_int(option_stacksize.arguments[0])));
+    
+  if(option_profile.specified)
+  {
+    const char *filename = option_profile.arguments[0];
+
+    profile_stream = fopen(filename, "w");
+
+    if(profile_stream == NULL)
+      error("Unable to open `%s' for writing.", filename);
+
+    profile_options.interval =
+      option_profile_scan.specified ?
+	to_unsigned(option_profile_scan.arguments[0]) : 0;
+
+    profile_options.manner = profile_manner;
+    profile_selector =
+      option_profile_select.specified ?
+	option_profile_select.arguments[0] : NULL;
+
+    profile_depth =
+      option_profile_depth.specified ?
+	to_unsigned(option_profile_depth.arguments[0]) : 0;
+
+    if (profile_depth > PROFILE_DEPTH_MAX)
+      error("The profiler cannot profile to depth %d (max %d)",
+	    profile_depth, PROFILE_DEPTH_MAX);
+
+    profile_specified_manner = 
+      (option_profile_manner.specified ?
+       to_unsigned(option_profile_manner.arguments[0]) : PROFILE_ALL) +
+	 (profile_depth << PROFILE_DEPTH_SHIFT);
+
+    profile_options.stream = profile_stream;
+
+    if(option_verbose.specified) {
+      message_start();
+      message_string("Profiling to `");
+      message_string(filename);
+      message_content("' with scanning interval %u and depth %u.",
+		      profile_options.interval, profile_depth);
+      message_end();
+    }
+
+    if(profile_begin(&profile_options))
+      error("The profile returned an unexpected error code %d.", errno);
+  }
+
+  /* install the exit routines in case the image calls MLWorks.exit() */
+
+  atexit(stop_mlworks);
+
+  start = clock();
+
+  /* If an image with a continuation was loaded, execute it first. */
+  if(image_continuation != MLUNIT)
+/* For the convenience of new lambda optimiser -- this is a HACK */
+/*
+      result = callml(MLUNIT, FIELD (image_continuation,0));
+*/
+      result = callml(MLUNIT, image_continuation);
+
+
+  /* If there is a module list file, load modules from there first. */
+  if(option_modules.specified)
+  {
+    char filename[FILENAME_MAX+1];
+    char format[10];
+    FILE *f;
+
+    if(option_verbose.specified) {
+      message_start();
+      message_string("Reading module filenames from file `%");
+      message_string(option_modules.arguments[0]);
+      message_string("'.");
+      message_end();
+    }
+
+    f = fopen(option_modules.arguments[0], "r");
+
+    if(f == NULL)
+      error("Unable to open module list file `%s'.",
+	    option_modules.arguments[0]);
+
+    (void)sprintf(format, " %%%us", FILENAME_MAX);
+
+    while(fscanf(f, format, filename) == 1)
+    {
+      int c = fgetc(f);
+
+      (void)load_link(filename);
+
+      if(c == EOF)
+	break;
+      else if(!isspace(c))
+	error("Overlong filename in module list file `%s'.",
+	      option_modules.arguments[0]);
+    }
+
+    (void)fclose(f);
+  }
+
+  /* Load any modules specified on the command line. */
+  for(loop=0; loop<argc; ++loop)
+    result = load_link(argv[loop]);
+
+  stop = clock();
+
+  if(option_show.specified)
+  {
+    print(NULL, stdout, result);
+    putchar('\n');
+  }
+
+  if(option_save.specified)
+  {
+    mlval global, filename, argument;
+
+    if(option_verbose.specified) {
+      message_start();
+      message_string("Saving image to file `");
+      message_string(option_save.arguments[0]);
+      message_string("'");
+      message_end();
+    }
+
+    global = global_pack();
+    declare_root(&global);
+    filename = ml_string(option_save.arguments[0]);
+    declare_root(&filename);
+
+  {
+    mlval old_message_level = MLSUB(gc_message_level,0);
+    MLUPDATE(gc_message_level,0,MLINT(-1));
+    gc_collect_all();
+    MLUPDATE(gc_message_level,0,old_message_level);
+  }
+    argument = allocate_record(2);
+    FIELD(argument, 0) = filename;
+    FIELD(argument, 1) = global;
+    retract_root(&filename);
+    retract_root(&global);
+
+    if(image_save(argument) == ERROR)
+      switch(errno)
+      {
+	case EIMPL:
+	error("Image saving is not implemented by this storage manager.");
+
+	case EIMAGEOPEN:
+	error("The image saver was unable to open the file `%s'.",
+	      option_save.arguments[0]);
+
+	case EIMAGEWRITE:
+	error("The image saver was unable to write to the file `%s'.",
+	      option_save.arguments[0]);
+
+	default:
+	error("The image saver returned %d, "
+	      "which is not a valid error code.", errno);
+      }
+  }
+
+  if(option_save_exec.specified)
+  {
+    mlval global, filename, argument;
+
+    if(option_verbose.specified) {
+      message_start();
+      message_string("Saving executable image to file `");
+      message_string(option_save_exec.arguments[0]);
+      message_string("'");
+      message_end();
+    }
+
+    global = global_pack();
+    declare_root(&global);
+    filename = ml_string(option_save_exec.arguments[0]);
+    declare_root(&filename);
+
+    {
+      mlval old_message_level = MLSUB(gc_message_level,0);
+      MLUPDATE(gc_message_level,0,MLINT(-1));
+      gc_collect_all();
+      MLUPDATE(gc_message_level,0,old_message_level);
+    }
+    argument = allocate_record(2);
+    FIELD(argument, 0) = filename;
+    FIELD(argument, 1) = global;
+    retract_root(&filename);
+    retract_root(&global);
+
+    if(save_executable(argument) == ERROR)
+      switch(errno)
+      {
+	case EIMPL:
+	error("Executable image saving is not implemented by this storage manager.");
+
+	case EIMAGEOPEN:
+	error("The image saver was unable to open the file `%s'.",
+	      option_save_exec.arguments[0]);
+
+        case EIMAGEREAD:
+	error("The image loader was unable to read from the file `%s' "
+	      "despite being able to open it.", runtime);
+
+        case EIMAGEALLOC:
+	error("The image loader was unable to allocate enough memory while "
+	      "reading the file `%s'.", runtime);
+
+	case EIMAGEWRITE:
+	error("The image saver was unable to write to the file `%s'.",
+	      option_save_exec.arguments[0]);
+
+	default:
+	error("The image saver returned %d, "
+	      "which is not a valid error code.", errno);
+      }
+  }
+
+  return(EXIT_SUCCESS);
+}
+
+int main(int argc, const char * const *argv)
+{
+  run_scheduler(start_mlworks, argc, argv);
+  return (EXIT_SUCCESS);
+}
+@
+
+
+1.4
+log
+@Getting rid of sm_interface().
+@
+text
+@d14 3
+d419 8
+d499 3
+d524 3
+d840 4
+@
+
+
+1.3
+log
+@Runtime error message buffer problem.
+@
+text
+@d14 3
+d354 1
+a727 3
+  if (option_stacksize.specified)
+    sm_interface (50, 1,MLINT(to_int(option_stacksize.arguments[0])));
+    
+d788 1
+a788 1
+	root = sm_interface(SM_IMAGE_LOAD, 1, ml_string(option_load.arguments[0]));
+d822 1
+a822 1
+	  (void) sm_interface(SM_ANALYSE_HEAP, 1,MLUNIT);
+d868 3
+d1003 1
+a1003 1
+    (void) sm_interface(SM_COLLECT_ALL, 1,MLUNIT);
+d1012 1
+a1012 1
+    if(sm_interface(SM_IMAGE_SAVE, 1, argument) == ERROR)
+d1052 1
+a1052 1
+      (void) sm_interface(SM_COLLECT_ALL, 1,MLUNIT);
+d1061 1
+a1061 1
+    if(sm_interface(SM_EXEC_IMAGE_SAVE, 1, argument) == ERROR)
+@
+
+
+1.2
+log
+@Add stuff to use loading/saving of executables
+@
+text
+@d14 3
+d750 7
+a756 3
+    if(option_verbose.specified)
+      message("Writing garbage collection statistics to file `%s'.",
+	      option_gc_stats.arguments[0]);
+d779 7
+a785 2
+	if(option_verbose.specified)
+	  message("Loading image from file `%s'.", option_load.arguments[0]);
+d900 8
+a907 4
+    if(option_verbose.specified)
+      message("Profiling to `%s' with scanning interval %u and depth %u.",
+	      filename, profile_options.interval, profile_depth);
+
+d935 7
+a941 3
+    if(option_verbose.specified)
+      message("Reading module filenames from file `%s'",
+	      option_modules.arguments[0]);
+d983 7
+a989 2
+    if(option_verbose.specified)
+      message("Saving image to file `%s'", option_save.arguments[0]);
+d1032 7
+a1038 2
+    if(option_verbose.specified)
+      message("Saving executable image to file `%s'", option_save_exec.arguments[0]);
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d13 4
+a16 1
+ *  $Log: src:OS:NT:main.c,v $
+d348 1
+d414 3
+d481 2
+d500 2
+a501 2
+&option_delivery,
+&option_analysis,
+d503 2
+d637 2
+d644 1
+d760 3
+a762 2
+  /* Load an initial image if specified. */
+  if(option_load.specified)
+d765 6
+d772 2
+a773 2
+    if(option_verbose.specified)
+      message("Loading image from file `%s'.", option_load.arguments[0]);
+d775 31
+a805 1
+    root = sm_interface(SM_IMAGE_LOAD, 1, ml_string(option_load.arguments[0]));
+d807 12
+a818 4
+    if(root == ERROR)
+      switch(errno)
+      {
+	case EIMPL:
+d821 1
+a821 1
+	case EIMAGEFORMAT:
+d823 1
+a823 1
+	      option_load.arguments[0]);
+d825 1
+a825 1
+	case EIMAGEOPEN:
+d827 1
+a827 1
+	      option_load.arguments[0]);
+d829 1
+a829 1
+	case EIMAGEREAD:
+d831 1
+a831 1
+	      "despite being able to open it.", option_load.arguments[0]);
+d833 1
+a833 1
+	case EIMAGEALLOC:
+d835 1
+a835 1
+	      "loading the file `%s'.", option_load.arguments[0]);
+d837 1
+a837 1
+	case EIMAGEVERSION:
+d839 1
+a839 1
+	      "of the image loader.", option_load.arguments[0]);
+d841 1
+a841 1
+	default:
+d845 2
+a846 7
+
+#ifdef DEBUG
+    if (option_analysis.specified)
+      (void) sm_interface(SM_ANALYSE_HEAP, 1,MLUNIT);
+#endif
+
+    if(!global_unpack(root))
+d849 1
+d996 52
+@

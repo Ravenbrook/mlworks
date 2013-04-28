@@ -1,0 +1,593 @@
+head	1.12;
+access;
+symbols
+	Final_version_of_old_runtime:1.12
+	ML_revised_beta_release_25/05/94:1.12
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.10
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.12
+date	94.05.25.15.27.48;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	94.01.28.17.22.49;	author nickh;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.01.20.16.53.41;	author nickh;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.01.04.10.31.37;	author nickh;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.09.28.09.46.54;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.09.01.09.32.09;	author daveb;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	93.05.11.13.18.47;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.04.26.10.44.05;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.25.14.30.00;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.02.01.13.14.03;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.01.06.16.50.36;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.12.21.15.38.29;	author richard;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	93.09.01.09.32.09;	author jont;	state Exp;
+branches;
+next	1.7.1.2;
+
+1.7.1.2
+date	93.09.28.09.44.29;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@License enforcer.
+@
+
+
+1.12
+log
+@Update expiry date
+@
+text
+@/*  === LICENSING ===
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The process is forked.  The parent continues with the normal running,
+ *  but traps child status changes by putting a signal handler on SIGCHLD.
+ *  The child monitors the license and exits if it expires.
+ *
+ *  Care is taken to deal with tampering.  In particular, if the child is
+ *  stopped or killed the parent exits.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: license.c,v $
+ *  Revision 1.11  1994/01/28  17:22:49  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.9  1994/01/04  10:31:37  nickh
+ *  Update best-before date to 1st April.
+ *
+ *  Revision 1.8  1993/09/28  09:46:54  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.7.1.2  1993/09/28  09:44:29  jont
+ *  Fixed to poll license expiry regularly
+ *
+ *  Revision 1.7.1.1  1993/09/01  09:32:09  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.7  1993/09/01  09:32:09  daveb
+ *  Changed BEST_BEFORE date to 1994-01-01 00:00:00.
+ *
+ *  Revision 1.6  1993/05/11  13:18:47  daveb
+ *  Increased a diagnostic level.
+ *
+ *  Revision 1.5  1993/04/26  10:44:05  richard
+ *  Increased diagnostic levels.
+ *
+ *  Revision 1.4  1993/03/25  14:30:00  daveb
+ *  Added a few extra checks and diagnostics.  Used sigblock instead of
+ *  sigvec where appropriate.
+ *
+ *  Revision 1.3  1993/02/01  13:14:03  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.2  1993/01/06  16:50:36  richard
+ *  The mechanism is now considerably more secure.  The parent and child
+ *  roles have been swapped so that interfering with the child is easily
+ *  spotted.  The child monitors the status of the parent using a dummy
+ *  pipe.
+ *
+ *  Revision 1.1  1992/12/21  15:38:29  richard
+ *  Initial revision
+ *
+ */
+
+#include "ansi.h"
+#include "syscalls.h"
+#include "storeman.h"
+#include "diagnostic.h"
+
+#include <time.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <string.h>
+#include <memory.h>
+#include <sys/wait.h>
+#include <signal.h>
+#include <sys/signal.h>
+#include <errno.h>
+#include <sys/errno.h>
+
+#define BEST_BEFORE	781024732	/* 1994-10-01 sometime */
+#define POLL_PERIOD	600		/* seconds between licence checks */
+
+static int child;
+
+static void sigchild(int sig, int code)
+{
+  int status, available;
+
+  DIAGNOSTIC(4, "sigchild(sig = %d, code = %d, ...", sig, code);
+  DIAGNOSTIC(4, "         child = %d)", child, 0);
+
+  /* Find out what happened to the child.  If waitpid() is interrupted by a */
+  /* signal then try again. */
+  
+  do
+    available = waitpid(child, &status, WNOHANG | WUNTRACED);
+  while(available == -1 && errno == EINTR);
+  
+  if(available == -1)
+    error("Unable to determine status of licensing process.  "
+	  "waitpid set errno to %d.", errno);
+
+  /* If available is non zero then something happened to the child.  If it */
+  /* is zero then the child status changed, but changed back (for example, */
+  /* both child and parent were suspended from the shell and restarted. */
+  
+  if(available)
+  {
+    DIAGNOSTIC(4, "available %d status 0x%02X", available, status);
+
+    if(WIFSTOPPED(status))
+      error("Licensing process was stopped with signal %d", WSTOPSIG(status));
+    else if(WIFSIGNALED(status))
+      error("Licensing process was terminated with signal %d", WTERMSIG(status));
+    else
+      error("Your license has expired.  Contact MLWorks customer support:\n"
+	    "   electronic mail:  mlworks-support@@harlequin.co.uk\n"
+	    "   telephone:        +44 223 872522");
+  }
+}
+
+static void sigalrm(int sig)
+{
+  time_t now;
+
+
+  now = time(NULL);
+  DIAGNOSTIC(4, "child: checking license at time %ld ", now, 0);
+
+  if(now == -1)
+    message("child: WARNING: time() returned -1");
+  else if (now >= BEST_BEFORE)
+  {
+    DIAGNOSTIC(1, "child: license expired at time %ld ", now, 0);
+    exit(1);
+  }
+}
+
+void license(void)
+{
+  struct sigvec sv;
+  int pipefd[2];
+
+  /* Set up a handler on SIGCHLD _before_ forking, so that immediate changes */
+  /* in status are caught.  */
+  
+  sv.sv_handler = sigchild;
+  sv.sv_mask = 0;
+  sv.sv_flags = 0;
+  if(sigvec(SIGCHLD, &sv, NULL) == -1)
+    error("Unable to set signal handler for SIGCHLD.  "
+	  "sigvec set errno to %d.", errno);
+
+  if(pipe(pipefd))
+    error("Unable to create pipe for licensing.  "
+	  "pipe set errno to %d.", errno);
+
+  child = fork();
+
+  if(child == -1)
+    switch(errno)
+    {
+      case EAGAIN:
+      error("Too many processes running to fork licensing process.");
+
+      case ENOMEM:
+      error("Insufficient memory to fork licensing process.");
+
+      default:
+      error("fork() returned an unexpected error code %d", errno);
+    }
+
+  if(child == 0)
+  {
+    char dummy;
+    struct itimerval period;
+    int i;
+
+    sv.sv_mask = 0;
+    sv.sv_flags = 0;
+
+    /* Ignore all signals (if possible) so that signals sent to the */
+    /* process group won't affect the licensing process. */
+
+    sv.sv_handler = SIG_IGN;
+    for(i=1; i<NSIG; ++i)
+      if (i != SIGALRM)
+	/* SIGKILL and SIGSTOP are not blocked by this */
+        sigblock(sigmask(i));
+
+    /* Check the license once before we start. */
+    sigalrm (0);
+
+    /* Set up a real time alarm with a handler to poll the license. */
+
+    sv.sv_handler = sigalrm;
+    if(sigvec(SIGALRM, &sv, NULL) == -1)
+      error("Licensing process unable to set signal handler for SIGALRM.  "
+	    "sigvec set errno to %d.", errno);
+
+    period.it_value.tv_sec = POLL_PERIOD;
+    period.it_value.tv_usec = 0;
+    period.it_interval.tv_sec = POLL_PERIOD;
+    period.it_interval.tv_usec = 0;
+
+    if(setitimer(ITIMER_REAL, &period, NULL) == -1)
+      error("Unable to set up licensing timer.  "
+	    "setitimer set errno to %d.", errno);
+
+    /* Read from the child's end of the pipe.  This has the effect of */
+    /* blocking the child until the other end is closed by the parent */
+    /* exiting. */
+
+    close(pipefd[1]);
+    if(read(pipefd[0], &dummy, 1))
+      error("Licensing process managed to read from pipe.");
+
+    DIAGNOSTIC(2, "child: parent died -- exiting", 0, 0);
+    exit(0);
+  }
+
+  DIAGNOSTIC(1, "licensing process id %d", child, 0);
+}
+@
+
+
+1.11
+log
+@Moved extern function declarations to header files.
+@
+text
+@d17 3
+d75 1
+a75 1
+#define BEST_BEFORE	773017200	/* 1994-07-01 00:00:00 */
+d123 1
+a123 1
+  DIAGNOSTIC(4, "child: checking license at time %ld", now, 0);
+d129 1
+a129 1
+    DIAGNOSTIC(1, "child: license expired at time %ld", now, 0);
+@
+
+
+1.10
+log
+@Updated best-before date to 1st July.
+@
+text
+@d56 2
+a70 6
+extern int fork(void);
+extern int getppid(void);
+extern int sleep(unsigned int);
+extern int sigvec(int, struct sigvec *, struct sigvec *);
+extern int kill(int, int);
+extern time_t time(time_t *);
+d198 1
+a198 1
+    if(setitimer(ITIMER_REAL, &period) == -1)
+@
+
+
+1.9
+log
+@Update best-before date to 1st April.
+@
+text
+@d17 3
+d76 1
+a76 1
+#define BEST_BEFORE	765154800	/* 1994-04-01 00:00:00 */
+@
+
+
+1.8
+log
+@Merging in bug fixes
+@
+text
+@d17 3
+d73 1
+a73 1
+#define BEST_BEFORE	757382400	/* 1994-01-01 00:00:00 */
+@
+
+
+1.7
+log
+@Changed BEST_BEFORE date to 1994-01-01 00:00:00.
+@
+text
+@d17 9
+d191 1
+a191 1
+    period.it_value.tv_sec = 0;
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a16 3
+ *  Revision 1.7  1993/09/01  09:32:09  daveb
+ *  Changed BEST_BEFORE date to 1994-01-01 00:00:00.
+ *
+@
+
+
+1.7.1.2
+log
+@Fixed to poll license expiry regularly
+@
+text
+@a16 3
+ *  Revision 1.7.1.1  1993/09/01  09:32:09  jont
+ *  Fork for bug fixing
+ *
+d185 1
+a185 1
+    period.it_value.tv_sec = POLL_PERIOD;
+@
+
+
+1.6
+log
+@Increased a diagnostic level.
+@
+text
+@d17 3
+d61 1
+a61 1
+#define BEST_BEFORE	746838000	/* 1993-09-01 00:00:00 */
+@
+
+
+1.5
+log
+@Increased diagnostic levels.
+@
+text
+@d17 3
+d196 1
+a196 1
+    DIAGNOSTIC(1, "child: parent died -- exiting", 0, 0);
+@
+
+
+1.4
+log
+@Added a few extra checks and diagnostics.  Used sigblock instead of
+sigvec where appropriate.
+@
+text
+@d17 4
+d64 2
+a65 2
+  DIAGNOSTIC(0, "sigchild(sig = %d, code = %d, ...", sig, code);
+  DIAGNOSTIC(0, "         child = %d)", child, 0);
+d84 1
+a84 1
+    DIAGNOSTIC(0, "available %d status 0x%02X", available, status);
+d103 1
+a103 1
+  DIAGNOSTIC(1, "child: checking license at time %ld", now, 0);
+d105 5
+a109 5
+  if (now == -1) {
+    DIAGNOSTIC(0, "child: time returned -1", 0, 0);
+  }
+  else if (now >= BEST_BEFORE) {
+    DIAGNOSTIC(0, "child: license expired at time %ld", now, 0);
+d197 1
+a197 1
+  DIAGNOSTIC(0, "licensing process id %d", child, 0);
+@
+
+
+1.3
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d17 3
+d35 1
+d49 1
+a49 1
+extern unsigned long int time(unsigned long int *);
+d52 1
+a52 1
+#define POLL_PERIOD	60		/* seconds between licence checks */
+d60 2
+a61 1
+  DIAGNOSTIC(1, "sigchild(sig = %d, code = %d)", sig, code);
+d80 1
+a80 1
+    DIAGNOSTIC(1, "child %d status 0x%02X", child, status);
+d95 5
+a99 1
+  DIAGNOSTIC(1, "child: checking license...", 0, 0);
+d101 5
+a105 1
+  if(time(NULL) >= BEST_BEFORE)
+d107 1
+d157 7
+a163 2
+    for(i=0; i<NSIG; ++i)
+      sigvec(i, &sv, NULL);
+d193 1
+a193 1
+  DIAGNOSTIC(1, "licensing process id %d", child, 0);
+@
+
+
+1.2
+log
+@The mechanism is now considerably more secure.  The parent and child
+roles have been swapped so that interfering with the child is easily
+spotted.  The child monitors the status of the parent using a dummy
+pipe.
+@
+text
+@d17 6
+d37 1
+d134 1
+d136 10
+a148 3
+    sv.sv_mask = 0;
+    sv.sv_flags = 0;
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 3
+a9 2
+ *  The process is forked.  The child continues with the normal running, the
+ *  parent monitors the license and kills them both if it expires.
+d11 3
+d16 4
+a19 1
+ *  $Log$
+d23 1
+d26 3
+d32 1
+d34 1
+d38 1
+d40 2
+a41 1
+#define BEST_BEFORE 746838000	/* 1993-09-01 00:00:00 */
+d43 2
+d47 32
+a78 1
+  exit(0);
+d81 8
+d91 2
+a92 2
+#ifndef DEBUG
+  int child;
+d94 30
+a123 1
+  if(child = fork())
+d125 2
+a126 1
+    struct sigvec sv;
+d128 3
+a130 1
+    sv.sv_handler = sigchild;
+d134 2
+a135 2
+    if(sigvec(SIGCHLD, &sv, NULL))
+      error("Licensing parent unable to set signal handler.  "
+d138 4
+a141 2
+    while((unsigned long int)time(NULL) < BEST_BEFORE)
+      sleep(60);
+d143 3
+a145 1
+    sv.sv_handler = SIG_IGN;    
+d147 3
+a149 3
+    if(sigvec(SIGCHLD, &sv, NULL))
+      error("Licensing parent unable to set signal handler.  "
+	    "sigvec set errno to %d.", errno);
+d151 3
+a153 1
+    kill(child, SIGKILL);
+d155 2
+a156 3
+    error("Your license has expired.  Contact MLWorks customer support:\n"
+	  "   electronic mail:  mlworks-support@@harlequin.co.uk\n"
+	  "   telephone:        +44 223 872522");
+d158 2
+a159 1
+#endif
+@

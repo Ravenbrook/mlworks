@@ -1,0 +1,523 @@
+head	1.14;
+access;
+symbols
+	Final_version_of_old_runtime:1.14
+	ML_revised_beta_release_25/05/94:1.14
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ *  @;
+
+
+1.14
+date	94.03.29.15.57.03;	author johnk;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	94.03.29.15.56.12;	author johnk;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	94.03.23.12.44.07;	author nickh;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.05.13.10.47.55;	author richard;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.04.06.15.28.01;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.02.04.23.21.16;	author nosa;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.12.18.15.20.56;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.07.08.40.40;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.29.14.23.00;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.14.15.56.06;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.30.09.44.02;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.11.17.07.21;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.05.08.17.09.03;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.04.14.16.14.32;	author clive;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.05.13.10.47.55;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@First version of the profiler
+@
+
+
+1.14
+log
+@Bumped a revision.
+@
+text
+@/*  ==== PROFILER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: profiler.h,v $
+ *  Revision 1.13  1994/03/29  15:56:12  johnk
+ *  Manually Bumped.
+ *
+ *  Revision 1.12  1994/03/23  12:44:07  nickh
+ *  New profiler, with a slightly different interface.
+ *
+ *  Revision 1.11  1993/05/13  10:47:55  richard
+ *  Added suspend and resume.
+ *
+ *  Revision 1.10  1993/04/06  15:28:01  richard
+ *  Another complete rewrite based on Nosa's multi-level profiler.
+ *
+ *  Revision 1.9  1993/02/04  23:21:16  nosa
+ *  Implemented a multi-level profiler
+ *
+ *  Revision 1.8  1992/12/18  15:20:56  clive
+ *  Made the profiler take the generalised streams
+ *
+ *  Revision 1.7  1992/08/07  08:40:40  richard
+ *  Profile_new() is no longer needed due to changes in the loader.
+ *
+ *  Revision 1.6  1992/07/29  14:23:00  richard
+ *  Added better error return.
+ *
+ *  Revision 1.5  1992/07/14  15:56:06  richard
+ *  Complete reimplementation without placing assumptions on the
+ *  storage manager.  The profiler may now be `wrapped around'
+ *  a computation in order to profile it, and sends it output to
+ *  a specified stream.
+ *
+ *  Revision 1.4  1992/06/30  09:44:02  richard
+ *  Tidying, and moved in_ML here since it isn't (going to be) used
+ *  from the storage manager.
+ *
+ *  Revision 1.3  1992/06/11  17:07:21  clive
+ *  Fixes to the profiler
+ *  
+ *  Revision 1.2  1992/05/08  17:09:03  clive
+ *  Added some code for memory profiling and corrected some bugs
+ *  
+ *  Revision 1.1  1992/04/14  16:14:32  clive
+ *  Initial revision
+ */
+
+#ifndef profiler_h
+#define profiler_h
+
+#include <stdio.h>
+#include <stddef.h>
+
+#include "options.h"
+#include "values.h"
+#include "storeman.h"
+
+
+/*  === INIIALISE THE PROFILER ===
+ *
+ *  Performs internal initialisation.
+ */
+
+extern void profile_init(void);
+
+
+/*  === PROFILING OPTIONS ===
+ *
+ *  interval
+ *    The interval, in virtual milliseconds, between scans of the stack.
+ *    If zero, no scans will occur.
+ *  depth
+ *    The depth of caller-callee relations to which information is
+ *    collated.  (1 gives profiles about individual code vectors.)
+ *  select
+ *    A function which yields non-zero if a code is to be profiled.  This
+ *    may be called asynchronously and therefore cannot be in ML.
+ *  print
+ *    A function (in C or ML) which is applied to the strings which
+ *    form the output of the profiler.  It must not raise an
+ *    exception.
+ */
+
+struct profile_options
+{
+  unsigned int interval;
+  unsigned int depth;
+  int (*select)(mlval code);
+  enum {PROFILE_OPT_C, PROFILE_OPT_ML} printer_type;
+  union
+  {
+    mlval ml;
+    void (*c)(const char *string);
+  } print;
+};
+
+extern int profile_select_all(mlval code);
+extern void profile_print_stdout(const char *string);
+
+
+/* profile_on is non-zero when profiling and zero otherwise */
+
+extern int profile_on;
+
+/*  === PROFILE A CODE SECTION ===
+ *
+ *  profile_begin() and profile_end() are used to `bracket' a section of
+ *  code to be profiled.   The results of profiling are passed to a print
+ *  function as strings.
+ *
+ *  The options structure must not be modified until profile_end() returns.
+ *
+ *  Both functions return zero on success or -1 on error and set errno.
+ */
+
+#define PROFILE_DEPTH_MAX	256
+
+enum /* errno */
+{
+  EPROFILEDEPTH = 1,		/* cannot profile that deep */
+  EPROFILENEST			/* profiler cannot nest */
+};
+
+extern int profile_begin(struct profile_options *options);
+extern int profile_end(void);
+
+
+/*  === PROFILE SUSPENDING ===
+ *
+ *  Between a profile_begin() and a profile_end() it may be desirable to
+ *  suspend profiling temporarily, for example, to enter a debugger.
+ *  profile_suspend() and profile_resume() do the obvious thing, and return
+ *  zero on success.  They nest, and return -1 and set errno to EPROFILENEST
+ *  if wrongly nested or used outside profiling.
+ *
+ *  The integer profile_suspended is non-zero if profiling is suspended.  It
+ *  is not meaningful outside profiling.
+ */
+
+extern int profile_suspended;
+extern int profile_suspend(void);
+extern int profile_resume(void);
+
+
+#endif
+@
+
+
+1.13
+log
+@Manually Bumped.
+@
+text
+@d8 3
+@
+
+
+1.12
+log
+@New profiler, with a slightly different interface.
+@
+text
+@d8 3
+@
+
+
+1.11
+log
+@Added suspend and resume.
+@
+text
+@d8 3
+d67 3
+a72 3
+ *  interval
+ *    The interval, in virtual milliseconds, between scans of the stack.
+ *    If zero, no scans will occur.
+d77 3
+a79 2
+ *    A function which is folded over the strings which form the output of
+ *    the profiler.  It must not raise an exception.
+d90 1
+a90 1
+    struct {mlval out, fold;} ml;
+d99 4
+d126 1
+a126 1
+/*  === PROFILE NESTING ===
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a7 3
+ *  Revision 1.11  1993/05/13  10:47:55  richard
+ *  Added suspend and resume.
+ *
+@
+
+
+1.10
+log
+@Another complete rewrite based on Nosa's multi-level profiler.
+@
+text
+@d8 3
+d111 1
+a111 1
+  EPROFILERUNNING		/* profiler cannot nest */
+d116 17
+@
+
+
+1.9
+log
+@Implemented a multi-level profiler
+@
+text
+@d8 3
+a50 1
+
+a55 8
+struct profile_list
+{
+  char *string;
+  struct profile_list *next;
+};
+extern struct profile_list *CONS(const char *,struct profile_list *);
+extern struct profile_list *CONVERT(mlval);
+
+d59 1
+a59 1
+/*  === BEGIN PROFILING ===
+d61 12
+a72 7
+ *  Call this function at the start of the time period to profile.  The
+ *  first parameter is the stream to which the profiling results will be
+ *  written.  The second parameter is the interval between of stack scans,
+ *  in virtual milliseconds.  If zero, no stack scans will occur.
+ *
+ *  The function returns non-zero if it fails and sets errno to one of the
+ *  error codes below.
+d75 1
+a75 1
+enum
+d77 9
+a85 3
+  EPROFILERUNNING = 1,		/* the profiler is already running */
+  EPROFILEALLOC,		/* couldn't allocate memory for tables */
+  EPROFILEWRITE			/* couldn't write to the profile stream */
+d88 2
+a89 2
+extern int profile_begin(short profileLevel, short profileAll, struct profile_list *toProfile, 
+			 mlval stream, unsigned int frequency,int is_a_file);
+d92 1
+a92 1
+/*  === END PROFILING ===
+d94 7
+a100 3
+ *  The collected statistics are written out to the stream passed to
+ *  profile_begin.  It returns non-zero on error and sets errno to one of
+ *  the error codes above.
+d103 9
+@
+
+
+1.8
+log
+@Made the profiler take the generalised streams
+@
+text
+@d8 3
+d48 1
+d54 8
+d83 2
+a84 1
+extern int profile_begin(mlval stream, unsigned int frequency,int is_a_file);
+@
+
+
+1.7
+log
+@Profile_new() is no longer needed due to changes in the loader.
+@
+text
+@d8 3
+d71 1
+a71 1
+extern int profile_begin(FILE *stream, unsigned int frequency);
+@
+
+
+1.6
+log
+@Added better error return.
+@
+text
+@d8 3
+a47 10
+
+
+/*  === INFORM THE PROFILER ABOUT A NEW CODE VECTOR ===
+ *
+ *  If a new code vector is added to the heap it must be registered with the
+ *  profiler by calling this function, otherwise it will not be profiled,
+ *  and will not be safe to call if it contains call counting code.
+ */
+
+extern void profile_new(mlval code);
+@
+
+
+1.5
+log
+@Complete reimplementation without placing assumptions on the
+storage manager.  The profiler may now be `wrapped around'
+a computation in order to profile it, and sends it output to
+a specified stream.
+@
+text
+@d8 6
+d39 1
+a39 6
+/*  === BEGIN PROFILING ===
+ *
+ *  Call this function at the start of the time period to profile.  The
+ *  first parameter is the stream to which the profiling results will be
+ *  written.  The second parameter is the frequency of stack scans, in
+ *  virtual Hz.  If zero, no stack scans will occur.
+d41 1
+a41 1
+ *  The function returns zero (failure) if the profiler is already running.
+d44 1
+a44 1
+extern int profile_begin(FILE *stream, unsigned int frequency);
+d47 1
+a47 1
+/*  == Inform the profiler about a new code vector ==
+d50 2
+a51 1
+ *  profiler by calling this function.
+d57 21
+d81 2
+a82 1
+ *  profile_begin.
+d85 1
+a85 1
+extern void profile_end(void);
+@
+
+
+1.4
+log
+@Tidying, and moved in_ML here since it isn't (going to be) used
+from the storage manager.
+@
+text
+@d8 4
+d25 2
+a26 7
+extern int in_ML;
+extern int profiling_turned_on;
+extern int scan_stack_profiling;
+extern void finalise_profiler_table(int,int);
+extern void set_up_profiler_interrupt(void);
+extern void profile_frequency(int);
+extern void set_profiler_timer_going(void);
+d28 35
+a62 2
+#define PROFILE_TOS_EVERY (10000L)
+#define SIGNAL_STACK_SIZE 8000
+@
+
+
+1.3
+log
+@Fixes to the profiler
+@
+text
+@d8 9
+a16 2
+Revision 1.2  1992/05/08  17:09:03  clive
+Added some code for memory profiling and corrected some bugs
+a17 5
+Revision 1.1  1992/04/14  16:14:32  clive
+Initial revision
+
+*/
+
+d21 1
+@
+
+
+1.2
+log
+@Added some code for memory profiling and corrected some bugs
+@
+text
+@d8 3
+d24 1
+d27 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 3
+d17 1
+@

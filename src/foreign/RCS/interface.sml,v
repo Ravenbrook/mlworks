@@ -1,0 +1,480 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.24.14.58.41;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(* ==== Foreign Interface signature file : interface.sml ====
+ * (Copyright) The Harlequin Group, 1996 (All rights reserved)
+ *)
+
+require "../basis/__general";
+require "../basis/__word32";
+require "../basis/__word8";
+
+
+signature INTERFACE =
+   sig
+
+      type 'a option = 'a General.option
+
+      type word32    = Word32.word
+      type address   = word32
+      type bytearray = MLWorks.ByteArray.bytearray
+      type name      = string
+      type filename  = string
+
+      structure Store :
+      sig
+
+         type store
+
+         exception ReadOnly
+         exception WriteOnly
+
+         datatype store_status = LOCKED_STATUS | RD_STATUS | WR_STATUS | RDWR_STATUS 
+
+         val store_status     : store -> store_status
+         val set_store_status : (store * store_status) -> unit
+
+         datatype alloc_policy = ORIGIN | SUCC | ALIGNED_4 | ALIGNED_8
+
+         datatype overflow_policy = BREAK | EXTEND | RECYCLE
+
+         val store : { alloc    : alloc_policy,
+                       overflow : overflow_policy,
+                       status   : store_status,
+                       size     : int } -> store
+
+         val store_size     : store -> int
+         val store_alloc    : store -> alloc_policy
+         val store_overflow : store -> overflow_policy
+
+         exception ExpandStore
+
+         val is_standard_store  : store -> bool
+         val is_ephemeral_store : store -> bool
+
+         val expand  : (store * int) -> unit
+      end
+
+      structure Object :
+      sig
+         type ('a) object
+
+         datatype object_mode = LOCAL_OBJECT | REMOTE_OBJECT
+         datatype object_status = PERMANENT_OBJECT | TEMPORARY_OBJECT
+
+         exception OutOfBounds
+         exception ReadOnly
+         exception WriteOnly
+         exception Currency
+
+         val object_status       : ('l_type) object -> object_status
+         val object_currency     : ('l_type) object -> bool
+         val object_mode         : ('l_type) object -> object_mode
+         val object_size         : ('l_type) object -> int
+         val object_location     : ('l_type) object -> int
+         val object_address      : ('l_type) object -> address
+      end;
+      
+      structure Aliens :
+      sig
+
+         val ensure_aliens  : unit -> unit
+         val reset_aliens   : unit -> unit
+         val refresh_aliens : unit -> unit
+
+      end
+
+      structure LibML :
+      sig
+
+        val register_external_value   :  string * 'a -> unit
+        val   delete_external_value   :  string -> unit
+
+        val         external_values   :  unit -> string list
+        val   clear_external_values   :  unit -> unit
+
+      end
+
+      structure C :
+      sig
+
+         (* C STRUCTURE *)
+         structure Structure :
+         sig
+
+            type c_structure
+
+            datatype load_mode = IMMEDIATE_LOAD | DEFERRED_LOAD
+
+            val load_object_file : filename * load_mode -> c_structure
+            val file_info : c_structure -> (filename * load_mode)
+
+            val files_loaded : unit -> filename list
+            val symbols      : c_structure -> name list
+
+            datatype value_type = CODE_VALUE | VAR_VALUE | UNKNOWN_VALUE
+
+            val symbol_info : c_structure * name -> value_type
+
+         end
+
+         (* C TYPE *)
+         structure Type :
+         sig
+
+            (* C TYPE INFORMATION *)
+
+            (* Pointer information may be interpreted in the following ways:
+               - LOCAL_PTR     = Machine address pointing within the associated store
+               - REMOTE_PTR    = Machine address pointing outside associated store
+               - RELATIVE_PTR  = Index value accessing location within associated store
+             *)
+            datatype pointer_kind = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+
+            (* The ML type c_type provides a representation of a C type descriptor
+               as an ML value.
+             *)
+            datatype c_type =
+               VOID_TYPE
+            |
+               CHAR_TYPE           | UNSIGNED_CHAR_TYPE | SIGNED_CHAR_TYPE
+            |
+               SHORT_TYPE          | INT_TYPE           | LONG_TYPE
+            |
+               UNSIGNED_SHORT_TYPE | UNSIGNED_INT_TYPE  | UNSIGNED_LONG_TYPE
+            |
+               FLOAT_TYPE          | DOUBLE_TYPE        | LONG_DOUBLE_TYPE
+            |
+               STRING_TYPE   of { length : int }
+            |
+               TYPENAME      of { name : name,
+                                  size : int option }
+            |
+               FUNCTION_TYPE of { source : c_type list,
+                                  target : c_type
+                                }
+            |
+               POINTER_TYPE  of { ctype : c_type, mode : pointer_kind }
+            |
+               STRUCT_TYPE   of { tag    : name option,
+                                  fields : c_field list,
+                                  size   : int option }
+            |
+               UNION_TYPE    of { tag      : name option,
+                                  variants : c_variant list,
+                                  size     : int option,
+                                  current  : c_variant }
+            |
+               ARRAY_TYPE    of { length : int, ctype : c_type, size : int option }
+            |
+               ENUM_TYPE     of { tag   : name option,
+                                  elems : name list,
+                                  card  : int }
+
+            and  c_variant = VARIANT of { name  : name,
+                                          ctype : c_type,
+                                          size  : int option }
+
+            and  c_field   = FIELD of { name    : name,
+                                        ctype   : c_type,
+                                        size    : int option,
+                                        padding : int,
+                                        offset  : int option }
+
+            exception UnknownTypeName of string
+
+            val size_of      : c_type -> int
+
+            val equal_type   : c_type * c_type -> bool
+
+            val structType   : string * (string * c_type) list -> c_type
+            val unionType    : string * (string * c_type) list -> c_type
+            val ptrType      : c_type -> c_type
+            val typeName     : string -> c_type
+            val enumType     : string * string list -> c_type
+
+         end
+
+
+         (* C VALUE STRUCTURE *)
+         structure Value :
+         sig
+
+            type store         = Store.store
+            type object_mode   = Object.object_mode
+            type c_type        = Type.c_type
+
+            type c_object
+
+            val object : { ctype  : c_type,
+                           store  : store } -> c_object
+
+            val set_object_mode   :  c_object * object_mode -> unit
+
+            val object_type       :  c_object -> c_type
+            val cast_object_type  :  c_object * c_type -> unit
+
+            val new_object  : c_object -> c_object
+            val dup_object  : c_object -> c_object
+            val tmp_object  : c_object -> c_object
+
+            type c_char
+
+            type c_short_int
+            type c_int
+            type c_long_int
+
+            type c_real
+            type c_double
+            type c_long_double
+
+            exception ForeignType
+            exception StoreAccess
+
+            val set_char           : c_object * c_char -> unit
+            val set_unsigned_char  : c_object * c_char -> unit
+            val set_signed_char    : c_object * c_char -> unit
+
+            val set_short          : c_object * c_short_int -> unit
+            val set_int            : c_object * c_int -> unit
+            val set_long           : c_object * c_long_int -> unit
+
+            val set_unsigned_short : c_object * c_short_int -> unit
+            val set_unsigned       : c_object * c_int -> unit
+            val set_unsigned_long  : c_object * c_long_int -> unit
+
+            val set_word32         : c_object * word32 -> unit
+
+            val set_float          : c_object * c_real -> unit
+            val set_double         : c_object * c_double -> unit
+            val set_long_double    : c_object * c_long_double -> unit
+
+            val set_string      : c_object * string -> unit
+
+            val set_addr        : { obj:c_object, addr:c_object } -> unit
+
+            val set_ptr_addr    : { ptr:c_object, addr:c_object   } -> unit
+            val set_ptr_addr_of : { ptr:c_object, data:c_object   } -> unit
+            val set_ptr_data    : { ptr:c_object, data:c_object   } -> unit
+            val set_ptr_type    : { ptr:c_object, data:c_object   } -> unit
+            val cast_ptr_type   : { ptr:c_object, ctype:c_type } -> unit
+
+            val set_local_ptr     : c_object -> unit
+            val set_relative_ptr  : c_object -> unit
+            val set_remote_ptr    : c_object -> unit
+
+            val set_struct  : c_object * (c_object list) -> unit
+            val set_field   : { record:c_object, field:name, data:c_object } -> unit
+
+            val set_member  : { union:c_object, member:name } -> unit
+            val set_union   : { union:c_object, data:c_object } -> unit
+
+            val set_array   : c_object * (c_object list) * int -> unit
+            val set_enum    : c_object * int -> unit
+
+
+            (* Selectors ... *)
+
+            val index_object   : { array:c_object,  tgt:c_object, index:int } -> unit
+            val deref_object   : { ptr:c_object,    tgt:c_object } -> unit
+            val select_object  : { record:c_object, tgt:c_object, field:name } -> unit
+            val coerce_object  : { union:c_object,  tgt:c_object } -> unit
+
+            val copy_index_object     : c_object * int -> c_object
+            val copy_deref_object     : c_object -> c_object
+            val copy_select_object    : c_object * name -> c_object
+            val copy_coerce_object    : c_object -> c_object
+
+            val index_object_type     : c_object -> c_type
+            val deref_object_type     : c_object -> c_type
+            val select_object_type    : c_object * name -> c_type
+            val coerce_object_type    : c_object -> c_type 
+
+            val index_object_size     : c_object -> int
+            val deref_object_size     : c_object -> int
+            val select_object_size    : c_object * name -> int
+            val coerce_object_size    : c_object -> int
+
+            val next_array_item        : c_object -> unit
+            val prev_array_item         : c_object -> unit
+
+            (* Getters ... *)
+
+            val get_char           : c_object -> c_char
+            val get_unsigned_char  : c_object -> c_char
+            val get_signed_char    : c_object -> c_char
+
+            val get_short          : c_object -> c_short_int
+            val get_int            : c_object -> c_int
+            val get_long           : c_object -> c_long_int
+
+            val get_unsigned_short : c_object -> c_short_int
+            val get_unsigned       : c_object -> c_int
+            val get_unsigned_long  : c_object -> c_long_int
+
+            val get_word32         : c_object -> word32
+
+            val get_float          : c_object -> c_real
+            val get_double         : c_object -> c_double
+            val get_long_double    : c_object -> c_long_double
+
+            val get_string         : c_object -> string
+
+            val get_data           : c_object -> c_object
+                (* dereference pointer *)
+
+            val get_struct         : c_object -> c_object list
+                (* field components of a structure *)
+
+            val get_field          : c_object * name -> c_object
+                (* field of a structure *)
+
+            val get_union          : c_object -> c_object
+            val get_array          : c_object -> c_object list
+
+            val get_enum           : c_object -> int
+         end
+
+
+         (* C Signature *)
+         structure Signature :
+         sig
+            type c_type = Type.c_type
+            type c_signature
+
+            datatype c_decl =
+                UNDEF_DECL
+            |
+                VAR_DECL of { name : name, ctype : c_type }
+            |
+                FUN_DECL of { name   : name,
+                              source : c_type list,
+                              target : c_type }
+            |
+                TYPE_DECL of { name : name,
+                               defn : c_type,
+                               size : int }
+            |
+                CONST_DECL of { name : name, ctype : c_type }
+
+            val new_signature      : unit -> c_signature
+
+            val lookup_entry   : c_signature -> name -> c_decl
+            val def_entry      : c_signature * c_decl -> unit
+            val remove_entry   : c_signature * name -> unit
+
+            val show_entries   : c_signature -> c_decl list
+
+            val normalise_type : c_signature -> c_type -> c_type
+
+            val load_header : filename -> c_signature
+         end
+
+         (* C FUNCTION *)
+         structure Function :
+         sig
+ 
+            type c_type = Type.c_type
+            type c_object = Value.c_object
+            type c_structure = Structure.c_structure
+            type c_signature = Signature.c_signature
+
+            type c_function
+
+            val define_foreign_fun : (c_structure * c_signature) -> name -> c_function
+
+            val call   : c_function -> (c_object list * c_object) -> unit
+         end
+
+         structure Diagnostic :
+         sig
+
+            type store     = Store.store
+            type c_type    = Type.c_type
+            type c_object  = Value.c_object
+
+            val c_type_info : c_type -> string
+
+            val view_object : c_object -> string
+            val disp_object : c_object -> c_object
+
+            val object_info : c_object ->
+                       { store     : store,
+                         status    : string,
+                         currency  : string,
+                         mode      : string,
+                         langtype  : string,
+                         size      : int,
+                         base      : address option,
+                         offset    : int
+                       }
+
+            val object_data         : c_object -> int list
+            val object_data_hex     : c_object -> string
+            val object_data_ascii   : c_object -> string
+         end
+      end (* C_INTERFACE *)
+
+      structure Diagnostic :
+      sig
+        type store = Store.store
+
+        val view_store : store -> string
+        val disp_store : store -> store
+
+        val store_info : store ->
+               { kind     : string,
+                 origin   : address,
+                 status   : string,
+                 alloc    : string,
+                 overflow : string,
+                 size     : int,
+                 top      : int,
+                 free     : int }
+
+        val store_data :
+            { store : store,
+              start  : int,
+              length : int } -> int list
+
+        val store_data_hex :
+            { store : store,
+              start  : int,
+              length : int } -> string
+
+        val store_data_ascii :
+            { store : store,
+              start  : int,
+              length : int } -> string
+
+        val diff_addr : address -> address -> int
+        val incr_addr : address * int -> address
+      end
+   end; (* signature INTERFACE *)
+@

@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.09.44.33;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.ext.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "basis.toplevel";
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = ext "" = NONE;
+
+val b = ext ".login" = NONE;
+
+val c = ext "/.login" = NONE;
+
+val d = ext "a" = NONE;
+
+val e = ext "a." = NONE;
+
+val f = ext "a.b" = SOME "b";
+
+val g = ext "a.b.c" = SOME "c";
+
+val h = ext "/a.b" = SOME "b";
+
+val i = ext "/c/a.b" = SOME "b";
+
+val j = ext "/c/a/b/.d" = NONE;
+
+val k = ext "/c.a/b.d" = SOME "d";
+
+val l = ext "/c.a/bd" = NONE;
+
+val m = ext "/c/a/b.foo.bar" = SOME "bar";
+
+val n = ext "/c/a/b.foo" = SOME "foo";
+
+val p = ext ".news/comp" = NONE;
+@

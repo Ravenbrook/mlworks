@@ -1,0 +1,827 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.5
+	MLWorks_20b0_1998_03_20:1.5
+	MLWorks_20m2_1998_02_16:1.5
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_11r1:1.2.1.1.1.2.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.2
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	97.11.25.19.17.17;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.08.07.14.05.33;	author brucem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.05.28.16.14.57;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.03.10.46.56;	author matthew;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.02.28.16.51.04;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.11.08.38;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.50.05;	author daveb;	state Exp;
+branches;
+next	1.2.1.1.1.2;
+
+1.2.1.1.1.2
+date	97.08.13.15.50.45;	author johnh;	state Exp;
+branches
+	1.2.1.1.1.2.1.1;
+next	;
+
+1.2.1.1.1.2.1.1
+date	97.10.07.12.14.21;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.41.55;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.14.41.19;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.5
+log
+@[Bug #30323]
+Removed Shell.Build.loadSource.
+@
+text
+@val allreg : 'a -> {base: 'a, col: int, ncols: 'b option, nrows: 'c option, row: int} = fn
+val iprint : int Array2.array -> unit = fn
+val maken : (int * int) -> int Array2.array = fn
+val mkreg : ('a * 'b * 'c * 'd * 'e) -> {base: 'a, col: 'c, ncols: 'e option, nrows: 'd option, row: 'b} = fn
+tabulate RowMajor
+
+  0   1   2   3   4   5 
+  6   7   8   9  10  11 
+ 12  13  14  15  16  17 
+ 18  19  20  21  22  23 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+tabulate ColMajor 
+
+  0   4   8  12  16  20 
+  1   5   9  13  17  21 
+  2   6  10  14  18  22 
+  3   7  11  15  19  23 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+val copytest : (int * int * int * int * int * int) -> unit = fn
+copy test
+
+  0   1   2   3   4   5   6   7 
+  8   9  10  11  12  13  14  15 
+ 16  17  18  19   0   1  22  23 
+ 24  25  26  27   8   9  30  31 
+ 32  33  34  35  16  17  38  39 
+ 40  41  42  43  44  45  46  47 
+
+  0   1   2   3   4   5   6   7 
+  8   9  10  11  12  13  14  15 
+  0   1  18  19  20  21  22  23 
+  8   9  26  27  28  29  30  31 
+ 16  17  34  35  36  37  38  39 
+ 40  41  42  43  44  45  46  47 
+
+ 18  19   2   3   4   5   6   7 
+ 26  27  10  11  12  13  14  15 
+ 34  35  18  19  20  21  22  23 
+ 24  25  26  27  28  29  30  31 
+ 32  33  34  35  36  37  38  39 
+ 40  41  42  43  44  45  46  47 
+
+  0   1   2   3   4   5   6   7 
+  8   0   1   2  12  13  14  15 
+ 16   8   9  10  20  21  22  23 
+ 24  16  17  18  28  29  30  31 
+ 32  33  34  35  36  37  38  39 
+ 40  41  42  43  44  45  46  47 
+
+  9  10  11   3   4   5   6   7 
+ 17  18  19  11  12  13  14  15 
+ 25  26  27  19  20  21  22  23 
+ 24  25  26  27  28  29  30  31 
+ 32  33  34  35  36  37  38  39 
+ 40  41  42  43  44  45  46  47 
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val copytest2 : (int * int * int * int * int * int) -> unit = fn
+copy test2
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   1   0   0   0   0 
+  0   0   0   0   8   9   0   0   0   0 
+  0   0   0   0  16  17   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   1   0   0   0   0   0   0   0   0 
+  8   9   0   0   0   0   0   0   0   0 
+ 16  17   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+ 18  19   0   0   0   0   0   0   0   0 
+ 26  27   0   0   0   0   0   0   0   0 
+ 34  35   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   1   2   0   0   0   0   0   0 
+  0   8   9  10   0   0   0   0   0   0 
+  0  16  17  18   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  9  10  11   0   0   0   0   0   0   0 
+ 17  18  19   0   0   0   0   0   0   0 
+ 25  26  27   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+val it : string = "OK"
+app test
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 
+0 6 12 18 1 7 13 19 2 8 14 20 3 9 15 21 4 10 16 22 5 11 17 23 
+0 7 14 21 
+0 7 14 21 
+8 9 13 15 19 20 
+13 19 8 20 9 15 
+modify test
+val it : unit = ()
+
+  0   2   4   6   8  10 
+ 12   0  16  18  20  22 
+ 24  26   0  30  32  34 
+ 36  38  40   0  44  46 
+
+  0   1   2   3   4   5 
+  6   0  16  18  20  11 
+ 12  26   0  30  32  17 
+ 18  38  40   0  44  23 
+modify RowMajor
+
+  0   1   2   3   4   5 
+  6   7   8   9  10  11 
+ 12  13  14  15  16  17 
+ 18  19  20  21  22  23 
+modify ColMajor
+
+  0   4   8  12  16  20 
+  1   5   9  13  17  21 
+  2   6  10  14  18  22 
+  3   7  11  15  19  23 
+fold test
+val fold1 : int list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..]
+val fold2 : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+val fold3 : string = "OK"
+val fold4 : string = "OK"
+val fold5 : string = "OK"
+val fold6 : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+@
+
+
+1.4
+log
+@[Bug #30245]
+ARRAY2 has changed, so the test has too.
+@
+text
+@a0 3
+structure Array = struct ... end
+structure Array2 = struct ... end
+structure Int = struct ... end
+@
+
+
+1.3
+log
+@[Bug #30090]
+Remove uses of MLWorks.IO
+@
+text
+@d1 39
+a39 99
+val it : unit = ()
+structure Array =
+  struct
+    eqtype 'a array = 'a array
+    eqtype 'a vector = 'a vector
+    val app : ('a -> unit) -> 'a array -> unit = fn
+    val appi : ((int * 'a) -> unit) -> ('a array * int * int option) -> unit = fn
+    val array : (int * 'a) -> 'a array = fn
+    val copy : {di: int, dst: 'a array, len: int option, si: int, src: 'a array} -> unit = fn
+    val copyVec : {di: int, dst: 'a array, len: int option, si: int, src: 'a vector} -> unit = fn
+    val extract : ('a array * int * int option) -> 'a vector = fn
+    val foldl : (('a * 'b) -> 'b) -> 'b -> 'a array -> 'b = fn
+    val foldli : ((int * 'a * 'b) -> 'b) -> 'b -> ('a array * int * int option) -> 'b = fn
+    val foldr : (('a * 'b) -> 'b) -> 'b -> 'a array -> 'b = fn
+    val foldri : ((int * 'a * 'b) -> 'b) -> 'b -> ('a array * int * int option) -> 'b = fn
+    val fromList : 'a list -> 'a array = fn
+    val length : 'a array -> int = fn
+    val maxLen : int = 4194297
+    val modify : ('a -> 'a) -> 'a array -> unit = fn
+    val modifyi : ((int * 'a) -> 'a) -> ('a array * int * int option) -> unit = fn
+    val sub : ('a array * int) -> 'a = fn
+    val tabulate : (int * (int -> 'a)) -> 'a array = fn
+    val update : ('a array * int * 'a) -> unit = fn
+  end
+val it : unit = ()
+structure Array2 =
+  struct
+    eqtype 'a array2 = 'a array2
+    eqtype region = {col: int, ht: int option, row: int, wd: int option}
+    datatype traversal =
+      ColMajor |
+      RowMajor
+    val ColMajor : Array2.traversal
+    val RowMajor : Array2.traversal
+    val app : ('a -> unit) -> 'a Array2.array2 -> unit = fn
+    val appi : ((int * int * 'a) -> unit) -> ('a Array2.array2 * {col: int, ht: int option, row: int, wd: int option}) -> unit = fn
+    val array : (int * int * 'a) -> 'a Array2.array2 = fn
+    val column : ('a Array2.array2 * int) -> 'a array = fn
+    val copy : {dst: 'a Array2.array2, dst_col: int, dst_row: int, src: 'a Array2.array2, src_reg: {col: int, ht: int option, row: int, wd: int option}} -> unit = fn
+    val dimensions : 'a Array2.array2 -> (int * int) = fn
+    val dot : ((('a array * 'b array) -> 'c) * 'a Array2.array2 * 'b Array2.array2) -> 'c Array2.array2 = fn
+    val fold : Array2.traversal -> (('a * 'b) -> 'b) -> 'b -> 'a Array2.array2 -> 'b = fn
+    val foldi : Array2.traversal -> ((int * int * 'a * 'b) -> 'b) -> 'b -> ('a Array2.array2 * {col: int, ht: int option, row: int, wd: int option}) -> 'b = fn
+    val fromList : 'a list list -> 'a Array2.array2 = fn
+    val height : 'a Array2.array2 -> int = fn
+    val map : ('a -> 'b) -> 'a Array2.array2 -> 'b Array2.array2 = fn
+    val map2 : (('a * 'b) -> 'c) -> ('a Array2.array2 * 'b Array2.array2) -> 'c Array2.array2 = fn
+    val mapCols : ('a array -> 'b) -> 'a Array2.array2 -> 'b array = fn
+    val mapRows : ('a array -> 'b) -> 'a Array2.array2 -> 'b array = fn
+    val maxSize : int = 4194297
+    val modify : ('a -> 'a) -> 'a Array2.array2 -> unit = fn
+    val modifyi : ((int * int * 'a) -> 'a) -> ('a Array2.array2 * {col: int, ht: int option, row: int, wd: int option}) -> unit = fn
+    val rotate : ('a Array2.array2 * int * int) -> 'a Array2.array2 = fn
+    val row : ('a Array2.array2 * int) -> 'a array = fn
+    val shift : ('a Array2.array2 * int * int * 'a) -> 'a Array2.array2 = fn
+    val sub : ('a Array2.array2 * int * int) -> 'a = fn
+    val tabulate : (int * int * ((int * int) -> 'a)) -> 'a Array2.array2 = fn
+    val transpose : 'a Array2.array2 -> 'a Array2.array2 = fn
+    val update : ('a Array2.array2 * int * int * 'a) -> unit = fn
+    val width : 'a Array2.array2 -> int = fn
+  end
+val it : unit = ()
+structure Int =
+  struct
+    eqtype int = int
+    val * : (int * int) -> int = fn
+    val + : (int * int) -> int = fn
+    val - : (int * int) -> int = fn
+    val < : (int * int) -> bool = fn
+    val <= : (int * int) -> bool = fn
+    val > : (int * int) -> bool = fn
+    val >= : (int * int) -> bool = fn
+    val abs : int -> int = fn
+    val compare : (int * int) -> order = fn
+    val div : (int * int) -> int = fn
+    val fmt : radix(hidden) -> int -> string = fn
+    val fromInt : int -> int = fn
+    val fromLarge : MLWorks.Internal.Types.int32 -> int = fn
+    val fromString : string -> int option = fn
+    val max : (int * int) -> int = fn
+    val maxInt : int option = SOME 536870911
+    val min : (int * int) -> int = fn
+    val minInt : int option = SOME ~536870912
+    val mod : (int * int) -> int = fn
+    val precision : int option = SOME 30
+    val quot : (int * int) -> int = fn
+    val rem : (int * int) -> int = fn
+    val sameSign : (int * int) -> bool = fn
+    val scan : radix(hidden) -> ('a -> (char * 'a) option) -> 'a -> (int * 'a) option = fn
+    val sign : int -> int = fn
+    val toInt : int -> int = fn
+    val toLarge : int -> MLWorks.Internal.Types.int32 = fn
+    val toString : int -> string = fn
+    val ~ : int -> int = fn
+  end
+val allreg : {col: int, ht: 'a option, row: int, wd: 'b option} = {col=0, ht=NONE, row=0, wd=NONE}
+val iprint : int Array2.array2 -> unit = fn
+val maken : (int * int) -> int Array2.array2 = fn
+val mkreg : ('a * 'b * 'c * 'd) -> {col: 'b, ht: 'c option, row: 'a, wd: 'd option} = fn
+a41 1
+val it : unit = ()
+a48 1
+val it : unit = ()
+a55 1
+val it : unit = ()
+a62 1
+val it : unit = ()
+a69 1
+val it : unit = ()
+a76 1
+val it : unit = ()
+a82 1
+val it : unit = ()
+a93 1
+val it : unit = ()
+a104 1
+val it : unit = ()
+a115 1
+val it : unit = ()
+a126 1
+val it : unit = ()
+a137 1
+val it : unit = ()
+d140 6
+a145 10
+val it : unit = ()
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 val it : unit = ()
+
+val it : unit = ()
+0 7 14 21 val it : unit = ()
+
+val it : unit = ()
+8 9 13 15 19 20 val it : unit = ()
+
+val it : unit = ()
+a152 1
+val it : unit = ()
+d158 1
+a158 9
+val it : unit = ()
+fold test
+val it : unit = ()
+val it : int list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..]
+val it : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val a : int Array2.array2 = ARR2 (#A[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..], 4, 6)
+d164 1
+a164 3
+val it : unit = ()
+shift test
+val it : unit = ()
+d166 11
+a176 96
+ ~1  ~1  ~1  ~1  ~1  ~1 
+ ~1   0   1   2   3   4 
+ ~1   6   7   8   9  10 
+ ~1  12  13  14  15  16 
+val it : unit = ()
+
+ ~1  ~1  ~1  ~1  ~1  ~1 
+  1   2   3   4   5  ~1 
+  7   8   9  10  11  ~1 
+ 13  14  15  16  17  ~1 
+val it : unit = ()
+
+  7   8   9  10  11  ~1 
+ 13  14  15  16  17  ~1 
+ 19  20  21  22  23  ~1 
+ ~1  ~1  ~1  ~1  ~1  ~1 
+val it : unit = ()
+
+ ~1   6   7   8   9  10 
+ ~1  12  13  14  15  16 
+ ~1  18  19  20  21  22 
+ ~1  ~1  ~1  ~1  ~1  ~1 
+val it : unit = ()
+
+ ~1  ~1  ~1  ~1  ~1  ~1 
+ ~1  ~1  ~1  ~1  ~1  ~1 
+ ~1  ~1  ~1  ~1  ~1  ~1 
+ ~1  ~1  ~1  ~1  ~1  ~1 
+val it : unit = ()
+rotate test
+val it : unit = ()
+
+ 23  18  19  20  21  22 
+  5   0   1   2   3   4 
+ 11   6   7   8   9  10 
+ 17  12  13  14  15  16 
+val it : unit = ()
+
+ 19  20  21  22  23  18 
+  1   2   3   4   5   0 
+  7   8   9  10  11   6 
+ 13  14  15  16  17  12 
+val it : unit = ()
+
+  7   8   9  10  11   6 
+ 13  14  15  16  17  12 
+ 19  20  21  22  23  18 
+  1   2   3   4   5   0 
+val it : unit = ()
+
+ 11   6   7   8   9  10 
+ 17  12  13  14  15  16 
+ 23  18  19  20  21  22 
+  5   0   1   2   3   4 
+val it : unit = ()
+
+ 14  15  16  17  12  13 
+ 20  21  22  23  18  19 
+  2   3   4   5   0   1 
+  8   9  10  11   6   7 
+val it : unit = ()
+transpose test
+val it : unit = ()
+
+  0   6  12  18 
+  1   7  13  19 
+  2   8  14  20 
+  3   9  15  21 
+  4  10  16  22 
+  5  11  17  23 
+val it : unit = ()
+map test
+val it : unit = ()
+
+  1   2   3   4   5   6 
+  7   8   9  10  11  12 
+ 13  14  15  16  17  18 
+ 19  20  21  22  23  24 
+val it : unit = ()
+
+  0   2   4   6   8  10 
+ 12  14  16  18  20  22 
+ 24  26  28  30  32  34 
+ 36  38  40  42  44  46 
+val it : unit = ()
+dot test
+val it : unit = ()
+val dp : (int array * int array) -> int = fn
+val mult : (int Array2.array2 * int Array2.array2) -> int Array2.array2 = fn
+val unit : int -> int Array2.array2 = fn
+val rot : 'a Array2.array2 -> 'a Array2.array2 = fn
+
+ 15  18  21 
+ 42  54  66 
+ 69  90 111 
+val it : unit = ()
+@
+
+
+1.2
+log
+@Adding flush to print
+@
+text
+@a95 1
+val print : string -> unit = fn
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.2.1.1.1.2
+log
+@[Bug #30245]
+Merging - ARRAY2 has changed, fix the test so it works with the new sig and struct.
+@
+text
+@d1 100
+a100 39
+structure Array = struct ... end
+structure Array2 = struct ... end
+structure Int = struct ... end
+val allreg : 'a -> {base: 'a, col: int, ncols: 'b option, nrows: 'c option, row: int} = fn
+val iprint : int Array2.array -> unit = fn
+val maken : (int * int) -> int Array2.array = fn
+val mkreg : ('a * 'b * 'c * 'd * 'e) -> {base: 'a, col: 'c, ncols: 'e option, nrows: 'd option, row: 'b} = fn
+tabulate RowMajor
+
+  0   1   2   3   4   5 
+  6   7   8   9  10  11 
+ 12  13  14  15  16  17 
+ 18  19  20  21  22  23 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+tabulate ColMajor 
+
+  0   4   8  12  16  20 
+  1   5   9  13  17  21 
+  2   6  10  14  18  22 
+  3   7  11  15  19  23 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+d103 1
+d111 1
+d119 1
+d127 1
+d135 1
+d143 1
+d150 1
+d162 1
+d174 1
+d186 1
+d198 1
+d210 1
+d213 10
+a222 6
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 
+0 6 12 18 1 7 13 19 2 8 14 20 3 9 15 21 4 10 16 22 5 11 17 23 
+0 7 14 21 
+0 7 14 21 
+8 9 13 15 19 20 
+13 19 8 20 9 15 
+d230 1
+d236 9
+a244 1
+modify RowMajor
+d250 67
+a316 1
+modify ColMajor
+d318 32
+a349 11
+  0   4   8  12  16  20 
+  1   5   9  13  17  21 
+  2   6  10  14  18  22 
+  3   7  11  15  19  23 
+fold test
+val fold1 : int list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..]
+val fold2 : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+val fold3 : string = "OK"
+val fold4 : string = "OK"
+val fold5 : string = "OK"
+val fold6 : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+@
+
+
+1.2.1.1.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+@
+text
+@d73 31
+a103 1
+    val abs : int -> incopy test
+d111 1
+d119 1
+d127 1
+d135 1
+d143 6
+d150 1
+d162 1
+d174 1
+d186 1
+d198 1
+d210 2
+d213 10
+a222 3
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 
+0 7 14 21 
+8 9 13 15 19 20 
+d224 1
+d230 1
+d236 1
+d238 7
+d250 1
+d252 1
+d258 1
+d264 1
+d270 1
+d276 1
+d282 1
+d284 1
+d290 1
+d296 1
+d302 1
+d308 1
+d314 1
+d316 1
+d324 1
+d326 1
+d332 1
+d338 1
+a339 85
+
+ 15  18  21 
+ 42  54  66 
+ 69  90 111 
+t = fn
+    val compare : (int * int) -> order = fn
+    val div : (int * int) -> int = fn
+    val fmt : radix(hidden) -> int -> string = fn
+    val fromInt : int -> int = fn
+    val fromLarge : MLWorks.Internal.Types.int32 -> int = fn
+    val fromString : string -> int option = fn
+    val max : (int * int) -> int = fn
+    val maxInt : int option = SOME 536870911
+    val min : (int * int) -> int = fn
+    val minInt : int option = SOME ~536870912
+    val mod : (int * int) -> int = fn
+    val precision : int option = SOME 30
+    val quot : (int * int) -> int = fn
+    val rem : (int * int) -> int = fn
+    val sameSign : (int * int) -> bool = fn
+    val scan : radix(hidden) -> ('a -> (char * 'a) option) -> 'a -> (int * 'a) option = fn
+    val sign : int -> int = fn
+    val toInt : int -> int = fn
+    val toLarge : int -> MLWorks.Internal.Types.int32 = fn
+    val toString : int -> string = fn
+    val ~ : int -> int = fn
+  end
+val allreg : {col: int, ht: 'a option, row: int, wd: 'b option} = {col=0, ht=NONE, row=0, wd=NONE}
+val iprint : int Array2.array2 -> unit = fn
+val maken : (int * int) -> int Array2.array2 = fn
+val mkreg : ('a * 'b * 'c * 'd) -> {col: 'b, ht: 'c option, row: 'a, wd: 'd option} = fn
+val copytest : (int * int * int * int * int * int) -> unit = fn
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val copytest2 : (int * int * int * int * int * int) -> unit = fn
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : string = "OK"
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : int list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..]
+val it : int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val a : int Array2.array2 = ARR2 (#A[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..], 4, 6)
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+d345 4
+@

@@ -1,0 +1,102 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_workspace_97:1.1.1
+	MLWorks_20m1_1997_10_23:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.06.06.11.06.57;	author stephenb;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.11.30.16.47.31;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@The ls example implements an extremly simple version of UNIX ls
+command using the directory(3) interface.  It produces output that is
+similar to that produced by a shell script that contained :-
+
+  #! /bin/sh
+  ls -a1 ${1:-.}
+
+The example shows the following parts of the MLWorks<->C interface :- 
+
+ - calling C functions from ML.
+ - passing pointers to C structures from ML to C.
+ - returning pointers to C structures from C to ML.
+ - allocating C structures from within ML.
+ - creating a standalone executable which uses a dynamically loaded
+   library.
+ - calling routines defined in libc.
+
+
+The first step to running the example is to follow the instructions
+in the README contained in enclosing directory about how set up any
+necessary values that the example requires and building the library
+that the example requires.
+
+Once the library has been built, start MLWorks and create a listener
+and load in the ls code into MLWorks by doing :- 
+
+  MLWorks> Shell.File.loadSource "__ls";
+
+This should create an executable called "simplels".  This takes an
+optional single argument which is the name of the directory.  For
+example, running simplels on /tmp on this machine produces :-
+
+  $ ./simplels -pass args /tmp args
+  .
+  ..
+  mbox
+  .getwd
+  .X11-unix
+
+If you do not type the name of a directory, then a listing of the
+current directory is produced.  That is, the following commands
+produce the same output :-
+
+  $ ./simplels 
+  $ ./simplels -pass args . args
+
+If the directory does not exist, then simplels displays an error
+message :-
+
+  $ ./simplels -pass args does-not-exist args
+  No such directory: does-not-exist
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@

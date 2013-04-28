@@ -1,0 +1,513 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_workspace_97:1.3.2
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_11r1:1.3.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.3.1.1.1.1
+	MLWorks_10r3:1.3.1.1.3
+	MLWorks_10r2_551:1.3.1.1.2
+	MLWorks_11:1.3.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.3.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.3.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.3.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.3.1
+	MLWorks_BugFix_1997_04_24:1.3
+	MLWorks_1_0_r2_Win32_1997_04_11:1.3
+	MLWorks_1_0_r2_Unix_1997_04_04:1.3
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.2.6.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.2.6
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.2.4.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.2.4.1
+	MLWorks_1_0_Irix_1996_11_28:1.2.4.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.2.5
+	MLWorks_1_0_Unix_1996_11_14:1.2.4
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	97.01.15.15.51.51;	author io;	state Exp;
+branches
+	1.3.1.1
+	1.3.2.1;
+next	1.2;
+
+1.2
+date	96.09.04.11.52.31;	author jont;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1
+	1.2.4.1
+	1.2.5.1
+	1.2.6.1;
+next	1.1;
+
+1.1
+date	96.07.26.15.43.42;	author davids;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.06.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.15.58.04;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.16.26;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.4.1
+date	96.11.14.12.39.28;	author hope;	state Exp;
+branches
+	1.2.4.1.1.1;
+next	;
+
+1.2.4.1.1.1
+date	96.11.28.14.51.28;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.5.1
+date	96.11.22.18.00.05;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.6.1
+date	96.12.17.17.39.01;	author hope;	state Exp;
+branches
+	1.2.6.1.1.1;
+next	;
+
+1.2.6.1.1.1
+date	97.02.24.11.26.12;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	97.05.12.10.23.58;	author hope;	state Exp;
+branches
+	1.3.1.1.1.1
+	1.3.1.1.2.1
+	1.3.1.1.3.1;
+next	;
+
+1.3.1.1.1.1
+date	97.07.28.18.09.57;	author daveb;	state Exp;
+branches
+	1.3.1.1.1.1.1.1;
+next	;
+
+1.3.1.1.1.1.1.1
+date	97.10.07.11.33.47;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.3.1.1.2.1
+date	97.09.08.17.03.17;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.1.1.3.1
+date	97.09.09.13.57.51;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.2.1
+date	97.11.30.16.48.19;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@[Bug #1892]
+rename __word{8,16,32}{array,vector} to __word{8,16,32}_{array,vector}
+@
+text
+@(*  ==== BASIS EXAMPLES : Binary structure ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This module defines a type 'binary' that is a vector of bits.  It provides
+ *  functions to convert strings and bytes (ie. Word8.word) to and from the
+ *  binary type.  These functions use the Vector, Word8 and Word8Vector 
+ *  structures in their implementations.  Functions are also provided to
+ *  convert a string to and from the vector of binaries representing the ASCII
+ *  code of each character. These functions illustrate the Byte structure.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: basis:__binary.sml,v $
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+ *  Revision 1.1  1996/07/26  15:43:42  davids
+ *  new unit
+ *
+ *
+ *)
+
+require "binary";
+require "$.basis.__vector";
+require "$.basis.__byte";
+require "$.basis.__word8";
+require "$.basis.__word8_vector";
+require "$.basis.__word";
+
+
+structure Binary : BINARY =
+  struct
+
+    datatype bit = ZERO | ONE
+    
+
+    (* Store binary as a vector of bits, with the lsb at the left. *)
+    type binary = bit Vector.vector
+
+     
+    exception Binary
+
+
+    (* Convert a bit to a character: either #"0" or #"1". *)
+
+    fun bitToChar ZERO = #"0"
+      | bitToChar ONE = #"1"
+
+
+    (* Convert a character to a bit.  Raise Binary for invalid characters. *)
+
+    fun charToBit #"0" = ZERO
+      | charToBit #"1" = ONE
+      | charToBit _ = raise Binary
+
+
+    (* Convert a string of 0s and 1s into a binary.  Return NONE if string
+     contains invalid characters.  The list must be reversed since the
+     binary is stored in the reverse order to the original string. *)
+
+    fun fromString s = 
+      SOME (Vector.fromList (map charToBit (rev (explode s))))
+      handle Binary => NONE
+
+
+    (* Convert 'bin' into a string of 0s and 1s, reversing to give
+     correct order. *)
+
+    fun toString bin = 
+      let
+	fun bits i = 
+	  bitToChar (Vector.sub (bin, i)) :: bits (i + 1)
+	  handle Subscript => [] 
+      in
+	implode (rev (bits 0))
+      end
+      
+
+    (* Extract the nth bit from 'byte' *)
+
+    fun getBit byte n = 
+      let
+	val mask = Word8.<< (Word8.fromInt 1, Word.fromInt n);
+	val b = Word8.andb (byte, mask)
+      in
+	if b = (Word8.fromInt 0) then ZERO else ONE
+      end
+    
+
+    (* Convert a byte to a binary by extracting every bit in turn. *)
+
+    fun fromByte byte = Vector.tabulate (8, (getBit byte))
+
+
+    (* Calculate 2 to the power of p. *)
+
+    fun pow2 p = Word8.<< (Word8.fromInt 1, Word.fromInt p)
+
+
+    (* Create a table of the first 8 powers of 2. *)
+
+    val powersOfTwo = Word8Vector.tabulate (8, pow2)
+
+
+    (* For the 'i'th bit of a byte, add the appropriate power of 2 to 'total'.
+     eg. if bit 3 is ONE then add on 8. *)
+
+    fun addBits (i, ZERO, total) = total
+      | addBits (i, ONE, total) =
+	Word8.+ (Word8Vector.sub (powersOfTwo, i), total)
+
+
+    (* Add up the appropriate values of all bits in 'bin'.  This is done
+     by folding addBits over the whole of 'bin'.  Vector.foldli is used so
+     as to pass the index to addBits. *)
+
+    fun toByte bin = 
+      if Vector.length bin > 8 then
+	raise Size
+      else
+	Vector.foldli addBits (Word8.fromInt 0) (bin, 0, NONE)
+
+
+    (* Convert string 's' to the vector of binaries representing
+     the ASCII code of each character. *)
+
+    fun toAscii s =
+      let
+	val byteVector = Byte.stringToBytes s
+	fun doByte i = fromByte (Word8Vector.sub (byteVector, i))
+      in
+	Vector.tabulate (size s, doByte)
+      end
+
+
+    (* Convert vector of binaries to the string made up of the characters given
+     by their ASCII values. *)
+
+    fun fromAscii ascii = 
+      let
+	fun doByte i = toByte (Vector.sub (ascii, i))
+      in
+	Byte.bytesToString (Word8Vector.tabulate (Vector.length ascii, doByte))
+      end
+
+
+    (* Print out each ASCII binary making up the string 's'. *)
+
+    fun printAscii s =
+      let
+	fun display bin = print (toString bin ^ "\n")
+      in
+	Vector.app display (toAscii s)
+      end
+
+  end
+@
+
+
+1.3.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a16 4
+ *  Revision 1.3  1997/01/15  15:51:51  io
+ *  [Bug #1892]
+ *  rename __word{8,16,32}{array,vector} to __word{8,16,32}_{array,vector}
+ *
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a16 4
+ *  Revision 1.3  1997/01/15  15:51:51  io
+ *  [Bug #1892]
+ *  rename __word{8,16,32}{array,vector} to __word{8,16,32}_{array,vector}
+ *
+@
+
+
+1.3.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a16 3
+ *  Revision 1.3.1.1  1997/05/12  10:23:58  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a16 3
+ *  Revision 1.3.1.1  1997/05/12  10:23:58  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a16 3
+ *  Revision 1.3.1.1  1997/05/12  10:23:58  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a16 3
+ *  Revision 1.3.1.1.1.1  1997/07/28  18:09:57  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@
+
+
+1.2
+log
+@Make require statements absolute
+@
+text
+@d17 3
+d30 1
+a30 1
+require "$.basis.__word8vector";
+@
+
+
+1.2.6.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.2.6.1.1.1
+log
+@branched from 1.2.6.1
+@
+text
+@a16 3
+ *  Revision 1.2.6.1  1996/12/17  17:39:01  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.5.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.2.4.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.2.4.1.1.1
+log
+@branched from 1.2.4.1
+@
+text
+@a16 3
+ *  Revision 1.2.4.1  1996/11/14  12:39:28  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ *  Revision 1.2  1996/09/04  11:52:31  jont
+ *  Make require statements absolute
+ *
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d16 4
+a19 1
+ *  $Log$
+d24 5
+a28 5
+require "basis.__vector";
+require "basis.__byte";
+require "basis.__word8";
+require "basis.__word8vector";
+require "basis.__word";
+@

@@ -1,0 +1,1259 @@
+head	1.8;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.6.1
+	MLWorks_Open_Beta_1996_08_22:1.6
+	MLWorks_Beta_1996_07_02:1.3
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.8
+date	96.10.01.12.49.56;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.09.30.11.00.23;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.08.20.09.58.24;	author johnh;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	96.08.20.09.21.44;	author johnh;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.08.19.13.24.04;	author johnh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.17.11.09.48;	author nickb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.10.27.11.08.59;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.10.26.17.20.13;	author matthew;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	96.09.13.11.07.40;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New demo
+@
+
+
+1.8
+log
+@Improving
+@
+text
+@(*  ==== Mandelbrot demo  ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd
+ *
+ * $Log: man-demo.sml,v $
+ *  Revision 1.7  1996/09/30  11:00:23  matthew
+ *  Fixing problem with creation of gc1 -- needs to have main as drawable.
+ *
+ *  Revision 1.6  1996/08/20  09:58:24  johnh
+ *  Added header.
+ *
+ *)
+
+require "motif/__xm.sml";
+require "basis/__array.sml";
+
+
+(* Computation of the mandelbrot function itself *)
+local
+  (* For reference, a simple version *)
+  fun julia (zreal,zim,creal,cim,max_iterations) =
+    let
+      fun loop (0,zim,zreal) = 0
+        | loop (n,zim,zreal) =
+          let
+            val t1 = zreal * zreal
+            val t2 = zim * zim
+          in
+            if t1 + t2 >= 4.0
+              then n
+            else
+              let
+                val zim = zim * zreal
+                val zim = zim + zim + cim
+                val zreal = creal + t1 - t2
+              in
+                loop (n-1,zim,zreal)
+              end
+
+          end
+    in
+      max_iterations - loop (max_iterations,zim,zreal)
+    end
+in
+  fun mandel1 ((creal, cim), max_iterations) =
+    julia (creal, cim, creal, cim, max_iterations-1)
+end
+
+
+(* complicated fast version *)
+local
+  val limit = 8.0
+  val l_2 = limit*limit
+  val l_4 = l_2 * l_2
+  val l_8 = l_4 * l_4
+  val l_16 = l_8 * l_8
+  val l_32 = l_16 * l_16
+  val l_64 = l_32 * l_32
+  val l_128 = l_64 * l_64
+
+  fun mandel_correct r =
+    if r >= l_16 then
+      if r >= l_64 then
+        if r >= l_128 then 7 else 6
+      else
+        if r >= l_32 then 5 else 4
+    else
+      if r >= l_4 then
+        if r >= l_8 then 3 else 2
+      else
+        if r >= l_2 then 1 else 0
+
+  fun fast_mand (levels,re,im) =
+    let
+      val ci = im
+      val cr = re
+      fun fast_mand_loop (x,y,iters) = 
+	let
+	  (* unboxed local values *)
+	  val ci = ci+0.0
+	  val cr = cr+0.0
+
+	  (* seven iterations in which we do not test the bound *)
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+	  val f = x*y val g = x+y val x = x-y val y = f+f val x = x*g
+	  val y = y+ci val x = x+cr
+
+	  (* then one in which we do *)
+          val f = x*x val g = y*y val e = f+cr val f = f+g val y = y*x
+          val x = e-g val y = y+y+ci
+
+	  val iters = iters-8
+	in
+	  if f < limit then
+	    if iters > 0 then fast_mand_loop(x,y,iters)
+	    else 0
+	  else iters+(mandel_correct f)
+	end
+    in
+      fast_mand_loop(0.0,0.0,levels)
+    end
+  
+in
+  fun mandel2 ((re,im),levels) =
+    fast_mand(levels,re,im)
+end
+
+local
+  structure Xm = Xm_;
+in
+  fun make_toplevel () =
+  let
+    val name = "mlworks"
+    val class = "MLWorks"
+        
+    val title = "Mandelbrot"
+
+    (* Use default size here *)
+    val applicationShell =
+      Xm.initialize
+      (name, class,
+       [(Xm.TITLE, Xm.STRING title),
+        (Xm.ICON_NAME, Xm.STRING title)]);
+
+    val main = Xm.Widget.createManaged ("drawPane", 
+                                        Xm.Widget.DRAWING_AREA, 
+                                        applicationShell,
+                                        [])
+
+    (* Associate a window with main *)
+    val _ = Xm.Widget.realize applicationShell
+
+    val window= Xm.Widget.window main
+    val display = Xm.Widget.display main
+    val screen = Xm.Widget.screen main
+
+    exception Size (* Should never be raised *)
+    fun size widget =
+      case Xm.Widget.valuesGet (widget,[Xm.WIDTH,Xm.HEIGHT]) of
+        [Xm.INT width,Xm.INT height] => (width,height) 
+      | _ => raise Size
+
+    (* Color allocation *)
+    val colormap = Xm.Colormap.default screen
+
+    val num_colors = 4
+    val num_shades = 16
+    val total_colors = num_colors * num_shades
+    datatype Color = RGB of real * real * real
+    val main_colors = Array.fromList[RGB (0.0,0.0,1.0),
+                                     RGB (0.0,1.0,0.0),
+                                     RGB (1.0,0.0,0.0),
+                                     RGB (1.0,1.0,0.0)]
+
+    val (pixels,rotate_colors) =
+      let
+        val (_,pixels) = Xm.Colormap.allocColorCells (display,colormap,true,0,total_colors)
+        val colors = Array.array (total_colors,RGB (0.0,0.0,0.0))
+        fun make_shade (RGB (r,g,b),shade,num_shades) =
+          if num_shades = 1 then RGB (r,g,b)
+          else
+            let
+              val i = (real (num_shades - 1 - shade)) / (real (num_shades - 1));
+              val r' = i*r
+              val g' = i*g
+              val b' = i*b
+            in
+              RGB (r',g',b')
+            end
+        fun clamp i = if i < 0 then total_colors - 1 else if i >= total_colors then 0 else i
+        fun init_colors (col,shade,i) =
+          if col >= num_colors then ()
+          else
+            if shade >= num_shades then init_colors (col+1,0,i)
+            else 
+              (Array.update (colors,i,make_shade (Array.sub (main_colors,col),
+                                                  shade,
+                                                  num_shades));
+               init_colors (col,shade+1,clamp (i+1)))
+        fun set_colors (count,i) =
+            if count = total_colors
+              then ()
+            else
+              let
+                fun do_color (pixel,RGB c) =
+                  Xm.Colormap.storeColor (display,colormap,pixel,c);
+              in
+                do_color (Array.sub (pixels,count),Array.sub(colors,i));
+                set_colors (count+1,(i+1) mod total_colors)
+              end
+        val i = ref 0
+        fun rotate_colors inc =
+          (i := clamp (!i + inc); 
+           set_colors (0,!i))
+      in
+        init_colors(0,0,0);
+        set_colors(0,!i);
+        (pixels,rotate_colors)
+      end
+    (* Get this error if we couldn't allocate all the colors *)
+    handle Xm.XSystemError _ => 
+      (Array.tabulate (total_colors,
+                       fn i => if i mod 2 = 0 then Xm.Pixel.screenBlack screen
+                               else Xm.Pixel.screenWhite screen),
+       fn _ => ())
+      
+    val gc_array = Array.tabulate (total_colors,
+                                   fn i =>
+                                   Xm.GC.create (display,window,
+                                                 [Xm.GC.FOREGROUND (Array.sub (pixels,i))]))
+
+    (* initial x,y and width *)
+    val region = ref (0.0,0.0,0.0)
+    val region_stack = ref []
+
+    val start_values = (~2.5,~1.5,4.0)
+    val _ = region := start_values
+
+    fun draw_brot () =
+        let
+          val (w,h) = size main
+          val (regx,regy,regw) = !region
+          val scale = regw / (real w)
+          (* window coord to complex *)
+          fun to_complex (x,y) =
+            ((scale * real x) + regx, (scale * real y)  + regy)
+          fun pixel_to_gc n = Array.sub (gc_array,n mod total_colors);
+          fun plot_point (x:int,y:int) =
+            Xm.Draw.point (display,window,
+                           pixel_to_gc (mandel2 (to_complex (x,y),100)),
+                           x,y)
+
+          (* aux1 and aux2 functions draw the image *)
+          (* * column by column then row by row. *)
+          fun aux1 x =
+            if x = w then ()
+            else
+              let
+                fun aux2 y =
+                  if y = h then ()
+                  else
+                    (plot_point (x,y);
+                     aux2 (y+1))
+              in
+                aux2 0;
+                aux1 (x+1)
+              end
+        in
+          aux1 0
+        end          
+
+    fun do_expose (Xm.Event.EXPOSE_EVENT {common,x,y,width,height,count}) =
+      if count = 0 then  (* Only draw if this is the last notification *)
+        draw_brot ()
+      else ()
+
+    fun expose_handler data =
+      let
+        val event = Xm.Event.convertEvent data
+      in
+        case event of
+          Xm.Event.EXPOSE expose_event => do_expose expose_event
+        | Xm.Event.GRAPHICS_EXPOSE expose_event => do_expose expose_event
+        (* Could be a NoExpose event *)
+        | _ => ()
+      end
+
+    fun clearit _ =
+      Xm.Draw.clearArea (display,window,0,0,0,0,true)
+
+    fun resize_callback data = 
+      clearit ()
+
+    (* Draw the zooming rectangle *)
+    val gc1 = Xm.GC.create (display,window,
+                            [Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+                             Xm.GC.BACKGROUND (Xm.Pixel.screenWhite screen),
+                             Xm.GC.FUNCTION Xm.GC.NOR])
+
+    (* Coords for initial mouse press *)
+    val press_coords = ref (0,0);
+
+    (* Coords of current rectangle *)
+    val clear = ref false
+    val rect_coords = ref (0,0,0,0)
+
+    (* Is there a previously drawn rectangle which needs to be deleted before *)
+    (* drawing the next rectangle? *)
+    fun maybe_clear_rec _ = 
+      if !clear then 
+        let
+          val (rx1,ry1,rx2,ry2) = !rect_coords
+        in
+          Xm.Draw.rectangle (display,window,gc1,rx1,ry1,rx2,ry2); 
+          clear := false
+        end
+      else ();
+
+    (* In order for the rectangle to be drawn properly, the top left coordinates *)
+    (* are given first, so a comparison is made between the coordinates to find  *)
+    (* the top left pair. *)
+
+    fun minmax (a,b) = if a<b then (a,b) else (b,a)
+
+    fun correct_xy_values (x1,y1,x2,y2) = 
+      (*  exercise for reader: express this more compactly *)
+      (* x1, y1 is the initial position *)
+      let 
+        val (w,h) = size main
+      in
+        if (real (abs (x1 - x2)) * real h) / (real (abs (y1 -y2)) * real w) > 1.0
+          then
+            let
+              val (ax,bx) = minmax (x1,x2)
+              val (ay,by) = 
+                if y1 < y2
+                  then
+                    let
+                      (* proportion the rectangle as the window is *)
+                      val by = y1 + floor (real h *  real (bx - ax) / real w)
+                    in
+                      (y1,by)
+                    end
+                else
+                  let
+                    val ay = y1 - floor (real h * real (bx - ax) / real w)
+                  in
+                    (ay,y1)
+                  end
+            in
+              (ax,ay,bx,by)
+            end
+        else
+          let        
+              val (ay,by) = minmax (y1,y2)
+              val (ax,bx) = 
+                if x1 < x2
+                  then
+                    let
+                      (* proportion the rectangle as the window is *)
+                      val bx = x1 + floor (real w *  real (by - ay) / real h)
+                    in
+                      (x1,bx)
+                    end
+                else
+                  let
+                    val ax = x1 - floor (real w * real (by - ay) / real h)
+                  in
+                    (ax,x1)
+                  end
+          in
+              (ax,ay,bx,by)
+            end
+      end
+    fun motion_handler data = 
+      case Xm.Event.convertEvent data of
+          Xm.Event.MOTION_NOTIFY (Xm.Event.MOTION_EVENT {x,y,...}) =>
+            let 
+              val _ = maybe_clear_rec ()
+              val (x1,y1) = !press_coords
+              val (ax,ay,bx,by) = correct_xy_values (x1,y1,x,y)
+            in
+              Xm.Draw.rectangle (display,window,gc1,ax,ay,bx - ax,by - ay);
+              rect_coords := (ax,ay,bx - ax,by - ay);
+              clear := true
+            end
+        | _ => ()
+
+    fun input_callback data =
+      let
+        val (reason,event) = Xm.Callback.convertAny data
+      in
+        case event of
+          Xm.Event.BUTTON_PRESS 
+          (Xm.Event.BUTTON_EVENT {x,y,...}) => 
+            press_coords := (x,y)
+        | (Xm.Event.BUTTON_RELEASE (Xm.Event.BUTTON_EVENT {x,y,...})) =>
+            let 
+              val (x1,y1) = !press_coords
+              val (ax,ay,bx,by) = correct_xy_values (x1,y1,x,y);
+              val (w,h) = size main
+              val (regx,regy,regw) = !region
+              val scale = regw / real w
+              val newx = regx + scale * real ax
+              val newy = regy + scale * real ay
+              val neww = scale * real (bx - ax)
+            in
+              maybe_clear_rec();
+              region_stack := !region :: !region_stack;
+              region := (newx,newy,neww);
+              clearit()
+            end
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "x",...})) =>
+            (Xm.Colormap.freeColors (display,colormap,pixels,0);
+             Xm.Widget.destroy applicationShell)
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "r",...})) =>
+            rotate_colors 1 
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "t",...})) =>
+            rotate_colors ~1 
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "b",...})) =>
+            (case !region_stack of
+               reg :: rest =>
+                 (region := reg;
+                  region_stack := rest;
+                  clearit())
+             | _ => ())
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "c",...})) =>
+            (region := start_values;
+             region_stack := [];
+             clearit ())
+        | _ => ()
+      end
+  in
+    Xm.Event.addHandler (main,[Xm.Event.EXPOSURE_MASK],true,expose_handler);
+    Xm.Event.addHandler (main,[Xm.Event.BUTTON_MOTION_MASK],true,motion_handler);
+    Xm.Callback.add (main,Xm.Callback.INPUT,input_callback)
+  end;
+
+  fun test () = (make_toplevel ())
+  fun runx () = Xm.mainLoop ();
+  fun appl () = (test (); runx ())
+
+end;
+@
+
+
+1.7
+log
+@Fixing problem with creation of gc1 -- needs to have brotmain as drawable.
+@
+text
+@d6 3
+d17 2
+d20 5
+a24 16
+
+fun julia (zreal,zim,creal,cim,max_iterations) =
+  let
+    fun loop (iterations,zim,zreal) =
+      if iterations <= 0 then 0
+      else
+      let
+        val creal = creal + 0.0
+        val cim = cim + 0.0
+        val lim = 4.0 + 0.0
+        val t1 = zreal * zreal
+        val t2 = zim * zim
+      in
+        if t1 + t2 >= lim
+          then iterations
+        else
+d26 2
+a27 3
+            val zim = zim * zreal
+            val zim = zim + zim + cim
+            val zreal = creal + t1 - t2
+d29 11
+a39 43
+            let
+              val t1 = zreal * zreal
+              val t2 = zim * zim
+            in
+              if t1 + t2 >= lim orelse iterations = 0
+                then iterations-1
+              else
+                let
+                  val zim = zim * zreal
+                  val zim = zim + zim + cim
+                  val zreal = creal + t1 - t2
+                in
+                  let
+                    val t1 = zreal * zreal
+                    val t2 = zim * zim
+                  in
+                    if t1 + t2 >= lim orelse iterations = 0
+                      then iterations-2
+                    else
+                      let
+                        val zim = zim * zreal
+                        val zim = zim + zim + cim
+                        val zreal = creal + t1 - t2
+                      in
+                        let
+                          val t1 = zreal * zreal
+                          val t2 = zim * zim
+                        in
+                          if t1 + t2 >= lim orelse iterations = 0
+                            then iterations-3
+                          else
+                            let
+                              val zim = zim * zreal
+                              val zim = zim + zim + cim
+                              val zreal = creal + t1 - t2
+                            in
+                              loop (iterations-4,zim,zreal)
+                            end
+                        end
+                      end
+                  end
+                end
+            end
+d41 3
+a43 4
+      end
+  in
+    max_iterations - loop (max_iterations,zim,zreal)
+  end
+d49 2
+a120 2
+  fun env s = MLWorks.Internal.Value.cast (MLWorks.Internal.Runtime.environment s)
+  val sync_graphics_exposures : unit -> unit = env "x sync graphics exposures"
+d122 1
+a122 4
+  fun max (x:int,y) = if x > y then x else y
+  fun min (x:int,y) = if x < y then x else y
+
+fun make_toplevel () =
+d127 1
+a127 5
+    val mantitle = "Mandelbrot"
+
+    (*  The extent of the drawing area *)
+    val xextent = 700
+    val yextent = 700
+d129 1
+d133 2
+a134 1
+       [(Xm.TITLE, Xm.STRING mantitle), (Xm.ICON_NAME, Xm.STRING mantitle)]);
+d136 4
+a139 3
+    val brotmain =
+      Xm.Widget.createManaged
+      ("drawPane", Xm.Widget.DRAWING_AREA, applicationShell, [])
+d141 1
+d144 3
+a146 2
+    fun env s = MLWorks.Internal.Value.cast (MLWorks.Internal.Runtime.environment s)
+    val get_widget_resource : Xm.widget * string * string -> Xm.font = env "x get application resource"
+d148 1
+a148 40
+    val myfont = get_widget_resource (applicationShell,"foo","Foo")
+    val window= Xm.Widget.window brotmain
+    val display = Xm.Widget.display brotmain
+    val screen = Xm.Widget.screen brotmain
+
+    val pix1 = 
+      let
+        val pixmap = Xm.Pixmap.create (display,window,8,8,1)
+        val gc1 = Xm.GC.create (display,pixmap,[Xm.GC.FONT myfont,
+                                                Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+                                                Xm.GC.BACKGROUND (Xm.Pixel.screenWhite screen)])
+        val gc2 = Xm.GC.create (display,pixmap,[Xm.GC.FONT myfont,
+                                                Xm.GC.FOREGROUND (Xm.Pixel.screenWhite screen),
+                                                Xm.GC.BACKGROUND (Xm.Pixel.screenBlack screen)])
+        (* draw a pattern in the pixmap *)
+        fun fill () =
+          let
+            fun aux1 8 = ()
+              | aux1 i =
+                let
+                  fun aux2 8 = ()
+                    | aux2 j =
+                      (if (i+j) mod 3 = 0 then Xm.Draw.point (display,pixmap,gc1,i,j)
+                       else Xm.Draw.point (display,pixmap,gc2,i,j);
+                         aux2 (j+1))
+                in
+                  aux2 0;
+                  aux1 (i+1)
+                end
+          in
+            aux1 0
+          end
+      in
+        fill ();
+        Xm.GC.free (display,gc1);
+        Xm.GC.free (display,gc2);
+        pixmap
+      end
+
+    exception Size
+d154 1
+d156 11
+a166 3
+    (* Handle color allocation failure here *)
+ 
+    val (pixel1,pixel1',pixel2,pixel2',do_colors) =
+d168 38
+a205 25
+        val (_,pixels) = Xm.Colormap.allocColorCells (display,colormap,true,0,4)
+        val pixel1 = Array.sub (pixels,0)
+        val pixel1' = Array.sub (pixels,1)
+        val pixel2 = Array.sub (pixels,2)
+        val pixel2' = Array.sub (pixels,3)
+        datatype Color = NAME of string | RGB of real * real * real
+        val colors_ref = ref [RGB (1.0,1.0,0.0),NAME"slate grey",NAME "maroon",NAME "turquoise"]
+        fun rot(a::b) = b @@ [a]
+          | rot x = x
+        fun do_colors () =
+          (case !colors_ref of
+             [c1,c2,c3,c4] =>
+               let
+                 fun do_color (pixel,NAME s) =
+                   Xm.Colormap.storeNamedColor (display,colormap,pixel,s)
+                   | do_color (pixel,RGB c) =
+                     Xm.Colormap.storeColor (display,colormap,pixel,c);
+               in
+                 colors_ref := rot (!colors_ref);
+                 do_color (pixel1, c1);
+                 do_color (pixel1',c2);
+                 do_color (pixel2, c3);
+                 do_color (pixel2',c4)
+               end
+           | _ => ())
+d207 3
+a209 1
+        (pixel1,pixel1',pixel2,pixel2',do_colors)
+d211 1
+d213 3
+a215 2
+      (Xm.Pixel.screenBlack screen,Xm.Pixel.screenWhite screen,
+       Xm.Pixel.screenBlack screen,Xm.Pixel.screenWhite screen,
+d218 8
+a225 5
+    val brot_gcs = Array.fromList
+        [Xm.GC.create (display,window,[Xm.GC.FOREGROUND pixel1']),
+         Xm.GC.create (display,window,[Xm.GC.FOREGROUND pixel1]),
+         Xm.GC.create (display,window,[Xm.GC.FOREGROUND pixel2']),
+         Xm.GC.create (display,window,[Xm.GC.FOREGROUND pixel2])]
+d227 2
+d230 1
+a230 17
+(* Zooming in on a smaller area is achieved by passing rescaled values
+ * to the function 'to_complex' which calculates a pixel value for given
+ * coordinates.  Zooming in continuously is achieved by adjusting stored
+ * coordinates of a rectangle which represents the rectangular protion
+ * of the original (ie, first) image which is scaled to the current image.
+ *)
+    val (ww, wh) = 
+      let 
+        val (a, b) = size brotmain 
+      in
+        (ref (real a), ref (real b))
+      end
+
+    val (x1n, y1n) = (ref 0.0, ref 0.0)
+    val (x2n, y2n) = (ref (!ww), ref (!wh))
+        
+    fun draw_brot (x1:int,y1,x2,y2) =
+d232 7
+a238 13
+          val (w,h) = size brotmain
+          val scale = 1.0 / (real w)
+          val x0 = real w (* 3 * (ww div 4) *)
+          val y0 = 0.0 (* wh div 2 *)
+          fun pixel_to_gc n = Array.sub (brot_gcs,n mod 4);
+          val _ = (x1n := !x1n + ((real x1) / x0) * !ww)
+          val _ = (y1n := !y1n + ((real y1) / (real h)) * !wh)
+          val _ = (x2n := !x2n + ((real x2) / x0) * !ww - !ww)
+          val _ = (y2n := !y2n + ((real y2) / (real h)) * !wh - !wh)
+          val _ = (ww := !x2n - !x1n)
+          val _ = (wh := !y2n - !y1n)
+          fun to_complex (x:real ,y:real) =
+            (scale * (x - x0), scale * (y - y0))
+d240 3
+a242 3
+            Xm.Draw.point (display,window,pixel_to_gc 
+                 (mandel2 (to_complex 
+                  (!x1n + ((real x / real w) * !ww),!y1n + ((real y / real h) * !wh)),50)),x,y)
+d244 2
+a245 2
+         (* aux1 and aux2 functions draw the image 
+          * column by column then row by row. *)
+d263 4
+a266 4
+    val _ = do_colors ()
+    (* This one works out if we need to clip the image *)
+
+    val coords = ref [] : ((int * int) * (int * int)) list ref
+a267 9
+    fun do_expose (Xm.Event.EXPOSE_EVENT {common,x,y,width,height,count}) =
+      let 
+        val (w,h) = size brotmain 
+      in
+        if count = 0 then 
+          draw_brot (0, 0, w, h)
+        else ()
+      end
+ 
+d280 1
+a280 3
+      if Xm.Widget.isRealized brotmain
+        then Xm.Draw.clearArea (display,Xm.Widget.window brotmain,0,0,0,0,true)
+      else ()
+d285 3
+a287 8
+    val dorect = ref false;
+    val x1 = ref 0;
+    val y1 = ref 0;
+    val x2 = ref 0;
+    val y2 = ref 0;
+    val gc1 = Xm.GC.create (display,Xm.Widget.window brotmain,
+                            [Xm.GC.FONT myfont,
+                             Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+d291 2
+d294 19
+a312 25
+    fun start_values _ = 
+      let 
+        val (width, height) = size brotmain
+      in
+        (x1n := 0.0;
+         x2n := real width;
+         y1n := 0.0;
+         y2n := real height;
+         ww := real width;
+         wh := real height)
+      end
+
+    val clear = ref false;
+    val (rx1, ry1, rx2, ry2) = (ref 0, ref 0, ref 0, ref 0);
+
+(* Is there a previously drawn rectangle which needs to be deleted before 
+ * drawing the next rectangle? *)
+    fun test_rec _ = 
+             if !clear then 
+               (Xm.Draw.rectangle (display,Xm.Widget.window brotmain,gc1,!rx1,!ry1,!rx2,!ry2); clear := false; ())
+             else ();
+
+(* In order for the rectangle to be drawn properly, the top left coordinates
+ * are given first, so a comparison is made between the coordinates to find 
+ * the top left pair. *)
+d316 3
+a318 1
+    fun update_xy_values (x1',y1',x2',y2') = 
+d320 1
+a320 2
+        val (ax,bx) = minmax (x1',x2')
+        val (ay,by) = minmax (y1',y2')
+d322 43
+a364 1
+        (ax,ay,bx,by)
+a365 6
+
+(* The motion event tracks the movement of the mouse to redraw the rectangle
+ * for zooming.  The previously drawn rectangle is stored so that it can be
+ * removed.  The coordinates are stored during the button press and release
+ * events below. These coordinates are stored in rx1, ry1, rx2, ry2.  The
+ * coordinates of the final rectangle are stored in x1, y1, x2, y2. *)
+d369 9
+a377 8
+             (test_rec ();
+              (let 
+                val (ax,ay,bx,by) = update_xy_values (!x1,!y1,x,y)
+              in
+                 (Xm.Draw.rectangle (display,Xm.Widget.window brotmain,gc1,ax,ay,bx - ax,by - ay);
+                 rx1 := ax; rx2 := bx - ax; ry1 := ay; ry2 := by - ay)
+              end);
+              clear := true)
+d387 1
+a387 1
+            (x1:=x;y1:=y;dorect := true)
+d389 15
+a403 10
+            (x2 := x;y2:=y;
+             let 
+               val (a,b) = minmax (!x1, !x2)
+               val (c,d) = minmax (!y1, !y2);
+             in
+               (x1 := a; x2 := b; y1 := c; y2 := d)
+             end;
+             test_rec ();
+             Xm.Draw.rectangle (display,Xm.Widget.window brotmain,gc1,!x1,!y1,!x2 - !x1,!y2 - !y1);
+             draw_brot(!x1, !y1, !x2, !y2);dorect := false)
+d405 2
+a406 1
+             Xm.Widget.destroy applicationShell
+d408 10
+a417 1
+            do_colors () 
+d419 2
+a420 1
+            (start_values ();
+d425 3
+a427 3
+    Xm.Event.addHandler (brotmain,[Xm.Event.EXPOSURE_MASK],true,expose_handler);
+    Xm.Event.addHandler (brotmain,[Xm.Event.BUTTON_MOTION_MASK],true,motion_handler);
+    Xm.Callback.add (brotmain,Xm.Callback.INPUT,input_callback)
+@
+
+
+1.6
+log
+@Added header.
+@
+text
+@d5 4
+a8 1
+ * $Log$
+d373 5
+a377 5
+    val pixmap = Xm.Pixmap.create (display,window,8,8,1)
+    val gc1 = Xm.GC.create (display,pixmap,[Xm.GC.FONT myfont,
+                                Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+                                Xm.GC.BACKGROUND (Xm.Pixel.screenWhite screen),
+                                Xm.GC.FUNCTION Xm.GC.NOR])
+@
+
+
+1.6.1.1
+log
+@branched from 1.6
+@
+text
+@d5 1
+a5 4
+ * $Log: man-demo.sml,v $
+ *  Revision 1.6  1996/08/20  09:58:24  johnh
+ *  Added header.
+ *
+@
+
+
+1.5
+log
+@Added motion event handler.
+@
+text
+@d1 7
+@
+
+
+1.4
+log
+@Improved the madelbrotdemo by addding a zoom facility.
+,.
+@
+text
+@d269 7
+a301 2
+(*            Xm.Draw.point (display,window,pixel_to_gc 
+                 (mandel2 (to_complex (x,y),100)),x,y)*)
+d306 2
+d369 1
+d385 2
+d392 32
+d433 8
+a440 1
+            (x2 := x;y2:=y; test_rec ();
+a442 5
+        | (Xm.Event.MOTION_NOTIFY (Xm.Event.MOTION_EVENT {x,y,...})) =>
+             (test_rec ();
+               (Xm.Draw.rectangle (display,Xm.Widget.window brotmain,gc1,!x1,!y1,x - !x1,y - !y1);
+                rx1 := !x1; rx2 := x - !x1; ry1 := !y1; ry2 := y - !y1;
+                clear := true))
+d454 1
+@
+
+
+1.3
+log
+@Update names in Xm.
+@
+text
+@d155 1
+a155 2
+(* ix,iy are increments for moving dobbs image *)
+fun make_toplevel (ix,iy) =
+d160 1
+a160 1
+    val title = "test"
+d169 1
+a169 1
+       [(Xm.TITLE, Xm.STRING title), (Xm.ICON_NAME, Xm.STRING title)]);
+d171 1
+a171 1
+    val main =
+a174 4
+    (* offset of start of window *)
+    val xi_ref = ref 0
+    val yi_ref = ref 0
+
+d181 4
+a184 3
+    val window= Xm.Widget.window main
+    val display = Xm.Widget.display main
+    val screen = Xm.Widget.screen main
+d227 1
+a227 1
+
+d229 35
+a263 36
+        let
+          val (_,pixels) = Xm.Colormap.allocColorCells (display,colormap,true,0,4)
+          val pixel1 = Array.sub (pixels,0)
+          val pixel1' = Array.sub (pixels,1)
+          val pixel2 = Array.sub (pixels,2)
+          val pixel2' = Array.sub (pixels,3)
+          datatype Color = NAME of string | RGB of real * real * real
+          val colors_ref = ref [RGB (1.0,1.0,0.0),NAME"slate grey",NAME "maroon",NAME "turquoise"]
+          fun rot(a::b) = b @@ [a]
+            | rot x = x
+          fun do_colors () =
+            (case !colors_ref of
+               [c1,c2,c3,c4] =>
+                 let
+                   fun do_color (pixel,NAME s) =
+                     Xm.Colormap.storeNamedColor (display,colormap,pixel,s)
+                     | do_color (pixel,RGB c) =
+                       Xm.Colormap.storeColor (display,colormap,pixel,c);
+                 in
+                   colors_ref := rot (!colors_ref);
+                   do_color (pixel1, c1);
+                   do_color (pixel1',c2);
+                   do_color (pixel2, c3);
+                   do_color (pixel2',c4)
+                 end
+             | _ => ())
+        in
+          (pixel1,pixel1',pixel2,pixel2',do_colors)
+        end
+        handle Xm.XSystemError _ => 
+          (Xm.Pixel.screenBlack screen,Xm.Pixel.screenWhite screen,
+           Xm.Pixel.screenBlack screen,Xm.Pixel.screenWhite screen,
+           fn _ => ())
+
+    val brot_gcs =
+        Array.fromList
+d269 11
+a279 1
+    fun draw_brot () =
+d281 20
+a300 9
+          val (ww,wh) = size main
+          val scale = 1.0 / (real ww)
+          val x0 = ww (* 3 * (ww div 4) *)
+          val y0 = 0 (* wh div 2 *)
+          fun pixel_to_gc n = Array.sub (brot_gcs,n mod 4)
+          fun to_complex (x,y) =
+            (scale * real (x - x0), scale * real (y - y0))
+          fun plot_point (x,y) =
+            Xm.Draw.point (display,window,pixel_to_gc (mandel2 (to_complex (x,y),50)),x,y)
+d302 1
+a302 1
+            if x = ww then ()
+d306 1
+a306 1
+                  if y = wh then ()
+a317 26
+    val dobbs_path = "minidobb.xbm"
+    val dobbs_mask_path = "minidobb-mask.xbm"
+
+    val dobbs1 = Xm.Pixmap.get (screen,dobbs_path,
+                                pixel1,pixel1')
+    val dobbs2 = Xm.Pixmap.get (screen,dobbs_path,
+                                pixel2,pixel2')
+
+    val dobbs_mask_bitmap = 
+        let
+          val dobbs_mask = Xm.Pixmap.get (screen,dobbs_mask_path,
+                                          Xm.Pixel.screenBlack screen,Xm.Pixel.screenWhite screen)
+          val dobbs_mask_bitmap = Xm.Pixmap.create (display,window,64,75,1)
+          val mask_gc = Xm.GC.create (display,dobbs_mask_bitmap,[Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+                                                                 Xm.GC.BACKGROUND (Xm.Pixel.screenWhite screen)])
+        in
+          Xm.Draw.copyPlane (display,dobbs_mask,dobbs_mask_bitmap,mask_gc,0,0,64,75,0,0,1);
+          Xm.GC.free (display,mask_gc);
+          (* Xm.Pixmap.free (display,dobbs_mask); *)(* Pixmap.get is cached, so don't free it! *)
+          dobbs_mask_bitmap
+        end
+
+    val image_gc = Xm.GC.create (display,window,[Xm.GC.FONT myfont,
+                                                   Xm.GC.FOREGROUND pixel1 (* Xm.Pixel.screenBlack screen*),
+                                                   Xm.GC.BACKGROUND pixel2 (*Xm.Pixel.screenWhite screen*),
+                                                   Xm.GC.CLIP_MASK (Xm.GC.PIXMAP dobbs_mask_bitmap)])
+a319 19
+    fun draw_image (xorigin,yorigin,w,h) (x,y) =
+        let
+          (* offset from origin *)
+          val xi = ~(!xi_ref)
+          val yi = ~(!yi_ref)
+          (* Actual boundaries of box to draw *)
+          val x1 = max (xorigin,x+xi)
+          val y1 = max (yorigin,y+yi)
+          val x2 = min (xorigin+w,x+xi+64)
+          val y2 = min (yorigin+h,y+yi+75)
+        in
+          if x2 > x1 andalso y2 > y1
+            then
+              (Xm.GC.change (display,image_gc,
+                             [Xm.GC.CLIP_X_ORIGIN (x+xi),
+                              Xm.GC.CLIP_Y_ORIGIN (y+yi)]);
+               Xm.Draw.copyArea (display,dobbs1,window,image_gc,x1-x-xi,y1-y-yi,x2-x1,y2-y1,x1,y1))
+          else ()
+        end
+d321 1
+a321 18
+      fun draw_image_all (x,y) =
+        let
+          val xi = ~(!xi_ref)
+          val yi = ~(!yi_ref)
+        in
+          Xm.GC.change (display,image_gc,
+                        [Xm.GC.CLIP_X_ORIGIN (x+xi),
+                         Xm.GC.CLIP_Y_ORIGIN (y+yi)]);
+          Xm.Draw.copyArea (display,dobbs1,window,image_gc,0,0,64,75,x+xi,y+yi)
+        end
+
+      fun abs_draw_image (x,y) =
+        (Xm.GC.change (display,image_gc,
+                       [Xm.GC.CLIP_X_ORIGIN (x-32),
+                        Xm.GC.CLIP_Y_ORIGIN (y-37)]);
+         Xm.Draw.copyArea (display,dobbs2,window,image_gc,0,0,64,75,x-32,y-37))
+        
+    (* The bouncing dobbs feature *)
+d323 3
+a325 20
+    fun new_pos (widget,coords) =
+      let
+        val (width,height) = size widget
+        fun doone ((x,y),(ix,iy)) =
+          let
+            val x' = x + ix
+            val y' = y + iy
+            val ix = 
+              if x' < 0 orelse x' > (width-64)
+                then ~ix
+              else ix
+            val iy = 
+              if y' < 0 orelse y' > (height-75)
+                then ~iy
+              else iy;
+            val newx = x + ix
+            val newy = y + iy
+          in
+            ((newx,newy),(ix,iy))
+          end
+d327 3
+a329 1
+        map doone coords
+d331 1
+a331 21
+
+    val coords = ref [] : ((int * int) * (int * int)) list ref
+
+    fun bounce_dobbs () =
+      case !coords of
+        [] => ()
+      | _ => 
+          let
+            fun loop 0 = ()
+              | loop n =
+                (coords := new_pos (main,!coords);
+                 map (draw_image_all o #1) (rev (!coords));
+                 Xm.sync (display,false);
+                 loop (n-1))
+          in
+            loop 100
+          end
+
+    fun do_expose (Xm.Event.EXPOSE_EVENT {common,x,y,width,height,count}) =
+      if count = 0 then draw_brot () else ()
+      
+d344 2
+a345 2
+      if Xm.Widget.isRealized main
+        then Xm.Draw.clearArea (display,Xm.Widget.window main,0,0,0,0,true)
+d351 31
+d389 10
+a398 2
+            (coords := ((x-32,y-37),(ix,iy)) :: !coords;
+             draw_image_all (x-32,y-37))
+d400 1
+a400 1
+            Xm.Widget.destroy applicationShell
+d402 4
+a405 3
+            do_colors ()
+        | (Xm.Event.KEY_PRESS _) =>
+            bounce_dobbs ()
+d409 2
+a410 2
+    Xm.Event.addHandler (main,[Xm.Event.EXPOSURE_MASK],true,expose_handler);
+    Xm.Callback.add (main,Xm.Callback.INPUT,input_callback)
+d413 1
+a413 1
+  fun test () = (make_toplevel (9,13))
+@
+
+
+1.2
+log
+@Removing call to mainLoop
+@
+text
+@d2 1
+a150 2
+  fun P s = output (std_out,s ^ "\n")
+  val N = MLWorks.Integer.makestring
+d158 2
+a159 2
+    val name = Xm.Widget.NAME "mlworks"
+    val class = Xm.APP_CLASS "MLWorks"
+d170 1
+a170 1
+       [(Xm.Title, Xm.STRING title), (Xm.IconName, Xm.STRING title)]);
+d174 1
+a174 1
+      (Xm.Widget.NAME "drawPane", Xm.Widget.Class.DrawingArea, applicationShell, [])
+d183 1
+a183 1
+    val get_widget_resource : Xm.Widget * string * string -> Xm.Font = env "x get application resource"
+d225 1
+a225 1
+      case Xm.Widget.valuesGet (widget,[Xm.Width,Xm.Height]) of
+d262 1
+a262 1
+        handle Xm.X_system_error _ => 
+d268 1
+a268 1
+        Array.arrayoflist
+a409 2
+    val N = MLWorks.Integer.makestring
+
+d418 2
+a419 2
+          Xm.Event.Expose expose_event => do_expose expose_event
+        | Xm.Event.GraphicsExpose expose_event => do_expose expose_event
+d425 1
+a425 1
+      if Xm.Widget.is_realized main
+d437 1
+a437 1
+          Xm.Event.ButtonPress 
+d441 1
+a441 1
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "x",...})) =>
+d443 1
+a443 1
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "r",...})) =>
+d445 1
+a445 1
+        | (Xm.Event.KeyPress _) =>
+d450 2
+a451 2
+    Xm.Event.addHandler (main,[Xm.Event.EXPOSURE],true,expose_handler);
+    Xm.Widget.callbackAdd (main,Xm.Callback.Input,input_callback)
+@
+
+
+1.1
+log
+@new unit
+New demo
+@
+text
+@a147 1
+  exception Halt
+d414 1
+a414 1
+        draw_brot ()
+a447 2
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "m",...})) =>
+            draw_brot ()
+d454 1
+a454 2
+    Xm.Widget.callbackAdd (main,Xm.Callback.Input,input_callback);
+    Xm.Widget.callbackAdd (main,Xm.Callback.Resize,resize_callback)
+d457 4
+a460 4
+  fun run () = 
+    (make_toplevel (9,13);
+     Xm.mainLoop ())
+    handle Halt => ()
+@

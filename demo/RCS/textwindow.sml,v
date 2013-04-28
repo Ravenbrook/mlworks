@@ -1,0 +1,164 @@
+head	1.2;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.2
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.08.20.16.18.12;	author johnh;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	95.05.23.11.19.11;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.07.50;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Windows demo.
+@
+
+
+1.2
+log
+@update the demo to refer to the existing Xm library.
+@
+text
+@(*  ==== Text Window demo  ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd
+ *
+ * $Log$
+ *)
+
+require "motif/__xm";
+
+fun text_window {title, height, width} =
+
+  let
+    
+    val appshell = Xm_.initialize (title,
+				     "appshellappclass", [])
+      
+    val text_widget = Xm_.Widget.createScrolledText
+      (appshell, "text_widget",
+       [(Xm_.EDIT_MODE, Xm_.EDIT_MODE_VALUE Xm_.MULTI_LINE_EDIT),
+	(Xm_.HEIGHT, Xm_.INT height),
+	(Xm_.WIDTH, Xm_.INT width)])
+      
+    val _ = Xm_.Widget.manage text_widget
+      
+    val _ = Xm_.Widget.realize appshell
+      
+    val pos = ref 0
+      
+    fun output s = 
+      let
+	val length = size s
+	val current = !pos
+	val new = current + length
+      in
+	(Xm_.Text.insert (text_widget,
+			  current,
+			  s);
+	 pos := new)
+      end
+    fun destroy () = Xm_.Widget.destroy appshell
+  in
+    (output,destroy)
+  end
+
+local
+  fun doit(0,f,a) = ()
+    | doit (n,f,a) = (f a;
+		      doit (n-1,f,a))
+  fun id x = x
+  fun delay n = doit(n,id,())
+  fun delayed_dot (d,out) = (delay d;
+			     out ".")
+  fun slow_line' (n,d,out) = (doit(n,delayed_dot,(d,out));
+			     out "\n")
+  fun slow_lines (wname,n,m,d,out) =
+    (out("some dots : "^wname^"\n");
+     doit (n,slow_line',(m,d,out));
+     out("done some dots for "^wname^"\n"))
+in    
+  fun slow_window(wname,h,w,n,m,d) =
+    let val (ptw,dtw) = text_window{title = wname, height = h, width = w}
+    in (slow_lines(wname:string,n,m,d,ptw);
+	dtw())
+    end
+  fun dots () = slow_window("dots",200,200,20,20,50000)
+  fun slow_line (n,out) = slow_line'(n,100000,out)
+end
+
+
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@d5 1
+a5 4
+ * $Log: textwindow.sml,v $
+ *  Revision 1.2  1996/08/20  16:18:12  johnh
+ *  update the demo to refer to the existing Xm library.
+ *
+@
+
+
+1.1
+log
+@new unit
+Windows demo.
+@
+text
+@d1 8
+a8 2
+Shell.Path.set_source_path [".", "~sml/MLW/src"];
+Shell.Make.load_module "library.__xm";
+d14 2
+a15 2
+    val appshell = Xm_.initialize (Xm_.Widget.NAME title,
+				     Xm_.APP_CLASS "appshellappclass", [])
+d18 4
+a21 4
+      (appshell, Xm_.Widget.NAME "text_widget",
+       [(Xm_.EditMode, Xm_.EDITMODE Xm_.MULTI_LINE_EDIT),
+	(Xm_.Height, Xm_.INT height),
+	(Xm_.Width, Xm_.INT width)])
+d55 2
+a56 2
+  fun slow_lines (name,n,m,d,out) =
+    (out("some dots : "^name^"\n");
+d58 1
+a58 1
+     out("done some dots for "^name^"\n"))
+d60 3
+a62 3
+  fun slow_window(name,h,w,n,m,d) =
+    let val (ptw,dtw) = text_window{title=name, height = h, width = w}
+    in (slow_lines(name,n,m,d,ptw);
+d68 1
+@

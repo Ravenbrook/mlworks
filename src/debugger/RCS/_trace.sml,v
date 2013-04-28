@@ -1,0 +1,330 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+
+
+1.3
+date	93.12.09.19.29.16;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.09.06.15.53.11;	author nosa;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.10.09.14.56.33;	author clive;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.10.09.14.56.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Tracing module
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@(*
+$Log: _trace.sml,v $
+Revision 1.2  1993/09/06  15:53:11  nosa
+Record compiler option debug_polyvariables in Debugger_Types.INFO
+for recompilation purposes.
+
+Revision 1.1  1992/10/09  14:56:33  clive
+Initial revision
+
+ * Copyright (c) 1993 Harlequin Ltd.
+*)
+
+require "debugger_types";
+require "../utils/newmap";
+require "trace";
+
+functor Trace(
+             structure Debugger_Types : DEBUGGER_TYPES
+              ) : TRACE =
+  struct
+    structure Debugger_Types = Debugger_Types
+    structure NewMap = Debugger_Types.Datatypes.NewMap
+    structure Datatypes = Debugger_Types.Datatypes
+
+    val trace_frames = ref([] : (MLWorks.Internal.Debugger.StackFrame * MLWorks.Internal.Debugger.StackFrame ref) list)
+       
+    fun add_trace_frame arg =
+      trace_frames := arg :: !trace_frames
+         
+       fun remove_trace_frame arg =
+         let
+           fun do_remove [] = []
+             | do_remove (h::t) =
+               if h = arg
+                 then t
+               else h :: do_remove t
+         in
+           trace_frames := do_remove(!trace_frames)
+         end
+
+
+       fun check(result,frame,[]) = result
+         | check(result,frame,(b,ref a)::rest) = 
+           if a=frame
+             then get_next_frame b
+           else check(result,frame,rest)
+
+       and get_next_frame x = 
+         let
+           val result as (_,next,_) = MLWorks.Internal.Debugger.get_next_frame x
+         in
+           check(result,next,!trace_frames)
+         end
+
+       (* TRACING AND BREAKPOINTING *)
+
+       val functions_to_trace = ref([] : MLWorks.Internal.Value.ml_value list)
+       val functions_to_breakpoint = ref([] : MLWorks.Internal.Value.ml_value list)
+       val trace_depth = ref(0)
+
+       datatype Search = Found | NotFound 
+
+       fun find_object object = 
+         let
+           fun find' [] = NotFound
+             | find' (h::t) = 
+               if h = object
+                 then Found
+               else find' t
+         in
+           find'(!functions_to_trace)
+         end
+
+       fun internal_find_object (object,elements) = 
+         let
+           fun find' [] = NotFound
+             | find' (h::t) = 
+               if h = object
+                 then Found
+               else find' t
+         in
+           find' elements
+         end
+
+       val are_we_tracing = ref(false)
+       val are_we_breakpointing = ref(false)
+
+       val get_function_debug_info =
+         MLWorks.Internal.Debugger.get_code_object_debug_info;
+
+       fun trace info closure = 
+         let
+           val Debugger_Types.INFO (interpreter_info,_) = info 
+           val closure = MLWorks.Internal.Value.cast closure
+           val code_string = MLWorks.Internal.Debugger.get_object_at_address(closure,~1)
+           val debug_info = get_function_debug_info code_string
+           val the_slot = internal_find_object (code_string,! functions_to_trace)
+           val the_slot' = internal_find_object (code_string,! functions_to_breakpoint)
+         in
+           case (the_slot,the_slot') of
+             (Found,_) => (output(std_out,"Already tracing that function\n");
+                       false)
+           | (_,Found) => (output(std_out,"Already breakpointing that function\n");
+                           false)
+           | (NotFound,_)  =>
+               let
+                 val _ = if !are_we_tracing
+                           then ()
+                         else (trace_depth := 0;
+                               trace_frames := [])
+                 val not_possible =
+                   (#2((NewMap.apply interpreter_info debug_info) :
+                    Datatypes.Type * bool * (int * Debugger_Types.Backend_Annotation) list))
+                   handle NewMap.Undefined => false
+               in
+                 if not_possible
+                   then
+                     (output(std_out,"This function is leaf and cannot be traced\n");
+                      false)
+                 else
+                   (functions_to_trace := code_string :: ! functions_to_trace;
+                    MLWorks.Internal.Debugger.tag_as_interesting code_string;
+                    are_we_tracing := true;
+                    MLWorks.Internal.Debugger.start_single_stepping();
+                    true)
+               end
+         end
+
+
+       fun untrace closure = 
+         let
+           val closure = MLWorks.Internal.Value.cast closure
+           val code_string = MLWorks.Internal.Debugger.get_object_at_address(closure,~1)
+           val the_slot = internal_find_object(code_string,! functions_to_trace)
+         in
+           case (the_slot,! functions_to_trace) of 
+             (Found,[_]) =>
+               (functions_to_trace := [];
+                MLWorks.Internal.Debugger.untag_as_interesting code_string;
+                are_we_tracing := false;
+                true)
+           | (Found,rest) =>
+               let
+                 fun remove ([],acc) = acc
+                   | remove (h::t,acc) = 
+                     if h = code_string
+                       then remove(t,acc)
+                     else remove (t,h::acc)
+               in
+                 MLWorks.Internal.Debugger.untag_as_interesting code_string;
+                 functions_to_trace := remove(rest,[]);
+                 true
+               end
+           | (NotFound,_) => 
+               (output(std_out,"Not being traced\n");
+                false)
+         end
+
+       fun untrace_all() =
+         (map MLWorks.Internal.Debugger.untag_as_interesting (!functions_to_trace);
+          functions_to_trace := [];
+          trace_depth := 0;
+          case !functions_to_breakpoint of
+            [] => MLWorks.Internal.Debugger.stop_single_stepping ()
+          | _ => ())
+
+       fun breakpoint info closure = 
+         let
+           val Debugger_Types.INFO (interpreter_info,_) = info 
+           val closure = MLWorks.Internal.Value.cast closure
+           val code_string = MLWorks.Internal.Debugger.get_object_at_address(closure,~1)
+           val debug_info = get_function_debug_info code_string
+           val the_slot = internal_find_object (code_string,! functions_to_breakpoint)
+           val the_slot' = internal_find_object (code_string,! functions_to_trace)
+         in
+           case (the_slot,the_slot') of
+             (Found,_) => (output(std_out,"Already breakpointing that function\n");
+                       false)
+           | (_,Found) => (output(std_out,"Already tracing that function\n");
+                           false)
+           | (NotFound,_)  =>
+               let
+                 val not_possible =
+                   (#2((NewMap.apply interpreter_info debug_info) :
+                    Datatypes.Type * bool * (int * Debugger_Types.Backend_Annotation) list))
+                   handle NewMap.Undefined => false
+               in
+                 if not_possible
+                   then
+                     (output(std_out,"This function is leaf and cannot be breakpointed\n");
+                      false)
+                 else
+                   (functions_to_breakpoint := code_string :: ! functions_to_breakpoint;
+                    MLWorks.Internal.Debugger.tag_as_interesting code_string;
+                    are_we_breakpointing := true;
+                    MLWorks.Internal.Debugger.start_single_stepping();
+                    true)
+               end
+         end
+
+       fun unbreakpoint closure = 
+         let
+           val closure = MLWorks.Internal.Value.cast closure
+           val code_string = MLWorks.Internal.Debugger.get_object_at_address(closure,~1)
+           val the_slot = internal_find_object(code_string,! functions_to_breakpoint)
+         in
+           case (the_slot,! functions_to_trace) of 
+             (Found,[_]) =>
+               (functions_to_breakpoint := [];
+                MLWorks.Internal.Debugger.untag_as_interesting code_string;
+                are_we_breakpointing := false;
+                true)
+           | (Found,rest) =>
+               let
+                 fun remove ([],acc) = acc
+                   | remove (h::t,acc) = 
+                     if h = code_string
+                       then remove(t,acc)
+                     else remove (t,h::acc)
+               in
+                 MLWorks.Internal.Debugger.untag_as_interesting code_string;
+                 functions_to_breakpoint := remove(rest,[]);
+                 true
+               end
+           | (NotFound,_) => 
+               (output(std_out,"Not being breakpointed\n");
+                false)
+         end
+
+       fun unbreakpoint_all() =
+         (map MLWorks.Internal.Debugger.untag_as_interesting (!functions_to_breakpoint);
+          functions_to_breakpoint := [];
+          case !functions_to_trace of
+            [] => MLWorks.Internal.Debugger.stop_single_stepping ()
+          | _ => ())
+
+        val are_we_tracing = fn () => !are_we_tracing
+        val are_we_breakpointing = fn () => !are_we_breakpointing
+
+  end
+              
+@
+
+
+1.2
+log
+@Record compiler option debug_polyvariables in Debugger_Types.INFO
+for recompilation purposes.
+@
+text
+@d3 4
+d10 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log: $
+d88 1
+a88 1
+           val Debugger_Types.INFO interpreter_info = info 
+d164 1
+a164 1
+           val Debugger_Types.INFO interpreter_info = info 
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 1
+a2 4
+$Log: _trace.sml,v $
+Revision 1.1  1992/10/09  14:56:33  clive
+Initial revision
+
+@

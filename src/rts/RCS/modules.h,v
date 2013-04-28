@@ -1,0 +1,247 @@
+head	1.7;
+access;
+symbols
+	Final_version_of_old_runtime:1.7
+	ML_revised_beta_release_25/05/94:1.7
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.7
+date	93.11.22.16.50.32;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.08.12.13.43.42;	author daveb;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.08.26.15.50.47;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.01.14.40.24;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.03.17.13.29.20;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.03.11.11.30.27;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.17.15.15.11;	author davidt;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.08.12.13.43.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functions for dealing with associating names with external modules.
+@
+
+
+1.7
+log
+@Added extra function to lookup module timestamp
+Changed mt_add to accept extra parameter for module timestamp
+@
+text
+@/*  ==== MODULE TABLE ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  These functions provide a lookup table from module names to modules.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: modules.h,v $
+ *  Revision 1.6  1993/08/12  13:43:42  daveb
+ *  mt_lookup looks along the module path.
+ *
+ *  Revision 1.5  1992/08/26  15:50:47  richard
+ *  The module table is now a pervasive value.
+ *
+ *  Revision 1.4  1992/07/01  14:40:24  richard
+ *  Changed modules to be an entirely ML type to make them storage
+ *  manager independent.
+ *
+ *  Revision 1.3  1992/03/17  13:29:20  richard
+ *  Rewrote and generalised.
+ *
+ *  Revision 1.2  1992/03/11  11:30:27  richard
+ *  Improved documentation slightly.
+ *
+ *  Revision 1.1  1991/10/17  15:15:11  davidt
+ *  Initial revision
+ */
+
+#ifndef modules_h
+#define modules_h
+
+
+#include "mltypes.h"
+#include "values.h"
+
+
+extern mlval mt_empty(void);
+extern mlval mt_add(mlval table, mlval name, mlval structure, mlval time);
+extern mlval mt_lookup(mlval table, mlval name, mlval parent);
+extern mlval mt_lookup_time(mlval table, mlval name, mlval parent);
+
+
+#endif
+@
+
+
+1.6
+log
+@mt_lookup looks along the module path.
+@
+text
+@d12 3
+d41 1
+a41 1
+extern mlval mt_add(mlval table, mlval name, mlval structure);
+d43 1
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a11 3
+ *  Revision 1.6  1993/08/12  13:43:42  daveb
+ *  mt_lookup looks along the module path.
+ *
+@
+
+
+1.5
+log
+@The module table is now a pervasive value.
+@
+text
+@d12 3
+d39 1
+a39 1
+extern mlval mt_lookup(mlval table, mlval name);
+@
+
+
+1.4
+log
+@Changed modules to be an entirely ML type to make them storage
+manager independent.
+@
+text
+@d12 4
+a32 1
+extern mlval modules;		/* the global module table */
+@
+
+
+1.3
+log
+@Rewrote and generalised.
+@
+text
+@d12 3
+d25 2
+d29 1
+a29 10
+typedef struct
+{
+  size_t size;
+  size_t free;
+  struct
+  {
+    mlval name;		/* ML string: the name of the module */
+    mlval structure;	/* ML record: the module structure */
+  } *array;
+} *ModuleTable;
+d31 3
+a33 4
+extern ModuleTable mt_empty(void);
+extern void mt_discard(ModuleTable table);
+extern void mt_add(ModuleTable table, mlval name, mlval structure);
+extern mlval mt_lookup(const ModuleTable table, mlval name);
+@
+
+
+1.2
+log
+@Improved documentation slightly.
+@
+text
+@d12 3
+d24 10
+a33 2
+/* Initialise the table of modules */
+extern void init_module_table(int maximum);
+d35 4
+a38 2
+/* Discard the table of modules so that it may be garbage collected */
+extern void discard_module_table(void);
+a39 5
+/* Add this module name and value to the list of all known modules */
+extern void add_module(mlval name, mlval module);
+
+/* Return the pointer to the value representing the given module */
+extern mlval lookup_module(const char *current_module, mlval name);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 13
+a13 6
+/*
+ * modules.h
+ * Functions for dealing with associating names with external module.
+ * $Log$
+ * 
+ * Copyright (c) 1991 Harlequin Ltd.
+a15 1
+/* Avoid multiple inclusion */
+d19 1
+a19 4
+/* For efficiency */
+#ifndef mltypes_h
+#include "mltypes.h"
+#endif
+d28 1
+a28 1
+extern void add_module(mlval module_name, mlval module);
+d31 1
+a31 1
+extern mlval lookup_module(char *current_module, mlval module_name);
+@

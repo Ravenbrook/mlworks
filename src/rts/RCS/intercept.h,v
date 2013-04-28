@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	93.04.15.12.57.33;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.04.15.12.57.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Code vector interception
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*  ==== CODE VECTOR INTERCEPTION ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  Code vectors are intercepted by altering them to call a special routine.
+ *  The functions below take care of this alteration and with dispatching
+ *  the intercepted flow of control.
+ *
+ *  Revision Log 
+ *  ------------
+ *  $Log$
+ */
+
+#ifndef intercept_h
+#define intercept_h
+
+#include "mltypes.h"
+
+
+/*  === INTERCEPT/REPLACE CODE VECTOR ===
+ *
+ *  code_intercept() alters a code vector so that it calls intercept()
+ *  instead of executing.  code_replace() alters it so that it calls
+ *  replace().  code_nop() restores its original behaviour.  They return zero
+ *  on success and set errno otherwise.
+ */
+
+enum /* errno */
+{
+  EINTERCEPTCODE = 1,	/* Object is not a code vector */
+  EINTERCEPTFORM	/* Code vector not compiled with interception slot */
+};
+
+extern int code_intercept(mlval code);
+extern int code_replace(mlval code);
+extern int code_nop(mlval code);
+
+
+/*  === TEST STATUS OF A CODE VECTOR ===
+ *
+ *  May return -1 and set errno.
+ */
+
+enum code_status
+{
+  CS_INTERCEPT, CS_REPLACE, CS_NOP
+} code_status(mlval code);
+
+
+/*  === INTERCEPTION/REPLACEMENT HANDLERS ===
+ *
+ *  These are called by the code in the ML to C interface and should not be
+ *  called directly.  They apply the function pointed to by the ancillary
+ *  slot INTERFNS to the stack frame.  The result of this function is
+ *  discarded.
+ */
+
+extern void intercept(struct stack_frame *frame);
+extern void replace(struct stack_frame *frame);
+
+
+
+#endif
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d13 1
+a13 4
+ *  $Log: intercept.h,v $
+ *  Revision 1.1  1993/04/15  12:57:33  richard
+ *  Initial revision
+ *
+@

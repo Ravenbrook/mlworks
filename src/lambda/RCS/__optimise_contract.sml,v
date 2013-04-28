@@ -1,0 +1,310 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.9
+	MLWorks-1-0-3-21/12/1992:1.9
+	MLWorks-1-0-2-15/12/1992:1.9
+	MLWorks-1-0-1-04/12/1992:1.9
+	checkpoint_17_08_92:1.9;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	93.05.18.15.54.49;	author jont;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	92.07.17.13.55.39;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.07.09.09.29.29;	author davida;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.16.12.12.59;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.27.10.55.47;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.02.05.16.35.12;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.22.18.09.30;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.13.58.33;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.16.16.27.08;	author davida;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.06.11.09.26;	author davida;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.05.18.15.54.49;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Various strictly contracting optimisations
+@
+
+
+1.10
+log
+@Removed integer parameter
+@
+text
+@(*
+ * Lambda-Calculus Optimisation: __optimise_contract
+ *
+ * Contraction-phase Optimisations:
+ * simple beta-reduction, eta-reduction,
+ * select-elimination, struct-elimination,
+ * switch-elmination, application reorder.
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/__crash";
+require "../utils/__lists";
+require "../utils/__print";
+require "../main/__pervasives";
+require "../basics/__ident";
+require "../debugger/__debugger_types";
+require "__lambdasub";
+require "__lambdaprint";
+require "_optimise_contract";
+
+structure OptimiseContract_ = OptimiseContract(
+  structure Crash = Crash_
+  structure Lists = Lists_
+  structure Print = Print_
+  structure Ident = Ident_
+  structure Pervasives = Pervasives_
+  structure LambdaSub = LambdaSub_
+  structure LambdaPrint = LambdaPrint_
+  structure Debugger_Types = Debugger_Types_
+    );
+
+(* $Log: __optimise_contract.sml,v $
+Revision 1.9  1992/07/17  13:55:39  clive
+More work on type propogation
+
+Revision 1.8  1992/07/09  09:29:29  davida
+Removed OptimiseLib parameter
+
+Revision 1.7  1992/04/16  12:12:59  clive
+General speed improvements
+
+Revision 1.6  1992/03/27  10:55:47  jont
+Added Print parameter to functor application
+
+Revision 1.5  1992/02/05  16:35:12  jont
+Added a bit more info to the bad select_elim message on the way to
+finding a bug in the lambda translator
+
+Revision 1.4  1991/10/22  18:09:30  davidt
+Now builds using Lists structure.
+
+Revision 1.3  91/10/22  13:58:33  davidt
+Now builds using the Crash_ structure.
+
+Revision 1.2  91/09/16  16:27:08  davida
+Added pervasives parameter
+
+Revision 1.1  91/09/06  11:09:26  davida
+Initial revision
+ *)
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a33 3
+Revision 1.10  1993/05/18  15:54:49  jont
+Removed integer parameter
+
+@
+
+
+1.9
+log
+@More work on type propogation
+@
+text
+@a13 1
+require "../utils/__integer";
+a24 1
+  structure Integer = Integer_
+d34 3
+@
+
+
+1.8
+log
+@Removed OptimiseLib parameter
+@
+text
+@d18 1
+d32 1
+d36 3
+@
+
+
+1.7
+log
+@General speed improvements
+@
+text
+@a0 1
+
+d18 1
+a18 1
+require "__optimise_lib";
+a26 1
+  structure Lib = OptimiseLib_
+d29 1
+d34 3
+@
+
+
+1.6
+log
+@Added Print parameter to functor application
+@
+text
+@d20 1
+d30 3
+a32 1
+  structure Pervasives = Pervasives_);
+d35 3
+@
+
+
+1.5
+log
+@Added a bit more info to the bad select_elim message on the way to
+finding a bug in the lambda translator
+@
+text
+@d16 1
+d18 1
+a18 1
+require "../basics/ident";
+d26 1
+d32 4
+@
+
+
+1.4
+log
+@Now builds using Lists structure.
+@
+text
+@d15 1
+d21 7
+a27 6
+structure OptimiseContract_ = 
+   OptimiseContract(structure Crash = Crash_
+		    structure Lists = Lists_
+		    structure Lib = OptimiseLib_
+		    structure Ident = Ident_
+		    structure Pervasives = Pervasives_);
+d29 4
+a32 1
+(* $Log:	__optimise_contract.sml,v $
+@
+
+
+1.3
+log
+@Now builds using the Crash_ structure.
+@
+text
+@d2 10
+a11 1
+(*  Lambda-Calculus Optimisation: __optimise_contract  *)
+a12 7
+    (*  Contraction-phase Optimisations:        *)
+    (*  simple beta-reduction, eta-reduction,   *)
+    (*  select-elimination, struct-elimination, *)
+    (*  switch-elmination, application reorder. *)
+
+       (*  Copyright (c) 1991 Harlequin Ltd. *)
+
+d14 1
+d22 1
+d28 3
+@
+
+
+1.2
+log
+@Added pervasives parameter
+@
+text
+@d11 1
+a11 1
+
+a16 3
+
+
+
+d18 2
+a19 1
+   OptimiseContract(structure Lib = OptimiseLib_
+d23 3
+a25 1
+   
+a26 1
+(* $Log:	__optimise_contract.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 1
+d19 1
+d22 2
+a23 1
+		    structure Ident = Ident_);
+d27 4
+a30 1
+(* $Log$ *)
+@

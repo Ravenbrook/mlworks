@@ -1,0 +1,183 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.05.01.11.30.08;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.29.15.39.46;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.34.30;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@(*  ==== INITIAL BASIS : Time structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __time.sml,v $
+ * Revision 1.2  1996/04/29  15:39:46  matthew
+ * Removed MLWorks.Integer
+ *
+ * Revision 1.1  1996/04/18  11:34:30  jont
+ * new unit
+ *
+ *  Revision 1.1  1995/04/13  13:33:55  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "__integer";
+
+require "__general";
+require "time";
+
+structure Time : TIME =
+  struct
+    val one_million = 1000000
+    type time = MLWorks.Time.time
+
+    exception Time
+
+    val zeroTime : time = MLWorks.Time.zero
+
+    val realToTime : real -> time =
+      fn x =>
+	MLWorks.Time.+(zeroTime, MLWorks.Time.Interval.from_real x)
+
+    val implodeTime : {sec : int, usec : int} -> time =
+      fn {sec, usec} =>
+      if sec < 0 orelse usec < 0 orelse usec >= one_million then
+	raise General.Overflow
+      else
+	realToTime(real sec + real usec / real one_million)
+
+    val timeToReal :time -> real =
+      fn x => MLWorks.Time.Interval.to_real(MLWorks.Time.interval(x, zeroTime))
+
+    val explodeTime : time -> {sec : int, usec : int} =
+      fn time =>
+      let
+	val real_time = timeToReal time
+      in
+	{sec = floor real_time, usec = floor(real one_million * (real_time - real(floor real_time)))}
+      end
+
+    val timeToUnits : time * int -> int =
+      fn(time, i) =>
+      let
+	val real_time = timeToReal time
+	val sign = i < 0
+	val i = abs i
+	val mult = exp(real i * ln(real 10))
+	val real_time =
+	  if sign then real_time * mult else real_time / mult
+      in
+	floor real_time
+      end
+
+    fun timeToInterval time = MLWorks.Time.interval(time, zeroTime)
+
+    val now : unit -> time = MLWorks.Time.now
+
+    val makestring : time * int -> string =
+      fn (time, i) =>
+      if i <= 0 then
+	Int.toString(floor(timeToReal time))
+      else
+	let
+	  val real_time = timeToReal time
+	  fun do_decimal(0, _, acc) = rev acc
+	    | do_decimal(n, r, acc) =
+	      do_decimal(n-1, r*10.0 - real(floor(r*10.0)),
+			 Int.toString(floor r) :: acc)
+	in
+	  String.implode(Int.toString(floor real_time) :: "." :: do_decimal(i, (real_time - real(floor real_time)) * 10.0, []))
+	end
+
+    val op + : time * time -> time =
+      fn (t1, t2) => MLWorks.Time.+(t1, timeToInterval t2)
+
+    val op - : time * time -> time =
+      fn (t1, t2) =>
+      if MLWorks.Time.<(t1, t2) then
+	raise Time
+      else
+	MLWorks.Time.-(t1, timeToInterval t2)
+
+    val op < : time * time -> bool =
+      MLWorks.Time.<
+
+    val op <= : time * time -> bool =
+      fn (t1, t2) => t1 = t2 orelse t1 < t2
+
+    val op > : time * time -> bool =
+      fn (t1, t2) => t2 < t1
+
+    val op >= : time * time -> bool =
+      fn (t1, t2) => t1 = t2 orelse t1 > t2
+
+  end (* TIME *)
+@
+
+
+1.2
+log
+@Removed MLWorks.Integer
+@
+text
+@d10 3
+d88 1
+a88 1
+	  implode(Int.toString(floor real_time) :: "." :: do_decimal(i, (real_time - real(floor real_time)) * 10.0, []))
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d20 2
+d76 1
+a76 1
+	MLWorks.Integer.makestring(floor(timeToReal time))
+d83 1
+a83 1
+			 MLWorks.Integer.makestring(floor r) :: acc)
+d85 1
+a85 1
+	  implode(MLWorks.Integer.makestring(floor real_time) :: "." :: do_decimal(i, (real_time - real(floor real_time)) * 10.0, []))
+@

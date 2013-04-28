@@ -1,0 +1,364 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.4
+date	92.08.13.16.10.20;	author davidt;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.07.08.12.25.50;	author davida;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.05.01.14.18.02;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.04.28.15.12.56;	author clive;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.08.13.16.10.20;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initial version
+@
+
+
+1.4
+log
+@NO LONGER IN USE. Commented out code so that a parse
+error is generated if the file is used.
+@
+text
+@(*
+$Log: _hashtable-with-extras.sml,v $
+Revision 1.3  1992/07/08  12:25:50  davida
+Changed clear function to declare a new array
+with the initial size, instead of clearing out
+the old one.
+
+Revision 1.2  1992/05/01  14:18:02  clive
+Make the hash generator function take more useful diagnostic information
+
+Revision 1.1  1992/04/28  15:12:56  clive
+Initial revision
+
+
+ This is just like the standard hashtable functor, but it notices when a bucket is getting too full
+ and trys to adjust the hash function to compensate
+
+*)
+
+(*require "hashtable-with-extras";*)
+
+functor HashTable' (*(Spec : HASHSPEC') : HASHTABLE'  =
+  struct
+
+    type Key = Spec.Key
+    type Value = Spec.Value
+    exception Lookup of Key
+
+    val element_equality = Spec.eq
+
+    local
+      (* Note that prime assumes that n is odd and greater than 4 *)
+
+      fun prime n =
+	let
+	  fun prime' divisor =
+	    let 
+	      val quotient = n div divisor
+	    in
+	      if quotient < divisor then
+		true
+	      else
+		if divisor * quotient = n then
+		  false
+		else
+		  prime' (divisor+2)
+	    end
+	in
+	  prime' 3
+	end
+
+      fun make_prime' n =
+	if prime n then n else make_prime' (n+2)
+
+      fun make_prime n =
+	make_prime' (if (n mod 2) = 0 then n+1 else n)
+
+      val initial_size = 
+	make_prime
+	(if Spec.size < 31 then
+	   31
+	 else
+	   Spec.size)
+
+      type Table = (int ref * int ref * (Key * Value ref) list Array.array ref *
+                    int * (Key -> int) ref * int ref * ((int * (unit -> Key list)) -> ((Key -> int) * bool)) ref *
+                    bool ref )
+
+      val (hash_fn,resize_if_bucket_full) = Spec.hash_generator(0,fn () => [])
+      val table : Table = 
+	(ref initial_size,ref 0, ref (Array.array (initial_size,nil)),
+         Spec.maximum_bucket_size, ref(hash_fn) , ref(0), ref(Spec.hash_generator),
+         ref(resize_if_bucket_full))
+         
+
+    in
+      fun clear () = 
+	let
+	  val (ref_size, countref, ref_vector,
+               _,ref_hash_function,ref_hash_generator_called,
+               ref hash_generator, ref_rehash_if_bucket_full) = table
+
+          val (hash_fn,resize) = hash_generator (0,fn () => [])
+	in
+          (ref_size := initial_size;
+	   countref := 0;
+	   ref_vector := Array.array (initial_size,nil);
+	   ref_hash_function := hash_fn;
+	   ref_hash_generator_called := 0;
+	   ref_rehash_if_bucket_full := resize)
+	end
+
+      fun lookup' (key,table) =
+	let 
+	  val (ref size,_,ref vector,_,ref hash_function,_,_,_) = table
+	  val n = hash_function key mod size
+	  val bucket = Array.sub (vector,n)
+
+	  fun search nil = raise Lookup key
+	    | search ((k,vref)::rest) =
+	      if element_equality (k,key) then
+		!vref
+	      else
+		search rest
+	in
+	  search bucket
+	end
+
+      fun lookup key = lookup' (key,table)
+
+      fun update' ((pair as (key,value)),table) =
+	let 
+	  val (ref size, countref as (ref count), ref vector,
+               maximum_bucket_size,ref_hash_function as ref hash_function,
+               resized_how_many_times,
+               hash_function_generator,ref_rehash_if_bucket_full) = table
+	in
+	  if count >= size then
+	    (rehash (true); update' (pair,table))
+	  else
+	    let 
+	      val n = hash_function key mod size
+	      val bucket = Array.sub (vector,n)
+
+	      fun search(arg,0) = 
+                if !ref_rehash_if_bucket_full
+                  then
+                    let
+                      val (new_function,new_flag) = (! hash_function_generator)
+                        (!resized_how_many_times+1,fn () => map (fn (a,_) => a) bucket)
+                    in
+                      (* output(std_out,"*** Re-hashing due to bucket overflow\n"); *)
+                      ref_hash_function := new_function;
+                      ref_rehash_if_bucket_full := new_flag;
+                      resized_how_many_times := !resized_how_many_times + 1;
+                      rehash(false);
+                      update'(pair,table)
+                    end
+                else
+                  search(arg,1000)
+                | search (nil,_) =
+                  (Array.update (vector,n,(key,ref value)::bucket);
+                   countref := count + 1)
+		| search ((k,vref)::rest,n) =
+		  if element_equality (k,key) then
+		    vref := value
+		  else
+		    search (rest,n-1)
+	    in
+	      search (bucket,maximum_bucket_size)
+	    end
+	end
+
+      and rehash (double_size) =
+	let
+	  val (sizeref as (ref size),countref,vectorref as (ref vector),
+               maximum_bucket_size,hash,ref_number_of_times_resized,
+               ref_hash_function_generator,flag) =
+	    table
+	  val new_size = 
+            if double_size
+              then make_prime (size + size)
+            else size
+	  val new_vector = Array.array (new_size,nil)
+	  val new_countref = ref 0
+	  val new_table : Table = 
+	    (ref new_size,new_countref,ref new_vector,maximum_bucket_size,
+             hash,ref_number_of_times_resized, ref_hash_function_generator,flag)
+             
+	    
+	  fun scan 0 = ()
+	    | scan n = 
+	      let 
+		val n' = n-1
+		val _ = 
+		  map
+		  (fn (key,ref value) => update' ((key,value),new_table))
+		  (Array.sub (vector,n'))
+	      in
+		scan n'
+	      end
+	  val _ = scan size
+	in
+	  (sizeref := new_size;
+	   vectorref := new_vector;
+	   countref := !new_countref)
+	end
+
+      fun update pair = update' (pair,table)
+
+      fun stats () =
+	let
+	  val (ref size,ref count,ref vector,_,_,_,_,_) = table
+	  val smallest = ref 1000000
+	  val largest = ref 0
+	  val used = ref 0
+
+	  fun scan (0,x) = x
+	    | scan (n,largest_row_contents) = 
+	      let 
+                fun length ([]) = 0
+                  | length (_::t) = let
+                      fun length' (acc,[]) = acc
+                        | length' (acc,_::t) = length'(1+acc,t)
+                    in
+                      length'(1,t)
+                    end
+		val n' = n-1
+		val m = length (Array.sub (vector,n'))
+                fun max (m:int,n) = if m >= n then m else n
+                fun min (m:int,n) = if m <= n then m else n
+	      in
+		(smallest := min (m,!smallest);
+		 largest := max (m,!largest);
+		 if m = 0 then () else used := !used + 1;
+		 scan (n',if m = !largest then Array.sub(vector,n') else largest_row_contents))
+	      end
+	  val largest_row_contents = scan (size,[])
+          fun row_to_list [] = []
+            | row_to_list ((a,ref b) :: rest) = (a,b)::row_to_list rest
+	in
+	  {count = count,size = size,smallest = !smallest,largest = !largest,
+	   used = !used,largest_row_contents = row_to_list largest_row_contents}
+	end
+
+    end
+  end
+*)
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 4
+Revision 1.4  1992/08/13  16:10:20  davidt
+NO LONGER IN USE. Commented out code so that a parse
+error is generated if the file is used.
+
+@
+
+
+1.3
+log
+@Changed clear function to declare a new array
+with the initial size, instead of clearing out
+the old one.
+@
+text
+@d3 5
+d20 1
+a20 1
+require "hashtable-with-extras";
+d22 1
+a22 1
+functor HashTable' (Spec : HASHSPEC') : HASHTABLE'  =
+d228 1
+@
+
+
+1.2
+log
+@Make the hash generator function take more useful diagnostic information
+@
+text
+@d3 3
+d74 1
+a74 1
+	  val (ref size, countref, ref vector,
+a78 12
+          val _ = (ref_hash_function := hash_fn;
+                   ref_hash_generator_called := 0;
+                   ref_rehash_if_bucket_full := resize)
+            
+	  fun iterate 0 = ()
+	    | iterate n = 
+	      let 
+		val n' = n-1
+		val _ = Array.update (vector,n',nil)
+	      in
+		iterate n'
+	      end
+d80 6
+a85 2
+	  (iterate size;
+	   countref := 0)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 2
+d6 1
+d58 1
+a58 1
+                    int * (Key -> int) ref * int ref * (int -> ((Key -> int) * bool)) ref *
+d61 1
+a61 1
+      val (hash_fn,resize_if_bucket_full) = Spec.hash_generator(0)
+d75 1
+a75 1
+          val (hash_fn,resize) = hash_generator 0
+d129 2
+a130 1
+                      val (new_function,new_flag) = (! hash_function_generator) (!resized_how_many_times+1)
+@

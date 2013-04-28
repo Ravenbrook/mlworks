@@ -1,0 +1,581 @@
+head	1.8;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.7.3.1.1
+	MLWorks_gui_1996_12_18:1.7.4
+	MLWorks_1_0_Win32_1996_12_17:1.7.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.7.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.7.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.7.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.7.2
+	MLWorks_1_0_Unix_1996_11_14:1.7.1
+	MLWorks_Open_Beta2_1996_10_11:1.5.2
+	MLWorks_License_dev:1.5.1
+	MLWorks_1_open_beta_1996_09_13:1.4.1
+	MLWorks_Open_Beta_1996_08_22:1.4
+	MLWorks_Beta_1996_07_02:1.4
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.4
+	MLWorks_Beta_1996_05_31:1.4
+	MLWorks_Beta_1996_05_30:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	96.11.16.11.34.41;	author io;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.11.04.16.45.03;	author jont;	state Exp;
+branches
+	1.7.1.1
+	1.7.2.1
+	1.7.3.1
+	1.7.4.1;
+next	1.6;
+
+1.6
+date	96.10.21.15.22.18;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.10.03.13.15.35;	author io;	state Exp;
+branches
+	1.5.1.1
+	1.5.2.1;
+next	1.4;
+
+1.4
+date	96.05.21.12.24.27;	author matthew;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	96.05.15.13.07.57;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.01.11.33.58;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.25.09;	author jont;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	96.09.13.11.09.37;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	96.10.07.16.00.33;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.2.1
+date	96.10.17.11.18.47;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	96.11.14.12.42.20;	author hope;	state Exp;
+branches
+	1.7.1.1.1.1;
+next	;
+
+1.7.1.1.1.1
+date	96.11.28.14.54.13;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.2.1
+date	96.11.22.18.02.51;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.3.1
+date	96.12.17.17.41.44;	author hope;	state Exp;
+branches
+	1.7.3.1.1.1;
+next	;
+
+1.7.3.1.1.1
+date	97.02.24.11.30.03;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.4.1
+date	96.12.18.09.35.42;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.8
+log
+@[Bug #1757]
+renamed __charvector to __char_vector
+@
+text
+@asdsadasdsad ensure this does not compile as name has changed
+(*  ==== INITIAL BASIS : charvector structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __charvector.sml,v $
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+ * Revision 1.6  1996/10/21  15:22:18  jont
+ * Remove references to basis.toplevel
+ *
+ * Revision 1.5  1996/10/03  13:15:35  io
+ * [Bug #1614]
+ * convert MLWorks.String
+ *
+ * Revision 1.4  1996/05/21  12:24:27  matthew
+ * UPdating
+ *
+ * Revision 1.3  1996/05/15  13:07:57  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.2  1996/05/01  11:33:58  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.1  1996/04/18  11:25:09  jont
+ * new unit
+ *
+ *  Revision 1.4  1995/05/16  14:37:01  daveb
+ *  Removed commented out old code.
+ *
+ *  Revision 1.1  1995/04/13  16:40:38  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "mono_vector";
+require "__string";
+require "__pre_basis";
+
+structure CharVector : MONO_VECTOR =
+  struct
+    type elem = char
+
+    (* The rest is directly copied from __word8vector *)
+    type vector = string 
+    val maxLen = PreBasis.maxSize + 1
+    fun check_size n = if n < 0 orelse n > maxLen then raise Size else n
+    val toint : elem -> int = cast
+    val fromint : int -> elem = cast
+
+    (* vector creation functions *)
+    fun fromList x = (check_size (length x); implode x)
+    fun tabulate(len, f) =
+      let
+	val _ = check_size len
+	fun next(n, acc) =
+	  if n = len then acc else next(n+1, (f n) :: acc)
+      in
+	implode(rev(next(0, [])))
+      end
+
+    val length = size
+    fun sub (v,i) = 
+      if i < 0 orelse i >= size v
+        then raise Subscript
+(*
+      else fromint(unsafe_string_sub (v,i))
+*)
+      else String.sub(v, i)
+
+    fun check_slice (array,i,SOME j) =
+      if i < 0 orelse j < 0 orelse i + j > length array
+        then raise Subscript
+      else j
+      | check_slice (array,i,NONE) =
+        let
+          val l = length array
+        in
+          if i < 0 orelse i > l
+            then raise Subscript
+          else l - i
+        end
+
+    val extract = 
+      fn (s,i,len) =>
+      let
+        val len = check_slice (s,i,len)
+      in 
+        String.substring (s,i,len)
+      end
+    val concat = concat
+
+    fun appi f (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun iterate n =
+	  if n >= l then
+	    ()
+	  else
+	    (f(n, sub(vector, n));
+	     iterate(n+1))
+      in
+	iterate i
+      end
+
+    fun app f vector =
+      let
+	val l = length vector
+	fun iterate n =
+	  if n = l then
+	    ()
+	  else
+	    (f(sub(vector, n));
+	     iterate(n+1))
+      in
+	iterate 0
+      end
+
+    fun foldl f b vector =
+      let
+	val l = length vector
+	fun reduce(n, x) =
+	  if n = l then
+	    x
+	  else
+	    reduce(n+1, f(sub(vector, n), x))
+      in
+	reduce(0, b)
+      end
+
+    fun foldr f b vector =
+      let
+	val l = length vector
+	fun reduce(n, x) =
+	  if n < 0 then
+	    x
+	  else
+	    reduce(n-1, f(sub(vector, n), x))
+      in
+	reduce(l-1, b)
+      end
+
+    fun foldli f b (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce(n, x) =
+	  if n >= len then
+	    x
+	  else
+	    reduce(n+1, f(n, sub(vector, n), x))
+      in
+	reduce(0, b)
+      end
+
+    fun foldri f b (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce(n, x) =
+	  if n < 0 then
+	    x
+	  else
+	    reduce(n-1, f(n, sub(vector, n), x))
+      in
+	reduce(len-1, b)
+      end
+  end
+@
+
+
+1.7
+log
+@[Bug #1725]
+Remove unsafe string operations introduced when String structure removed
+@
+text
+@d1 1
+d11 4
+@
+
+
+1.7.4.1
+log
+@branched from 1.7
+@
+text
+@a9 4
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.7.3.1
+log
+@branched from 1.7
+@
+text
+@a9 4
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.7.3.1.1.1
+log
+@branched from 1.7.3.1
+@
+text
+@a9 3
+ * Revision 1.7.3.1  1996/12/17  17:41:44  hope
+ * branched from 1.7
+ *
+@
+
+
+1.7.2.1
+log
+@branched from 1.7
+@
+text
+@a9 4
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.7.1.1
+log
+@branched from 1.7
+@
+text
+@a9 4
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.7.1.1.1.1
+log
+@branched from 1.7.1.1
+@
+text
+@a9 3
+ * Revision 1.7.1.1  1996/11/14  12:42:20  hope
+ * branched from 1.7
+ *
+@
+
+
+1.6
+log
+@Remove references to basis.toplevel
+@
+text
+@d10 3
+d43 1
+d72 1
+d74 2
+d95 1
+a95 1
+        unsafe_substring (s,i,len)
+@
+
+
+1.5
+log
+@[Bug #1614]
+convert MLWorks.String
+@
+text
+@d10 4
+a38 1
+require "toplevel";
+@
+
+
+1.5.2.1
+log
+@branched from 1.5
+@
+text
+@a9 4
+ * Revision 1.5  1996/10/03  13:15:35  io
+ * [Bug #1614]
+ * convert MLWorks.String
+ *
+@
+
+
+1.5.1.1
+log
+@branched from 1.5
+@
+text
+@a9 4
+ * Revision 1.5  1996/10/03  13:15:35  io
+ * [Bug #1614]
+ * convert MLWorks.String
+ *
+@
+
+
+1.4
+log
+@UPdating
+@
+text
+@d10 3
+d37 1
+a37 2
+require "__list";
+require "__char";
+d45 1
+a45 1
+    val maxLen = MLWorks.String.maxLen + 1
+d47 2
+a48 2
+    val toint : elem -> int = MLWorks.Internal.Value.cast
+    val fromint : int -> elem = MLWorks.Internal.Value.cast
+d51 9
+a59 13
+    local
+      fun str x = String.chr (toint x)
+    in
+      fun fromList x = (check_size (List.length x); String.implode (map str x))
+      fun tabulate(len, f) =
+        let
+          val _ = check_size len
+	  fun next(n, acc) =
+	    if n = len then acc else next(n+1, str(f n) :: acc)
+        in
+	  String.implode(rev(next(0, [])))
+        end
+    end
+d65 1
+a65 1
+      else fromint(MLWorks.String.ordof (v,i))
+d85 1
+a85 1
+        MLWorks.String.substring (s,i,len)
+d87 1
+a87 1
+    val concat = String.implode
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@a9 3
+ * Revision 1.4  1996/05/21  12:24:27  matthew
+ * UPdating
+ *
+@
+
+
+1.3
+log
+@pack_words moved to pack_word
+@
+text
+@d10 3
+d34 1
+a39 1
+    type vector = string
+d41 6
+a46 1
+    val maxlen = 32768
+d50 1
+a50 1
+      fun str x = String.chr (Char.ord x)
+d52 1
+a52 1
+      fun vector x = String.implode (map str x)
+d55 1
+d64 25
+a88 2
+    val sub = Char.chr o MLWorks.String.ordof
+    val extract = MLWorks.String.substring
+d90 83
+@
+
+
+1.2
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@d10 6
+d30 2
+a31 2
+require "mono_vectors";
+require "__chars";
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d36 1
+a36 1
+      fun str x = chr (Char.ord x)
+d38 1
+a38 1
+      fun vector x = implode (map str x)
+d44 1
+a44 1
+	  implode(rev(next(0, [])))
+d51 1
+a51 1
+    val concat = implode
+@

@@ -1,0 +1,133 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.13.36;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.30;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+
+(* 	$Id: build.ml,v 1.3 1994/12/04 16:54:43 pxs Exp $	 *)
+val uses = map (fn s => use ("src/" ^ s));
+
+val _ = uses ["common.ml"];
+
+(* Hashing code from the SML/NJ Library, version 0.1 *)  
+val _ = uses ["hash-string.sml",				       
+               "hash-key-sig.sml",				       
+               "hash-table-sig.sml",				       
+               "hash-table.sml"];				       
+
+(* slightly hacked from SML-NJ library, version 0.1 *)
+val _ = uses ["name-sig.sml","name.sml"]
+
+val _ = uses ["SortedList.sig","SortedList.str"];
+
+structure SL = SL();
+
+val _ = uses ["Var.sig","Var.str"];
+
+structure V = Var ();
+
+val _ = uses ["Env.sig","Env.str"];
+
+structure E = Env(structure V=V; structure SL=SL);
+
+val _ = uses ["Trie.sig","Trie.str"];
+
+structure Trie = Trie( );
+
+(* slightly perverse way to do this? If there is an argument, use it,  *)
+(* else use "both". Then check that we haven't got nonsense,	       *)
+(* i.e. something other than ccs or sccs; if we have, use "both".      *)
+
+(* MLA -- Remove stuff with argv *)
+
+val wb = let val version = "both"
+	 in if version = "ccs" orelse version = "sccs" then version
+	    else "both"
+	 end;
+
+(*
+val wb = let val version = 
+             if not(null(tl(System.Unsafe.CInterface.argv())))
+		 then hd(tl(System.Unsafe.CInterface.argv()))
+	     else "both"
+	 in if version = "ccs" orelse version = "sccs" then version
+	    else "both"
+	 end;
+*)
+
+(* need to have both of these fns defined here, even though only one   *)
+(* may be "really' defined. *)
+val  ccs_cwb = fn () => ();
+val sccs_cwb = fn () => ();
+
+case wb of
+    "ccs"  => use "make_ccs.ml"
+  | "sccs" => use "make_sccs.ml"
+  |  _     => (use "make_ccs.ml";use"make_sccs.ml");
+
+(* the run-time command line argument is ignored if we only compiled   *)
+(* one version of the workbench (with no error message?!), but if we   *)
+(* compiled both, then it determines which top fn we use at runtime.   *)
+fun top s =
+    case wb of
+        "ccs" => 
+          (ccs_cwb()
+           handle _ => print "\nSorry! An ML exception has been raised.\n")
+      | "sccs" => 
+          (sccs_cwb()
+           handle _ => print "\nSorry! An ML exception has been raised.\n")
+      | _ => 
+           (if s="sccs" then sccs_cwb() else ccs_cwb()
+           handle _ => print "\nSorry! an ML exception has been raised.\n")
+
+(* exportedfun calls top with argument the second commandline arg,     *)
+(* i.e. the first one that isn't "cwb"! If none, uses ccs as default.  *)
+fun exportedfun (_::s::_,_) = top s
+  | exportedfun _ = top "ccs";
+
+(* exportFn ("cwb", exportedfun); *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,138 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	95.03.24.15.31.14;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.08.14.22.13;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.01.11.02.10;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Foreign Interface functor body.
+@
+
+
+1.3
+log
+@Updated to use Word32.word values (instead of int * int) to
+encode addresses.
+@
+text
+@(*  ==== FOREIGN INTERFACE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The implementation uses Word values of appropriate size to
+ *  represent addresses and memory pointers.  The interface is
+ *  provided via the libdl conformant C library provided by the
+ *  underlying OS (see rts/foreign_loader.h and
+ *  also rts/OS/*/arch/*/foreign_loader.c).
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _foreign_interface.sml,v $
+# Revision 1.2  1995/03/08  14:22:13  brianm
+# Minor corrections.
+#
+# Revision 1.1  1995/03/01  11:02:10  brianm
+# new unit
+# Foreign Interface functor body.
+#
+ *
+ *)
+
+require "foreign_interface";
+require "../initbasis/__word32";
+
+
+functor ForeignInterface() : FOREIGN_INTERFACE =
+  struct
+
+    val MLWcast         = MLWorks.Internal.Value.cast (fn x => x) : 'a -> 'b;
+    val MLWenvironment  = MLWorks.Internal.Runtime.environment;
+
+    fun env s = MLWcast(MLWenvironment s);
+
+    abstype foreign_object = FObj of (string * (string list) * int)
+    with
+        val load_object = env "load foreign object";
+        fun list_content (FObj(_,obj_lst,_)) = obj_lst;  
+    end;
+
+    abstype foreign_value  = FVal of Word32.word
+    with
+        val find_value        =  env "lookup foreign value";
+        val call_unit_fun     =  env "call unit function";
+        val call_foreign_fun  =  env "call foreign function";
+    end;
+
+    type memory = Word32.word;
+      
+    val load_object : string -> foreign_object
+      = load_object;
+      
+    val find_value   : (foreign_object * string) -> foreign_value
+      = find_value;
+
+    val list_content :  foreign_object -> string list
+      = list_content
+      
+    val call_unit_fun : foreign_value -> unit
+      = call_unit_fun;
+
+    val call_foreign_fun : (foreign_object * memory * int * memory) -> unit 
+      = call_foreign_fun;  (* unimplemented *)
+
+  end;
+@
+
+
+1.2
+log
+@Minor corrections.
+@
+text
+@d7 5
+d16 3
+d27 2
+d44 1
+a44 1
+    abstype foreign_value  = FVal of (int * int)
+d51 1
+a51 1
+    type memory = int;
+@
+
+
+1.1
+log
+@new unit
+Foreign Interface functor body.
+@
+text
+@d10 5
+a14 1
+ *  $Log$
+d38 1
+a38 1
+        fun call_foreign_fun  =  env "call foreign function";
+d41 2
+d54 3
+@

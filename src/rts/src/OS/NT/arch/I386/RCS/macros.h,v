@@ -1,0 +1,375 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	95.01.20.14.48.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved to the architecture and OS sepcific directory because of assembler problems\non NT
+@
+
+
+1.1
+log
+@new unit
+Moved to the architecture and OS sepcific directory because of assembler problems\non NT
+@
+text
+@/*
+ * ==== ML TO C INTERFACE MACROS ====
+ *
+ * Copyright (C) 1992 Harlequin Ltd.
+ *
+ * Description
+ * -----------
+ * These macros are used by other SPARC assembly language routines in
+ * the ML to C interface.  They deal with various conventions between
+ * the C runtime system and ML.
+ *
+ * Notes
+ * -----
+ * This file must be run through the m4 macro processor to produce an
+ * assembler file.
+ *
+ * Revision Log
+ * ------------
+ * $Log: src:arch:I386:macros.h,v $
+ * Revision 1.7  1994/11/18  15:32:34  jont
+ * Modify to new register assignment
+ *
+ * Revision 1.6  1994/10/28  00:38:19  jont
+ * Improvements to state saving and loading macros
+ *
+ * Revision 1.5  1994/10/20  12:33:52  jont
+ * Add macros for raise handling
+ *
+ * Revision 1.4  1994/10/14  15:37:40  jont
+ * Add save_all_regs and load_all_regs macros
+ *
+ * Revision 1.3  1994/10/05  16:35:26  jont
+ * Also save_regs and load_regs
+ *
+ * Revision 1.2  1994/10/05  13:30:14  jont
+ * Get copying to/from implicit vector corrected
+ *
+ * Revision 1.1  1994/10/04  16:53:30  jont
+ * new file
+ *
+ */
+
+#include "offsets.h"
+#include "naming.h"
+
+/* ML boolean values; these must agree with those defined in values.h */
+
+#define TRUE	4
+#define FALSE	0
+
+/* Clean register windows */
+
+#define	clean_windows    ta 4
+
+/* Register definitions */
+
+#define	implicit	esi
+#define	fnarg		ebx
+
+/* Clean the registers in the current window */
+
+clean_current_registers	macro
+	xor	edx,	edx
+	xor	eax,	eax
+endm
+
+/* Saves the global registers in a C struct labelled with the first
+ * arg, address of that label in the second arg register.  The stack
+ * register %g6 is only stored if is not -1. */
+
+/* Note the fiddling with g1/g2/g4 here. This is to make sure that,
+   while in C, GC_HEAP_LIMIT points to the limit of the creation
+   space, but while in ML, %g1 contains 0x7ffffffc - (limit-alloc). */
+
+store_ML_state	macro	where, use, temp, label
+	lea	use, where	;
+	mov	32[use], edi	; /* Save current closure */
+	mov	temp, IMPLICIT_gc_base[implicit] 	;
+	mov	0[use], temp		;
+	mov	temp, IMPLICIT_gc_limit[implicit]	;
+	mov	20[use], temp		; /* Save gc pointer */
+	mov	temp, IMPLICIT_handler[implicit] 	;
+	mov	4[use], temp		; /* Save handler */
+	mov	temp, IMPLICIT_stack_limit[implicit]	;
+	cmp	temp, 0		; /* Limit < 0 ? */
+	jl	label		;
+	mov	16[use], temp		; /* Save stack */
+label:
+endm
+
+/* Loads the global registes from a C struct labelled with the first
+ * arg, leaving the address of that label in the second arg.  The
+ * stack register %g6 is ORed with the interrupt stack slot on the
+ * implicit vector, which is left in the third arg */
+
+/* Note the fiddling with g1/g2/g4 here. This is to make sure that,
+   while in C, GC_HEAP_LIMIT points to the limit of the creation
+   space, but while in ML, %g1 contains 0x7ffffffc - (limit-alloc). */
+
+load_ML_state	macro	where, use, intreg
+	lea	use, where 	;
+	mov	edi, 32[use]		; /* Restore current closure */
+	mov	implicit, 12[use]		; /* Set up implicit */
+	mov	intreg, 0[use]		;
+	mov	IMPLICIT_gc_base[implicit], intreg	;
+	mov	intreg, 20[use]		; /* Set up gc */
+	mov	IMPLICIT_gc_limit[implicit], intreg	;
+	mov	intreg, 4[use]		; /* Set up handler */
+	mov	IMPLICIT_handler[implicit], intreg	;
+	mov	intreg, 16[use]		; /* Set up stack */
+	or	intreg, IMPLICIT_interrupt[implicit]	;
+	mov	IMPLICIT_stack_limit[implicit], intreg	;
+endm
+
+/* Sets reg (second arg) to the address (first arg).
+ */
+
+address_C_globals	macro	where, use
+	lea	use, where
+endm
+
+/*
+ * save_all_ML_regs
+ * create a new ml stack frame to save all the ml gc (including caller saves)
+ * registers prior to calling C.
+ * Preserve ecx, this contains the gc size argument
+ */
+
+save_all_ML_regs	macro
+	push	fnarg			;
+	push	ebp			; /* Caller saves */
+	push	edx			;
+	push	eax			; /* Callee saves */
+	push	edi			; /* Closure */
+	lea	ebp, 24[esp]		;
+	push	ebp			; /* fp */
+endm
+
+/*
+ * save_ML_regs
+ * create a new ml stack frame to save all the ml callee save
+ * registers prior to calling C
+ */
+
+save_ML_regs	macro
+	push	ebp			;/* gc register */
+	push	edx			;/* Save callee saves */
+	push	eax			;
+	push	edi			;/* Save callee_clos */
+	lea	ecx, 20[esp]		;/* Calculate fp */
+	push	ecx			;/* And push it */
+	mov	edi, ebp		;/* Copy in closure */
+endm
+
+/*
+ * load_all_ML_regs
+ * discard ml stack frame created for gc entry
+ * prior to calling C
+ * Preserve ecx, this contains the gc result
+ */
+
+load_all_ML_regs	macro
+	add	esp, 4		;
+	pop	edi			; /* Closure */
+	pop	eax			; /* Callee saves */
+	pop	edx			;
+	pop	ebp			; /* Caller saves */
+	pop	fnarg			;
+endm
+
+/*
+ * load_ML_regs
+ * restore all the ml callee save
+ * registers after calling C
+ */
+
+load_ML_regs	macro
+	add	esp, 4		;/* Throw away fp */
+	pop	edi			;
+	pop	eax			;
+	pop	edx			;
+	pop	ebp			;
+endm
+
+/*
+ * save_C_regs
+ * save the C callee saves
+ * ie %esi, %edi, %ebx, %ebp
+ */
+save_C_regs	macro
+	push	ebx			;
+	push	ebp			;
+	push	esi			;
+	push	edi
+endm
+
+/*
+ * load_C_regs
+ * restore the C callee saves
+ * ie %esi, %edi, %ebx, %ebp
+ */
+load_C_regs	macro
+	pop	edi			;
+	pop	esi			;
+	pop	ebp			;
+	pop	ebx
+endm
+
+/* Call C from ML : 
+ * Saves the ML state and restore the C state, then calls the
+ * function, propagating registers fnarg, %eax, %edx as arguments for
+ * C.	 The C return value is returned in %o0. */
+
+ML_to_C	macro	what, what_label
+	store_ML_state C_NAME(ml_state), ebp, ecx, what_label	;
+	mov	24[ebp], esp		; /* Save ML stack base	     */
+	address_C_globals C_NAME(c_state), ecx	;
+	mov	esp, 28[ecx]		; /* Fetch the previous C sp */
+	push	edx			; /* Push args */
+	push	eax			; /* Push args */
+	push	fnarg			; /* Push args */
+	call	what			; /* Call function */
+	add	esp, 12		; /* Pop arguments off stack */
+	mov	fnarg, eax		; /* Get returned value */
+	address_C_globals C_NAME(c_state), ecx	;
+	mov	28[ecx], esp		; /* Save C sp */
+	load_ML_state C_NAME(ml_state), ebp, ecx;
+	mov	esp, 24[ebp]		; /* Back on ml stack */
+endm
+
+/* Unwind stack to a particular point
+ * 
+ * The ML stack is unwound by repeatedly restoring register windows
+ * until the first register arg equals %g4.  the other arg is a label prefix.*/
+
+unwind_stack	macro	label
+label_unwind:
+	cmp	ecx, 0[esp]	; /*in the right frame already?*/
+	jmp	label_start	;
+label_loop:
+/* Stuff to do with restoring c_state.sp here  */
+label_c:
+	test	edi, 3	; /* Is the closure tagged */
+	je	label_done	; /* Branch if not */
+	mov	ebp, -1[edi]	; /* Get code vector */
+	mov	ebp, -1[ebp]	; /* Get ancillary information */
+	shr	ebp, CCODE_SAVES_SHIFT	;
+	and	ebp, CCODE_MAX_SAVES	; /* Number of callee saves */
+	je	label_done	;
+	mov	eax, 8[esp]	;
+	sub	ebp, 1	;
+	je	label_done	;
+	mov	edx, 12[esp]	;
+label_done:			;
+	mov	edi, 4[esp]	; /* Get caller's closure back */
+	mov	esp, 0[esp]	; /* And pop off stack */
+	cmp	ecx, 0[esp]	; /* In the right frame yet? */
+label_start:
+	jne	label_loop	;
+label_exit:
+
+#if 0
+	mov	%o0, %i0	;	/* Propagate handler result */
+	save	%sp, -0x40, %sp	;
+	mov	%fp, %o0	;
+	ML_to_C(C_NAME(unwind_stack))	;	/* Unwind stack extensions */
+	addcc	%g6, 1, %g0	;	/* Is an event flagged? */
+	beq,a	label ## exit	;	/* Finished if so. */
+	restore			;
+	sethi	%hi(C_NAME(ml_state)), %o1 ;
+	or	%o1, %lo(C_NAME(ml_state)), %o1;
+	ld	[%o1+16], %g6	;	/* Install the new stack area */
+	restore			;					
+#endif
+endm
+
+/* Save all the FP's away. The arg is a register pointing to the save
+ * area (size 128). */
+
+/*
+ * copy_down(size, pointer, temp)
+ * copy callee save values plus linkage down one word
+ */
+copy_down	macro size, pointer, temp
+	mov	pointer, esp 		;/* From pointer */
+	sub	esp, 4		;/* Create space */
+copy_down_start:			;
+	mov	temp, 0[pointer]	;
+	mov	-4[pointer], temp	;/* copy down */
+	add	pointer, 4		;
+	sub	size, 1		;
+	jne	copy_down_start	;/* Loop if more to do */
+endm
+
+/*
+ * copy_up(size, pointer, temp)
+ * copy callee save values plus linkage up one word
+ */
+copy_up	macro	size, pointer, temp
+	mov	temp, size		;
+	shl	temp, 2		;
+	mov	pointer, esp		;
+	add	pointer, temp		;/* Pointer into stack */
+copy_up_start:			;
+	mov	temp, -4[pointer]	;
+	mov	0[pointer], temp	;/* copy up */
+	sub	pointer, 4		;
+	sub	size, 1		;
+	jne	copy_up_start	;/* Loop if more to do */
+	add	esp, 4		;/* Throw away extra space space */
+endm
+
+#define store_fps(where)			\
+	std	%f0,  [where]		;	\
+	std	%f2,  [where+8]		;	\
+	std	%f4,  [where+16]	;	\
+	std	%f6,  [where+24]	;	\
+	std	%f8,  [where+32]	;	\
+	std	%f10, [where+40]	;	\
+	std	%f12, [where+48]	;	\
+	std	%f14, [where+56]	;	\
+	std	%f16, [where+64]	;	\
+	std	%f18, [where+72]	;	\
+	std	%f20, [where+80]	;	\
+	std	%f22, [where+88]	;	\
+	std	%f24, [where+96]	;	\
+	std	%f26, [where+104]	;	\
+	std	%f28, [where+112]	;	\
+	std	%f30, [where+120]
+
+/* Load the FPs. The arg is a register pointing to the saved values */
+
+#define load_fps(from_where)			\
+	ldd	[from_where],     %f0	;	\
+	ldd	[from_where+8],   %f2	;	\
+	ldd	[from_where+16],  %f4	;	\
+	ldd	[from_where+24],  %f6	;	\
+	ldd	[from_where+32],  %f8	;	\
+	ldd	[from_where+40],  %f10	;	\
+	ldd	[from_where+48],  %f12	;	\
+	ldd	[from_where+56],  %f14	;	\
+	ldd	[from_where+64],  %f16	;	\
+	ldd	[from_where+72],  %f18	;	\
+	ldd	[from_where+80],  %f20	;	\
+	ldd	[from_where+88],  %f22	;	\
+	ldd	[from_where+96],  %f24	;	\
+	ldd	[from_where+104], %f26	;	\
+	ldd	[from_where+112], %f28	;	\
+	ldd	[from_where+120], %f30
+@

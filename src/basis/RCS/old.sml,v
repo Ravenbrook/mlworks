@@ -1,0 +1,440 @@
+head	1.1;
+access;
+symbols
+	MLWorks_11r1:1.1.8.1.1.1.1
+	MLWorks_workspace_97:1.1.10
+	MLWorks_dt_wizard:1.1.9
+	MLWorks_11c0_1997_09_09:1.1.8.1.1.1
+	MLWorks_10r3:1.1.8.1.3
+	MLWorks_10r2_551:1.1.8.1.2
+	MLWorks_11:1.1.8.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.8.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.8.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.8.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.8
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.6.1.1
+	MLWorks_gui_1996_12_18:1.1.7
+	MLWorks_1_0_Win32_1996_12_17:1.1.6
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.1.4.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.1.4.1
+	MLWorks_1_0_Irix_1996_11_28:1.1.4.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.1.5
+	MLWorks_1_0_Unix_1996_11_14:1.1.4
+	MLWorks_Open_Beta2_1996_10_11:1.1.3
+	MLWorks_License_dev:1.1.2
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.30.16.10.23;	author daveb;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1
+	1.1.5.1
+	1.1.6.1
+	1.1.7.1
+	1.1.8.1
+	1.1.9.1
+	1.1.10.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.10.47;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.10.07.16.01.33;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.10.17.11.19.48;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	96.11.14.12.43.22;	author hope;	state Exp;
+branches
+	1.1.4.1.1.1;
+next	;
+
+1.1.4.1.1.1
+date	96.11.28.14.55.14;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.5.1
+date	96.11.22.18.03.49;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.6.1
+date	96.12.17.17.42.45;	author hope;	state Exp;
+branches
+	1.1.6.1.1.1;
+next	;
+
+1.1.6.1.1.1
+date	97.02.24.11.31.20;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.7.1
+date	96.12.18.09.36.44;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.8.1
+date	97.05.12.10.28.54;	author hope;	state Exp;
+branches
+	1.1.8.1.1.1
+	1.1.8.1.2.1
+	1.1.8.1.3.1;
+next	;
+
+1.1.8.1.1.1
+date	97.07.28.18.13.42;	author daveb;	state Exp;
+branches
+	1.1.8.1.1.1.1.1;
+next	;
+
+1.1.8.1.1.1.1.1
+date	97.10.07.11.38.52;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.8.1.2.1
+date	97.09.08.17.07.11;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.8.1.3.1
+date	97.09.09.14.02.26;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.9.1
+date	97.09.10.19.16.52;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.10.1
+date	97.09.11.20.47.12;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Backwards compatibility.
+@
+
+
+1.1
+log
+@new unit
+Backwards compatibility.
+@
+text
+@(* This signature specifies the top-level items in the 1990 Definition Of
+ * Standard ML that were removed by the revised basis.  Opening a matching
+ * structure should enable almost any code written for the original
+ * Definition to be compiled.
+ *
+ * Copyright (C) 1996 Harlequin Ltd.
+ *
+ * $Log$
+ *
+ *)
+
+signature OLD =
+sig
+  type instream
+  type outstream
+
+  exception Ord
+  exception Io of string
+
+  (* The following exceptions are all aliases for Overflow *)
+  exception Abs
+  exception Quot
+  exception Prod
+  exception Neg
+  exception Sum
+  exception Diff
+  exception Floor
+
+  (* The following exceptions never in fact occur *)
+  exception Sqrt
+  exception Exp
+  exception Ln
+
+  (* The following exception is a synonym of Div *)
+  exception Mod
+
+  (* The following exception is raised when ... *)
+  exception Interrupt
+
+  val sqrt: real -> real
+  val sin: real -> real
+  val cos: real -> real
+  val arctan: real -> real
+  val exp: real -> real
+  val ln: real -> real
+  val chr: int -> string
+  val ord: string -> int
+  val explode: string -> string list
+  val implode: string list -> string
+
+  val std_in: instream
+  val open_in: string -> instream
+  val input: instream * int -> string
+  val lookahead: instream -> string
+  val close_in: instream -> unit
+  val end_of_stream: instream -> bool
+
+  val std_out: outstream
+  val open_out: string -> outstream
+  val output: outstream * string -> unit
+  val close_out: outstream -> unit
+end
+
+@
+
+
+1.1.10.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.9.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.8.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.8.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a8 3
+ *  Revision 1.1.8.1  1997/05/12  10:28:54  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.8.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a8 3
+ *  Revision 1.1.8.1  1997/05/12  10:28:54  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.8.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a8 3
+ *  Revision 1.1.8.1  1997/05/12  10:28:54  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.8.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a8 3
+ *  Revision 1.1.8.1.1.1  1997/07/28  18:13:42  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@
+
+
+1.1.7.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.6.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.6.1.1.1
+log
+@branched from 1.1.6.1
+@
+text
+@a8 3
+ *  Revision 1.1.6.1  1996/12/17  17:42:45  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.5.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.4.1.1.1
+log
+@branched from 1.1.4.1
+@
+text
+@a8 3
+ *  Revision 1.1.4.1  1996/11/14  12:43:22  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+ * $Log: old.sml,v $
+ *  Revision 1.1  1996/05/30  16:10:23  daveb
+ *  new unit
+ *  Backwards compatibility.
+ *
+@

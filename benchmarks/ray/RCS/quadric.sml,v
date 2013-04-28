@@ -1,0 +1,248 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	97.05.20.15.59.22;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.04.12.07.06;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	96.12.11.12.41.21;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.10.23.18;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.09.30;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.11.33.17;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.02.50;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.13.57.26;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@Fixing warnings
+@
+text
+@(**************************************************************************)
+(* Quadric Primitives for The Ghost CSG Raytracer - (C) Chris Walton 1994 *)
+(**************************************************************************)
+     
+(* 
+   Functions to calculate the intersection points and normals for a general
+   quadric.   Written using the information from "Essential ray Tracing 
+   Algorithms" by Eric Haines. (Chapter 2 - An Introduction to Ray Tracing)
+
+   Quadric Equation : Ax^2 + 2Bxy + 2Cxz + 2D x + Ey^2 + 2Fyz + 2Gy + 
+                      Hz^2 + 2Iz + J = 0
+ 
+   Quadric primitive definition :  
+ 
+   primtype = 4
+   vecdata = []
+   realdata = [A, B, C, D, E, F, G, H, I, J, 2*B, 2*C, 2*D, 2*F, 2*G, 2*I]
+   intdata = []
+
+*)
+
+functor quadric (structure Csg : CSG) : PRIMITIVE =
+  struct
+    
+    structure Csg=Csg
+    open Csg
+    open Csg.Ray
+    open Csg.Ray.Vector
+
+    fun intersect (Prim s, surf, Ray (O, RD)) =
+	  let val (A,B,C,D,E,F,G,H,I,J,NB,NC,ND,NF,NG,NI) =
+            case #realdata s of
+              (A::B::C::D::E::F::G::H::I::J::NB::NC::ND::NF::NG::NI::_) =>
+                (A,B,C,D,E,F,G,H,I,J,NB,NC,ND,NF,NG,NI)
+            | _ => raise Match
+              val (Xo, Yo, Zo) = (VecComp(O, 0), VecComp(O, 1), VecComp(O, 2))
+              val (Xd, Yd, Zd) = (VecComp(RD, 0), VecComp(RD, 1), 
+                                  VecComp(RD, 2))
+              val Aq = Xd*(A*Xd+NB*Yd+NC*Zd)+Yd*(E*Yd+NF*Zd)+H*Zd*Zd
+              val NBq = Xd*(A*Xo+B*Yo+C*Zo+D)+Yd*(B*Xo+E*Yo+F*Zo+G)+
+                        Zd*(C*Xo+F*Yo+H*Zo+I)
+              val Cq = Xo*(A*Xo+NB*Yo+NC*Zo+ND)+Yo*(E*Yo+NF*Zo+NG)+Zo*
+                       (H*Zo+NI)+J
+          in
+            if Real.== (Aq,0.0) then (false, [])
+            else 
+              let val Ka = ~NBq/Aq
+                  val Kb = Cq/Aq       
+                  val disc = Ka*Ka-Kb
+              in
+                if disc<0.0 then (false, [])
+                else 
+                  let val disc2 = sqrt(disc)
+                      val l1 = Ka+disc2
+                  in
+                    if l1<=epsilon then (false, [])
+                    else
+                      let val l0 = Ka-disc2
+                      in
+                        if l0>epsilon then 
+                          (false, IsectAdd(IsectAdd([], l0, (Prim s, surf), 
+                           true), l1, (Prim s, surf), false))
+                        else 
+                          (true, IsectAdd([], l1, (Prim s, surf), false))
+                      end
+                  end
+              end
+          end
+
+    fun normal (Prim s, P) = 
+          let val (A,B,C,D,E,F,G,H,I) =
+            case #realdata s of
+              (A::B::C::D::E::F::G::H::I::_) =>
+                (A,B,C,D,E,F,G,H,I)
+            | _ => raise Match
+              val (Xi, Yi, Zi) = (VecComp(P, 0), VecComp(P, 1), VecComp(P, 2))
+          in
+            VecUnit(MakeVec(A*Xi+B*Yi+C*Zi+D, 
+                            B*Xi+E*Yi+F*Zi+G, 
+                            C*Xi+F*Yi+H*Zi+I))
+          end
+
+  end;
+  
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.2
+log
+@[Bug #2025]
+Use new version of Real.equal, called Real.==
+@
+text
+@d31 5
+a35 2
+	  let val (A::B::C::D::E::F::G::H::I::J::NB::NC::ND::NF::NG::NI::_) =
+                    #realdata s
+d71 5
+a75 1
+          let val (A::B::C::D::E::F::G::H::I::_) = #realdata s
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+@
+text
+@d42 1
+a42 1
+            if Real.equal (Aq,0.0) then (false, [])
+@

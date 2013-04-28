@@ -1,0 +1,155 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.2
+date	92.08.26.17.17.19;	author davidt;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.07.21.14.48.55;	author clive;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.08.26.17.17.19;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initial version
+@
+
+
+1.2
+log
+@Took out diagnostic message that was always being printed.
+@
+text
+@(* _curry_reduce.sml the functor *)
+(*
+$Log: _curry_reduce.sml,v $
+Revision 1.1  1992/07/21  14:48:55  clive
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/lists";
+require "../utils/print";
+require "../utils/crash";
+require "../utils/integer";
+require "lambdatypes";
+require "lambdasub";
+require "curry_reduce";
+
+functor Curry_Reduce(
+  structure Lists : LISTS
+  structure Print : PRINT
+  structure Crash : CRASH
+  structure Integer : INTEGER
+  structure LambdaTypes : LAMBDATYPES
+  structure LambdaSub : LAMBDASUB
+
+  sharing LambdaTypes = LambdaSub.LT
+
+) : CURRY_REDUCE =
+struct
+  structure LambdaTypes = LambdaTypes
+
+  fun rewrite_apps(lv, lv', new_lv, le) =
+    let
+      exception bad_var
+      fun check_and_subst(app as LambdaTypes.APP(LambdaTypes.VAR l, le, ty)) =
+	if l = lv then
+	  case le of
+	    LambdaTypes.VAR l =>
+	      if l = lv' then
+		LambdaTypes.VAR new_lv
+	      else
+		raise bad_var
+	  | _ => raise bad_var
+	else
+	  app
+	| check_and_subst(var as LambdaTypes.VAR l) =
+	  if l = lv then
+	    raise bad_var (* Bad use of letrec name *)
+	  else
+	    var
+	| check_and_subst le = le
+    in
+      (LambdaSub.apply_outermost check_and_subst le, true)
+      handle bad_var => (le, false)
+    end
+
+  val reduce_curry =
+    let
+      fun reduce_curry'(letrec as
+                        LambdaTypes.LETREC([lambda],
+                                           [LambdaTypes.FN(mu, body as
+                                                           LambdaTypes.FN(nu, le,
+                                                                          name, ty),
+                                                           name', ty')],
+                                           LambdaTypes.VAR lv)) =
+        if lv = lambda then
+          let
+            val new_lv = LambdaTypes.new_LVar()
+          in
+            case rewrite_apps(lambda, mu, new_lv, body) of
+              (new_body, true) =>
+		LambdaTypes.FN(mu, LambdaTypes.LETREC([new_lv], [new_body], LambdaTypes.VAR new_lv),
+			       "derived from " ^ name, ty)
+            | _ => letrec
+          end
+        else
+          letrec (* Don't bother if not canonical form *)
+        | reduce_curry' lexp = lexp
+    in
+      LambdaSub.apply_outermost reduce_curry'
+    end
+
+end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/08/26  17:17:19  davidt
+Took out diagnostic message that was always being printed.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d72 2
+a73 4
+                (output(std_out,"Curry reducing the function " ^ name ^ " \n");
+                 LambdaTypes.FN(mu, LambdaTypes.LETREC([new_lv], [new_body],
+                                                       LambdaTypes.VAR new_lv),
+                                "derived from " ^ name, ty))
+@

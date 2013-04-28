@@ -1,0 +1,85 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.12.22.11;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.30.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+(* modified: exported exception FrontEnd -er 17Aug94 *)
+
+(* Puts the pieces of the front end together *)
+
+signature ELF_FRONT_END =
+sig
+
+  structure Term : TERM
+  structure Sign : SIGN  sharing Sign.Term = Term
+  structure Constraints : CONSTRAINTS  sharing Constraints.Term = Term
+
+  exception FrontEnd of string
+
+  val echo_declarations : bool ref
+  val warn_redeclaration : bool ref
+  val warn_implicit : bool ref
+
+  val sig_clean : unit -> unit
+
+  val handle_std_exceptions : string -> (unit -> 'a) -> 'a
+
+  val file_read : string -> Sign.sign
+  val interactive_read :
+         unit -> (Term.term list * Term.term * Constraints.constraint) option
+
+  type token_stream
+  val stream_init : instream -> (string -> string) -> token_stream
+  val stream_read :
+         token_stream
+	  -> ((Term.term list * Term.term * Constraints.constraint)
+	      * token_stream) option
+
+end  (* signature ELF_FRONT_END *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

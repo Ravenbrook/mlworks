@@ -1,0 +1,134 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.10.10.09.47.21;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.09.23.14.52.37;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Made more like lambdatypes
+@
+text
+@require "../lambda/lambdatypes";
+
+signature SIMPLETYPES =
+
+  sig
+    structure LambdaTypes : LAMBDATYPES
+
+    open MLWorks.Option
+
+    (* The language *)
+      
+    type var;
+
+    val new_valid : unit -> var
+
+    datatype Status = ENTRY | BODY | FUNC
+
+    datatype StructType = STRUCTURE | TUPLE | CONSTRUCTOR
+      
+    datatype tag = 
+      VCC_TAG of int |
+      IMM_TAG of int |
+      SCON_TAG of LambdaTypes.Ident.SCon |
+      EXP_TAG of exp
+      
+    and exp = 
+      VAR of var |
+      FN of var list * exp * Status * string * LambdaTypes.Type * LambdaTypes.FunInfo LambdaTypes.Option.opt |
+      LET of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * exp) * exp |
+      LETREC of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt) list * exp list * exp |
+      APP of exp * exp list * LambdaTypes.Type ref option |
+      SCON of LambdaTypes.Ident.SCon |
+      INT of int |
+      SWITCH of exp * {num_vccs:int,num_imms:int} option * (tag * exp) list * exp option |
+      STRUCT of exp list * StructType |
+      SELECT of {index: int,size: int,selecttype: StructType} * exp |
+      RAISE of exp |
+      HANDLE of exp * exp * string |
+      BUILTIN of LambdaTypes.Primitive |
+      
+      (* These are new ones *)
+      BUILTINAPP of LambdaTypes.Primitive * exp list * LambdaTypes.Type ref option
+
+    val exp_eq : exp * exp -> bool
+
+    datatype Dec = 
+      VAL of exp |
+      FUNCTOR of var * string * ((var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp)
+      
+    datatype program =
+      PROGRAM of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp
+      
+    val telfun : (exp -> exp) -> (tag * exp) -> (tag * exp)
+
+    val print_var : var -> string
+    val print_exp : exp -> string
+    val pds : program -> string
+    val pde : exp -> string
+end
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d1 1
+a1 2
+require "../basics/ident";
+require "../main/pervasives";
+d6 1
+a6 3
+    structure Pervasives : PERVASIVES
+    structure Ident : IDENT
+    type Type
+d17 2
+d23 1
+a23 1
+      SCON_TAG of Ident.SCon |
+d27 6
+a32 6
+      VAREXP of var |
+      FN of var list * Status * string * exp |
+      LET of var * exp * exp |
+      LETREC of (var * var list * string * exp) list * exp |
+      APP of exp * exp list * Type ref option |
+      SCONEXP of Ident.SCon |
+d35 2
+a36 2
+      STRUCT of exp list |
+      SELECT of int * int * exp |
+d38 2
+a39 2
+      HANDLE of exp * exp |
+      BOP of Pervasives.pervasive |
+d42 1
+a42 1
+      BOPAPP of Pervasives.pervasive * exp list * Type ref option
+d48 1
+a48 1
+      FUNCTOR of var * string * ((var * Dec) list * exp)
+d51 1
+a51 1
+      PROGRAM of (var * Dec) list * exp
+@

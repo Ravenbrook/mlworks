@@ -1,0 +1,64 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	93.09.02.10.08.58;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.09.07.15.14.09;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#!/bin/csh
+# $Log$
+# Copyright (c) 1993 Harlequin Ltd.
+if ($#argv != 2) then
+  echo Usage: renametree <oldname> <newname>
+  exit(1)
+endif
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src)
+  pushd $i
+  if (`ls RCS | wc -l` != 0) then
+    echo naming $i
+    rcs -q -N$argv[2]":$argv[1]" RCS/*
+  endif
+  popd
+end
+@
+
+
+1.1.1.1
+log
+@Bug fix branch
+@
+text
+@d2 1
+a2 4
+# $Log: renametree,v $
+# Revision 1.1  1993/09/02  10:08:58  jont
+# Initial revision
+#
+d8 1
+a8 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src /usr/sml/src/scripts)
+@

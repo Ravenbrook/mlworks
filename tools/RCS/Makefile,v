@@ -1,0 +1,85 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	91.08.22.16.47.26;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.08.22.16.47.26;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Makefile for time stamping utilities for RCS file time stamp preservation
+@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#
+# Default value, may be overridden
+# $Log$
+#
+MACHINE=sparc
+RMFLAGS = -f
+RM = rm $(RMFLAGS)
+CC = gcc
+CFILES = readtime.c writetime.c
+
+all:	$(CFILES:.c=)
+
+.c:
+		$(CC) $(CFLAGS) -o $@@ $<
+
+clean:
+		rm *.out *.o
+
+depend:	${CFILES}
+	${RM} makedep;
+	(echo -n '# generated: '; date) >makedep
+	${CC} -M ${CFLAGS} ${CFILES} | \
+	      awk ' { if ($$1 != prev) \
+		  { if (rec != "") print rec; rec = $$0; prev = $$1; } \
+		  else { if (length(rec $$2) > 78) { print rec; rec = $$0; } \
+		  else rec = rec " " $$2 } } \
+		  END { print rec } ' >> makedep
+	echo '/^# DO NOT DELETE THIS LINE/+2,$$d' >eddep
+	echo '$$r makedep' >>eddep
+	echo 'w' >>eddep
+	cp Makefile Makefile.bak
+	/bin/ed - Makefile < eddep
+	${RM} eddep makedep
+	echo '# DEPENDENCIES MUST END AT END OF FILE' >> Makefile
+	echo '# IF YOU PUT STUFF HERE IT WILL GO AWAY' >> Makefile
+	echo '# see make depend above' >> Makefile
+
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+# $Log: Makefile,v $
+# Revision 1.1  1991/08/22  16:47:26  jont
+# Initial revision
+#
+@

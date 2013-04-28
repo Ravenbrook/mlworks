@@ -1,0 +1,162 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_07_02:1.2
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@:: @;
+
+
+1.2
+date	96.04.19.10.03.49;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.15.14.51.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+First cut at install script for Win95 and NT
+@
+
+
+1.2
+log
+@initbasis moves to basis
+@
+text
+@@@echo off
+rem
+rem NT and Win95 install script
+rem
+rem Copyright (C) Harlequin 1996
+rem
+rem $Log: install.bat,v $
+:: Revision 1.1  1996/03/15  14:51:35  jont
+:: new unit
+:: First cut at install script for Win95 and NT
+::
+rem
+rem installs binaries, scripts, pervasives, libraries, images, manuals, environments
+rem
+rem       Location of installation
+rem You may wish to change the value given to MLDIR
+rem or DRIVE
+rem We recommend that you do not change any of the subsequent values
+rem NB MLWorks must be installed on a file system capable of handling
+rem long filenames
+rem
+rem   MLWORKSDIR  root directory for MLWorks
+rem   LIBDIR      directory for MLWorks libraries
+rem   IMAGEDIR    directory for MLWorks images
+rem   BINDIR      directory for MLWorks binaries
+rem   SCRIPTDIR   directory for MLWorks scripts
+rem   RUNTIME     name of the runtime system to install as mlrun
+rem   RUNTIMEOPTS options when using it
+rem   ARCH	architecture of the host machine (e.g. I386)
+rem   OS		operating system of the host machine (e.g. NT)
+rem
+set DRIVE=C:
+set MLDIR=MLWorks
+set MLWORKSDIR=%DRIVE%\%MLDIR%
+set LIBDIR=%MLWORKSDIR%\lib
+set IMAGEDIR=%MLWORKSDIR%\images
+set BINDIR=%MLWORKSDIR%\bin
+set SCRIPTDIR=%MLWORKSDIR%\bin
+echo %MLWORKSDIR%> poo.txt
+sed -e "s/^/set DOSMLWORKSDIR=/;s,\\,\\\\,g" poo.txt > poo.bat
+call poo
+echo %LIBDIR%> poo.txt
+sed -e "s/^/set DOSLIBDIR=/;s,\\,\\\\,g" poo.txt > poo.bat
+call poo
+echo %IMAGEDIR%> poo.txt
+sed -e "s/^/set DOSIMAGEDIR=/;s,\\,\\\\,g" poo.txt > poo.bat
+call poo
+echo %BINDIR%> poo.txt
+sed -e "s/^/set DOSBINDIR=/;s,\\,\\\\,g" poo.txt > poo.bat
+call poo
+echo %SCRIPTDIR%> poo.txt
+sed -e "s/^/set DOSSCRIPTDIR=/;s,\\,\\\\,g" poo.txt > poo.bat
+call poo
+set RUNTIME=main
+set RUNTIMEOPTS=
+set ARCH=I386
+set OS=Win95
+rem
+rem Ok, let's get on with it.
+rem
+rem
+rem Create the MLWORKSDIR
+rem
+mkdir %MLWORKSDIR%
+rem
+rem install the binaries in BINDIR
+rem
+mkdir %BINDIR%
+copy bin\%ARCH%\%OS%\*.* %BINDIR%
+rem
+rem install the scripts in SCRIPTDIR
+rem This needs to do some postprocessing later
+rem
+mkdir %SCRIPTDIR%
+copy scripts\*bat.in %SCRIPTDIR%
+sed -e "s/DRIVE/%DRIVE%/g;s/BINDIR/%DOSBINDIR%/g;s/IMAGEDIR/%DOSIMAGEDIR%/g" %SCRIPTDIR%\mlworks.bat.in > %SCRIPTDIR%\mlworks.bat
+sed -e "s/DRIVE/%DRIVE%/g;s/BINDIR/%DOSBINDIR%/g;s/IMAGEDIR/%DOSIMAGEDIR%/g" %SCRIPTDIR%\mlbatch.bat.in > %SCRIPTDIR%\mlbatch.bat
+sed -e "s/DRIVE/%DRIVE%/g;s/BINDIR/%DOSBINDIR%/g;s/IMAGEDIR/%DOSIMAGEDIR%/g" %SCRIPTDIR%\mlpervasive.bat.in > %SCRIPTDIR%\mlpervasive.bat
+del %SCRIPTDIR%\*.in
+rem
+rem install the pervasive modules in MLWORKSDIR\pervasive
+rem
+mkdir %MLWORKSDIR%\pervasive
+copy pervasive\%ARCH%\%OS%\*.* %MLWORKSDIR%\pervasive
+rem
+rem install the library modules
+rem we need utils, basis, win_nt, winsys
+rem
+mkdir %MLWORKSDIR%\utils
+mkdir %MLWORKSDIR%\basis
+mkdir %MLWORKSDIR%\win_nt
+mkdir %MLWORKSDIR%\winsys
+copy utils\%ARCH%\%OS%\*.* %MLWORKSDIR%\utils
+copy basis\%ARCH%\%OS%\*.* %MLWORKSDIR%\basis
+copy win_nt\%ARCH%\%OS%\*.* %MLWORKSDIR%\win_nt
+copy winsys\%ARCH%\%OS%\*.* %MLWORKSDIR%\winsys
+rem
+rem install images in IMAGEDIR
+rem
+mkdir %IMAGEDIR%
+copy images\%ARCH%\%OS%\*.img %IMAGEDIR%
+rem
+rem environments not done yet
+rem
+@
+
+
+1.1
+log
+@new unit
+First cut at install script for Win95 and NT
+@
+text
+@d7 5
+a11 1
+rem $Log$
+d87 1
+a87 1
+rem we need utils, initbasis, win_nt, winsys
+d90 1
+a90 1
+mkdir %MLWORKSDIR%\initbasis
+d94 1
+a94 1
+copy initbasis\%ARCH%\%OS%\*.* %MLWORKSDIR%\initbasis
+@

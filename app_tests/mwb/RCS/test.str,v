@@ -1,0 +1,173 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.12.58.24;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.10.17.36.18;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+functor Test(structure N : NAME;
+	     structure SL : SORTEDLIST) : TEST =
+struct
+    structure N = N
+	
+    type test = N.name list list
+	
+    val True = []
+	
+    (* returns a list of the names in a test *)
+    fun names(T) =
+	Lib.mapcan (fn x=>x) T
+    val domain = names
+
+    fun free_names(t,lvl) =
+	Lib.mapcan (fn tst =>
+		    map (fn n=> N.free(n,lvl))
+		    (Lib.filter (fn n => N.is_free(n,lvl)) tst)) t
+	
+    fun mkstr([]) = "[True]"
+      | mkstr(T) =
+	let fun mkstr_eq(L) = (Lib.mapconcat N.mkstr L "=")
+	in "[" ^ (Lib.mapconcat mkstr_eq T ",") ^ "]"
+	end
+    
+    fun makstr([],_) = "[True]"
+      | makstr(T,nl) =
+	let fun mkstr_eq(L) = (Lib.mapconcat (fn n=> (N.makstr(n,nl)))
+			       L "=")
+	in "[" ^ (Lib.mapconcat mkstr_eq T ",") ^ "]"
+	end
+    
+    fun match (n1,n2) =
+	if N.le(n1,n2)
+	    then if N.le(n2,n1) then True
+		 else [[n1,n2]]
+	else [[n2,n1]]
+	    
+    fun hd (h::t) = h | hd _ = raise Match
+    fun tl (h::t) = t | tl _ = raise Match
+	
+    fun insert L [] = [L]
+      | insert [] L = L
+      | insert L (h::t) =
+	if N.le(hd L,hd h) then L::h::t
+	else h::(insert L t)
+	    
+    fun intersects _ [] = false
+      | intersects [] _ = false
+      | intersects (a::s) (b::t) =
+	if N.le(a,b) then
+	    if N.le(b,a) then true
+	    else intersects s (b::t)
+	else intersects (a::s) t
+	    
+    fun split L [] = ([],[])
+      | split L (h::t) =
+	let val (f1,f2) = split L t
+	in if intersects L h then (h::f1,f2)
+	   else (f1,h::f2)
+	end
+    
+    fun merge P [] = P
+      | merge [] Q = Q
+      | merge (a::s) (b::t) =
+	if N.le(a,b) then
+	    if N.le(b,a) then a::(merge s t)
+	    else a::(merge s (b::t))
+	else b::(merge (a::s) t)
+	    
+    fun bigmerge [] = []
+      | bigmerge [L] = L
+      | bigmerge (a::b::t) = bigmerge((merge a b)::t)
+	
+    fun join (P,[]) = P
+      | join (P,h::t) =
+	let val (f1,f2) = split h P
+	in join (insert (bigmerge(h::f1)) f2,t)
+	end
+    
+    fun implies (P,Q) =
+	let fun subset ([],_) = true
+	      | subset (_,[]) = false
+	      | subset (n1::t1,n2::t2) =
+		if N.le(n1,n2) then
+		    N.le(n2,n1) andalso subset(t1,t2)
+		else subset(n1::t1,t2)
+		    
+	in Lib.forall (fn h => Lib.exists (fn x => subset(h,x)) P) Q
+	end
+    
+    fun eq (t1,t2) = 
+	Lib.eq (Lib.eq N.eq) (t1,t2)
+
+(* pre-deBruijn
+    fun substitute (e, v, t) =
+	let val (s,t') = split [v] t	(* s is the subtest where v occurs, t' the others *)
+	in
+	    if null s then t
+	    else let val (a::r) = SL.remove (fn x=>x) N.le (v,hd s)
+		 in join(join(match(e,a),if null r then [] else [r]),t')
+		 end
+	end
+*)
+
+    (* return a list of pairs (a,b) to substitute a for b *)
+    fun sigma [] = []
+      | sigma((h::t)::r) =
+	(map (fn x => (h,x)) t)@@(sigma r)
+      | sigma _ = raise Match
+
+    fun beta_reduce t E =
+	(fold (fn ((hd::tl),r) =>
+	       let val h = N.beta_reduce hd E
+	       in
+		   join(fold (fn (n,tt) => join(match(h,N.beta_reduce n E),tt))
+			tl True,
+			r)
+	       end
+               | _ => raise Match)
+	 t True)
+	
+end
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

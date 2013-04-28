@@ -1,0 +1,1442 @@
+head	1.25;
+access;
+symbols
+	Final_version_of_old_runtime:1.25
+	ML_revised_beta_release_25/05/94:1.25
+	ML_final_beta_release_02/03/94:1.25
+	mlworks-28-01-1994:1.24
+	Release:1.24
+	mlworks-beta-01-09-1993:1.24
+	MLWorks-1-0-3-21/12/1992:1.23
+	MLWorks-1-0-2-15/12/1992:1.23
+	MLWorks-1-0-1-04/12/1992:1.23
+	checkpoint_17_08_92:1.20;
+locks; strict;
+comment	@ *  @;
+
+
+1.25
+date	94.01.28.17.22.10;	author nickh;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	93.03.23.15.20.57;	author jont;	state Exp;
+branches
+	1.24.1.1;
+next	1.23;
+
+1.23
+date	92.09.08.14.30.47;	author richard;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.08.24.14.41.09;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.08.24.08.05.14;	author richard;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.08.05.17.18.54;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.07.30.11.19.17;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.07.23.11.22.45;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.07.14.08.20.13;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.06.30.16.16.26;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.03.11.14.25.25;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.03.05.09.20.30;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.02.26.11.46.23;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.01.08.16.55.34;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.12.20.16.59.20;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.12.17.16.55.32;	author nickh;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.12.17.16.02.29;	author nickh;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.12.17.14.23.06;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.12.16.11.12.01;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.12.04.15.22.55;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.11.11.18.00.23;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.29.14.54.12;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.23.15.40.44;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.21.09.20.02;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.18.16.13.23;	author davidt;	state Exp;
+branches;
+next	;
+
+1.24.1.1
+date	93.03.23.15.20.57;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Allocation routines for various ML objects.
+@
+
+
+1.25
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== ML VALUE HEAP ALLOCATION ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The allocation functions attempt to allocate space by simply
+ *  incrementing the value of ml_state.heap_start, just as an ML program
+ *  would.  If this takes the heap_start over the heap_limit the garbage
+ *  collector is called.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: allocator.c,v $
+ *  Revision 1.24  1993/03/23  15:20:57  jont
+ *  Changed allocation of bytearrays to be ref tagged
+ *
+ *  Revision 1.23  1992/09/08  14:30:47  richard
+ *  Added `allocate_multiple'.
+ *
+ *  Revision 1.22  1992/08/24  14:41:09  richard
+ *  Added allocate_bytearray.
+ *
+ *  Revision 1.21  1992/08/24  08:05:14  richard
+ *  Added allocate_bytearray.
+ *
+ *  Revision 1.20  1992/08/05  17:18:54  richard
+ *  Added allocate_code().
+ *
+ *  Revision 1.19  1992/07/30  11:19:17  richard
+ *  Added static_string.  Corrected use of MLPTR().
+ *
+ *  Revision 1.18  1992/07/23  11:22:45  richard
+ *  `ml_string' now takes a const char *.
+ *
+ *  Revision 1.17  1992/07/14  08:20:13  richard
+ *  Added allocate_array() and allocate_weak_array().
+ *
+ *  Revision 1.16  1992/06/30  16:16:26  richard
+ *  Reworked to use declarations in storeman.h.
+ *
+ *  Revision 1.15  1992/03/11  14:25:25  richard
+ *  Tidied up and increased level of diagnostic messages.
+ *
+ *  Revision 1.14  1992/03/05  09:20:30  richard
+ *  Caused allocate_record to zero out the padding word in the case of
+ *  an unaligned record length.
+ *
+ *  Revision 1.13  1992/02/26  11:46:23  richard
+ *  Corrected calls to the gc() to pass sizes in bytes, not words.
+ *
+ *  Revision 1.12  1992/01/08  16:55:34  richard
+ *  Sorted out the malformatted diagnostics.
+ *
+ *  Revision 1.11  1991/12/20  16:59:20  richard
+ *  Reworked allocate_record() and changed diagnostic output
+ *  to use DIAGNOSTIC so that it can be switched on and off.
+ *
+ *  Revision 1.10  91/12/17  16:55:32  nickh
+ *  oops.
+ *
+ *  Revision 1.9  91/12/17  16:02:29  nickh
+ *  rewrote to remove bugs, but return to gc-calling style. Note that declaring
+ *  and retracting roots is now in gc.c
+ *
+ *  Revision 1.5  91/11/11  18:00:23  jont
+ *  Added allocate_real
+ *
+ *  Revision 1.4  91/10/29  14:54:12  davidt
+ *  Changed allocation routines to call the garbage collector if they
+ *  run out of free space. They should now behave exactly as a ML
+ *  program behaves when allocating stuuf on the heap.
+ *
+ *  Revision 1.3  91/10/23  15:40:44  davidt
+ *  Now uses ml_state.heap_start and ml_state.heap_limit to allocate
+ *  on the ML heap.
+ *
+ *  Revision 1.2  91/10/21  09:20:02  davidt
+ *  Changed the types of declare_root and retract_root so that the
+ *  garbage collector is free to move the root objects (updating
+ *  their new values using the address provided).
+ *
+ *  Revision 1.1  91/10/18  16:13:23  davidt
+ *  Initial revision
+ */
+
+
+#include "allocator.h"
+#include "diagnostic.h"
+#include "state.h"
+#include "utils.h"
+#include "values.h"
+#include "storeman.h"
+
+#include <string.h>
+#include <stddef.h>
+#include <assert.h>
+
+#define ALLOCATE(p, words) \
+{ 						\
+  size_t w = (words+1) & ~1;			\
+						\
+  p = GC_HEAP_START;				\
+  GC_HEAP_START += w;				\
+  if(GC_HEAP_START >= GC_HEAP_LIMIT)		\
+  {						\
+    gc(w * sizeof(mlval), MLUNIT);		\
+    p = GC_RETURN;				\
+  }						\
+}
+
+
+/*  == Allocate a record ==
+ *
+ *  Records of size 2 are headerless, and are aligned differently to others.
+ *  (See primary tags in values.h for details.)
+ */
+
+mlval allocate_record(size_t nr_fields)
+{
+  mlval *record;
+
+  if(nr_fields == 2)
+  {
+    ALLOCATE(record, 2);
+
+    DIAGNOSTIC(5, "Allocate pair  : New ml_heap 0x%lx", GC_HEAP_START, 0);
+    DIAGNOSTIC(5, "               : Tagged value 0x%lx", MLPTR(PAIRPTR, record), 0);
+
+    return(MLPTR(PAIRPTR, record));
+  }
+  else
+  {
+    ALLOCATE(record, nr_fields+1);
+
+    record[0] = MAKEHEAD(RECORD, nr_fields);
+
+    /* Make sure the extra word added for alignment purposes is scannable by */
+    /* the garabge collector. */
+    if(!(nr_fields & 1))
+      record[nr_fields+1] = 0;
+
+    DIAGNOSTIC(5, "Allocate record: Fields 0x%lx", nr_fields, 0);
+    DIAGNOSTIC(5, "               : Header 0x%lx", MAKEHEAD(RECORD,nr_fields), 0);
+    DIAGNOSTIC(5, "               : New ml_heap 0x%lx", GC_HEAP_START, 0);
+    DIAGNOSTIC(5, "               : Tagged value 0x%lx", MLPTR(POINTER, record), 0);
+
+    return(MLPTR(POINTER, record));
+  }
+}
+
+
+/*  == Allocate a string ==  */
+
+mlval allocate_string(size_t length)
+{
+  mlval *string;
+
+  ALLOCATE(string, WLENGTH(length)+1);
+
+  string[0] = MAKEHEAD(STRING,length);
+
+  DIAGNOSTIC(5, "Allocate string: Size in bytes 0x%lx", length, 0);
+  DIAGNOSTIC(5, "               : Wrote header 0x%lx", MAKEHEAD(STRING,length), 0);
+  DIAGNOSTIC(5, "               : New ml_heap 0x%lx", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "               : Tagged pointer 0x%lx", MLPTR(POINTER, string), 0);
+
+  return(MLPTR(POINTER, string));
+}
+
+mlval allocate_bytearray(size_t length)
+{
+  mlval *bytearray;
+
+  ALLOCATE(bytearray, WLENGTH(length)+1);
+
+  bytearray[0] = MAKEHEAD(BYTEARRAY, length);
+
+  DIAGNOSTIC(5, "Allocate bytearray: Size in bytes 0x%lx", length, 0);
+  DIAGNOSTIC(5, "                  : Wrote header 0x%lx", MAKEHEAD(BYTEARRAY,length), 0);
+  DIAGNOSTIC(5, "                  : New ml_heap 0x%lx", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "                  : Tagged pointer 0x%lx", MLPTR(POINTER, bytearray), 0);
+
+  return(MLPTR(REFPTR, bytearray));
+}
+
+
+/*  == Allocate a code vector ==  */
+
+mlval allocate_code(size_t length)
+{
+  mlval *code;
+
+  ALLOCATE(code, length+1);
+
+  code[0] = MAKEHEAD(CODE, length);
+
+  if(!(length & 1))
+    code[length+1] = 0;
+
+  DIAGNOSTIC(5, "Allocate code: Size in words 0x%X", length, 0);
+  DIAGNOSTIC(5, "             : Header 0x%X", MAKEHEAD(CODE, length), 0);
+  DIAGNOSTIC(5, "             : New ml_heap 0x%X", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "             : Tagged pointer 0x%X", MLPTR(POINTER, code), 0);
+
+  return(MLPTR(POINTER, code));
+}
+
+
+/*  == Allocate a static string ==  */
+
+mlval static_string(size_t length)
+{
+  mlval *string;
+
+  string = alloc(sizeof(mlval) + length,
+		 "Unable to allocate static string of length %u", length);
+
+  string[0] = MAKEHEAD(STRING, length);
+
+  DIAGNOSTIC(5, "Static string: Size in bytes 0x%lx", length, 0);
+  DIAGNOSTIC(5, "             : Wrote header 0x%lx", MAKEHEAD(STRING,length), 0);
+  DIAGNOSTIC(5, "             : Tagged pointer 0x%lx", MLPTR(POINTER, string), 0);
+
+  return(MLPTR(POINTER, string));
+}
+
+
+/*  == Allocate an array ==  */
+
+mlval allocate_array(size_t length)
+{
+  mlval *array;
+  union ml_array_header *entry;
+
+  ALLOCATE(array, length+3);
+  entry = (union ml_array_header *)array;
+
+  entry->the.header  = MAKEHEAD(ARRAY, length);
+  entry->the.forward = (union ml_array_header *)MLINT(1);
+  entry->the.back    = (union ml_array_header *)MLINT(0);
+
+  if(!(length & 1))
+    array[length+3] = 0;
+
+  DIAGNOSTIC(5, "Allocate array: Length 0x%X", length, 0);
+  DIAGNOSTIC(5, "              : Header 0x%X", array[0], 0);
+  DIAGNOSTIC(5, "              : New heap 0x%X", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "              : Tagged value 0x%X", MLPTR(REFPTR, array), 0);
+
+  return(MLPTR(REFPTR, array));
+}
+
+
+/*  == Allocate a weak array ==
+ *
+ *  The weak array is placed on the modified list so that the garbage
+ *  collector can find it.
+ */
+
+mlval allocate_weak_array(size_t length)
+{
+  mlval *array;
+  union ml_array_header *entry;
+
+  ALLOCATE(array, length+3);
+  entry = (union ml_array_header *)array;
+  entry->the.header  = MAKEHEAD(WEAKARRAY, length);
+  entry->the.forward = 0;
+  entry->the.back    = GC_MODIFIED_LIST;
+  GC_MODIFIED_LIST = entry;;
+  
+  if(!(length & 1))
+    array[length+3] = 0;
+
+  DIAGNOSTIC(5, "Allocate weak array: Length 0x%X", length, 0);
+  DIAGNOSTIC(5, "                   : Header 0x%X", array[0], 0);
+  DIAGNOSTIC(5, "                   : New heap 0x%X", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "                   : Tagged value 0x%X", MLPTR(REFPTR, array), 0);
+
+  return(MLPTR(REFPTR, array));
+}
+
+
+/*  == Allocate a real ==
+ *
+ *  Only double-sized reals are supported at present.
+ *  An extra word of padding is inserted before the double itself to ensure
+ *  that it is double-aligned.
+ */
+
+mlval allocate_real(void)
+{
+  mlval *bytearray;
+
+  ALLOCATE(bytearray, 4);
+
+  bytearray[0] = MAKEHEAD(BYTEARRAY, sizeof(double) + 4);
+
+  DIAGNOSTIC(5, "Allocate real  : Wrote header 0x%lx", MAKEHEAD(BYTEARRAY,sizeof(double) + 4), 0);
+  DIAGNOSTIC(5, "               : New ml_heap 0x%lx", GC_HEAP_START, 0);
+  DIAGNOSTIC(5, "               : Tagged pointer 0x%lx", MLPTR(POINTER, bytearray), 0);
+
+  return(MLPTR(POINTER, bytearray));
+}
+
+
+
+/*  === MAKE ML STRING FROM C STRING ===  */
+
+mlval ml_string (const char *cstring)
+{
+  mlval mlstring = allocate_string(strlen(cstring) + 1);
+  strcpy(CSTRING(mlstring), cstring);
+  return(mlstring);
+}
+
+
+/*  === ALLOCATE MULTIPLE OBJECTS ===  */
+
+size_t allocate_multiple(size_t size, size_t number, mlval **start)
+{
+  signed long available = (GC_HEAP_LIMIT - GC_HEAP_START)/size;
+
+  assert(available >= 0);
+
+  available = available > number ? number : available;
+  *start = GC_HEAP_START;
+  GC_HEAP_START = GC_HEAP_START + available * size;
+  return(available);
+}
+@
+
+
+1.24
+log
+@Changed allocation of bytearrays to be ref tagged
+@
+text
+@d15 3
+d97 1
+a97 1
+
+d323 1
+a323 1
+  size_t available = (GC_HEAP_LIMIT - GC_HEAP_START)/size;
+d325 1
+a325 7
+  if(available >= 0)
+  {
+    available = available > number ? number : available;
+    *start = GC_HEAP_START;
+    GC_HEAP_START = GC_HEAP_START + available * size;
+    return(available);
+  }
+d327 4
+a330 1
+  return(0);
+@
+
+
+1.24.1.1
+log
+@Fork for bug fixing
+@
+text
+@a14 3
+ *  Revision 1.24  1993/03/23  15:20:57  jont
+ *  Changed allocation of bytearrays to be ref tagged
+ *
+@
+
+
+1.23
+log
+@Added `allocate_multiple'.
+@
+text
+@d15 3
+d181 1
+a181 1
+  return(MLPTR(POINTER, bytearray));
+@
+
+
+1.22
+log
+@Added allocate_bytearray.
+@
+text
+@d15 3
+d310 18
+@
+
+
+1.21
+log
+@Added allocate_bytearray.
+@
+text
+@d15 3
+d285 1
+a285 1
+  mlval *string;
+d287 1
+a287 1
+  ALLOCATE(string, 4);
+d289 1
+a289 1
+  string[0] = MAKEHEAD(STRING, sizeof(double) + 4);
+d291 1
+a291 1
+  DIAGNOSTIC(5, "Allocate real  : Wrote header 0x%lx", MAKEHEAD(STRING,sizeof(double) + 4), 0);
+d293 1
+a293 1
+  DIAGNOSTIC(5, "               : Tagged pointer 0x%lx", MLPTR(POINTER, string), 0);
+d295 1
+a295 1
+  return(MLPTR(POINTER, string));
+@
+
+
+1.20
+log
+@Added allocate_code().
+@
+text
+@d15 3
+d157 16
+@
+
+
+1.19
+log
+@Added static_string.  Corrected use of MLPTR().
+@
+text
+@d15 3
+d154 22
+@
+
+
+1.18
+log
+@`ml_string' now takes a const char *.
+@
+text
+@d15 3
+d110 1
+a110 1
+    DIAGNOSTIC(5, "               : Tagged value 0x%lx", MLPTR(record, PAIRPTR), 0);
+d112 1
+a112 1
+    return(MLPTR(record, PAIRPTR));
+d128 1
+a128 1
+    DIAGNOSTIC(5, "               : Tagged value 0x%lx", MLPTR(record,POINTER), 0);
+d130 1
+a130 1
+    return(MLPTR(record, POINTER));
+d148 20
+a167 1
+  DIAGNOSTIC(5, "               : Tagged pointer 0x%lx", MLPTR(string,POINTER), 0);
+d169 1
+a169 1
+  return(MLPTR(string, POINTER));
+d193 1
+a193 1
+  DIAGNOSTIC(5, "              : Tagged value 0x%X", MLPTR(array, REFPTR), 0);
+d195 1
+a195 1
+  return(MLPTR(array, REFPTR));
+d223 1
+a223 1
+  DIAGNOSTIC(5, "                   : Tagged value 0x%X", MLPTR(array, REFPTR), 0);
+d225 1
+a225 1
+  return(MLPTR(array, REFPTR));
+d246 1
+a246 1
+  DIAGNOSTIC(5, "               : Tagged pointer 0x%lx", MLPTR(string,POINTER), 0);
+d248 1
+a248 1
+  return(MLPTR(string, POINTER));
+@
+
+
+1.17
+log
+@Added allocate_array() and allocate_weak_array().
+@
+text
+@d15 3
+d233 1
+a233 1
+mlval ml_string (char *cstring)
+@
+
+
+1.16
+log
+@Reworked to use declarations in storeman.h.
+@
+text
+@d15 3
+d83 1
+a83 1
+    gc(w * sizeof(mlval));			\
+d145 56
+@
+
+
+1.15
+log
+@Tidied up and increased level of diagnostic messages.
+@
+text
+@d15 3
+d34 1
+a34 1
+ *  
+d38 1
+a38 1
+ *  
+d41 1
+a41 1
+ *  
+d46 1
+a46 1
+ *  
+d50 1
+a50 1
+ *  
+d55 1
+a55 1
+ *  
+d66 1
+a66 1
+#include "gc.h"
+d72 14
+d94 1
+a94 2
+  word record = ml_state.heap_start;
+  size_t size;
+d98 1
+a98 6
+    ml_state.heap_start += size = double_align(2 * sizeof(word));
+    if(ml_state.heap_start >= ml_state.heap_limit)
+    {
+      gc(size);
+      record = ml_state.global;
+    }
+d100 2
+a101 2
+    DIAGNOSTIC(5, "Allocate pair  : New ml_heap 0x%lx", ml_state.heap_start, 0);
+    DIAGNOSTIC(5, "               : Tagged value 0x%lx", MLPTR(record,PAIRPTR), 0);
+d107 1
+a107 6
+    ml_state.heap_start += size = double_align((nr_fields+1) * sizeof(word));
+    if(ml_state.heap_start >= ml_state.heap_limit)
+    {
+      gc(size);
+      record = ml_state.global;
+    }
+d109 1
+a109 1
+    *(word *)record = MAKEHEAD(RECORD, nr_fields);
+d114 1
+a114 1
+      ((word *)record)[nr_fields+1] = MLUNIT;
+d118 1
+a118 1
+    DIAGNOSTIC(5, "               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+d121 1
+a121 1
+    return MLPTR(record, POINTER);
+d130 1
+a130 2
+  word string = ml_state.heap_start;
+  int size = double_align(length + sizeof(word));
+d132 1
+a132 6
+  ml_state.heap_start += size;
+  if(ml_state.heap_start >= ml_state.heap_limit)
+  {
+    gc(size);
+    string = ml_state.global;
+  }
+d134 1
+a134 1
+  *(word *)string = MAKEHEAD(STRING,length);
+d138 1
+a138 1
+  DIAGNOSTIC(5, "               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+d154 1
+a154 2
+  word string = ml_state.heap_start;
+  int size = double_align(sizeof(double) + sizeof(word) + 4);
+d156 1
+a156 6
+  ml_state.heap_start += size;
+  if(ml_state.heap_start >= ml_state.heap_limit)
+  {
+    gc(size);
+    string = ml_state.global;
+  }
+d158 1
+a158 1
+  *(word *)string = MAKEHEAD(STRING, sizeof(double) + 4);
+d161 1
+a161 1
+  DIAGNOSTIC(5, "               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+@
+
+
+1.14
+log
+@Caused allocate_record to zero out the padding word in the case of
+an unaligned record length.
+@
+text
+@d1 1
+a1 6
+/*
+ * allocator.c
+ * Allocation routines for various ML objects.
+ * $Log: allocator.c,v $
+ * Revision 1.13  1992/02/26  11:46:23  richard
+ * Corrected calls to the gc() to pass sizes in bytes, not words.
+d3 1
+a3 2
+ * Revision 1.12  1992/01/08  16:55:34  richard
+ * Sorted out the malformatted diagnostics.
+d5 6
+a10 3
+ * Revision 1.11  1991/12/20  16:59:20  richard
+ * Reworked allocate_record() and changed diagnostic output
+ * to use DIAGNOSTIC so that it can be switched on and off.
+d12 6
+a17 27
+ * Revision 1.10  91/12/17  16:55:32  nickh
+ * oops.
+ * 
+ * Revision 1.9  91/12/17  16:02:29  nickh
+ * rewrote to remove bugs, but return to gc-calling style. Note that declaring
+ * and retracting roots is now in gc.c
+ * 
+ * Revision 1.5  91/11/11  18:00:23  jont
+ * Added allocate_real
+ * 
+ * Revision 1.4  91/10/29  14:54:12  davidt
+ * Changed allocation routines to call the garbage collector if they
+ * run out of free space. They should now behave exactly as a ML
+ * program behaves when allocating stuuf on the heap.
+ * 
+ * Revision 1.3  91/10/23  15:40:44  davidt
+ * Now uses ml_state.heap_start and ml_state.heap_limit to allocate
+ * on the ML heap.
+ * 
+ * Revision 1.2  91/10/21  09:20:02  davidt
+ * Changed the types of declare_root and retract_root so that the
+ * garbage collector is free to move the root objects (updating
+ * their new values using the address provided).
+ * 
+ * Revision 1.1  91/10/18  16:13:23  davidt
+ * Initial revision
+ * 
+d19 36
+a54 1
+ * Copyright (c) 1991 harlequin Ltd.
+a56 1
+#include <string.h>
+d65 2
+d69 1
+a69 1
+/*  === ALLOCATE A RECORD ===
+d71 2
+a72 8
+ *  Creates an uninitialized record with the number of fields
+ *  requested.  The fields must be initialized to valid ML values
+ *  before a garbage collection, allocation, or call to ML.
+ *
+ *  Initially this function tries to allocate space for the record by
+ *  simply incrementing the heap start pointer.  If this takes it over
+ *  the heap limit the garbage collector is called to allocate more
+ *  space, and possibly perform a garbage collection in the process.
+d75 1
+a75 1
+mlval allocate_record(word fields)
+d78 1
+a78 1
+  word size;
+d80 1
+a80 3
+  /* A record of size 2 can be created as a headerless pair. */
+
+  if(fields == 2)
+d82 1
+a82 2
+    size = double_align(2 * sizeof(word));
+    ml_state.heap_start += size;
+d89 2
+a90 2
+    DIAGNOSTIC(4,"Allocate pair  : New ml_heap 0x%lx", ml_state.heap_start, 0);
+    DIAGNOSTIC(4,"               : Tagged value 0x%lx", MLPTR(record,PAIRPTR), 0);
+d96 1
+a96 2
+    size = double_align((fields + 1) * sizeof(word));
+    ml_state.heap_start += size;
+d103 1
+a103 1
+    *(word *)record = MAKEHEAD(RECORD,fields);
+d107 2
+a108 2
+    if(!(fields & 1))
+      ((word *)record)[fields+1] = 0;
+d110 4
+a113 4
+    DIAGNOSTIC(4,"Allocate record: Fields 0x%lx", fields, 0);
+    DIAGNOSTIC(4,"               : Header 0x%lx", MAKEHEAD(RECORD,fields), 0);
+    DIAGNOSTIC(4,"               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+    DIAGNOSTIC(4,"               : Tagged value 0x%lx", MLPTR(record,POINTER), 0);
+a118 3
+/*
+ * Temporary allocate function for strings.
+ */
+d120 3
+a122 1
+mlval allocate_string (word length)
+d136 4
+a139 4
+  DIAGNOSTIC(4,"Allocate string: Size in bytes 0x%lx", length, 0);
+  DIAGNOSTIC(4,"               : Wrote header 0x%lx", MAKEHEAD(STRING,length), 0);
+  DIAGNOSTIC(4,"               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+  DIAGNOSTIC(4,"               : Tagged pointer 0x%lx", MLPTR(string,POINTER), 0);
+d144 6
+a149 4
+/*
+ * Temporary allocate function for reals.
+ *  N.B. 4 is added to the size of the double to make sure that it is
+ *  double-aligned within the string.
+d166 3
+a168 3
+  DIAGNOSTIC(4,"Allocate real  : Wrote header 0x%lx", MAKEHEAD(STRING,sizeof(double) + 4), 0);
+  DIAGNOSTIC(4,"               : New ml_heap 0x%lx", ml_state.heap_start, 0);
+  DIAGNOSTIC(4,"               : Tagged pointer 0x%lx", MLPTR(string,POINTER), 0);
+d172 4
+@
+
+
+1.13
+log
+@Corrected calls to the gc() to pass sizes in bytes, not words.
+@
+text
+@d5 3
+d103 5
+d118 1
+a118 1
+ * Temporary allocate function for strings (automatically checks for errors).
+@
+
+
+1.12
+log
+@Sorted out the malformatted diagnostics.
+@
+text
+@d5 3
+d69 1
+d75 2
+a76 1
+    ml_state.heap_start += 2 * sizeof(word);
+d79 1
+a79 1
+      gc(2);
+d86 1
+a86 1
+    return MLPTR(record, PAIRPTR);
+d90 1
+a90 2
+    word size = double_align((fields + 1) * sizeof(word));
+
+d94 1
+a94 1
+      gc(size / sizeof(word));
+d117 6
+a122 2
+  if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+    gc(size >> 2); string = ml_state.global;
+d124 1
+a124 1
+  /* Write header word */
+d131 2
+a132 1
+  return MLPTR(string, POINTER);
+d136 3
+a138 1
+ * Temporary allocate function for reals (automatically checks for errors).
+d141 1
+a141 1
+mlval allocate_real (void)
+d144 7
+a150 3
+  int size = double_align(sizeof(double)+ sizeof(word) + 4 ); /* 4 for padding so that the double is well-aligned */
+  if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+    gc(size >> 2); string = ml_state.global;
+d153 1
+a153 1
+  *(word *)string = MAKEHEAD(STRING,sizeof(double) + 4);
+d158 2
+a159 1
+  return MLPTR(string, POINTER);
+d166 1
+a166 1
+  return mlstring;
+@
+
+
+1.11
+log
+@Reworked allocate_record() and changed diagnostic output
+to use DIAGNOSTIC so that it can be switched on and off.
+@
+text
+@d4 5
+a8 1
+ * $Log:	allocator.c,v $
+d78 2
+a79 2
+    DIAGNOSTIC(4,"[Allocate pair  : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DIAGNOSTIC(4,"[               : Tagged value 0x%lx]\n", MLPTR(record,PAIRPTR), 0);
+d96 4
+a99 4
+    DIAGNOSTIC(4,"[Allocate record: Fields 0x%lx]\n", fields, 0);
+    DIAGNOSTIC(4,"[               : Header 0x%lx]\n", MAKEHEAD(RECORD,fields), 0);
+    DIAGNOSTIC(4,"[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DIAGNOSTIC(4,"[               : Tagged value 0x%lx]\n", MLPTR(record,POINTER), 0);
+d119 4
+a122 4
+  DIAGNOSTIC(4,"[Allocate string: Size in bytes 0x%lx]\n", length, 0);
+  DIAGNOSTIC(4,"[               : Wrote header 0x%lx]\n", MAKEHEAD(STRING,length), 0);
+  DIAGNOSTIC(4,"[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DIAGNOSTIC(4,"[               : Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+d140 3
+a142 3
+  DIAGNOSTIC(4,"[Allocate real  : Wrote header 0x%lx]\n", MAKEHEAD(STRING,sizeof(double) + 4), 0);
+  DIAGNOSTIC(4,"[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DIAGNOSTIC(4,"[               : Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+@
+
+
+1.10
+log
+@oops.
+@
+text
+@d5 3
+d39 1
+a39 1
+#include "debug.h"
+d43 1
+a44 3
+/*
+ * Generate error message for when we run out of heap.
+ */
+a45 4
+static void allocation_error()
+{
+  runtime_error("Ran out of memory");
+}
+d47 10
+a56 2
+/*
+ * Temporary allocate function for records (automatically checks for errors).
+d59 1
+a59 1
+mlval allocate_record (word fields)
+d63 1
+a63 1
+  if (fields == 2) {		/* then this is a pair */
+d65 5
+a69 1
+    if ((ml_state.heap_start += 8) >= ml_state.heap_limit) {
+d74 3
+a76 2
+    DEBUG("[Allocate pair  : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DEBUG("[               : Tagged value 0x%lx]\n", MLPTR(record,PAIRPTR), 0);
+d78 4
+d83 5
+a87 4
+  } else {
+    int size = double_align((fields + 1) * sizeof(word));
+    if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+      gc(size >> 2); record = ml_state.global;
+a88 1
+    *(word *)record = MAKEHEAD(RECORD,fields); /* Write header word */
+d90 7
+a96 5
+    /* Diagnostics */
+    DEBUG("[Allocate record: Fields 0x%lx]\n", fields, 0);
+    DEBUG("[               : Header 0x%lx]\n", MAKEHEAD(RECORD,fields), 0);
+    DEBUG("[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DEBUG("[               : Tagged value 0x%lx]\n", MLPTR(record,POINTER), 0);
+d115 4
+a118 4
+  DEBUG("[Allocate string: Size in bytes 0x%lx]\n", length, 0);
+  DEBUG("[               : Wrote header 0x%lx]\n", MAKEHEAD(STRING,length), 0);
+  DEBUG("[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DEBUG("[               : Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+d136 3
+a138 3
+  DEBUG("[Allocate real  : Wrote header 0x%lx]\n", MAKEHEAD(STRING,sizeof(double) + 4), 0);
+  DEBUG("[               : New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DEBUG("[               : Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+@
+
+
+1.9
+log
+@rewrote to remove bugs, but return to gc-calling style. Note that declaring
+and retracting roots is now in gc.c
+@
+text
+@d5 4
+d118 1
+a118 1
+  *(word *)string = MAKEHEAD(STRING,length * 4);
+d120 1
+a120 2
+  DEBUG("[Allocate real  : Size in words 0x%lx]\n", length, 0);
+  DEBUG("[               : Wrote header 0x%lx]\n", MAKEHEAD(STRING,length * 4), 0);
+@
+
+
+1.8
+log
+@Removed argument from allocate_real.
+@
+text
+@a4 7
+ * Revision 1.7  91/12/16  11:12:01  richard
+ * Changed string allocation to include the `\0' character in the
+ * size.
+ * 
+ * Revision 1.6  91/12/04  15:22:55  richard
+ * Rewrote the allocator to use plain malloc so that it works.
+ * 
+d37 5
+a41 1
+mlval allocate_record (word nr_fields)
+d43 2
+a44 1
+  word record;
+d46 3
+a48 3
+  if(nr_fields == 2)
+  {
+    record = double_align(malloc(16));
+d50 3
+a52 2
+    if(record == NULL)
+      runtime_error("allocate_record: run out of C heap.");
+d54 1
+a54 1
+    DEBUG("[Allocated pair at 0x%lx]\n", record, 0);
+d56 4
+a59 6
+    return(MLPTR(record, PAIRPTR));
+  }
+  else
+  {
+    word size = double_align((nr_fields+1) * sizeof(word));
+    record = double_align(malloc(size + 8));
+d61 3
+a63 2
+    if(record == NULL)
+      runtime_error("allocate_record: run out of C heap.");
+d65 6
+a70 1
+    *(word *)record = MAKEHEAD(RECORD, nr_fields);
+d72 6
+a77 3
+    DEBUG("[Allocated record with %d fields at 0x%lx]\n", nr_fields, record);
+
+    return(MLPTR(record, POINTER));
+d81 4
+d87 7
+a93 2
+  word size = double_align(length + sizeof(word));
+  word string = double_align(malloc(size + 8));
+d95 4
+a98 9
+  if(string == NULL)
+    runtime_error("allocate_string: Run out of C heap.");
+
+  *(word *)string = MAKEHEAD(STRING, length);
+  ((char *)string)[sizeof(word) + length - 1] = '\0';
+
+  DEBUG("[Allocated string of size 0x%lx at 0x%lx]\n", length, string);
+
+  /* Return the tagged pointer */
+d102 5
+a106 1
+mlval allocate_real ()
+d108 5
+a112 1
+  word real = double_align(malloc(sizeof(word) + 4 + sizeof(double) + 8));
+d114 1
+a114 2
+  if(real == NULL)
+    runtime_error("allocate_real: Run out of C heap.");
+d116 5
+a120 5
+  *(word *)real = MAKEHEAD(STRING, 4 + sizeof(double));
+
+  DEBUG("[Allocated real at 0x%lx]\n", real, 0);
+
+  return MLPTR(real, POINTER);
+a127 10
+}
+
+void declare_root (mlval *root)
+{
+  DEBUG("[Declare root 0x%lx]\n", *root, 0);
+}
+
+void retract_root (mlval *root)
+{
+  DEBUG("[Retract root 0x%lx]\n", *root, 0);
+@
+
+
+1.7
+log
+@Changed string allocation to include the `\0' character in the
+size.
+@
+text
+@d5 4
+d92 1
+a92 1
+mlval allocate_real (word length)
+d94 1
+a94 2
+  word size = double_align(4 * length + sizeof(word));
+  word real = double_align(malloc(length + 8));
+d99 1
+a99 1
+  *(word *)real = MAKEHEAD(STRING,length * 4);
+d101 1
+a101 1
+  DEBUG("[Allocated %d real(s) at 0x%lx]\n", length, real);
+@
+
+
+1.6
+log
+@Rewrote the allocator to use plain malloc so that it works.
+@
+text
+@d5 3
+d73 1
+a73 1
+  word size = double_align(length + sizeof(word) + 1);
+d80 1
+a80 1
+  ((char *)string)[length + sizeof(word)] = '\0';
+d82 1
+a82 1
+  DEBUG("[Allocated string of length 0x%lx at 0x%lx]\n", length, string);
+@
+
+
+1.5
+log
+@Added allocate_real
+@
+text
+@d5 3
+d37 1
+a37 5
+/*
+ * Generate error message for when we run out of heap.
+ */
+
+static void allocation_error()
+d39 1
+a39 2
+  runtime_error("Ran out of memory");
+}
+d41 3
+a43 3
+/*
+ * Temporary allocate function for records (automatically checks for errors).
+ */
+d45 6
+a50 29
+mlval allocate_record (word fields)
+{
+  word record = ml_state.heap_start;
+  /* Diagnostics */
+  DEBUG("[Allocate record: Fields 0x%lx]\n", fields, 0);
+  /* Check if we are allocating a pair */
+  if (fields == 2) {
+    if ((ml_state.heap_start += 8) >= ml_state.heap_limit) {
+      gc(2); record = ml_state.global;
+    };
+    while ((ml_state.heap_start + 8) >= ml_state.heap_limit) gc();
+    DEBUG("[Allocate record: New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DEBUG("[Allocate record: Tagged value 0x%lx]\n", MLPTR(record,PAIRPTR), 0);
+    record = ml_state.heap_start;
+    ml_state.heap_start += 8;
+    return MLPTR(record, PAIRPTR);
+  } else {
+    int size = double_align((fields + 1) * sizeof(word));
+    if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+      gc(size >> 2); record = ml_state.global;
+    };
+    /* Write header word */
+    *(word *)record = MAKEHEAD(RECORD,fields);
+    /* Diagnostics */
+    DEBUG("[Allocate record: Header 0x%lx]\n", MAKEHEAD(RECORD,fields), 0);
+    DEBUG("[Allocate record: New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+    DEBUG("[Allocate record: Tagged value 0x%lx]\n", MLPTR(record,POINTER), 0);
+    /* Return the tagged pointer */
+    return MLPTR(record, POINTER);
+d52 14
+a67 4
+/*
+ * Temporary allocate function for strings (automatically checks for errors).
+ */
+
+d70 11
+a80 13
+  word string = ml_state.heap_start;
+  int size = double_align(length + sizeof(word));
+  if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+    gc(size >> 2); string = ml_state.global;
+  };
+  /* Diagnostics */
+  DEBUG("[Allocate string: Size in bytes 0x%lx]\n", length, 0);
+  /* Write header word */
+  *(word *)string = MAKEHEAD(STRING,length);
+  /* Diagnostics */
+  DEBUG("[Allocate string: Wrote header 0x%lx]\n", MAKEHEAD(STRING,length), 0);
+  DEBUG("[Allocate record: New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DEBUG("[Allocate record: Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+a84 4
+/*
+ * Temporary allocate function for reals (automatically checks for errors).
+ */
+
+d87 11
+a97 15
+  word string = ml_state.heap_start;
+  int size = double_align(4 * length + sizeof(word));
+  if ((ml_state.heap_start += size) >= ml_state.heap_limit) {
+    gc(size >> 2); string = ml_state.global;
+  };
+  /* Diagnostics */
+  DEBUG("[Allocate real: Size in words 0x%lx]\n", length, 0);
+  /* Write header word */
+  *(word *)string = MAKEHEAD(STRING,length * 4);
+  /* Diagnostics */
+  DEBUG("[Allocate string: Wrote header 0x%lx]\n", MAKEHEAD(STRING,length * 4), 0);
+  DEBUG("[Allocate record: New ml_heap 0x%lx]\n", ml_state.heap_start, 0);
+  DEBUG("[Allocate record: Tagged pointer 0x%lx]\n", MLPTR(string,POINTER), 0);
+  /* Return the tagged pointer */
+  return MLPTR(string, POINTER);
+@
+
+
+1.4
+log
+@Changed allocation routines to call the garbage collector if they
+run out of free space. They should now behave exactly as a ML
+program behaves when allocating stuuf on the heap.
+@
+text
+@d5 5
+d96 23
+@
+
+
+1.3
+log
+@Now uses ml_state.heap_start and ml_state.heap_limit to allocate
+on the ML heap.
+@
+text
+@d5 4
+a43 1
+  /* Record goes on start of heap */
+d49 4
+a52 1
+    ml_state.heap_start += 8;
+d55 2
+a56 2
+    /* Check we haven't run out of heap */
+    if (ml_state.heap_start >= ml_state.heap_limit) allocation_error();
+d59 4
+a62 2
+    /* Setup new heap pointer */
+    ml_state.heap_start += double_align((fields + 1) * sizeof(word));
+a68 2
+    /* Check we haven't run out of heap */
+    if (ml_state.heap_start >= ml_state.heap_limit) allocation_error();
+a79 1
+  /* Record goes on start of heap */
+d81 4
+a86 2
+  /* Setup new heap pointer */
+  ml_state.heap_start += double_align(length + sizeof(word));
+a92 2
+  /* Check we haven't run out of heap */
+  if (ml_state.heap_start >= ml_state.heap_limit) allocation_error();
+@
+
+
+1.2
+log
+@Changed the types of declare_root and retract_root so that the
+garbage collector is free to move the root objects (updating
+their new values using the address provided).
+@
+text
+@d5 5
+d41 1
+a41 1
+  word record = ml_heap;
+d46 2
+a47 2
+    ml_heap += 8;
+    DEBUG("[Allocate record: New ml_heap address 0x%lx]\n", ml_heap, 0);
+d50 1
+a50 1
+    if (ml_heap >= ml_heap_limit) allocation_error();
+d54 1
+a54 1
+    ml_heap += double_align((fields + 1) * sizeof(word));
+d59 1
+a59 1
+    DEBUG("[Allocate record: New ml_heap address 0x%lx]\n", ml_heap, 0);
+d62 1
+a62 1
+    if (ml_heap >= ml_heap_limit) allocation_error();
+d75 1
+a75 1
+  word string = ml_heap;
+d79 1
+a79 1
+  ml_heap += double_align(length + sizeof(word));
+d84 1
+a84 1
+  DEBUG("[Allocate record: New ml_heap address 0x%lx]\n", ml_heap, 0);
+d87 1
+a87 1
+  if (ml_heap >= ml_heap_limit) allocation_error();
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d94 1
+a94 1
+void declare_root (mlval root)
+d96 1
+a96 1
+  DEBUG("[Declare root 0x%lx]\n", root, 0);
+d99 1
+a99 1
+void retract_root (mlval root)
+d101 1
+a101 1
+  DEBUG("[Retract root 0x%lx]\n", root, 0);
+@

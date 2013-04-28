@@ -1,0 +1,466 @@
+head	1.12;
+access;
+symbols
+	ML_beta_release_12/08/94:1.12
+	ML_beta_release_03/08/94:1.12
+	ML_revised_beta_release_25/05/94:1.12
+	ML_final_beta_release_02/03/94:1.12
+	mlworks-28-01-1994:1.12
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.10
+	MLWorks-1-0-2-15/12/1992:1.10
+	MLWorks-1-0-1-04/12/1992:1.10
+	checkpoint_17_08_92:1.6
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.12
+date	93.08.16.10.49.05;	author nosa;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.02.08.17.13.40;	author matthew;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	92.11.26.16.39.49;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.10.27.19.18.37;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.10.02.16.01.32;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.18.16.09.43;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.11.16.28.36;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.04.22.54.56;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.03.09.15.44.27;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.20.04.58;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.48.45;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.39.23;	author colin;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.02.08.17.13.40;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatype and functions for TyVarEnv mapping from syntactic type variables
+to semantic types
+Corresponds closely to TyVarSet (U) in The Definition (section 4.2)
+@
+
+
+1.12
+log
+@Instances for METATYVARs and TYVARs and in schemes for polymorphic debugger.
+@
+text
+@(* _tyvarenv.sml the functor *)
+(*
+$Log: _tyvarenv.sml,v $
+Revision 1.11  1993/02/08  17:13:40  matthew
+Changes for BASISTYPES signature
+
+Revision 1.10  1992/11/26  16:39:49  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.9  1992/10/27  19:18:37  jont
+Modified to use less than functions for maps
+
+Revision 1.8  1992/10/02  16:01:32  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.7  1992/08/18  16:09:43  jont
+Removed irrelevant handlers and new exceptions
+
+Revision 1.6  1992/08/11  16:28:36  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.5  1992/08/04  22:54:56  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.4  1992/03/09  15:44:27  jont
+Added require "datatypes"
+
+Revision 1.3  1992/01/27  20:04:58  jont
+Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+
+Revision 1.2  1991/11/21  16:48:45  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:39:23  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/lists";
+require "../utils/print";
+require "../basics/identprint";
+require "../typechecker/ty_debug";
+require "../typechecker/types";
+require "basistypes";
+
+require "../typechecker/tyvarenv";
+
+functor Tyvarenv (
+  structure Lists     : LISTS
+  structure Print     : PRINT
+  structure IdentPrint : IDENTPRINT
+  structure Ty_Debug  : TY_DEBUG
+  structure Types     : TYPES
+  structure BasisTypes : BASISTYPES
+  structure Debug :
+		 sig
+		   val set_debug_level : int -> unit
+		   val debug_level : unit -> int
+		 end
+  sharing IdentPrint.Ident = Types.Datatypes.Ident
+  sharing BasisTypes.Datatypes = Types.Datatypes
+  ) : TYVARENV =
+  struct
+    structure Datatypes = Types.Datatypes
+    structure BasisTypes = BasisTypes
+    val do_debug = Ty_Debug.do_debug
+
+    (****
+     TYVARENV is a mapping from explicit type variables to their types.
+     It is necessary to keep this information in a seperate mapping 
+     because it is not available from the Context as defined in The Definition.
+     Tyvarenv is one of the components of the Context in the implementation.
+     ****)
+
+    exception Lookup_in_Tyvarenv = Datatypes.NewMap.Undefined
+
+    fun tyvar_order x =
+      Datatypes.Ident.tyvar_eq x 
+      orelse Datatypes.Ident.tyvar_order x 
+      
+    val tyvar_eq = Datatypes.Ident.tyvar_eq
+
+    val empty_tyvarenv = BasisTypes.TYVARENV (Datatypes.NewMap.empty (Datatypes.Ident.tyvar_lt, tyvar_eq))
+
+    fun lookup (tyvar, BasisTypes.TYVARENV amap) = 
+      (if (do_debug andalso Debug.debug_level () > 10) 
+	 then (Print.print ("tyvar lookup \n");
+	       Print.print (IdentPrint.printTyVar tyvar);
+	       Print.print ("\n"))
+       else ();
+	 Datatypes.NewMap.apply'(amap, tyvar))
+
+    fun add_to_tyvarenv (alevel,tyvar,BasisTypes.TYVARENV amap) =
+      BasisTypes.TYVARENV 
+      (Datatypes.NewMap.define 
+       (amap,tyvar,Datatypes.TYVAR(ref (alevel,
+                   Datatypes.NULLTYPE,Datatypes.NO_INSTANCE),tyvar)))
+
+    fun string_tyvarenv (BasisTypes.TYVARENV amap) =
+      let
+        val tyvar_type_list = Datatypes.NewMap.to_list_ordered amap
+        fun print_pair ((object,image),print_object,print_image,connector) = 
+          print_object object ^ connector ^ print_image image
+      in
+        Lists.to_string
+        (fn (x,y) => print_pair ((x,y),IdentPrint.printTyVar,
+                                 fn atype => (Types.debug_print_type atype) ^ "\n",
+                                 " |--> "))
+        tyvar_type_list
+      end
+
+end;
+@
+
+
+1.11
+log
+@Changes for BASISTYPES signature
+@
+text
+@d4 3
+d98 4
+a101 1
+      BasisTypes.TYVARENV (Datatypes.NewMap.define (amap,tyvar,Datatypes.TYVAR (ref alevel,tyvar)))
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.11  1993/02/08  17:13:40  matthew
+Changes for BASISTYPES signature
+
+@
+
+
+1.10
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d44 3
+a47 1
+require "../typechecker/types";
+d55 1
+d62 1
+d66 1
+a66 1
+
+a67 1
+    open Datatypes
+d76 1
+a76 3
+    datatype Tyvarenv = TYVARENV of (Ident.TyVar,Type) NewMap.T
+    
+    exception Lookup_in_Tyvarenv = NewMap.Undefined
+d79 2
+a80 2
+      Ident.tyvar_eq x 
+      orelse Ident.tyvar_order x 
+d82 1
+a82 1
+    val tyvar_eq = Ident.tyvar_eq
+d84 1
+a84 1
+    val empty_tyvarenv = TYVARENV (NewMap.empty (Ident.tyvar_lt, tyvar_eq))
+d86 1
+a86 1
+    fun lookup (tyvar,TYVARENV amap) = 
+d92 1
+a92 1
+	 NewMap.apply'(amap, tyvar))
+d94 2
+a95 2
+    fun add_to_tyvarenv (alevel,tyvar,TYVARENV amap) =
+      TYVARENV (NewMap.define (amap,tyvar,TYVAR (ref alevel,tyvar)))
+d97 1
+a97 1
+    fun string_tyvarenv (TYVARENV amap) =
+d99 1
+a99 1
+        val tyvar_type_list = NewMap.to_list_ordered amap
+@
+
+
+1.9
+log
+@Modified to use less than functions for maps
+@
+text
+@d4 3
+d58 1
+d100 1
+a100 1
+                                 fn atype => (Types.print_type atype) ^ "\n",
+@
+
+
+1.8
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d75 1
+a75 1
+    val empty_tyvarenv = TYVARENV (NewMap.empty (tyvar_order,tyvar_eq))
+@
+
+
+1.7
+log
+@Removed irrelevant handlers and new exceptions
+@
+text
+@d4 3
+d67 4
+a70 6
+      if Ident.tyvar_eq x 
+        then NewMap.EQUAL
+      else
+        if Ident.tyvar_order x 
+          then NewMap.LESS
+        else NewMap.GREATER
+d72 1
+a72 1
+    val empty_tyvarenv = TYVARENV (NewMap.empty tyvar_order)
+@
+
+
+1.6
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d61 1
+a61 1
+    exception Lookup_in_Tyvarenv
+d79 1
+a79 2
+	 (NewMap.apply'(amap, tyvar)) 
+         handle NewMap.Undefined => raise Lookup_in_Tyvarenv)
+@
+
+
+1.5
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+d25 1
+a27 1
+require "../typechecker/datatypes";
+d33 1
+a34 1
+  structure Datatypes : DATATYPES
+d41 2
+a42 1
+  sharing Datatypes = Types.Datatypes) : TYVARENV =
+d44 1
+a44 1
+    structure Datatypes = Datatypes
+d75 1
+a75 1
+	 (NewMap.apply amap tyvar) 
+@
+
+
+1.4
+log
+@Added require "datatypes"
+@
+text
+@d4 3
+d20 1
+d27 4
+a30 3
+functor Tyvarenv(
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+d32 1
+a32 1
+  structure Types : TYPES
+d51 1
+a51 1
+    datatype Tyvarenv = TYVARENV of (Ident.TyVar,Type) Mapping.Map
+d53 1
+a53 1
+    val empty_tyvarenv = TYVARENV (Mapping.empty_map)
+d55 10
+d71 2
+a72 1
+	 Mapping.lookup (tyvar,amap))
+d75 1
+a75 2
+      TYVARENV (Mapping.add ((tyvar,TYVAR (ref alevel,tyvar)),
+			     amap,Ident.tyvar_order))
+d77 13
+a89 3
+    fun string_tyvarenv (TYVARENV amap) = 
+      Mapping.print_map (amap,IdentPrint.printTyVar,Types.print_type," --> ")
+	
+@
+
+
+1.3
+log
+@Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+@
+text
+@d4 4
+d20 1
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_tyvarenv.sml,v $
+d12 3
+a16 1
+require "../utils/print";
+d18 11
+a28 7
+functor Tyvarenv (structure Print : PRINT
+		  structure Datatypes : DATATYPES
+		  structure Types : TYPES
+		  structure Debug : sig val set_debug_level : int -> unit
+					val debug_level : unit -> int
+				    end
+		  sharing Datatypes = Types.Datatypes) : TYVARENV =
+d31 1
+d46 1
+a46 1
+      (if (Debug.debug_level () > 10) 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

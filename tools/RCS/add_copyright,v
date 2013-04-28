@@ -1,0 +1,68 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	96.06.13.15.35.53;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.06.06.11.37.28;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+For the distribution mechanism only, to add copyright headers to distributed source
+@
+
+
+1.2
+log
+@Modify to be a dummy calling add_copyright.sh
+@
+text
+@#!/bin/sh
+#
+# $Log: add_copyright,v $
+# Revision 1.1  1996/06/06  11:37:28  jont
+# new unit
+# For the distribution mechanism only, to add copyright headers to distributed source
+#
+#
+# Copyright (c) 1996 Harlequin Ltd
+#
+add_copyright.sh $*
+@
+
+
+1.1
+log
+@new unit
+For the distribution mechanism only, to add copyright headers to distributed source
+@
+text
+@d3 5
+a7 1
+# $Log$
+d11 1
+a11 11
+SML=/u/sml/MLW; export SML
+PATH=$SML/tools:$PATH; export PATH
+if [ $# -ne 1 ]
+then
+  echo $#
+  exit 1
+fi
+echo "(* $1"
+echo " * Copyright (c) 1996 Harlequin Ltd."
+echo " *)"
+remove_src_hdr < $1
+@

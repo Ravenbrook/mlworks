@@ -1,0 +1,4746 @@
+head	1.27;
+access;
+symbols
+	ML_beta_release_12/08/94:1.24
+	ML_beta_release_03/08/94:1.24
+	ML_revised_beta_release_25/05/94:1.24
+	ML_final_beta_release_02/03/94:1.23
+	mlworks-28-01-1994:1.23
+	Release:1.23
+	mlworks-beta-01-09-1993:1.23
+	MLWorks-1-0-4-29/01/1993:1.21
+	MLWorks-1-0-3-21/12/1992:1.21
+	MLWorks-1-0-2-15/12/1992:1.21
+	MLWorks-1-0-1-04/12/1992:1.21
+	checkpoint_17_08_92:1.10;
+locks; strict;
+comment	@ *  @;
+
+
+1.27
+date	94.09.30.14.31.28;	author matthew;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	94.09.14.09.19.02;	author matthew;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	94.08.26.10.39.53;	author matthew;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	94.04.13.13.53.15;	author jont;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	93.06.15.16.50.29;	author daveb;	state Exp;
+branches
+	1.23.1.1;
+next	1.22;
+
+1.22
+date	93.05.18.19.11.04;	author jont;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.10.29.14.37.13;	author jont;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.10.29.11.10.11;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.10.02.15.43.27;	author clive;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.09.22.13.43.43;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.09.15.18.21.05;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.09.01.16.17.54;	author jont;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.08.28.11.22.37;	author davidt;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.08.27.18.17.51;	author davidt;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.08.27.15.19.39;	author davidt;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.08.26.13.04.13;	author davidt;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.08.18.18.07.51;	author davidt;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.13.14.25.15;	author davidt;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.11.11.24.36;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.04.18.07.19;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.13.10.34.33;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.06.17.10.29.02;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.11.14.49.49;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.10.12.12.59;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.01.09.46.15;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.05.19.10.41.18;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.11.15.18.11;	author richard;	state Exp;
+branches;
+next	;
+
+1.23.1.1
+date	93.06.15.16.50.29;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Balanced tree implementation of general purpose
+map.  This is the functor.
+@
+
+
+1.27
+log
+@Efficiency improvements
+@
+text
+@(*  ==== GENERAL PURPOSE MAP ====
+ *   ===    BALANCED TREE    ===
+ *             FUNCTOR
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  This implementation of the MAP signature uses a 2-3-4 balanced tree[1],
+ *  giving O(log n) lookup and insertion times regardless of the order of
+ *  insertion.  The code is fairly long (and wide!) as it deals with all the
+ *  tree cases explicitly in order to provide a fast service.
+ *
+ *  When to use it
+ *  --------------
+ *  The balanced tree provides fast lookup, but is expensive in terms of
+ *  garbage to build.  Deletion from the tree is handled by marking objects
+ *  as undefined rather than actually removing them from the tree, and
+ *  therefore this implementation should not be used for maps that will
+ *  shrink significantly.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _btree.sml,v $
+ *  Revision 1.26  1994/09/14  09:19:02  matthew
+ *  Use MLWorks.Integer.makestring
+ *
+ *  Revision 1.25  1994/08/26  10:39:53  matthew
+ *  More binary searching
+ *  Small optimization to scan_n3_no 4
+ *  Removed global ref
+ *
+ *  Revision 1.24  1994/04/13  13:53:15  jont
+ *  Change raise Bind to Crash.impossible
+ *
+ *  Revision 1.23  1993/06/15  16:50:29  daveb
+ *  Added tryApply'Eq, for use in _realise.
+ *
+ *  Revision 1.22  1993/05/18  19:11:04  jont
+ *  Removed integer parameter
+ *
+ *  Revision 1.21  1992/10/29  14:37:13  jont
+ *  Improved search order for 3 and 4 nodes to binary chop
+ *
+ *  Revision 1.20  1992/10/29  11:10:11  jont
+ *  Reordered tests when scanning tree to do inequalities before equalities.
+ *  Improves speed both of insertion and lookup
+ *
+ *  Revision 1.19  1992/10/02  15:43:27  clive
+ *  Change to NewMap.empty which now takes < and = functions instead of the single-function
+ *
+ *  Revision 1.18  1992/09/22  13:43:43  jont
+ *  Added extra functions to avoid building new constructed values solely
+ *  in order to pattern match them. Changed the order of pattern matching
+ *  for improved code generation
+ *
+ *  Revision 1.17  1992/09/15  18:21:05  jont
+ *  Added empty'' for strict less than functions which do the less than test
+ *  first. this should be more efficient for large maps
+ *
+ *  Revision 1.16  1992/09/01  16:17:54  jont
+ *  Improved the implementastions of the alternative lookup functions so
+ *  as not to handle exceptions
+ *
+ *  Revision 1.15  1992/08/28  11:22:37  davidt
+ *  the sz reference is only created once.
+ *
+ *  Revision 1.14  1992/08/27  18:17:51  davidt
+ *  Forgot to include out start and finish strings in `string' function.
+ *
+ *  Revision 1.13  1992/08/27  15:19:39  davidt
+ *  Added the functions fold_in_rev_order and string.
+ *  Changed the implementation to keep track of the size
+ *  of the tree, giving a constant time implementation of
+ *  size (useful for the eq function) and a correct implementation
+ *  of is_empty.
+ *
+ *  Revision 1.12  1992/08/26  13:04:13  davidt
+ *  Changed the type of forall and exists, adding the
+ *  function map.
+ *
+ *  Revision 1.11  1992/08/18  18:07:51  davidt
+ *  Added the combine function.
+ *
+ *  Revision 1.10  1992/08/13  14:25:15  davidt
+ *  Added tryApply, tryApply', size, rank, rank, and merge functions.
+ *
+ *  Revision 1.9  1992/08/11  11:24:36  jont
+ *  Removed some redundant structure arguments and sharing
+ *  Converted where relevant to use NewMap.{forall,exists,iterate}
+ *
+ *  Revision 1.8  1992/08/04  18:07:19  jont
+ *  Added fold, fold_in_order and union on maps
+ *
+ *  Revision 1.7  1992/07/13  10:34:33  jont
+ *  Added is_empty predicate
+ *
+ *  Revision 1.6  1992/06/17  10:29:02  jont
+ *  Added range_ordered for signature matching requirements of lambda translator
+ *
+ *  Revision 1.5  1992/06/11  14:49:49  jont
+ *  Added domain_ordered function (required by lambda translator)
+ *
+ *  Revision 1.4  1992/06/10  12:12:59  richard
+ *  Added to_list_ordered.
+ *
+ *  Revision 1.3  1992/06/01  09:46:15  richard
+ *  Added empty' and from_list'.
+ *
+ *  Revision 1.2  1992/05/19  10:41:18  richard
+ *  Added efficient variants of `apply' for different situations.
+ *
+ *  Revision 1.1  1991/12/11  15:18:11  richard
+ *  Initial revision
+ *
+ *)
+
+require "../utils/crash";
+require "../utils/newmap_datatypes";
+require "../utils/newmap";
+
+functor BTree (structure Crash : CRASH
+               structure NewMapDataTypes : NEWMAP_DATATYPES
+                 ) : NEWMAP =
+  struct
+
+
+    open NewMapDataTypes;
+
+    (*  === BALANCED TREE TYPE ===
+     *
+     *  A 2-3-4 balanced tree contains four kinds of node: a leaf, a
+     *  two-node (with two subtrees), a three-node (similarly), and a
+     *  four-node.  I have arranged the tuples that make up the tree so that
+     *  when a tree is written out using constructors the entries appear in
+     *  order.
+     *
+     *  The `entry' type is used to mark deleted mappings in the tree as
+     *  undefined.
+     *)
+
+    datatype ('object, 'image) btree =
+      LEAF
+    | N2 of ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree
+    | N3 of ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree
+    | N4 of ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree *
+            'object * 'image result *
+            ('object, 'image) btree
+
+    datatype ('object, 'image) T =
+      MAP of {size    : int,
+	      order   : 'object * 'object -> bool,
+              eq      : 'object * 'object -> bool,
+              mapping : ('object, 'image) btree}
+
+
+
+    (*  === CONSTRUCT AN EMPTY MAP ===
+     *
+     *  An empty tree is just a leaf node.
+     *)
+
+    fun empty (order,equality) =
+      MAP {size = 0, order = order, eq = equality, mapping = LEAF}
+
+    fun empty' (op<) =
+        MAP {size = 0, order = (op<), eq = (op=), mapping = LEAF}
+
+    fun is_empty (MAP{size = 0, ...}) = true
+      | is_empty _ = false
+
+    (*  === DEFINE THE MAP AT A POINT ===
+     *
+     *  This is by far the most complex function in the functor, as 2-3-4
+     *  balanced tree insertion has many cases, though most are fairly
+     *  simple.  For details see [1] from the comment at the start of this
+     *  file.
+     *)
+
+    val dotcount = ref 0
+
+    datatype ('object, 'image) split_result =
+      SPLIT of ('object, 'image) btree * 'object * 'image result * ('object, 'image) btree
+      | NOSPLIT  of ('object, 'image) btree
+
+    fun define (MAP {size, order, mapping,eq}, object, image) =
+      let
+        (* 
+        val _ = output (std_out,"*")
+        val _ = dotcount := !dotcount + 1
+        val _ = if !dotcount > 50 then (output (std_out,"\n");dotcount := 0) else ()
+          *)
+        val sz = ref (size+1)
+
+        val image' = YES image
+
+        (*  == Four-node splitting ==
+         *
+         *  When a leaf four-node is encountered and the new object and
+         *  image need to be inserted the node must be split into two
+         *  smaller nodes, and the `middle' node passed back for insertion
+         *  into the parent.  For example:
+         *
+         *             M                  M S
+         *           /   \   + Q =      /  |  \
+         *          /     \            /   |   \
+         *         A     P S V        A   P Q   V
+         *)
+
+	fun defineit NO = image'
+	  | defineit (YES _) = (sz := size; image')
+
+        and split (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, o3, i3, LEAF)) =
+          (if order(object, o2) then
+	     if order(object, o1) then
+	       SPLIT (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o1) then
+		 NOSPLIT  (N4 (LEAF, object, defineit i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+	       else
+		 SPLIT (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 NOSPLIT  (N4 (LEAF, o1, i1, LEAF, object, defineit i2, LEAF, o3, i3, LEAF))
+	       else
+		 SPLIT (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o3) then
+		 NOSPLIT  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, defineit i3, LEAF))
+	       else
+		 SPLIT (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+          | split other_shape = NOSPLIT other_shape
+
+        (*  == Scan and insert ==
+         *
+         *  The `scan' function does most of the work of insertion into the
+         *  tree.  New mappings are only ever inserted at the leaves, but
+         *  this might result in a mapping being passed back up to a parent
+         *  node (see `split' above).  The problem occurs when a mapping is
+         *  passed back for insertion into a four-node, causing another
+         *  split, and so on.  To avoid this situation, which requires a
+         *  truly recursive definition, all four-nodes are split on the way
+         *  down the tree, but without increasing its depth.  The two
+         *  transformations are (excluding symmetries):
+         *
+         *      D             D H           H J             H J T
+         *    /   \     ->   / | \         / | \      ->   / | | \
+         *   /     \        /  |  \       /  |  \         /  | |  \
+         *  A     E H N    A   E   N     A   I  L T Z    A   I L   Z
+         *
+         *  When a two-node or three-node leaf is reached it is simply
+         *  expanded with the new object.  Four-node leaves are spotted from
+         *  their parents and split if necessary (see `split' above).
+         *)
+
+            (* Four-node splitting transformations.  Notice the way in which *)
+            (* the order of the trees, objects, and images is preserved *)
+            (* despite changes to the shape of the tree. *)
+
+        fun scan_n3_no_n4 (t1, o1, i1, t2, o2, i2, t3) =
+          (if order(object, o1) then
+             (case split t1 of
+                SPLIT (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+              | NOSPLIT t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+           else
+             if order(object, o2) then
+               if eq(object, o1) then
+                 N3 (t1, object, defineit i1, t2, o2, i2, t3)
+               else
+                 (case split t2 of
+                    SPLIT (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                  | NOSPLIT t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+             else
+               if eq(object, o2) then
+                 N3 (t1, o1, i1, t2, object, defineit i2, t3)
+               else
+                 case split t3 of
+                   SPLIT (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                 | NOSPLIT t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+
+	and scan_n4_no_n4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4) =
+	  (if order(object, o2) then
+	     if order(object, o1) then
+	       N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+	     else
+	       if eq(object, o1) then
+		 N4 (t1, object, defineit i1, t2, o2, i2, t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 N4 (t1, o1, i1, t2, object, defineit i2, t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+	     else
+	       if eq(object, o3) then
+		 N4 (t1, o1, i1, t2, o2, i2, t3, object, defineit i3, t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+
+        and scan (N2 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5)) =
+	  scan_n3_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5)
+          | scan (N2 (LEAF, o1, i1, LEAF)) =
+            (if order(object, o1) then
+	       N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+	     else
+	       if eq(object, o1) then
+		 N2 (LEAF, object, defineit i1, LEAF)
+	       else
+		 N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+
+          | scan (N2 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5))) =
+	    scan_n3_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5))
+          | scan (N3 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)) =
+	    scan_n4_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)
+          | scan (N3 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5), o5, i5, t6)) =
+	    scan_n4_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5), o5, i5, t6)
+          | scan (N3 (t1, o1, i1, t2, o2, i2, N4 (t3, o3, i3, t4, o4, i4, t5, o5, i5, t6))) =
+	    scan_n4_no_n4(t1, o1, i1, t2, o2, i2, N2 (t3, o3, i3, t4), o4, i4, N2 (t5, o5, i5, t6))
+          | scan (N3 (LEAF, o1, i1, LEAF, o2, i2, LEAF)) =
+            (if order(object, o1) then
+               N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+             else
+               if order(object, o2) then
+                 if eq(object, o1) then
+                   N3 (LEAF, object, defineit i1, LEAF, o2, i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+               else
+                 if eq(object, o2) then
+                   N3 (LEAF, o1, i1, LEAF, object, defineit i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+
+            (* Leaf-level insertion. *)
+
+          | scan (N3 value) = scan_n3_no_n4 value
+
+            (* Scanning other levels and four-node leaf splitting. *)
+
+          | scan (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+	       (case split t1
+		  of SPLIT (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		| NOSPLIT t1' => N2 (scan t1', o1, i1, t2))
+	     else
+	       if eq(object, o1) then
+		 N2 (t1, object, defineit i1, t2)
+	       else
+		 (case split t2
+                    of SPLIT (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+		  | NOSPLIT t2' => N2 (t1, o1, i1, scan t2')))
+
+            (* The child of a four-node cannot be another four-node (they *)
+            (* are broken up in other cases above) so there's no need to *)
+            (* check for splits in the children of a four-node. *)
+
+          | scan (N4 value) = scan_n4_no_n4 value
+
+            (* This case should never occur if the above rules are correct *)
+            (* and the tree is properly balanced.  I've included a rule *)
+            (* which will allow the tree to continue functioning in an *)
+            (* unbalanced manner. *)
+
+          | scan LEAF = N2 (LEAF, object, image', LEAF)
+
+        (*  == Insertion at the root ==
+         *
+         *  The only way in which the tree can grow deeper is by insertion
+         *  or splitting at the root.  A four-node at the root is always
+         *  split into three two-nodes, adding one extra level.  An empty
+         *  tree is converted into a two-node in the obvious manner.
+         *)
+
+        fun insert (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            scan (N2 (N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4)))
+          | insert LEAF = N2 (LEAF, object, image', LEAF)
+          | insert other_shape = scan other_shape
+
+	val mapping' = insert mapping
+      in
+        MAP {size = !sz, order = order, eq=eq, mapping = mapping'}
+      end
+
+    fun define' (tree, (object, image)) = define (tree, object, image)
+
+    fun combine f (MAP {size, order, mapping,eq}, object, image) =
+      let
+(*
+        val _ = output (std_out,"#")
+        val _ = dotcount := !dotcount + 1
+        val _ = if !dotcount > 50 then (output (std_out,"\n");dotcount := 0) else ()
+*)
+
+        val image' = YES image
+
+        val sz = ref (size+1)
+
+        (*  == Four-node splitting ==
+         *
+         *  When a leaf four-node is encountered and the new object and
+         *  image need to be inserted the node must be split into two
+         *  smaller nodes, and the `middle' node passed back for insertion
+         *  into the parent.  For example:
+         *
+         *             M                  M S
+         *           /   \   + Q =      /  |  \
+         *          /     \            /   |   \
+         *         A     P S V        A   P Q   V
+         *)
+
+	fun defineit (ob,  NO,  i) = YES i
+	  | defineit (ob, YES i1, i2) = YES (sz := size; f(ob, i1, i2))
+
+        and split (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, o3, i3, LEAF)) =
+          (if order(object, o2) then
+	     if order(object, o1) then
+	       SPLIT (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o1) then
+		 NOSPLIT (N4 (LEAF, object, defineit(o1, i1, image), LEAF, o2, i2, LEAF, o3, i3, LEAF))
+	       else
+		 SPLIT (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 NOSPLIT (N4 (LEAF, o1, i1, LEAF, object, defineit(o2, i2, image), LEAF, o3, i3, LEAF))
+	       else
+		 SPLIT (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o3) then
+		 NOSPLIT  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, defineit(o3, i3, image), LEAF))
+	       else
+		 SPLIT (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+          | split other_shape = NOSPLIT other_shape
+
+        (*  == Scan and insert ==
+         *
+         *  The `scan' function does most of the work of insertion into the
+         *  tree.  New mappings are only ever inserted at the leaves, but
+         *  this might result in a mapping being passed back up to a parent
+         *  node (see `split' above).  The problem occurs when a mapping is
+         *  passed back for insertion into a four-node, causing another
+         *  split, and so on.  To avoid this situation, which requires a
+         *  truly recursive definition, all four-nodes are split on the way
+         *  down the tree, but without increasing its depth.  The two
+         *  transformations are (excluding symmetries):
+         *
+         *      D             D H           H J             H J T
+         *    /   \     ->   / | \         / | \      ->   / | | \
+         *   /     \        /  |  \       /  |  \         /  | |  \
+         *  A     E H N    A   E   N     A   I  L T Z    A   I L   Z
+         *
+         *  When a two-node or three-node leaf is reached it is simply
+         *  expanded with the new object.  Four-node leaves are spotted from
+         *  their parents and split if necessary (see `split' above).
+         *)
+
+            (* Four-node splitting transformations.  Notice the way in which *)
+            (* the order of the trees, objects, and images is preserved *)
+            (* despite changes to the shape of the tree. *)
+
+        fun scan_n3_no_n4 (t1, o1, i1, t2, o2, i2, t3) =
+          (if order(object, o1) then
+             (case split t1 of
+                SPLIT (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+              | NOSPLIT t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+           else
+             if order(object, o2) then
+               if eq(object, o1) then
+                 N3 (t1, object, defineit(o1, i1, image), t2, o2, i2, t3)
+               else
+                 (case split t2 of
+                    SPLIT (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                  | NOSPLIT t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+             else
+               if eq(object, o2) then
+                 N3 (t1, o1, i1, t2, object, defineit(o2, i2, image), t3)
+               else
+                 case split t3 of
+                   SPLIT (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                 | NOSPLIT t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+
+	and scan_n4_no_n4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4) =
+	  (if order(object, o2) then
+	     if order(object, o1) then
+	       N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+	     else
+	       if eq(object, o1) then
+		 N4 (t1, object, defineit(o1, i1, image), t2, o2, i2, t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 N4 (t1, o1, i1, t2, object, defineit(o2, i2, image), t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+	     else
+	       if eq(object, o3) then
+		 N4 (t1, o1, i1, t2, o2, i2, t3, object, defineit(o3, i3, image), t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+
+        and scan (N2 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5)) =
+	  scan_n3_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5)
+          | scan (N2 (LEAF, o1, i1, LEAF)) =
+            (if order(object, o1) then
+	       N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+	     else
+	       if eq(object, o1) then
+		 N2 (LEAF, object, defineit(o1, i1, image), LEAF)
+	       else
+		 N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+
+          | scan (N2 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5))) =
+	    scan_n3_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5))
+          | scan (N3 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)) =
+	    scan_n4_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)
+          | scan (N3 (LEAF, o1, i1, LEAF, o2, i2, LEAF)) =
+            (if order(object, o1) then
+               N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+             else
+               if order(object, o2) then
+                 if eq(object, o1) then
+                   N3 (LEAF, object, defineit(o1, i1, image), LEAF, o2, i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+               else
+                 if eq(object, o2) then
+                   N3 (LEAF, o1, i1, LEAF, object, defineit(o2, i2, image), LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+          | scan (N3 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5), o5, i5, t6)) =
+	    scan_n4_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5), o5, i5, t6)
+          | scan (N3 (t1, o1, i1, t2, o2, i2, N4 (t3, o3, i3, t4, o4, i4, t5, o5, i5, t6))) =
+	    scan_n4_no_n4(t1, o1, i1, t2, o2, i2, N2 (t3, o3, i3, t4), o4, i4, N2 (t5, o5, i5, t6))
+
+            (* Leaf-level insertion. *)
+
+          | scan (N3 value) = scan_n3_no_n4 value
+
+            (* Scanning other levels and four-node leaf splitting. *)
+
+          | scan (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+	       (case split t1
+		  of SPLIT (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		| NOSPLIT t1' => N2 (scan t1', o1, i1, t2))
+	     else
+	       if eq(object, o1) then
+		 N2 (t1, object, defineit(o1, i1, image), t2)
+	       else
+		 (case split t2
+                    of SPLIT (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+		  | NOSPLIT t2' => N2 (t1, o1, i1, scan t2')))
+
+            (* The child of a four-node cannot be another four-node (they *)
+            (* are broken up in other cases above) so there's no need to *)
+            (* check for splits in the children of a four-node. *)
+
+          | scan (N4 value) = scan_n4_no_n4 value
+
+            (* This case should never occur if the above rules are correct *)
+            (* and the tree is properly balanced.  I've included a rule *)
+            (* which will allow the tree to continue functioning in an *)
+            (* unbalanced manner. *)
+
+          | scan LEAF = N2 (LEAF, object, image', LEAF)
+
+        (*  == Insertion at the root ==
+         *
+         *  The only way in which the tree can grow deeper is by insertion
+         *  or splitting at the root.  A four-node at the root is always
+         *  split into three two-nodes, adding one extra level.  An empty
+         *  tree is converted into a two-node in the obvious manner.
+         *)
+
+        fun insert (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            scan (N2 (N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4)))
+          | insert LEAF = N2 (LEAF, object, image', LEAF)
+          | insert other_shape = scan other_shape
+
+	val mapping' = insert mapping
+      in
+        MAP {size = !sz, order = order, mapping = mapping', eq=eq}
+      end
+
+
+    (*  === UNDEFINE THE MAP AT A POINT ===
+     *
+     *  Mappings are not removed from the tree, but the image of the object
+     *  to be undefined is turned into NO so that it will not be
+     *  found by future invocations of `apply' (qv).
+     *)
+
+    fun undefine (MAP {size, order, mapping,eq}, object) =
+      let
+        val sz = ref size
+        fun delete LEAF = LEAF
+
+          | delete (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+		 N2 (delete t1, o1, i1, t2)
+	     else
+	       if eq(object, o1) then
+		   (sz := size - 1; N2 (t1, o1, NO, t2))
+	       else
+		 N2 (t1, o1, i1, delete t2))
+
+          | delete (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (if order(object, o1) then
+		 N3 (delete t1, o1, i1, t2, o2, i2, t3)
+	     else
+	       if eq(object, o1) then
+		   (sz := size - 1; N3 (t1, o1, NO, t2, o2, i2, t3))
+	       else
+		 if order(object, o2) then
+		     N3 (t1, o1, i1, delete t2, o2, i2, t3)
+		 else
+		   if eq(object, o2) then
+		       (sz := size - 1; N3 (t1, o1, i1, t2, o2, NO, t3))
+		   else
+		     N3 (t1, o1, i1, t2, o2, i2, delete t3))
+
+          | delete (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (if order(object, o1) then
+		 N4 (delete t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+	     else
+	       if eq(object, o1) then
+		   (sz := size - 1; N4 (t1, o1, NO, t2, o2, i2, t3, o3, i3, t4))
+	       else
+		 if order(object, o2) then
+		     N4 (t1, o1, i1, delete t2, o2, i2, t3, o3, i3, t4)
+		 else
+		   if eq(object, o2) then
+		       (sz := size - 1; N4 (t1, o1, i1, t2, o2, NO, t3, o3, i3, t4))
+		   else
+                   if order(object, o3) then
+		       N4 (t1, o1, i1, t2, o2, i2, delete t3, o3, i3, t4)
+		   else
+		     if eq(object, o3) then
+                         (sz := size - 1; N4 (t1, o1, i1, t2, o2, i2, t3, o3, NO, t4))
+                     else
+                       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, delete t4))
+
+	val mapping' = delete mapping
+      in
+        MAP {size = !sz, order = order, mapping = mapping', eq=eq}
+      end
+
+
+
+    (*  === APPLY THE MAP TO AN OBJECT ===
+     *
+     *  This is a simple search of the tree to find the image of the object.
+     *  The only subtlety is that when an object is found whose image is
+     *  UNDEFINED, Undefined is raised.
+     *
+     *  This will be the most critical function in terms of speed, and so
+     *  the code is unravelled rather than terse.
+     *)
+
+
+    fun apply' (MAP {size, order, mapping,eq}, object) =
+      let
+        fun find LEAF = raise Undefined
+
+          | find (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then
+		   (case i1 of YES image => image | NO => raise Undefined)
+             else
+	       find t2)
+
+          | find (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (if order(object, o1) then
+	       find t1
+	     else
+	       if order(object, o2) then
+		 if eq(object, o1) then
+		   (case i1 of YES image => image | NO => raise Undefined)
+		 else
+		   find t2
+	       else
+		 if eq(object, o2) then
+		   (case i2 of YES image => image | NO => raise Undefined)
+		 else
+		   find t3)
+
+          | find (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (if order(object, o2) then
+	       if order(object, o1) then
+		 find t1
+	       else
+		 if eq(object, o1) then
+		   (case i1 of YES image => image | NO => raise Undefined)
+		 else
+		   find t2
+	     else
+	       if order(object, o3) then
+		 if eq(object, o2) then
+		   (case i2 of YES image => image | NO => raise Undefined)
+		 else
+		   find t3
+	       else
+		 if eq(object, o3) then
+		   (case i3 of YES image => image | NO => raise Undefined)
+		 else
+		   find t4)
+
+      in
+	find mapping
+      end
+
+    fun apply map object = apply' (map, object)
+
+    fun apply_default' (MAP {size, order, mapping, eq}, default, object) =
+      let
+        fun find LEAF = default
+
+          | find (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then
+		   (case i1 of
+		      YES image => image
+		    | NO => default)
+	       else
+		 find t2)
+
+          | find (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then
+		   (case i1 of
+		      YES image => image
+		    | NO => default)
+	       else
+		 if order(object, o2) then
+		     find t2
+		 else
+		   if eq(object, o2) then
+		       (case i2 of
+			  YES image => image
+			| NO => default)
+		   else
+		     find t3)
+
+          | find (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then
+		   (case i1 of
+		      YES image => image
+		    | NO => default)
+	       else
+		 if order(object, o2) then
+		     find t2
+		 else
+		   if eq(object, o2) then
+		       (case i2 of
+			  YES image => image
+			| NO => default)
+		   else
+		     if order(object, o3) then
+			 find t3
+		     else
+		       if eq(object, o3) then
+			   (case i3 of
+			      YES image => image
+			    | NO => default)
+		       else
+			 find t4)
+
+      in
+	find mapping
+      end
+
+    fun apply_default (map, default) object =
+      apply_default'(map, default, object)
+
+    fun tryApply' (MAP {size, order, mapping, eq}, object) =
+      let
+        fun find LEAF = NO
+
+          | find (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then i1
+             else
+	       find t2)
+
+          | find (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (if order(object, o1) then
+	       find t1
+	     else
+	       if order(object, o2) then
+		 if eq(object, o1) then i1
+		 else
+		   find t2
+	       else
+		 if eq(object, o2) then i2
+		 else
+		   find t3)
+
+          | find (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (if order(object, o2) then
+	       if order(object, o1) then
+		 find t1
+	       else
+		 if eq(object, o1) then i1
+		 else
+		   find t2
+	     else
+	       if order(object, o3) then
+		 if eq(object, o2) then i2
+		 else
+		   find t3
+	       else
+		 if eq(object, o3) then i3
+		 else
+		   find t4)
+      in
+	find mapping
+      end
+
+(*
+      let
+        fun find LEAF = NO
+
+          | find (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then i1
+	       else
+		 find t2)
+
+          | find (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then i1
+	       else
+		 if order(object, o2) then
+		     find t2
+		 else
+		   if eq(object, o2) then i2
+		   else
+		     find t3)
+
+          | find (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (if order(object, o1) then
+		 find t1
+	     else
+	       if eq(object, o1) then i1
+	       else
+		 if order(object, o2) then
+		     find t2
+		 else
+		   if eq(object, o2) then i2
+		   else
+		     if order(object, o3) then
+			 find t3
+		     else
+		       if eq(object, o3) then i3
+		       else
+			 find t4)
+
+      in
+	find mapping
+      end
+*)
+
+    fun tryApply'Eq (MAP {size, order, mapping, ...}, object) =
+      tryApply' (MAP {size=size, order=order, mapping=mapping, eq=(op=)},
+		 object)
+
+    fun tryApply map object = tryApply'(map, object)
+
+    (*  === CONVERT LIST TO MAP ===
+     *
+     *)
+
+    fun log2(n, 1) = n
+      | log2(n, i) = log2(n+1, i div 2)
+
+    fun length(n, []) = n
+      | length(n, _ :: xs) = length(n+1, xs)
+
+    val makestring = MLWorks.Integer.makestring
+
+    fun from_list (order,eq) =
+      let
+	fun is_sorted[] = true
+	  | is_sorted[x] = true
+	  | is_sorted((x, _) :: (rest as ((x', _) :: _))) =
+	    if order(x, x') orelse eq(x,x') then
+                is_sorted rest
+	    else
+              false
+
+	fun is_rev_sorted[] = true
+	  | is_rev_sorted[x] = true
+	  | is_rev_sorted((x, _) :: (rest as ((x', _) :: _))) =
+	    if order(x', x) orelse eq(x',x) then
+                is_rev_sorted rest
+	    else
+              false
+
+     fun merge args =
+       let
+         fun do_merge (x,[]) = x
+           | do_merge ([],x) = x
+           | do_merge (arg as ((h as (v1,_))::t),arg' as ((a as (v2,_))::b)) =
+             (if order(v1,v2) then
+                  h :: do_merge(t,arg')
+              else
+                a :: do_merge(arg,b))
+       in
+         do_merge args
+       end
+
+       fun qsort [] = []
+         | qsort (arg as [x]) = arg
+         | qsort (arg as [a as (v1,_),b as (v2,_)]) =
+           (if order(v1,v2) then arg
+            else [b,a])
+         | qsort (a::(rest as [b as (v1,_),c as (v2,_)])) =
+           merge([a],
+		 if order(v1,v2) then
+		     rest
+		 else
+		   [c,b])
+         | qsort yukky_list =
+           let
+             fun qs ([],nice_list) = nice_list
+               | qs ((pivot as (pv,_))::xs, sofar) =
+                 let
+                   fun part (left,right,[]) = qs(left, pivot::(qs (right, sofar)))
+                     | part (left,right,(y as (v1,_))::ys) =
+                       (if order(v1,pv) then
+                            part (y::left,right,ys)
+                        else
+                          part (left,y::right,ys))
+                 in
+                   part([],[],xs)
+                 end
+           in
+             qs (yukky_list,[])
+           end
+
+	fun sub_from[] = {mapping = LEAF, order = order, size = 0,eq=eq}
+	  | sub_from[(ob, im)] =
+	    {mapping = N2(LEAF, ob, YES im, LEAF), order = order, size = 1,eq=eq}
+	  | sub_from[(ob1, im1), (ob2, im2)] =
+	    {mapping = N3(LEAF, ob1, YES im1, LEAF, ob2, YES im2, LEAF),
+	     order = order, size = 2,eq=eq}
+	  | sub_from list =
+	    let
+	      val len = length(0, list)
+	      val depth = log2(0, len+1)
+	      val size = (len-1) div 2
+	      val (left_tree, (ob, im), rest) =
+		case sub_from'(size, depth-1, list) of
+		  (left_tree, x :: rest) => (left_tree, x, rest)
+		| _ => Crash.impossible "Bad result from sub_from'"
+	      val right_tree =
+		case sub_from'(len - size - 1, depth-1, rest) of
+		  (right_tree, []) => right_tree
+		| _ => Crash.impossible "Bad result from sub_from'\n"
+	    in
+	      {mapping = N2(left_tree, ob, YES im, right_tree),
+	       order = order, size = len,eq=eq}
+	    end
+
+	and sub_from'(size, depth, list as ((ob, im) :: rest)) =
+	  (* Make a subtree with size elements of depth depth from *)
+	  (* the leading sublist of list, returning the rest of it *)
+	  (case depth of
+	     0 => Crash.impossible "Bad depth to sub_from'\n"
+	   | 1 =>
+	       (case size of
+		  0 => Crash.impossible "Bad size  0 to sub_from'\n"
+		| 1 => (N2(LEAF, ob, YES im, LEAF), rest)
+		| 2 =>
+		    (case rest of
+		       (ob', im') :: rest =>
+			 (N3(LEAF, ob, YES im, LEAF, ob', YES im',
+			     LEAF), rest)
+		     | _ => Crash.impossible "Bad size 2 to sub_from'\n")
+		| 3 =>
+		    (case rest of
+		       (ob', im') :: (ob'', im'') :: rest =>
+			 (N4(LEAF, ob, YES im, LEAF, ob', YES im',
+			     LEAF, ob'', YES im'', LEAF), rest)
+		     | _ => Crash.impossible "Bad size 3 to sub_from'")
+		| n => Crash.impossible ("Bad size " ^ makestring n ^
+                                         " to sub_from'\n"))
+	   | n =>
+	       let
+		 val len = size
+		 val size = (len-1) div 2
+		 val (left_tree, (ob, im), rest) =
+		   case sub_from'(size, depth-1, list) of
+		     (left_tree, x :: rest) => (left_tree, x, rest)
+		   | _ => Crash.impossible"Bad result from sub_from'"
+		 val (right_tree, rest) =
+		   sub_from'(len - size - 1, depth-1, rest)
+	       in
+		 (N2(left_tree, ob, YES im, right_tree), rest)
+	       end)
+	  | sub_from' _ = Crash.impossible"Bad list to sub_from'"
+	fun sub_from'' [] = sub_from []
+	  | sub_from''(x as [_]) = sub_from x
+	  | sub_from'' list =
+	    let
+	      val list =
+ 		if is_sorted list then
+		  list
+		else
+ 		  if is_rev_sorted list then
+		    rev list
+		  else
+		    qsort list
+	    in
+	      sub_from list
+	    end
+      in
+	fn list => MAP(sub_from'' list)
+      end
+
+    fun from_list' order = from_list (order,op =)
+
+
+    fun fold f =
+      let
+        fun red (done, LEAF) = done
+          | red (done, N2 (t1, o1, YES image, t2)) =
+            red (red (f(done, o1, image), t1), t2)
+          | red (done, N2 (t1, o1, NO, t2)) =
+            red (red (done, t1), t2)
+          | red (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i1 of YES image =>
+		f(done, o1, image)  | NO => done
+              val done'' = case i2 of YES image =>
+		f(done', o2, image) | NO => done'
+            in
+              red (red (red (done'', t1), t2), t3)
+            end
+          | red (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i1 of YES image =>
+		f(done, o1, image)   | NO => done
+              val done''  = case i2 of YES image =>
+		f(done', o2, image)  | NO => done'
+              val done''' = case i3 of YES image =>
+		f(done'', o3, image) | NO => done''
+            in
+              red (red (red (red (done''', t1), t2), t3), t4)
+            end
+      in
+	fn (x, MAP{mapping, ...}) => red(x, mapping)
+      end
+
+    fun fold_in_order f =
+      let
+        fun red (done, LEAF) = done
+          | red (done, N2 (t1, o1, YES image, t2)) =
+	    red(f(red(done, t1), o1, image), t2)
+          | red (done, N2 (t1, o1, NO, t2)) =
+            red (red (done, t1), t2)
+          | red (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+	      val done = red(done, t1)
+	      val done = case i1 of
+		YES image => red(f(done, o1, image), t2)
+	      | NO     => red(done, t2)
+              val done = case i2 of
+		YES image => red(f(done, o2, image), t3)
+	      | NO     => red(done, t3)
+            in
+	      done
+            end
+          | red (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+	      val done = red(done, t1)
+	      val done = case i1 of
+		YES image => red(f(done, o1, image), t2)
+	      | NO     => red(done, t2)
+              val done = case i2 of
+		YES image => red(f(done, o2, image), t3)
+	      | NO     => red(done, t3)
+              val done = case i3 of
+		YES image => red(f(done, o3, image), t4)
+	      | NO     => red(done, t4)
+            in
+	      done
+            end
+      in
+	fn (x, MAP{mapping, ...}) => red(x, mapping)
+      end
+
+    fun fold_in_rev_order f =
+      let
+        fun red (done, LEAF) = done
+          | red (done, N2 (t1, o1, YES image, t2)) =
+	    red(f(red(done, t2), o1, image), t1)
+          | red (done, N2 (t1, o1, NO, t2)) =
+            red (red (done, t2), t1)
+          | red (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+	      val done = red(done, t3)
+	      val done = case i2 of
+		YES image => red(f(done, o2, image), t2)
+	      | NO     => red(done, t2)
+              val done = case i1 of
+		YES image => red(f(done, o1, image), t1)
+	      | NO     => red(done, t1)
+            in
+	      done
+            end
+          | red (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+	      val done = red(done, t4)
+	      val done = case i3 of
+		YES image => red(f(done, o3, image), t3)
+	      | NO     => red(done, t3)
+              val done = case i2 of
+		YES image => red(f(done, o2, image), t2)
+	      | NO     => red(done, t2)
+              val done = case i1 of
+		YES image => red(f(done, o1, image), t1)
+	      | NO     => red(done, t1)
+            in
+	      done
+            end
+      in
+	fn (x, MAP{mapping, ...}) => red(x, mapping)
+      end
+
+    val union = fold define
+
+    fun merge f = fold (combine (fn (ob, im, im') => f(im, im')))
+
+    fun size (MAP {size, ...}) = size
+
+    fun map f =
+      let
+        fun red LEAF = LEAF
+          | red (N2 (t1, o1, i1, t2)) =
+	    N2(red t1, o1,
+	       case i1 of
+		 YES image => YES(f(o1, image))
+	       | NO => NO,
+	       red t2)
+          | red (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            N3(red t1, o1,
+	       case i1 of
+		 YES image => YES(f(o1, image))
+	       | NO     => NO,
+	       red t2, o2,
+	       case i2 of
+		 YES image => YES(f(o2, image))
+	       | NO     => NO,
+	       red t3)
+          | red (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            N4(red t1, o1,
+	       case i1 of
+		 YES image => YES(f(o1, image))
+	       | NO     => NO,
+	       red t2, o2,
+	       case i2 of
+		 YES image => YES(f(o2, image))
+	       | NO     => NO,
+	       red t3, o3,
+	       case i3 of
+		 YES image => YES(f(o3, image))
+	       | NO     => NO,
+	       red t4)
+      in
+	fn MAP{size, order, mapping,eq} =>
+	MAP{size = size, order = order, eq=eq, mapping = red mapping}
+      end
+
+    exception Found of int
+
+    fun rank' (m as MAP{order, eq, ...}, ob) =
+      let
+	fun f (res, object, _) =
+	  if order(object, ob) then
+	      res + 1
+	  else
+	    if eq(object, ob) then
+		raise Found(res)
+	    else
+	      raise Undefined
+      in
+	(fold_in_order f (0, m); raise Undefined)
+	handle Found(res) => res
+      end
+
+    fun rank m ob = rank' (m, ob)
+
+    fun forall f =
+      let
+        fun red LEAF = true
+          | red (N2 (t1, o1, YES image, t2)) =
+	    f (o1, image) andalso red t1 andalso red t2
+          | red (N2 (t1, o1, NO, t2)) = red t1 andalso red t2
+          | red (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+	    (case i1 of
+	       YES image => f (o1, image)
+	     |  NO => true) andalso
+	       (case i2 of
+		  YES image => f (o2, image)
+		|  NO => true) andalso red t1 andalso red t2 andalso
+		  red t3
+          | red (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+	    (case i1 of
+	       YES image => f (o1, image)
+	     |  NO => true) andalso
+	       (case i2 of
+		  YES image => f (o2, image)
+		|  NO => true) andalso
+		  (case i3 of
+		     YES image => f (o3, image)
+		   |  NO => true) andalso
+		     red t1 andalso red t2 andalso red t3 andalso red t4
+      in
+	fn MAP {mapping, ...} => red mapping
+      end
+
+    fun exists f =
+      let
+        fun red LEAF = false
+          | red (N2 (t1, o1, YES image, t2)) =
+	    f (o1, image) orelse red t1 orelse red t2
+          | red (N2 (t1, o1, NO, t2)) = red t1 orelse red t2
+          | red (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+	    (case i1 of
+	       YES image => f (o1, image)
+	     |  NO => false) orelse
+	       (case i2 of
+		  YES image => f (o2, image)
+		|  NO => false) orelse red t1 orelse red t2 orelse
+		  red t3
+          | red (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+	    (case i1 of
+	       YES image => f (o1, image)
+	     |  NO => false) orelse
+	       (case i2 of
+		  YES image => f (o2, image)
+		|  NO => false) orelse
+		  (case i3 of
+		     YES image => f (o3, image)
+		   |  NO => false) orelse
+		     red t1 orelse red t2 orelse red t3 orelse red t4
+      in
+	fn MAP {mapping, ...} => red mapping
+      end
+
+    fun eq f (m1, m2) =
+      size m1 = size m2 andalso
+      ((forall (fn (ob, im) => f (apply'(m1, ob), im)) m2)
+       handle Undefined => false)
+
+    fun iterate f =
+      let
+        fun red LEAF = ()
+          | red (N2 (t1, o1, YES image, t2)) =
+	    (f(o1, image); red t1; red t2)
+          | red (N2 (t1, o1, NO, t2)) = (red t1; red t2)
+          | red (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+	    ((case i1 of
+		YES image => f(o1, image)
+	      | NO => ());
+		(case i2 of
+		   YES image => f(o2, image)
+		 | NO => ());
+		   red t1; red t2; red t3)
+          | red (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+	    ((case i1 of
+		YES image => f(o1, image)
+	      | NO => ());
+		(case i2 of
+		   YES image => f(o2, image)
+		 | NO => ());
+		   (case i3 of
+		      YES image => f(o3, image)
+		    | NO => ());
+		      red t1; red t2; red t3; red t4)
+      in
+	fn MAP {mapping, ...} => red mapping
+      end
+
+    fun iterate_ordered f =
+      let
+        fun red LEAF = ()
+          | red (N2 (t1, o1, YES image, t2)) =
+	    (red t1; f(o1, image); red t2)
+          | red (N2 (t1, o1, NO, t2)) = (red t1; red t2)
+          | red (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+	    (red t1;
+	     (case i1 of
+		YES image => f(o1, image)
+	      | NO => ());
+		red t2;
+		(case i2 of
+		   YES image => f(o2, image)
+		 | NO => ());
+		   red t3)
+          | red (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+	    (red t1;
+	     (case i1 of
+		YES image => f(o1, image)
+	      | NO => ());
+		red t2;
+		(case i2 of
+		   YES image => f(o2, image)
+		 | NO => ());
+		   red t3;
+		   (case i3 of
+		      YES image => f(o3, image)
+		    | NO => ());
+		      red t4)
+      in
+	fn MAP {mapping, ...} => red mapping
+      end
+
+    (*  === EXTRACT THE DOMAIN OF A MAP ===  *)
+
+    local
+      fun make (l, ob, _) = ob :: l
+    in
+      fun domain m = fold make ([], m)
+      fun domain_ordered m = fold_in_rev_order make ([], m)
+    end
+
+    (*  === EXTRACT THE RANGE OF A MAP ===  *)
+
+    local
+      fun make (l, _, im) = im :: l
+    in
+      fun range m = fold make ([], m)
+      fun range_ordered m = fold_in_rev_order make ([], m)
+    end
+
+    (*  === CONVERT MAP TO LIST ===  *)
+
+    local
+      fun make (l, ob, im) = (ob, im) :: l
+    in
+      fun to_list m = fold make ([], m)
+      fun to_list_ordered m = fold_in_rev_order make ([], m)
+    end
+
+    (* === PRINT A MAP === *)
+
+    fun string obP imP {start, domSep, itemSep, finish} m =
+      let
+	fun make ((doSep, res), ob, im) =
+	  (true, obP ob :: domSep :: imP im :: (if doSep then itemSep :: res else res))
+      in
+	implode(start :: #2 (fold_in_rev_order make ((false, [finish]), m)))
+      end
+
+  (* === Get the ordering relation === *)
+    fun get_ordering(MAP{order,...}) = order
+    fun get_equality(MAP{eq,...}) = eq
+
+  end
+@
+
+
+1.26
+log
+@Use MLWorks.Integer.makestring
+@
+text
+@d25 3
+a141 4
+    datatype 'image entry =
+      DEFINED of 'image
+    | UNDEFINED
+
+d145 1
+a145 1
+            'object * 'image entry *
+d148 1
+a148 1
+            'object * 'image entry *
+d150 1
+a150 1
+            'object * 'image entry *
+d153 1
+a153 1
+            'object * 'image entry *
+d155 1
+a155 1
+            'object * 'image entry *
+d157 1
+a157 1
+            'object * 'image entry *
+d190 6
+d198 5
+d205 1
+a205 1
+        val image' = DEFINED image
+a206 3
+	fun define UNDEFINED = image'
+	  | define (DEFINED _) = (sz := size; image')
+
+d220 2
+a221 3
+        datatype ('object, 'image) split_result =
+          YES of ('object, 'image) btree * 'object * 'image entry * ('object, 'image) btree
+        | NO  of ('object, 'image) btree
+d223 1
+a223 1
+        fun split (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, o3, i3, LEAF)) =
+d226 1
+a226 1
+	       YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d229 1
+a229 1
+		 NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d231 1
+a231 1
+		 YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d235 1
+a235 1
+		 NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))
+d237 1
+a237 1
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+d240 1
+a240 1
+		 NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+d242 2
+a243 2
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+          | split other_shape = NO other_shape
+d274 2
+a275 2
+                YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+              | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+d279 1
+a279 1
+                 N3 (t1, object, define i1, t2, o2, i2, t3)
+d282 2
+a283 2
+                    YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                  | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+d286 1
+a286 1
+                 N3 (t1, o1, i1, t2, object, define i2, t3)
+d289 2
+a290 2
+                   YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                 | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d298 1
+a298 1
+		 N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+d304 1
+a304 1
+		 N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+d309 1
+a309 1
+		 N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+d320 1
+a320 1
+		 N2 (LEAF, object, define i1, LEAF)
+d338 1
+a338 1
+                   N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+d343 1
+a343 1
+                   N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+d356 2
+a357 2
+		  of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		| NO t1' => N2 (scan t1', o1, i1, t2))
+d360 1
+a360 1
+		 N2 (t1, object, define i1, t2)
+d363 2
+a364 2
+                    of YES (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+		  | NO t2' => N2 (t1, o1, i1, scan t2')))
+d401 5
+a405 1
+        val image' = DEFINED image
+d407 2
+a410 3
+	fun define (ob,  UNDEFINED,  i) = DEFINED i
+	  | define (ob, DEFINED i1, i2) = DEFINED (sz := size; f(ob, i1, i2))
+
+d424 2
+a425 3
+        datatype ('object, 'image) split_result =
+          YES of ('object, 'image) btree * 'object * 'image entry * ('object, 'image) btree
+        | NO  of ('object, 'image) btree
+d427 1
+a427 1
+        fun split (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, o3, i3, LEAF)) =
+d430 1
+a430 1
+	       YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d433 1
+a433 1
+		 NO (N4 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d435 1
+a435 1
+		 YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d439 1
+a439 1
+		 NO (N4 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF, o3, i3, LEAF))
+d441 1
+a441 1
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+d444 1
+a444 1
+		 NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define(o3, i3, image), LEAF))
+d446 2
+a447 2
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+          | split other_shape = NO other_shape
+d478 2
+a479 2
+                YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+              | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+d483 1
+a483 1
+                 N3 (t1, object, define(o1, i1, image), t2, o2, i2, t3)
+d486 2
+a487 2
+                    YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                  | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+d490 1
+a490 1
+                 N3 (t1, o1, i1, t2, object, define(o2, i2, image), t3)
+d493 2
+a494 2
+                   YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                 | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d502 1
+a502 1
+		 N4 (t1, object, define(o1, i1, image), t2, o2, i2, t3, o3, i3, t4)
+d508 1
+a508 1
+		 N4 (t1, o1, i1, t2, object, define(o2, i2, image), t3, o3, i3, t4)
+d513 1
+a513 1
+		 N4 (t1, o1, i1, t2, o2, i2, t3, object, define(o3, i3, image), t4)
+d524 1
+a524 1
+		 N2 (LEAF, object, define(o1, i1, image), LEAF)
+d538 1
+a538 1
+                   N3 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF)
+d543 1
+a543 1
+                   N3 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF)
+d560 2
+a561 2
+		  of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		| NO t1' => N2 (scan t1', o1, i1, t2))
+d564 1
+a564 1
+		 N2 (t1, object, define(o1, i1, image), t2)
+d567 2
+a568 2
+                    of YES (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+		  | NO t2' => N2 (t1, o1, i1, scan t2')))
+d605 1
+a605 1
+     *  to be undefined is turned into UNDEFINED so that it will not be
+d619 1
+a619 1
+		   (sz := size - 1; N2 (t1, o1, UNDEFINED, t2))
+d628 1
+a628 1
+		   (sz := size - 1; N3 (t1, o1, UNDEFINED, t2, o2, i2, t3))
+d634 1
+a634 1
+		       (sz := size - 1; N3 (t1, o1, i1, t2, o2, UNDEFINED, t3))
+d643 1
+a643 1
+		   (sz := size - 1; N4 (t1, o1, UNDEFINED, t2, o2, i2, t3, o3, i3, t4))
+d649 1
+a649 1
+		       (sz := size - 1; N4 (t1, o1, i1, t2, o2, UNDEFINED, t3, o3, i3, t4))
+d655 1
+a655 1
+                         (sz := size - 1; N4 (t1, o1, i1, t2, o2, i2, t3, o3, UNDEFINED, t4))
+d686 1
+a686 1
+		   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+d696 1
+a696 1
+		   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+d701 1
+a701 1
+		   (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+d711 1
+a711 1
+		   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+d717 1
+a717 1
+		   (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+d722 1
+a722 1
+		   (case i3 of DEFINED image => image | UNDEFINED => raise Undefined)
+d742 2
+a743 2
+		      DEFINED image => image
+		    | UNDEFINED => default)
+d753 2
+a754 2
+		      DEFINED image => image
+		    | UNDEFINED => default)
+d761 2
+a762 2
+			  DEFINED image => image
+			| UNDEFINED => default)
+d772 2
+a773 2
+		      DEFINED image => image
+		    | UNDEFINED => default)
+d780 2
+a781 2
+			  DEFINED image => image
+			| UNDEFINED => default)
+d788 2
+a789 2
+			      DEFINED image => image
+			    | UNDEFINED => default)
+d808 1
+a808 4
+	       if eq(object, o1) then
+		   (case i1 of 
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d817 1
+a817 4
+		 if eq(object, o1) then
+		   (case i1 of 
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d821 1
+a821 4
+		 if eq(object, o2) then
+		   (case i2 of 
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d830 1
+a830 4
+		 if eq(object, o1) then
+		   (case i1 of 
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d835 1
+a835 4
+		 if eq(object, o2) then
+		   (case i2 of 
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d839 1
+a839 4
+		 if eq(object, o3) then
+		   (case i3 of
+                      DEFINED image => YES image 
+                    | UNDEFINED => NO)
+d854 1
+a854 4
+	       if eq(object, o1) then
+		   (case i1 of
+		      DEFINED image => YES image
+		    | UNDEFINED => NO)
+d862 1
+a862 4
+	       if eq(object, o1) then
+		   (case i1 of
+		      DEFINED image => YES image
+		    | UNDEFINED => NO)
+d867 1
+a867 4
+		   if eq(object, o2) then
+		       (case i2 of
+			  DEFINED image => YES image
+			| UNDEFINED => NO)
+d875 1
+a875 4
+	       if eq(object, o1) then
+		   (case i1 of
+		      DEFINED image => YES image
+		    | UNDEFINED => NO)
+d880 1
+a880 4
+		   if eq(object, o2) then
+		       (case i2 of
+			  DEFINED image => YES image
+			| UNDEFINED => NO)
+d885 1
+a885 4
+		       if eq(object, o3) then
+			   (case i3 of
+			      DEFINED image => YES image
+			    | UNDEFINED => NO)
+d974 1
+a974 1
+	    {mapping = N2(LEAF, ob, DEFINED im, LEAF), order = order, size = 1,eq=eq}
+d976 1
+a976 1
+	    {mapping = N3(LEAF, ob1, DEFINED im1, LEAF, ob2, DEFINED im2, LEAF),
+d992 1
+a992 1
+	      {mapping = N2(left_tree, ob, DEFINED im, right_tree),
+d1004 1
+a1004 1
+		| 1 => (N2(LEAF, ob, DEFINED im, LEAF), rest)
+d1008 1
+a1008 1
+			 (N3(LEAF, ob, DEFINED im, LEAF, ob', DEFINED im',
+d1014 2
+a1015 2
+			 (N4(LEAF, ob, DEFINED im, LEAF, ob', DEFINED im',
+			     LEAF, ob'', DEFINED im'', LEAF), rest)
+d1030 1
+a1030 1
+		 (N2(left_tree, ob, DEFINED im, right_tree), rest)
+d1058 1
+a1058 1
+          | red (done, N2 (t1, o1, DEFINED image, t2)) =
+d1060 1
+a1060 1
+          | red (done, N2 (t1, o1, UNDEFINED, t2)) =
+d1064 4
+a1067 4
+              val done'  = case i1 of DEFINED image =>
+		f(done, o1, image)  | UNDEFINED => done
+              val done'' = case i2 of DEFINED image =>
+		f(done', o2, image) | UNDEFINED => done'
+d1073 6
+a1078 6
+              val done'   = case i1 of DEFINED image =>
+		f(done, o1, image)   | UNDEFINED => done
+              val done''  = case i2 of DEFINED image =>
+		f(done', o2, image)  | UNDEFINED => done'
+              val done''' = case i3 of DEFINED image =>
+		f(done'', o3, image) | UNDEFINED => done''
+d1089 1
+a1089 1
+          | red (done, N2 (t1, o1, DEFINED image, t2)) =
+d1091 1
+a1091 1
+          | red (done, N2 (t1, o1, UNDEFINED, t2)) =
+d1097 2
+a1098 2
+		DEFINED image => red(f(done, o1, image), t2)
+	      | UNDEFINED     => red(done, t2)
+d1100 2
+a1101 2
+		DEFINED image => red(f(done, o2, image), t3)
+	      | UNDEFINED     => red(done, t3)
+d1109 2
+a1110 2
+		DEFINED image => red(f(done, o1, image), t2)
+	      | UNDEFINED     => red(done, t2)
+d1112 2
+a1113 2
+		DEFINED image => red(f(done, o2, image), t3)
+	      | UNDEFINED     => red(done, t3)
+d1115 2
+a1116 2
+		DEFINED image => red(f(done, o3, image), t4)
+	      | UNDEFINED     => red(done, t4)
+d1127 1
+a1127 1
+          | red (done, N2 (t1, o1, DEFINED image, t2)) =
+d1129 1
+a1129 1
+          | red (done, N2 (t1, o1, UNDEFINED, t2)) =
+d1135 2
+a1136 2
+		DEFINED image => red(f(done, o2, image), t2)
+	      | UNDEFINED     => red(done, t2)
+d1138 2
+a1139 2
+		DEFINED image => red(f(done, o1, image), t1)
+	      | UNDEFINED     => red(done, t1)
+d1147 2
+a1148 2
+		DEFINED image => red(f(done, o3, image), t3)
+	      | UNDEFINED     => red(done, t3)
+d1150 2
+a1151 2
+		DEFINED image => red(f(done, o2, image), t2)
+	      | UNDEFINED     => red(done, t2)
+d1153 2
+a1154 2
+		DEFINED image => red(f(done, o1, image), t1)
+	      | UNDEFINED     => red(done, t1)
+d1174 2
+a1175 2
+		 DEFINED image => DEFINED(f(o1, image))
+	       | UNDEFINED => UNDEFINED,
+d1180 2
+a1181 2
+		 DEFINED image => DEFINED(f(o1, image))
+	       | UNDEFINED     => UNDEFINED,
+d1184 2
+a1185 2
+		 DEFINED image => DEFINED(f(o2, image))
+	       | UNDEFINED     => UNDEFINED,
+d1190 2
+a1191 2
+		 DEFINED image => DEFINED(f(o1, image))
+	       | UNDEFINED     => UNDEFINED,
+d1194 2
+a1195 2
+		 DEFINED image => DEFINED(f(o2, image))
+	       | UNDEFINED     => UNDEFINED,
+d1198 2
+a1199 2
+		 DEFINED image => DEFINED(f(o3, image))
+	       | UNDEFINED     => UNDEFINED,
+d1228 1
+a1228 1
+          | red (N2 (t1, o1, DEFINED image, t2)) =
+d1230 1
+a1230 1
+          | red (N2 (t1, o1, UNDEFINED, t2)) = red t1 andalso red t2
+d1233 2
+a1234 2
+	       DEFINED image => f (o1, image)
+	     |  UNDEFINED => true) andalso
+d1236 2
+a1237 2
+		  DEFINED image => f (o2, image)
+		|  UNDEFINED => true) andalso red t1 andalso red t2 andalso
+d1241 2
+a1242 2
+	       DEFINED image => f (o1, image)
+	     |  UNDEFINED => true) andalso
+d1244 2
+a1245 2
+		  DEFINED image => f (o2, image)
+		|  UNDEFINED => true) andalso
+d1247 2
+a1248 2
+		     DEFINED image => f (o3, image)
+		   |  UNDEFINED => true) andalso
+d1257 1
+a1257 1
+          | red (N2 (t1, o1, DEFINED image, t2)) =
+d1259 1
+a1259 1
+          | red (N2 (t1, o1, UNDEFINED, t2)) = red t1 orelse red t2
+d1262 2
+a1263 2
+	       DEFINED image => f (o1, image)
+	     |  UNDEFINED => false) orelse
+d1265 2
+a1266 2
+		  DEFINED image => f (o2, image)
+		|  UNDEFINED => false) orelse red t1 orelse red t2 orelse
+d1270 2
+a1271 2
+	       DEFINED image => f (o1, image)
+	     |  UNDEFINED => false) orelse
+d1273 2
+a1274 2
+		  DEFINED image => f (o2, image)
+		|  UNDEFINED => false) orelse
+d1276 2
+a1277 2
+		     DEFINED image => f (o3, image)
+		   |  UNDEFINED => false) orelse
+d1291 1
+a1291 1
+          | red (N2 (t1, o1, DEFINED image, t2)) =
+d1293 1
+a1293 1
+          | red (N2 (t1, o1, UNDEFINED, t2)) = (red t1; red t2)
+d1296 2
+a1297 2
+		DEFINED image => f(o1, image)
+	      | UNDEFINED => ());
+d1299 2
+a1300 2
+		   DEFINED image => f(o2, image)
+		 | UNDEFINED => ());
+d1304 2
+a1305 2
+		DEFINED image => f(o1, image)
+	      | UNDEFINED => ());
+d1307 2
+a1308 2
+		   DEFINED image => f(o2, image)
+		 | UNDEFINED => ());
+d1310 2
+a1311 2
+		      DEFINED image => f(o3, image)
+		    | UNDEFINED => ());
+d1320 1
+a1320 1
+          | red (N2 (t1, o1, DEFINED image, t2)) =
+d1322 1
+a1322 1
+          | red (N2 (t1, o1, UNDEFINED, t2)) = (red t1; red t2)
+d1326 2
+a1327 2
+		DEFINED image => f(o1, image)
+	      | UNDEFINED => ());
+d1330 2
+a1331 2
+		   DEFINED image => f(o2, image)
+		 | UNDEFINED => ());
+d1336 2
+a1337 2
+		DEFINED image => f(o1, image)
+	      | UNDEFINED => ());
+d1340 2
+a1341 2
+		   DEFINED image => f(o2, image)
+		 | UNDEFINED => ());
+d1344 2
+a1345 2
+		      DEFINED image => f(o3, image)
+		    | UNDEFINED => ());
+@
+
+
+1.25
+log
+@More binary searching
+Small optimization to scan_n3_no 4
+Removed global ref
+@
+text
+@d25 5
+d938 1
+a938 12
+    fun makestring anint =
+      let
+	val sign = if anint < 0 then "~" else ""
+	val anint = if anint < 0 then 0 - anint else anint
+	val new_int = anint div 10
+      in
+	sign ^
+	(if new_int > 0 then makestring new_int
+	else
+	   "") ^
+	   chr ((anint mod 10) + 48)
+      end
+@
+
+
+1.24
+log
+@Change raise Bind to Crash.impossible
+@
+text
+@d25 3
+d186 3
+a188 1
+    val sz = ref 0
+a189 2
+    fun define' (MAP {size, order, mapping, eq}, (object, image)) =
+      let
+d260 20
+a279 34
+	fun scan_n3_no_n4 (LEAF, o1, i1, LEAF, o2, i2, LEAF) =
+	  (if order(object, o1) then
+	     N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+	   else
+	     if order(object, o2) then
+	       if eq(object, o1) then
+		 N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+	     else
+	       if eq(object, o2) then
+		 N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+	  | scan_n3_no_n4 (t1, o1, i1, t2, o2, i2, t3) =
+            (if order(object, o1) then
+	       (case split t1 of
+		  YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		| NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+	     else
+	       if order(object, o2) then
+		 if eq(object, o1) then
+		   N3 (t1, object, define i1, t2, o2, i2, t3)
+		 else
+		   (case split t2 of
+		      YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		    | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+	       else
+		 if eq(object, o2) then
+		   N3 (t1, o1, i1, t2, object, define i2, t3)
+		 else
+		   case split t3 of
+		     YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		   | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+a316 2
+          | scan (N3 (value as (LEAF, o1, i1, LEAF, o2, i2, LEAF))) =
+	    scan_n3_no_n4 value
+d321 14
+a380 1
+	val _ = sz := (size + 1)
+d386 1
+a386 200
+    fun define (MAP {size, order, mapping,eq}, object, image) =
+      let
+        val image' = DEFINED image
+
+	fun define UNDEFINED = image'
+	  | define (DEFINED _) = (sz := size; image')
+
+        (*  == Four-node splitting ==
+         *
+         *  When a leaf four-node is encountered and the new object and
+         *  image need to be inserted the node must be split into two
+         *  smaller nodes, and the `middle' node passed back for insertion
+         *  into the parent.  For example:
+         *
+         *             M                  M S
+         *           /   \   + Q =      /  |  \
+         *          /     \            /   |   \
+         *         A     P S V        A   P Q   V
+         *)
+
+        datatype ('object, 'image) split_result =
+          YES of ('object, 'image) btree * 'object * 'image entry * ('object, 'image) btree
+        | NO  of ('object, 'image) btree
+
+        fun split (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, o3, i3, LEAF)) =
+          (if order(object, o2) then
+	     if order(object, o1) then
+	       YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o1) then
+		 NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+	       else
+		 YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))
+	       else
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+	     else
+	       if eq(object, o3) then
+		 NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+	       else
+		 YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+          | split other_shape = NO other_shape
+
+        (*  == Scan and insert ==
+         *
+         *  The `scan' function does most of the work of insertion into the
+         *  tree.  New mappings are only ever inserted at the leaves, but
+         *  this might result in a mapping being passed back up to a parent
+         *  node (see `split' above).  The problem occurs when a mapping is
+         *  passed back for insertion into a four-node, causing another
+         *  split, and so on.  To avoid this situation, which requires a
+         *  truly recursive definition, all four-nodes are split on the way
+         *  down the tree, but without increasing its depth.  The two
+         *  transformations are (excluding symmetries):
+         *
+         *      D             D H           H J             H J T
+         *    /   \     ->   / | \         / | \      ->   / | | \
+         *   /     \        /  |  \       /  |  \         /  | |  \
+         *  A     E H N    A   E   N     A   I  L T Z    A   I L   Z
+         *
+         *  When a two-node or three-node leaf is reached it is simply
+         *  expanded with the new object.  Four-node leaves are spotted from
+         *  their parents and split if necessary (see `split' above).
+         *)
+
+            (* Four-node splitting transformations.  Notice the way in which *)
+            (* the order of the trees, objects, and images is preserved *)
+            (* despite changes to the shape of the tree. *)
+
+	fun scan_n3_no_n4 (LEAF, o1, i1, LEAF, o2, i2, LEAF) =
+	  (if order(object, o1) then
+	     N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+	   else
+	     if order(object, o2) then
+	       if eq(object, o1) then
+		 N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+	     else
+	       if eq(object, o2) then
+		 N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+	  | scan_n3_no_n4 (t1, o1, i1, t2, o2, i2, t3) =
+            (if order(object, o1) then
+	       (case split t1 of
+		  YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		| NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+	     else
+	       if order(object, o2) then
+		 if eq(object, o1) then
+		   N3 (t1, object, define i1, t2, o2, i2, t3)
+		 else
+		   (case split t2 of
+		      YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		    | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+	       else
+		 if eq(object, o2) then
+		   N3 (t1, o1, i1, t2, object, define i2, t3)
+		 else
+		   case split t3 of
+		     YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		   | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+
+	and scan_n4_no_n4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4) =
+	  (if order(object, o2) then
+	     if order(object, o1) then
+	       N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+	     else
+	       if eq(object, o1) then
+		 N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+	   else
+	     if order(object, o3) then
+	       if eq(object, o2) then
+		 N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+	     else
+	       if eq(object, o3) then
+		 N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+	       else
+		 N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+
+        and scan (N2 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5)) =
+	  scan_n3_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5)
+          | scan (N2 (LEAF, o1, i1, LEAF)) =
+            (if order(object, o1) then
+	       N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+	     else
+	       if eq(object, o1) then
+		 N2 (LEAF, object, define i1, LEAF)
+	       else
+		 N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+
+          | scan (N2 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5))) =
+	    scan_n3_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5))
+          | scan (N3 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)) =
+	    scan_n4_no_n4(N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)
+          | scan (N3 (value as (LEAF, o1, i1, LEAF, o2, i2, LEAF))) =
+	    scan_n3_no_n4 value
+          | scan (N3 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5), o5, i5, t6)) =
+	    scan_n4_no_n4(t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5), o5, i5, t6)
+          | scan (N3 (t1, o1, i1, t2, o2, i2, N4 (t3, o3, i3, t4, o4, i4, t5, o5, i5, t6))) =
+	    scan_n4_no_n4(t1, o1, i1, t2, o2, i2, N2 (t3, o3, i3, t4), o4, i4, N2 (t5, o5, i5, t6))
+
+            (* Leaf-level insertion. *)
+
+          | scan (N3 value) = scan_n3_no_n4 value
+
+            (* Scanning other levels and four-node leaf splitting. *)
+
+          | scan (N2 (t1, o1, i1, t2)) =
+            (if order(object, o1) then
+	       (case split t1
+		  of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		| NO t1' => N2 (scan t1', o1, i1, t2))
+	     else
+	       if eq(object, o1) then
+		 N2 (t1, object, define i1, t2)
+	       else
+		 (case split t2
+                    of YES (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+		  | NO t2' => N2 (t1, o1, i1, scan t2')))
+
+            (* The child of a four-node cannot be another four-node (they *)
+            (* are broken up in other cases above) so there's no need to *)
+            (* check for splits in the children of a four-node. *)
+
+          | scan (N4 value) = scan_n4_no_n4 value
+
+            (* This case should never occur if the above rules are correct *)
+            (* and the tree is properly balanced.  I've included a rule *)
+            (* which will allow the tree to continue functioning in an *)
+            (* unbalanced manner. *)
+
+          | scan LEAF = N2 (LEAF, object, image', LEAF)
+
+        (*  == Insertion at the root ==
+         *
+         *  The only way in which the tree can grow deeper is by insertion
+         *  or splitting at the root.  A four-node at the root is always
+         *  split into three two-nodes, adding one extra level.  An empty
+         *  tree is converted into a two-node in the obvious manner.
+         *)
+
+        fun insert (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            scan (N2 (N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4)))
+          | insert LEAF = N2 (LEAF, object, image', LEAF)
+          | insert other_shape = scan other_shape
+
+	val _ = sz := (size + 1)
+	val mapping' = insert mapping
+      in
+        MAP {size = !sz, order = order, eq=eq, mapping = mapping'}
+      end
+d392 2
+d462 20
+a481 34
+	fun scan_n3_no_n4 (LEAF, o1, i1, LEAF, o2, i2, LEAF) =
+	  (if order(object, o1) then
+	     N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+	   else
+	     if order(object, o2) then
+	       if eq(object, o1) then
+		 N3 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+	     else
+	       if eq(object, o2) then
+		 N3 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF)
+	       else
+		 N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+	  | scan_n3_no_n4 (t1, o1, i1, t2, o2, i2, t3) =
+            (if order(object, o1) then
+	       (case split t1 of
+		  YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		| NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+	     else
+	       if order(object, o2) then
+		 if eq(object, o1) then
+		   N3 (t1, object, define(o1, i1, image), t2, o2, i2, t3)
+		 else
+		   (case split t2 of
+		      YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		    | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+	       else
+		 if eq(object, o2) then
+		   N3 (t1, o1, i1, t2, object, define(o2, i2, image), t3)
+		 else
+		   case split t3 of
+		     YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		   | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d519 14
+a532 2
+          | scan (N3 (value as (LEAF, o1, i1, LEAF, o2, i2, LEAF))) =
+	    scan_n3_no_n4 value
+a582 1
+	val _ = sz := (size + 1)
+d598 1
+a645 1
+	val _ = sz := size
+d796 64
+d915 1
+@
+
+
+1.23
+log
+@Added tryApply'Eq, for use in _realise.
+@
+text
+@d25 3
+d1195 1
+a1195 2
+		   | _ => (output(std_out, "Bad result from sub_from'\n");
+			   raise Bind)
+d1201 1
+a1201 2
+	  | sub_from' _ = (output(std_out, "Bad list to sub_from'\n");
+			   raise Bind)
+@
+
+
+1.23.1.1
+log
+@Fork for bug fixing
+@
+text
+@a24 3
+ *  Revision 1.23  1993/06/15  16:50:29  daveb
+ *  Added tryApply'Eq, for use in _realise.
+ *
+@
+
+
+1.22
+log
+@Removed integer parameter
+@
+text
+@d25 3
+d1048 4
+@
+
+
+1.21
+log
+@Improved search order for 3 and 4 nodes to binary chop
+@
+text
+@d25 3
+a101 1
+require "../utils/integer";
+a105 1
+               structure Integer : INTEGER
+@
+
+
+1.20
+log
+@Reordered tests when scanning tree to do inequalities before equalities.
+Improves speed both of insertion and lookup
+@
+text
+@d25 4
+d203 3
+a205 5
+          (if order(object, o1) then
+	     YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+	   else
+	     if eq(object, o1) then
+	       NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d207 3
+a209 1
+	       if order(object, o2) then
+d211 4
+d216 6
+a221 10
+		 if eq(object, o2) then
+		   NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))
+		 else
+		   if order(object, o3) then
+		     YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+		   else
+		     if eq(object, o3) then
+		       NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+		     else
+		       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+d254 5
+a258 2
+	     if eq(object, o1) then
+	       N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+d260 2
+a261 2
+	       if order(object, o2) then
+		 N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+d263 1
+a263 4
+		 if eq(object, o2) then
+		   N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+		 else
+		   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d270 4
+a273 4
+	       if eq(object, o1) then
+		 N3 (t1, object, define i1, t2, o2, i2, t3)
+	       else
+		 if order(object, o2) then
+d276 4
+a279 1
+		      | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+d281 3
+a283 6
+		   if eq(object, o2) then
+		       N3 (t1, o1, i1, t2, object, define i2, t3)
+		   else
+		     case split t3 of
+		       YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		     | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d286 2
+a287 1
+	  (if order(object, o1) then
+d289 5
+d295 5
+a299 2
+	     if eq(object, o1) then
+		 N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+d301 2
+a302 2
+	       if order(object, o2) then
+		   N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+d304 1
+a304 10
+		 if eq(object, o2) then
+		     N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+		 else
+		   if order(object, o3) then
+		       N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+		   else
+		     if eq(object, o3) then
+			 N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+		     else
+		       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+d310 1
+a310 1
+		 N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+d313 1
+a313 1
+		   N2 (LEAF, object, define i1, LEAF)
+d336 3
+a338 3
+		 (case split t1
+		    of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		  | NO t1' => N2 (scan t1', o1, i1, t2))
+d341 1
+a341 1
+		   N2 (t1, object, define i1, t2)
+a346 1
+
+d354 3
+a356 3
+          (* and the tree is properly balanced.  I've included a rule *)
+          (* which will allow the tree to continue functioning in an *)
+          (* unbalanced manner. *)
+a359 1
+
+d404 2
+a405 1
+          (if order(object, o1) then
+d407 5
+d413 5
+a417 2
+	     if eq(object, o1) then
+		 NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d419 2
+a420 2
+	       if order(object, o2) then
+		   YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d422 1
+a422 10
+		 if eq(object, o2) then
+		     NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))
+		 else
+		   if order(object, o3) then
+		       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+		   else
+		     if eq(object, o3) then
+			 NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+		     else
+		       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+a424 1
+
+d453 1
+a453 1
+	       N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+d455 2
+a456 1
+	     if eq(object, o1) then
+d458 2
+d461 2
+a462 2
+	       if order(object, o2) then
+		   N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+d464 1
+a464 4
+		 if eq(object, o2) then
+		     N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+		 else
+		   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d467 3
+a469 3
+		 (case split t1 of
+		    YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		  | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+d471 2
+a472 1
+	       if eq(object, o1) then
+d474 4
+d479 2
+a480 4
+		 if order(object, o2) then
+		     (case split t2 of
+			YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		      | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+d482 3
+a484 6
+		   if eq(object, o2) then
+		       N3 (t1, o1, i1, t2, object, define i2, t3)
+		   else
+		     case split t3 of
+		       YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		     | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d487 2
+a488 1
+	  (if order(object, o1) then
+d490 5
+d496 5
+a500 2
+	     if eq(object, o1) then
+		 N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+d502 2
+a503 2
+	       if order(object, o2) then
+		   N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+d505 1
+a505 10
+		 if eq(object, o2) then
+		     N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+		 else
+		   if order(object, o3) then
+		       N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+		   else
+		     if eq(object, o3) then
+			 N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+		     else
+		       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+d511 1
+a511 1
+		 N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+d514 1
+a514 1
+		   N2 (LEAF, object, define i1, LEAF)
+d537 3
+a539 3
+		 (case split t1
+		    of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		  | NO t1' => N2 (scan t1', o1, i1, t2))
+d542 1
+a542 1
+		   N2 (t1, object, define i1, t2)
+a560 1
+
+d605 2
+a606 1
+          (if order(object, o1) then
+d608 5
+d614 5
+a618 2
+	     if eq(object, o1) then
+		 NO  (N4 (LEAF, object, define(o1,i1,image), LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d620 2
+a621 2
+	       if order(object, o2) then
+		   YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+d623 1
+a623 10
+		 if eq(object, o2) then
+		     NO  (N4 (LEAF, o1, i1, LEAF, object, define(o2,i2,image), LEAF, o3, i3, LEAF))
+		 else
+		   if order(object, o3) then
+		       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+		   else
+		     if eq(object, o3) then
+			 NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define(o3,i3,image), LEAF))
+		     else
+		       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+a625 1
+
+d654 1
+a654 1
+	       N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+d656 5
+a660 2
+	     if eq(object, o1) then
+		 N3 (LEAF, object, define(o1,i1,image), LEAF, o2, i2, LEAF)
+d662 2
+a663 2
+	       if order(object, o2) then
+		   N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+d665 1
+a665 4
+		 if eq(object, o2) then
+		     N3 (LEAF, o1, i1, LEAF, object, define(o2,i2,image), LEAF)
+		 else
+		   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d668 3
+a670 3
+		 (case split t1 of
+		    YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		  | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+d672 7
+a678 2
+	       if eq(object, o1) then
+		   N3 (t1, object, define(o1,i1,image), t2, o2, i2, t3)
+d680 2
+a681 4
+		 if order(object, o2) then
+		     (case split t2 of
+			YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		      | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+d683 3
+a685 6
+		   if eq(object, o2) then
+		       N3 (t1, o1, i1, t2, object, define(o2,i2,image), t3)
+		   else
+		     case split t3 of
+                       YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                     | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+d688 2
+a689 1
+	  (if order(object, o1) then
+d691 5
+d697 5
+a701 2
+	     if eq(object, o1) then
+		 N4 (t1, object, define(o1,i1,image), t2, o2, i2, t3, o3, i3, t4)
+d703 2
+a704 2
+	       if order(object, o2) then
+		   N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+d706 1
+a706 10
+		 if eq(object, o2) then
+		     N4 (t1, o1, i1, t2, object, define(o2,i2,image), t3, o3, i3, t4)
+		 else
+		   if order(object, o3) then
+		       N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+		   else
+		     if eq(object, o3) then
+			 N4 (t1, o1, i1, t2, o2, i2, t3, object, define(o3,i3,image), t4)
+		     else
+		       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+d712 1
+a712 1
+		 N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+d715 1
+a715 1
+		   N2 (LEAF, object, define(o1,i1,image), LEAF)
+d738 3
+a740 3
+		 (case split t1
+		    of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+		  | NO t1' => N2 (scan t1', o1, i1, t2))
+d743 1
+a743 1
+		   N2 (t1, object, define(o1,i1,image), t2)
+a748 1
+
+a761 1
+
+d872 1
+a872 1
+		 find t1
+d874 2
+a875 1
+	       if eq(object, o1) then
+d877 2
+d880 2
+a881 2
+                 if order(object, o2) then
+		     find t2
+d883 1
+a883 4
+		   if eq(object, o2) then
+		       (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+		   else
+		     find t3)
+d886 4
+a889 3
+            (if order(object, o1) then
+                   find t1
+               else
+d891 1
+a891 1
+		     (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+d893 12
+a904 13
+		   if order(object, o2) then
+			 find t2
+		     else
+		       if eq(object, o2) then
+			   (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+		       else
+			 if order(object, o3) then
+			       find t3
+			   else
+			     if eq(object, o3) then
+				 (case i3 of DEFINED image => image | UNDEFINED => raise Undefined)
+			     else
+			       find t4)
+@
+
+
+1.19
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d2 1
+a2 1
+ *   ===    BALACNED TREE    ===
+d25 3
+d94 4
+a97 4
+require "crash";
+require "integer";
+require "newmap_datatypes";
+require "newmap";
+d158 2
+a159 2
+    fun empty' (op<=) =
+        MAP {size = 0, order = (op<=), eq = (op=), mapping = LEAF}
+d199 19
+a217 25
+          (if eq(object, o1)
+             then
+               NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+           else
+             if order (object, o1)
+               then
+                 YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+             else
+               if eq(object, o2)
+                 then
+                   NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))                  
+               else
+                 if order (object, o2)
+                   then
+                     YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+                 else
+                   if eq(object, o3)
+                     then
+                       NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+                   else
+                     if order (object, o3)
+                       then
+                         YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+                     else 
+                       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+d219 1
+a219 2
+            
+            
+d247 13
+a259 17
+	  (if eq(object, o1) 
+             then
+               N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+           else  
+             if order (object, o1) 
+               then
+                 N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+             else
+	       if eq(object, o2)
+                 then
+                   N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d261 20
+a280 24
+            (if eq(object, o1) 
+               then
+                 N3 (t1, object, define i1, t2, o2, i2, t3)
+             else
+               if order (object, o1) 
+                 then
+                   (case split t1 of
+                      YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+                    | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+               else
+		 if eq(object, o2) 
+                   then
+                     N3 (t1, o1, i1, t2, object, define i2, t3)
+                 else
+                       if order (object, o2) 
+                         then
+                           (case split t2 of
+                              YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                            | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+                       else
+                         case split t3 of
+                           YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                         | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+               
+d282 20
+a301 26
+	  (if eq(object, o1) 
+             then
+               N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+           else
+             if order (object, o1) 
+               then
+                 N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+             else
+	       if eq(object, o2)
+                 then
+                   N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+                 else
+		   if eq(object, o3)
+                     then
+                       N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+                   else
+                     if order (object, o3)
+                       then
+                         N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+                     else
+                       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+             
+d305 8
+a312 10
+            (if eq(object, o1)
+               then
+                 N2 (LEAF, object, define i1, LEAF)
+             else
+               if order (object, o1)
+                 then
+                   N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+               else
+                 N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+               
+d331 9
+a339 11
+            (if eq(object, o1)
+               then
+                 N2 (t1, object, define i1, t2)
+             else
+               if order (object, o1)
+                 then
+                   (case split t1
+                      of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+                       | NO t1' => N2 (scan t1', o1, i1, t2))
+               else
+                 (case split t2
+d341 1
+a341 2
+                     | NO t2' => N2 (t1, o1, i1, scan t2')))
+               
+d343 1
+d354 1
+a354 1
+            
+d402 19
+a420 25
+          (if eq(object, o1)
+             then
+               NO  (N4 (LEAF, object, define i1, LEAF, o2, i2, LEAF, o3, i3, LEAF))
+           else
+             if order (object, o1)
+               then
+                 YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+             else
+               if eq(object, o2)
+                 then
+                   NO  (N4 (LEAF, o1, i1, LEAF, object, define i2, LEAF, o3, i3, LEAF))                  
+               else
+                 if order (object, o2)
+                   then
+                     YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+                 else
+                   if eq(object, o3)
+                     then
+                       NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define i3, LEAF))
+                   else
+                     if order (object, o3)
+                       then
+                         YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+                     else 
+                       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+d422 2
+a423 2
+            
+            
+d451 13
+a463 17
+	  (if eq(object, o1) 
+             then
+               N3 (LEAF, object, define i1, LEAF, o2, i2, LEAF)
+           else  
+             if order (object, o1) 
+               then
+                 N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+             else
+	       if eq(object, o2)
+                 then
+                   N3 (LEAF, o1, i1, LEAF, object, define i2, LEAF)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d465 20
+a484 24
+            (if eq(object, o1) 
+               then
+                 N3 (t1, object, define i1, t2, o2, i2, t3)
+             else
+               if order (object, o1) 
+                 then
+                   (case split t1 of
+                      YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+                    | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+               else
+		 if eq(object, o2) 
+                   then
+                     N3 (t1, o1, i1, t2, object, define i2, t3)
+                 else
+                       if order (object, o2) 
+                         then
+                           (case split t2 of
+                              YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                            | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+                       else
+                         case split t3 of
+                           YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                         | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+               
+d486 20
+a505 26
+	  (if eq(object, o1) 
+             then
+               N4 (t1, object, define i1, t2, o2, i2, t3, o3, i3, t4)
+           else
+             if order (object, o1) 
+               then
+                 N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+             else
+	       if eq(object, o2)
+                 then
+                   N4 (t1, o1, i1, t2, object, define i2, t3, o3, i3, t4)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+                 else
+		   if eq(object, o3)
+                     then
+                       N4 (t1, o1, i1, t2, o2, i2, t3, object, define i3, t4)
+                   else
+                     if order (object, o3)
+                       then
+                         N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+                     else
+                       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+             
+d509 7
+a515 9
+            (if eq(object, o1)
+               then
+   N2 (LEAF, object, define i1, LEAF)
+             else
+                   if order (object, o1)
+                     then
+                       N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+                     else
+                N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+d533 1
+a533 1
+            
+d535 9
+a543 11
+            (if eq(object, o1)
+               then
+                 N2 (t1, object, define i1, t2)
+             else
+               if order (object, o1)
+                 then
+                   (case split t1
+                      of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+                       | NO t1' => N2 (scan t1', o1, i1, t2))
+               else
+                 (case split t2
+d545 2
+a546 2
+                     | NO t2' => N2 (t1, o1, i1, scan t2')))
+               
+d605 19
+a623 25
+          (if eq(object, o1)
+             then
+               NO  (N4 (LEAF, object, define(o1,i1,image), LEAF, o2, i2, LEAF, o3, i3, LEAF))
+           else
+             if order (object, o1)
+               then
+                 YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+             else
+               if eq(object, o2)
+                 then
+                   NO  (N4 (LEAF, o1, i1, LEAF, object, define(o2,i2,image), LEAF, o3, i3, LEAF))                  
+               else
+                 if order (object, o2)
+                   then
+                     YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+                 else
+                   if eq(object, o3)
+                     then
+                       NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define(o3,i3,image), LEAF))
+                   else
+                     if order (object, o3)
+                       then
+                         YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+                     else 
+                       YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+d625 2
+a626 2
+            
+            
+d654 13
+a666 17
+	  (if eq(object, o1) 
+             then
+               N3 (LEAF, object, define(o1,i1,image), LEAF, o2, i2, LEAF)
+           else  
+             if order (object, o1) 
+               then
+                 N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+             else
+	       if eq(object, o2)
+                 then
+                   N3 (LEAF, o1, i1, LEAF, object, define(o2,i2,image), LEAF)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+                 else
+                   N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d668 17
+a684 21
+            (if eq(object, o1) 
+               then
+                 N3 (t1, object, define(o1,i1,image), t2, o2, i2, t3)
+             else
+               if order (object, o1) 
+                 then
+                   (case split t1 of
+                      YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+                    | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+               else
+		 if eq(object, o2) 
+                   then
+                     N3 (t1, o1, i1, t2, object, define(o2,i2,image), t3)
+                 else
+                   if order (object, o2) 
+                     then
+                       (case split t2 of
+                            YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                          | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+                   else
+                     case split t3 of
+d687 1
+a687 1
+               
+d689 20
+a708 26
+	  (if eq(object, o1) 
+             then
+               N4 (t1, object, define(o1,i1,image), t2, o2, i2, t3, o3, i3, t4)
+           else
+             if order (object, o1) 
+               then
+                 N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+             else
+	       if eq(object, o2)
+                 then
+                   N4 (t1, o1, i1, t2, object, define(o2,i2,image), t3, o3, i3, t4)
+               else
+                 if order (object, o2)
+                   then
+                     N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+                 else
+		   if eq(object, o3)
+                     then
+                       N4 (t1, o1, i1, t2, o2, i2, t3, object, define(o3,i3,image), t4)
+                   else
+                     if order (object, o3)
+                       then
+                         N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+                     else
+                       N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+             
+d712 7
+a718 9
+            (if eq(object, o1)
+               then
+                 N2 (LEAF, object, define(o1,i1,image), LEAF)
+             else
+               if order (object, o1)
+                 then
+                   N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+               else
+                 N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+d736 1
+a736 1
+            
+d738 9
+a746 11
+            (if eq(object, o1)
+               then
+                 N2 (t1, object, define(o1,i1,image), t2)
+             else
+               if order (object, o1)
+                 then
+                   (case split t1
+                      of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+                       | NO t1' => N2 (scan t1', o1, i1, t2))
+               else
+                 (case split t2
+d748 3
+a750 3
+                     | NO t2' => N2 (t1, o1, i1, scan t2')))
+               
+               
+d797 8
+a804 10
+            (if eq(object, o1)
+               then
+                 (sz := size - 1; N2 (t1, o1, UNDEFINED, t2))
+             else
+               if order (object, o1)
+                 then
+                   N2 (delete t1, o1, i1, t2)
+               else
+                 N2 (t1, o1, i1, delete t2))
+               
+d806 14
+a819 18
+            (if eq(object, o1)
+               then
+                 (sz := size - 1; N3 (t1, o1, UNDEFINED, t2, o2, i2, t3))
+             else
+               if order (object, o1)
+                 then 
+                   N3 (delete t1, o1, i1, t2, o2, i2, t3)
+               else
+                 if eq(object, o2)
+                   then
+                     (sz := size - 1; N3 (t1, o1, i1, t2, o2, UNDEFINED, t3))
+                 else
+                   if order (object, o2)
+                     then
+                       N3 (t1, o1, i1, delete t2, o2, i2, t3)
+                   else
+                     N3 (t1, o1, i1, t2, o2, i2, delete t3))
+               
+d821 16
+a836 18
+            (if eq(object, o1)
+               then
+                 (sz := size - 1; N4 (t1, o1, UNDEFINED, t2, o2, i2, t3, o3, i3, t4))
+             else
+               if order (object, o1)
+                 then
+                   N4 (delete t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+               else
+                 if eq(object, o2)
+                   then
+                     (sz := size - 1; N4 (t1, o1, i1, t2, o2, UNDEFINED, t3, o3, i3, t4))
+                 else
+                   if order (object, o2)
+                     then
+                       N4 (t1, o1, i1, delete t2, o2, i2, t3, o3, i3, t4)
+                   else
+                     if eq(object, o3)
+                       then
+d839 2
+a840 6
+                       if order (object, o3)
+                         then
+                           N4 (t1, o1, i1, t2, o2, i2, delete t3, o3, i3, t4)
+                       else
+                         N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, delete t4))
+               
+d865 5
+a869 3
+            (if eq(object, o1)
+               then
+                 (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+d871 1
+a871 5
+               if order (object, o1)
+                 then 
+                   find t1
+               else
+                 find t2)
+d874 13
+a886 17
+            (if eq(object, o1)
+               then
+                 (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 if eq(object, o2)
+                   then
+                     (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)                 
+                 else 
+                   if order (object, o2)
+                     then
+                       find t2
+                   else
+                     find t3)
+d889 1
+a889 6
+            (if eq(object, o1)
+               then
+                 (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+             else
+               if order (object, o1)
+                 then
+d892 17
+a908 18
+                 if eq(object, o2)
+                   then
+                     (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+                 else    
+                   if order (object, o2)
+                     then
+                       find t2
+                   else
+                     if eq(object, o3)
+                       then
+                         (case i3 of DEFINED image => image | UNDEFINED => raise Undefined)
+                     else  
+                       if order (object, o3)
+                         then
+                           find t3
+                       else
+                         find t4)
+               
+d920 9
+a928 11
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => image
+                  | UNDEFINED => default)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 find t2)
+d931 18
+a948 22
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => image
+                  | UNDEFINED => default)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 if eq(object, o2)
+                   then
+                     (case i2 of
+                        DEFINED image => image
+                      | UNDEFINED => default)
+                 else
+                   if  order (object, o2)
+                     then
+                       find t2
+                   else
+                     find t3)
+               
+d950 26
+a975 32
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => image
+                  | UNDEFINED => default)
+             else 
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 if eq(object, o2)
+                   then
+                     (case i2 of
+                        DEFINED image => image
+                      | UNDEFINED => default)
+                 else
+                   if order (object, o2)
+                     then
+                       find t2
+                   else
+                     if eq(object, o3)
+                       then
+                         (case i3 of
+                            DEFINED image => image
+                          | UNDEFINED => default)
+                     else
+                       if order (object, o3)
+                         then
+                           find t3
+                       else
+                         find t4)
+               
+d988 9
+a996 11
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => YES image
+                  | UNDEFINED => NO)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 find t2)
+d999 17
+a1015 21
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => YES image
+                  | UNDEFINED => NO)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 if eq(object, o2)
+                   then
+                     (case i2 of
+                        DEFINED image => YES image
+                      | UNDEFINED => NO)
+                 else
+                   if order (object, o2)
+                     then
+                       find t2
+                   else
+                     find t3)
+d1018 26
+a1043 32
+            (if eq(object, o1)
+               then
+                 (case i1 of
+                    DEFINED image => YES image
+                  | UNDEFINED => NO)
+             else
+               if order (object, o1)
+                 then
+                   find t1
+               else
+                 if eq(object, o2)
+                   then
+                     (case i2 of
+                        DEFINED image => YES image
+                      | UNDEFINED => NO)
+                 else
+                   if order (object, o2)
+                     then
+                       find t2
+                   else
+                     if eq(object, o3)
+                       then
+                         (case i3 of
+                            DEFINED image => YES image
+                          | UNDEFINED => NO)
+                     else
+                       if order (object, o3)
+                         then
+                           find t3
+                       else
+                         find t4)
+               
+d1067 1
+a1067 2
+	(if new_int > 0
+	  then makestring new_int
+d1078 1
+a1078 2
+	    if order(x, x') orelse eq(x,x')
+              then
+d1086 1
+a1086 2
+	    if order(x', x) orelse eq(x',x)
+              then
+d1088 1
+a1088 1
+	    else 
+d1096 1
+a1096 2
+             (if order(v1,v2) 
+                then
+d1098 1
+a1098 1
+              else 
+d1103 1
+a1103 1
+         
+d1107 1
+a1107 2
+           (if order (v1,v2) 
+              then arg
+d1111 4
+a1114 5
+                           if order(v1,v2) 
+                             then
+                               rest 
+                           else 
+                             [c,b])
+d1118 1
+a1118 1
+               | qs ((pivot as (pv,_))::xs, sofar) = 
+d1121 2
+a1122 3
+                     | part (left,right,(y as (v1,_))::ys) = 
+                       (if order(v1,pv) 
+                          then
+d1201 1
+a1201 1
+		if is_sorted list then
+d1204 1
+a1204 1
+		  if is_rev_sorted list then
+d1215 1
+a1215 2
+    fun from_list' order =
+      from_list (order,op =)
+d1374 7
+a1380 9
+	  if eq(object, ob) 
+            then
+              raise Found(res)
+          else 
+            if order(object, ob) 
+              then
+                res + 1
+            else
+              raise Undefined
+@
+
+
+1.18
+log
+@Added extra functions to avoid building new constructed values solely
+in order to pattern match them. Changed the order of pattern matching
+for improved code generation
+@
+text
+@a21 12
+ *  Further work
+ *  ------------
+ *  The `from_list' function needs to be rewritten efficiently.  At the
+ *  moment it builds the tree using the `define' function, and therefore
+ *  generates lots of garbage and wastes lots of time.  I'm not sure whether
+ *  it can examine the data in the list before building the tree, or even
+ *  whether this would help.
+ *
+ *  [1] Algorithms (2nd edition)
+ *      R Sedgewick
+ *      Addison Wesley ISBN 0-201-06673-4
+ *
+d25 5
+d91 3
+d96 4
+a99 1
+functor BTree () : NEWMAP =
+a100 1
+    datatype relation = LESS | EQUAL | GREATER
+d103 2
+d141 2
+a142 1
+	      order   : 'object * 'object -> relation,
+d152 2
+a153 2
+    fun empty order =
+      MAP {size = 0, order = order, mapping = LEAF}
+d156 1
+a156 8
+      let
+        fun order (object, object') =
+          if object = object' then EQUAL
+          else if object <= object' then LESS
+               else GREATER
+      in
+        empty order
+      end
+a157 11
+    fun empty'' (op<) =
+      let
+        fun order (object, object') =
+	  if object < object' then LESS
+	  else
+	    if object = object' then EQUAL
+	    else GREATER
+      in
+        empty order
+      end
+
+d171 1
+a171 1
+    fun combine f (MAP {size, order, mapping}, object, image) =
+d175 2
+a176 2
+	fun define (ob,  UNDEFINED,  i) = DEFINED i
+	  | define (ob, DEFINED i1, i2) = DEFINED (sz := size; f(ob, i1, i2))
+d196 25
+a220 12
+            (case order (object, o1)
+               of LESS =>    YES (N3 (LEAF, object, image', LEAF, o1, i1, LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+                | EQUAL =>   NO  (N4 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF, o3, i3, LEAF))
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    YES (N3 (LEAF, o1, i1, LEAF, object, image', LEAF), o2, i2, N2 (LEAF, o3, i3, LEAF))
+                     | EQUAL =>   NO  (N4 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF, o3, i3, LEAF))
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, object, image', LEAF, o3, i3, LEAF))
+                          | EQUAL =>   NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, define(o3, i3, image), LEAF))
+                          | GREATER => YES (N2 (LEAF, o1, i1, LEAF), o2, i2, N3 (LEAF, o3, i3, LEAF, object, image', LEAF)))
+d222 23
+d246 3
+d250 202
+d479 17
+a495 8
+	  (case order (object, o1) of
+	     LESS => N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+	   | EQUAL => N3 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF)
+	   | GREATER =>
+	       case order (object, o2)
+		 of LESS =>    N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+	       | EQUAL =>   N3 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF)
+	       | GREATER => N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d497 24
+a520 18
+            (case order (object, o1) of
+	       LESS =>
+		 (case split t1 of
+		    YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+		  | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+	     | EQUAL =>   N3 (t1, object, define(o1, i1, image), t2, o2, i2, t3)
+	     | GREATER =>
+		 case order (object, o2) of
+		   LESS =>
+		     (case split t2 of
+			YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+		      | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+		 | EQUAL =>   N3 (t1, o1, i1, t2, object, define(o2, i2, image), t3)
+		 | GREATER =>
+		     case split t3 of
+		       YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+		     | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+
+d522 26
+a547 13
+	  (case order (object, o1) of
+	     LESS =>    N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+	   | EQUAL =>   N4 (t1, object, define(o1, i1, image), t2, o2, i2, t3, o3, i3, t4)
+	   | GREATER =>
+	       case order (object, o2)
+		 of LESS =>    N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+	       | EQUAL =>   N4 (t1, o1, i1, t2, object, define(o2, i2, image), t3, o3, i3, t4)
+	       | GREATER =>
+		   case order (object, o3)
+		     of LESS =>    N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+		   | EQUAL =>   N4 (t1, o1, i1, t2, o2, i2, t3, object, define(o3, i3, image), t4)
+		   | GREATER => N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+
+d551 9
+a559 4
+            (case order (object, o1)
+               of LESS =>    N3 (LEAF, object, image', LEAF, o1, i1, LEAF)
+                | EQUAL =>   N2 (LEAF, object, define(o1, i1, image), LEAF)
+                | GREATER => N3 (LEAF, o1, i1, LEAF, object, image', LEAF))
+d577 1
+a577 1
+
+d579 17
+a595 8
+            (case order (object, o1)
+               of LESS =>    (case split t1
+                                of YES (tl, om, im, tr) => N3 (tl, om, im, tr, o1, i1, t2)
+                                 | NO t1' => N2 (scan t1', o1, i1, t2))
+                | EQUAL =>   N2 (t1, object, define(o1, i1, image), t2)
+                | GREATER => (case split t2
+                                of YES (tl, om, im, tr) => N3 (t1, o1, i1, tl, om, im, tr)
+                                 | NO t2' => N2 (t1, o1, i1, scan t2')))
+d597 1
+d599 222
+d851 1
+a851 1
+        MAP {size = !sz, order = order, mapping = mapping'}
+a853 1
+    val define = combine (fn (_, old, new) => new)
+d862 1
+a862 1
+    fun undefine (MAP {size, order, mapping}, object) =
+d867 10
+a876 5
+            (case order (object, o1)
+               of LESS =>    N2 (delete t1, o1, i1, t2)
+                | EQUAL =>   (sz := size - 1; N2 (t1, o1, UNDEFINED, t2))
+                | GREATER => N2 (t1, o1, i1, delete t2))
+
+d878 18
+a895 9
+            (case order (object, o1)
+               of LESS =>    N3 (delete t1, o1, i1, t2, o2, i2, t3)
+                | EQUAL =>   (sz := size - 1; N3 (t1, o1, UNDEFINED, t2, o2, i2, t3))
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    N3 (t1, o1, i1, delete t2, o2, i2, t3)
+                     | EQUAL =>   (sz := size - 1; N3 (t1, o1, i1, t2, o2, UNDEFINED, t3))
+                     | GREATER => N3 (t1, o1, i1, t2, o2, i2, delete t3))
+
+d897 26
+a922 13
+            (case order (object, o1)
+               of LESS =>    N4 (delete t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+                | EQUAL =>   (sz := size - 1; N4 (t1, o1, UNDEFINED, t2, o2, i2, t3, o3, i3, t4))
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    N4 (t1, o1, i1, delete t2, o2, i2, t3, o3, i3, t4)
+                     | EQUAL =>   (sz := size - 1; N4 (t1, o1, i1, t2, o2, UNDEFINED, t3, o3, i3, t4))
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    N4 (t1, o1, i1, t2, o2, i2, delete t3, o3, i3, t4)
+                          | EQUAL =>   (sz := size - 1; N4 (t1, o1, i1, t2, o2, i2, t3, o3, UNDEFINED, t4))
+                          | GREATER => N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, delete t4))
+
+d926 1
+a926 1
+        MAP {size = !sz, order = order, mapping = mapping'}
+a940 1
+    exception Undefined
+d942 1
+a942 1
+    fun apply' (MAP {size, order, mapping}, object) =
+d947 9
+a955 4
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+                | GREATER => find t2)
+d958 17
+a974 8
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>   (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+                     | GREATER => find t3)
+d977 26
+a1002 13
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => raise Undefined)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>   (case i2 of DEFINED image => image | UNDEFINED => raise Undefined)
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    find t3
+                          | EQUAL =>   (case i3 of DEFINED image => image | UNDEFINED => raise Undefined)
+                          | GREATER => find t4)
+
+d1009 1
+a1009 1
+    fun apply_default' (MAP {size, order, mapping}, default, object) =
+d1014 11
+a1024 7
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => image
+		     | UNDEFINED => default)
+                | GREATER => find t2)
+d1027 22
+a1048 15
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => image
+		     | UNDEFINED => default)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>
+			 (case i2 of
+			    DEFINED image => image
+			  | UNDEFINED => default)
+                     | GREATER => find t3)
+
+d1050 32
+a1081 22
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => image
+		     | UNDEFINED => default)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>
+			 (case i2 of
+			    DEFINED image => image
+			  | UNDEFINED => default)
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    find t3
+                          | EQUAL =>
+			      (case i3 of
+				 DEFINED image => image
+			       | UNDEFINED => default)
+                          | GREATER => find t4)
+
+d1089 1
+a1089 3
+    datatype 'a result = YES of 'a | NO
+
+    fun tryApply' (MAP {size, order, mapping}, object) =
+d1094 11
+a1104 7
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => YES image
+		     | UNDEFINED => NO)
+                | GREATER => find t2)
+d1107 21
+a1127 14
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => YES image
+		     | UNDEFINED => NO)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>
+			 (case i2 of
+			    DEFINED image => YES image
+			  | UNDEFINED => NO)
+                     | GREATER => find t3)
+d1130 32
+a1161 22
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>
+		    (case i1 of
+		       DEFINED image => YES image
+		     | UNDEFINED => NO)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>
+			 (case i2 of
+			    DEFINED image => YES image
+			  | UNDEFINED => NO)
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    find t3
+                          | EQUAL =>
+			      (case i3 of
+				 DEFINED image => YES image
+			       | UNDEFINED => NO)
+                          | GREATER => find t4)
+
+a1169 3
+     *  Notes:  This is written naively at the moment.  It could apply a
+     *  better sort to the list or even just use a better insertion function
+     *  to avoid building lots of {order, mapping} records.
+d1172 7
+a1178 1
+    fun from_list order list =
+d1180 3
+a1182 3
+	fun build (result, []) = result
+	  | build (result, (object, image)::pairs) =
+	    build (define (result, object, image), pairs)
+d1184 6
+a1189 1
+	build (empty order, list)
+d1192 1
+a1192 1
+    fun from_list' order list =
+d1194 142
+a1335 3
+	fun build (result, []) = result
+	  | build (result, (object, image)::pairs) =
+	    build (define (result, object, image), pairs)
+d1337 1
+a1337 1
+	build (empty' order, list)
+d1340 4
+d1491 2
+a1492 2
+	fn MAP{size, order, mapping} =>
+	MAP{size = size, order = order, mapping = red mapping}
+d1497 1
+a1497 1
+    fun rank' (m as MAP{order, ...}, ob) =
+d1500 9
+a1508 4
+	  case order(object, ob) of
+	    LESS => res + 1
+	  | EQUAL => raise Found(res)
+	  | GREATER => raise Undefined
+d1678 5
+@
+
+
+1.17
+log
+@Added empty'' for strict less than functions which do the less than test
+first. this should be more efficient for large maps
+@
+text
+@d37 4
+d254 27
+a280 10
+        fun scan (N2 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5)) =
+            scan (N3 (N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5))
+          | scan (N2 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5))) =
+            scan (N3 (t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5)))
+          | scan (N3 (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4), o4, i4, t5, o5, i5, t6)) =
+            scan (N4 (N2 (t1, o1, i1, t2), o2, i2, N2 (t3, o3, i3, t4), o4, i4, t5, o5, i5, t6))
+          | scan (N3 (t1, o1, i1, N4 (t2, o2, i2, t3, o3, i3, t4, o4, i4, t5), o5, i5, t6)) =
+            scan (N4 (t1, o1, i1, N2 (t2, o2, i2, t3), o3, i3, N2 (t4, o4, i4, t5), o5, i5, t6))
+          | scan (N3 (t1, o1, i1, t2, o2, i2, N4 (t3, o3, i3, t4, o4, i4, t5, o5, i5, t6))) =
+            scan (N4 (t1, o1, i1, t2, o2, i2, N2 (t3, o3, i3, t4), o4, i4, N2 (t5, o5, i5, t6)))
+d282 13
+a294 1
+            (* Leaf-level insertion. *)
+d296 2
+d304 10
+a313 9
+          | scan (N3 (LEAF, o1, i1, LEAF, o2, i2, LEAF)) =
+            (case order (object, o1)
+               of LESS =>    N4 (LEAF, object, image', LEAF, o1, i1, LEAF, o2, i2, LEAF)
+                | EQUAL =>   N3 (LEAF, object, define(o1, i1, image), LEAF, o2, i2, LEAF)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o2, i2, LEAF)
+                     | EQUAL =>   N3 (LEAF, o1, i1, LEAF, object, define(o2, i2, image), LEAF)
+                     | GREATER => N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d315 4
+a330 16
+          | scan (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (case order (object, o1)
+               of LESS =>    (case split t1
+                                of YES (tl, om, im, tr) => N4 (tl, om, im, tr, o1, i1, t2, o2, i2, t3)
+                                 | NO t1' => N3 (scan t1', o1, i1, t2, o2, i2, t3))
+                | EQUAL =>   N3 (t1, object, define(o1, i1, image), t2, o2, i2, t3)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    (case split t2
+                                     of YES (tl, om, im, tr) => N4 (t1, o1, i1, tl, om, im, tr, o2, i2, t3)
+                                      | NO t2' => N3 (t1, o1, i1, scan t2', o2, i2, t3))
+                     | EQUAL =>   N3 (t1, o1, i1, t2, object, define(o2, i2, image), t3)
+                     | GREATER =>
+                       case split t3
+                         of YES (tl, om, im, tr) => N4 (t1, o1, i1, t2, o2, i2, tl, om, im, tr)
+                          | NO t3' => N3 (t1, o1, i1, t2, o2, i2, scan t3'))
+a331 1
+
+d336 1
+a336 13
+          | scan (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (case order (object, o1)
+               of LESS =>    N4 (scan t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)
+                | EQUAL =>   N4 (t1, object, define(o1, i1, image), t2, o2, i2, t3, o3, i3, t4)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    N4 (t1, o1, i1, scan t2, o2, i2, t3, o3, i3, t4)
+                     | EQUAL =>   N4 (t1, o1, i1, t2, object, define(o2, i2, image), t3, o3, i3, t4)
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    N4 (t1, o1, i1, t2, o2, i2, scan t3, o3, i3, t4)
+                          | EQUAL =>   N4 (t1, o1, i1, t2, o2, i2, t3, object, define(o3, i3, image), t4)
+                          | GREATER => N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, scan t4))
+@
+
+
+1.16
+log
+@Improved the implementastions of the alternative lookup functions so
+as not to handle exceptions
+@
+text
+@d37 4
+d150 1
+a150 1
+    fun empty' (op<) =
+d154 1
+a154 1
+          else if object < object' then LESS
+d156 11
+@
+
+
+1.15
+log
+@the sz reference is only created once.
+@
+text
+@d37 3
+d442 3
+a444 2
+    fun apply_default' (map, default, object) =
+      apply'(map, object) handle Undefined => default
+d446 52
+d499 1
+a499 1
+      apply'(map, object) handle Undefined => default
+d503 3
+a505 2
+    fun tryApply map object =
+      YES(apply'(map, object)) handle Undefined => NO
+d507 53
+a559 2
+    fun tryApply' (map, object) =
+      YES(apply'(map, object)) handle Undefined => NO
+@
+
+
+1.14
+log
+@Forgot to include out start and finish strings in `string' function.
+@
+text
+@d37 3
+d164 2
+a167 2
+	val sz = ref (size + 1)
+
+d330 1
+a346 2
+	val sz = ref size
+  
+d379 1
+d434 1
+a434 2
+        if size = 0 then raise Undefined
+	else find mapping
+@
+
+
+1.13
+log
+@Added the functions fold_in_rev_order and string.
+Changed the implementation to keep track of the size
+of the tree, giving a constant time implementation of
+size (useful for the eq function) and a correct implementation
+of is_empty.
+@
+text
+@d37 7
+d803 1
+a803 1
+	implode(#2 (fold_in_rev_order make ((false, []), m)))
+@
+
+
+1.12
+log
+@Changed the type of forall and exists, adding the
+function map.
+@
+text
+@d37 4
+a76 1
+
+a78 1
+
+a79 1
+
+a80 1
+
+d119 2
+a120 1
+      MAP of {order   : 'object * 'object -> relation,
+d130 2
+a131 1
+    fun empty order = MAP {order = order, mapping = LEAF}
+d143 1
+a143 1
+    fun is_empty(MAP{mapping=LEAF, ...}) = true
+d154 1
+a154 1
+    fun combine f (MAP {order, mapping}, object, image) =
+d156 2
+d160 2
+a161 2
+	fun define (ob, UNDEFINED,   i) = DEFINED i
+	  | define (ob, DEFINED i1, i2) = DEFINED (f(ob, i1, i2))
+d320 1
+d322 1
+a322 1
+        MAP {order = order, mapping = insert mapping}
+d334 1
+a334 1
+    fun undefine (MAP {order, mapping}, object) =
+d336 2
+a337 1
+
+d343 1
+a343 1
+                | EQUAL =>   N2 (t1, o1, UNDEFINED, t2)
+d349 1
+a349 1
+                | EQUAL =>   N3 (t1, o1, UNDEFINED, t2, o2, i2, t3)
+d353 1
+a353 1
+                     | EQUAL =>   N3 (t1, o1, i1, t2, o2, UNDEFINED, t3)
+d359 1
+a359 1
+                | EQUAL =>   N4 (t1, o1, UNDEFINED, t2, o2, i2, t3, o3, i3, t4)
+d363 1
+a363 1
+                     | EQUAL =>   N4 (t1, o1, i1, t2, o2, UNDEFINED, t3, o3, i3, t4)
+d367 1
+a367 1
+                          | EQUAL =>   N4 (t1, o1, i1, t2, o2, i2, t3, o3, UNDEFINED, t4)
+d370 1
+d372 1
+a372 1
+        MAP {order = order, mapping = delete mapping}
+d389 1
+a389 1
+    fun apply' (MAP {order, mapping}, object) =
+d424 2
+a425 1
+        find mapping
+a443 196
+    (*  === EXTRACT THE DOMAIN OF A MAP ===  *)
+
+    fun domain (MAP {mapping, ...}) =
+      let
+        fun domain' (done, LEAF) = done
+          | domain' (done, N2 (t1, o1, DEFINED _, t2)) =
+            domain' (domain' (o1::done, t1), t2)
+          | domain' (done, N2 (t1, o1, UNDEFINED, t2)) =
+            domain' (domain' (done, t1), t2)
+          | domain' (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i1 of DEFINED _ => o1::done  | UNDEFINED => done
+              val done'' = case i2 of DEFINED _ => o2::done' | UNDEFINED => done'
+            in
+              domain' (domain' (domain' (done'', t1), t2), t3)
+            end
+          | domain' (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i1 of DEFINED _ => o1::done   | UNDEFINED => done
+              val done''  = case i2 of DEFINED _ => o2::done'  | UNDEFINED => done'
+              val done''' = case i3 of DEFINED _ => o3::done'' | UNDEFINED => done''
+            in
+              domain' (domain' (domain' (domain' (done''', t1), t2), t3), t4)
+            end
+      in
+        domain' ([], mapping)
+      end
+
+
+    fun domain_ordered (MAP {mapping, ...}) =
+      let
+        fun domain' (done, LEAF) = done
+          | domain' (done, N2 (t1, o1, DEFINED _, t2)) =
+            domain' (o1 :: domain' (done, t2), t1)
+          | domain' (done, N2 (t1, o1, UNDEFINED, t2)) =
+            domain' (domain' (done, t2), t1)
+          | domain' (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i2
+                             of DEFINED _ => o2 :: domain' (done, t3)
+                              | UNDEFINED     => domain' (done, t3)
+              val done'' = case i1
+                             of DEFINED _ => o1 :: domain' (done', t2)
+                              | UNDEFINED     => domain' (done', t2)
+            in
+              domain' (done'', t1)
+            end
+          | domain' (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i3
+                              of DEFINED _ => o3 :: domain' (done, t4)
+                               | UNDEFINED     => domain' (done, t4)
+              val done''  = case i2
+                              of DEFINED _ => o2 :: domain' (done', t3)
+                               | UNDEFINED     => domain' (done', t3)
+              val done''' = case i1
+                              of DEFINED _ => o1 :: domain' (done'', t2)
+                               | UNDEFINED     => domain' (done'', t2)
+            in
+              domain' (done''', t1)
+            end
+      in
+        domain' ([], mapping)
+      end
+
+
+    (*  === EXTRACT THE RANGE OF A MAP ===  *)
+
+    fun range (MAP {mapping, ...}) =
+      let
+        fun range' (done, LEAF) = done
+          | range' (done, N2 (t1, _, DEFINED image, t2)) =
+            range' (range' (image::done, t1), t2)
+          | range' (done, N2 (t1, _, UNDEFINED, t2)) =
+            range' (range' (done, t1), t2)
+          | range' (done, N3 (t1, _, i1, t2, _, i2, t3)) =
+            let
+              val done'  = case i1 of DEFINED image => image::done  | UNDEFINED => done
+              val done'' = case i2 of DEFINED image => image::done' | UNDEFINED => done'
+            in
+              range' (range' (range' (done'', t1), t2), t3)
+            end
+          | range' (done, N4 (t1, _, i1, t2, _, i2, t3, _, i3, t4)) =
+            let
+              val done'   = case i1 of DEFINED image => image::done   | UNDEFINED => done
+              val done''  = case i2 of DEFINED image => image::done'  | UNDEFINED => done'
+              val done''' = case i3 of DEFINED image => image::done'' | UNDEFINED => done''
+            in
+              range' (range' (range' (range' (done''', t1), t2), t3), t4)
+            end
+      in
+        range' ([], mapping)
+      end
+
+    fun range_ordered (MAP {mapping, ...}) =
+      let
+        fun range' (done, LEAF) = done
+          | range' (done, N2 (t1, _, DEFINED i1, t2)) =
+            range' (i1 :: range' (done, t2), t1)
+          | range' (done, N2 (t1, _, UNDEFINED, t2)) =
+            range' (range' (done, t2), t1)
+          | range' (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i2
+                             of DEFINED i => i :: range' (done, t3)
+			   | UNDEFINED     => range' (done, t3)
+              val done'' = case i1
+                             of DEFINED i => i :: range' (done', t2)
+			   | UNDEFINED     => range' (done', t2)
+            in
+              range' (done'', t1)
+            end
+          | range' (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i3
+                              of DEFINED i => i :: range' (done, t4)
+			    | UNDEFINED     => range' (done, t4)
+              val done''  = case i2
+                              of DEFINED i => i :: range' (done', t3)
+			    | UNDEFINED     => range' (done', t3)
+              val done''' = case i1
+                              of DEFINED i => i :: range' (done'', t2)
+			    | UNDEFINED     => range' (done'', t2)
+            in
+              range' (done''', t1)
+            end
+      in
+        range' ([], mapping)
+      end
+
+    (*  === CONVERT MAP TO LIST ===  *)
+
+    fun to_list (MAP {mapping, ...}) =
+      let
+        fun to_list' (done, LEAF) = done
+          | to_list' (done, N2 (t1, o1, DEFINED image, t2)) =
+            to_list' (to_list' ((o1, image)::done, t1), t2)
+          | to_list' (done, N2 (t1, o1, UNDEFINED, t2)) =
+            to_list' (to_list' (done, t1), t2)
+          | to_list' (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i1 of DEFINED image => (o1, image)::done  | UNDEFINED => done
+              val done'' = case i2 of DEFINED image => (o2, image)::done' | UNDEFINED => done'
+            in
+              to_list' (to_list' (to_list' (done'', t1), t2), t3)
+            end
+          | to_list' (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i1 of DEFINED image => (o1, image)::done   | UNDEFINED => done
+              val done''  = case i2 of DEFINED image => (o2, image)::done'  | UNDEFINED => done'
+              val done''' = case i3 of DEFINED image => (o3, image)::done'' | UNDEFINED => done''
+            in
+              to_list' (to_list' (to_list' (to_list' (done''', t1), t2), t3), t4)
+            end
+      in
+        to_list' ([], mapping)
+      end
+
+    fun to_list_ordered (MAP {mapping, ...}) =
+      let
+        fun to_list' (done, LEAF) = done
+          | to_list' (done, N2 (t1, o1, DEFINED image, t2)) =
+            to_list' ((o1, image) :: to_list' (done, t2), t1)
+          | to_list' (done, N2 (t1, o1, UNDEFINED, t2)) =
+            to_list' (to_list' (done, t2), t1)
+          | to_list' (done, N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            let
+              val done'  = case i2
+                             of DEFINED image => (o2, image) :: to_list' (done, t3)
+                              | UNDEFINED     => to_list' (done, t3)
+              val done'' = case i1
+                             of DEFINED image => (o1, image) :: to_list' (done', t2)
+                              | UNDEFINED     => to_list' (done', t2)
+            in
+              to_list' (done'', t1)
+            end
+          | to_list' (done, N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            let
+              val done'   = case i3
+                              of DEFINED image => (o3, image) :: to_list' (done, t4)
+                               | UNDEFINED     => to_list' (done, t4)
+              val done''  = case i2
+                              of DEFINED image => (o2, image) :: to_list' (done', t3)
+                               | UNDEFINED     => to_list' (done', t3)
+              val done''' = case i1
+                              of DEFINED image => (o1, image) :: to_list' (done'', t2)
+                               | UNDEFINED     => to_list' (done'', t2)
+            in
+              to_list' (done''', t1)
+            end
+      in
+        to_list' ([], mapping)
+      end
+
+
+
+d497 1
+a497 1
+	fn (x, MAP{mapping=mapping, ...}) => red(x, mapping)
+d535 39
+a573 1
+	fn (x, MAP{mapping=mapping, ...}) => red(x, mapping)
+d578 1
+a578 2
+    fun merge f =
+      fold (combine (fn (ob, im, im') => f(im, im')))
+d580 1
+a580 1
+    fun size m = fold (fn (x, _, _) => x + 1) (0, m)
+d616 2
+a617 1
+	fn MAP{order, mapping} => MAP{order = order, mapping = red mapping}
+d662 1
+a662 1
+	fn MAP{mapping, ...} => red mapping
+d691 1
+a691 1
+	fn MAP{mapping, ...} => red mapping
+d703 1
+a703 3
+	    (f(o1, image);
+	     red t1;
+	     red t2)
+d712 1
+a712 3
+		   red t1;
+		   red t2;
+		   red t3)
+d723 1
+a723 4
+		      red t1;
+		      red t2;
+		      red t3;
+		      red t4)
+d725 1
+a725 1
+	fn MAP{mapping=mapping, ...} => red mapping
+d732 1
+a732 3
+	    (red t1;
+	     f(o1, image);
+	     red t2)
+d759 1
+a759 1
+	fn MAP{mapping=mapping, ...} => red mapping
+d762 36
+@
+
+
+1.11
+log
+@Added the combine function.
+@
+text
+@d37 3
+d733 37
+d790 1
+a790 1
+	    f image andalso red t1 andalso red t2
+d794 1
+a794 1
+	       DEFINED image => f image
+d797 1
+a797 1
+		  DEFINED image => f image
+d802 1
+a802 1
+	       DEFINED image => f image
+d805 1
+a805 1
+		  DEFINED image => f image
+d808 1
+a808 1
+		     DEFINED image => f image
+d812 1
+a812 1
+	fn MAP{mapping=mapping, ...} => red mapping
+d819 1
+a819 1
+	    f image orelse red t1 orelse red t2
+d823 1
+a823 1
+	       DEFINED image => f image
+d826 1
+a826 1
+		  DEFINED image => f image
+d831 1
+a831 1
+	       DEFINED image => f image
+d834 1
+a834 1
+		  DEFINED image => f image
+d837 1
+a837 1
+		     DEFINED image => f image
+d841 1
+a841 1
+	fn MAP{mapping=mapping, ...} => red mapping
+d843 5
+@
+
+
+1.10
+log
+@Added tryApply, tryApply', size, rank, rank, and merge functions.
+@
+text
+@d37 3
+d149 1
+a149 1
+    fun define (MAP {order, mapping}, object, image) =
+d151 1
+d153 2
+a154 1
+        val image' = DEFINED image
+d176 1
+a176 1
+                | EQUAL =>   NO  (N4 (LEAF, object, image', LEAF, o2, i2, LEAF, o3, i3, LEAF))
+d180 1
+a180 1
+                     | EQUAL =>   NO  (N4 (LEAF, o1, i1, LEAF, object, image', LEAF, o3, i3, LEAF))
+d184 1
+a184 1
+                          | EQUAL =>   NO  (N4 (LEAF, o1, i1, LEAF, o2, i2, LEAF, object, image', LEAF))
+d231 1
+a231 1
+                | EQUAL =>   N2 (LEAF, object, image', LEAF)
+d237 1
+a237 1
+                | EQUAL =>   N3 (LEAF, object, image', LEAF, o2, i2, LEAF)
+d241 1
+a241 1
+                     | EQUAL =>   N3 (LEAF, o1, i1, LEAF, object, image', LEAF)
+d251 1
+a251 1
+                | EQUAL =>   N2 (t1, object, image', t2)
+d261 1
+a261 1
+                | EQUAL =>   N3 (t1, object, image', t2, o2, i2, t3)
+d267 1
+a267 1
+                     | EQUAL =>   N3 (t1, o1, i1, t2, object, image', t3)
+d281 1
+a281 1
+                | EQUAL =>   N4 (t1, object, image', t2, o2, i2, t3, o3, i3, t4)
+d285 1
+a285 1
+                     | EQUAL =>   N4 (t1, o1, i1, t2, object, image', t3, o3, i3, t4)
+d289 1
+a289 1
+                          | EQUAL =>   N4 (t1, o1, i1, t2, o2, i2, t3, object, image', t4)
+d317 1
+a317 1
+
+d726 1
+a726 8
+      let
+	fun m (res, ob, im) =
+	  case tryApply'(res, ob) of
+	    YES(im') => define(res, ob, f(im, im'))
+	  | NO => define(res, ob, im)
+      in
+	fold m
+      end
+@
+
+
+1.9
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d37 4
+a375 1
+
+d414 2
+a415 34
+    fun apply_default' (MAP {order, mapping}, default, object) =
+      let
+
+        fun find LEAF = default
+
+          | find (N2 (t1, o1, i1, t2)) =
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => default)
+                | GREATER => find t2)
+
+          | find (N3 (t1, o1, i1, t2, o2, i2, t3)) =
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => default)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>   (case i2 of DEFINED image => image | UNDEFINED => default)
+                     | GREATER => find t3)
+
+          | find (N4 (t1, o1, i1, t2, o2, i2, t3, o3, i3, t4)) =
+            (case order (object, o1)
+               of LESS =>    find t1
+                | EQUAL =>   (case i1 of DEFINED image => image | UNDEFINED => default)
+                | GREATER =>
+                  case order (object, o2)
+                    of LESS =>    find t2
+                     | EQUAL =>   (case i2 of DEFINED image => image | UNDEFINED => default)
+                     | GREATER =>
+                       case order (object, o3)
+                         of LESS =>    find t3
+                          | EQUAL =>   (case i3 of DEFINED image => image | UNDEFINED => default)
+                          | GREATER => find t4)
+d417 2
+a418 3
+      in
+        find mapping
+      end
+d420 1
+a420 1
+    fun apply_default (map, default) object = apply_default' (map, default, object)
+d422 2
+d425 2
+d719 28
+@
+
+
+1.8
+log
+@Added fold, fold_in_order and union on maps
+@
+text
+@d37 3
+d745 131
+@
+
+
+1.7
+log
+@Added is_empty predicate
+@
+text
+@d37 3
+d672 30
+d703 39
+@
+
+
+1.6
+log
+@Added range_ordered for signature matching requirements of lambda translator
+@
+text
+@d37 3
+d125 2
+a126 1
+
+@
+
+
+1.5
+log
+@Added domain_ordered function (required by lambda translator)
+@
+text
+@d37 3
+d538 35
+@
+
+
+1.4
+log
+@Added to_list_ordered.
+@
+text
+@d37 3
+d469 36
+@
+
+
+1.3
+log
+@Added empty' and from_list'.
+@
+text
+@d37 3
+d520 36
+@
+
+
+1.2
+log
+@Added efficient variants of `apply' for different situations.
+@
+text
+@d37 3
+d103 10
+d538 9
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d36 4
+a39 1
+ *  $Log$
+d331 3
+d338 1
+a338 1
+    fun apply (MAP {order, mapping}) object =
+d376 43
+@

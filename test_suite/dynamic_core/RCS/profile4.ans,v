@@ -1,0 +1,95 @@
+head	1.3;
+access;
+symbols
+	ML_beta_release_12/08/94:1.3
+	ML_beta_release_03/08/94:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.1;
+locks; strict;
+
+
+1.3
+date	94.08.10.09.56.18;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.12.15.15.54.45;	author nickh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.09.28.13.18.39;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@Part of the test suite.
+@
+
+
+1.3
+log
+@Updating
+@
+text
+@val it : unit = ()
+structure Btree =
+  struct
+    datatype 'a Tree =
+      Tree of ('a TreeRep * (('a * 'a) -> bool))
+    datatype 'a TreeRep =
+      E |
+      T of ('a * int * 'a TreeRep * 'a TreeRep)
+    val empty : (('a * 'a) -> bool) -> 'a Btree.Tree = fn
+    val fromList : (int list * ((int * int) -> bool)) -> int Btree.Tree = fn
+  end
+val fromList : (int list * ((int * int) -> bool)) -> int Btree.Tree = fn
+val mkList : int -> int list = fn
+MLWorks profiler v4.0
+204 bytes of data, 4 roots
+profile period: 0 ms
+functions profiled: 4
+---
+   calls     found       top     depth      self      name
+       0         0         0         0         0   add' argument 0[<TTY listener>:63,17 to 68,30]
+       1         0         0         0         0   add'<Uncurried>[<TTY listener>:63,17 to 68,30]
+       1         0         0         0         0   add' argument 1[<TTY listener>:63,17 to 68,30]
+       -         0         0         0         0   add'[utils._smallintset:149]
+val it : int Btree.Tree = Tree (E, fn)
+@
+
+
+1.2
+log
+@minor format changes.
+@
+text
+@d14 3
+a16 2
+MLWorks profiler v3.0
+profile period: 0ms
+d20 4
+a23 4
+       1         0         0         0         0   add'[<TTY listener>:63,16 to 68,30]
+       1         0         0         0         0   add'<Uncurried>[<TTY listener>:63,16 to 68,30]
+       1         0         0         0         0   add' argument 1[<TTY listener>:63,16 to 68,30]
+       0         0         0         0         0   add'[/usr/sml/src/utils/_smallintset.sml:149,8 to 168,9]
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d19 4
+a22 4
+       1         0         0         0         0   add'[TTY listener:49,9 to 54,16]
+       1         0         0         0         0   add'[TTY listener:49,9 to 54,16]
+       1         0         0         0         0   add' argument 1[TTY listener:49,9 to 54,16]
+       0         0         0         0         0   add'[/usr/sml/src/utils/_smallintset.sml:146,8 to 190,9]
+@

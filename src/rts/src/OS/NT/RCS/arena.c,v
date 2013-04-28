@@ -1,0 +1,500 @@
+head	1.7;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	95.10.09.14.54.17;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.08.02.14.23.05;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.04.05.14.12.43;	author nickb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.03.01.13.45.52;	author nickb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.02.03.17.41.30;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.02.03.17.29.44;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.12.14.21.20;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.7
+log
+@Improve space number algorithm to allow transfer of images between
+NT and Win95.
+@
+text
+@/*  ==== ARENA MANAGEMENT ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:NT:arena.c,v $
+ * Revision 1.6  1995/08/02  14:23:05  jont
+ * Remove windows.h from include list
+ *
+ * Revision 1.5  1995/04/05  14:12:43  nickb
+ * Add maximum memory use reporting.
+ *
+ * Revision 1.4  1995/03/01  13:45:52  nickb
+ * Add interface for holes and make space_gen array general.
+ *
+ * Revision 1.3  1995/02/03  17:41:30  jont
+ * Further fix to error handling from VirtualAlloc
+ *
+ * Revision 1.2  1995/02/03  17:29:44  jont
+ * Handle errors from VirtualAlloc gracefully
+ *
+ * Revision 1.1  1994/12/12  14:21:20  jont
+ * new file
+ *
+ * Revision 1.2  1994/10/13  13:06:02  nickb
+ * Allow multiple block spaces, so blocks can occupy more of arena.
+ *
+ * Revision 1.1  1994/10/04  16:25:59  jont
+ * new file
+ *
+ * Revision 1.2  1994/06/09  14:25:14  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:50:00  nickh
+ * new file
+ */
+
+#include "ansi.h"
+#include "arena.h"
+#include "types.h"
+#include "diagnostic.h"
+#include "utils.h"
+#include "syscalls.h"
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
+
+#include <sys/types.h>
+#include <fcntl.h>
+#include <signal.h>
+
+/* type and extent tables */
+
+byte space_type[NR_SPACES];
+size_t space_extent[NR_SPACES];
+void *space_info[NR_SPACES];
+
+/* The first block space has a statically-allocated map. Later block
+   spaces have their maps in a reserved region within the first block
+   space. The pointer 'block_maps' indicates the next available
+   location for a map in this region */
+
+byte first_block_space_map[BLOCKS_PER_SPACE];
+byte *block_maps = NULL;
+
+size_t arena_extent = 0;
+#ifdef COLLECT_STATS
+size_t max_arena_extent = 0;
+#endif
+
+static int zero_device;
+static int page_size;
+
+#define BACKOFF_LIMIT	5
+
+/* arena_state is UNINITIALIZED until the arena has been initialized.
+ * See arena_init() and block_alloc() below.
+ *
+ * GCC 2.x calls __main() before main(). __main() can call malloc().
+ * Our malloc(), on first call, calls block_alloc() to get some heap.
+ * If the arena has been initialized, we simply allocate a block.
+ * Otherwise we initialize the arena then. */
+
+enum {
+  UNINITIALIZED = 0,
+  INITIALIZING,
+  INITIALIZED
+};
+
+static int arena_state = UNINITIALIZED;
+
+/* grains. The purpose of grain_round is to round its argument (a
+number of bytes) up to a convenient size, where "convenient" means "a
+multiple of 2^n (where n<=20), which does not waste more than
+GRAIN_OVERHEAD bytes per 0x100". */
+
+#define MAX_GRAIN_SIZE		0x100000	/* 1Mb */
+#define GRAIN_OVERHEAD		0x10		/* per 0x100 */
+#define GRAINROUND(grain, size)	(((size)+(grain)-1) & ~((grain)-1))
+
+static size_t grain_round(size_t size)
+{
+  int grain;
+  /* we round at least to the nearest page */
+  size_t rounded = GRAINROUND(page_size, size);
+  /* maximum is the maximum acceptable size (any more wastes too much) */
+  size_t maximum = (size * (0x100+GRAIN_OVERHEAD))/ 0x100;
+
+  if(rounded > 0)
+    for(grain = MAX_GRAIN_SIZE; grain >= page_size; grain >>= 1)
+    {
+      rounded = GRAINROUND(grain, size);
+      
+      if (rounded < maximum)
+	break;
+    }
+
+  return(rounded);
+}
+
+static void map(void *start, size_t length)
+{
+  if (arena_state != INITIALIZED)
+    error_without_alloc("Trying to map memory before arena initialized.\n");
+
+  if(length > 0 &&
+     VirtualAlloc((LPVOID)start, (DWORD)length,
+		  MEM_COMMIT,
+		  PAGE_EXECUTE_READWRITE) == NULL)
+    /* **** decode cryptic and arcane windows error code here! */
+    {
+      message("VirtualAlloc failed with %lu", GetLastError());
+      error("Unable to allocate virtual memory of length 0x%x", length);
+    };
+  arena_extent += length;
+#ifdef COLLECT_STATS
+  if (arena_extent > max_arena_extent)
+    max_arena_extent = arena_extent;
+#endif
+}
+
+static void unmap(void *start, size_t length)
+{
+  if(length > 0 &&
+     !VirtualFree((LPVOID)start, (DWORD)length, MEM_DECOMMIT))
+    error("VirtualFree has returned an unexpected error code %lu", GetLastError());
+
+  arena_extent -= length;
+}
+
+void arena_init(void)
+{
+  int first_block_space,i;
+  
+  switch (arena_state) {
+    
+  case UNINITIALIZED: {
+    LPVOID base;
+    SYSTEM_INFO sysinfo;
+
+    arena_state = INITIALIZING;
+
+    base = VirtualAlloc(NULL, 1lu<<ADDRESS_WIDTH, MEM_RESERVE, PAGE_NOACCESS);
+    if(base == NULL)
+      error_without_alloc("Arena initializing unable to reserve address space.");
+    first_block_space = SPACE(((word)base) + (1 << SPACE_WIDTH) -1);
+
+    GetSystemInfo(&sysinfo);
+    page_size = sysinfo.dwPageSize;
+
+    for(i=0; i<first_block_space; ++i) {
+      space_type[i]   = TYPE_RESERVED;
+      space_extent[i] = (size_t)-1;
+      SPACE_MAP(i)    = NULL;
+    }
+
+    SPACE_MAP(first_block_space) = first_block_space_map;
+    space_type[first_block_space] = TYPE_BLOCKS;
+    space_extent[first_block_space] = (size_t)-2;
+    
+    for(i=first_block_space+1; i<NR_SPACES; ++i) {
+      space_type[i]   = TYPE_FREE;
+      space_extent[i] = 0;
+      SPACE_MAP(i) = NULL;
+    }
+    
+    for (i=0; i < BLOCKS_PER_SPACE; ++i) {
+      first_block_space_map[i] = TYPE_FREE;
+    }
+    
+    arena_extent = 0;
+#ifdef COLLECT_STATS
+    max_arena_extent = 0;
+#endif
+    arena_state = INITIALIZED;
+
+    /* The arena is now initialized, so we can call block_alloc */
+    block_maps = block_alloc(TYPE_RESERVED,
+			     (unsigned long)NR_SPACES*BLOCKS_PER_SPACE);
+    break;
+  }
+  case INITIALIZING:
+    error_without_alloc("Allocation during arena startup.");
+  case INITIALIZED:
+    /* Could get to here if we alloc before arena_init gets called. */
+    break;
+  default:
+    error_without_alloc("Arena state inconsistent.");
+  }
+}
+
+void space_free(byte *space)
+{
+  unsigned int space_no = SPACE(space);
+  unmap(space, space_extent[space_no]);
+  space_type[space_no] = TYPE_FREE;
+  space_extent[space_no] = 0;
+}
+
+void space_resize(byte *space, size_t extent)
+{
+  unsigned int space_no = SPACE(space);
+  size_t current = space_extent[space_no];
+
+  extent = grain_round(extent);
+
+  if(extent > current)
+    map(space+current, extent-current);
+  else if(current > extent)
+    unmap(space+extent, current-extent);
+
+  space_extent[space_no] = extent;
+}
+
+byte *space_alloc(byte type, size_t extent)
+{
+  unsigned int i;
+
+  if (extent > SPACE_SIZE) {
+    error("Allocating too large a space");
+  }
+
+  for(i=0; i<NR_SPACES; ++i)
+    if(space_type[i] == TYPE_FREE)
+    {
+      space_type[i] = type;
+      space_extent[i] = 0;
+      space_resize(SPACE_BASE(i), extent);
+      return SPACE_BASE(i);
+    }
+
+  error("Run out of arena spaces.");
+}
+
+/* Allow general mapping holes inside spaces; note that both of these
+ * functions can be no-ops to start with */
+
+void space_allow_hole(byte *hole, size_t extent)
+{
+}
+
+void space_remove_hole(byte *hole, size_t extent)
+{
+}
+
+byte *block_alloc(byte type, size_t size)
+{
+  int s, b, found = 0, blocks = BLOCKS(size);
+  byte *block_map;
+  byte *space;
+
+  if (arena_state != INITIALIZED)
+    arena_init();
+
+  if (blocks > BLOCKS_PER_SPACE)
+    error("Trying to allocate too many contiguous blocks.");
+
+  for(s=0; s<NR_SPACES; ++s) {
+    if (space_type[s] == TYPE_BLOCKS) {
+      block_map = SPACE_MAP(s);
+      for (b=0; b<BLOCKS_PER_SPACE; b++) {
+	if (block_map[b] == TYPE_FREE) {
+	  found ++;
+	  if(found >= blocks) {
+	    int start = b+1-found, k;
+
+	    for(k=start; k<=b; ++k)
+	      block_map[k] = type;
+	    map(BLOCK_BASE(s,start), GRAINROUND(page_size, size));
+	    return(BLOCK_BASE(s,start));
+	  }
+	}
+	else
+	  found = 0;
+      }
+      found = 0;
+    }
+  }
+
+  /* None of the existing block spaces have room; let's make a new one */
+
+  space = space_alloc(TYPE_BLOCKS,0);    /* allocate the new space */
+  s = SPACE(space);
+  block_map = SPACE_MAP(s) = block_maps; /* allocate a map ... */
+  block_maps += BLOCKS_PER_SPACE;       
+
+  for(b=0; b< blocks; ++b)
+    block_map[b] = type;
+  for (b=blocks; b < BLOCKS_PER_SPACE; b++)
+    block_map[b] = TYPE_FREE;		 /* ... and initialize it */
+
+  map(space, GRAINROUND(page_size, size));
+  return(space);
+}
+
+void block_free(byte *block, size_t size)
+{
+  unsigned int space_nr = SPACE(block);
+  unsigned int block_nr = BLOCK_NR(block);
+  size_t blocks = BLOCKS(size);
+  byte *block_map = SPACE_MAP(space_nr);
+  unsigned i;
+
+  for(i=0; i<blocks; ++i)
+    block_map[block_nr+i] = TYPE_FREE;
+
+  unmap(block, GRAINROUND(page_size, size));
+}
+
+@
+
+
+1.6
+log
+@Remove windows.h from include list
+@
+text
+@d11 3
+a72 1
+word arena_base = 0;
+d160 1
+a160 1
+  int i;
+d167 1
+a167 1
+    
+d173 1
+a173 2
+
+    arena_base = (word)base;
+d178 9
+a186 3
+    SPACE_MAP(0) = first_block_space_map;
+    space_type[0] = TYPE_BLOCKS;
+    space_extent[0] = (size_t)-2;
+d188 1
+a188 1
+    for(i=1; i<NR_SPACES; ++i) {
+@
+
+
+1.5
+log
+@Add maximum memory use reporting.
+@
+text
+@d11 3
+a51 1
+#include <windows.h>
+@
+
+
+1.4
+log
+@Add interface for holes and make space_gen array general.
+@
+text
+@d11 3
+d70 3
+d139 4
+d190 3
+@
+
+
+1.3
+log
+@Further fix to error handling from VirtualAlloc
+@
+text
+@d11 3
+d55 1
+a55 1
+byte *space_map[NR_SPACES];
+d165 1
+a165 1
+    space_map[0] = first_block_space_map;
+d172 1
+a172 1
+      space_map[i] = NULL;
+d240 11
+d265 1
+a265 1
+      block_map = space_map[s];
+d289 1
+a289 1
+  block_map = space_map[s] = block_maps; /* allocate a map ... */
+d306 1
+a306 1
+  byte *block_map = space_map[space_nr];
+@
+
+
+1.2
+log
+@Handle errors from VirtualAlloc gracefully
+@
+text
+@d11 3
+d125 4
+a128 3
+    message("VirtualAlloc failed with %lu", GetLastError());
+    error("Unable to allocate virtual memory of length 0x%x", length);
+
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d10 4
+a13 1
+ *  $Log: src:OS:Linux:arena.c,v $
+d123 1
+d149 1
+a149 1
+    base = VirtualAlloc(NULL, 1<<ADDRESS_WIDTH, MEM_RESERVE, PAGE_NOACCESS);
+@

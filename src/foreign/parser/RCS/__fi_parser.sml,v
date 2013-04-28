@@ -1,0 +1,167 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.08.22.10.25.46;	author brucem;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.08.22.09.27.54;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.19.09;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.50.19;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.53.58;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Final structure in the Foreign Interface parser.
+Forms the interface between the FI parser and other code.
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(*
+ * Foreign Interface parser: final structure
+ *
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * $Log$
+ *
+ *)
+
+require "fi_abs_syntax";
+require "__fi_abs_syntax";
+require "fi_int_abs_syn";
+require "_fi_int_abs_syn";
+require "lex_parse_interface";
+require "__lex_parse_interface";
+require "_fi_parser";
+require "fi_grm";
+require "_fi_grm";
+require "fi_lex";
+
+require "$.lib.base";
+require "$.lib.join";
+require "$.lib.parser2";
+
+
+local
+
+  structure FIIntAbsSyn = FIIntAbsSyn (structure FIAbsSyntax=FIAbsSyntax)
+
+  structure FILrVals = FILrValsFun(structure FIIntAbsSyn = FIIntAbsSyn
+                                   structure Token = LrParser.Token
+                                   structure LexParseInterface = LexParseInterface)
+
+  structure FILex = FILexFun(structure Tokens = FILrVals.Tokens
+                             structure LexParseInterface = LexParseInterface)
+
+  structure Joined = Join(structure LrParser = LrParser
+                          structure ParserData = FILrVals.ParserData
+                          structure Lex = FILex)
+in
+
+  (* This is the top level structure for the FI Parser, it contains
+     functions for parsing and the abstract syntax data types *)
+
+  structure FIParser = FIParser(structure FIIntAbsSyn = FIIntAbsSyn
+                                structure LexParseInterface = LexParseInterface
+                                structure Joined = Joined
+                                structure Tokens = FILrVals.Tokens)
+end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:__fi_parser.sml,v $
+ *  Revision 1.2  1997/08/22  10:25:46  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:__fi_parser.sml,v $
+ *  Revision 1.2  1997/08/22  10:25:46  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:__fi_parser.sml,v $
+ *  Revision 1.2  1997/08/22  10:25:46  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+Final structure in the Foreign Interface parser.
+Forms the interface between the FI parser and other code.
+@
+text
+@@

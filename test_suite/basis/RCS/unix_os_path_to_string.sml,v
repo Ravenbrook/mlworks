@@ -1,0 +1,101 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.05.22.10.19.58;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.21.12.45.59;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.toString.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log: basis:unix_os_path_to_string.sml,v $
+ *  Revision 1.1  1996/05/21  12:45:59  stephenb
+ *  new unit
+ *
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = toString {isAbs=false, vol = "", arcs = []} = "";
+
+val b = toString {isAbs=true, vol = "", arcs = []} = "/";
+
+val c = toString {isAbs=true, vol = "", arcs = ["",""]} = "//";
+
+val d = toString {isAbs=false, vol = "", arcs = ["a"]} = "a";
+
+val e = toString {isAbs=true, vol = "", arcs = ["a"]} = "/a";
+
+val f = toString {isAbs=true, vol = "", arcs = ["","a"]} = "//a";
+
+val g = toString {isAbs=false, vol = "", arcs = ["a",""]} = "a/";
+
+val h = toString {isAbs=false, vol = "", arcs = ["a","", ""]} = "a//";
+
+val i = toString {isAbs=false, vol = "", arcs = ["a", "b"]} = "a/b";
+
+val j = toString {isAbs=false, vol = "", arcs = ["a.b", "c"]} = "a.b/c" ;
+
+val k = toString {isAbs=false, vol = "", arcs = ["a.b", "c", ""]} = "a.b/c/";
+
+val l = toString {isAbs=false, vol = "", arcs = ["a", ".", "c"]} = "a/./c";
+
+val m = toString {isAbs=false, vol = "", arcs = ["a", "..", "c"]} = "a/../c";
+
+val n = toString {isAbs=false, vol = "", arcs = ["."]} = ".";
+
+val p = (toString {isAbs=false, vol = "foo", arcs = ["."]}; false) handle Path => true;
+
+val q = (toString {isAbs=false, vol = "", arcs = ["", "a"]}; false) handle Path => true;
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ * $Log$
+d18 1
+a18 1
+Shell.Module.loadSource "unix.__os";
+@

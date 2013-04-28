@@ -1,0 +1,99 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.10.19.14.00.57;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.08.22;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding scripts to run applications/tests into hope
+@
+
+
+1.2
+log
+@[Bug #70203]
+Modify for new argument passing mechanism
+@
+text
+@#!/bin/sh
+#
+# Copyright (c) 1998, Harlequin Group plc
+# All rights reserved
+#
+# $Log: TIME_ALL.sh,v $
+# Revision 1.1  1998/05/28  15:08:22  jont
+# new unit
+# Adding scripts to run applications/tests into hope
+#
+#
+
+dirs=`cat dirs`
+
+SRC=/u/sml/MLW/src
+ARCH=SPARC/Solaris
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -src) shift ; SRC=$1 ; shift ;;
+    -arch) shift ; ARCH=$1 ; shift ;;
+    *) echo "unknown parameter $1: use -src or -arch"; exit 1 ;;
+  esac
+done
+
+for dir in $dirs; do
+  echo Timing $dir
+  STATUS=0
+  time RUN_SOME -dir $dir -src $SRC -arch $ARCH 1>/dev/null 2>1 || STATUS=1
+  if [ STATUS -eq 1 ]; then
+    echo $dir failed
+  fi
+done
+@
+
+
+1.1
+log
+@new unit
+Adding scripts to run applications/tests into hope
+@
+text
+@d6 5
+a10 1
+# $Log$
+d27 7
+a33 15
+MLWORKS="$SRC/rts/runtime-g -load $SRC/images/$ARCH/guib.img -pass args -tty args"
+for dir in $dirs
+do
+  ( 
+    cd $dir
+    echo Timing $dir
+    csh << EOF
+    setenv MLWORKS_PERVASIVE ~sml/MLW/src/pervasive
+    setenv MLWORKS_SRC_PATH .:$MLWORKS_SRC_PATH
+    setenv XUSERFILESEARCHPATH ~sml/MLW/src/app-defaults/%N%C
+    time $MLWORKS << EOF1 >& poo
+    use"load";
+EOF1
+EOF
+  )
+@

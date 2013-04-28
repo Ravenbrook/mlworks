@@ -1,0 +1,116 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	92.09.04.08.33.13;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.08.31.15.23.25;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.08.28.15.08.51;	author richard;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.09.04.08.33.13;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compilation error handler.
+@
+
+
+1.3
+log
+@Changed to use a shared Location structure.
+@
+text
+@(*  ==== COMPILATION ERROR HANDLING ====
+ *                FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __error.sml,v $
+ *  Revision 1.2  1992/08/31  15:23:25  richard
+ *  Added Option structure.
+ *
+ *  Revision 1.1  1992/08/28  15:08:51  richard
+ *  Initial revision
+ *
+ *)
+
+require "../utils/__lists";
+require "../utils/__integer";
+require "../utils/__option";
+require "../basics/__location";
+require "_error";
+
+structure Error_ = Error (structure Lists = Lists_
+                          structure Integer = Integer_
+                          structure Option = Option_
+                          structure Location = Location_
+
+                          val default_stream = MLWorks.IO.std_err);
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 3
+ *  Revision 1.3  1992/09/04  08:33:13  richard
+ *  Changed to use a shared Location structure.
+ *
+@
+
+
+1.2
+log
+@Added Option structure.
+@
+text
+@d9 3
+d20 1
+d25 4
+a28 1
+                          structure Option = Option_);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 4
+a11 1
+ *  $Log$
+d16 1
+d20 2
+a21 1
+                          structure Integer = Integer_);
+@

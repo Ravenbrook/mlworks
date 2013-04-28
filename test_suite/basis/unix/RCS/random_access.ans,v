@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	99.03.23.10.00.01;	author mitchell;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.04.15.38.25;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30369]
+Replace project source path with a list of files.
+@
+
+
+1.2
+log
+@[Bug #190511]
+Order of structure output needs to be reversed now targets are processed in the correct order
+@
+text
+@val it : unit = ()
+structure IO = struct ... end
+structure BinPrimIO = struct ... end
+structure OSPrimIO = struct ... end
+structure TextIO = struct ... end
+structure TextStreamIO = struct ... end
+structure BinStreamIO = struct ... end
+structure TextPrimIO = struct ... end
+val it : unit = ()
+datatype Result =
+  CORRECT_EX |
+  NO_EX |
+  WRONG_EX of exn
+val CORRECT_EX : Result
+val NO_EX : Result
+val WRONG_EX : exn -> Result
+val test : unit -> {repeatTest: Result list, testGetPosStdErr: Result, testGetPosStdIn: Result, testGetPosStdOut: Result, testSetPosStdErr: Result, testSetPosStdIn: Result, testSetPosStdOut: Result, testStreamIO: {getPosStdIn: Result, getPosStdOut: Result}} = fn
+val it : {repeatTest: Result list, testGetPosStdErr: Result, testGetPosStdIn: Result, testGetPosStdOut: Result, testSetPosStdErr: Result, testSetPosStdIn: Result, testSetPosStdOut: Result, testStreamIO: {getPosStdIn: Result, getPosStdOut: Result}} = {repeatTest=[CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX], testGetPosStdErr=CORRECT_EX, testGetPosStdIn=CORRECT_EX, testGetPosStdOut=CORRECT_EX, testSetPosStdErr=CORRECT_EX, testSetPosStdIn=CORRECT_EX, testSetPosStdOut=CORRECT_EX, testStreamIO={getPosStdIn=CORRECT_EX, getPosStdOut=CORRECT_EX}}
+@
+
+
+1.1
+log
+@new unit
+[Bug #30369]
+Replace project source path with a list of files.
+@
+text
+@d2 6
+a8 6
+structure BinStreamIO = struct ... end
+structure TextStreamIO = struct ... end
+structure TextIO = struct ... end
+structure OSPrimIO = struct ... end
+structure BinPrimIO = struct ... end
+structure IO = struct ... end
+@

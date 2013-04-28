@@ -1,0 +1,94 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.20.01;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.31;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Elem.sig,v 1.3 1994/12/03 14:43:54 pxs Exp $";
+(*********************************** Elem ************************************)
+(*                                                                           *)
+(*         Signature to provide elementary functions on states               *)
+(*                                                                           *)
+(*****************************************************************************)
+
+signature ELEM =
+sig
+   structure PG : POLYGRAPH
+
+   type Div               (* Lists the local divergence potential           *)
+   type accset            (* Additional information for testing equivalence *)
+   type Preinf            (* Includes the entire additional information     *)
+                          (* which is needed for preorder checking.         *)
+                          (* Components are Div, App and accset             *)
+   type App               (* List the states wich are upper approximates of *)
+                          (* the considered state                           *)
+
+   val compgldivref       : '_a PG.state ref -> bool ref
+   val compprdiv          : '_a PG.state ref -> bool
+   val compsuc            : '_a PG.state ref
+                               -> (PG.act * '_a PG.state ref list ref) list ref
+   val compinfo           : '_a PG.state ref -> '_a
+   val divinf             : Preinf PG.state ref -> PG.act list
+   val approxinf          : Preinf PG.state ref -> Preinf PG.state ref list
+   val accsetinf          : Preinf PG.state ref -> accset
+   val infocompdivref     : Preinf PG.state ref -> PG.act list ref
+   val infocompappref     : Preinf PG.state ref -> Preinf PG.state ref list ref
+   val infocompaccsetref  : Preinf PG.state ref -> accset ref
+   val actsuclist         : PG.act * '_a PG.state ref -> '_a PG.state ref list
+   val getaccsetref       : Preinf -> (accset ref)
+
+   val setpreinf          : Preinf
+   val preinfcongrcl      : Preinf PG.state ref -> Preinf
+
+   val actmem             : PG.act * PG.act list -> bool
+   val actlistinclusion   : PG.act list * PG.act list -> bool
+   val stateeq            : '_a PG.state ref * '_a PG.state ref -> bool
+   val statemem           : '_a PG.state ref * '_a PG.state ref list -> bool
+   val statelistinclusion : '_a PG.state ref list * '_a PG.state ref list -> bool
+   val statelistinters    : '_a PG.state ref list * '_a PG.state ref list -> bool
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

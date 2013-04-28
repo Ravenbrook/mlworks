@@ -1,0 +1,119 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	92.08.04.15.46.24;	author davidt;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.04.21.17.20.19;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.08.04.15.46.24;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@New implementation of nameset using hashed sets as underlying implementation
+@
+
+
+1.2
+log
+@Removed redundant Array argument and require.
+@
+text
+@(* __newnameset.sml the structure *)
+(*
+$Log: __newnameset.sml,v $
+Revision 1.1  1992/04/21  17:20:19  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/__debug";
+require "../utils/__set";
+require "../utils/_hashset";
+require "../utils/__crash";
+require "../utils/__lists";
+require "../utils/__print";
+require "__ty_debug";
+require "__datatypes";
+require "__types";
+require "__strnames";
+require "__namehash";
+require "_newnameset";
+
+structure NewNameset_ = NewNameset(
+  structure Set       = Set_
+  structure TynameSet = HashSet(
+    structure Crash = Crash_
+    structure Lists = Lists_
+    type element = Datatypes_.Tyname
+    val eq = Types_.tyname_eq
+    val hash = NameHash_.tyname_hash
+    val size = 1024
+  )
+  structure StrnameSet = HashSet(
+    structure Crash = Crash_
+    structure Lists = Lists_
+    type element = Datatypes_.Strname
+    val eq = Strnames_.strname_eq
+    val hash = NameHash_.strname_hash
+    val size = 512
+  )
+  structure Debug     = Nameset_Debug_
+  structure Print     = Print_
+  structure Ty_Debug = Ty_Debug_
+  structure Datatypes = Datatypes_
+  structure Types     = Types_
+  structure Strnames  = Strnames_
+);
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/08/04  15:46:24  davidt
+Removed redundant Array argument and require.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+a12 1
+require "../utils/__array";
+a25 1
+    structure Array = Array_
+a33 1
+    structure Array = Array_
+@

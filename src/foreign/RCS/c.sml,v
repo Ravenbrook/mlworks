@@ -1,0 +1,255 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	97.05.07.08.32.15;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30030]
+@
+
+
+1.1
+log
+@new unit
+[Bug #30030]
+@
+text
+@(* Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * An interface to C.
+ * 
+ *.incomplete: The interface is incomplete, I've only put as much in
+ * as necessary to implement various motivating examples.
+ *
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+
+require "$.basis.__word";    (* Word.word *)
+require "$.basis.__word32";  (* Word32.word *)
+require "$.basis.__int";     (* Int.int *)
+require "$.basis.__int32";   (* Int32.int *)
+require "$.basis.__real";    (* Real.real *)
+require "$.basis.__char";    (* Char.char *)
+
+signature C =
+  sig
+
+    structure VoidPtr :
+      sig
+        type ptr
+        val next : ptr * Word.word -> ptr
+        val prev : ptr * Word.word -> ptr
+        val null : ptr
+        val - : ptr * ptr -> Int.int
+      end
+
+
+    structure FunPtr :
+      sig
+        type ('d, 'r) ptr
+      end
+
+    structure Memory :
+      sig
+        (*
+         * `malloc', `realloc' and `free' are identical to malloc(3),
+         * realloc(3) and free(3).  That is, any memory allocated by
+         * `malloc' and `realloc' can legitimately be passed to free(3)
+         * on the C side of a CFI call and any memory allocated by
+         * malloc(3) and realloc(3) can be freed by `free' on the ML side.
+         *)
+
+        val malloc : Word.word -> VoidPtr.ptr
+        val realloc : VoidPtr.ptr * Word.word -> VoidPtr.ptr
+
+        (* 
+         * Currently the above behave just like their C counterparts on
+         * failure (i.e. return NULL).  Still undecided as to whether it
+         * would be better to raise an exception in this case.
+         *)
+
+        val free : VoidPtr.ptr -> unit
+        val copy : {from: VoidPtr.ptr, to: VoidPtr.ptr, size:Word.word} -> unit
+      end
+
+
+
+    type 'a ptr
+
+    val null : 'a ptr
+    val free : 'a ptr -> unit
+
+    type 's c_char
+    type 's c_short
+    type 's c_int
+    type 's c_long
+    type void
+
+    type signed
+    type unsigned
+
+    val charSize  : Word.word
+    val shortSize : Word.word
+    val ptrSize   : Word.word
+
+    val charPadding  : Word.word
+    val shortPadding : Word.word
+    val intPadding   : Word.word
+    val longPadding  : Word.word
+    val ptrPadding   : Word.word
+
+    val makeUnsignedChar : char -> unsigned c_char
+    val makeSignedChar : char -> signed c_char
+    val unsignedCharToChar : unsigned c_char -> char
+    val makeUnsignedShort : Word.word -> unsigned c_short
+    val makeSignedShort : int -> signed c_short
+
+    val updateShortPtr : 's c_short ptr * 's c_short -> unit
+
+    val updatePtrPtr   : 'a ptr ptr * 'a ptr -> unit
+
+    val makeCharPtr : 's c_char -> 's c_char ptr
+    val fromString : string -> signed c_char ptr
+    val toString : 'a c_char ptr -> string
+    val toStringN : 'a c_char ptr * Word.word -> string
+
+    val fromVoidPtr : VoidPtr.ptr -> 'a ptr
+
+    val deRefCharPtr : 's c_char ptr -> 's c_char
+    val deRefShortPtr : 's c_short ptr -> 's c_short
+    val deRefIntPtr : 's c_int ptr -> 's c_int
+    val deRefLongPtr : 's c_long ptr -> 's c_long
+    val deRefPtrPtr : 'a ptr ptr -> 'a ptr
+
+    structure Long :
+      sig
+        type 's long
+        val size : Word.word
+        val padding : Word.word
+        val fromInt : Int.int -> signed long
+        val fromInt32 : Int32.int -> signed long
+        val fromWord : Word.word -> unsigned long
+        val fromWord32 : Word32.word -> unsigned long
+        val toInt : signed long -> Int.int
+        val toInt32 : signed long -> Int32.int
+        val toWord : unsigned long -> Word.word
+        val toWord32 : unsigned long -> Word32.word
+      end
+
+    structure Int :
+      sig
+        type 's int
+        val size : Word.word
+        val padding : Word.word
+        val fromInt : Int.int -> signed int
+        val fromInt32 : Int32.int -> signed int
+        val fromWord : Word.word -> unsigned int
+        val fromWord32 : Word32.word -> unsigned int
+        val toInt : signed int -> Int.int
+        val toInt32 : signed int -> Int32.int
+        val toWord : unsigned int -> Word.word
+        val toWord32 : unsigned int -> Word32.word
+      end
+
+
+    structure IntPtr :
+      sig
+        val make : Word.word -> 's Int.int ptr
+        val makeWith : 's Int.int -> 's Int.int ptr
+        val free : 's Int.int ptr -> unit
+        val := : 's Int.int ptr * 's Int.int -> unit
+        val ! : 's Int.int ptr -> 's Int.int
+        val fromVoidPtr : void ptr -> 's Int.int ptr
+        val toVoidPtr : 's Int.int ptr -> void ptr
+      end
+
+    structure LongPtr :
+      sig
+        val make : 's Long.long -> 's Long.long ptr
+        val := : 's Long.long ptr * 's Long.long -> unit
+        val ! : 's Long.long ptr -> 's Long.long
+        val fromVoidPtr : void ptr -> 's Long.long ptr
+        val toVoidPtr : 's Long.long ptr -> void ptr
+      end
+
+    (*
+     * Imagine here that you'll find ...
+     * UdChar, UShort, and Float
+     * which all look much the same as the above.
+     *)
+
+    structure File :
+      sig
+        type file
+        type file_name = string;
+        type function_name = string;
+
+
+        val openFile : file_name * function_name -> file
+        (*
+         * `open' opens `file_name' and calls the initialisation function
+         * called `function_name'.
+         *
+         * `open' raises OS.SysErr if `file_name' cannot be opened 
+         * successfully.  (XXX: perhaps a C specific exception may
+         * be more appropriate)
+         *
+         * `file_name' should include any necessary OS specific file 
+         * extension.  For example, under UNIX this means it should 
+         * have the extension "so" and under Win32 the extension "DLL".
+         *)
+
+
+(*     
+        val lookup : file option -> ('d, 'r) FunPtr.ptr
+*)
+
+
+        val closeFile : file * function_name option -> unit
+        (*
+         * `close' closes `file' and calls the finialisation function
+         * called `function_name' if defined.
+         *
+         * `close' raises OS.SysErr if `file' cannot be closed
+         * successfully.  (XXX: perhaps a C specific exception may
+         * be more appropriate)
+         *
+         *)
+
+
+        (*
+         * Note that there is no function to bind a value to a function
+         * in a specfied file.  This is because the binding is taken
+         * care of in a C stub.
+         *)
+
+      end
+
+
+
+    val call : string -> 'a
+    (*
+     * Returns an ML function that when applied to its arguments will
+     * call the C function with the given name.  For example, assuming
+     * that the C function called "hello" has been defined, then the
+     * following binds it to the value helloWorld :-
+     *
+     *   val helloWorld : unit -> unit = call "hello"
+     *)
+
+
+  end
+@

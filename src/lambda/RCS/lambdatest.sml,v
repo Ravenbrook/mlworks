@@ -1,0 +1,1033 @@
+head	1.13;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.13
+	mlworks-28-01-1994:1.13
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.13
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.12
+	Ten15_release_21-08-91:1.11
+	Ten15_release_19-08-91:1.11
+	ten15_release:1.11;
+locks; strict;
+
+
+1.13
+date	92.09.03.18.06.42;	author richard;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	91.12.05.15.38.00;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.07.10.16.21.57;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.07.10.14.50.23;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.07.09.18.09.32;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.07.08.18.05.20;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.07.05.17.20.05;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.06.26.20.33.54;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.06.24.21.09.19;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.06.21.19.10.42;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.17.15.09.00;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.12.11.12.00;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.11.16.55.59;	author jont;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	93.03.12.18.53.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Test harness for the lambda translator
+@
+
+
+1.13
+log
+@Installed central error reporting mechanism.
+@
+text
+@(*
+$Log: lambdatest.sml,v $
+Revision 1.12  1991/12/05  15:38:00  jont
+Turned off structure elimination from the optimiser
+
+Revision 1.11  91/07/10  16:21:57  jont
+No change?
+
+Revision 1.10  91/07/10  14:50:23  jont
+Now just a shell, all work in toplevel
+
+Revision 1.9  91/07/09  18:09:32  jont
+End of the day!
+
+Revision 1.8  91/07/08  18:05:20  jont
+Updated to deal with top level environments
+
+Revision 1.7  91/07/05  17:20:05  jont
+*** empty log message ***
+
+Revision 1.6  91/06/26  20:33:54  jont
+Added first effort at handling primitives
+
+Revision 1.5  91/06/24  21:09:19  jont
+All good up to match translator
+
+Revision 1.4  91/06/21  19:10:42  jont
+More testing
+
+Revision 1.3  91/06/17  15:09:00  jont
+Removed structure handling into _lambda
+Did some tidying up
+
+Revision 1.2  91/06/12  11:12:00  jont
+Extended to deal with more input
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../main/__toplevel";
+
+fun compile x = TopLevel_.compile_file x
+
+fun test x = TopLevel_.test_string x
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 4
+a5 1
+$Log:	lambdatest.sml,v $
+a39 1
+require "../utils/__debug";
+a40 4
+require "../main/__io";
+require "../main/__info";
+require "../main/__options";
+require "__lambdaoptimiser";
+d42 1
+a42 4
+val compile =
+  TopLevel_.compile_file
+  Info_.default_options
+  Options_.default_options
+a44 119
+
+fun nolambda() = map (fn(_,x)=>x:=false) LambdaOptimiser_.optimise_switches;
+
+fun alllambda() = map (fn(_,x)=>x:=true) LambdaOptimiser_.optimise_switches;
+
+fun no_code() =
+  (TopLevel_.show_absyn := false;
+   TopLevel_.show_match := false;
+   TopLevel_.show_lambda := false;
+   TopLevel_.show_environ := false;
+   TopLevel_.show_opt_lambda := false;
+   TopLevel_.show_mir := false;
+   TopLevel_.show_opt_mir := false)
+   
+fun toggle_opt s =
+   let
+      fun find ((name,switch)::rest) = if name=s
+					  then switch:=not(!switch)
+				       else find rest
+   in
+      find LambdaOptimiser_.optimise_switches
+   end
+
+fun set_opt s =
+   let
+      fun find ((name,switch)::rest) = if name=s
+					  then switch:=true
+				       else find rest
+   in
+      find LambdaOptimiser_.optimise_switches
+   end
+
+fun clear_opt s =
+   let
+      fun find ((name,switch)::rest) = if name=s
+					  then switch:=false
+				       else find rest
+   in
+      find LambdaOptimiser_.optimise_switches
+   end
+
+fun clear_all () =
+  map (clear_opt o #1) LambdaOptimiser_.optimise_switches
+
+fun set_all () =
+  map (set_opt o #1) LambdaOptimiser_.optimise_switches
+
+fun debug_all() =
+  (Unify_Debug_.set_debug_level 100;
+  Scheme_Debug_.set_debug_level 100;
+  Valenv_Debug_.set_debug_level 100;
+  Tystr_Debug_.set_debug_level 100;
+  Tyenv_Debug_.set_debug_level 100;
+  Environment_Debug_.set_debug_level 100;
+  Tyvarenv_Debug_.set_debug_level 100;
+  Strnames_Debug_.set_debug_level 100;
+  Tyname_id_Debug_.set_debug_level 100;
+  Tyfun_id_Debug_.set_debug_level 100;
+  Strname_id_Debug_.set_debug_level 100;
+  Nameset_Debug_.set_debug_level 100;
+  Sigma_Debug_.set_debug_level 100;
+  Sigenv_Debug_.set_debug_level 100;
+  Funenv_Debug_.set_debug_level 100;
+  Basis_Debug_.set_debug_level 100;
+  Types_Debug_.set_debug_level 100;
+  Type_exp_Debug_.set_debug_level 100;
+  Patterns_Debug_.set_debug_level 100;
+  Core_rules_Debug_.set_debug_level 100;
+  Realise_Debug_.set_debug_level 100;
+  Sharetypes_Debug_.set_debug_level 100;
+  Share_Debug_.set_debug_level 100;
+  Assemblies_Debug_.set_debug_level 100;
+  Module_rules_Debug_.set_debug_level 100)
+
+fun debug_none() =
+  (Unify_Debug_.set_debug_level 0;
+  Scheme_Debug_.set_debug_level 0;
+  Valenv_Debug_.set_debug_level 0;
+  Tystr_Debug_.set_debug_level 0;
+  Tyenv_Debug_.set_debug_level 0;
+  Environment_Debug_.set_debug_level 0;
+  Tyvarenv_Debug_.set_debug_level 0;
+  Strnames_Debug_.set_debug_level 0;
+  Tyname_id_Debug_.set_debug_level 0;
+  Tyfun_id_Debug_.set_debug_level 0;
+  Strname_id_Debug_.set_debug_level 0;
+  Nameset_Debug_.set_debug_level 0;
+  Sigma_Debug_.set_debug_level 0;
+  Sigenv_Debug_.set_debug_level 0;
+  Funenv_Debug_.set_debug_level 0;
+  Basis_Debug_.set_debug_level 0;
+  Types_Debug_.set_debug_level 0;
+  Type_exp_Debug_.set_debug_level 0;
+  Patterns_Debug_.set_debug_level 0;
+  Core_rules_Debug_.set_debug_level 0;
+  Realise_Debug_.set_debug_level 0;
+  Sharetypes_Debug_.set_debug_level 0;
+  Share_Debug_.set_debug_level 0;
+  Assemblies_Debug_.set_debug_level 0;
+  Module_rules_Debug_.set_debug_level 0)
+
+val _ = TopLevel_.Diagnostic.set 2
+val _ = TopLevel_.do_lambda_opt := true
+val _ = no_code()
+val gc = System.Unsafe.CInterface.gc
+
+fun path x = TopLevel_.pervasive_library_dir := x;
+
+require "../make/__recompile";
+
+fun read_path () =
+  (case Io_.get_pervasive_dir(MLWorks.OS.Unix.environment()) of
+     Io_.Option.PRESENT s => TopLevel_.pervasive_library_dir := s
+   | _ => output(std_out, "No path found\n"));
+
+read_path();
+
+open Recompile_
+val recompile = recompile Info_.default_options Options_.default_options
+@
+
+
+1.12
+log
+@Turned off structure elimination from the optimiser
+@
+text
+@d2 4
+a5 1
+$Log:	lambdatest.sml,v $
+a44 12
+
+fun clear_opt s =
+   let
+      fun find ((name,switch)::rest) = if name=s
+					  then switch:=false
+				       else find rest
+   in
+      find LambdaOptimiser_.optimise_switches
+   end
+
+val _ = clear_opt"struct_elim"
+(* Don't want this one at the moment *)
+@
+
+
+1.11
+log
+@No change?
+@
+text
+@d3 3
+d42 12
+@
+
+
+1.10
+log
+@Now just a shell, all work in toplevel
+@
+text
+@d3 3
+d36 1
+a36 1
+fun compilefile x = TopLevel_.compile_file x
+@
+
+
+1.9
+log
+@End of the day!
+@
+text
+@d3 3
+d31 1
+a31 18
+require "../lexer/__lexer";
+require "../parser/__parser";
+require "../typechecker/__basis";
+require "../typechecker/__mod_rules";
+require "../basics/__absyn";
+require "../basics/__absynprint";
+require "../basics/identprint";
+require "../utils/__sexpr";
+require "../basics/__ident";
+require "../basics/__symbol";
+require "__environ";
+require "__lambda";
+require "__lambdaprint";
+require "__environprint";
+require "__environtypes";
+require "__lambdatypes";
+require "__lambdaoptimiser";
+require "__codeprint";
+d33 1
+a33 1
+exception not_done_yet = LambdaTypes_.not_done_yet
+d35 1
+a35 312
+fun parse pB s =
+  let
+    val done = ref false
+    val ts = Lexer_.mkTokenStream (fn () => if !done then
+				             ""
+					   else
+					     (done := true; s))
+  in
+    Parser_.parse_topdec (ts,pB)
+  end
+
+val primitives = 
+    "(* first value constructors *) \
+    \  datatype constructors = true | false | nil | :: | ref \
+     
+    \  (* next exception constructors *) \
+    \  exception Abs and Ord and Chr and Div and Mod and Quot and Prod \
+    \ and Neg and Sum and Diff and Floor and Sqrt and Exp and Ln and Io \
+    \ and Match and Bind and Interrupt \
+
+    \  (* next value variables *) \
+    \  val map = () and rev = () and not = () and ~ = () and abs = () \
+    \  and floor = () and real = () and sqrt = () and sin = () and cos = () \
+    \  and arctan = () and exp = () and ln = () and size = () and chr = () \
+    \  and ord = () and explode = () and implode = () and ! = () \
+    
+    \  and / = () and div = () and mod = () and + = () and * = () and - = () \
+    \  and ^ = () and @@ = () and <> = () and < = () and > = () \
+    \  and <= = () and >= = () and := = () and o = () \
+
+    \  (* finally we define the infix identifiers *) \
+    \  infix 7 / * div mod \
+    \  infix 6 + - ^ \
+    \  infix 5 @@ \
+    \  infixr 5 :: \
+    \  infix 4 <> < > <= >= =\
+    \  infix 3 := o"
+
+val overloads = 
+    "  val 'real+ = () and 'int+ = () and 'real* = () and 'int* = () \
+    \  and 'real- = () and 'int- = () \
+    \  and 'int< = () and 'real< = () \
+    \  and 'int> = () and 'real> = () \
+    \  and 'int<= = () and 'real<= = () \
+    \  and 'int>= = () and 'real>= = () "
+
+val (_, initial) = parse Parser_.empty_pB primitives
+
+val bref = ref (Basis_.initial_basis)
+val absyn_tree = ref ""
+val lambda_code = ref ""
+val lambda_opt_code = ref ""
+val environ = ref ""
+val initial_environ = ref ""
+
+fun extract_env (Basis_.BASIS (_,_,_,env)) = env
+
+fun printenv () =
+  print ("E = \n" ^ (Environment_.string_environment (extract_env (!bref))))
+
+fun sigexp_to_string sigexp = case sigexp of
+  Absyn_.NEWsigexp(spec, _) => "Can't print sigid specs yet"
+| Absyn_.OLDsigexp(sigid, _) => IdentPrint_.printSigId sigid
+
+fun strexp_to_string strexp = case strexp of
+  Absyn_.NEWstrexp(strdec) => " struct " ^ strdec_to_string(strdec) ^ " end"
+| Absyn_.OLDstrexp(longstrid) => IdentPrint_.printLongStrId(longstrid)
+| Absyn_.APPstrexp(funid, strexp) => (IdentPrint_.printFunId funid) ^ "(" ^
+  (strexp_to_string strexp) ^ ")"
+| Absyn_.LOCALstrexp(strdec, strexp) => (strdec_to_string strdec) ^
+  (strexp_to_string strexp)
+
+and strdec_to_string strdec = case strdec of
+  Absyn_.DECstrdec(ord_dec) => AbsynPrint_.printDec(ord_dec)
+| Absyn_.STRUCTUREstrdec(struc_dec_list) =>
+  let fun struc_dec_list_to_string([]) = ""
+  | struc_dec_list_to_string((strid, sigexp_opt, strexp) :: tl) =
+    "(" ^ (IdentPrint_.printStrId strid) ^
+      (case sigexp_opt of
+	Absyn_.ABSENT => ""
+      | Absyn_.PRESENT(sigexp) => sigexp_to_string sigexp) ^
+      (strexp_to_string strexp) ^ ")" ^ struc_dec_list_to_string(tl)
+  in
+    struc_dec_list_to_string struc_dec_list
+  end
+| Absyn_.LOCALstrdec(strdec1, strdec2) =>
+  "LOCAL " ^ strdec_to_string(strdec1) ^ "IN " ^ strdec_to_string(strdec2) ^
+  "END"
+| Absyn_.SEQUENCEstrdec(strdec_list) =>
+  let fun strdec_list_to_string [] = ""
+  | strdec_list_to_string(hd :: tl) = strdec_to_string(hd) ^
+    strdec_list_to_string(tl)
+  in
+    strdec_list_to_string(strdec_list)
+  end
+
+val declist_to_sexpr = CodePrint_.decodelambdalist
+
+fun take(x, n) = if n <= 0 orelse x = [] then []
+		 else (hd x) :: (take(tl x, n-1))
+
+fun drop(x, n) = if n <= 0 orelse x = [] then x
+		 else drop(tl x, n-1)
+
+fun skip_spaces x = if x = [] then [] 
+		    else
+		      if hd x <> " " then x
+		      else skip_spaces(tl x)
+
+fun get_id x = if x = [] orelse hd x = " " then []
+	       else (hd x) :: (get_id(tl x))
+
+fun check_comment x = take(x, 2) = explode"(*"
+
+fun skip_comment x =
+let fun inner_skip x =
+  if x = [] then []
+  else
+    if take(x, 2) = explode"*)" then drop(x, 2)
+    else
+     if check_comment x then
+       inner_skip(skip_comment x)
+     else inner_skip(tl x)
+in
+  inner_skip(drop(x, 2))
+end
+
+fun skip_to_space x =
+  if x = [] then [] 
+  else
+    if hd x = " " then x
+    else
+      skip_to_space(if check_comment x then skip_comment x else tl x)
+
+fun get_token x = get_id(
+let val x' = skip_spaces x
+in
+  if check_comment x' then skip_comment x' else x'
+end
+)
+
+fun skip_token x = skip_spaces(skip_to_space(skip_spaces x))
+
+fun make_primitives x =
+let val chars = explode x
+  fun do_tokens x = case x of
+    [] => Environ_.empty_env
+  | h :: t =>
+    let val token = get_token x
+      val y = skip_spaces x
+    in
+      if token = explode "infix" then Environ_.empty_env
+      else
+	if token = explode "exception" then
+	  let val x' = skip_token x
+(*
+	    val _ = print"found exception"
+*)
+	    fun do_exc (y, env) =
+	      let val id = get_token y
+		val rest = skip_token y
+(*
+		val _ = print("adding " ^ (implode id))
+*)
+		val new_env =
+		  Environ_.add_valid_env((Ident_.EXCON(Symbol_.find_symbol
+						      (implode id)),
+		    EnvironTypes_.PRIM(LambdaTypes_.new_Prim())), env)
+	      in
+		if get_token rest = explode "and" then
+		  do_exc(skip_token rest, new_env)
+		else (new_env, rest)
+	      end
+	    val (env, rest) = do_exc(x', Environ_.empty_env)
+	  in
+	    Environ_.augment_env(env, do_tokens rest)
+	  end
+	else
+	  if token = explode "val" then
+	    let val x' = skip_token x
+(*
+	      val _ = print"found val"
+*)
+	      fun do_val (y, env) =
+		let val id = get_token y
+		  val rest = skip_token(skip_token(skip_token y))
+		  (* Ignore = () part *)
+(*
+		  val _ = print("adding " ^ (implode id))
+*)
+		  val new_env =
+		    Environ_.add_valid_env((Ident_.VAR(Symbol_.find_symbol
+							 (implode id)),
+		      EnvironTypes_.PRIM(LambdaTypes_.new_Prim())), env)
+		in
+		  if get_token rest = explode "and" then
+		    do_val(skip_token rest, new_env)
+		  else (new_env, rest)
+		end
+	      val (env, rest) = do_val(x', Environ_.empty_env)
+	    in
+	      Environ_.augment_env(env, do_tokens rest)
+	    end
+	  else
+	    do_tokens(skip_to_space y)
+    end
+in
+  do_tokens chars
+end
+
+val printSexpr = Sexpr_.pprintSexpr (fn x => x)
+
+fun test_dec dec = 
+  let 
+    val _ = bref := Module_rules_.check_topdec (dec,Basis_.initial_basis)
+    val _ = LambdaTypes_.init_LVar()
+    val _ = LambdaTypes_.init_Prim()
+    val _ = absyn_tree := case dec of
+      Absyn_.STRDECtopdec(strdec) => strdec_to_string(strdec)
+    | Absyn_.SIGNATUREtopdec(sigbind_list) =>
+      "Can't print SIGNATUREtopdec yet"
+    | Absyn_.FUNCTORtopdec funbind_list =>
+      let fun print_fun_list [] = "()"
+	| print_fun_list((Absyn_.FUNBIND head) :: tail) =
+	let fun print_funbind [] = ";"
+	  | print_funbind((funid, strid, sigexp, _, strexp, sig_opt) :: rest) =
+	  "functor " ^ (IdentPrint_.printFunId funid) ^
+	  "(" ^ (IdentPrint_.printStrId strid) ^ ": sig)" ^
+	  (case sig_opt of Absyn_.ABSENT => "" | _ => ": sig") ^ "=" ^
+	  (strexp_to_string strexp) ^
+	  (print_funbind rest)
+	in
+	  (print_funbind head) ^ (print_fun_list tail)
+	end
+      in
+	print_fun_list funbind_list
+      end
+    | Absyn_.REQUIREtopdec(require) =>
+      "Can't print REQUIREtopdec yet"
+    val _ = print("The syntax tree")
+    val _ = print(!absyn_tree)
+    val initial_env =
+      Environ_.add_valid_env((Ident_.CON(Symbol_.find_symbol "ref"),
+	EnvironTypes_.PRIM(LambdaTypes_.new_Prim())),
+      Environ_.augment_env
+	(make_primitives primitives, make_primitives overloads))
+    val _ = Environ_.define_overloaded_ops initial_env
+    val imp_prims = Environ_.make_imperative_primitives initial_env
+    val _ = print(Set_.set_print(imp_prims,LambdaTypes_.printPrim))
+    val (top_env as EnvironTypes_.TOP_ENV(env, fun_env), code_list) =
+      Lambda_.trans_top_dec(dec,
+	EnvironTypes_.TOP_ENV(initial_env, EnvironTypes_.FUN_ENV Map_.empty_map))
+      handle exn as LambdaTypes_.not_done_yet x =>
+        (print("not_done_yet "^x); raise exn)
+      | exn as LambdaTypes_.impossible x =>
+        (print("impossible "^x); raise exn)
+    val code_list_opt = map
+      (fn (l, e) => (l, LambdaOptimiser_.optimise imp_prims e)) code_list
+    val _ = lambda_code := printSexpr(declist_to_sexpr(code_list))
+    val _ = lambda_opt_code := printSexpr(declist_to_sexpr(code_list_opt))
+    val _ = environ := printSexpr(EnvironPrint_.decodeenv env)
+    val _ = initial_environ := printSexpr(EnvironPrint_.decodeenv initial_env)
+  in
+    print("The lambda code");
+    print(!lambda_code);
+    print("The optimisied lambda code");
+    print(!lambda_opt_code);
+(*
+    print("The initial environment");
+    print(!initial_environ);
+*)
+    print("The environment");
+    print(!environ);
+    "done"
+  end
+
+fun testfile x =
+  let
+    val source_file = x ^ ".sml"
+
+    val source_stream = open_in source_file
+      
+    val ts = Lexer_.mkTokenStream (fn () => input_line source_stream)
+    val (dec,_) = Parser_.parse_topdec (ts,initial) handle exn as Parser_.ParseError x => (print ("ParserError "^x); raise exn)
+
+    val _ = close_in source_stream
+      
+  in
+    test_dec dec
+  end
+
+fun compilefile x =
+  let
+    val source_file = x ^ ".sml"
+
+    val source_stream = open_in source_file
+      
+    val ts = Lexer_.mkTokenStream (fn () => input_line source_stream)
+    val (dec,_) = Parser_.parse_topdec (ts,initial)
+
+    val _ = close_in source_stream
+      
+  in
+    test_dec dec
+  end
+
+fun test x = 
+  let 
+    val (dec,_) = parse initial x
+  in
+    test_dec dec
+  end
+@
+
+
+1.8
+log
+@Updated to deal with top level environments
+@
+text
+@d3 3
+d44 2
+d100 1
+d145 1
+a145 5
+fun declist_to_sexpr[] = Sexpr_.NIL
+  | declist_to_sexpr((lvar, lambda) :: code_list) =
+  Sexpr_.list[Sexpr_.ATOM(LambdaTypes_.printLVar lvar), Sexpr_.ATOM(", "),
+    LambdaPrint_.decodelambda lambda, Sexpr_.ATOM("; "),
+      declist_to_sexpr code_list]
+d270 16
+a285 2
+    | Absyn_.FUNCTORtopdec(fundbind_list) =>
+      "Can't print FUNCTORtopdec yet"
+d305 2
+d308 1
+d314 2
+@
+
+
+1.7
+log
+@*** empty log message ***
+@
+text
+@d3 3
+d274 5
+a278 2
+    val initial_env = Environ_.augment_env
+      (make_primitives primitives, make_primitives overloads)
+d280 5
+a284 1
+    val (env, code_list) = Lambda_.trans_top_dec(dec, initial_env)
+a336 14
+(*
+    val _ = bref := Module_rules_.check_topdec (dec,Basis_.initial_basis)
+    val _ = LambdaTypes_.init_LVar()
+    val _ = absyn_tree := case dec of
+      Absyn_.STRDECtopdec(strdec) => strdec_to_string(strdec)
+    | Absyn_.SIGNATUREtopdec(sigbind_list) =>
+      "Can't print SIGNATUREtopdec yet"
+    | Absyn_.FUNCTORtopdec(fundbind_list) =>
+      "Can't print FUNCTORtopdec yet"
+    val _ = print("The syntax tree")
+    val _ = print(!absyn_tree)
+    val (env, code_list) = lambda_trans(dec)
+    val _ = lambda_code := printSexpr(declist_to_sexpr(code_list))
+    val _ = environ := printSexpr(EnvironPrint_.decodeenv(env))
+a337 8
+    print("The lambda code");
+    print(!lambda_code);
+    print("The environment");
+    print(!environ);
+    "done"
+  end
+*)
+  in
+a339 44
+
+local
+  structure Timer = System.Timer
+in
+
+  fun time f = 
+    let 
+      val timer = Timer.start_timer () 
+	
+      fun print_time () =
+	print ("Time : " ^ Timer.makestring (Timer.check_timer timer))
+	
+      val result = 
+	f () handle exn => (print_time () ; raise exn)
+    in
+      (print_time () ; result)
+    end
+
+
+  fun xtime f = 
+    let 
+
+      val timer = Timer.start_timer () 
+	
+      fun print_time () =
+	let 
+	  val time = Timer.makestring (Timer.check_timer timer)
+	  val gc_time = Timer.makestring (Timer.check_timer_gc timer)
+	  val sys_time = Timer.makestring (Timer.check_timer_sys timer)
+	in
+	  print ("Time : " ^ time ^
+		 " [gc : " ^ gc_time ^ 
+		 " sys : " ^ sys_time ^ "]") 
+	end
+      
+      val result = 
+	f () handle exn => (print_time () ; raise exn)
+    in
+      (print_time () ; result)
+    end
+
+end
+
+fun rebuild () = xtime (fn () => make "lambdatest")
+@
+
+
+1.6
+log
+@Added first effort at handling primitives
+@
+text
+@d3 3
+d79 8
+d93 1
+d101 2
+a102 2
+  Absyn_.NEWsigexp(spec) => "Can't print sigid specs yet"
+| Absyn_.OLDsigexp(sigid) => IdentPrint_.printSigId sigid
+d105 1
+a105 1
+  Absyn_.NEWstrexp(strdec) => strdec_to_string(strdec)
+d142 2
+a143 2
+fun first_n(x, n) = if n <= 0 orelse x = [] then []
+		    else (hd x) :: (first_n(tl x, n-1))
+d145 2
+a146 2
+fun after_first_n(x, n) = if n <= 0 orelse x = [] then x
+			  else after_first_n(tl x, n-1)
+d149 3
+a151 3
+		      else
+			if hd x <> " " then x
+			else skip_spaces(tl x)
+a152 5
+fun skip_to_space x = if x = [] then [] 
+		      else
+			if hd x = " " then x
+			else skip_to_space(tl x)
+
+d156 2
+d159 2
+a160 3
+if x = [] then []
+else
+  if first_n(x, 2) = explode"*)" then after_first_n(x, 2)
+d162 8
+a169 3
+    if first_n(x, 2) = explode"(*" then
+      skip_comment(skip_comment(after_first_n(x, 2)))
+    else skip_comment(tl x)
+d171 16
+d192 4
+a195 5
+  if first_n(x, 2) = explode"(*" then do_tokens(skip_comment(after_first_n(x, 2)))
+  else
+    if h = " " then do_tokens t
+    else
+      if first_n(x, 5) = explode "infix" then let val _ = print"foudn infix" in Environ_.empty_env end
+d197 3
+a199 2
+	if first_n(x, 9) = explode "exception" then
+	  let val x' = skip_spaces(after_first_n(x, 9))
+d201 1
+d203 3
+a205 2
+	      let val id = get_id y
+		val rest = skip_spaces(after_first_n(y, length id))
+d207 1
+d213 2
+a214 2
+		if get_id rest = explode "and" then
+		  do_exc(skip_spaces(after_first_n(rest, 3)), new_env)
+d222 24
+a245 3
+	  if first_n(x, 3) = explode "val" then
+	    let val _ = print"found val" in
+	    Environ_.empty_env
+d247 3
+a249 1
+	  else let val _ = print("skipping to space" ^ (implode(first_n(x, 3)))) in do_tokens(skip_to_space x) end
+a253 17
+fun lambda_trans(topdec) = let
+  val _ = LambdaTypes_.init_Prim()
+  val env = make_primitives primitives
+  val _ = print"made env"
+  val _ = print(printSexpr(EnvironPrint_.decodeenv(env)))
+(*
+  val env = Environ_.add_valid_env((Ident_.EXCON(Symbol_.find_symbol "bind"),
+    EnvironTypes_.LAMB(LambdaTypes_.new_LVar())),
+      Environ_.add_valid_env((Ident_.EXCON(Symbol_.find_symbol "match"),
+        EnvironTypes_.LAMB(LambdaTypes_.new_LVar())), Environ_.empty_env))
+*)
+
+  val (new_env, new_lambda) = Lambda_.trans_top_dec(topdec, env)
+in
+  (Environ_.augment_env(env, new_env), new_lambda)
+end
+
+d260 1
+d267 2
+d271 4
+a274 1
+    val (env, code_list) = lambda_trans(dec)
+d280 2
+a281 1
+    val _ = environ := printSexpr(EnvironPrint_.decodeenv(env))
+d285 4
+@
+
+
+1.5
+log
+@All good up to match translator
+@
+text
+@d3 3
+d49 1
+a49 3
+  val (_, initial) =
+    parse Parser_.empty_pB   
+
+d76 2
+d130 69
+d200 5
+d209 3
+d213 1
+a213 12
+  case topdec of
+    Absyn_.STRDECtopdec(strdec) =>
+    let val (new_env, new_lambda) =
+      Lambda_.trans_str_dec(strdec, env)
+    in
+      (Environ_.augment_env(env, new_env), new_lambda)
+    end
+
+  | Absyn_.SIGNATUREtopdec(sigbind_list) =>
+    raise(not_done_yet("Can't translate SIGNATUREtopdec yet"))
+  | Absyn_.FUNCTORtopdec(fundbind_list) =>
+    raise(not_done_yet("Can't translate FUNCTORtopdec yet"))
+@
+
+
+1.4
+log
+@More testing
+@
+text
+@d3 3
+d124 2
+a125 1
+	 LambdaPrint_.decodelambda lambda, declist_to_sexpr code_list]
+@
+
+
+1.3
+log
+@Removed structure handling into _lambda
+Did some tidying up
+@
+text
+@d3 4
+d125 3
+a127 1
+    EnvironTypes_.LAMB(LambdaTypes_.new_LVar())), Environ_.empty_env)
+d145 27
+a174 1
+    val enc_file = x ^ ".enc"
+d179 1
+a179 1
+    val (dec,_) = Parser_.parse_topdec (ts,initial)
+a182 1
+    val _ = bref := Module_rules_.check_topdec (dec,Basis_.initial_basis)
+d184 1
+a184 1
+    "done"
+a189 1
+    val enc_file = x ^ ".enc"
+a197 1
+    val _ = bref := Module_rules_.check_topdec (dec,Basis_.initial_basis)
+d199 1
+a199 1
+    "done"
+d205 1
+d226 4
+a229 1
+
+@
+
+
+1.2
+log
+@Extended to deal with more input
+@
+text
+@d2 4
+a5 1
+$Log$
+d15 1
+d78 13
+a90 1
+fun strdec_to_string strdec = case strdec of
+d93 10
+a102 1
+    "Can't print STRUCTUREstrdec yet"
+d104 2
+a105 1
+    "Can't print LOCALstrdec yet"
+d108 2
+a109 2
+    | strdec_list_to_string(hd :: tl) = strdec_to_string(hd) ^
+      strdec_list_to_string(tl)
+d120 2
+a121 2
+  val env = Environ_.add_valid_env(Ident_.EXCON(Symbol_.find_symbol "bind"),
+    EnvironTypes_.LAMB(LambdaTypes_.new_LVar()), Environ_.empty_env)
+d125 5
+a129 9
+      (case strdec of
+	Absyn_.DECstrdec(dec) => Lambda_.trans_dec(dec, Environ_.empty_env,
+	  env)
+      | Absyn_.STRUCTUREstrdec(struc_dec_list) =>
+	raise(not_done_yet("Can't translate STRUCTUREstrdec yet"))
+      | Absyn_.LOCALstrdec(strdec1, strdec2) =>
+	raise(not_done_yet("Can't translate LOCALstrdec yet"))
+      | Absyn_.SEQUENCEstrdec(strdec_list) =>
+	raise(not_done_yet("Can't translate SEQUENCEstrdec yet")))
+d131 4
+a134 4
+   | Absyn_.SIGNATUREtopdec(sigbind_list) =>
+     raise(not_done_yet("Can't translate SIGNATUREtopdec yet"))
+   | Absyn_.FUNCTORtopdec(fundbind_list) =>
+     raise(not_done_yet("Can't translate FUNCTORtopdec yet"))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 5
+d22 1
+a22 1
+exception not_done_yet = LmabdaTypes_.not_done_yet
+@

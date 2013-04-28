@@ -1,0 +1,253 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	95.07.27.10.58.11;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.07.27.10.13.07;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved from motif
+@
+
+
+1.2
+log
+@Moved capi etc. to gui
+@
+text
+@(*
+ * Copyright (c) 1993 Harlequin Ltd.
+ * $Log: _output.sml,v $
+ * Revision 1.1  1995/07/27  10:13:07  matthew
+ * new unit
+ * Moved from motif
+ *
+ * Revision 1.7  1995/07/04  10:43:08  matthew
+ * Capification
+ *
+ *  Revision 1.6  1995/06/14  13:21:08  daveb
+ *  ShellUtils.edit_* functions no longer require a context argument.
+ *  Removed redundant get_context parameter from the create function.
+ *
+ *  Revision 1.5  1995/06/09  09:44:53  daveb
+ *  If the auto_output_window preference is set, the output window is
+ *  automatically displayed when written to.
+ *
+ *  Revision 1.4  1995/05/31  11:04:45  daveb
+ *  Combined show_output and hide_output fields of the result into a
+ *  single function that takes a boolean, for use with TOGGLE buttons.
+ *
+ *  Revision 1.3  1994/08/01  10:07:28  daveb
+ *  Moved environment options to preferences structure.
+ *
+ *  Revision 1.2  1994/07/27  13:31:16  daveb
+ *  Cut-down menus for novices.
+ * 
+ *  Revision 1.1  1994/06/21  18:56:35  daveb
+ *  new file
+ * 
+ *)
+
+require "../utils/lists";
+require "../main/preferences";
+require "../interpreter/shell_utils";
+require "capi";
+require "menus";
+require "gui_utils";
+
+require "output";
+
+functor OutputWindow(
+  structure Lists : LISTS
+  structure Capi : CAPI
+  structure Menus : MENUS
+  structure GuiUtils : GUI_UTILS
+  structure ShellUtils : SHELL_UTILS
+  structure Preferences : PREFERENCES
+
+  sharing type Capi.Widget = Menus.Widget = GuiUtils.Widget
+  sharing type Menus.ButtonSpec = GuiUtils.ButtonSpec
+  sharing type GuiUtils.user_tool_options = ShellUtils.UserOptions
+  sharing type Preferences.preferences = ShellUtils.preferences
+               
+) : OUTPUT_WINDOW =
+  struct
+
+    type Widget = Capi.Widget
+    type preferences = Preferences.preferences
+    type Context = ShellUtils.Context
+
+    fun create {parent, title, get_preferences} =
+      let
+        val (shell,mainWindow,menuBar,_) =
+          Capi.make_main_window ("textOutput",
+                                 title ^ " Output",
+                                 parent,
+                                 false)
+
+        val (textscroll,text) =
+          Capi.make_scrolled_text ("textIO",mainWindow,[])
+
+        val write_pos = ref 0
+
+        fun getline (str, pos, length) =
+	let fun lastline ~1 = 0
+	    |   lastline n = if String.ordof (str, n) = ord "\n" then
+			  n+1
+			else
+			  lastline (n-1)
+
+	    fun nextline n =
+	      if n = length orelse String.ordof (str, n) = ord "\n" then
+		n
+	      else
+		nextline (n+1)
+
+	    val start = lastline (pos-1)
+	    val finish = nextline (pos)
+	    val all = String.substring (str, start, finish - start)
+	in
+          all
+	end
+
+        exception NoLocation
+        fun get_location line =
+          let
+            val sz = size line
+            fun aux index =
+              if index < sz
+                then
+                  if String.ordof(line,index) = ord ":"
+                    then index+1
+                  else
+                    aux (index+1)
+              else
+                raise NoLocation
+            (* skip up to second ":" *)
+            val result = String.substring(line,0,(aux (aux 0))-1)
+          in
+            result
+          end
+
+        val quit_funs = ref []
+
+        fun do_quit_funs _ =
+	  (Lists.iterate (fn f => f ()) (!quit_funs);
+	   quit_funs := [])
+
+        fun edit_error _ =
+          (let
+            val str = Capi.Text.get_string text
+	    val pos = Capi.Text.get_insertion_position text
+	    val length = size str
+            val line = getline (str, pos, length)
+            val locstring = get_location line
+            val quit_fun =
+	      ShellUtils.edit_string
+		(locstring, get_preferences())
+
+          in
+            quit_funs := quit_fun :: (!quit_funs)
+          end 
+          handle  ShellUtils.EditFailed s => Capi.send_message (shell,s)
+               | NoLocation => (output(std_out,"No location info found\n"))
+               | ShellUtils.Info.Location.InvalidLocation =>
+		   (output(std_out,"No location info found\n")))
+
+        val output_visible_ref = ref false
+        
+        fun output_visible _ = !output_visible_ref
+
+        fun show_output b =
+	  (output_visible_ref := b;
+	   if b then
+	     (Capi.manage shell;
+              Capi.to_front shell)
+	   else
+             (do_quit_funs();
+              Capi.unmanage shell))
+
+        fun ensure_output () =
+          let
+            val Preferences.PREFERENCES
+                  {environment_options =
+                     Preferences.ENVIRONMENT_OPTIONS {auto_output_window, ...},
+                   ...} =
+              get_preferences ()
+          in
+            if (!auto_output_window) then show_output true else ()
+          end
+
+        fun insert_text str =
+          (ensure_output ();
+           Capi.Text.insert(text, !write_pos, str);
+           write_pos := size str + !write_pos;
+           Capi.Text.set_insertion_position (text, !write_pos)
+           )
+
+	val outstream = GuiUtils.make_outstream insert_text
+
+	val Preferences.PREFERENCES
+	      {environment_options =
+		 Preferences.ENVIRONMENT_OPTIONS {full_menus, ...},
+	       ...} =
+	  get_preferences ()
+
+        val menuspec =
+          Menus.CASCADE ("window",
+                          [Menus.PUSH ("close",
+                                       fn _ => show_output false,
+                                       fn _ => true)],
+                          fn _ => true)
+          :: (if !full_menus then
+	        [Menus.CASCADE ("error",
+                                [Menus.PUSH ("edit",
+                                             edit_error,
+                                             fn _ => true)],
+                                fn _ => true)]
+	      else
+	        nil)
+      in
+        Menus.make_submenus (menuBar,menuspec);
+        Capi.Layout.lay_out [Capi.Layout.MENUBAR menuBar,
+                             Capi.Layout.TEXT textscroll,
+                             Capi.Layout.SPACE];
+        Capi.Callback.add (text, Capi.Callback.Activate, edit_error);
+        Capi.Callback.add (mainWindow, Capi.Callback.Unmap,
+                           fn _ => (output_visible_ref := false;
+                                    do_quit_funs ()));
+        Capi.Callback.add (shell, Capi.Callback.Destroy,do_quit_funs);
+        Capi.manage text;
+        {outstream = outstream, output_widget = shell,
+	 output_visible = output_visible,
+	 show_output = show_output}
+      end
+          
+  end;
+@
+
+
+1.1
+log
+@new unit
+Moved from motif
+@
+text
+@d4 4
+a35 2
+require "../library/capi";
+require "../library/menus";
+d37 2
+@

@@ -1,0 +1,66 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.23.09.49.20;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.mkRelative.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = mkRelative ("a/b", "/c/d") = "a/b";
+
+val b = mkRelative ("/", "/a/b/c") = "../../..";
+
+val c = mkRelative ("/a/b/", "/a/c") = "../b/";
+
+val d = mkRelative ("/a/b", "/a/c") = "../b";
+
+val e = mkRelative ("/", "/") = ".";
+
+val f = mkRelative ("/", "/.") = ".";
+
+val g = mkRelative ("/", "/a") = "..";
+
+val h = mkRelative ("/a/b/../c", "/a/d") = "../b/../c";
+
+val i = mkRelative ("/a/b", "/c/d") = "../../a/b";
+
+val i = mkRelative ("/c/a/b", "/c/d") = "../a/b";
+
+val j = mkRelative ("/c/d/a/b", "/c/d") = "a/b";
+
+val k = (mkRelative ("/a", "c/d"); false) handle Path => true;
+
+val l = (mkRelative ("a", "c/d"); false) handle Path => true;
+@

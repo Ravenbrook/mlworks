@@ -1,0 +1,158 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.09.16.11.10.02;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.18.11.42;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Lex port under version control
+@
+
+
+1.2
+log
+@[Bug #30412]
+Update for MLWorks v2.0
+@
+text
+@(* the following requires are only necessary in MLWorks *)
+ 
+require "calc_lex";
+require "$.basis.__string";
+require "$.basis.__int";
+require "$.basis.__text_io";
+
+structure Calc =
+ struct
+   open CalcLex
+   open UserDeclarations
+   exception Error
+   exception Finished
+   fun parse strm =
+    let
+      val _ = print "type \"()\" to finish.\n"
+      val say = print
+      val input_line = fn f =>
+          let fun loop result =
+             let val c = TextIO.inputN (f,1)
+	         val result = c :: result
+             in if String.size c = 0 orelse c = "\n" then
+	  	   String.concat (rev result)
+	         else loop result
+	     end
+              val r = loop nil
+          in if r = "()\n" then raise Finished else r
+          end
+      val lexer = makeLexer (fn n => input_line strm)
+      val nexttok = ref (lexer())
+      val advance = fn () => (nexttok := lexer(); !nexttok)
+      val error = fn () => (say ("calc: syntax error on line" ^
+                           (Int.toString(!linenum)) ^ "\n"); raise Error)
+      val lookup = fn i =>
+        if i = "ONE" then 1
+        else if i = "TWO" then 2
+        else  (say ("calc: unknown identifier '" ^ i ^ "'\n"); raise Error)
+     fun STMT_LIST () =
+         case !nexttok of
+            EOF => ()
+          | _ => (ignore(STMT()); STMT_LIST())
+        
+     and STMT() =
+         (case !nexttok
+           of EOS  => ()
+            | PRINT => (ignore(advance()); ignore(say ((Int.toString (E():int)) ^ "\n")); ())
+            | _ => (ignore(E()); ());
+         case !nexttok
+           of EOS => (advance())
+            | _ => error())
+     and E () = E' (T())
+     and E' (i : int ) =
+         case !nexttok of
+            PLUS => (ignore(advance ()); E'(i+T()))
+          | SUB => (ignore(advance ()); E'(i-T()))
+          | RPAREN => i
+          | EOF => i
+          | EOS => i
+          | _ => error()
+     and T () =  T'(F())
+     and T' i =
+        case !nexttok of
+            PLUS => i
+          | SUB => i
+          | TIMES => (ignore(advance()); T'(i*F()))
+          | DIV => (ignore(advance ()); T'(i div F()))
+          | EOF => i
+          | EOS => i
+          | RPAREN => i
+          | _ => error()
+     and F () =
+        case !nexttok of
+            ID i => (ignore(advance()); lookup i)
+          | LPAREN =>
+              let val v = (ignore(advance()); E())
+              in if !nexttok = RPAREN then (ignore(advance ()); v) else error()
+              end
+          | NUM i => (ignore(advance()); i)
+          | _ => error()
+    in STMT_LIST () handle Error => parse strm
+    end handle Finished => print "Finished.\n"
+ end
+@
+
+
+1.1
+log
+@new unit
+Put ML-Lex port under version control
+@
+text
+@d1 1
+a1 4
+(* the following requires are only necessary in MLWorks, and only if
+ * neither the revised basis nor the CalcLex structure are present when
+ * we Shell.File.loadSource this file.
+ *)
+d41 1
+a41 1
+          | _ => (STMT(); STMT_LIST())
+d46 2
+a47 2
+            | PRINT => (advance(); say ((Int.toString (E():int)) ^ "\n"); ())
+            | _ => (E(); ());
+d54 2
+a55 2
+            PLUS => (advance (); E'(i+T()))
+          | SUB => (advance (); E'(i-T()))
+d65 2
+a66 2
+          | TIMES => (advance(); T'(i*F()))
+          | DIV => (advance (); T'(i div F()))
+d73 1
+a73 1
+            ID i => (advance(); lookup i)
+d75 2
+a76 2
+              let val v = (advance(); E())
+              in if !nexttok = RPAREN then (advance (); v) else error()
+d78 1
+a78 1
+          | NUM i => (advance(); i)
+@

@@ -1,0 +1,477 @@
+head	1.2;
+access;
+symbols
+	Final_version_of_old_runtime:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	94.01.28.17.23.27;	author nickh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.04.21.13.01.28;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.04.21.13.01.28;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Runtime value printer
+@
+
+
+1.2
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== RUNTIME VALUE PRINTER ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The value printer is table-driven as far as possible.  This makes is
+ *  nicely maintainable and extensible.  DON'T test for tags explicitly if
+ *  you can possibly help it.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: print.c,v $
+ *  Revision 1.1  1993/04/21  13:01:28  richard
+ *  Initial revision
+ *
+ */
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "ansi.h"
+#include "print.h"
+#include "mltypes.h"
+#include "values.h"
+#include "tags.h"
+#include "extensions.h"
+
+
+struct print_options print_defaults = {0, 0, 0, 0};
+
+void p(struct print_options *options, FILE *stream,
+       int depth, int indent_next, mlval value);
+
+static inline void indent(FILE *stream, int depth)
+{
+  putc('\n', stream);
+  depth *= 2;
+  while(depth--) putc(' ', stream);
+}
+
+static void p_record(struct print_options *options,
+		     FILE *stream,
+		     int depth,
+		     mlval value,
+		     mlval primary,
+		     mlval header,
+		     mlval secondary)
+{
+  size_t i, length = LENGTH(header);
+
+  if(options->tags && options->indent) indent(stream, depth);
+  putc('{', stream);
+  for(i=0; i<length; ++i)
+  {
+    if(i) fputs(", ", stream);
+    p(options, stream, depth+1, 1, FIELD(value, i));
+  }
+  if(options->indent) indent(stream, depth);
+  putc('}', stream);
+}
+
+static void p_substring(FILE *stream, const char *s, size_t length)
+{
+  while(length--)
+  {
+    char c = *s++;
+    if(c == '"') fprintf(stream, "\\\"");
+    else if(c == '\\') fprintf(stream, "\\\\");
+    else if(c >= 21 && c < 127) putc(c, stream);
+    else if(c == '\n') fprintf(stream, "\\n");
+    else if(c == '\t') fprintf(stream, "\\t");
+    else if((unsigned char)c <= 26) fprintf(stream, "\\^%c", c+64);
+    else fprintf(stream, "\\%03u", (unsigned char)c);
+  }
+}
+
+static void p_string(struct print_options *options,
+		     FILE *stream,
+		     int depth,
+		     mlval value,
+		     mlval primary,
+		     mlval header,
+		     mlval secondary)
+{
+  size_t length = LENGTH(header)-1;
+  const char *s = CSTRING(value);
+
+  putc('"', stream);
+  if(options->string_length_max &&
+     length > options->string_length_max)
+  {
+    p_substring(stream, s, options->string_length_max);
+    fputs("...", stream);
+  }
+  else
+    p_substring(stream, s, length);
+  putc('"', stream);
+}
+
+static void p_array(struct print_options *options,
+		    FILE *stream,
+		    int depth,
+		    mlval value,
+		    mlval primary,
+		    mlval header,
+		    mlval secondary)
+{
+  size_t i, length = LENGTH(header);
+  if(options->tags && options->indent) indent(stream, depth);
+  putc('[', stream);
+  for(i=0; i<length; ++i)
+  {
+    if(i) fputs(", ", stream);
+    p(options, stream, depth+1, 1, MLSUB(value, i));
+  }
+  if(options->indent) indent(stream, depth);
+  putc(']', stream);
+}
+
+static void p_bytearray(struct print_options *options,
+			FILE *stream,
+			int depth,
+			mlval value,
+			mlval primary,
+			mlval header,
+			mlval secondary)
+{
+  size_t i, length = LENGTH(header);
+  unsigned char *bytes =
+    primary == POINTER ?
+      (unsigned char *)CSTRING(value) : CBYTEARRAY(value);
+
+  if(options->tags && options->indent) indent(stream, depth);
+  fputs("byte[", stream);
+  for(i=0; i<length; ++i)
+  {
+    if(i) fputs(", ", stream);
+    if(options->indent && i%16 == 0) indent(stream, depth+1);
+    fprintf(stream, "%02X", bytes[i]);
+  }
+  if(options->indent) indent(stream, depth);
+  fputs("]byte", stream);
+}
+
+static void p_backptr(struct print_options *options,
+		      FILE *stream,
+		      int depth,
+		      mlval value,
+		      mlval primary,
+		      mlval header,
+		      mlval secondary)
+{
+  if(options->tags)
+    fprintf(stream, "code %d of 0x%X ancillary 0x%X",
+	    CCODENUMBER(value), FOLLOWBACK(value), CCODEANCILLARY(value));
+
+  if(options->tags && options->indent) indent(stream, depth);
+  fputs("code{", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("name = ", stream);
+  p(options, stream, depth+2, 0, CCODENAME(value));
+  fputs(", ", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("spills = ", stream);
+  p(options, stream, depth+2, 0, CCODEANCSUB(value, SPILLS));
+  fputs(", ", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("leaf = ", stream);
+  p(options, stream, depth+2, 0, CCODEANCSUB(value, LEAFS));
+  fputs(", ", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("profile = ", stream);
+  p(options, stream, depth+2, 0, CCODEANCSUB(value, PROFILES));
+  fputs(", ", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("intercept = ", stream);
+  p(options, stream, depth+2, 0, CCODEANCSUB(value, INTERCEPTS));
+  fputs(", ", stream);
+  if(options->indent) indent(stream, depth+1);
+  fputs("interfn = ", stream);
+  p(options, stream, depth+2, 0, CCODEANCSUB(value, INTERFNS));
+  if(options->indent) indent(stream, depth);
+  fputs("}code", stream);
+}
+
+static void p_code(struct print_options *options,
+		   FILE *stream,
+		   int depth,
+		   mlval value,
+		   mlval primary,
+		   mlval header,
+		   mlval secondary)
+{
+  fputs("code vector printer not implemented", stream);
+}
+
+static void p_illegal_secondary(struct print_options *options,
+				FILE *stream,
+				int depth,
+				mlval value,
+				mlval primary,
+				mlval header,
+				mlval secondary)
+{
+  fputs("illegal", stream);
+}
+
+static struct
+{
+  const char *name;
+  void (*printer)(struct print_options *options,
+		  FILE *stream,
+		  int depth,
+		  mlval value,
+		  mlval primary,
+		  mlval header,
+		  mlval secondary);
+} secondaries[64] =
+{
+  {NULL,	NULL},		{NULL,	NULL},
+  {"RECORD",	p_record},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"STRING",	p_string},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"ARRAY",	p_array},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"BYTEARRAY", p_bytearray},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"BACKPTR",   p_backptr},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"CODE",      p_code},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"HEADER50",  p_illegal_secondary},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {"WEAKARRAY", p_array},	{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL},
+  {NULL,	NULL},		{NULL,	NULL}
+};
+
+
+static void p_int(struct print_options *options,
+		  FILE *stream,
+		  int depth,
+		  mlval value,
+		  mlval primary)
+{
+  fprintf(stream, "%d", CINT(value));
+}
+
+static void p_header(struct print_options *options,
+		     FILE *stream,
+		     int depth,
+		     mlval value,
+		     mlval primary)
+{
+  fprintf(stream, "for %s length %u",
+	  secondaries[SECONDARY(value)].name,
+	  LENGTH(value));
+}
+
+static void p_illegal(struct print_options *options,
+		      FILE *stream,
+		      int depth,
+		      mlval value,
+		      mlval primary)
+{
+  fputs("illegal", stream);
+}
+
+static void p_pair(struct print_options *options,
+		   FILE *stream,
+		   int depth,
+		   mlval value,
+		   mlval primary)
+{
+  if(options->tags && options->indent) indent(stream, depth);
+  putc('{', stream);
+  p(options, stream, depth+1, 1, FIELD(value, 0));
+  fputs(", ", stream);
+  p(options, stream, depth+1, 1, FIELD(value, 1));
+  if(options->indent) indent(stream, depth);
+  putc('}', stream);
+}
+
+static void p_pointer(struct print_options *options,
+		      FILE *stream,
+		      int depth,
+		      mlval value,
+		      mlval primary)
+{
+  mlval header = GETHEADER(value), secondary = SECONDARY(header);
+  const char *name = secondaries[secondary].name;
+
+  if(name)
+  {
+    if(options->tags)
+      fprintf(stream, "0x%X %s ", header, name);
+
+    (*secondaries[secondary].printer)(options, stream, depth, value,
+				      primary, header, secondary);
+  }
+  else
+    fprintf(stream, "0x%X bad secondary %d", header, secondary);
+}
+
+static void p_ref(struct print_options *options,
+		  FILE *stream,
+		  int depth,
+		  mlval value,
+		  mlval primary)
+{
+  mlval header = ARRAYHEADER(value), secondary = SECONDARY(header);
+
+  const char *name = secondaries[secondary].name;
+
+  if(name)
+  {
+    if(options->tags)
+      fprintf(stream, "0x%X %s ", header, name);
+
+    (*secondaries[secondary].printer)(options, stream, depth, value,
+				      primary, header, secondary);
+  }
+  else
+    fprintf(stream, "0x%X bad secondary %d", header, secondary);
+}
+
+static struct
+{
+  const char *name;
+  void (*printer)(struct print_options *options,
+		  FILE *stream,
+		  int depth,
+		  mlval value,
+		  mlval primary);
+} primaries[8] =
+{
+  {"INTEGER0", p_int},
+  {"PAIRPTR",  p_pair},
+  {"HEADER",   p_header},
+  {"REFPTR",   p_ref},
+  {"INTEGER1", p_int},
+  {"POINTER",  p_pointer},
+  {"PRIMARY6", p_illegal},
+  {"PRIMARY7", p_illegal}
+};
+
+
+static struct
+{
+  mlval value;
+  const char *name;
+} specials[] =
+{
+  {ERROR, "ERROR"},
+  {EVACUATED, "EVACUATED"},
+  {DEAD, "DEAD"}
+};
+
+
+void p(struct print_options *options, FILE *stream,
+       int depth, int indent_next, mlval value)
+{
+  mlval primary = PRIMARY(value);
+  int i;
+
+  if(indent_next && options->indent) indent(stream, depth);
+  if(options->tags)
+    fprintf(stream, "<0x%X %s ", value, primaries[primary].name);
+
+  if(options->depth_max && depth > options->depth_max)
+    fputs("...", stream);
+  else
+  {
+    for(i=0; i<sizeof(specials)/sizeof(specials)[0]; ++i)
+      if(value == specials[i].value)
+      {
+	fputs(specials[i].name, stream);
+	goto special;
+      }
+
+    (*primaries[primary].printer)(options, stream, depth, value, primary);
+
+    special:;
+  }
+
+  if(options->tags) putc('>', stream);
+}
+
+void print(struct print_options *options, FILE *stream, mlval value)
+{
+  p(options ? options : &print_defaults, stream, 0, 0, value);
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 4
+a16 1
+ *  $Log$
+d24 1
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d13 1
+a13 4
+ *  $Log: print.c,v $
+ *  Revision 1.1  1993/04/21  13:01:28  richard
+ *  Initial revision
+ *
+@

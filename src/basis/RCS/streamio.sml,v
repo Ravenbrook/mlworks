@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.45.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : STREAM_IO ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log$
+ *  Revision 1.1  1995/04/13  14:10:51  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+require "primio";
+
+signature STREAM_IO =
+  sig
+    structure PrimIO: PRIM_IO
+
+    type elem   sharing type elem = PrimIO.elem
+    type vector sharing type vector = PrimIO.vector
+    type pos    sharing type pos = PrimIO.pos
+
+    type instream
+    type outstream
+
+    val mkInstream   : PrimIO.reader -> instream
+    val closeIn      : instream -> unit
+    val setPosIn     : instream * pos -> instream
+    val getPosIn     : instream -> pos
+    val endPosIn     : instream -> pos
+    val input         : instream -> vector * instream
+    val inputAll     : instream -> vector
+    val inputNoBlock : instream -> (vector * instream) option
+    val input1        : instream -> elem option * instream
+    val inputN       : instream * int -> vector * instream
+    val endOfStream : instream -> bool
+    val getReader    : instream -> PrimIO.reader
+
+    val mkOutstream : PrimIO.writer -> outstream
+    val closeOut : outstream -> unit
+    val output    : (outstream * vector) -> unit
+    val output1   : (outstream * elem) -> unit
+    val flushOut : outstream -> unit
+    val getPosOut  : outstream -> pos
+    val setPosOut  : outstream * pos -> unit
+    val endPosOut  : outstream -> pos
+    val getWriter: outstream -> PrimIO.writer
+
+  end
+@

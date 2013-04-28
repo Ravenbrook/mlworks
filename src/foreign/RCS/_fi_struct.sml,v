@@ -1,0 +1,139 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.38.04;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_STRUCTURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "../utils/stringlib";
+require "../utils/newmap";
+require "../utils/lists";
+
+require "fi_aliens";
+require "fi_struct";
+require "fi_types";
+
+functor ForeignStruct(
+
+     structure StringLib : STRING_LIB
+     structure FIAliens  : FOREIGN_ALIENS
+     structure FITypes : FOREIGN_TYPES
+     structure Lists     : LISTS
+     structure Map       : NEWMAP
+
+     sharing
+         type Map.T  = FIAliens.Map
+     and 
+         type string = FIAliens.filename = FIAliens.info = FIAliens.name
+
+) : FOREIGN_STRUCTURE =
+   struct
+
+   (* Mapping *)
+
+     structure FITypes = FITypes
+     open FITypes
+
+     open MLWorks.Option
+
+     type ('a,'b)Map = ('a,'b)Map.T
+
+     exception Undefined = Map.Undefined
+
+     type foreign_module    =  FIAliens.foreign_module
+
+     val get_module_later   =  FIAliens.get_module_later
+     val get_item_later     =  FIAliens.get_item_later
+
+     val get_module_now     =  FIAliens.get_module_now
+     val get_item_now       =  FIAliens.get_item_now
+
+     val get_item_names     =  FIAliens.get_item_names
+     val get_item_info      =  FIAliens.get_item_info
+
+     val chrof              =  chr o String.ordof
+     val to_lower           =  StringLib.to_lower
+
+     val adjoin             = Lists.adjoin
+
+     val lookup             = Map.apply'
+
+
+   (* Definitions *)
+
+     datatype load_mode = IMMEADIATE_LM | DEFERRED_LM
+
+     val files = ref([] : filename list)
+
+     fun files_loaded () = !files
+
+     datatype value_type = CODE_VT | VAR_VT | NONE_VT
+
+     fun load_module (fname,IMMEADIATE_LM)  =  get_module_now(fname)
+       | load_module (fname,DEFERRED_LM)    =  get_module_later(fname)
+
+     abstype foreign_structure =
+
+        FSTRUCT of (filename * load_mode * foreign_module)
+
+     with
+
+        fun load_structure(fname : filename, mode) =
+            let val F_mod = load_module(fname,mode)
+            in
+              files := adjoin(fname,!files);
+              FSTRUCT(fname,mode,F_mod)
+            end
+
+        fun file_info(FSTRUCT(fname,mode,_)) = (fname,mode)
+
+        fun symbols(FSTRUCT(_,_,f_mod)) = get_item_names(f_mod)
+
+        fun symbol_info(FSTRUCT(_,_,f_mod),str) =
+            let val info_map = get_item_info(f_mod)
+                val info = lookup(info_map,str)
+                val chr  = to_lower(chrof(info,0))
+            in
+                case chr of
+                  "c" => CODE_VT |
+                  "v" => VAR_VT  |
+                   _  => NONE_VT
+            end handle Undefined => NONE_VT
+
+        fun module(FSTRUCT(_,_,f_mod)) = f_mod
+
+     end
+   end;
+@

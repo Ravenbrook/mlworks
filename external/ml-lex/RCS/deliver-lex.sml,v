@@ -1,0 +1,91 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.07.01.18.59.44;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.18.11.44;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Lex port under version control
+@
+
+
+1.2
+log
+@[Bug #30412]
+Update for MLWorks v2.0
+@
+text
+@(* deliver-lex.sml
+ *)
+
+require "__lexgen";
+require "$.basis.__list";
+require "$.basis.__string";
+require "$.basis.__text_io";
+require "$.basis.__command_line";
+
+structure DeliverLexGen : sig
+
+    val lexGen : unit -> unit
+
+  end = struct
+
+    fun err msg = TextIO.output(TextIO.stdErr, String.concat msg)
+
+    fun lexGen () =
+          let
+            val args = CommandLine.arguments()
+	    fun lex_gen () = 
+              (case args
+		 of [] => err ["sml-lex", ": missing filename\n"]
+		  | files => List.app LexGen.lexGen files
+		(* end case *))
+	  in
+            (lex_gen())
+            handle MLWorks.Interrupt => err ["sml-lex", ": Interrupt\n"]
+                 | any => err [
+                          "sml-lex", 
+                               ": uncaught exception ", exnMessage any, "\n"
+                               ]
+
+          end
+  end;
+   
+fun deliver name = MLWorks.Deliver.deliver (name, DeliverLexGen.lexGen,MLWorks.Deliver.CONSOLE);
+
+
+@
+
+
+1.1
+log
+@new unit
+Put ML-Lex port under version control
+@
+text
+@d8 1
+d20 1
+a20 1
+            val args = MLWorks.arguments()
+d37 2
+a38 1
+fun deliver name = MLWorks.Deliver.deliver (name, DeliverLexGen.lexGen,true);
+@

@@ -1,0 +1,1547 @@
+head	1.7;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.7
+date	95.03.29.13.56.29;	author nickb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.03.17.13.27.42;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.03.14.12.05.49;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.02.09.14.35.32;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.01.23.12.56.34;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.01.20.15.11.05;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.18.13.17.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+nmake specific makefile. Hopefully we can get this back to gnumake some time
+@
+
+
+1.7
+log
+@Threads system.
+@
+text
+@# ==== MAKEFILE FOR NT ====
+#
+# $Id: makefile.mak,v 1.6 1995/03/17 13:27:42 jont Exp $
+#
+# Copyright (C) 1994, Harlequin Group
+#
+# This is the Microsoft nmake file for Windows NT.  It's terribly ghastly.
+#
+# Notes
+#
+# 1. This file (at present) must be copied into the src directory and
+#   the product built from there.
+# 2. The SOURCES and HEADERS macro must be manually maintained.
+# 3. All the sources depend on all the headers.
+
+ARCH = 386
+OS = NT
+BUILD = MVC
+TARG = DW
+
+PROJ = MLWorks
+
+PREFIX = ..
+SRCDIR = $(PREFIX)\src
+INCDIR = $(PREFIX)\include
+
+CC = cl
+AS = as
+
+SOURCES = src/OS/NT/main.c \
+	src/alloc.c \
+	src/allocator.c \
+	src/OS/NT/arena.c \
+	src/bytearrays.c \
+	src/cache.c \
+	src/diagnostic.c \
+	src/endian.c \
+	src/environment.c \
+	src/event.c \
+	src/exceptions.c \
+	src/fixup.c \
+	src/gc.c \
+	src/global.c \
+	src/image.c \
+	src/implicit.c \
+	src/initialise.c \
+	src/integers.c \
+	src/intercept.c \
+	src/arch/I386/interface.S \
+	src/OS/NT/license.c \
+	src/lists.c \
+	src/loader.c \
+	src/main.c \
+	src/marshal.c \
+	src/mem.c \
+	src/modules.c \
+	src/options.c \
+	src/pervasives.c \
+	src/print.c \
+	src/profiler.c \
+	src/reals.c \
+	src/arch/I386/stacks.c \
+	src/state.c \
+	src/streams.c \
+	src/strings.c \
+	src/system.c \
+	src/OS/NT/time.c \
+	src/trace.c \
+	src/OS/NT/nt.c \
+	src/OS/NT/unix.c \
+	src/utils.c \
+	src/value.c \
+	src/values.c \
+	src/vector.c \
+	src/words.c \
+	src/OS/NT/os.c \
+	src/OS/NT/arch/I386/signals.c \
+	src/OS/NT/arch/I386/foreign_loader.c \
+	src/arch/I386/stubs.c \
+	src/threads.c \
+	src/arch/I386/mach_state.c
+
+HEADERS = src/OS/NT/ansi.h \
+	src/integers.h \
+	src/OS/NT/arena.h \
+	src/intercept.h \
+	src/OS/NT/arenadefs.h \
+	src/interface.h \
+	src/OS/NT/naming.h \
+	src/license.h \
+	src/OS/NT/syscalls.h \
+	src/lists.h \
+	src/OS/NT/mltime.h \
+	src/loader.h \
+	src/OS/NT/nt.h \
+	src/OS/NT/unix.h \
+	src/mach.h \
+	src/mach_fixup.h \
+	src/alloc.h \
+	src/main.h \
+	src/allocator.h \
+	src/marshal.h \
+	src/mem.h \
+	src/arch/I386/mach_values.h \
+	src/mltypes.h \
+	src/arch/I386/macros.h \
+	src/modules.h \
+	src/arch/I386/stacks.h \
+	src/objectfile.h \
+	src/state.h \
+	src/options.h \
+	src/arch/I386/types.h \
+	src/os.h \
+	src/bytearrays.h \
+	src/pervasives.h \
+	src/cache.h \
+	src/print.h \
+	src/diagnostic.h \
+	src/profiler.h \
+	src/endian.h \
+	src/reals.h \
+	src/environment.h \
+	src/signals.h \
+	src/event.h \
+	src/streams.h \
+	src/exceptions.h \
+	src/strings.h \
+	src/extensions.h \
+	src/stubs.h \
+	src/fixup.h \
+	src/system.h \
+	src/gc.h \
+	src/tags.h \
+	src/global.h \
+	src/trace.h \
+	src/utils.h \
+	src/image.h \
+	src/value.h \
+	src/implicit.h \
+	src/values.h \
+	src/initialise.h \
+	src/vector.h \
+	src/threads.h \
+	src/arch/I386/mach_state.h \
+	src/arch/I386/asm_offsets.h
+
+OBJECTS = obj/I386/NT/main.obj \
+	obj/I386/NT/alloc.obj \
+	obj/I386/NT/allocator.obj \
+	obj/I386/NT/bytearrays.obj \
+	obj/I386/NT/cache.obj \
+	obj/I386/NT/diagnostic.obj \
+	obj/I386/NT/endian.obj \
+	obj/I386/NT/environment.obj \
+	obj/I386/NT/event.obj \
+	obj/I386/NT/exceptions.obj \
+	obj/I386/NT/fixup.obj \
+	obj/I386/NT/gc.obj \
+	obj/I386/NT/global.obj \
+	obj/I386/NT/image.obj \
+	obj/I386/NT/implicit.obj \
+	obj/I386/NT/initialise.obj \
+	obj/I386/NT/integers.obj \
+	obj/I386/NT/intercept.obj \
+	obj/I386/NT/license.obj \
+	obj/I386/NT/lists.obj \
+	obj/I386/NT/loader.obj \
+	obj/I386/NT/marshal.obj \
+	obj/I386/NT/mem.obj \
+	obj/I386/NT/modules.obj \
+	obj/I386/NT/options.obj \
+	obj/I386/NT/pervasives.obj \
+	obj/I386/NT/print.obj \
+	obj/I386/NT/profiler.obj \
+	obj/I386/NT/reals.obj \
+	obj/I386/NT/stacks.obj \
+	obj/I386/NT/state.obj \
+	obj/I386/NT/streams.obj \
+	obj/I386/NT/strings.obj \
+	obj/I386/NT/system.obj \
+	obj/I386/NT/trace.obj \
+	obj/I386/NT/nt.obj \
+	obj/I386/NT/unix.obj \
+	obj/I386/NT/utils.obj \
+	obj/I386/NT/value.obj \
+	obj/I386/NT/values.obj \
+	obj/I386/NT/vector.obj \
+	obj/I386/NT/words.obj \
+	obj/I386/NT/os.obj \
+	obj/I386/NT/stubs.obj \
+	obj/I386/NT/interface.obj \
+	obj/I386/NT/time.obj \
+	obj/I386/NT/arena.obj \
+	obj/I386/NT/signals.obj \
+	obj/I386/NT/foreign_loader.obj \
+	obj/I386/NT/threads.obj \
+	obj/I386/NT/mach_state.obj
+
+DEFS = /DOS_$(OS) /D"ARCH_$(ARCH)" /D"BUILD_$(BUILD)" /D"TARG_$(TARG)"
+DEFSREL = $(DEFS)
+DEFSDEB = $(DEFS) /D"DEBUG"
+# Compiler Options
+# nologo vital as it stops the compiler producing a copyright message
+# W3 warnings at level three, W4 leads to overoutput
+# WX treat warnings as errors, not used yet
+# YX use PreCompiled Headers.  Marginally faster.
+# FR create Source Browser file ?
+# ML create links to libc.lib
+# O2 optimize for speed
+# Z7 create debugging info
+# FA generate assembler listing
+OPTS = /nologo /Gd /I src /I src/arch/I386 /I src/OS/NT /I src/OS/NT/arch/I386 /I gen /W3
+OPTSREL = $(OPTS) /O2
+OPTSDEB = $(OPTS) /DDIAGNOSTICS /Z7 /Od
+OPTSLINK = SUBSYSTEM:CONSOLE
+CFLAGSREL = $(OPTSDEB) $(DEFSDEB)
+CFLAGSDEB = $(OPTSDEB) $(DEFSDEB)
+
+all: $(PROJ).EXE
+
+obj/I386/NT/main.obj:	src/OS/NT/main.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/alloc.obj:	src/alloc.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/allocator.obj:	src/allocator.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/arena.obj:	src/OS/NT/arena.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/bytearrays.obj:	src/bytearrays.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/cache.obj:	src/OS/NT/arch/I386/cache.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/diagnostic.obj:	src/diagnostic.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/endian.obj:	src/endian.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/environment.obj:	src/environment.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/event.obj:	src/event.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/exceptions.obj:	src/exceptions.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/fixup.obj:	src/fixup.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/gc.obj:	src/gc.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/global.obj:	src/global.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/image.obj:	src/image.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/implicit.obj:	src/implicit.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/initialise.obj:	src/initialise.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/integers.obj:	src/integers.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/intercept.obj:	src/intercept.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/license.obj:	src/OS/NT/license.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/lists.obj:	src/lists.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/loader.obj:	src/loader.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/marshal.obj:	src/marshal.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/mem.obj:	src/mem.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/modules.obj:	src/modules.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/options.obj:	src/options.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/pervasives.obj:	src/pervasives.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/print.obj:	src/print.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/profiler.obj:	src/profiler.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/reals.obj:	src/reals.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/stacks.obj:	src/arch/I386/stacks.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/state.obj:	src/state.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/streams.obj:	src/streams.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/strings.obj:	src/strings.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/system.obj:	src/system.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/time.obj:	src/OS/NT/time.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/trace.obj:	src/trace.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/nt.obj:	src/OS/NT/nt.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/unix.obj:	src/OS/NT/unix.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/utils.obj:	src/utils.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/value.obj:	src/value.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/values.obj:	src/values.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/vector.obj:	src/vector.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/words.obj:	src/words.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/os.obj:	src/OS/NT/os.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/signals.obj:	src/OS/NT/arch/I386/signals.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/foreign_loader.obj:	src/OS/NT/arch/I386/foreign_loader.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/stubs.obj:	src/arch/I386/stubs.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/mach_state.obj:	src/arch/I386/mach_state.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/threads.obj:	src/threads.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/interface.obj:	src/arch/I386/interface.S
+	gcc -E src/arch/I386/interface.S -Isrc -Igen -Isrc/arch/I386 -Isrc/OS/NT | $(AS) -o $@@
+
+
+.c.obg:
+	$(CC) $(CFLAGSDEB) /c $<
+	copy $(<:.c=.obj) $(<:.c=.obg)
+
+.c.obj:
+	$(CC) $(CFLAGSREL) /c $<
+
+$(SOURCES): $(HEADERS)
+
+$(PROJ).exe: $(OBJECTS)
+	echo >NUL @@<<spong.crf
+obj/I386/NT/main.obj
+obj/I386/NT/alloc.obj
+obj/I386/NT/allocator.obj
+obj/I386/NT/bytearrays.obj
+obj/I386/NT/cache.obj
+obj/I386/NT/diagnostic.obj
+obj/I386/NT/endian.obj
+obj/I386/NT/environment.obj
+obj/I386/NT/event.obj
+obj/I386/NT/exceptions.obj
+obj/I386/NT/fixup.obj
+obj/I386/NT/gc.obj
+obj/I386/NT/global.obj
+obj/I386/NT/image.obj
+obj/I386/NT/implicit.obj
+obj/I386/NT/initialise.obj
+obj/I386/NT/integers.obj
+obj/I386/NT/intercept.obj
+obj/I386/NT/license.obj
+obj/I386/NT/lists.obj
+obj/I386/NT/loader.obj
+obj/I386/NT/marshal.obj
+obj/I386/NT/mem.obj
+obj/I386/NT/modules.obj
+obj/I386/NT/options.obj
+obj/I386/NT/pervasives.obj
+obj/I386/NT/print.obj
+obj/I386/NT/profiler.obj
+obj/I386/NT/reals.obj
+obj/I386/NT/stacks.obj
+obj/I386/NT/state.obj
+obj/I386/NT/streams.obj
+obj/I386/NT/strings.obj
+obj/I386/NT/system.obj
+obj/I386/NT/trace.obj
+obj/I386/NT/nt.obj
+obj/I386/NT/unix.obj
+obj/I386/NT/utils.obj
+obj/I386/NT/value.obj
+obj/I386/NT/values.obj
+obj/I386/NT/vector.obj
+obj/I386/NT/words.obj
+obj/I386/NT/os.obj
+obj/I386/NT/stubs.obj
+obj/I386/NT/interface.obj
+obj/I386/NT/time.obj
+obj/I386/NT/arena.obj
+obj/I386/NT/signals.obj
+obj/I386/NT/mach_state.obj
+obj/I386/NT/threads.obj
+obj/I386/NT/foreign_loader.obj
+<<
+	if exist $@@ del $@@
+	$(CC) $(CFLAGSREL) @@spong.crf /Fe$@@ /link LIBC.LIB kernel32.lib /$(OPTSLINK)
+
+clean: force
+	del $(SRCDIR)\*.OBJ
+	del $(SRCDIR)\*.SBR
+
+force:
+# ==== MLWORKS RUNTIME SYSTEM (GNU) MAKEFILE ====
+#
+# RCS Id: $Id: makefile.mak,v 1.6 1995/03/17 13:27:42 jont Exp $
+#
+# To make, provide environment variables OS, ARCH:
+#
+# (SunOS, SPARC), (Solaris, SPARC), (Irix, MIPS), ...
+#
+# and do "gnumake"
+
+#MODULES = alloc allocator arena bytearrays cache diagnostic endian \
+#          environment event exceptions fixup gc global handler image \
+#          implicit initialise integers intercept interface \
+#          license lists loader main marshal mem modules options \
+#	  pervasives print profiler reals stacks state streams \
+#          strings system time trace utils value values vector os signals stubs
+
+#MODULESSTATIC = $(MODULES)
+
+#TARGETFILES	= main main-g main-static
+#TARGETDIR 	= bin/$(ARCH)/$(OS)
+#TARGETS 	= $(TARGETFILES:%=$(TARGETDIR)/%)
+#DISTFILES	= main main-static
+#DISTRIBUTED	= $(DISTFILES:%=$(TARGETDIR)/%)
+
+#GENFILES = objectfile.sml __objectfile.sml \
+#           implicit.sml __implicit.sml \
+#           tags.sml __tags.sml \
+#           offsets.h
+
+#GENERATED      = $(GENFILES:%=gen/%)
+
+#INCLUDES        = -Igen -Isrc/OS/$(OS)/arch/$(ARCH) \
+#                  -Isrc/OS/$(OS) -Isrc/arch/$(ARCH) \
+#                  -Isrc -Iinclude
+#DEFINES         = 
+#DEFINESDEBUG    = -DDEBUG -DDIAGNOSTICS -DCOLLECT_STATS
+#LIBRARIES       = -lm
+#CCOPTS          = -O -ansi \
+#                  -Wall -Wpointer-arith -Wwrite-strings \
+#                  -Wconversion -Winline -Waggregate-return \
+#		  -Wmissing-prototypes -Wnested-externs
+
+# cannot use -Wcast-align, as we regularly do things which it will warn
+# 	e.g. mlval foo = f();
+#            mlval bar = *(mlval *)(foo - THE_TAG_WHICH_I_KNOW)
+#
+# cannot use -Wcast-qual, as the prototype for XtOpenDisplay()
+# does not use (const char *) arguments.
+#
+# cannot use -Wshadow, as we don't have a naming scheme that enforces
+# it (e.g. ml_string is a function, as is exn_name, ...).
+#
+# cannot use -Wstrict-prototypes, because it complains (for no good
+# reason) about signal-handling code like:
+#
+#		sv.sv_handler = SIG_IGN;
+#
+# cannot use -Wredundant-decls, because the Gcc-installed include
+# files break this rule all the time (e.g. sys/signal.h declares
+# "void (*signal())()" twice!)
+
+#RM              = /bin/rm -f
+#MKDIR		= /bin/mkdir
+#TAR 		= /bin/tar
+#LN		= /bin/ln
+#FIND            = /bin/find
+#AWK		= /bin/awk
+#CC              = gcc
+#STRIP		= /bin/strip
+
+# now include the target-specific makefile, which can redefine any of
+# the above macros as it likes. Typically will add to MODULES,
+# DEFINES, INCLUDES, LIBRARIES, and may tinker with CCOPTS.
+
+# Need to define OBJECTDIR first so this included file can see it.
+
+#OBJECTDIR	= obj/$(ARCH)/$(OS)
+
+#include src/OS/$(OS)/arch/$(ARCH)/GNUmake
+
+#OBJECTS         = $(MODULES:%=$(OBJECTDIR)/%.o)
+#OBJECTSDEBUG    = $(MODULES:%=$(OBJECTDIR)/%-g.o)
+#OBJECTSSTATIC   = $(MODULESSTATIC:%=$(OBJECTDIR)/%.o)
+
+#CCOPTSDEBUG     = $(CCOPTS) -g
+#CFLAGS          = $(CCOPTS) $(DEFINES) $(INCLUDES)
+#CFLAGSDEBUG     = $(CCOPTSDEBUG) $(DEFINES) $(DEFINESDEBUG) $(INCLUDES)
+
+#DEPENDDIR	= depend/$(ARCH)/$(OS)
+
+#all: runtime runtime-g runtime-static $(GENERATED)
+#generated: $(GENERATED)
+#objects: $(OBJECTS)
+#objectsdebug: $(OBJECTSDEBUG)
+
+# === MAKE DIRECTIVES ===
+
+# Disable traditional suffix searches.
+
+.SUFFIXES:
+
+# == General Rules ==
+
+#$(DEPENDDIR)/%.d: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(DEPENDDIR) 2>/dev/null || :
+#	@@$(CC) -MM $(CFLAGS) $< | sed '/:/s!$*.o!$(OBJECTDIR)/$*.o $(OBJECTDIR)/$*-g.o $@@!' > $@@
+
+#$(DEPENDDIR)/%.d: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(DEPENDDIR) 2>/dev/null || :
+#	@@$(CC) -MM $(CFLAGS) $< | sed '/:/s!$*.o!$(OBJECTDIR)/$*.o $(OBJECTDIR)/$*-g.o $@@!' > $@@
+
+#$(OBJECTDIR)/%.o: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGS) -o $@@ $<
+
+#$(OBJECTDIR)/%-g.o: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGSDEBUG) -o $@@ $<
+
+#$(OBJECTDIR)/%.o: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGS) -o $@@ $<
+
+#$(OBJECTDIR)/%-g.o: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGSDEBUG) -o $@@ $<
+
+#gen/%.sml: src/%.h awk/%.awk
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/$*.awk < src/$*.h > gen/$*.sml
+
+#gen/__%.sml: src/%.h awk/__%.awk
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/__$*.awk < src/$*.h > gen/__$*.sml
+
+#gen/%.h: awk/%.awk src/implicit.h
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/$*.awk < src/implicit.h > gen/$*.h
+
+# Have to put explicit dependencies on the offsets file here, because
+# Make isn't smart enough to figure them all out (in fact, because gcc
+# -MM insists on finding all the depended-upon files, rather than
+# recording them as dependencies).
+
+#src/arch/SPARC/interface.S: gen/offsets.h
+#src/arch/SPARC/poly_equal.S: gen/offsets.h
+
+# == Search paths ==
+#
+# NOTE: The order of these paths is IMPORTANT.  Please think about it.
+
+# C sources may be located in general source and architecture-specific
+# directories.
+
+#vpath %.c \
+#  src/OS/$(OS)/arch/$(ARCH) \
+#  src/OS/$(OS) \
+#  src/arch/$(ARCH) \
+#  src gen
+
+# C headers may be generated.
+
+#vpath %.h gen
+
+# Name-value and name-offset definition files are like C sources.
+# 
+# vpath %.nv \
+#   src/OS/$(OS)/arch/$(ARCH) \
+#   src/OS/$(OS) \
+#   src/arch/$(ARCH) \
+#   src gen
+# 
+# vpath %.no \
+#   src/OS/$(OS)/arch/$(ARCH) \
+#   src/OS/$(OS) \
+#   src/arch/$(ARCH) \
+#   src gen
+
+# Note that assembler sources may only be located in
+# architecture-specific directories.
+
+#vpath %.S \
+#  src/OS/$(OS)/arch/$(ARCH) \
+#  src/arch/$(ARCH) \
+#  gen
+
+# === AUTOMATIC DEPENDENCIES ===
+#
+# Dependency files are kept in the depend directory and are
+# automatically kept up to date by the general rules above.
+# For details, see the GNU make documentation.
+
+#include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
+
+# === TARGETS ===
+
+#$(TARGETDIR)/main: $(OBJECTS)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGS) -B/bin/ -o $@@ $(OBJECTS) $(LIBRARIES)
+#	@@$(STRIP) $@@
+
+#$(TARGETDIR)/main-static: $(OBJECTSSTATIC)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGS) -B/bin/ -Xlinker -Bstatic -o $@@ $(OBJECTSSTATIC) $(LIBRARIES)
+#	@@$(STRIP) $@@
+
+#$(TARGETDIR)/main-g: $(OBJECTSDEBUG)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGSDEBUG) -B/bin/ -o $@@ $(OBJECTSDEBUG) $(LIBRARIES)
+
+# === PSUEDO TARGETS ===
+
+#doc: force
+#	cd doc && $(MAKE) $(MAKEFLAGS)
+
+#clean: force
+#	$(RM) $(OBJECTDIR)/* core $(TARGETS) runtime*
+
+
+#cleandepend: force
+#	$(RM) $(DEPENDDIR)/*
+
+#cleangen: force
+#	$(RM) gen/*
+
+#runtime: $(TARGETDIR)/main
+#	 $(RM) $@@
+#	 $(LN) -s $(TARGETDIR)/main $@@
+
+#runtime-static: $(TARGETDIR)/main-static
+#	$(RM) $@@
+#	$(LN) -s $(TARGETDIR)/main-static $@@
+
+#runtime-g: $(TARGETDIR)/main-g
+#	$(RM) $@@
+#	$(LN) -s $(TARGETDIR)/main-g $@@
+
+#distribution: $(DISTRIBUTED)
+#	$(RM) -r $(DISTDIR)/bin
+#	$(MKDIR) $(DISTDIR)/bin
+#	$(TAR) cvf - $(DISTRIBUTED) | ( cd $(DISTDIR); $(TAR) xf - )
+
+#force:
+@
+
+
+1.6
+log
+@Add words.c to files to be compiled
+@
+text
+@d3 1
+a3 1
+# $Id: makefile.mak,v 1.5 1995/03/14 12:05:49 jont Exp $
+a43 1
+	src/handler.c \
+d63 1
+a63 1
+	src/arch/I386/state.c \
+d79 3
+a81 1
+	src/arch/I386/stubs.c
+d110 1
+a110 1
+	src/arch/I386/state.h \
+a135 1
+	src/handler.h \
+d142 56
+a197 1
+	src/vector.h
+a198 12
+OBJECTS = 	obj/I386/NT/main.obj obj/I386/NT/alloc.obj obj/I386/NT/allocator.obj obj/I386/NT/bytearrays.obj \
+	obj/I386/NT/cache.obj obj/I386/NT/diagnostic.obj obj/I386/NT/endian.obj obj/I386/NT/environment.obj \
+	obj/I386/NT/event.obj obj/I386/NT/exceptions.obj obj/I386/NT/fixup.obj obj/I386/NT/gc.obj obj/I386/NT/global.obj \
+	obj/I386/NT/handler.obj obj/I386/NT/image.obj obj/I386/NT/implicit.obj obj/I386/NT/initialise.obj \
+	obj/I386/NT/integers.obj obj/I386/NT/intercept.obj obj/I386/NT/license.obj obj/I386/NT/lists.obj obj/I386/NT/loader.obj \
+	obj/I386/NT/marshal.obj obj/I386/NT/mem.obj obj/I386/NT/modules.obj obj/I386/NT/options.obj obj/I386/NT/pervasives.obj \
+	obj/I386/NT/print.obj obj/I386/NT/profiler.obj obj/I386/NT/reals.obj obj/I386/NT/stacks.obj obj/I386/NT/state.obj \
+	obj/I386/NT/streams.obj obj/I386/NT/strings.obj obj/I386/NT/system.obj obj/I386/NT/trace.obj obj/I386/NT/nt.obj obj/I386/NT/unix.obj obj/I386/NT/utils.obj \
+	obj/I386/NT/value.obj obj/I386/NT/values.obj obj/I386/NT/vector.obj obj/I386/NT/words.obj obj/I386/NT/os.obj obj/I386/NT/stubs.obj \
+	obj/I386/NT/interface.obj obj/I386/NT/time.obj obj/I386/NT/arena.obj obj/I386/NT/signals.obj \
+	obj/I386/NT/foreign_loader.obj
+
+a262 3
+obj/I386/NT/handler.obj:	src/handler.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+d314 1
+a314 1
+obj/I386/NT/state.obj:	src/arch/I386/state.c
+d365 6
+a398 1
+obj/I386/NT/handler.obj
+d434 2
+d448 1
+a448 1
+# RCS Id: $Id: makefile.mak,v 1.5 1995/03/14 12:05:49 jont Exp $
+@
+
+
+1.5
+log
+@Add foreign_loader.c to list of files to be made
+@
+text
+@d3 1
+a3 1
+# $Id: makefile.mak,v 1.4 1995/02/09 14:35:32 jont Exp $
+d76 1
+d152 1
+a152 1
+	obj/I386/NT/value.obj obj/I386/NT/values.obj obj/I386/NT/vector.obj obj/I386/NT/os.obj obj/I386/NT/stubs.obj \
+d310 3
+d382 1
+d401 1
+a401 1
+# RCS Id: $Id: makefile.mak,v 1.4 1995/02/09 14:35:32 jont Exp $
+@
+
+
+1.4
+log
+@Remove need for interface.i
+@
+text
+@d3 1
+a3 1
+# $Id: makefile.mak,v 1.3 1995/01/23 12:56:34 jont Exp $
+d78 1
+d152 2
+a153 1
+	obj/I386/NT/interface.obj obj/I386/NT/time.obj obj/I386/NT/arena.obj obj/I386/NT/signals.obj
+d315 3
+d384 1
+d396 1
+a396 1
+# RCS Id: $Id: makefile.mak,v 1.3 1995/01/23 12:56:34 jont Exp $
+@
+
+
+1.3
+log
+@Modifying to use gas instead of masm
+@
+text
+@d3 1
+a3 1
+# $Id: makefile.mak,v 1.1 1995/01/18 13:17:45 jont Exp $
+d317 1
+a317 2
+	gcc -E src/arch/I386/interface.S -Isrc -Igen -Isrc/arch/I386 -Isrc/OS/NT -o interface.i
+	$(AS) interface.i -o $@@
+d390 1
+a390 1
+# RCS Id: $Id: makefile.mak,v 1.1 1995/01/18 13:17:45 jont Exp $
+@
+
+
+1.2
+log
+@Minor modifications
+@
+text
+@a26 1
+#CC = c:\hqbin\winnt\watcom\binnt\wcl386
+d28 1
+d50 1
+a50 1
+	src/OS/NT/arch/I386/interface.S \
+d103 1
+a103 1
+	src/OS/NT/arch/I386/macros.h \
+d316 3
+a318 4
+obj/I386/NT/interface.obj:	src/OS/NT/arch/I386/interface.S
+	copy src\OS\NT\arch\I386\interface.S interface.c
+	$(CC) $(CFLAGSREL) /c interface.c /EP > interface.i
+	$(AS) /Ml /Zi interface.i,$@@
+@
+
+
+1.1
+log
+@new unit
+nmake specific makefile. Hopefully we can get this back to gnumake some time
+@
+text
+@d1 645
+a645 645
+# ==== MAKEFILE FOR NT ====
+#
+# $Id$
+#
+# Copyright (C) 1994, Harlequin Group
+#
+# This is the Microsoft nmake file for Windows NT.  It's terribly ghastly.
+#
+# Notes
+#
+# 1. This file (at present) must be copied into the src directory and
+#   the product built from there.
+# 2. The SOURCES and HEADERS macro must be manually maintained.
+# 3. All the sources depend on all the headers.
+
+ARCH = 386
+OS = NT
+BUILD = MVC
+TARG = DW
+
+PROJ = MLWorks
+
+PREFIX = ..
+SRCDIR = $(PREFIX)\src
+INCDIR = $(PREFIX)\include
+
+#CC = c:\hqbin\winnt\watcom\binnt\wcl386
+CC = cl
+
+SOURCES = src/OS/NT/main.c \
+	src/alloc.c \
+	src/allocator.c \
+	src/OS/NT/arena.c \
+	src/bytearrays.c \
+	src/cache.c \
+	src/diagnostic.c \
+	src/endian.c \
+	src/environment.c \
+	src/event.c \
+	src/exceptions.c \
+	src/fixup.c \
+	src/gc.c \
+	src/global.c \
+	src/handler.c \
+	src/image.c \
+	src/implicit.c \
+	src/initialise.c \
+	src/integers.c \
+	src/intercept.c \
+	src/OS/NT/arch/I386/interface.S \
+	src/OS/NT/license.c \
+	src/lists.c \
+	src/loader.c \
+	src/main.c \
+	src/marshal.c \
+	src/mem.c \
+	src/modules.c \
+	src/options.c \
+	src/pervasives.c \
+	src/print.c \
+	src/profiler.c \
+	src/reals.c \
+	src/arch/I386/stacks.c \
+	src/arch/I386/state.c \
+	src/streams.c \
+	src/strings.c \
+	src/system.c \
+	src/OS/NT/time.c \
+	src/trace.c \
+	src/OS/NT/nt.c \
+	src/OS/NT/unix.c \
+	src/utils.c \
+	src/value.c \
+	src/values.c \
+	src/vector.c \
+	src/OS/NT/os.c \
+	src/OS/NT/arch/I386/signals.c \
+	src/arch/I386/stubs.c
+
+HEADERS = src/OS/NT/ansi.h \
+	src/integers.h \
+	src/OS/NT/arena.h \
+	src/intercept.h \
+	src/OS/NT/arenadefs.h \
+	src/interface.h \
+	src/OS/NT/naming.h \
+	src/license.h \
+	src/OS/NT/syscalls.h \
+	src/lists.h \
+	src/OS/NT/mltime.h \
+	src/loader.h \
+	src/OS/NT/nt.h \
+	src/OS/NT/unix.h \
+	src/mach.h \
+	src/mach_fixup.h \
+	src/alloc.h \
+	src/main.h \
+	src/allocator.h \
+	src/marshal.h \
+	src/mem.h \
+	src/arch/I386/mach_values.h \
+	src/mltypes.h \
+	src/arch/I386/macros.h \
+	src/modules.h \
+	src/arch/I386/stacks.h \
+	src/objectfile.h \
+	src/arch/I386/state.h \
+	src/options.h \
+	src/arch/I386/types.h \
+	src/os.h \
+	src/bytearrays.h \
+	src/pervasives.h \
+	src/cache.h \
+	src/print.h \
+	src/diagnostic.h \
+	src/profiler.h \
+	src/endian.h \
+	src/reals.h \
+	src/environment.h \
+	src/signals.h \
+	src/event.h \
+	src/streams.h \
+	src/exceptions.h \
+	src/strings.h \
+	src/extensions.h \
+	src/stubs.h \
+	src/fixup.h \
+	src/system.h \
+	src/gc.h \
+	src/tags.h \
+	src/global.h \
+	src/trace.h \
+	src/handler.h \
+	src/utils.h \
+	src/image.h \
+	src/value.h \
+	src/implicit.h \
+	src/values.h \
+	src/initialise.h \
+	src/vector.h
+
+OBJECTS = 	obj/I386/NT/main.obj obj/I386/NT/alloc.obj obj/I386/NT/allocator.obj obj/I386/NT/bytearrays.obj \
+	obj/I386/NT/cache.obj obj/I386/NT/diagnostic.obj obj/I386/NT/endian.obj obj/I386/NT/environment.obj \
+	obj/I386/NT/event.obj obj/I386/NT/exceptions.obj obj/I386/NT/fixup.obj obj/I386/NT/gc.obj obj/I386/NT/global.obj \
+	obj/I386/NT/handler.obj obj/I386/NT/image.obj obj/I386/NT/implicit.obj obj/I386/NT/initialise.obj \
+	obj/I386/NT/integers.obj obj/I386/NT/intercept.obj obj/I386/NT/license.obj obj/I386/NT/lists.obj obj/I386/NT/loader.obj \
+	obj/I386/NT/marshal.obj obj/I386/NT/mem.obj obj/I386/NT/modules.obj obj/I386/NT/options.obj obj/I386/NT/pervasives.obj \
+	obj/I386/NT/print.obj obj/I386/NT/profiler.obj obj/I386/NT/reals.obj obj/I386/NT/stacks.obj obj/I386/NT/state.obj \
+	obj/I386/NT/streams.obj obj/I386/NT/strings.obj obj/I386/NT/system.obj obj/I386/NT/trace.obj obj/I386/NT/nt.obj obj/I386/NT/unix.obj obj/I386/NT/utils.obj \
+	obj/I386/NT/value.obj obj/I386/NT/values.obj obj/I386/NT/vector.obj obj/I386/NT/os.obj obj/I386/NT/stubs.obj \
+	obj/I386/NT/interface.obj obj/I386/NT/time.obj obj/I386/NT/arena.obj obj/I386/NT/signals.obj
+
+DEFS = /DOS_$(OS) /D"ARCH_$(ARCH)" /D"BUILD_$(BUILD)" /D"TARG_$(TARG)"
+DEFSREL = $(DEFS)
+DEFSDEB = $(DEFS) /D"DEBUG"
+# Compiler Options
+# nologo vital as it stops the compiler producing a copyright message
+# W3 warnings at level three, W4 leads to overoutput
+# WX treat warnings as errors, not used yet
+# YX use PreCompiled Headers.  Marginally faster.
+# FR create Source Browser file ?
+# ML create links to libc.lib
+# O2 optimize for speed
+# Z7 create debugging info
+# FA generate assembler listing
+OPTS = /nologo /Gd /I src /I src/arch/I386 /I src/OS/NT /I src/OS/NT/arch/I386 /I gen /W3
+OPTSREL = $(OPTS) /O2
+OPTSDEB = $(OPTS) /DDIAGNOSTICS /Z7 /Od
+OPTSLINK = SUBSYSTEM:CONSOLE
+CFLAGSREL = $(OPTSDEB) $(DEFSDEB)
+CFLAGSDEB = $(OPTSDEB) $(DEFSDEB)
+
+all: $(PROJ).EXE
+
+obj/I386/NT/main.obj:	src/OS/NT/main.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/alloc.obj:	src/alloc.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/allocator.obj:	src/allocator.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/arena.obj:	src/OS/NT/arena.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/bytearrays.obj:	src/bytearrays.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/cache.obj:	src/OS/NT/arch/I386/cache.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/diagnostic.obj:	src/diagnostic.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/endian.obj:	src/endian.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/environment.obj:	src/environment.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/event.obj:	src/event.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/exceptions.obj:	src/exceptions.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/fixup.obj:	src/fixup.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/gc.obj:	src/gc.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/global.obj:	src/global.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/handler.obj:	src/handler.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/image.obj:	src/image.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/implicit.obj:	src/implicit.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/initialise.obj:	src/initialise.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/integers.obj:	src/integers.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/intercept.obj:	src/intercept.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/license.obj:	src/OS/NT/license.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/lists.obj:	src/lists.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/loader.obj:	src/loader.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/marshal.obj:	src/marshal.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/mem.obj:	src/mem.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/modules.obj:	src/modules.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/options.obj:	src/options.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/pervasives.obj:	src/pervasives.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/print.obj:	src/print.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/profiler.obj:	src/profiler.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/reals.obj:	src/reals.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/stacks.obj:	src/arch/I386/stacks.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/state.obj:	src/arch/I386/state.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/streams.obj:	src/streams.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/strings.obj:	src/strings.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/system.obj:	src/system.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/time.obj:	src/OS/NT/time.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/trace.obj:	src/trace.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/nt.obj:	src/OS/NT/nt.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/unix.obj:	src/OS/NT/unix.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/utils.obj:	src/utils.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/value.obj:	src/value.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/values.obj:	src/values.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/vector.obj:	src/vector.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/os.obj:	src/OS/NT/os.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/signals.obj:	src/OS/NT/arch/I386/signals.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/stubs.obj:	src/arch/I386/stubs.c
+	$(CC) $(CFLAGSREL) /c $** /Fo$@@
+
+obj/I386/NT/interface.obj:	src/OS/NT/arch/I386/interface.S
+	copy src\OS\NT\arch\I386\interface.S interface.c
+	$(CC) $(CFLAGSREL) /c interface.c /EP > interface.i
+	$(AS) /Ml /Zi interface.i,$@@
+
+
+.c.obg:
+	$(CC) $(CFLAGSDEB) /c $<
+	copy $(<:.c=.obj) $(<:.c=.obg)
+
+.c.obj:
+	$(CC) $(CFLAGSREL) /c $<
+
+$(SOURCES): $(HEADERS)
+
+$(PROJ).exe: $(OBJECTS)
+	echo >NUL @@<<spong.crf
+obj/I386/NT/main.obj
+obj/I386/NT/alloc.obj
+obj/I386/NT/allocator.obj
+obj/I386/NT/bytearrays.obj
+obj/I386/NT/cache.obj
+obj/I386/NT/diagnostic.obj
+obj/I386/NT/endian.obj
+obj/I386/NT/environment.obj
+obj/I386/NT/event.obj
+obj/I386/NT/exceptions.obj
+obj/I386/NT/fixup.obj
+obj/I386/NT/gc.obj
+obj/I386/NT/global.obj
+obj/I386/NT/handler.obj
+obj/I386/NT/image.obj
+obj/I386/NT/implicit.obj
+obj/I386/NT/initialise.obj
+obj/I386/NT/integers.obj
+obj/I386/NT/intercept.obj
+obj/I386/NT/license.obj
+obj/I386/NT/lists.obj
+obj/I386/NT/loader.obj
+obj/I386/NT/marshal.obj
+obj/I386/NT/mem.obj
+obj/I386/NT/modules.obj
+obj/I386/NT/options.obj
+obj/I386/NT/pervasives.obj
+obj/I386/NT/print.obj
+obj/I386/NT/profiler.obj
+obj/I386/NT/reals.obj
+obj/I386/NT/stacks.obj
+obj/I386/NT/state.obj
+obj/I386/NT/streams.obj
+obj/I386/NT/strings.obj
+obj/I386/NT/system.obj
+obj/I386/NT/trace.obj
+obj/I386/NT/nt.obj
+obj/I386/NT/unix.obj
+obj/I386/NT/utils.obj
+obj/I386/NT/value.obj
+obj/I386/NT/values.obj
+obj/I386/NT/vector.obj
+obj/I386/NT/os.obj
+obj/I386/NT/stubs.obj
+obj/I386/NT/interface.obj
+obj/I386/NT/time.obj
+obj/I386/NT/arena.obj
+obj/I386/NT/signals.obj
+<<
+	if exist $@@ del $@@
+	$(CC) $(CFLAGSREL) @@spong.crf /Fe$@@ /link LIBC.LIB kernel32.lib /$(OPTSLINK)
+
+clean: force
+	del $(SRCDIR)\*.OBJ
+	del $(SRCDIR)\*.SBR
+
+force:
+# ==== MLWORKS RUNTIME SYSTEM (GNU) MAKEFILE ====
+#
+# RCS Id: $Id: GNUmakefile,v 1.14 1994/11/09 16:16:31 nickb Exp $
+#
+# To make, provide environment variables OS, ARCH:
+#
+# (SunOS, SPARC), (Solaris, SPARC), (Irix, MIPS), ...
+#
+# and do "gnumake"
+
+#MODULES = alloc allocator arena bytearrays cache diagnostic endian \
+#          environment event exceptions fixup gc global handler image \
+#          implicit initialise integers intercept interface \
+#          license lists loader main marshal mem modules options \
+#	  pervasives print profiler reals stacks state streams \
+#          strings system time trace utils value values vector os signals stubs
+
+#MODULESSTATIC = $(MODULES)
+
+#TARGETFILES	= main main-g main-static
+#TARGETDIR 	= bin/$(ARCH)/$(OS)
+#TARGETS 	= $(TARGETFILES:%=$(TARGETDIR)/%)
+#DISTFILES	= main main-static
+#DISTRIBUTED	= $(DISTFILES:%=$(TARGETDIR)/%)
+
+#GENFILES = objectfile.sml __objectfile.sml \
+#           implicit.sml __implicit.sml \
+#           tags.sml __tags.sml \
+#           offsets.h
+
+#GENERATED      = $(GENFILES:%=gen/%)
+
+#INCLUDES        = -Igen -Isrc/OS/$(OS)/arch/$(ARCH) \
+#                  -Isrc/OS/$(OS) -Isrc/arch/$(ARCH) \
+#                  -Isrc -Iinclude
+#DEFINES         = 
+#DEFINESDEBUG    = -DDEBUG -DDIAGNOSTICS -DCOLLECT_STATS
+#LIBRARIES       = -lm
+#CCOPTS          = -O -ansi \
+#                  -Wall -Wpointer-arith -Wwrite-strings \
+#                  -Wconversion -Winline -Waggregate-return \
+#		  -Wmissing-prototypes -Wnested-externs
+
+# cannot use -Wcast-align, as we regularly do things which it will warn
+# 	e.g. mlval foo = f();
+#            mlval bar = *(mlval *)(foo - THE_TAG_WHICH_I_KNOW)
+#
+# cannot use -Wcast-qual, as the prototype for XtOpenDisplay()
+# does not use (const char *) arguments.
+#
+# cannot use -Wshadow, as we don't have a naming scheme that enforces
+# it (e.g. ml_string is a function, as is exn_name, ...).
+#
+# cannot use -Wstrict-prototypes, because it complains (for no good
+# reason) about signal-handling code like:
+#
+#		sv.sv_handler = SIG_IGN;
+#
+# cannot use -Wredundant-decls, because the Gcc-installed include
+# files break this rule all the time (e.g. sys/signal.h declares
+# "void (*signal())()" twice!)
+
+#RM              = /bin/rm -f
+#MKDIR		= /bin/mkdir
+#TAR 		= /bin/tar
+#LN		= /bin/ln
+#FIND            = /bin/find
+#AWK		= /bin/awk
+#CC              = gcc
+#STRIP		= /bin/strip
+
+# now include the target-specific makefile, which can redefine any of
+# the above macros as it likes. Typically will add to MODULES,
+# DEFINES, INCLUDES, LIBRARIES, and may tinker with CCOPTS.
+
+# Need to define OBJECTDIR first so this included file can see it.
+
+#OBJECTDIR	= obj/$(ARCH)/$(OS)
+
+#include src/OS/$(OS)/arch/$(ARCH)/GNUmake
+
+#OBJECTS         = $(MODULES:%=$(OBJECTDIR)/%.o)
+#OBJECTSDEBUG    = $(MODULES:%=$(OBJECTDIR)/%-g.o)
+#OBJECTSSTATIC   = $(MODULESSTATIC:%=$(OBJECTDIR)/%.o)
+
+#CCOPTSDEBUG     = $(CCOPTS) -g
+#CFLAGS          = $(CCOPTS) $(DEFINES) $(INCLUDES)
+#CFLAGSDEBUG     = $(CCOPTSDEBUG) $(DEFINES) $(DEFINESDEBUG) $(INCLUDES)
+
+#DEPENDDIR	= depend/$(ARCH)/$(OS)
+
+#all: runtime runtime-g runtime-static $(GENERATED)
+#generated: $(GENERATED)
+#objects: $(OBJECTS)
+#objectsdebug: $(OBJECTSDEBUG)
+
+# === MAKE DIRECTIVES ===
+
+# Disable traditional suffix searches.
+
+.SUFFIXES:
+
+# == General Rules ==
+
+#$(DEPENDDIR)/%.d: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(DEPENDDIR) 2>/dev/null || :
+#	@@$(CC) -MM $(CFLAGS) $< | sed '/:/s!$*.o!$(OBJECTDIR)/$*.o $(OBJECTDIR)/$*-g.o $@@!' > $@@
+
+#$(DEPENDDIR)/%.d: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(DEPENDDIR) 2>/dev/null || :
+#	@@$(CC) -MM $(CFLAGS) $< | sed '/:/s!$*.o!$(OBJECTDIR)/$*.o $(OBJECTDIR)/$*-g.o $@@!' > $@@
+
+#$(OBJECTDIR)/%.o: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGS) -o $@@ $<
+
+#$(OBJECTDIR)/%-g.o: %.c
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGSDEBUG) -o $@@ $<
+
+#$(OBJECTDIR)/%.o: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGS) -o $@@ $<
+
+#$(OBJECTDIR)/%-g.o: %.S
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p $(OBJECTDIR) 2>/dev/null || :
+#	@@$(CC) -c $(CFLAGSDEBUG) -o $@@ $<
+
+#gen/%.sml: src/%.h awk/%.awk
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/$*.awk < src/$*.h > gen/$*.sml
+
+#gen/__%.sml: src/%.h awk/__%.awk
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/__$*.awk < src/$*.h > gen/__$*.sml
+
+#gen/%.h: awk/%.awk src/implicit.h
+#	@@echo 'MAKE: $< -> $@@'
+#	@@mkdir -p gen 2>/dev/null || :
+#	@@$(AWK) -f awk/$*.awk < src/implicit.h > gen/$*.h
+
+# Have to put explicit dependencies on the offsets file here, because
+# Make isn't smart enough to figure them all out (in fact, because gcc
+# -MM insists on finding all the depended-upon files, rather than
+# recording them as dependencies).
+
+#src/arch/SPARC/interface.S: gen/offsets.h
+#src/arch/SPARC/poly_equal.S: gen/offsets.h
+
+# == Search paths ==
+#
+# NOTE: The order of these paths is IMPORTANT.  Please think about it.
+
+# C sources may be located in general source and architecture-specific
+# directories.
+
+#vpath %.c \
+#  src/OS/$(OS)/arch/$(ARCH) \
+#  src/OS/$(OS) \
+#  src/arch/$(ARCH) \
+#  src gen
+
+# C headers may be generated.
+
+#vpath %.h gen
+
+# Name-value and name-offset definition files are like C sources.
+# 
+# vpath %.nv \
+#   src/OS/$(OS)/arch/$(ARCH) \
+#   src/OS/$(OS) \
+#   src/arch/$(ARCH) \
+#   src gen
+# 
+# vpath %.no \
+#   src/OS/$(OS)/arch/$(ARCH) \
+#   src/OS/$(OS) \
+#   src/arch/$(ARCH) \
+#   src gen
+
+# Note that assembler sources may only be located in
+# architecture-specific directories.
+
+#vpath %.S \
+#  src/OS/$(OS)/arch/$(ARCH) \
+#  src/arch/$(ARCH) \
+#  gen
+
+# === AUTOMATIC DEPENDENCIES ===
+#
+# Dependency files are kept in the depend directory and are
+# automatically kept up to date by the general rules above.
+# For details, see the GNU make documentation.
+
+#include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
+
+# === TARGETS ===
+
+#$(TARGETDIR)/main: $(OBJECTS)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGS) -B/bin/ -o $@@ $(OBJECTS) $(LIBRARIES)
+#	@@$(STRIP) $@@
+
+#$(TARGETDIR)/main-static: $(OBJECTSSTATIC)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGS) -B/bin/ -Xlinker -Bstatic -o $@@ $(OBJECTSSTATIC) $(LIBRARIES)
+#	@@$(STRIP) $@@
+
+#$(TARGETDIR)/main-g: $(OBJECTSDEBUG)
+#	@@echo 'MAKE: $@@'
+#	@@mkdir -p $(TARGETDIR) 2>/dev/null || :
+#	@@$(CC) $(CFLAGSDEBUG) -B/bin/ -o $@@ $(OBJECTSDEBUG) $(LIBRARIES)
+
+# === PSUEDO TARGETS ===
+
+#doc: force
+#	cd doc && $(MAKE) $(MAKEFLAGS)
+
+#clean: force
+#	$(RM) $(OBJECTDIR)/* core $(TARGETS) runtime*
+
+
+#cleandepend: force
+#	$(RM) $(DEPENDDIR)/*
+
+#cleangen: force
+#	$(RM) gen/*
+
+#runtime: $(TARGETDIR)/main
+#	 $(RM) $@@
+#	 $(LN) -s $(TARGETDIR)/main $@@
+
+#runtime-static: $(TARGETDIR)/main-static
+#	$(RM) $@@
+#	$(LN) -s $(TARGETDIR)/main-static $@@
+
+#runtime-g: $(TARGETDIR)/main-g
+#	$(RM) $@@
+#	$(LN) -s $(TARGETDIR)/main-g $@@
+
+#distribution: $(DISTRIBUTED)
+#	$(RM) -r $(DISTDIR)/bin
+#	$(MKDIR) $(DISTDIR)/bin
+#	$(TAR) cvf - $(DISTRIBUTED) | ( cd $(DISTDIR); $(TAR) xf - )
+
+#force:
+@

@@ -1,0 +1,750 @@
+head	1.25;
+access;
+symbols
+	ML_beta_release_12/08/94:1.16
+	ML_beta_release_03/08/94:1.16
+	ML_revised_beta_release_25/05/94:1.15
+	ML_final_beta_release_02/03/94:1.14
+	mlworks-28-01-1994:1.14
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11;
+locks; strict;
+comment	@ * @;
+
+
+1.25
+date	95.07.04.13.47.40;	author matthew;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	95.06.05.13.19.52;	author daveb;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	95.06.01.10.28.14;	author daveb;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	95.05.22.10.51.12;	author matthew;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	95.04.20.13.11.27;	author matthew;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	95.04.18.14.31.43;	author daveb;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	95.03.16.18.20.22;	author daveb;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	95.03.10.15.04.27;	author daveb;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.09.21.16.05.06;	author brianm;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.06.20.11.13.12;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	94.04.06.11.31.20;	author daveb;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.12.10.11.01.36;	author daveb;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.10.08.16.46.50;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.09.13.09.16.20;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.08.10.16.54.49;	author matthew;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.07.29.11.28.46;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.05.27.16.14.35;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.05.13.10.06.51;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.05.06.13.45.39;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.05.04.16.22.09;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.04.30.14.40.04;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.04.28.10.04.25;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.04.27.12.39.32;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.04.23.14.19.59;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.04.21.12.11.37;	author daveb;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.08.10.16.54.49;	author jont;	state Exp;
+branches;
+next	1.11.1.2;
+
+1.11.1.2
+date	93.09.10.11.13.07;	author daveb;	state Exp;
+branches;
+next	1.11.1.3;
+
+1.11.1.3
+date	93.10.08.10.35.18;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@Motif utility functions.
+@
+
+
+1.25
+log
+@Moving various functions to CAPI
+@
+text
+@(*
+ * $Log: motif_utils.sml,v $
+ *  Revision 1.24  1995/06/05  13:19:52  daveb
+ *  Added NO_SENSE_SELECTION option for Sensitivity type.
+ *
+ *  Revision 1.23  1995/06/01  10:28:14  daveb
+ *  Added new type MotifContext, which combines a user_context with
+ *  dialog boxes for context-specific options.  Changed context_menu to
+ *  incorporate entries for popping up the options dialogs for the current
+ *  context.  Put the remaining options dialogs, for tool-specific options,
+ *  in the view_options function, which returns items for use in "view"
+ *  menus.
+ *
+ *  Revision 1.22  1995/05/22  10:51:12  matthew
+ *  Changing interface to list_select.
+ *
+ *  Revision 1.21  1995/04/20  13:11:27  matthew
+ *  Added set_sensitivity and input_string
+ *
+ *  Revision 1.20  1995/04/18  14:31:43  daveb
+ *  Added get_context argument to context_menu.
+ *
+ *  Revision 1.19  1995/03/16  18:20:22  daveb
+ *  Made context_menu ignore constant contexts if asked to do so.
+ *
+ *  Revision 1.18  1995/03/10  15:04:27  daveb
+ *  Added support for selections to the options menu.
+ *
+ *  Revision 1.17  1994/09/21  16:05:06  brianm
+ *  Adding value menu implementation ...
+ *
+ *  Revision 1.16  1994/06/20  11:13:12  daveb
+ *  Replaced ContextRef with user_context.
+ *
+ *  Revision 1.15  1994/04/06  11:31:20  daveb
+ *  Added breakpoints menu.
+ *
+ *  Revision 1.14  1993/12/10  11:01:36  daveb
+ *  Added context_menu function.
+ *
+ *  Revision 1.13  1993/10/08  16:46:50  matthew
+ *  Merging in bug fixes
+ *
+ *  Revision 1.12  1993/09/13  09:16:20  daveb
+ *  Merged in bug fix.
+ *
+ *  Revision 1.11.1.3  1993/10/08  10:35:18  matthew
+ *  Added beep and cut buffer operations
+ *
+ *  Revision 1.11.1.2  1993/09/10  11:13:07  daveb
+ *  Added name parameter to MotifUtils.list_select.
+ *
+ *  Revision 1.11.1.1  1993/08/10  16:54:49  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.11  1993/08/10  16:54:49  matthew
+ *  Return update function from options_menu
+ *
+ *  Revision 1.10  1993/07/29  11:28:46  matthew
+ *  Added with_message function
+ *
+ *  Revision 1.9  1993/05/27  16:14:35  matthew
+ *  Return exit function from list_select
+ *
+ *  Revision 1.8  1993/05/13  10:06:51  daveb
+ *  options_menu now takes a string to use for the title of the options
+ *  dialogs.
+ *
+ *  Revision 1.7  1993/05/06  13:45:39  daveb
+ *  Added make_outstream.
+ *
+ *  Revision 1.6  1993/05/04  16:22:09  matthew
+ *  Added fileselect function
+ *
+ *  Revision 1.5  1993/04/30  14:40:04  daveb
+ *  Moved Editor options dialog to new setup menu.
+ *
+ *  Revision 1.4  1993/04/28  10:04:25  daveb
+ *  Changes to make_scrolllist.
+ *
+ *  Revision 1.3  1993/04/27  12:39:32  daveb
+ *  Added options_menu code from _listener and _fileselect.
+ *
+ *  Revision 1.2  1993/04/23  14:19:59  matthew
+ *  Added send_message function
+ *
+ *  Revision 1.1  1993/04/21  12:11:37  daveb
+ *  Initial revision
+ *
+ *
+ * Copyright (c) 1993 Harlequin Ltd.
+ *
+ *)
+
+signature MOTIF_UTILS =
+sig
+  type Widget
+  type ButtonSpec
+  type user_context_options
+  type user_tool_options
+  type user_preferences
+  type user_context
+
+  val make_outstream : (string -> unit) -> outstream
+  (* make_outstream uses a local buffer to implement an outstream.  It uses
+     its argument to actually display the text. *)
+
+  val list_select :
+    (Widget * string) ->
+    ('_a list * ('_a -> unit) * ('_a -> string)) -> 
+    (unit -> unit)
+
+  val setup_menu : Widget * user_preferences -> ButtonSpec
+
+  val breakpoints_menu : Widget -> ButtonSpec
+
+  datatype Writable = WRITABLE | ALL
+
+  type MotifContext
+  (* A MotifContext combines a user_context with some option dialogs. *)
+
+  val make_context: user_context * Widget * user_preferences -> MotifContext
+
+  val makeInitialContext: Widget * user_preferences -> unit
+
+  val getInitialContext: unit -> MotifContext
+
+  val get_user_context: MotifContext -> user_context
+
+  val get_context_name: MotifContext -> string
+
+  (* A context menu includes entries for setting the current mode, saving the
+     source to a file, and creating a new context.  The writable argument 
+     controls whether the menu contains the entries for creating new contexts.
+     If full_menus is set, it also contains entries for selecting the current
+     context and for setting individual options. *)
+  val context_menu :
+    {set_state: MotifContext -> unit,
+     get_context: unit -> MotifContext,
+     writable: Writable,
+     applicationShell: Widget,
+     user_preferences: user_preferences}
+    -> ButtonSpec
+
+  (* view_options returns a list of items for inclusion in a view menu.
+     These items pop-up dialogs for setting the tool-specific options.
+     The ViewOptions type controls which dialogs the funtion creates.
+     The Sensitivity type controls whether the sensitivity dialog contains
+     toggles for controlling sensitivity to the current selection -- for
+     some tools this is irrelevant.  The options are:
+       SENSE_ALL: sense selection, set_selection, sense_context, set_context.
+       NO_SET_SELECTION: omit set_selection
+       NO_SENSE_SELECTION: omit sense_selection
+       CONTEXT_ONLY: set_selection, sense_context, set_context.
+     sense_context and set_context are omitted if full_menus is not set,
+     regardless of the value of the sensitivity field.
+     The string argument is the title of the dialog shells. *)
+  datatype ViewOptions = VIEW_ALL | SENSE_ONLY
+  datatype Sensitivity =
+    SENSE_ALL | NO_SET_SELECTION | NO_SENSE_SELECTION | CONTEXT_ONLY
+
+  val view_options :
+    {parent: Widget,
+     title: string,
+     user_options: user_tool_options, 
+     user_preferences: user_preferences,
+     caller_update_fn: user_tool_options -> unit,
+     sensitivity: Sensitivity,
+     view_type: ViewOptions}
+    -> ButtonSpec list
+
+  (* cuttin' an' pastin' *)
+  val  cutSelection : Widget -> unit
+  val  copySelection : Widget -> unit
+  val  pasteSelection : Widget -> unit
+
+  (* Value menu : Edit, Trace, Untrace *)
+  val  value_menu :
+    Widget * user_context * user_tool_options * user_preferences * (Widget list)
+    -> ButtonSpec
+
+  val  value_menu_strfun :
+    Widget * user_context * user_tool_options * user_preferences
+    * (unit -> string)
+    -> ButtonSpec
+
+end
+@
+
+
+1.24
+log
+@Added NO_SENSE_SELECTION option for Sensitivity type.
+@
+text
+@d3 3
+a94 2
+require "../main/options";
+
+a96 2
+  structure Options : OPTIONS
+
+a103 20
+  val make_scrolllist:
+    {parent: Widget,
+     name: string,
+     select_fn: Widget * Widget * (Options.print_options -> '_a list -> unit) ->
+		  '_a -> unit,
+     action_fn: Widget * Widget * (Options.print_options -> '_a list -> unit) ->
+		  '_a -> unit,
+     print_fn: Options.print_options -> '_a -> string} ->
+      Widget * Widget * (Options.print_options -> '_a list -> unit)
+    (* The results are the scroll window, the list window, and the function
+       for setting the contents of the list window.  These are also passed
+       (curried) to the select and action functions, so that they can (e.g.)
+       modify the contents. *)
+
+  val send_message : Widget * string -> unit
+
+  val beep : Widget -> unit
+
+  val with_message : Widget * string -> (unit -> 'a) -> 'a
+
+a185 2
+
+  val set_sensitivity : Widget * bool -> unit
+@
+
+
+1.23
+log
+@Added new type MotifContext, which combines a user_context with
+dialog boxes for context-specific options.  Changed context_menu to
+incorporate entries for popping up the options dialogs for the current
+context.  Put the remaining options dialogs, for tool-specific options,
+in the view_options function, which returns items for use in "view"
+menus.
+@
+text
+@d3 8
+d174 1
+d180 2
+a181 1
+  datatype Sensitivity = SENSE_ALL | NO_SET_SELECTION | CONTEXT_ONLY
+@
+
+
+1.22
+log
+@Changing interface to list_select.
+@
+text
+@d3 3
+d92 3
+a94 1
+  type UserOptions
+a110 5
+  (* Input a string from the user and call a function on it *)
+  (* The returned function is the relevant popup function *)
+
+  val input_string : Widget * string * (string -> unit) -> (unit -> unit)
+
+d126 4
+d131 11
+a141 2
+  val context_menu :
+    (user_context -> unit) * (unit -> user_context) * Writable -> ButtonSpec
+d143 1
+a143 1
+  val setup_menu : Widget * (unit -> UserOptions) -> ButtonSpec
+d145 27
+a171 1
+  val breakpoints_menu : Widget -> ButtonSpec
+d173 9
+a181 5
+  (* The string argument to options_menu is the title of the dialog shells
+     created by the menu. *)
+  val options_menu :
+    Widget * string * (unit -> UserOptions) * (UserOptions -> unit)
+    -> (ButtonSpec * (unit -> unit))
+d189 8
+a196 2
+  val  value_menu : Widget * user_context * UserOptions * (Widget list) -> ButtonSpec
+  val  value_menu_strfun : Widget * user_context * UserOptions * (unit -> string) -> ButtonSpec
+@
+
+
+1.21
+log
+@Added set_sensitivity and input_string
+@
+text
+@d3 3
+d122 3
+a124 2
+    (Widget * string * '_a list * ('_a -> unit) * ('_a -> string)) ->
+      (unit -> unit)
+@
+
+
+1.20
+log
+@Added get_context argument to context_menu.
+@
+text
+@d3 3
+d103 5
+d144 3
+@
+
+
+1.19
+log
+@Made context_menu ignore constant contexts if asked to do so.
+@
+text
+@d3 3
+d115 2
+a116 1
+  val context_menu : (user_context -> unit) * Writable -> ButtonSpec
+@
+
+
+1.18
+log
+@Added support for selections to the options menu.
+@
+text
+@d3 3
+d111 2
+a112 1
+  val context_menu : (user_context -> unit) -> ButtonSpec
+@
+
+
+1.17
+log
+@Adding value menu implementation ...
+@
+text
+@d3 3
+d116 3
+a118 1
+  val options_menu : Widget * string * (unit -> UserOptions) -> (ButtonSpec * (unit -> unit))
+@
+
+
+1.16
+log
+@Replaced ContextRef with user_context.
+@
+text
+@d3 3
+d120 3
+@
+
+
+1.15
+log
+@Added breakpoints menu.
+@
+text
+@d3 3
+d72 1
+a72 1
+  type ContextRef
+d102 1
+a102 1
+  val context_menu : (ContextRef -> unit) -> ButtonSpec
+@
+
+
+1.14
+log
+@Added context_menu function.
+@
+text
+@d3 3
+d102 2
+@
+
+
+1.13
+log
+@Merging in bug fixes
+@
+text
+@d3 3
+d66 1
+d95 2
+@
+
+
+1.12
+log
+@Merged in bug fix.
+@
+text
+@d3 6
+d80 2
+d97 6
+@
+
+
+1.11
+log
+@Return update function from options_menu
+@
+text
+@d3 9
+d80 3
+a82 1
+  val list_select : (Widget * '_a list * ('_a -> unit) * ('_a -> string)) -> (unit -> unit)
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 3
+ *  Revision 1.11  1993/08/10  16:54:49  matthew
+ *  Return update function from options_menu
+ *
+@
+
+
+1.11.1.2
+log
+@Added name parameter to MotifUtils.list_select.
+@
+text
+@a2 3
+ *  Revision 1.11.1.1  1993/08/10  16:54:49  jont
+ *  Fork for bug fixing
+ *
+d74 1
+a74 3
+  val list_select :
+    (Widget * string * '_a list * ('_a -> unit) * ('_a -> string)) ->
+      (unit -> unit)
+@
+
+
+1.11.1.3
+log
+@Added beep and cut buffer operations
+@
+text
+@a2 3
+ *  Revision 1.11.1.2  1993/09/10  11:13:07  daveb
+ *  Added name parameter to MotifUtils.list_select.
+ *
+a70 2
+  val beep : Widget -> unit
+
+a85 6
+
+  (* cuttin' an' pastin' *)
+  val  cutSelection : Widget -> unit
+  val  copySelection : Widget -> unit
+  val  pasteSelection : Widget -> unit
+
+@
+
+
+1.10
+log
+@Added with_message function
+@
+text
+@d3 3
+d77 1
+a77 1
+  val options_menu : Widget * string * (unit -> UserOptions) -> ButtonSpec
+@
+
+
+1.9
+log
+@Return exit function from list_select
+@
+text
+@d3 3
+d61 2
+@
+
+
+1.8
+log
+@options_menu now takes a string to use for the title of the options
+dialogs.
+@
+text
+@d3 4
+d63 1
+a63 1
+  val list_select : (Widget * '_a list * ('_a -> unit) * ('_a -> string)) -> unit
+@
+
+
+1.7
+log
+@Added make_outstream.
+@
+text
+@d3 3
+d63 3
+a65 1
+  val options_menu : Widget * (unit -> UserOptions) -> ButtonSpec
+@
+
+
+1.6
+log
+@Added fileselect function
+@
+text
+@d3 3
+d51 4
+@
+
+
+1.5
+log
+@Moved Editor options dialog to new setup menu.
+@
+text
+@d3 3
+d48 2
+@
+
+
+1.4
+log
+@Changes to make_scrolllist.
+@
+text
+@d3 3
+d45 2
+@
+
+
+1.3
+log
+@Added options_menu code from _listener and _fileselect.
+@
+text
+@d3 3
+d17 2
+d21 2
+d28 12
+a39 5
+    Widget * string *
+    (Widget * Widget * ('_a list -> unit) -> '_a -> unit) *
+    (Widget * Widget * ('_a list -> unit) -> '_a -> unit) *
+    ('_a -> string) ->
+      Widget * Widget * ('_a list -> unit)
+@
+
+
+1.2
+log
+@Added send_message function
+@
+text
+@d3 3
+d17 3
+d29 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 3
+a4 1
+ * $Log$
+d6 1
+d20 3
+@

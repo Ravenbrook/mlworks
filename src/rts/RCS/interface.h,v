@@ -1,0 +1,868 @@
+head	1.30;
+access;
+symbols
+	Final_version_of_old_runtime:1.30
+	ML_revised_beta_release_25/05/94:1.30
+	ML_final_beta_release_02/03/94:1.30
+	mlworks-28-01-1994:1.30
+	Release:1.29
+	mlworks-beta-01-09-1993:1.29
+	MLWorks-1-0-3-21/12/1992:1.27
+	MLWorks-1-0-2-15/12/1992:1.27
+	MLWorks-1-0-1-04/12/1992:1.27
+	checkpoint_17_08_92:1.25;
+locks; strict;
+comment	@ * @;
+
+
+1.30
+date	93.11.05.15.12.26;	author jont;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	93.04.21.14.16.56;	author jont;	state Exp;
+branches
+	1.29.1.1;
+next	1.28;
+
+1.28
+date	93.04.14.13.24.02;	author richard;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	92.11.11.16.26.30;	author clive;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	92.10.02.09.23.42;	author richard;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.08.17.10.47.58;	author richard;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.08.11.15.27.39;	author clive;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.08.07.13.56.50;	author clive;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.07.31.08.14.09;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.07.27.14.00.28;	author richard;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.07.22.14.07.17;	author clive;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.07.21.15.32.15;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.07.15.12.12.05;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.07.03.13.51.09;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.06.22.14.08.58;	author clive;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.06.18.11.47.54;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.06.17.13.38.50;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.06.01.13.23.47;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.05.08.13.04.29;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.04.13.16.44.46;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.03.25.09.52.41;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.03.24.15.46.21;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.01.14.10.12.01;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.01.08.12.48.14;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.01.03.12.49.16;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.24.17.16.27;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.24.16.16.23;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.18.15.59.45;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.16.17.22.22;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.16.15.24.20;	author davidt;	state Exp;
+branches;
+next	;
+
+1.29.1.1
+date	93.04.21.14.16.56;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@This is the profile for the callml function (which is in fact
+implemented in assembler).
+@
+
+
+1.30
+log
+@Added check_event entries for leaf and non-leaf.
+@
+text
+@/*
+ * interface.h
+ * Assembly code interfacing C and ML.
+ *
+ * $Log: interface.h,v $
+ * Revision 1.29  1993/04/21  14:16:56  jont
+ * Added leaf raise code
+ *
+ * Revision 1.28  1993/04/14  13:24:02  richard
+ * Ripped out old tracing mechanism and installed a new one.
+ *
+ * Revision 1.27  1992/11/11  16:26:30  clive
+ * Access to functions needed for tracing
+ *
+ * Revision 1.26  1992/10/02  09:23:42  richard
+ * Made c_raise nonreturning.
+ *
+ * Revision 1.25  1992/08/17  10:47:58  richard
+ * Added set_stack_underflow().
+ *
+ * Revision 1.24  1992/08/11  15:27:39  clive
+ * Work on tracing
+ *
+ * Revision 1.23  1992/08/07  13:56:50  clive
+ * Changed the functionality of some of the debugger functions - added support
+ * for tracing
+ *
+ * Revision 1.22  1992/07/31  08:14:09  richard
+ * The C and assembler calling stubs are now single static code vectors.
+ *
+ * Revision 1.21  1992/07/27  14:00:28  richard
+ * Added poly_equal() and poly_not_equal() so that they can be added to the
+ * runtime environment by pervasives.c.
+ * Added callasm_code.
+ *
+ * Revision 1.20  1992/07/22  14:07:17  clive
+ * Took out ml_profile
+ *
+ * Revision 1.19  1992/07/21  15:32:15  richard
+ * Changed ml_call_c to callc.
+ *
+ * Revision 1.18  1992/07/15  12:12:05  richard
+ * Added ml_call_c stuff, and ml_boot_environment, although these aren't
+ * used at the moment.
+ *
+ * Revision 1.17  1992/07/03  13:51:09  richard
+ * Removed some redundant things and added ml_disturbance.
+ *
+ * Revision 1.16  1992/06/22  14:08:58  clive
+ * A few changes for the new debugger
+ *
+ * Revision 1.15  1992/06/18  11:47:54  richard
+ * Tidied up.
+ *
+ * Revision 1.14  1992/06/17  13:38:50  richard
+ * Added ml_gc_leaf.
+ *
+ * Revision 1.13  1992/06/01  13:23:47  clive
+ * Defined a macro to determine if we are in Raise code
+ *
+ * Revision 1.12  1992/05/08  13:04:29  clive
+ * Added code for memory profiling
+ *
+ * Revision 1.11  1992/04/13  16:44:46  clive
+ * First version of the profiler
+ *
+ * Revision 1.10  1992/03/25  09:52:41  richard
+ * Added ml_poly_equal.
+ *
+ * Revision 1.9  1992/03/24  15:46:21  richard
+ * Removed obsolete `ml_preserve' and updated documentation.
+ *
+ * Revision 1.8  1992/01/14  10:12:01  richard
+ * Added ml_raise and removed ml_toplevel_handler.
+ *
+ * Revision 1.7  1992/01/08  12:48:14  richard
+ * Changed the names of the routines in interface.s.
+ *
+ * Revision 1.6  1992/01/03  12:49:16  richard
+ * Added ml_preserve and documentation.
+ *
+ * Revision 1.5  1991/10/24  17:16:27  davidt
+ * Added header for ml_toplevel_handler.
+ *
+ * Revision 1.4  91/10/24  16:16:23  davidt
+ * Put in headers for ml_callgc and ml_callc.
+ * 
+ * Revision 1.3  91/10/18  15:59:45  davidt
+ * We don't need all those arguments to callml because it really
+ * should just access the global variables directly.
+ * 
+ * Revision 1.2  91/10/16  17:22:22  davidt
+ * Changed the type char* to void* and the type tagged_value which
+ * is now called mlval.
+ * 
+ * Revision 1.1  91/10/16  15:24:20  davidt
+ * Initial revision
+ * 
+ * Copyright (c) 1991 Harlequin Ltd.
+ */
+
+
+#ifndef interface_h
+#define interface_h
+
+#include "mltypes.h"
+#include "extensions.h"
+#include "tags.h"
+
+
+/*  === C INTERFACE TO ML ===
+ *
+ *  callml() invokes an ML function, applying it to an argument.  The return
+ *  value is the result of the function.
+ *
+ *  c_raise() raises the exception passed as its argument.  It does not
+ *  return.
+ *
+ *  set_stack_underflow() is a ghastly hack which, when called from a signal
+ *  handler, sets the stack register in the signal context to a value which
+ *  will cause a disturbance.
+ */
+
+extern mlval callml(mlval argument, mlval closure);
+extern nonreturning void c_raise(mlval exception);
+extern void set_stack_underflow(void);
+
+
+/*  === ML INTERFACE TO C ===
+ *
+ *  These routines are included here because they must be entered in the
+ *  `implicit vector' (see implicit.h).
+ *
+ *  Note: The address of ml_extend is also used to mark stack extension
+ *  frames.  See interface code and garbage collector.
+ */
+
+extern void ml_gc(void);		/* GC entry point from ML */
+extern void ml_gc_leaf(void);		/* ditto for leaf procedures */
+extern void ml_lookup_pervasive(void);	/* ML interface to lookup_pervasive */
+extern void ml_disturbance(void);	/* Disturbed function entry */
+extern void ml_raise(void);		/* Raise an exception */
+extern void ml_raise_leaf(void);	/* Raise an exception */
+extern void ml_trap(void);		/* Debugging trap */
+extern void ml_replace(void);		/* Code vector replacement entry point */
+extern void ml_replace_leaf(void);
+extern void ml_intercept(void);		/* Code vector interception entry point */
+extern void ml_intercept_leaf(void);
+extern word ml_replace_on[INTERCEPT_LENGTH];	/* Replacing code fragment */
+extern word ml_replace_on_leaf[INTERCEPT_LENGTH];
+extern word ml_intercept_on[INTERCEPT_LENGTH];	/* Intercepting code fragment */
+extern word ml_intercept_on_leaf[INTERCEPT_LENGTH];
+extern word ml_nop[INTERCEPT_LENGTH];		/* No operation code fragment */
+extern void ml_event_check(void);       /* Check for events */
+extern void ml_event_check_leaf(void);  /* Check for events */
+/*  == Polymorphic equality ==
+ *
+ *  These routines are implemented in assembler as they are critical.
+ */
+
+extern mlval poly_equal(mlval);		/* Polymorphic equality... */
+extern mlval poly_not_equal(mlval);	/* and its inverse */
+
+
+/*  == C and assembler calling ML code ==
+ *
+ *  These values are ML values which refer to static ML code vectors.  When
+ *  called the code vectors call the C or assembler routine pointed to by
+ *  their first closure element, after any housekeeping.  The assembler stub
+ *  calls assembler routines in the ML state.
+ */
+
+extern mlval stub_c, stub_asm;
+
+
+#endif
+@
+
+
+1.29
+log
+@Added leaf raise code
+@
+text
+@d6 3
+d154 2
+a155 1
+
+@
+
+
+1.29.1.1
+log
+@Fork for bug fixing
+@
+text
+@a5 3
+ * Revision 1.29  1993/04/21  14:16:56  jont
+ * Added leaf raise code
+ *
+@
+
+
+1.28
+log
+@Ripped out old tracing mechanism and installed a new one.
+@
+text
+@d6 3
+d140 1
+@
+
+
+1.27
+log
+@Access to functions needed for tracing
+@
+text
+@d6 3
+d102 1
+d107 2
+a108 2
+ *  callml invokes the ML function at address ml_pc and applies it the
+ *  argument ml_arg.  The return value is the result of the function.
+d110 1
+a110 1
+ *  c_raise raises the exception passed as its argument.  It does not
+d118 1
+a118 2
+extern mlval callml(mlval ml_pc, mlval ml_arg);
+extern mlval callml_traced_code(mlval ml_arg, mlval closure);
+d138 9
+a146 3
+extern void ml_trace(void);		/* Trace function */
+extern word *ml_jump_to_trace_code;     /* Code for jumping to trace */
+extern word *ml_remove_trace_code;      /* Code for ignoring trace */
+@
+
+
+1.26
+log
+@Made c_raise nonreturning.
+@
+text
+@d6 3
+d115 1
+a115 1
+extern mlval callml_with_offset_and_stack_check(mlval ml_arg, mlval closure);
+d135 3
+a137 1
+
+@
+
+
+1.25
+log
+@Added set_stack_underflow().
+@
+text
+@d6 3
+d95 1
+d113 1
+a113 1
+extern void c_raise(mlval exception);
+@
+
+
+1.24
+log
+@Work on tracing
+@
+text
+@d6 3
+d101 4
+d110 1
+@
+
+
+1.23
+log
+@Changed the functionality of some of the debugger functions - added support
+for tracing
+@
+text
+@d6 4
+d101 1
+a101 1
+extern mlval callml_with_offset(mlval ml_pc, mlval ml_arg, mlval offset);
+@
+
+
+1.22
+log
+@The C and assembler calling stubs are now single static code vectors.
+@
+text
+@d6 3
+d97 1
+@
+
+
+1.21
+log
+@Added poly_equal() and poly_not_equal() so that they can be added to the
+runtime environment by pervasives.c.
+Added callasm_code.
+@
+text
+@d6 5
+d111 1
+d125 4
+a128 4
+ *  The callc variables define a length of code which can be loaded onto the
+ *  heap as an ML code vector.  When run, this code calls the C function
+ *  pointed to by its first closure element.  The callasm variables define a
+ *  similar stub for assembler subroutines.
+d131 1
+a131 4
+extern char *callc_code;
+extern size_t callc_length;
+extern char *callasm_code;
+extern size_t callasm_length;
+@
+
+
+1.20
+log
+@Took out ml_profile
+@
+text
+@d6 3
+d83 3
+d89 1
+d103 1
+a103 1
+extern void ml_external(void);		/* Call to pervasive routine */
+d106 9
+a114 3
+extern void ml_poly_equal(void);	/* Polymorphic equality */
+extern void ml_memory_profile(void);	/* Wrap memory profiling around function */
+extern void ml_boot_environment(void);  /* Return initial values to ML */
+d117 1
+a117 1
+/*  == C calling ML code ==
+d119 4
+a122 4
+ *  The following variables define a length of code which can be loaded onto
+ *  the heap as an ML code vector.  When run, this code calls the C routine
+ *  at an offset in the implicit vector defined by its first closure
+ *  element.
+d127 2
+@
+
+
+1.19
+log
+@Changed ml_call_c to callc.
+@
+text
+@d6 3
+a99 1
+extern void ml_profile(void);		/* Register a function for profiling */
+@
+
+
+1.18
+log
+@Added ml_call_c stuff, and ml_boot_environment, although these aren't
+used at the moment.
+@
+text
+@d6 4
+d110 2
+a111 2
+extern char *ml_call_c;
+extern size_t ml_call_c_length;
+@
+
+
+1.17
+log
+@Removed some redundant things and added ml_disturbance.
+@
+text
+@d6 3
+d95 13
+@
+
+
+1.16
+log
+@A few changes for the new debugger
+@
+text
+@d6 3
+d87 1
+a87 1
+extern void ml_extend(void);		/* Stack extension request */
+a92 12
+
+/*  === MISCELLANEOUS PARAMTERS ===
+ *
+ *  The profiler needs to know whether a program counter is in the raise
+ *  routine.  The macro PC_FOR_ML_RAISE tests for this.
+ */
+
+#define PC_FOR_ML_RAISE(pc)	(pc >= ((word) &ml_raise_start) && pc < ((word) (&ml_raise_end)))
+extern word ml_raise_start;	/* Lowest address of raise routine */
+extern word ml_raise_end;	/* Highest address of raise routine */
+
+extern void *stack_extension_marker;
+@
+
+
+1.15
+log
+@Tidied up.
+@
+text
+@d6 3
+d97 1
+a97 1
+#define PC_FOR_ML_RAISE(pc)	(pc >= ml_raise_start && pc < ml_raise_end)
+d101 1
+@
+
+
+1.14
+log
+@Added ml_gc_leaf.
+@
+text
+@d6 3
+d74 18
+a91 6
+ *  `ml_gc' is the entry point to the garbage collector from ML.
+ *  `ml_external' is the entry point to the functions in the ml_externals
+ *  table (see callc.h) `ml_preserve' is a subroutine which preserves the
+ *  machine registers on the stack for use by a debugger.  `ml_extend' is
+ *  called by ML to extend the stack.  `ml_raise' raises an exception.
+ *  `ml_poly_equal' is the polymorphic equality function.
+d94 3
+a96 8
+extern void ml_gc(void);
+extern void ml_gc_leaf(void);
+extern void ml_external(void);
+extern void ml_extend(void);
+extern void ml_raise(void);
+extern void ml_poly_equal(void);
+extern void ml_profile(void);
+extern void ml_memory_profile(void);
+a97 2
+extern void ml_raise_end(void);
+#define PC_FOR_ML_RAISE(x) ((x >= (word) ml_raise) && (x <= (word) ml_raise_end))
+@
+
+
+1.13
+log
+@Defined a macro to determine if we are in Raise code
+@
+text
+@d6 3
+d80 1
+@
+
+
+1.12
+log
+@Added code for memory profiling
+@
+text
+@d6 3
+d83 3
+@
+
+
+1.11
+log
+@First version of the profiler
+@
+text
+@d6 3
+d79 1
+@
+
+
+1.10
+log
+@Added ml_poly_equal.
+@
+text
+@d6 3
+d75 1
+@
+
+
+1.9
+log
+@Removed obsolete `ml_preserve' and updated documentation.
+@
+text
+@d6 3
+d64 1
+d71 1
+@
+
+
+1.8
+log
+@Added ml_raise and removed ml_toplevel_handler.
+@
+text
+@d6 3
+d53 8
+a60 6
+ *  ml_gc is the entry point to the garbage collector from ML.
+ *  ml_external is the entry point to the C interface which in turn calls
+ *  interpret_callc() (callc.h).  ml_preserve is a subroutine which
+ *  preserves the machine registers on the stack for use by a
+ *  debugger.  ml_extend is called by ML to extend the stack.
+ *  ml_raise raises an exception.
+a64 1
+extern void ml_preserve(void);
+@
+
+
+1.7
+log
+@Changed the names of the routines in interface.s.
+@
+text
+@d6 3
+d54 2
+a55 3
+ *  debugger.  ml_toplevel_handler is the entry point to an exception
+ *  handler which invokes interpret_callc() with request zero (see
+ *  callc.c).
+a60 1
+extern mlval ml_toplevel_handler(void);
+d62 1
+a62 1
+
+@
+
+
+1.6
+log
+@Added ml_preserve and documentation.
+@
+text
+@d6 3
+d47 2
+a48 2
+ *  ml_callgc is the entry point to the garbage collector from ML.
+ *  ml_callc is the entry point to the C interface which in turn calls
+d56 2
+a57 2
+extern void ml_callgc(void);
+extern void ml_callc(void);
+d60 1
+@
+
+
+1.5
+log
+@Added header for ml_toplevel_handler.
+@
+text
+@d5 4
+a8 1
+ * $Log:	interface.h,v $
+d26 1
+a26 1
+/* Avoid multiple inclusion */
+a29 2
+/* For efficiency */
+#ifndef mltypes_h
+a30 1
+#endif
+d32 5
+a36 2
+/*
+ * Call an ML function with a single argument.
+a40 3
+/*
+ * Call the garbage collector from ML.
+ */
+d42 9
+a50 4
+extern mlval ml_callgc(mlval request, mlval args);
+
+/*
+ * Call C from ML.
+d53 4
+a56 1
+extern mlval ml_callc(mlval request, mlval args);
+a57 5
+/*
+ * ML toplevel interrupt handler.
+ */
+
+extern mlval ml_toplevel_handler();
+@
+
+
+1.4
+log
+@Put in headers for ml_callgc and ml_callc.
+@
+text
+@d6 3
+d49 6
+@
+
+
+1.3
+log
+@We don't need all those arguments to callml because it really
+should just access the global variables directly.
+@
+text
+@d2 8
+a9 3
+ * callml.h
+ * Run-time system to ML call mechanism
+ * $Log:	callml.h,v $
+a16 1
+ *
+d21 2
+a22 2
+#ifndef callml_h
+#define callml_h
+d34 12
+@
+
+
+1.2
+log
+@Changed the type char* to void* and the type tagged_value which
+is now called mlval.
+@
+text
+@d5 4
+d17 2
+a18 2
+#ifndef call_out_h
+#define call_out_h
+d29 1
+a29 4
+extern mlval callml
+  (void *ml_stack, void *ml_heap,
+   void *ml_heap_limit, void *ml_code,
+   mlval ml_arg);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d12 2
+a13 1
+#ifndef call_out_h /* Avoid multiple inclusion */
+d16 3
+a18 2
+#ifndef types_h /* For efficiency */
+#include "types.h"
+a19 3
+#ifndef values_h /* For efficiency */
+#include "values.h"
+#endif
+d25 4
+a28 4
+extern tuple_pointer callml
+  (char *ml_stack, char *ml_heap,
+   char *ml_heap_limit, char *ml_code,
+   tagged_value ml_arg);
+@

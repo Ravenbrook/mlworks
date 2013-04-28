@@ -1,0 +1,699 @@
+head	1.18;
+access;
+symbols
+	ML_beta_release_12/08/94:1.17
+	ML_beta_release_03/08/94:1.17
+	ML_revised_beta_release_25/05/94:1.17
+	ML_final_beta_release_02/03/94:1.17
+	mlworks-28-01-1994:1.17
+	Release:1.17
+	mlworks-beta-01-09-1993:1.17
+	MLWorks-1-0-4-29/01/1993:1.16
+	MLWorks-1-0-3-21/12/1992:1.16
+	MLWorks-1-0-2-15/12/1992:1.16
+	MLWorks-1-0-1-04/12/1992:1.16
+	checkpoint_17_08_92:1.10;
+locks; strict;
+comment	@ * @;
+
+
+1.18
+date	94.10.13.10.05.38;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.15.16.53.15;	author daveb;	state Exp;
+branches
+	1.17.1.1;
+next	1.16;
+
+1.16
+date	92.10.28.14.35.47;	author jont;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.10.02.14.38.13;	author clive;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.09.15.18.18.50;	author jont;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.08.27.15.19.08;	author davidt;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.08.26.12.51.12;	author davidt;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.08.18.16.55.08;	author davidt;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.13.14.20.42;	author davidt;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.11.11.22.14;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.04.17.51.49;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.13.10.31.41;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.06.17.10.24.09;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.11.14.41.58;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.10.12.13.02;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.01.09.48.14;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.05.19.10.33.01;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.05.14.23.56;	author richard;	state Exp;
+branches;
+next	;
+
+1.17.1.1
+date	93.06.15.16.53.15;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@General purpose map module.  This is the signature.
+@
+
+
+1.18
+log
+@Use pervasive Option.option for return values
+@
+text
+@(*  === GENERAL PURPOSE MAP ===
+ *           SIGNATURE
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  A map is a general purpose partial function from some domain to some
+ *  range, or, if you prefer, a look-up table.  For the sake of efficiency a
+ *  complete order must be provided when constructing a map.
+ *
+ *  Notes
+ *  -----
+ *  This signature is intended to have more than one implementation, using
+ *  association lists, balanced trees, arrays, etc.  I want to keep the
+ *  signature simple and self-contained.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: newmap.sml,v $
+ *  Revision 1.17  1993/06/15  16:53:15  daveb
+ *  Added tryApply'Eq, for use in _realise.
+ *
+ *  Revision 1.16  1992/10/28  14:35:47  jont
+ *  Some cosmetic changes to emphasise the need for strict less than functions
+ *
+ *  Revision 1.15  1992/10/02  14:38:13  clive
+ *  Change to NewMap.empty which now takes < and = functions instead of the single-function
+ *
+ *  Revision 1.14  1992/09/15  18:18:50  jont
+ *  Added empty'' for strict less than functions which do the less than test
+ *  first. this should be more efficient for large maps
+ *
+ *  Revision 1.13  1992/08/27  15:19:08  davidt
+ *  Added the functions fold_in_rev_order and string.
+ *
+ *  Revision 1.12  1992/08/26  12:51:12  davidt
+ *  Changed the type of forall and exists, adding the
+ *  function map.
+ *
+ *  Revision 1.11  1992/08/18  16:55:08  davidt
+ *  Added the combine function.
+ *
+ *  Revision 1.10  1992/08/13  14:20:42  davidt
+ *  Added tryApply, tryApply', size, rank, rank, and merge functions.
+ *
+ *  Revision 1.9  1992/08/11  11:22:14  jont
+ *  Removed some redundant structure arguments and sharing
+ *  Converted where relevant to use NewMap.{forall,exists,iterate}
+ *
+ *  Revision 1.8  1992/08/04  17:51:49  jont
+ *  Added fold, fold_in_order and union on maps
+ *
+ *  Revision 1.7  1992/07/13  10:31:41  jont
+ *  Added is_empty predicate
+ *
+ *  Revision 1.6  1992/06/17  10:24:09  jont
+ *  Added range_ordered for signature matching requirements of lambda translator
+ *
+ *  Revision 1.5  1992/06/11  14:41:58  jont
+ *  Added domain_ordered function (required by lambda translator)
+ *
+ *  Revision 1.4  1992/06/10  12:13:02  richard
+ *  Added to_list_ordered.
+ *
+ *  Revision 1.3  1992/06/01  09:48:14  richard
+ *  Added empty' and from_list'.
+ *
+ *  Revision 1.2  1992/05/19  10:33:01  richard
+ *  Added efficient variants of `apply' for different situations.
+ *
+ *  Revision 1.1  1991/12/05  14:23:56  richard
+ *  Initial revision
+ *
+ *)
+
+
+signature NEWMAP =
+  sig
+    (*  === THE MAP TYPE ===  *)
+
+    type ('object, 'image) T
+
+
+    (*  === CONSTRUCT AN EMPTY MAP ===
+     *
+     *  An empty map is undefined everywhere, and is constructed by
+     *  supplying an ordering function for the object type (<) and
+     *  an equality function
+     *  Note:
+     *    ForAll f,x . apply (empty f) x = raise Undefined
+     *
+     *  empty' is a variation which takes a less function (or <) for an
+     *  equality-admitting object type.
+     *
+     *)
+
+    val empty  : (('object * 'object -> bool) * ('object * 'object -> bool)) -> ('object, 'image) T
+    val empty' : (''object * ''object -> bool) -> (''object, 'image) T
+
+    (* Determining if a map is empty *)
+    val is_empty : ('object, 'image) T -> bool
+
+    (*  === DEFINE THE MAP AT A POINT ===
+     *
+     *  Adds a mapping from the object to the image such that
+     *    apply (define (M, x, y)) x = y
+     *)
+
+    val define  : ('object, 'image) T * 'object * 'image -> ('object, 'image) T
+    val define' : ('object, 'image) T * ('object * 'image) -> ('object, 'image) T
+
+    (*  === DEFINE THE MAP AT A POINT ===
+     *
+     *  Adds a mapping from the object to the image, combining the
+     *  images using the supplied function if the object is already
+     *  present in the mapping.
+     *)
+
+    val combine : ('object * 'image * 'image -> 'image) -> ('object, 'image) T * 'object * 'image -> ('object, 'image) T
+
+    (*  === UNDEFINE THE MAP AT A POINT ===
+     *
+     *  Removed a mapping from the object to the image such that
+     *    apply (undefine (M, x)) x = raise Undefined
+     *)
+
+    val undefine : ('object, 'image) T * 'object -> ('object, 'image) T
+
+
+    (*  === APPLY THE MAP TO AN OBJECT ===
+     *
+     *  Looks up the image of an object in the map, and raises Undefined if
+     *  no mapping has been defined for that object.  apply M is the partial
+     *  function represented by the map M, and should be lifted out of loops
+     *  and functions so that apply has a chance to optimise the map.
+     *
+     *  apply' is an uncurried alternative to apply.  Use the curried
+     *  version if it can be lifted (see previous paragraph).  apply_default
+     *  and apply_default' will return a default image rather than raise
+     *  Undefined.
+     *
+     *  tryApply and tryApply' encode the result status in the return value.
+     *  tryApply'Eq uses polymorphic equality during the lookup instead of
+     *  the one with which the tree was built.  This is for signature
+     *  realisation, when (unusually) the constructor status of entries in
+     *  the value environment is important.
+     *)
+
+    exception Undefined
+
+    val apply          : ('object, 'image) T -> 'object -> 'image
+    val apply'         : ('object, 'image) T * 'object -> 'image
+    val tryApply       : ('object, 'image) T -> 'object -> 'image MLWorks.Option.option
+    val tryApply'      : ('object, 'image) T * 'object -> 'image MLWorks.Option.option
+    val tryApply'Eq    : (''object, 'image) T * ''object -> 'image MLWorks.Option.option
+    val apply_default  : ('object, 'image) T * 'image -> 'object -> 'image
+    val apply_default' : ('object, 'image) T * 'image * 'object -> 'image
+
+
+    (*  === EXTRACT THE DOMAIN OF A MAP ===
+     *
+     *  A list of all objects for which the map is defined is returned.
+     *)
+
+    val domain : ('object, 'image) T -> 'object list
+    val domain_ordered : ('object, 'image) T -> 'object list
+
+
+    (*  === EXTRACT THE RANGE OF A MAP ===
+     *
+     *  A list of all images mapped to in the map is returned.  This may
+     *  contain duplicate entries.
+     *)
+
+    val range : ('object, 'image) T -> 'image list
+    val range_ordered : ('object, 'image) T -> 'image list
+
+
+    (*  === CONVERT MAP TO LIST ===
+     *
+     *  Converts a map to a list of pairs of the form (object, image), in no
+     *  particular order.  to_list_ordered produces the pairs in ascending
+     *  order of object.
+     *)
+
+    val to_list         : ('object, 'image) T -> ('object * 'image) list
+    val to_list_ordered : ('object, 'image) T -> ('object * 'image) list
+
+
+    (*  === CONVERT LIST TO MAP ===
+     *
+     *  Converts a list of pairs of the form (object, image) to a map
+     *  defined for all such objects.  An ordering function on the objects
+     *  is also required as for `empty' (see above).
+     *)
+
+    val from_list :
+      (('object * 'object -> bool) * ('object * 'object -> bool)) ->
+      ('object * 'image) list ->
+      ('object, 'image) T
+
+    val from_list' :
+      (''object * ''object -> bool) ->
+      (''object * 'image) list ->
+      (''object, 'image) T
+
+    (*  === FOLD OVER MAP ===
+     *
+     *  Folds over all the live elements of a map.
+     *)
+
+    val fold : ('a * 'b * 'c -> 'a) -> 'a * ('b, 'c)T -> 'a
+    val fold_in_order : ('a * 'b * 'c -> 'a) -> 'a * ('b, 'c)T -> 'a
+    val fold_in_rev_order : ('a * 'b * 'c -> 'a) -> 'a * ('b, 'c)T -> 'a
+
+    (*  === FOLD OVER MAP ===
+     *
+     *  Map over all the live elements of a map in order.
+     *)
+
+    val map : ('a * 'b -> 'c) -> ('a, 'b)T -> ('a, 'c)T
+
+    (*
+     *  Calculate the number of entries in a map.
+     *)
+
+    val size : ('a, 'b)T -> int
+
+    (*
+     * Given an equality function on the image, checks if two maps are equal.
+     *)
+
+    val eq : ('a * 'b -> bool) -> ('o, 'a)T * ('o, 'b)T -> bool
+
+    (*
+     *  Find the position of an object in the domain (wrt to the domain
+     *  ordering), counting from zero for the least object. Raises Undefined
+     *  if the object is not present in the domain.
+     *)
+
+    val rank  : ('a, 'b)T -> 'a -> int
+    val rank' : ('a, 'b)T * 'a -> int
+
+    (*  === UNITE MAPS ===
+     *
+     *  Overrides the first map with the second
+     *)
+
+    val union : ('a, 'b)T * ('a, 'b)T -> ('a, 'b)T
+
+    (*  === UNITE MAPS ===
+     *
+     *  Merges the first map with the second, using the function
+     *  provided if both maps map the same object.
+     *)
+
+    val merge : ('b * 'b -> 'b) -> ('a, 'b)T * ('a, 'b)T -> ('a, 'b)T
+
+    (*  === LOGICAL FUNCTIONS OVER MAP RANGES ===
+     *
+     *  Forall and Exists quantifiers
+     *)
+
+    val forall : ('a * 'b -> bool) -> ('a, 'b)T -> bool
+    val exists : ('a * 'b -> bool) -> ('a, 'b)T -> bool
+
+    (*  === ITERATION OVER MAPS ===
+     *
+     *  Iterate and Iterate ordered
+     *)
+
+    val iterate : ('a * 'b -> unit) -> ('a, 'b)T -> unit
+    val iterate_ordered : ('a * 'b -> unit) -> ('a, 'b)T -> unit
+
+    (* === PRINTING OF MAPS ===
+     *
+     * Make a map into a string.
+     *)
+
+    val string :
+      ('a -> string) -> ('b -> string) ->
+      {start : string, domSep : string, itemSep : string, finish : string} ->
+      ('a, 'b)T -> string
+
+  (* === GET RELATION === 
+   *
+   * Get the ordering relation from a map
+   *)
+
+    val get_ordering : ('a,'b) T -> ('a * 'a -> bool)
+    val get_equality : ('a,'b) T -> ('a * 'a -> bool)
+
+  end
+@
+
+
+1.17
+log
+@Added tryApply'Eq, for use in _realise.
+@
+text
+@d21 3
+a150 1
+    datatype 'a result = YES of 'a | NO
+d154 3
+a156 3
+    val tryApply       : ('object, 'image) T -> 'object -> 'image result
+    val tryApply'      : ('object, 'image) T * 'object -> 'image result
+    val tryApply'Eq    : (''object, 'image) T * ''object -> 'image result
+@
+
+
+1.17.1.1
+log
+@Fork for bug fixing
+@
+text
+@a20 3
+ *  Revision 1.17  1993/06/15  16:53:15  daveb
+ *  Added tryApply'Eq, for use in _realise.
+ *
+@
+
+
+1.16
+log
+@Some cosmetic changes to emphasise the need for strict less than functions
+@
+text
+@d21 3
+d139 6
+d154 1
+@
+
+
+1.15
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d21 3
+d82 1
+a82 1
+     *  supplying an ordering function for the object type (<=) and
+d87 1
+a87 1
+     *  empty' is a variation which takes a less function (or <=) for an
+@
+
+
+1.14
+log
+@Added empty'' for strict less than functions which do the less than test
+first. this should be more efficient for large maps
+@
+text
+@d21 4
+a72 2
+    datatype relation = LESS | EQUAL | GREATER
+
+d79 3
+a81 1
+     *  supplying an ordering function for the object type. Note:
+d84 1
+a84 1
+     *  empty' is a variation which takes a less-than-or-equal function for an
+a86 2
+     *  empty'' is a variation which takes a strict less-than function for an
+     *  equality-admitting object type.
+d89 1
+a89 1
+    val empty  : ('object * 'object -> relation) -> ('object, 'image) T
+a90 1
+    val empty'' : (''object * ''object -> bool) -> (''object, 'image) T
+d102 1
+d184 1
+a184 1
+      ('object * 'object -> relation) ->
+d270 9
+@
+
+
+1.13
+log
+@Added the functions fold_in_rev_order and string.
+@
+text
+@d21 3
+d80 1
+a80 1
+     *  empty' is a variation which takes a less-than function for an
+d82 3
+d89 1
+@
+
+
+1.12
+log
+@Changed the type of forall and exists, adding the
+function map.
+@
+text
+@d21 4
+d191 1
+d249 12
+a260 2
+    val iterate : (('a * 'b) -> unit) -> ('a, 'b)T -> unit
+    val iterate_ordered : (('a * 'b) -> unit) -> ('a, 'b)T -> unit
+@
+
+
+1.11
+log
+@Added the combine function.
+@
+text
+@d21 3
+d182 1
+a182 1
+     *  Folds over all the live elements of a map
+d185 7
+a191 1
+    val fold : ('a * 'b * 'c -> 'a) -> ('a * ('b, 'c)T) -> 'a
+d193 1
+a193 2
+    val fold_in_order : ('a * 'b * 'c -> 'a) -> ('a * ('b, 'c)T) -> 'a
+    (* For when the domain order matters *)
+d202 6
+d236 2
+a237 1
+    val forall : ('b -> bool) -> ('a, 'b)T -> bool
+a238 2
+    val exists : ('b -> bool) -> ('a, 'b)T -> bool
+
+a244 1
+
+a245 1
+
+@
+
+
+1.10
+log
+@Added tryApply, tryApply', size, rank, rank, and merge functions.
+@
+text
+@d21 3
+d86 8
+a93 1
+    val define : ('object, 'image) T * 'object * 'image -> ('object, 'image) T
+d95 1
+@
+
+
+1.9
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d21 4
+a52 1
+
+a53 2
+
+
+a60 1
+
+d109 1
+d113 2
+d176 15
+d197 8
+@
+
+
+1.8
+log
+@Added fold, fold_in_order and union on maps
+@
+text
+@d21 3
+d173 5
+d179 18
+@
+
+
+1.7
+log
+@Added is_empty predicate
+@
+text
+@d21 3
+d160 11
+@
+
+
+1.6
+log
+@Added range_ordered for signature matching requirements of lambda translator
+@
+text
+@d21 3
+d68 2
+@
+
+
+1.5
+log
+@Added domain_ordered function (required by lambda translator)
+@
+text
+@d21 3
+d121 1
+@
+
+
+1.4
+log
+@Added to_list_ordered.
+@
+text
+@d21 3
+d108 1
+@
+
+
+1.3
+log
+@Added empty' and from_list'.
+@
+text
+@d21 3
+d118 3
+a120 1
+     *  Converts a map to a list of pairs of the form (object, image).
+d123 2
+a124 1
+    val to_list : ('object, 'image) T -> ('object * 'image) list
+@
+
+
+1.2
+log
+@Added efficient variants of `apply' for different situations.
+@
+text
+@d21 3
+d48 3
+d53 2
+a54 1
+    val empty : ('object * 'object -> relation) -> ('object, 'image) T
+a56 1
+
+d132 5
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d20 4
+a23 1
+ *  $Log$
+d73 7
+a79 1
+     *  function represented by the map M.
+d84 4
+a87 1
+    val apply : ('object, 'image) T -> 'object -> 'image
+@

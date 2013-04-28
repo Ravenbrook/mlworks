@@ -1,0 +1,83 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.05.22.10.19.34;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.21.12.42.40;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.getVolume.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log: basis:unix_os_path_get_volume.sml,v $
+ *  Revision 1.1  1996/05/21  12:42:40  stephenb
+ *  new unit
+ *
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = getVolume "/" = "";
+
+val b = getVolume "//" = "";
+
+val c = getVolume "a//b/c/" = "";
+
+val d = getVolume "./" = "";
+
+val e = getVolume "../" = "";
+
+val f = getVolume "" = "";
+
+val g = getVolume "C:" = "";
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ * $Log$
+d18 1
+a18 1
+Shell.Module.loadSource "unix.__os";
+@

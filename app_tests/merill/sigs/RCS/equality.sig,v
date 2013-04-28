@@ -1,0 +1,122 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.08.17.50.11;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.08.17.16.57;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* 
+
+MERILL  -  Equational Reasoning System in Standard ML.
+Brian Matthews				     10/03/90
+Glasgow University and Rutherford Appleton Laboratory.
+
+equality.sig 
+
+*)
+
+signature EQUALITY =
+   sig
+	structure Pretty : PRETTY
+
+	type Signature
+	type Term
+	type Substitution
+	type ORIENTATION
+
+	type Equality
+
+	val mk_equality : Term -> Term -> Equality
+	val mk_rule : Term -> Term -> ORIENTATION -> Equality
+	val mk_conjecture : Term -> Term -> Equality
+	val mk_conditional : Equality -> Equality list -> Equality
+	
+	(* for conditionals *)
+	val is_conditional : Equality -> bool
+	val conditions : Equality -> Equality list
+	val conclusion : Equality -> Equality
+	
+	val is_rule : Equality -> bool
+	
+	val lhs : Equality -> Term
+	val rhs : Equality -> Term
+	
+	val terms : Equality -> Term * Term
+	
+	val protect : Equality -> Equality
+	val unprotect : Equality -> Equality
+	val protected : Equality -> bool
+
+	val num_ops_in_eq : Equality -> int * int
+	val num_of_vars_in_eq : Equality -> int * int
+	
+	val left_linear : Equality -> bool
+	val right_linear : Equality -> bool
+	val linear_equation : Equality -> bool
+
+	val relate : (Term -> Term -> bool) -> Equality -> bool
+
+	val identity   : Equality -> bool
+	val EqualityEq : Equality -> Equality -> bool
+	
+	val rename_equality : Equality -> Equality
+	val reorder :  Equality -> Equality
+	val order :  Equality -> Equality
+	val unorder : Equality -> Equality
+
+	val applysubtoequality : Substitution -> Equality -> Equality
+	
+	val orientation : (Term -> Term -> bool) -> Equality -> ORIENTATION
+	
+	val parse_equality :  Signature -> Term TranSys.TranSys 
+				-> string list -> Equality Maybe
+				
+	val unparse_equality : Signature -> Equality -> string 
+	val pretty_equality : Signature -> Equality -> Pretty.T
+	val show_equality : Signature -> Equality -> string * string
+
+   end ; (* of signature EQUALITY *)
+
+@
+
+
+1.1
+log
+@new unit
+Putting applications into hope and daily
+@
+text
+@@

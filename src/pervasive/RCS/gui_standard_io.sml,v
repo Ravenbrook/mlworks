@@ -1,0 +1,52 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.07.02.12.13.25;	author andreww;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Additions to the pervasive library.
+@
+
+
+1.1
+log
+@new unit
+Additions to the pervasive library.
+@
+text
+@(* GUI Input/Output interface, used by the listener and the primitive IO
+ * system in determining where to direct standard IO.  The signature.
+ *
+ * $Log:$
+ *
+ *
+ *  Copyright (c) 1996 Harlequin Ltd.
+ *
+ *)
+
+
+signature GUI_STANDARD_IO =
+  sig
+    type IOData = {output_fun:string->unit,
+                   input_fun: unit->string,
+                   eof_flag: bool ref,
+                   buffer_pos: int ref,
+                   buffer_data: string ref}
+
+    val guiIsActive: unit -> bool
+    val inDeliveredImage: (unit -> unit) -> unit
+    val forDelivery: ((unit -> unit) -> unit) -> unit
+    val currentWindow: unit -> IOData
+    val setCurrentWindow: IOData -> unit
+
+end
+@

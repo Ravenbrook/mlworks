@@ -1,0 +1,108 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	92.03.10.16.28.07;	author matthew;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.03.10.16.28.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Header file for socket functions.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/* @@(#)io.h	1.2 11/26/90 */
+
+/*
+ * Copyright 1989, 1990 GMD 
+ *                      (German National Research Center for Computer Science)
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of GMD not be used in advertising or
+ * publicity pertaining to distribution of the software without specific,
+ * written prior permission.  GMD makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as is"
+ * without express or implied warranty.
+ *
+ * GMD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL GMD
+ * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Authors: Andreas Baecker (baecker@@gmdzi.uucp)
+ *          P.O. Box 1240
+ *          D-5205 Sankt Augustin 1
+ */
+
+/* Values for the ClmArg.arg_type and ClmArgHeader.arg_type fields */
+
+#define ClmArgInvalid (-1)
+#define ClmArgInteger 0
+#define ClmArgString  1
+#define ClmArgSymbol  2
+#define ClmArgFloat   3
+/*#define ClmArgBinary  4*/
+
+union ClmValue {
+    int      int_value; 
+    char    *string_value;
+    char    *symbol_value;
+    float    float_value;
+    /*caddr_t *binary_value;*/
+};
+
+typedef struct {
+    int            arg_type;  /* Type of argument */
+    union ClmValue v;
+} ClmArg;
+
+typedef struct {
+    int     command;  /* Command to be executed */
+    int     serial;   /* Serial number of request/callback */
+    int     num_arg;  /* Number of arguments to be transferred */
+    ClmArg *args;     /* List of arguments */
+} ClmCommand;
+
+typedef int WidgetID;
+
+#define CommandSize (sizeof(ClmCommand)-sizeof(ClmArg *))
+
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@@

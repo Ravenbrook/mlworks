@@ -1,0 +1,982 @@
+head	1.30;
+access;
+symbols
+	Final_version_of_old_runtime:1.30
+	ML_revised_beta_release_25/05/94:1.30
+	ML_final_beta_release_02/03/94:1.30
+	mlworks-28-01-1994:1.30
+	Release:1.30
+	mlworks-beta-01-09-1993:1.30
+	MLWorks-1-0-3-21/12/1992:1.30
+	MLWorks-1-0-2-15/12/1992:1.30
+	MLWorks-1-0-1-04/12/1992:1.30
+	checkpoint_17_08_92:1.30;
+locks; strict;
+comment	@ *  @;
+
+
+1.30
+date	92.07.22.14.05.47;	author clive;	state Exp;
+branches
+	1.30.1.1;
+next	1.29;
+
+1.29
+date	92.07.16.08.55.30;	author clive;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	92.07.09.14.43.29;	author clive;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	92.07.07.16.18.46;	author clive;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	92.06.23.13.32.30;	author clive;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.06.19.16.33.45;	author jont;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.06.12.18.32.52;	author jont;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.06.11.10.46.48;	author clive;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.05.18.11.43.32;	author clive;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.04.24.15.56.36;	author jont;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.03.26.11.53.38;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.03.25.13.27.53;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.03.24.15.35.15;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.03.18.13.37.01;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.03.10.12.50.52;	author clive;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.02.25.15.47.01;	author clive;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.02.18.17.10.30;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.02.06.18.08.14;	author jont;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.01.22.08.11.10;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.01.08.12.37.23;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.01.02.13.07.28;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.12.20.17.20.05;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.12.17.16.37.13;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.12.16.12.53.39;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.12.13.16.52.09;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.12.04.16.55.53;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.11.28.16.06.30;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.29.13.11.02;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.28.12.27.38;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.21.15.41.44;	author davidt;	state Exp;
+branches;
+next	;
+
+1.30.1.1
+date	92.07.22.14.05.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Interpret ml_callc calls.
+@
+
+
+1.30
+log
+@Added a few functions
+@
+text
+@/*  ==== ML INTERFACE TO EXTERNAL C FUNCTIONS ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  See header for description.
+ *
+ *  IMPORTANT: This file is automatically scanned.  See the comment before
+ *  the delcaration of ml_externals below.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: callc_codes.c,v $
+ *  Revision 1.29  1992/07/16  08:55:30  clive
+ *  Removed the C functions for breakpointing
+ *
+ *  Revision 1.28  1992/07/09  14:43:29  clive
+ *  Added an explicit function for calling the debugger
+ *
+ *  Revision 1.27  1992/07/07  16:18:46  clive
+ *  Added a manual call of the debugger for the interpreter
+ *
+ *  Revision 1.26  1992/06/23  13:32:30  clive
+ *  Added some breakpointing stuff
+ *
+ *  Revision 1.25  1992/06/19  16:33:45  jont
+ *  Added ml_require function for interpreter
+ *
+ *  Revision 1.24  1992/06/12  18:32:52  jont
+ *  Added functions required by interpretive system
+ *
+ *  Revision 1.23  1992/06/11  10:46:48  clive
+ *  Added utilities that the debugger needs
+ *
+ *  Revision 1.22  1992/05/18  11:43:32  clive
+ *  Added timers and code for compiling the make system
+ *
+ *  Revision 1.21  1992/04/24  15:56:36  jont
+ *  Added ml_exn_name
+ *
+ *  Revision 1.20  1992/03/26  11:53:38  richard
+ *  Redocumented according to new role, and added `stack_extension_count'
+ *  and `raise_count'.
+ *
+ *  Revision 1.19  1992/03/25  13:27:53  richard
+ *  Moved ml_equal and ml_not_equal so match up with interface.s.
+ *
+ *  Revision 1.18  1992/03/24  15:35:15  richard
+ *  The `interpret_callc' routine has been coded in assembler to remove
+ *  an unnecessary level.  `external_invocation_count' is incremented by
+ *  the assembler routine when a pervasive is called (see interface.s).
+ *
+ *  Revision 1.17  1992/03/18  13:37:01  richard
+ *  Altered call to val_print().  See values.h.
+ *
+ *  Revision 1.16  1992/03/10  12:50:52  clive
+ *  Added ml_eof
+ *
+ *  Revision 1.15  1992/02/25  15:47:01  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.14  1992/02/18  17:10:30  richard
+ *  > Added string comparison and substring functions to call C table.
+ *
+ *  Revision 1.13  1992/02/06  18:08:14  jont
+ *  Added ml_call_compiled_code
+ *
+ *  Revision 1.12  1992/01/22  08:11:10  richard
+ *  Added integer arithmetic and removed handler from externals table.
+ *
+ *  Revision 1.11  1992/01/08  12:37:23  richard
+ *  Altered format of ml_externals array to allow an ML structure
+ *  to be auto-generated with the correct routine codes.  See
+ *  callc_codes.awk etc.
+ *
+ *  Revision 1.10  1992/01/02  13:07:28  richard
+ *  Captured garbage collector calls explicitly and introduced the top
+ *  level handler as an ML external (like a pervasive).
+ *
+ *  Revision 1.9  91/12/20  17:20:05  richard
+ *  Changed diagnostic output to use DIAGNOSTIC so that it can be
+ *  switched on and off.
+ *  
+ *  Revision 1.8  91/12/17  16:37:13  richard
+ *  Commented out real number functions until we have some ANSI
+ *  headers.
+ *  
+ *  Revision 1.7  91/12/16  12:53:39  richard
+ *  Added some things to the externals table.
+ *  
+ *  Revision 1.6  91/12/13  16:52:09  richard
+ *  Removed unnecessary `&'s from the ml_externals table, and improved
+ *  the debugging output.
+ *  
+ *  Revision 1.5  91/12/04  16:55:53  richard
+ *  Added the file handling pervasives.
+ *  
+ *  Revision 1.4  91/11/28  16:06:30  richard
+ *  Moved the externals table here.
+ *  
+ *  Revision 1.3  91/10/29  13:11:02  davidt
+ *  ml_externals array is now specified here instead of in ml_externals.h
+ *  
+ *  Revision 1.2  91/10/28  12:27:38  davidt
+ *  All external C functions take a single mlval as argument (which may be
+ *  a tuple). The C function is expected to decode its own arguments.
+ *  
+ *  Revision 1.1  91/10/21  15:41:44  davidt
+ *  Initial revision
+ */
+
+
+#include "callc_codes.h"
+#include "mltypes.h"
+#include "pervasives.h"
+
+
+/*  == Call C function table ==
+ *
+ *  This is a table of functions indexed by the callc request number.
+ *
+ *  IMPORTANT: This declaration is automatically scanned to produce an
+ *  ML structure with the table entries.  Array elements must be on
+ *  separate lines with a comment giving their ML identifier at the
+ *  start of each.
+ *
+ *  IMPORTANT: The positions of ml_equal and ml_not_equal within this array
+ *  are mentioned explicitly in interface.s.  Hopefully this mechanism will
+ *  be replaced at some point.
+ */
+
+mlval (*ml_externals[])(mlval) = {
+  /* equal */			ml_equal,
+  /* not_equal */		ml_not_equal,
+  /* open_in */			ml_open_in,
+  /* close_in */		ml_close_in,
+  /* input */			ml_input,
+  /* open_out */		ml_open_out,
+  /* close_out */		ml_close_out,
+  /* output */			ml_output,
+  /* string_equal */		ml_string_equal,
+  /* string_not_equal */	ml_string_not_equal,
+  /* string_less */		ml_string_less,
+  /* string_greater */	        ml_string_greater,
+  /* substring */		ml_substring,
+  /* chr */			ml_chr,
+  /* ord */			ml_ord,
+  /* concatenate */		ml_concatenate,
+  /* explode */			ml_explode,
+  /* implode */			ml_implode,
+  /* size */			ml_size,
+  /* append */			ml_append,
+  /* iabs */			ml_iabs,
+  /* idivide */			ml_idivide,
+  /* imodulo */			ml_imodulo,
+  /* imultiply */		ml_imultiply,
+  /* inegate */			ml_inegate,
+  /* rabs */			ml_rabs,
+  /* rdivide */			ml_rdivide,
+  /* requal */			ml_requal,
+  /* rgt */			ml_rgt,
+  /* rge */			ml_rge,
+  /* rlt */			ml_rlt,
+  /* rle */			ml_rle,
+  /* rminus */			ml_rminus,
+  /* rmultiply */		ml_rmultiply,
+  /* rnegate */			ml_rnegate,
+  /* rnequal */			ml_rnequal,
+  /* rplus */			ml_rplus,
+  /* call_compiled_code */      ml_call_compiled_code,
+  /* val_print */		ml_val_print,
+  /* lookahead */		ml_lookahead,
+  /* exn_name */		ml_exn_name,
+  /* start_timer */		ml_start_timer,
+  /* check_timer */		ml_check_timer,
+  /* check_timer_gc */		ml_check_timer_gc,
+  /* makestring_timer */	ml_makestring_timer,
+  /* mtime */                   ml_mtime,
+  /* system */                  ml_system,
+  /* environ */                 ml_environ,
+  /* install_debugger */	ml_install_debugger,
+  /* get_data_from_frame */	ml_get_data_from_frame,
+  /* get_next_frame */		ml_get_next_frame,
+  /* get_argument_from_frame */ ml_get_argument_from_frame,
+  /* get_primary_tag */		ml_get_primary_tag,
+  /* get_object_at_address */	ml_get_object_at_address,
+  /* exit */                    ml_exit,
+  /* get_stack_frame */		ml_get_stack_frame,
+  /* generate_debugger_call */  ml_generate_debugger_call,
+  /* identity */                ml_identity,
+  /* ml_value_list */           ml_list_to_tuple,
+  /* call_ml_value */           ml_call_ml_value,
+  /* ml_require */              ml_require,
+  /* save_image */		ml_save_image,
+  /* profile */			ml_profile,
+  /* check_weak_validity */	ml_check_weak_validity,
+  /* make_into_weak_array */	ml_make_into_weak_array
+};
+
+
+/*  == Statistics updated by interface.s ==  */
+
+unsigned int external_invocation_count[sizeof(ml_externals)/sizeof(mlval)];
+unsigned int stack_extension_count;
+unsigned int raise_count;
+@
+
+
+1.30.1.1
+log
+@Fork for bug fixing
+@
+text
+@a12 3
+ *  Revision 1.30  1992/07/22  14:05:47  clive
+ *  Added a few functions
+ *
+@
+
+
+1.29
+log
+@Removed the C functions for breakpointing
+@
+text
+@d13 3
+d192 5
+a196 1
+  /* ml_require */              ml_require
+@
+
+
+1.28
+log
+@Added an explicit function for calling the debugger
+@
+text
+@d13 3
+a183 2
+  /* set_breakpoint */		ml_set_breakpoint,
+  /* unset_breakpoint */	ml_unset_breakpoint,
+@
+
+
+1.27
+log
+@Added a manual call of the debugger for the interpreter
+@
+text
+@d13 3
+d183 1
+@
+
+
+1.26
+log
+@Added some breakpointing stuff
+@
+text
+@d13 3
+d180 1
+@
+
+
+1.25
+log
+@Added ml_require function for interpreter
+@
+text
+@d13 3
+d175 2
+@
+
+
+1.24
+log
+@Added functions required by interpretive system
+@
+text
+@d13 3
+d172 1
+a172 1
+  /* identity */		ml_identity,
+d174 2
+a175 1
+  /* call_ml_value */           ml_call_ml_value
+@
+
+
+1.23
+log
+@Added utilities that the debugger needs
+@
+text
+@d13 3
+d169 3
+a171 1
+  /* identity */		ml_identity
+@
+
+
+1.22
+log
+@Added timers and code for compiling the make system
+@
+text
+@d13 3
+d158 9
+a166 1
+  /* environ */                 ml_environ
+@
+
+
+1.21
+log
+@Added ml_exn_name
+@
+text
+@d13 3
+d148 8
+a155 1
+  /* exn_name */		ml_exn_name
+@
+
+
+1.20
+log
+@Redocumented according to new role, and added `stack_extension_count'
+and `raise_count'.
+@
+text
+@d13 4
+d144 2
+a145 1
+  /* lookahead */		ml_lookahead
+@
+
+
+1.19
+log
+@Moved ml_equal and ml_not_equal so match up with interface.s.
+@
+text
+@d1 1
+a1 1
+/*  ==== ML TO C CALLING INTERFACE ====
+d5 1
+a5 7
+ *  Description
+ *  -----------
+ *  The function `interpret_callc' is called from the ML to C interface (see
+ *  interface.s) in response to both System.call_c function invocations.
+ *  The function is passed a request number, which it uses to index an array
+ *  of other functions which carry out the corresponding task (see
+ *  `ml_externals' below).
+d12 4
+a15 1
+ *  $Log: callc.c,v $
+d81 1
+a81 4
+#include <stdio.h>
+
+#include "callc.h"
+#include "diagnostic.h"
+a82 2
+#include "values.h"
+#include "gc.h"
+a83 1
+#include "handler.h"
+d144 2
+d147 2
+@
+
+
+1.18
+log
+@The `interpret_callc' routine has been coded in assembler to remove
+an unnecessary level.  `external_invocation_count' is incremented by
+the assembler routine when a pervasive is called (see interface.s).
+@
+text
+@d19 5
+d103 4
+d110 2
+a127 2
+  /* equal */			ml_equal,
+  /* not_equal */		ml_not_equal,
+@
+
+
+1.17
+log
+@Altered call to val_print().  See values.h.
+@
+text
+@d7 5
+a11 6
+ *  The function `interpret_callc' is called from the ML to C
+ *  interface (see interface.s) in response to both System.call_c
+ *  function invocations, garbage collector allocation requests, and
+ *  uncaught exceptions.  The function is passed a request number,
+ *  which it uses to index an array of other functions which carry out
+ *  the corresponding task (see `ml_externals' below).
+d13 2
+a14 2
+ *  IMPORTANT: This file is automatically scanned.  See the comment
+ *  before the delcaration of ml_externals below.
+d19 3
+a92 3
+ *  The first function (number 0) must be the top level exception
+ *  handler as this is referenced explicitly by the assembly code
+ *  routine _ml_toplevel_handler.
+d144 1
+a144 28
+/*  == Call C entry point ==
+ *
+ *  The assembly code in interface.s labelled ml_callc is called from
+ *  ML, and sets up the C environment and arguments to this function
+ *  before coming here.
+ */
+
+mlval interpret_callc (int request_number, word argument)
+{
+  switch(request_number)
+  {
+    case -1:
+    gc(argument);
+    return(MLUNIT);	/* GC returns information in the ml_state */
+  }
+
+#ifdef DIAGNOSTICS
+  if(3 <= diagnostic_level)
+  {
+    struct val_print_parameters p = {4, 10, 1};
+    fprintf(stderr, "[CALLC request %i with ", request_number);
+    val_print(stderr, argument, &p);
+    fprintf(stderr, "]\n");
+  }
+#endif
+
+  return (ml_externals[CINT(request_number)])(argument);
+}
+@
+
+
+1.16
+log
+@Added ml_eof
+@
+text
+@d20 3
+d141 1
+a141 1
+  /* eof */			ml_eof				
+d164 1
+d166 1
+a166 1
+    val_print(stderr, argument, 8, val_print_internals);
+@
+
+
+1.15
+log
+@Added val_print in the System structure in ML
+@
+text
+@d20 3
+d137 2
+a138 1
+  /* val_print */		ml_val_print
+@
+
+
+1.14
+log
+@> Added string comparison and substring functions to call C table.
+@
+text
+@d20 3
+d133 2
+a134 1
+  /* call_compiled_code */      ml_call_compiled_code
+d158 1
+a158 1
+    val_print(stderr, argument, 8);
+@
+
+
+1.13
+log
+@Added ml_call_compiled_code
+@
+text
+@d20 3
+d101 3
+@
+
+
+1.12
+log
+@Added integer arithmetic and removed handler from externals table.
+@
+text
+@d20 3
+d123 2
+a124 1
+  /* rplus */			ml_rplus
+@
+
+
+1.11
+log
+@Altered format of ml_externals array to allow an ML structure
+to be auto-generated with the correct routine codes.  See
+callc_codes.awk etc.
+@
+text
+@d20 5
+a86 1
+  /* handler */			handler,
+d104 5
+@
+
+
+1.10
+log
+@Captured garbage collector calls explicitly and introduced the top
+level handler as an ML external (like a pervasive).
+@
+text
+@d14 3
+d19 5
+a23 1
+ *  $Log:	callc.c,v $
+d74 5
+d81 31
+a111 32
+mlval (*ml_externals[])(mlval) =
+{
+  handler,		/* 0 */
+  ml_open_in,		/* 1 */
+  ml_close_in,		/* 2 */
+  ml_input,		/* 3 */
+  ml_open_out,		/* 4 */
+  ml_close_out,		/* 5 */
+  ml_output,		/* 6 */
+  ml_string_equal,	/* 7 */
+  ml_string_not_equal,	/* 8 */
+  ml_chr,		/* 9 */
+  ml_ord,		/* 10 */
+  ml_concatenate,	/* 11 */
+  ml_explode,		/* 12 */
+  ml_implode,		/* 13 */
+  ml_equal,	       	/* 14 */
+  ml_not_equal,		/* 15 */
+  ml_size,		/* 16 */
+  ml_append,		/* 17 */
+  ml_rabs,		/* 18 */
+  ml_rdivide,		/* 19 */
+  ml_requal,		/* 20 */
+  ml_rgt,		/* 21 */
+  ml_rge,		/* 22 */
+  ml_rlt,		/* 23 */
+  ml_rle,		/* 24 */
+  ml_rminus,		/* 25 */
+  ml_rmultiply,		/* 26 */
+  ml_rnegate,		/* 27 */
+  ml_rnequal,		/* 28 */
+  ml_rplus		/* 29 */
+d122 1
+a122 1
+mlval interpret_callc (mlval request_number, mlval argument)
+d124 1
+a124 1
+  if(request_number < 0)
+d126 1
+a126 1
+    DIAGNOSTIC(4, "CALLGC request for %d bytes", argument, 0);
+d128 1
+a128 1
+    return(MLUNIT);
+d134 1
+a134 1
+    fprintf(stderr, "[CALLC request %i with ");
+@
+
+
+1.9
+log
+@Changed diagnostic output to use DIAGNOSTIC so that it can be
+switched on and off.
+@
+text
+@d9 4
+a12 4
+ *  function invocations and garbage collector allocation requests.
+ *  The function is passed a request number, which it uses to index an
+ *  array of other functions which carry out the corresponding task
+ *  (see `ml_externals' below).
+d17 4
+d58 1
+d64 3
+a66 4
+ *  The first function (number 0) must be the garbage collector, as
+ *  this is referenced explicitly by the assembly code routine
+ *  ml_callgc.  The garbage collector takes an untagged argument,
+ *  hence the cast.
+d71 1
+a71 1
+  (mlval (*)(mlval))gc,	/* 0 */
+d113 1
+a113 2
+#ifdef DIAGNOSTICS
+  if(request_number == 0)
+d116 2
+d119 3
+a121 1
+  else if(3 <= diagnostic_level)
+d128 1
+@
+
+
+1.8
+log
+@Commented out real number functions until we have some ANSI
+headers.
+@
+text
+@d17 4
+d49 1
+a49 1
+#include "debug.h"
+d84 1
+a84 2
+  ml_append		/* 17 */
+#ifdef NEVER
+a96 1
+#endif
+d109 1
+a109 1
+#ifdef DEBUGGING
+d111 4
+a114 2
+    fprintf(stderr, "[CALLGC request for %d bytes]\n", argument);
+  else
+@
+
+
+1.7
+log
+@Added some things to the externals table.
+@
+text
+@d17 3
+d81 14
+@
+
+
+1.6
+log
+@Removed unnecessary `&'s from the ml_externals table, and improved
+the debugging output.
+@
+text
+@d17 4
+d60 18
+a77 16
+  (mlval (*)(mlval))gc,
+  ml_open_in,
+  ml_close_in,
+  ml_input,
+  ml_open_out,
+  ml_close_out,
+  ml_output,
+  ml_string_equal,
+  ml_string_not_equal,
+  ml_chr,
+  ml_ord,
+  ml_concatenate,
+  ml_explode,
+  ml_implode,
+  ml_equal,
+  ml_not_equal
+@
+
+
+1.5
+log
+@Added the file handling pervasives.
+@
+text
+@d1 31
+a31 19
+/*
+ * callc.c
+ * Interpret ml_callc calls.
+ * $Log:	callc.c,v $
+ * Revision 1.4  91/11/28  16:06:30  richard
+ * Moved the externals table here.
+ * 
+ * Revision 1.3  91/10/29  13:11:02  davidt
+ * ml_externals array is now specified here instead of in ml_externals.h
+ * 
+ * Revision 1.2  91/10/28  12:27:38  davidt
+ * All external C functions take a single mlval as argument (which may be
+ * a tuple). The C function is expected to decode its own arguments.
+ * 
+ * Revision 1.1  91/10/21  15:41:44  davidt
+ * Initial revision
+ * 
+ * 
+ * Copyright (c) Harlequin 1991.
+d34 3
+d48 4
+a51 4
+ *  The first function must be the garbage collector, as this is
+ *  referenced by the assembly code routine ml_callgc, which is itself
+ *  pointed to by the implicit vector.  This saves on code
+ *  duplication.
+d56 16
+a71 9
+  &gc,
+  &ml_open_in,
+  &ml_close_in,
+  &ml_input,
+  &ml_open_out,
+  &ml_close_out,
+  &ml_output,
+  &ml_string_equal,
+  &ml_string_not_equal
+d78 2
+a79 1
+ *  ML, and sets up the arguments to this function before coming here.
+d84 10
+a93 1
+  DEBUG("[CALLC request %i arguments 0x%lx]\n", request_number, argument);
+@
+
+
+1.4
+log
+@Moved the externals table here.
+@
+text
+@d5 3
+d42 8
+a49 1
+  &ml_output
+@
+
+
+1.3
+log
+@ml_externals array is now specified here instead of in ml_externals.h
+@
+text
+@d5 3
+d23 2
+d26 22
+a47 1
+extern mlval (*ml_externals[])(mlval);
+@
+
+
+1.2
+log
+@All external C functions take a single mlval as argument (which may be
+a tuple). The C function is expected to decode its own arguments.
+@
+text
+@d5 4
+a17 1
+#include "ml_externals.h"
+d20 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+ * $Log$
+d8 1
+d13 1
+d18 1
+a18 1
+mlval interpret_callc (mlval request_number, mlval arguments)
+d20 2
+a21 6
+  if (arguments == NULL) {
+    /* Do nullary function */
+    return (ml_externals[CINT(request_number)])();
+  } else {
+    printf("Non-nullary C function called");
+  }
+@

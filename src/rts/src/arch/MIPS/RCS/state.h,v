@@ -1,0 +1,173 @@
+head	1.5;
+access;
+symbols
+	hope_poo:1.3.1
+	ML_beta_release_12/08/94:1.3.1.1
+	ML_beta_release_03/08/94:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	95.03.02.15.30.36;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.11.23.17.07.00;	author nickb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.08.03.13.36.24;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	94.07.19.09.24.33;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.07.12.12.07.44;	author jont;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	95.07.05.10.29.44;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.5
+log
+@Added stack_top to ml_state
+@
+text
+@/*
+ * state.h
+ * The ML and C states are stored here.
+ * $Log: src:arch:MIPS:state.h,v $
+ * Revision 1.4  1994/11/23  17:07:00  nickb
+ * Remove closure from ML state.
+ *
+ * Revision 1.3  1994/08/03  13:36:24  jont
+ * Add closure to ml_state
+ *
+ * Revision 1.2  1994/07/19  09:24:33  jont
+ * MIPS specific state initialisation
+ *
+ * Revision 1.1  1994/07/12  12:07:44  jont
+ * new file
+ *
+ *
+ * Copyright (c) 1994 Harlequin Ltd.
+ */
+
+#ifndef state_h
+#define state_h
+
+#include "mem.h"
+
+struct c_state
+{
+  word sp;
+} c_state;
+
+extern struct ml_state
+{
+  mlval *global;			/* $1  global scratch register */
+  mlval *heap_start;			/* $2  next allocatable word */
+  mlval *heap_limit;			/* $3  first non-allocatable word */
+  struct stack *stack;			/* $7  current stack area */
+  mlval handler;			/* $8  current handler record */
+  struct implicit_vector *implicit;	/* $9  the implicit vector */
+  struct stack_frame *sp;	        /* $29  last ML frame */
+  struct stack_frame *base;		/*      lowest frame in stack area */
+  struct stack_frame *stack_top;
+} ml_state;
+
+#define GC_SP			ml_state.sp
+#define GC_STACK		ml_state.stack
+#define GC_MODIFIED_LIST	ml_state.implicit->gc_modified_list
+#define GC_HEAP_START		ml_state.heap_start
+#define GC_HEAP_LIMIT		ml_state.heap_limit
+#define GC_RETURN		ml_state.global
+
+/* Statistics collected by interface.m4s */
+
+extern unsigned int stack_extension_count;
+extern unsigned int raise_count;
+
+extern void state_initialise(struct stack *initial_stack);
+
+#endif
+@
+
+
+1.4
+log
+@Remove closure from ML state.
+@
+text
+@d5 3
+d41 1
+@
+
+
+1.3
+log
+@Add closure to ml_state
+@
+text
+@d5 3
+a37 1
+  mlval closure;			/* $6, the current function's closure */
+a45 1
+#define GC_CLOSURE		ml_state.closure
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a4 3
+ * Revision 1.3  1994/08/03  13:36:24  jont
+ * Add closure to ml_state
+ *
+@
+
+
+1.2
+log
+@MIPS specific state initialisation
+@
+text
+@d5 3
+d35 1
+d44 1
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d4 3
+a6 1
+ * $Log$
+d8 1
+d15 2
+a31 1
+  mlval g7;				/* Just for initialise.c */
+d45 2
+@

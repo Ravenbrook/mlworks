@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.03.27.15.50.28;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C FUNCTION CALL ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+
+signature C_FUNCALL =
+  sig
+
+    structure FStruct  : FOREIGN_STRUCT
+    structure CData    : C_DATA
+    structure CHeader  : C_HEADER
+
+    type foreign_code
+    type foreign_structure
+    type foreign_signature
+    type name
+    type c_type
+    type data_port
+
+    sharing type foreign_code      = FStruct.foreign_code
+    sharing type foreign_structure = FStruct.foreign_structure
+
+    sharing type name       = CData.name
+    sharing type c_type     = CData.T
+    sharing type data_port  = CData.data_port
+
+    sharing type foreign_signature = CHeader.foreign_signature
+
+    datatype c_function =
+	     CFUN of (name * (c_type) list * (c_type) list * foreign_code)
+
+    val attach : (foreign_structure * foreign_signature * name) -> c_function
+
+    val call : c_function * (data_port list) * (data_port list) -> unit
+
+  end; (* signature C_FUNCALL *)
+
+
+@

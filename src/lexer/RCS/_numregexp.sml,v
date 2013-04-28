@@ -1,0 +1,155 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.1
+date	91.09.06.16.45.08;	author nickh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.09.06.16.45.08;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Numbered Regular Expressions. Utilities for regexp -> dfa Dragon book
+algorithm. Not used at present.
+@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@(*
+$Log$
+Copyright (c) 1991 Harlequin Ltd.
+*)
+require "regexp";
+require "numregexp";
+require "myarray";
+
+functor NumRegExp (structure RegExp : REGEXP
+		   structure Array : ARRAY) : NUMREGEXP = 
+  struct
+(*
+    datatype NumRegExp = 
+      D of NumRegExp * NumRegExp
+    | S of NumRegExp
+    | B of NumRegExp * NumRegExp
+    | N of int * string
+    | C of int * string
+    | E of int
+
+    fun number x = let
+		     val c = ref 0
+		     fun i () = c := (!c)+1
+		     fun number' (RegExp.DOT (x,y)) = D(number' x, number' y)
+		       | number' (RegExp.STAR x) = S(number'  x)
+		       | number' (RegExp.BAR (x,y)) = B(number' x, number' y)
+		       | number' (RegExp.NODE s) = (i();
+			                            N (!c,s))
+		       | number' (RegExp.CLASS s) = (i();
+			                             N (!c,s))
+		       | number' RegExp.EPSILON = (i();
+			                           E (!c))
+		   in
+		     number' x
+		   end
+
+    fun root (a as D(x,y)) = root x
+      | root x = x
+
+    fun nullable (E _) = true
+      | nullable (N _) = false
+      | nullable (C _) = false
+      | nullable (S _) = true
+      | nullable (B (x,y)) = nullable (x) orelse nullable (y)
+      | nullable (D (x,y)) = nullable (x) andalso nullable (y)
+
+    fun firstpos (E _) = []
+      | firstpos (N (x,_)) = [x]
+      | firstpos (C (x,_)) = [x]
+      | firstpos (S x) = firstpos x
+      | firstpos (B (x,y)) = firstpos(x) @@ firstpos(y)
+      | firstpos (D (x,y)) = firstpos(x) @@ (if nullable(x) then firstpos(y) else [])
+
+    fun lastpos (E _) = []
+      | lastpos (N (x,_)) = [x]
+      | lastpos (C (x,_)) = [x]
+      | lastpos (S x) = lastpos x
+      | lastpos (B (x,y)) = lastpos(x) @@ lastpos(y)
+      | lastpos (D (x,y)) = (if nullable(y) then lastpos(x) else []) @@ lastpos(y)
+
+    fun maxnum x = let
+		     fun max n m = if n > m then n else m
+		     fun maxre re1 re2 = max (maxnum re1) (maxnum re2)
+		     fun maxnum' n (E m) = max n m 
+		       | maxnum' n (N(m,_)) = max n m
+		       | maxnum' n (C(m,_)) = max n m
+		       | maxnum' n (S x) = maxnum' n x
+		       | maxnum' n (B (x,y)) = max n (maxre x y)
+		       | maxnum' n (D (x,y)) = max n (maxre x y)
+		   in
+		     maxnum' 0 x
+		   end
+
+    local
+      (* prepend_entries adds the second argument to the entries (indexed by
+       the elements of the third argument) of the first argument array *)
+
+      fun prepend_entry arr ls ind = Array.update(arr,ind,ls @@ (Array.sub (arr,ind)))
+      fun prepend_entries arr ls [] = arr
+	| prepend_entries arr ls (i::inds) = (prepend_entry arr ls i;
+					      prepend_entries arr ls inds)
+	  
+      (* followpos1 takes a numregexp and an int list array, and adds
+       suitable entries to the array for the contents of the numregexp *)
+	  
+      fun followpos1 (N _, r) = r
+	| followpos1 (C _, r) = r
+	| followpos1 (E _, r) = r
+	| followpos1 (B (x,y), r) = followpos1(x,followpos1(y,r))
+	| followpos1 (S x, r) = followpos1(x,prepend_entries r (firstpos x) (lastpos x))
+	| followpos1 (D (x,y), r) = followpos1(x,
+					       followpos1(y, prepend_entries r (firstpos y) (lastpos x)))
+	  
+    in
+      (* followpos does one pass over the syntax tree to compute
+       followpos(i) for all i at once (these are the int lists in the int
+       list array) *)
+      
+      fun followpos x = followpos1(x,Array.array((maxnum x)+1,[]))
+    end
+
+end
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 1
+a2 4
+$Log: _numregexp.sml,v $
+Revision 1.1  1991/09/06  16:45:08  nickh
+Initial revision
+
+@

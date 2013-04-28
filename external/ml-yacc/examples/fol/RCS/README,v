@@ -1,0 +1,81 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.09.14.12.59.10;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.18.44.48;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.2
+log
+@[Bug #30412]
+Update for projects
+@
+text
+@This is a sample parser for first-order logic.   The grammar
+was contributed by Frank Pfenning.
+
+To construct the parser, first use ML-Yacc on the file "fol.grm" to construct
+the files "fol_grm.sml" and "_fol_grm.sml".  This can be done by loading
+ML-Yacc and typing ``ParseGen.parseGen "fol.grm"''.  Then construct the
+lexer by using ML-Lex on the file fol.lex (``LexGen.lexGen "fol.lex"'').
+
+To load it into Harlequin MLWorks, in the GUI open the project
+yaccfol.mlp in the Project Workspace tool and compile and load the
+targets using Project > Compile Target Sources and Project > Load
+Targets.  This will build the parser structure automatically.
+
+The end result is a structure Parser with four functions.  The
+function prog_parse will parse a program in a string.  Then function
+query_parse will parse a query in a string.  The function file_parse
+will parse a program in a file.  The function top_parse will parse a
+query from the standard input.
+
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@d7 1
+a7 1
+lexer by using ML_Lex on the file fol.lex (``LexGen.lexGen "fol.lex"'').
+d9 4
+a12 12
+To load it into Harlequin MLWorks, first extend the source path to
+point to the directory containing the ML-Yacc library directory, lib.
+To do this in the GUI, use the Paths=>Source_Path dialog.  Alternatively,
+one can type
+
+	Shell.Path.setSourcePath(<directory>::(Shell.Path.sourcePath()));
+
+Then, simply type 
+
+	Shell.File.loadSource "__link";
+
+and this will build the Parse structure automatically.
+@

@@ -1,0 +1,658 @@
+head	1.6;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.6
+	MLWorks_20c1_1998_08_20:1.6
+	MLWorks_20c0_1998_08_04:1.6
+	MLWorks_20b2c2_1998_06_19:1.6
+	MLWorks_20b2_Windows_1998_06_12:1.6
+	MLWorks_20b1c1_1998_05_07:1.6
+	MLWorks_20b0_1998_04_07:1.6
+	MLWorks_20b0_1998_03_20:1.6
+	MLWorks_20m2_1998_02_16:1.6
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_11r1:1.4.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.4.1.1.1.1
+	MLWorks_10r3:1.4.1.1.3
+	MLWorks_10r2_551:1.4.1.1.2
+	MLWorks_11:1.4.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.4.1.1
+	MLWorks_20m0_1997_06_20:1.4
+	MLWorks_1_0_r2c2_1997_06_14:1.4.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.4.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.4.1
+	MLWorks_BugFix_1997_04_24:1.4
+	MLWorks_1_0_r2_Win32_1997_04_11:1.4
+	MLWorks_1_0_r2_Unix_1997_04_04:1.4;
+locks; strict;
+comment	@# @;
+
+
+1.6
+date	98.01.30.12.21.19;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.11.25.19.26.12;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.04.02.21.57.24;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	97.03.24.14.28.38;	author andreww;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.05.11.54.27;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.27.11.52.13;	author andreww;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	97.05.12.11.07.06;	author hope;	state Exp;
+branches
+	1.4.1.1.1.1
+	1.4.1.1.2.1
+	1.4.1.1.3.1;
+next	;
+
+1.4.1.1.1.1
+date	97.07.28.18.50.31;	author daveb;	state Exp;
+branches
+	1.4.1.1.1.1.1.1;
+next	;
+
+1.4.1.1.1.1.1.1
+date	97.10.07.12.14.35;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.4.1.1.2.1
+date	97.09.08.17.42.18;	author daveb;	state Exp;
+branches;
+next	;
+
+1.4.1.1.3.1
+date	97.09.09.14.41.45;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #1759]
+answer.
+@
+
+
+1.6
+log
+@[Bug #30330]
+Modify answers now that type info correct in object files
+@
+text
+@val data : string = ""
+val inp : TextIO.StreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=false, more=ref(ISmore(Buf ..)), name="123"}, pos=0}
+val inp' : TextIO.StreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=4}
+val inp'' : TextIO.StreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=7}
+val inp''' : TextIO.StreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=7}
+val reportOK : bool -> string = fn
+val test1 : string = "test succeeded."
+val test2 : string = "test succeeded."
+val test3 : string = "test succeeded."
+@
+
+
+1.5
+log
+@[Bug #30323]
+@
+text
+@d2 4
+a5 4
+val inp : TextIO.StreamIO.instream = In _
+val inp' : TextIO.StreamIO.instream = In _
+val inp'' : TextIO.StreamIO.instream = In _
+val inp''' : TextIO.StreamIO.instream = In _
+@
+
+
+1.4
+log
+@Modify to stop displaying syserror type
+@
+text
+@a0 11
+structure General = struct ... end
+structure Char = struct ... end
+structure CharVector = struct ... end
+structure CharArray = struct ... end
+structure OSPrimIO = struct ... end
+structure BinPrimIO = struct ... end
+structure TextPrimIO = struct ... end
+structure TextStreamIO = struct ... end
+structure TextIO = struct ... end
+structure IO = struct ... end
+structure OS = struct ... end
+d2 4
+a5 4
+val inp : TextStreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=false, more=ref(ISmore(Buf ..)), name="123"}, pos=0}
+val inp' : TextStreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=4}
+val inp'' : TextStreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=7}
+val inp''' : TextStreamIO.instream = In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=true, more=ref(ISmore(Buf ..)), name="123"}, pos=7}
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@@
+
+
+1.4.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.4.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.4.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.4.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.3
+log
+@[Bug #1960]
+upating.
+@
+text
+@d1 11
+a11 430
+val it : unit = ()
+structure General =
+  struct
+    type exn = exn
+    datatype 'a option =
+      NONE |
+      SOME of 'a
+    datatype order =
+      EQUAL |
+      GREATER |
+      LESS
+    eqtype unit = unit
+    val ! : 'a ref -> 'a = fn
+    val := : ('a ref * 'a) -> unit = fn
+    val <> : (''a * ''a) -> bool = fn
+    exception Bind
+    exception Chr
+    exception Div
+    exception Domain
+    val EQUAL : order
+    exception Fail of string
+    val GREATER : order
+    val LESS : order
+    exception Match
+    val NONE : 'a option
+    exception Option
+    exception Overflow
+    val SOME : 'a -> 'a option
+    exception Size
+    exception Subscript
+    val before : ('a * unit) -> 'a = fn
+    val exnMessage : exn -> string = fn
+    val exnName : exn -> string = fn
+    val getOpt : ('a option * 'a) -> 'a = fn
+    val ignore : 'a -> unit = fn
+    val isSome : 'a option -> bool = fn
+    val o : (('a -> 'b) * ('c -> 'a)) -> 'c -> 'b = fn
+    val valOf : 'a option -> 'a = fn
+  end
+val it : unit = ()
+structure Char =
+  struct
+    eqtype char = char
+    eqtype string = string
+    val < : (char * char) -> bool = fn
+    val <= : (char * char) -> bool = fn
+    val > : (char * char) -> bool = fn
+    val >= : (char * char) -> bool = fn
+    val chr : int -> char = fn
+    val compare : (char * char) -> order = fn
+    val contains : string -> char -> bool = fn
+    val fromCString : string -> char option = fn
+    val fromString : string -> char option = fn
+    val isAlpha : char -> bool = fn
+    val isAlphaNum : char -> bool = fn
+    val isAscii : char -> bool = fn
+    val isCntrl : char -> bool = fn
+    val isDigit : char -> bool = fn
+    val isGraph : char -> bool = fn
+    val isHexDigit : char -> bool = fn
+    val isLower : char -> bool = fn
+    val isPrint : char -> bool = fn
+    val isPunct : char -> bool = fn
+    val isSpace : char -> bool = fn
+    val isUpper : char -> bool = fn
+    val maxChar : char = #"\255"
+    val maxOrd : int = 255
+    val minChar : char = #"\000"
+    val notContains : string -> char -> bool = fn
+    val ord : char -> int = fn
+    val pred : char -> char = fn
+    val scan : ('a -> (char * 'a) option) -> 'a -> (char * 'a) option = fn
+    val succ : char -> char = fn
+    val toCString : char -> string = fn
+    val toLower : char -> char = fn
+    val toString : char -> string = fn
+    val toUpper : char -> char = fn
+  end
+val it : unit = ()
+structure CharVector =
+  struct
+    eqtype elem = char
+    eqtype vector = string
+    val app : (char -> unit) -> string -> unit = fn
+    val appi : ((int * char) -> unit) -> (string * int * int option) -> unit = fn
+    val concat : string list -> string = fn
+    val extract : (string * int * int option) -> string = fn
+    val foldl : ((char * 'a) -> 'a) -> 'a -> string -> 'a = fn
+    val foldli : ((int * char * 'a) -> 'a) -> 'a -> (string * int * int option) -> 'a = fn
+    val foldr : ((char * 'a) -> 'a) -> 'a -> string -> 'a = fn
+    val foldri : ((int * char * 'a) -> 'a) -> 'a -> (string * int * int option) -> 'a = fn
+    val fromList : char list -> string = fn
+    val length : string -> int = fn
+    val maxLen : int = 16777196
+    val sub : (string * int) -> char = fn
+    val tabulate : (int * (int -> char)) -> string = fn
+  end
+val it : unit = ()
+structure CharArray =
+  struct
+    structure Vector =
+      struct
+        eqtype elem = char
+        eqtype vector = string
+        val app : (char -> unit) -> string -> unit = fn
+        val appi : ((int * char) -> unit) -> (string * int * int option) -> unit = fn
+        val concat : string list -> string = fn
+        val extract : (string * int * int option) -> string = fn
+        val foldl : ((char * 'a) -> 'a) -> 'a -> string -> 'a = fn
+        val foldli : ((int * char * 'a) -> 'a) -> 'a -> (string * int * int option) -> 'a = fn
+        val foldr : ((char * 'a) -> 'a) -> 'a -> string -> 'a = fn
+        val foldri : ((int * char * 'a) -> 'a) -> 'a -> (string * int * int option) -> 'a = fn
+        val fromList : char list -> string = fn
+        val length : string -> int = fn
+        val maxLen : int = 16777196
+        val sub : (string * int) -> char = fn
+        val tabulate : (int * (int -> char)) -> string = fn
+      end
+    eqtype array = array
+    eqtype elem = char
+    val app : (char -> unit) -> CharArray.array -> unit = fn
+    val appi : ((int * char) -> unit) -> (CharArray.array * int * int option) -> unit = fn
+    val array : (int * char) -> CharArray.array = fn
+    val copy : {di: int, dst: CharArray.array, len: int option, si: int, src: CharArray.array} -> unit = fn
+    val copyVec : {di: int, dst: CharArray.array, len: int option, si: int, src: string} -> unit = fn
+    val extract : (CharArray.array * int * int option) -> string = fn
+    val foldl : ((char * 'a) -> 'a) -> 'a -> CharArray.array -> 'a = fn
+    val foldli : ((int * char * 'a) -> 'a) -> 'a -> (CharArray.array * int * int option) -> 'a = fn
+    val foldr : ((char * 'a) -> 'a) -> 'a -> CharArray.array -> 'a = fn
+    val foldri : ((int * char * 'a) -> 'a) -> 'a -> (CharArray.array * int * int option) -> 'a = fn
+    val fromList : char list -> CharArray.array = fn
+    val length : CharArray.array -> int = fn
+    val maxLen : int = 16777196
+    val modify : (char -> char) -> CharArray.array -> unit = fn
+    val modifyi : ((int * char) -> char) -> (CharArray.array * int * int option) -> unit = fn
+    val sub : (CharArray.array * int) -> char = fn
+    val tabulate : (int * (int -> char)) -> CharArray.array = fn
+    val update : (CharArray.array * int * char) -> unit = fn
+  end
+val it : unit = ()
+structure OSPrimIO =
+  struct
+    type bin_reader = reader
+    type bin_writer = writer
+    eqtype file_desc = file_desc
+    type text_reader = reader
+    type text_writer = writer
+    val openApp : string -> OSPrimIO.bin_writer = fn
+    val openRd : string -> OSPrimIO.bin_reader = fn
+    val openString : string -> OSPrimIO.text_reader = fn
+    val openWr : string -> OSPrimIO.bin_writer = fn
+    val stdErr : OSPrimIO.bin_writer = WR {block=NONE, canOutput=SOME fn, chunkSize=1, close=fn, endPos=NONE, getPos=SOME fn, ioDesc=NONE, name="<stdOut>", setPos=SOME fn, verifyPos=SOME fn, writeArr=SOME fn, writeArrNB=SOME fn, writeVec=SOME fn, writeVecNB=SOME fn}
+    val stdIn : OSPrimIO.bin_reader = RD {avail=fn, block=NONE, canInput=SOME fn, chunkSize=1, close=fn, endPos=NONE, getPos=SOME fn, ioDesc=NONE, name="<stdIn>", readArr=SOME fn, readArrNB=SOME fn, readVec=SOME fn, readVecNB=SOME fn, setPos=SOME fn, verifyPos=SOME fn}
+    val stdOut : OSPrimIO.bin_writer = WR {block=NONE, canOutput=SOME fn, chunkSize=1, close=fn, endPos=NONE, getPos=SOME fn, ioDesc=NONE, name="<stdOut>", setPos=SOME fn, verifyPos=SOME fn, writeArr=SOME fn, writeArrNB=SOME fn, writeVec=SOME fn, writeVecNB=SOME fn}
+    val translateIn : OSPrimIO.bin_reader -> OSPrimIO.text_reader = fn
+    val translateOut : OSPrimIO.bin_writer -> OSPrimIO.text_writer = fn
+  end
+val it : unit = ()
+structure BinPrimIO =
+  struct
+    eqtype array = array
+    eqtype elem = word8
+    eqtype pos = int
+    datatype reader =
+      RD of {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, readArr: ({buf: array, i: int, sz: int option} -> int) option, readArrNB: ({buf: array, i: int, sz: int option} -> int option) option, readVec: (int -> vector) option, readVecNB: (int -> vector option) option, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option}
+    type vector = vector
+    datatype writer =
+      WR of {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option, writeArr: ({buf: array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: array, i: int, sz: int option} -> int option) option, writeVec: ({buf: vector, i: int, sz: int option} -> int) option, writeVecNB: ({buf: vector, i: int, sz: int option} -> int option) option}
+    val RD : {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: iodesc(hidden) option, name: string, readArr: ({buf: BinPrimIO.array, i: int, sz: int option} -> int) option, readArrNB: ({buf: BinPrimIO.array, i: int, sz: int option} -> int option) option, readVec: (int -> BinPrimIO.vector) option, readVecNB: (int -> BinPrimIO.vector option) option, setPos: (int -> unit) option, verifyPos: (unit -> int) option} -> BinPrimIO.reader
+    val WR : {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: iodesc(hidden) option, name: string, setPos: (int -> unit) option, verifyPos: (unit -> int) option, writeArr: ({buf: BinPrimIO.array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: BinPrimIO.array, i: int, sz: int option} -> int option) option, writeVec: ({buf: BinPrimIO.vector, i: int, sz: int option} -> int) option, writeVecNB: ({buf: BinPrimIO.vector, i: int, sz: int option} -> int option) option} -> BinPrimIO.writer
+    val augmentReader : BinPrimIO.reader -> BinPrimIO.reader = fn
+    val augmentWriter : BinPrimIO.writer -> BinPrimIO.writer = fn
+    val compare : (int * int) -> order = fn
+  end
+val it : unit = ()
+structure TextPrimIO =
+  struct
+    eqtype array = array
+    eqtype elem = char
+    eqtype pos = int
+    datatype reader =
+      RD of {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, readArr: ({buf: array, i: int, sz: int option} -> int) option, readArrNB: ({buf: array, i: int, sz: int option} -> int option) option, readVec: (int -> vector) option, readVecNB: (int -> vector option) option, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option}
+    eqtype vector = string
+    datatype writer =
+      WR of {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option, writeArr: ({buf: array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: array, i: int, sz: int option} -> int option) option, writeVec: ({buf: vector, i: int, sz: int option} -> int) option, writeVecNB: ({buf: vector, i: int, sz: int option} -> int option) option}
+    val RD : {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: iodesc(hidden) option, name: string, readArr: ({buf: CharArray.array, i: int, sz: int option} -> int) option, readArrNB: ({buf: CharArray.array, i: int, sz: int option} -> int option) option, readVec: (int -> string) option, readVecNB: (int -> string option) option, setPos: (int -> unit) option, verifyPos: (unit -> int) option} -> OSPrimIO.text_reader
+    val WR : {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: iodesc(hidden) option, name: string, setPos: (int -> unit) option, verifyPos: (unit -> int) option, writeArr: ({buf: CharArray.array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: CharArray.array, i: int, sz: int option} -> int option) option, writeVec: ({buf: string, i: int, sz: int option} -> int) option, writeVecNB: ({buf: string, i: int, sz: int option} -> int option) option} -> OSPrimIO.text_writer
+    val augmentReader : OSPrimIO.text_reader -> OSPrimIO.text_reader = fn
+    val augmentWriter : OSPrimIO.text_writer -> OSPrimIO.text_writer = fn
+    val compare : (int * int) -> order = fn
+  end
+val it : unit = ()
+structure TextStreamIO =
+  struct
+    eqtype elem = char
+    type in_pos = in_pos
+    type instream = instream
+    type out_pos = out_pos
+    eqtype outstream = outstream
+    eqtype pos = int
+    type reader = reader
+    eqtype vector = string
+    type writer = writer
+    val canInput : (TextStreamIO.instream * int) -> int option = fn
+    val closeIn : TextStreamIO.instream -> unit = fn
+    val closeOut : TextStreamIO.outstream -> unit = fn
+    val endOfStream : TextStreamIO.instream -> bool = fn
+    val filePosIn : TextStreamIO.in_pos -> int = fn
+    val filePosOut : TextStreamIO.out_pos -> int = fn
+    val flushOut : TextStreamIO.outstream -> unit = fn
+    val getBufferMode : TextStreamIO.outstream -> buffer_mode(hidden) = fn
+    val getPosIn : TextStreamIO.instream -> TextStreamIO.in_pos = fn
+    val getPosOut : TextStreamIO.outstream -> TextStreamIO.out_pos = fn
+    val getReader : TextStreamIO.instream -> (OSPrimIO.text_reader * string) = fn
+    val getWriter : TextStreamIO.outstream -> (OSPrimIO.text_writer * buffer_mode(hidden)) = fn
+    val input : TextStreamIO.instream -> (string * TextStreamIO.instream) = fn
+    val input1 : TextStreamIO.instream -> (char * TextStreamIO.instream) option = fn
+    val inputAll : TextStreamIO.instream -> string = fn
+    val inputLine : TextStreamIO.instream -> (string * TextStreamIO.instream) = fn
+    val inputN : (TextStreamIO.instream * int) -> (string * TextStreamIO.instream) = fn
+    val mkInstream : (OSPrimIO.text_reader * string) -> TextStreamIO.instream = fn
+    val mkOutstream : (OSPrimIO.text_writer * buffer_mode(hidden)) -> TextStreamIO.outstream = fn
+    val output : (TextStreamIO.outstream * string) -> unit = fn
+    val output1 : (TextStreamIO.outstream * char) -> unit = fn
+    val outputSubstr : (TextStreamIO.outstream * substring(hidden)) -> unit = fn
+    val setBufferMode : (TextStreamIO.outstream * buffer_mode(hidden)) -> unit = fn
+    val setPosIn : TextStreamIO.in_pos -> TextStreamIO.instream = fn
+    val setPosOut : TextStreamIO.out_pos -> TextStreamIO.outstream = fn
+  end
+val it : unit = ()
+structure TextIO =
+  struct
+    structure StreamIO =
+      struct
+        eqtype elem = char
+        type in_pos = in_pos
+        type instream = instream
+        type out_pos = out_pos
+        eqtype outstream = outstream
+        eqtype pos = int
+        type reader = reader
+        eqtype vector = string
+        type writer = writer
+        val canInput : (TextStreamIO.instream * int) -> int option = fn
+        val closeIn : TextStreamIO.instream -> unit = fn
+        val closeOut : TextStreamIO.outstream -> unit = fn
+        val endOfStream : TextStreamIO.instream -> bool = fn
+        val filePosIn : TextStreamIO.in_pos -> int = fn
+        val filePosOut : TextStreamIO.out_pos -> int = fn
+        val flushOut : TextStreamIO.outstream -> unit = fn
+        val getBufferMode : TextStreamIO.outstream -> buffer_mode(hidden) = fn
+        val getPosIn : TextStreamIO.instream -> TextStreamIO.in_pos = fn
+        val getPosOut : TextStreamIO.outstream -> TextStreamIO.out_pos = fn
+        val getReader : TextStreamIO.instream -> (OSPrimIO.text_reader * string) = fn
+        val getWriter : TextStreamIO.outstream -> (OSPrimIO.text_writer * buffer_mode(hidden)) = fn
+        val input : TextStreamIO.instream -> (string * TextStreamIO.instream) = fn
+        val input1 : TextStreamIO.instream -> (char * TextStreamIO.instream) option = fn
+        val inputAll : TextStreamIO.instream -> string = fn
+        val inputLine : TextStreamIO.instream -> (string * TextStreamIO.instream) = fn
+        val inputN : (TextStreamIO.instream * int) -> (string * TextStreamIO.instream) = fn
+        val mkInstream : (OSPrimIO.text_reader * string) -> TextStreamIO.instream = fn
+        val mkOutstream : (OSPrimIO.text_writer * buffer_mode(hidden)) -> TextStreamIO.outstream = fn
+        val output : (TextStreamIO.outstream * string) -> unit = fn
+        val output1 : (TextStreamIO.outstream * char) -> unit = fn
+        val outputSubstr : (TextStreamIO.outstream * substring(hidden)) -> unit = fn
+        val setBufferMode : (TextStreamIO.outstream * buffer_mode(hidden)) -> unit = fn
+        val setPosIn : TextStreamIO.in_pos -> TextStreamIO.instream = fn
+        val setPosOut : TextStreamIO.out_pos -> TextStreamIO.outstream = fn
+      end
+    eqtype elem = char
+    eqtype instream = instream ref
+    eqtype outstream = outstream ref
+    eqtype vector = string
+    val canInput : (TextStreamIO.instream ref * int) -> bool = fn
+    val closeIn : TextStreamIO.instream ref -> unit = fn
+    val closeOut : TextStreamIO.outstream ref -> unit = fn
+    val endOfStream : TextStreamIO.instream ref -> bool = fn
+    val flushOut : TextStreamIO.outstream ref -> unit = fn
+    val getInstream : TextStreamIO.instream ref -> TextStreamIO.instream = fn
+    val getOutstream : TextStreamIO.outstream ref -> TextStreamIO.outstream = fn
+    val getPosIn : TextStreamIO.instream ref -> TextStreamIO.in_pos = fn
+    val getPosOut : TextStreamIO.outstream ref -> TextStreamIO.out_pos = fn
+    val input : TextStreamIO.instream ref -> string = fn
+    val input1 : TextStreamIO.instream ref -> char option = fn
+    val inputAll : TextStreamIO.instream ref -> string = fn
+    val inputLine : TextStreamIO.instream ref -> string = fn
+    val inputN : (TextStreamIO.instream ref * int) -> string = fn
+    val lookahead : TextStreamIO.instream ref -> char option = fn
+    val mkInstream : TextStreamIO.instream -> TextStreamIO.instream ref = fn
+    val mkOutstream : TextStreamIO.outstream -> TextStreamIO.outstream ref = fn
+    val openAppend : string -> TextStreamIO.outstream ref = fn
+    val openIn : string -> TextStreamIO.instream ref = fn
+    val openOut : string -> TextStreamIO.outstream ref = fn
+    val openString : string -> TextStreamIO.instream ref = fn
+    val output : (TextStreamIO.outstream ref * string) -> unit = fn
+    val output1 : (TextStreamIO.outstream ref * char) -> unit = fn
+    val outputSubstr : (TextStreamIO.outstream ref * substring(hidden)) -> unit = fn
+    val print : string -> unit = fn
+    val scanStream : ((TextStreamIO.instream -> (char * TextStreamIO.instream) option) -> TextStreamIO.instream -> ('a * TextStreamIO.instream) option) -> TextStreamIO.instream ref -> 'a option = fn
+    val setInstream : (TextStreamIO.instream ref * TextStreamIO.instream) -> unit = fn
+    val setOutstream : (TextStreamIO.outstream ref * TextStreamIO.outstream) -> unit = fn
+    val setPosIn : (TextStreamIO.instream ref * TextStreamIO.in_pos) -> unit = fn
+    val setPosOut : (TextStreamIO.outstream ref * TextStreamIO.out_pos) -> unit = fn
+    val stdErr : TextStreamIO.outstream ref = ref(Out {data=A(#B[0]), mode=ref(NO_BUF), name="<stdOut>", pos=ref(0), writer=ref(PUTmore WR ..)})
+    val stdIn : TextStreamIO.instream ref = ref(In {buffer=Buf {basePos=SOME _, data=_, emptyMeansEof=false, more=ref(GETmore ..), name="<stdIn>"}, pos=0})
+    val stdOut : TextStreamIO.outstream ref = ref(Out {data=A(#B[0]), mode=ref(NO_BUF), name="<stdOut>", pos=ref(0), writer=ref(PUTmore WR ..)})
+  end
+val it : unit = ()
+structure IO =
+  struct
+    datatype buffer_mode =
+      BLOCK_BUF |
+      LINE_BUF |
+      NO_BUF
+    val BLOCK_BUF : IO.buffer_mode
+    exception BlockingNotSupported
+    exception ClosedStream
+    exception Io of {cause: exn, function: string, name: string}
+    val LINE_BUF : IO.buffer_mode
+    val NO_BUF : IO.buffer_mode
+    exception NonblockingNotSupported
+    exception RandomAccessNotSupported
+    exception TerminatedStream
+  end
+val it : unit = ()
+structure OS =
+  struct
+    structure FileSys =
+      struct
+        datatype access_mode =
+          A_EXEC |
+          A_READ |
+          A_WRITE
+        eqtype dirstream = dirstream
+        eqtype file_id = file_id
+        val A_EXEC : OS.FileSys.access_mode
+        val A_READ : OS.FileSys.access_mode
+        val A_WRITE : OS.FileSys.access_mode
+        val access : (string * OS.FileSys.access_mode list) -> bool = fn
+        val chDir : string -> unit = fn
+        val closeDir : OS.FileSys.dirstream -> unit = fn
+        val compare : (OS.FileSys.file_id * OS.FileSys.file_id) -> order = fn
+        val fileId : string -> OS.FileSys.file_id = fn
+        val fileSize : string -> int = fn
+        val fullPath : string -> string = fn
+        val getDir : unit -> string = fn
+        val hash : OS.FileSys.file_id -> word = fn
+        val isDir : string -> bool = fn
+        val isLink : string -> bool = fn
+        val mkDir : string -> unit = fn
+        val modTime : string -> time(hidden) = fn
+        val openDir : string -> OS.FileSys.dirstream = fn
+        val readDir : OS.FileSys.dirstream -> string = fn
+        val readLink : string -> string = fn
+        val realPath : string -> string = fn
+        val remove : string -> unit = fn
+        val rename : {new: string, old: string} -> unit = fn
+        val rewindDir : OS.FileSys.dirstream -> unit = fn
+        val rmDir : string -> unit = fn
+        val setTime : (string * time(hidden) option) -> unit = fn
+        val tmpName : unit -> string = fn
+      end
+    structure IO =
+      struct
+        structure Kind = struct ... end
+        eqtype iodesc = iodesc
+        eqtype iodesc_kind = iodesc_kind
+        eqtype poll_desc = poll_desc
+        eqtype poll_info = poll_info
+        exception Poll
+        val compare : (OS.IO.iodesc * OS.IO.iodesc) -> order = fn
+        val hash : OS.IO.iodesc -> word = fn
+        val infoToPollDesc : OS.IO.poll_info -> OS.IO.poll_desc = fn
+        val isIn : OS.IO.poll_info -> bool = fn
+        val isOut : OS.IO.poll_info -> bool = fn
+        val isPri : OS.IO.poll_info -> bool = fn
+        val kind : OS.IO.iodesc -> OS.IO.iodesc_kind = fn
+        val poll : (OS.IO.poll_desc list * time(hidden) option) -> OS.IO.poll_info list = fn
+        val pollDesc : OS.IO.iodesc -> OS.IO.poll_desc option = fn
+        val pollIn : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollOut : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollPri : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollToIODesc : OS.IO.poll_desc -> OS.IO.iodesc = fn
+      end
+    structure Path =
+      struct
+        exception Path
+        val base : string -> string = fn
+        val concat : (string * string) -> string = fn
+        val currentArc : string = "."
+        val dir : string -> string = fn
+        val ext : string -> string option = fn
+        val file : string -> string = fn
+        val fromString : string -> {arcs: string list, isAbs: bool, vol: string} = fn
+        val fromUnixPath : string -> string = fn
+        val getParent : string -> string = fn
+        val getVolume : string -> string = fn
+        val isAbsolute : string -> bool = fn
+        val isCanonical : string -> bool = fn
+        val isRelative : string -> bool = fn
+        val isRoot : string -> bool = fn
+        val joinBaseExt : {base: string, ext: string option} -> string = fn
+        val joinDirFile : {dir: string, file: string} -> string = fn
+        val mkAbsolute : (string * string) -> string = fn
+        val mkCanonical : string -> string = fn
+        val mkRelative : (string * string) -> string = fn
+        val parentArc : string = ".."
+        val splitBaseExt : string -> {base: string, ext: string option} = fn
+        val splitDirFile : string -> {dir: string, file: string} = fn
+        val toString : {arcs: string list, isAbs: bool, vol: string} -> string = fn
+        val toUnixPath : string -> string = fn
+        val validVolume : {isAbs: bool, vol: string} -> bool = fn
+      end
+    structure Process =
+      struct
+        eqtype status = int
+        val atExit : (unit -> unit) -> unit = fn
+        val exit : int -> 'a = fn
+        val failure : int = 1
+        val getEnv : string -> string option = fn
+        val success : int = 0
+        val system : string -> int = fn
+        val terminate : int -> 'a = fn
+      end
+    eqtype syserror = int
+    exception SysErr of (string * syserror option)
+    val errorMsg : int -> string = fn
+    val errorName : int -> string = fn
+    val syserror : string -> int option = fn
+  end
+@
+
+
+1.2
+log
+@Modify because Path now has toUnixPath and fromUnixPath
+@
+text
+@d152 1
+a152 1
+    val stdErr : OSPrimIO.bin_writer = WR {block=NONE, canOutput=SOME fn, chunkSize=1, close=fn, endPos=SOME fn, getPos=SOME fn, ioDesc=NONE, name="<stdOut>", setPos=SOME fn, verifyPos=SOME fn, writeArr=SOME fn, writeArrNB=SOME fn, writeVec=SOME fn, writeVecNB=SOME fn}
+@
+
+
+1.1
+log
+@new unit
+[Bug #1759]
+answer.
+@
+text
+@d395 1
+d411 1
+@

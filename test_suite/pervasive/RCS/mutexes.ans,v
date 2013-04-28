@@ -1,0 +1,275 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.4
+	MLWorks_20b2_Windows_1998_06_12:1.4
+	MLWorks_20b1c1_1998_05_07:1.4
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.1.1.1.1.1
+	MLWorks_10r3:1.1.1.1.3
+	MLWorks_10r2_551:1.1.1.1.2
+	MLWorks_11:1.1.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	98.10.06.11.36.42;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.05.04.17.25.14;	author mitchell;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.11.25.19.37.38;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.11.19.21.07.28;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.29.10.44.25;	author andreww;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.11.11.38;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1
+	1.1.1.1.2.1
+	1.1.1.1.3.1;
+next	;
+
+1.1.1.1.1.1
+date	97.07.28.18.54.03;	author daveb;	state Exp;
+branches
+	1.1.1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1.1.1
+date	97.10.07.12.18.42;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.1.2.1
+date	97.09.08.17.45.52;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.1.3.1
+date	97.09.09.14.45.05;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+answer.
+@
+
+
+1.5
+log
+@[Bug #30487]
+Modify type of run function
+@
+text
+@val it : unit = ()
+structure Mutex = struct ... end
+val it : unit = ()
+val deadlockFlag : bool ref = ref(false)
+val run : Int32.int -> unit = fn
+val testAnswer : string = "OK"
+val testOutput : unit -> bool = fn
+@
+
+
+1.4
+log
+@[Bug #50071]
+Replace uses of Shell.Build.loadSource by Shell.Project
+@
+text
+@d5 1
+a5 1
+val run : int -> unit = fn
+@
+
+
+1.3
+log
+@[Bug #30323]
+@
+text
+@d2 1
+a3 1
+structure Mutex = struct ... end
+@
+
+
+1.2
+log
+@[Bug #30085]
+Make independent of structure changes
+@
+text
+@a2 6
+structure Time = struct ... end
+val it : unit = ()
+structure Array = struct ... end
+val it : unit = ()
+structure Timer = struct ... end
+val it : unit = ()
+@
+
+
+1.1
+log
+@new unit
+answer.
+@
+text
+@a1 26
+structure Time =
+  struct
+    eqtype time = time
+    val + : (Time.time * Time.time) -> Time.time = fn
+    val - : (Time.time * Time.time) -> Time.time = fn
+    val < : (Time.time * Time.time) -> bool = fn
+    val <= : (Time.time * Time.time) -> bool = fn
+    val > : (Time.time * Time.time) -> bool = fn
+    val >= : (Time.time * Time.time) -> bool = fn
+    exception Time
+    val compare : (Time.time * Time.time) -> order = fn
+    val fmt : int -> Time.time -> string = fn
+    val fromMicroseconds : int -> Time.time = fn
+    val fromMilliseconds : int -> Time.time = fn
+    val fromReal : real -> Time.time = fn
+    val fromSeconds : int -> Time.time = fn
+    val fromString : string -> Time.time option = fn
+    val now : unit -> Time.time = fn
+    val scan : ('a -> (char * 'a) option) -> 'a -> (Time.time * 'a) option = fn
+    val toMicroseconds : Time.time -> int = fn
+    val toMilliseconds : Time.time -> int = fn
+    val toReal : Time.time -> real = fn
+    val toSeconds : Time.time -> int = fn
+    val toString : Time.time -> string = fn
+    val zeroTime : Time.time = TIME (0, 0, 0)
+  end
+d3 1
+a3 23
+structure Array =
+  struct
+    eqtype 'a array = 'a array
+    eqtype 'a vector = 'a vector
+    val app : ('a -> unit) -> 'a array -> unit = fn
+    val appi : ((int * 'a) -> unit) -> ('a array * int * int option) -> unit = fn
+    val array : (int * 'a) -> 'a array = fn
+    val copy : {di: int, dst: 'a array, len: int option, si: int, src: 'a array} -> unit = fn
+    val copyVec : {di: int, dst: 'a array, len: int option, si: int, src: 'a vector} -> unit = fn
+    val extract : ('a array * int * int option) -> 'a vector = fn
+    val foldl : (('a * 'b) -> 'b) -> 'b -> 'a array -> 'b = fn
+    val foldli : ((int * 'a * 'b) -> 'b) -> 'b -> ('a array * int * int option) -> 'b = fn
+    val foldr : (('a * 'b) -> 'b) -> 'b -> 'a array -> 'b = fn
+    val foldri : ((int * 'a * 'b) -> 'b) -> 'b -> ('a array * int * int option) -> 'b = fn
+    val fromList : 'a list -> 'a array = fn
+    val length : 'a array -> int = fn
+    val maxLen : int = 4194297
+    val modify : ('a -> 'a) -> 'a array -> unit = fn
+    val modifyi : ((int * 'a) -> 'a) -> ('a array * int * int option) -> unit = fn
+    val sub : ('a array * int) -> 'a = fn
+    val tabulate : (int * (int -> 'a)) -> 'a array = fn
+    val update : ('a array * int * 'a) -> unit = fn
+  end
+d5 1
+a5 9
+structure Timer =
+  struct
+    eqtype cpu_timer = cpu_timer
+    eqtype real_timer = real_timer
+    val checkCPUTimer : Timer.cpu_timer -> {gc: Time.time, sys: Time.time, usr: Time.time} = fn
+    val checkRealTimer : Timer.real_timer -> Time.time = fn
+    val startCPUTimer : unit -> Timer.cpu_timer = fn
+    val startRealTimer : unit -> Timer.real_timer = fn
+  end
+d7 3
+a9 16
+structure Mutex =
+  struct
+    type mutex = mutex
+    exception Mutex of string
+    val allSleeping : unit MLWorks.Threads.thread list -> bool = fn
+    val await : (Mutex.mutex list * (unit -> bool)) -> unit = fn
+    val cleanUp : unit -> unit = fn
+    val critical : (Mutex.mutex list * ('a -> 'b)) -> 'a -> 'b = fn
+    val newBinaryMutex : bool -> Mutex.mutex = fn
+    val newCountingMutex : int -> Mutex.mutex = fn
+    val query : Mutex.mutex -> unit MLWorks.Threads.thread list = fn
+    val signal : Mutex.mutex list -> unit = fn
+    val test : Mutex.mutex list -> bool = fn
+    val testAndClaim : Mutex.mutex list -> bool = fn
+    val wait : Mutex.mutex list -> unit = fn
+  end
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@

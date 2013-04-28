@@ -1,0 +1,310 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	99.03.18.12.19.53;	author johnh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.08.05.16.51.46;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.07.21.09.53.43;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30441]
+Part of an example of CAPI and projects.
+@
+
+
+1.3
+log
+@[Bug #190530]
+Don't use Real.fromInt - no need if Time.toReal is used.
+@
+text
+@(* === Guess demo ===
+ * 
+ * Copyright (C) 1998.  The Harlequin Group plc.
+ * 
+ * $Log: gui:guess.sml,v $
+# Revision 1.2  1998/08/05  16:51:46  johnh
+# [Bug #30463]
+# separate out the call to main_loop.
+#
+# Revision 1.1  1998/07/21  09:53:43  johnh
+# new unit
+# [Bug #30441]
+# Part of an example of CAPI and projects.
+#
+ *)
+
+require "__capi";
+require "__int";
+require "__time";
+require "__real";
+require "random";
+
+fun display_guess() = 
+  let
+    val shell = Capi.initialize_application ("MLWorks","Guess example")
+
+    val going = ref false
+    val now = Time.now()
+
+    val mainWindow = 
+      Capi.make_subwindow ("Guess my number (1-1000)", shell, 
+			   [(Capi.Position (100,100)),
+			    (Capi.Size (500, 200))]);
+
+    val guess_label = 
+      Capi.make_label ("Your guess:", mainWindow, [(Capi.Position (0, 0)),
+						   (Capi.Size (200, 30))]);
+
+    val guess_text = 
+      Capi.make_text ("guess_text", mainWindow, [(Capi.Position (200, 0)),
+						 (Capi.Size (50, 30)),
+						 (Capi.ReadOnly false)]);
+
+    val tries_label = 
+      Capi.make_label ("Number of tries:", mainWindow, [(Capi.Position (0, 30)),
+							(Capi.Size (200, 30))]);
+    val tries_text = 
+      Capi.make_text ("tries_text", mainWindow, [(Capi.Position (200, 30)),
+						 (Capi.Size (50, 30)),
+						 (Capi.ReadOnly true)]);
+
+    val my_number = ref 0
+    val low = ref 1
+    val high = ref 1000
+
+    val region_label = 
+      Capi.make_label ("The number is somewhere between 1 and 1000", mainWindow,
+			[(Capi.Position (0, 62)),
+			 (Capi.Size (500, 25))])
+
+    fun update_region_label () = 
+      let
+	val low_str = Int.toString (!low)
+	val high_str = Int.toString (!high)
+      in
+	Capi.set_label_string (region_label, 
+	  "The number is somewhere between " ^ low_str ^ " and " ^ high_str)
+      end
+
+    val update = ref update_region_label
+
+    fun start () =
+      let 
+	fun get_num () = 
+	  let
+	    val msecs = Time.toReal (Time.- (Time.now(), now))
+	  in
+	    msecs
+	    handle _ => 6688.0
+	  end
+
+	val seed = get_num()
+	val rand_num = (nextrand (seed))
+      in
+	my_number := rand_num;
+	low := 1;
+	high := 1000;
+	going := true;
+	(!update)();
+	Capi.set_text_string (guess_text, "0");
+	Capi.set_text_string (tries_text, "0")
+      end
+
+    val (startButton, start_update) = 
+      Capi.make_button {name = "Start again", 
+			parent = mainWindow,
+			attributes = [(Capi.Position (0, 87)),
+				      (Capi.Size (80, 30))],
+			sensitive = fn () => not (!going),
+			action = start}
+
+    fun guess () = 
+      let
+	val guess_val = 
+	  getOpt (Int.fromString (Capi.get_text_string guess_text), 0)
+	val tries = 
+	  getOpt (Int.fromString (Capi.get_text_string tries_text), 0) + 1
+      in
+	Capi.set_text_string (tries_text, Int.toString tries);
+	if guess_val < (!my_number) then
+	  (if guess_val > (!low) then low := guess_val else ();
+	   (!update)())
+	else if (guess_val > (!my_number)) then
+	  (if guess_val < (!high) then high := guess_val else ();
+	   (!update)())
+	else
+	  (going := false;
+	   (!update)();
+	   Capi.set_label_string(region_label,"The number is " ^ Int.toString guess_val);
+	   Capi.send_message (shell, "Well done, your guess was spot on!"))
+      end
+
+    val (guessButton, guess_update) = 
+      Capi.make_button {name = "Guess", 
+			parent = mainWindow, 
+			attributes = [(Capi.Position (82, 87)),
+				      (Capi.Size (80, 30))],
+			sensitive = fn () => (!going),
+			action = guess}
+
+    fun resign () = 
+      let 
+	val num_string = Int.toString (!my_number)
+	val tries = Capi.get_text_string tries_text
+      in
+	going := false;
+	(!update)();
+	Capi.send_message (shell, "You've given up after " ^ tries ^ " tries.  The number you tried to guess was " ^ num_string)
+      end
+
+    val (resignButton, resign_update) = 
+      Capi.make_button {name = "Give up", 
+			parent = mainWindow, 
+			attributes = [(Capi.Position (164, 87)),
+				      (Capi.Size (80, 30))],
+			sensitive = fn () => (!going),
+			action = resign}
+
+    fun quit () = 
+      (Capi.destroy mainWindow;  Capi.quit_loop shell)
+
+    val (closeButton, close_update) = 
+      Capi.make_button {name = "Close",
+			parent = mainWindow,
+			attributes = [(Capi.Position (246, 87)),
+				      (Capi.Size (80, 30))],
+			sensitive = fn () => true,
+			action = quit}
+
+  in
+    update := (fn () => (update_region_label();
+	       start_update();
+	       guess_update();
+	       resign_update()));
+    app (fn w => Capi.reveal w) 
+	       [mainWindow, 
+		guess_label, 
+		guess_text,
+		tries_label,
+		tries_text,
+		region_label,
+		startButton,
+		guessButton,
+		resignButton,
+		closeButton];
+    (!update)();
+    Capi.initialize_application_shell shell
+  end
+
+fun guess () = (display_guess(); Capi.main_loop())
+
+@
+
+
+1.2
+log
+@[Bug #30463]
+separate out the call to main_loop.
+@
+text
+@d6 4
+d76 1
+a76 2
+	    val t = Time.now()
+	    val msecs = Time.toMilliseconds (Time.- (Time.now(), now))
+d79 1
+a79 1
+	    handle _ => 6688
+d82 1
+a82 2
+	val msecs = get_num()
+	val seed = Real.fromInt msecs
+@
+
+
+1.1
+log
+@new unit
+[Bug #30441]
+Part of an example of CAPI and projects.
+@
+text
+@d5 6
+a10 1
+ * $Log$
+d19 1
+a19 1
+fun run() = 
+d21 1
+a21 1
+    val shell = Capi.initialize_application ("","")
+d26 4
+a29 3
+    val (mainShell, mainWindow) = 
+      Capi.make_window ("Guess my number (1-1000)", shell, [(Capi.Position (100,100)),
+					       (Capi.Size (400, 200))]);
+d33 1
+a33 1
+						   (Capi.Size (150, 25))]);
+d36 2
+a37 2
+      Capi.make_text ("guess_text", mainWindow, [(Capi.Position (150, 0)),
+						 (Capi.Size (50, 25)),
+d41 2
+a42 2
+      Capi.make_label ("Number of tries:", mainWindow, [(Capi.Position (0, 25)),
+							(Capi.Size (150, 25))]);
+d44 2
+a45 2
+      Capi.make_text ("tries_text", mainWindow, [(Capi.Position (150, 25)),
+						 (Capi.Size (50, 25)),
+d54 2
+a55 2
+			[(Capi.Position (0, 52)),
+			 (Capi.Size (400, 25))])
+d95 1
+a95 1
+			attributes = [(Capi.Position (0, 77)),
+d124 1
+a124 1
+			attributes = [(Capi.Position (82, 77)),
+d142 1
+a142 1
+			attributes = [(Capi.Position (164, 77)),
+d147 11
+d164 1
+a164 2
+	       [mainShell,
+		mainWindow, 
+d172 2
+a173 1
+		resignButton];
+d175 1
+a175 3
+    Capi.initialize_application_shell mainShell;
+    Capi.reveal mainShell;
+    Capi.main_loop()
+d178 1
+a178 1
+
+@

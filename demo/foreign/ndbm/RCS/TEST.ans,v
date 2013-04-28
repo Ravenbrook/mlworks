@@ -1,0 +1,685 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_workspace_97:1.1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	98.10.29.12.55.55;	author jkbrook;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.10.26.17.56.01;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.14.11.07.25;	author stephenb;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.11.30.16.47.42;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #20035]
+@
+
+
+1.3
+log
+@[Bug #70184]
+Removing spurious runtime messages
+@
+text
+@make ok
+dump ok
+matthew 3869
+andrew 8053
+dave 1564
+jon 3838
+jon 3838
+@
+
+
+1.2
+log
+@[Bug #70184]
+Update for projects
+@
+text
+@a1 596
+structure Phones =
+  struct
+    structure C =
+      struct
+        structure Char = struct ... end
+        structure CharPtr = struct ... end
+        structure Double = struct ... end
+        structure DoublePtr = struct ... end
+        structure Int = struct ... end
+        structure IntPtr = struct ... end
+        structure Long = struct ... end
+        structure LongPtr = struct ... end
+        structure PtrPtr = struct ... end
+        structure Short = struct ... end
+        structure ShortPtr = struct ... end
+        structure Uchar = struct ... end
+        structure UcharPtr = struct ... end
+        structure Uint = struct ... end
+        structure UintPtr = struct ... end
+        structure Ulong = struct ... end
+        structure UlongPtr = struct ... end
+        structure Ushort = struct ... end
+        structure UshortPtr = struct ... end
+        eqtype 'a ptr = 'a ptr
+        type syserror = syserror
+        eqtype void = void
+        exception SysErr of (string * syserror option)
+        val deRef16 : Phones.C.void Phones.C.ptr -> Word16.word = fn
+        val deRef32 : Phones.C.void Phones.C.ptr -> LargeWord.word = fn
+        val deRef8 : Phones.C.void Phones.C.ptr -> BinIO.elem = fn
+        val deRefReal : Phones.C.void Phones.C.ptr -> real = fn
+        val free : Phones.C.void Phones.C.ptr -> unit = fn
+        val fromSysWord : LargeWord.word -> Phones.C.void Phones.C.ptr = fn
+        val fromVoidPtr : Phones.C.void Phones.C.ptr -> 'a Phones.C.ptr = fn
+        val malloc : word -> Phones.C.void Phones.C.ptr = fn
+        val memcpy : {dest: Phones.C.void Phones.C.ptr, size: word, source: Phones.C.void Phones.C.ptr} -> unit = fn
+        val next : (Phones.C.void Phones.C.ptr * word) -> Phones.C.void Phones.C.ptr = fn
+        val null : 'a Phones.C.ptr = _
+        val prev : (Phones.C.void Phones.C.ptr * word) -> Phones.C.void Phones.C.ptr = fn
+        val ptrSize : word = 0w4
+        val toSysWord : Phones.C.void Phones.C.ptr -> LargeWord.word = fn
+        val toVoidPtr : 'a Phones.C.ptr -> Phones.C.void Phones.C.ptr = fn
+        val update16 : (Phones.C.void Phones.C.ptr * Word16.word) -> unit = fn
+        val update32 : (Phones.C.void Phones.C.ptr * LargeWord.word) -> unit = fn
+        val update8 : (Phones.C.void Phones.C.ptr * BinIO.elem) -> unit = fn
+        val updateReal : (Phones.C.void Phones.C.ptr * real) -> unit = fn
+      end
+    structure datumPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = datum
+        val ! : Phones.datumPtr.value Phones.C.ptr -> Phones.datumPtr.value = fn
+        val := : (Phones.datumPtr.value Phones.C.ptr * Phones.datumPtr.value) -> unit = fn
+        val free : Phones.datumPtr.value Phones.C.ptr -> unit = fn
+        val make : unit -> Phones.datumPtr.value Phones.C.ptr = fn
+        val makeArray : int -> Phones.datumPtr.value Phones.C.ptr = fn
+        val next : (Phones.datumPtr.value Phones.C.ptr * word) -> Phones.datumPtr.value Phones.C.ptr = fn
+        val prev : (Phones.datumPtr.value Phones.C.ptr * word) -> Phones.datumPtr.value Phones.C.ptr = fn
+        val size : word = 0w4
+      end
+    datatype access_type =
+      READ |
+      WRITE
+    exception CannotOpenDbmFile
+    exception OutOfMemory
+    val READ : Phones.access_type
+    val WRITE : Phones.access_type
+    val accessTypeToFlags : (Phones.access_type * int) -> int = fn
+    val addPerson : (DBM(hidden) Phones.C.ptr * string * string) -> unit = fn
+    val addToDb : (string * string * string) -> unit = fn
+    val createDb : (string * string) -> unit = fn
+    val datumToString : Phones.datumPtr.value -> string = fn
+    val dumpDb : string -> unit = fn
+    val foldDb : (('a * Phones.datumPtr.value) -> 'a) -> 'a -> DBM(hidden) Phones.C.ptr -> 'a = fn
+    val foldOverLinesInInputFile : string -> ((string * string) -> unit) -> ((int * string) -> unit) -> unit = fn
+    val getNumber : (DBM(hidden) Phones.C.ptr * Phones.datumPtr.value) -> string option = fn
+    val internalError : string -> 'a = fn
+    val lookupInDb : (string * string) -> unit = fn
+    val main : unit -> unit = fn
+    val makeDatum : string -> Phones.datumPtr.value = fn
+    val openError : string -> 'a = fn
+    val parseArgs : string list -> unit = fn
+    val removeFromDb : (string * string) -> unit = fn
+    val usage : unit -> 'a = fn
+    val withCString : Phones.C.Char.char Phones.C.ptr -> (Phones.C.Char.char Phones.C.ptr -> 'a) -> 'a = fn
+    val withDatum : Phones.datumPtr.value -> (Phones.datumPtr.value -> 'a) -> 'a = fn
+    val withDb : (string * Phones.access_type list * (DBM(hidden) Phones.C.ptr -> 'a)) -> 'a = fn
+    val withNdbm : DBM(hidden) Phones.C.ptr -> (DBM(hidden) Phones.C.ptr -> 'a) -> 'a = fn
+    val withNewDatum : string -> (Phones.datumPtr.value -> 'a) -> 'a = fn
+    val withNonNullResource : ((''a Phones.C.ptr -> 'b) * exn * ''a Phones.C.ptr * (''a Phones.C.ptr -> 'c)) -> 'c = fn
+    val withReadOnlyDb : string -> (DBM(hidden) Phones.C.ptr -> 'a) -> 'a = fn
+    val withResource : (('a -> 'b) * 'a * ('a -> 'c)) -> 'c = fn
+    val withWriteOnlyDb : string -> (DBM(hidden) Phones.C.ptr -> 'a) -> 'a = fn
+    val wordFromUint : Phones.C.Uint.word -> word = fn
+  end
+structure MLWorksCInterface =
+  struct
+    structure Char =
+      struct
+        eqtype char = char
+        eqtype string = string
+        val < : (MLWorksCInterface.Char.char * MLWorksCInterface.Char.char) -> bool = fn
+        val <= : (MLWorksCInterface.Char.char * MLWorksCInterface.Char.char) -> bool = fn
+        val > : (MLWorksCInterface.Char.char * MLWorksCInterface.Char.char) -> bool = fn
+        val >= : (MLWorksCInterface.Char.char * MLWorksCInterface.Char.char) -> bool = fn
+        val chr : int -> MLWorksCInterface.Char.char = fn
+        val compare : (MLWorksCInterface.Char.char * MLWorksCInterface.Char.char) -> order = fn
+        val contains : MLWorksCInterface.Char.string -> MLWorksCInterface.Char.char -> bool = fn
+        val fromCString : MLWorksCInterface.Char.string -> MLWorksCInterface.Char.char option = fn
+        val fromString : MLWorksCInterface.Char.string -> MLWorksCInterface.Char.char option = fn
+        val isAlpha : MLWorksCInterface.Char.char -> bool = fn
+        val isAlphaNum : MLWorksCInterface.Char.char -> bool = fn
+        val isAscii : MLWorksCInterface.Char.char -> bool = fn
+        val isCntrl : MLWorksCInterface.Char.char -> bool = fn
+        val isDigit : MLWorksCInterface.Char.char -> bool = fn
+        val isGraph : MLWorksCInterface.Char.char -> bool = fn
+        val isHexDigit : MLWorksCInterface.Char.char -> bool = fn
+        val isLower : MLWorksCInterface.Char.char -> bool = fn
+        val isPrint : MLWorksCInterface.Char.char -> bool = fn
+        val isPunct : MLWorksCInterface.Char.char -> bool = fn
+        val isSpace : MLWorksCInterface.Char.char -> bool = fn
+        val isUpper : MLWorksCInterface.Char.char -> bool = fn
+        val maxChar : MLWorksCInterface.Char.char = _
+        val maxOrd : int = 255
+        val minChar : MLWorksCInterface.Char.char = _
+        val notContains : MLWorksCInterface.Char.string -> MLWorksCInterface.Char.char -> bool = fn
+        val ord : MLWorksCInterface.Char.char -> int = fn
+        val pred : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.char = fn
+        val scan : ('a -> (MLWorksCInterface.Char.char * 'a) option) -> 'a -> (MLWorksCInterface.Char.char * 'a) option = fn
+        val succ : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.char = fn
+        val toCString : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.string = fn
+        val toLower : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.char = fn
+        val toString : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.string = fn
+        val toUpper : MLWorksCInterface.Char.char -> MLWorksCInterface.Char.char = fn
+      end
+    structure CharPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = char
+        val ! : MLWorksCInterface.Char.char MLWorksCInterface.ptr -> MLWorksCInterface.Char.char = fn
+        val := : (MLWorksCInterface.Char.char MLWorksCInterface.ptr * MLWorksCInterface.Char.char) -> unit = fn
+        val copySubString : (MLWorksCInterface.Char.char MLWorksCInterface.ptr * word) -> string = fn
+        val free : MLWorksCInterface.Char.char MLWorksCInterface.ptr -> unit = fn
+        val fromString : string -> MLWorksCInterface.Char.char MLWorksCInterface.ptr = fn
+        val make : unit -> MLWorksCInterface.Char.char MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Char.char MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Char.char MLWorksCInterface.ptr * word) -> MLWorksCInterface.Char.char MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Char.char MLWorksCInterface.ptr * word) -> MLWorksCInterface.Char.char MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Double =
+      struct
+        structure Math = struct ... end
+        type real = real
+        val != : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val * : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val *+ : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val *- : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val + : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val - : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val / : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val < : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val <= : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val == : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val > : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val >= : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val ?= : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val abs : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val ceil : MLWorksCInterface.Double.real -> int = fn
+        val checkFloat : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val class : MLWorksCInterface.Double.real -> IEEEReal.float_class = fn
+        val compare : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> order = fn
+        val compareReal : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> IEEEReal.real_order = fn
+        val copySign : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val floor : MLWorksCInterface.Double.real -> int = fn
+        val fmt : StringCvt.realfmt -> MLWorksCInterface.Double.real -> string = fn
+        val fromDecimal : IEEEReal.decimal_approx -> MLWorksCInterface.Double.real = fn
+        val fromInt : int -> MLWorksCInterface.Double.real = fn
+        val fromLarge : IEEEReal.rounding_mode -> real -> MLWorksCInterface.Double.real = fn
+        val fromLargeInt : Int32.int -> MLWorksCInterface.Double.real = fn
+        val fromManExp : {exp: int, man: MLWorksCInterface.Double.real} -> MLWorksCInterface.Double.real = fn
+        val fromString : string -> MLWorksCInterface.Double.real option = fn
+        val isFinite : MLWorksCInterface.Double.real -> bool = fn
+        val isNan : MLWorksCInterface.Double.real -> bool = fn
+        val isNormal : MLWorksCInterface.Double.real -> bool = fn
+        val max : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val maxFinite : MLWorksCInterface.Double.real = _
+        val min : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val minNormalPos : MLWorksCInterface.Double.real = _
+        val minPos : MLWorksCInterface.Double.real = _
+        val negInf : MLWorksCInterface.Double.real = _
+        val nextAfter : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val posInf : MLWorksCInterface.Double.real = _
+        val precision : int = 53
+        val radix : int = 2
+        val realCeil : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val realFloor : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val realMod : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val realTrunc : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+        val rem : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> MLWorksCInterface.Double.real = fn
+        val round : MLWorksCInterface.Double.real -> int = fn
+        val sameSign : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val scan : ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Double.real * 'a) option = fn
+        val sign : MLWorksCInterface.Double.real -> int = fn
+        val signBit : MLWorksCInterface.Double.real -> bool = fn
+        val split : MLWorksCInterface.Double.real -> {frac: MLWorksCInterface.Double.real, whole: MLWorksCInterface.Double.real} = fn
+        val toDecimal : MLWorksCInterface.Double.real -> IEEEReal.decimal_approx = fn
+        val toInt : IEEEReal.rounding_mode -> MLWorksCInterface.Double.real -> int = fn
+        val toLarge : MLWorksCInterface.Double.real -> real = fn
+        val toLargeInt : IEEEReal.rounding_mode -> MLWorksCInterface.Double.real -> Int32.int = fn
+        val toManExp : MLWorksCInterface.Double.real -> {exp: int, man: MLWorksCInterface.Double.real} = fn
+        val toString : MLWorksCInterface.Double.real -> string = fn
+        val trunc : MLWorksCInterface.Double.real -> int = fn
+        val unordered : (MLWorksCInterface.Double.real * MLWorksCInterface.Double.real) -> bool = fn
+        val ~ : MLWorksCInterface.Double.real -> MLWorksCInterface.Double.real = fn
+      end
+    structure DoublePtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        type value = real
+        val ! : MLWorksCInterface.Double.real MLWorksCInterface.ptr -> MLWorksCInterface.Double.real = fn
+        val := : (MLWorksCInterface.Double.real MLWorksCInterface.ptr * MLWorksCInterface.Double.real) -> unit = fn
+        val free : MLWorksCInterface.Double.real MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Double.real MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Double.real MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Double.real MLWorksCInterface.ptr * word) -> MLWorksCInterface.Double.real MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Double.real MLWorksCInterface.ptr * word) -> MLWorksCInterface.Double.real MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Int =
+      struct
+        eqtype int = int
+        val * : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val + : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val - : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val < : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> bool = fn
+        val <= : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> bool = fn
+        val > : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> bool = fn
+        val >= : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> bool = fn
+        val abs : MLWorksCInterface.Int.int -> MLWorksCInterface.Int.int = fn
+        val compare : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> order = fn
+        val div : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Int.int -> string = fn
+        val fromInt : int -> MLWorksCInterface.Int.int = fn
+        val fromLarge : Int32.int -> MLWorksCInterface.Int.int = fn
+        val fromString : string -> MLWorksCInterface.Int.int option = fn
+        val max : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val maxInt : MLWorksCInterface.Int.int option = SOME _
+        val min : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val minInt : MLWorksCInterface.Int.int option = SOME _
+        val mod : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val precision : int option = SOME 32
+        val quot : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val rem : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> MLWorksCInterface.Int.int = fn
+        val sameSign : (MLWorksCInterface.Int.int * MLWorksCInterface.Int.int) -> bool = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Int.int * 'a) option = fn
+        val sign : MLWorksCInterface.Int.int -> int = fn
+        val toInt : MLWorksCInterface.Int.int -> int = fn
+        val toLarge : MLWorksCInterface.Int.int -> Int32.int = fn
+        val toString : MLWorksCInterface.Int.int -> string = fn
+        val ~ : MLWorksCInterface.Int.int -> MLWorksCInterface.Int.int = fn
+      end
+    structure IntPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = int
+        val ! : MLWorksCInterface.Int.int MLWorksCInterface.ptr -> MLWorksCInterface.Int.int = fn
+        val := : (MLWorksCInterface.Int.int MLWorksCInterface.ptr * MLWorksCInterface.Int.int) -> unit = fn
+        val free : MLWorksCInterface.Int.int MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Int.int MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Int.int MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Int.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Int.int MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Int.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Int.int MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Long =
+      struct
+        eqtype int = int
+        val * : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val + : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val - : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val < : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> bool = fn
+        val <= : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> bool = fn
+        val > : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> bool = fn
+        val >= : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> bool = fn
+        val abs : MLWorksCInterface.Long.int -> MLWorksCInterface.Long.int = fn
+        val compare : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> order = fn
+        val div : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Long.int -> string = fn
+        val fromInt : int -> MLWorksCInterface.Long.int = fn
+        val fromLarge : Int32.int -> MLWorksCInterface.Long.int = fn
+        val fromString : string -> MLWorksCInterface.Long.int option = fn
+        val max : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val maxInt : MLWorksCInterface.Long.int option = SOME _
+        val min : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val minInt : MLWorksCInterface.Long.int option = SOME _
+        val mod : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val precision : int option = SOME 32
+        val quot : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val rem : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> MLWorksCInterface.Long.int = fn
+        val sameSign : (MLWorksCInterface.Long.int * MLWorksCInterface.Long.int) -> bool = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Long.int * 'a) option = fn
+        val sign : MLWorksCInterface.Long.int -> int = fn
+        val toInt : MLWorksCInterface.Long.int -> int = fn
+        val toLarge : MLWorksCInterface.Long.int -> Int32.int = fn
+        val toString : MLWorksCInterface.Long.int -> string = fn
+        val ~ : MLWorksCInterface.Long.int -> MLWorksCInterface.Long.int = fn
+      end
+    structure LongPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = int
+        val ! : MLWorksCInterface.Long.int MLWorksCInterface.ptr -> MLWorksCInterface.Long.int = fn
+        val := : (MLWorksCInterface.Long.int MLWorksCInterface.ptr * MLWorksCInterface.Long.int) -> unit = fn
+        val free : MLWorksCInterface.Long.int MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Long.int MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Long.int MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Long.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Long.int MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Long.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Long.int MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure PtrPtr =
+      struct
+        val ! : 'a MLWorksCInterface.ptr MLWorksCInterface.ptr -> 'a MLWorksCInterface.ptr = fn
+        val := : ('a MLWorksCInterface.ptr MLWorksCInterface.ptr * 'a MLWorksCInterface.ptr) -> unit = fn
+      end
+    structure Short =
+      struct
+        eqtype int = int
+        val * : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val + : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val - : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val < : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> bool = fn
+        val <= : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> bool = fn
+        val > : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> bool = fn
+        val >= : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> bool = fn
+        val abs : MLWorksCInterface.Short.int -> MLWorksCInterface.Short.int = fn
+        val compare : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> order = fn
+        val div : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Short.int -> string = fn
+        val fromInt : int -> MLWorksCInterface.Short.int = fn
+        val fromLarge : Int32.int -> MLWorksCInterface.Short.int = fn
+        val fromString : string -> MLWorksCInterface.Short.int option = fn
+        val max : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val maxInt : MLWorksCInterface.Short.int option = SOME _
+        val min : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val minInt : MLWorksCInterface.Short.int option = SOME _
+        val mod : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val precision : int option = SOME 16
+        val quot : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val rem : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> MLWorksCInterface.Short.int = fn
+        val sameSign : (MLWorksCInterface.Short.int * MLWorksCInterface.Short.int) -> bool = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Short.int * 'a) option = fn
+        val sign : MLWorksCInterface.Short.int -> int = fn
+        val toInt : MLWorksCInterface.Short.int -> int = fn
+        val toLarge : MLWorksCInterface.Short.int -> Int32.int = fn
+        val toString : MLWorksCInterface.Short.int -> string = fn
+        val ~ : MLWorksCInterface.Short.int -> MLWorksCInterface.Short.int = fn
+      end
+    structure ShortPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = int
+        val ! : MLWorksCInterface.Short.int MLWorksCInterface.ptr -> MLWorksCInterface.Short.int = fn
+        val := : (MLWorksCInterface.Short.int MLWorksCInterface.ptr * MLWorksCInterface.Short.int) -> unit = fn
+        val free : MLWorksCInterface.Short.int MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Short.int MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Short.int MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Short.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Short.int MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Short.int MLWorksCInterface.ptr * word) -> MLWorksCInterface.Short.int MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Uchar =
+      struct
+        eqtype word = word
+        val * : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val + : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val - : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val < : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> bool = fn
+        val << : (MLWorksCInterface.Uchar.word * word) -> MLWorksCInterface.Uchar.word = fn
+        val <= : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> bool = fn
+        val > : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> bool = fn
+        val >= : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> bool = fn
+        val >> : (MLWorksCInterface.Uchar.word * word) -> MLWorksCInterface.Uchar.word = fn
+        val andb : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val compare : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> order = fn
+        val div : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Uchar.word -> string = fn
+        val fromInt : int -> MLWorksCInterface.Uchar.word = fn
+        val fromLargeInt : Int32.int -> MLWorksCInterface.Uchar.word = fn
+        val fromLargeWord : LargeWord.word -> MLWorksCInterface.Uchar.word = fn
+        val fromString : string -> MLWorksCInterface.Uchar.word option = fn
+        val max : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val min : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val mod : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val notb : MLWorksCInterface.Uchar.word -> MLWorksCInterface.Uchar.word = fn
+        val orb : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Uchar.word * 'a) option = fn
+        val toInt : MLWorksCInterface.Uchar.word -> int = fn
+        val toIntX : MLWorksCInterface.Uchar.word -> int = fn
+        val toLargeInt : MLWorksCInterface.Uchar.word -> Int32.int = fn
+        val toLargeIntX : MLWorksCInterface.Uchar.word -> Int32.int = fn
+        val toLargeWord : MLWorksCInterface.Uchar.word -> LargeWord.word = fn
+        val toLargeWordX : MLWorksCInterface.Uchar.word -> LargeWord.word = fn
+        val toString : MLWorksCInterface.Uchar.word -> string = fn
+        val wordSize : int = 8
+        val xorb : (MLWorksCInterface.Uchar.word * MLWorksCInterface.Uchar.word) -> MLWorksCInterface.Uchar.word = fn
+        val ~>> : (MLWorksCInterface.Uchar.word * word) -> MLWorksCInterface.Uchar.word = fn
+      end
+    structure UcharPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = word
+        val ! : MLWorksCInterface.Uchar.word MLWorksCInterface.ptr -> MLWorksCInterface.Uchar.word = fn
+        val := : (MLWorksCInterface.Uchar.word MLWorksCInterface.ptr * MLWorksCInterface.Uchar.word) -> unit = fn
+        val free : MLWorksCInterface.Uchar.word MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Uchar.word MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Uchar.word MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Uchar.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Uchar.word MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Uchar.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Uchar.word MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Uint =
+      struct
+        eqtype word = word
+        val * : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val + : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val - : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val < : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> bool = fn
+        val << : (MLWorksCInterface.Uint.word * word) -> MLWorksCInterface.Uint.word = fn
+        val <= : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> bool = fn
+        val > : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> bool = fn
+        val >= : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> bool = fn
+        val >> : (MLWorksCInterface.Uint.word * word) -> MLWorksCInterface.Uint.word = fn
+        val andb : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val compare : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> order = fn
+        val div : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Uint.word -> string = fn
+        val fromInt : int -> MLWorksCInterface.Uint.word = fn
+        val fromLargeInt : Int32.int -> MLWorksCInterface.Uint.word = fn
+        val fromLargeWord : LargeWord.word -> MLWorksCInterface.Uint.word = fn
+        val fromString : string -> MLWorksCInterface.Uint.word option = fn
+        val max : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val min : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val mod : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val notb : MLWorksCInterface.Uint.word -> MLWorksCInterface.Uint.word = fn
+        val orb : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Uint.word * 'a) option = fn
+        val toInt : MLWorksCInterface.Uint.word -> int = fn
+        val toIntX : MLWorksCInterface.Uint.word -> int = fn
+        val toLargeInt : MLWorksCInterface.Uint.word -> Int32.int = fn
+        val toLargeIntX : MLWorksCInterface.Uint.word -> Int32.int = fn
+        val toLargeWord : MLWorksCInterface.Uint.word -> LargeWord.word = fn
+        val toLargeWordX : MLWorksCInterface.Uint.word -> LargeWord.word = fn
+        val toString : MLWorksCInterface.Uint.word -> string = fn
+        val wordSize : int = 32
+        val xorb : (MLWorksCInterface.Uint.word * MLWorksCInterface.Uint.word) -> MLWorksCInterface.Uint.word = fn
+        val ~>> : (MLWorksCInterface.Uint.word * word) -> MLWorksCInterface.Uint.word = fn
+      end
+    structure UintPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = word
+        val ! : MLWorksCInterface.Uint.word MLWorksCInterface.ptr -> MLWorksCInterface.Uint.word = fn
+        val := : (MLWorksCInterface.Uint.word MLWorksCInterface.ptr * MLWorksCInterface.Uint.word) -> unit = fn
+        val free : MLWorksCInterface.Uint.word MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Uint.word MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Uint.word MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Uint.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Uint.word MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Uint.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Uint.word MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Ulong =
+      struct
+        eqtype word = word
+        val * : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val + : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val - : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val < : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> bool = fn
+        val << : (MLWorksCInterface.Ulong.word * word) -> MLWorksCInterface.Ulong.word = fn
+        val <= : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> bool = fn
+        val > : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> bool = fn
+        val >= : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> bool = fn
+        val >> : (MLWorksCInterface.Ulong.word * word) -> MLWorksCInterface.Ulong.word = fn
+        val andb : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val compare : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> order = fn
+        val div : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Ulong.word -> string = fn
+        val fromInt : int -> MLWorksCInterface.Ulong.word = fn
+        val fromLargeInt : Int32.int -> MLWorksCInterface.Ulong.word = fn
+        val fromLargeWord : LargeWord.word -> MLWorksCInterface.Ulong.word = fn
+        val fromString : string -> MLWorksCInterface.Ulong.word option = fn
+        val max : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val min : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val mod : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val notb : MLWorksCInterface.Ulong.word -> MLWorksCInterface.Ulong.word = fn
+        val orb : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Ulong.word * 'a) option = fn
+        val toInt : MLWorksCInterface.Ulong.word -> int = fn
+        val toIntX : MLWorksCInterface.Ulong.word -> int = fn
+        val toLargeInt : MLWorksCInterface.Ulong.word -> Int32.int = fn
+        val toLargeIntX : MLWorksCInterface.Ulong.word -> Int32.int = fn
+        val toLargeWord : MLWorksCInterface.Ulong.word -> LargeWord.word = fn
+        val toLargeWordX : MLWorksCInterface.Ulong.word -> LargeWord.word = fn
+        val toString : MLWorksCInterface.Ulong.word -> string = fn
+        val wordSize : int = 32
+        val xorb : (MLWorksCInterface.Ulong.word * MLWorksCInterface.Ulong.word) -> MLWorksCInterface.Ulong.word = fn
+        val ~>> : (MLWorksCInterface.Ulong.word * word) -> MLWorksCInterface.Ulong.word = fn
+      end
+    structure UlongPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = word
+        val ! : MLWorksCInterface.Ulong.word MLWorksCInterface.ptr -> MLWorksCInterface.Ulong.word = fn
+        val := : (MLWorksCInterface.Ulong.word MLWorksCInterface.ptr * MLWorksCInterface.Ulong.word) -> unit = fn
+        val free : MLWorksCInterface.Ulong.word MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Ulong.word MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Ulong.word MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Ulong.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Ulong.word MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Ulong.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Ulong.word MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    structure Ushort =
+      struct
+        eqtype word = word
+        val * : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val + : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val - : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val < : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> bool = fn
+        val << : (MLWorksCInterface.Ushort.word * word) -> MLWorksCInterface.Ushort.word = fn
+        val <= : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> bool = fn
+        val > : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> bool = fn
+        val >= : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> bool = fn
+        val >> : (MLWorksCInterface.Ushort.word * word) -> MLWorksCInterface.Ushort.word = fn
+        val andb : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val compare : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> order = fn
+        val div : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val fmt : StringCvt.radix -> MLWorksCInterface.Ushort.word -> string = fn
+        val fromInt : int -> MLWorksCInterface.Ushort.word = fn
+        val fromLargeInt : Int32.int -> MLWorksCInterface.Ushort.word = fn
+        val fromLargeWord : LargeWord.word -> MLWorksCInterface.Ushort.word = fn
+        val fromString : string -> MLWorksCInterface.Ushort.word option = fn
+        val max : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val min : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val mod : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val notb : MLWorksCInterface.Ushort.word -> MLWorksCInterface.Ushort.word = fn
+        val orb : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (MLWorksCInterface.Ushort.word * 'a) option = fn
+        val toInt : MLWorksCInterface.Ushort.word -> int = fn
+        val toIntX : MLWorksCInterface.Ushort.word -> int = fn
+        val toLargeInt : MLWorksCInterface.Ushort.word -> Int32.int = fn
+        val toLargeIntX : MLWorksCInterface.Ushort.word -> Int32.int = fn
+        val toLargeWord : MLWorksCInterface.Ushort.word -> LargeWord.word = fn
+        val toLargeWordX : MLWorksCInterface.Ushort.word -> LargeWord.word = fn
+        val toString : MLWorksCInterface.Ushort.word -> string = fn
+        val wordSize : int = 16
+        val xorb : (MLWorksCInterface.Ushort.word * MLWorksCInterface.Ushort.word) -> MLWorksCInterface.Ushort.word = fn
+        val ~>> : (MLWorksCInterface.Ushort.word * word) -> MLWorksCInterface.Ushort.word = fn
+      end
+    structure UshortPtr =
+      struct
+        eqtype 'a ptr = 'a ptr
+        eqtype value = word
+        val ! : MLWorksCInterface.Ushort.word MLWorksCInterface.ptr -> MLWorksCInterface.Ushort.word = fn
+        val := : (MLWorksCInterface.Ushort.word MLWorksCInterface.ptr * MLWorksCInterface.Ushort.word) -> unit = fn
+        val free : MLWorksCInterface.Ushort.word MLWorksCInterface.ptr -> unit = fn
+        val make : unit -> MLWorksCInterface.Ushort.word MLWorksCInterface.ptr = fn
+        val makeArray : int -> MLWorksCInterface.Ushort.word MLWorksCInterface.ptr = fn
+        val next : (MLWorksCInterface.Ushort.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Ushort.word MLWorksCInterface.ptr = fn
+        val prev : (MLWorksCInterface.Ushort.word MLWorksCInterface.ptr * word) -> MLWorksCInterface.Ushort.word MLWorksCInterface.ptr = fn
+        val size : word = 0w4
+      end
+    eqtype 'a ptr = 'a ptr
+    type syserror = syserror
+    eqtype void = void
+    exception SysErr of (string * syserror option)
+    val deRef16 : MLWorksCInterface.void MLWorksCInterface.ptr -> Word16.word = fn
+    val deRef32 : MLWorksCInterface.void MLWorksCInterface.ptr -> LargeWord.word = fn
+    val deRef8 : MLWorksCInterface.void MLWorksCInterface.ptr -> BinIO.elem = fn
+    val deRefReal : MLWorksCInterface.void MLWorksCInterface.ptr -> real = fn
+    val free : MLWorksCInterface.void MLWorksCInterface.ptr -> unit = fn
+    val fromSysWord : LargeWord.word -> MLWorksCInterface.void MLWorksCInterface.ptr = fn
+    val fromVoidPtr : MLWorksCInterface.void MLWorksCInterface.ptr -> 'a MLWorksCInterface.ptr = fn
+    val malloc : word -> MLWorksCInterface.void MLWorksCInterface.ptr = fn
+    val memcpy : {dest: MLWorksCInterface.void MLWorksCInterface.ptr, size: word, source: MLWorksCInterface.void MLWorksCInterface.ptr} -> unit = fn
+    val next : (MLWorksCInterface.void MLWorksCInterface.ptr * word) -> MLWorksCInterface.void MLWorksCInterface.ptr = fn
+    val null : 'a MLWorksCInterface.ptr = _
+    val prev : (MLWorksCInterface.void MLWorksCInterface.ptr * word) -> MLWorksCInterface.void MLWorksCInterface.ptr = fn
+    val ptrSize : word = 0w4
+    val toSysWord : MLWorksCInterface.void MLWorksCInterface.ptr -> LargeWord.word = fn
+    val toVoidPtr : 'a MLWorksCInterface.ptr -> MLWorksCInterface.void MLWorksCInterface.ptr = fn
+    val update16 : (MLWorksCInterface.void MLWorksCInterface.ptr * Word16.word) -> unit = fn
+    val update32 : (MLWorksCInterface.void MLWorksCInterface.ptr * LargeWord.word) -> unit = fn
+    val update8 : (MLWorksCInterface.void MLWorksCInterface.ptr * BinIO.elem) -> unit = fn
+    val updateReal : (MLWorksCInterface.void MLWorksCInterface.ptr * real) -> unit = fn
+  end
+@
+
+
+1.1
+log
+@new unit
+[Bug #20035]
+@
+text
+@d2 596
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@

@@ -1,0 +1,737 @@
+head	1.22;
+access;
+symbols
+	Final_version_of_old_runtime:1.22
+	ML_revised_beta_release_25/05/94:1.22
+	ML_final_beta_release_02/03/94:1.22
+	mlworks-28-01-1994:1.22
+	Release:1.19
+	mlworks-beta-01-09-1993:1.19
+	MLWorks-1-0-3-21/12/1992:1.17
+	MLWorks-1-0-2-15/12/1992:1.17
+	MLWorks-1-0-1-04/12/1992:1.17
+	checkpoint_17_08_92:1.17;
+locks; strict;
+comment	@ *  @;
+
+
+1.22
+date	94.01.10.13.41.58;	author matthew;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.12.22.11.38.04;	author jont;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.11.23.12.03.49;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.08.26.16.04.07;	author daveb;	state Exp;
+branches
+	1.19.1.1;
+next	1.18;
+
+1.18
+date	93.03.12.13.30.04;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.08.07.08.27.30;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.07.29.14.22.55;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.07.27.13.00.26;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.07.15.17.24.27;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.07.14.08.16.39;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.07.02.09.12.43;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.01.13.47.48;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.04.13.16.32.31;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.03.20.14.42.14;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.03.17.17.24.55;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.12.23.11.33.55;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.12.17.16.49.08;	author nickh;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.18.14.56.30;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.17.16.10.47;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.16.13.32.49;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.05.15.15.29.51;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.05.14.11.08.54;	author jont;	state Exp;
+branches;
+next	;
+
+1.19.1.1
+date	93.08.26.16.04.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The interface of the single module loader to the run time system
+@
+
+
+1.22
+log
+@> Added function internal_load_link for use by image builder and by the ml mo loader.
+@
+text
+@/*  ==== MODULE LOADER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The loader reads a file in ML module format and executes the module
+ *  setup procedure with the parameters specified therein.  This yields a
+ *  module structure: the result of the compilation unit represented by the
+ *  module.
+ *
+ *  The loader also supplies functions for the `loading' of compiler results
+ *  already on the heap, for use by the interpreter.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: loader.h,v $
+ *  Revision 1.21  1993/12/22  11:38:04  jont
+ *  Added delivery option which discards code vector names
+ *
+ *  Revision 1.20  1993/11/23  12:03:49  jont
+ *  Changed type of load_module to allow extra parameter to indicate whether
+ *  to check for inconsistent sets of mos
+ *
+ *  Revision 1.19  1993/08/26  16:04:07  daveb
+ *  load_module sets the module name from the consistency information in the
+ *  file.
+ *
+ *  Revision 1.18  1993/03/12  13:30:04  richard
+ *  Removed fatal errors and replaced them with error codes.
+ *
+ *  Revision 1.17  1992/08/07  08:27:30  richard
+ *  The loader keeps track of code vectors (again) but an observer
+ *  function can be declared from any profiler.  This gives more
+ *  flexibility for use by the memory auditer.
+ *
+ *  Revision 1.16  1992/07/29  14:22:55  richard
+ *  The profiler, rather than the loader, maintains a list of code vectors.
+ *
+ *  Revision 1.15  1992/07/27  13:00:26  richard
+ *  Added declare_code().
+ *
+ *  Revision 1.14  1992/07/15  17:24:27  richard
+ *  Added load_wordset().
+ *
+ *  Revision 1.13  1992/07/14  08:16:39  richard
+ *  Added load_code_vectors, and removed profile parameter from load_module().
+ *
+ *  Revision 1.12  1992/07/02  09:12:43  richard
+ *  Returns ERROR to indicate error rather than IMPOSSIBLE.
+ *
+ *  Revision 1.11  1992/07/01  13:47:48  richard
+ *  Changed module table types.  See modules.h.
+ *
+ *  Revision 1.10  1992/04/13  16:32:31  clive
+ *  First version of the profiler
+ *
+ *  Revision 1.9  1992/03/20  14:42:14  richard
+ *  Added new error: ELOADVERSION.
+ *
+ *  Revision 1.8  1992/03/17  17:24:55  richard
+ *  Changed error behaviour and parameterised the module table.
+ *
+ *  Revision 1.7  1991/12/23  11:33:55  richard
+ *  Added a missing #include.
+ *
+ *  Revision 1.6  91/12/17  16:49:08  nickh
+ *  add in_ML flag.
+ *  
+ *  Revision 1.5  91/10/18  14:56:30  davidt
+ *  Made loader_error now take an extra argument.
+ *  
+ *  Revision 1.4  91/10/17  16:10:47  davidt
+ *  Put in loader_error macro. load_module now takes different arguments,
+ *  partly to deal with the slightly different behaviour required
+ *  when we load the last module.
+ *  
+ *  Revision 1.3  91/10/16  13:32:49  davidt
+ *  I intend to change the loader so that it returns the pointer
+ *  to the module and the main program updates the table of modules
+ *  (instead of load_module side-effecting the table of modules).
+ *  
+ *  Revision 1.2  91/05/15  15:29:51  jont
+ *  Revised interface for second version of load format
+ *  
+ *  Revision 1.1  91/05/14  11:08:54  jont
+ *  Initial revision
+ */
+
+
+#ifndef loader_h
+#define loader_h
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "mltypes.h"
+#include "modules.h"
+
+
+
+/*  === INITIALISE LOADER ===
+ *
+ *  This should be called once before any other function in this module.
+ */
+
+extern void load_init(void);
+
+
+
+/*  == Loaded code vector list ==
+ *
+ *  The loader maintains a weak list of all code vectors it has loaded.
+ *  (See global.h for functions which manipulate such lists.)
+ *
+ *  A profiler of some sort may need to observe the appearance of new code
+ *  vectors in order to initialise profiling tables.  The function pointer
+ *  loader_code_observer is called on each new code vector if not NULL.
+ *
+ *  On image the profiler slots of all code vectors are intialised to
+ *  PROFILE_DISABLE.
+ */
+
+extern mlval loader_code;
+extern void (*loader_code_observer)(mlval code);
+
+
+
+/*  === LOAD AN ML MODULE ===
+ *
+ *  See header comment for description.  The paramters are the filename of
+ *  the module file to read, a table of modules which might be used as
+ *  external parameters to the module.  The function reads the contents of
+ *  the module file and constructs the top-level function of the module on
+ *  the heap.  The result is the closure for this function which, when
+ *  applied to itself, yields the module result structure.
+ *
+ *  In the event of an error `errno' is set to one of the enum values below
+ *  and ERROR is returned.
+ *
+ *  In the event of an ELOADEXTERNAL error, `load_external' is assigned the
+ *  name of the module referenced.  This variable should not be changed
+ *  otherwise.
+ */
+
+enum /* errno */
+{
+  ELOADREAD = 1,	/* An error occurred reading the file. */
+  ELOADOPEN,		/* Unable to open the file specified. */
+  ELOADALLOC,		/* Unable to allocate memory at some point. */
+  ELOADVERSION,		/* The module version is incompatable with the loader. */
+  ELOADFORMAT,		/* The module file is not in the proper format. */
+  ELOADEXTERNAL		/* A module referenced wasn't in the table. */
+};
+
+extern mlval load_external;
+
+/* mod_name is set by this function. */
+extern mlval load_module(const char *filename, mlval *mod_name,
+			 mlval modules, int verbose, int dont_check_cons, int delivery);
+
+
+extern mlval internal_load_link (const char *filename,
+				 mlval *mod_name,
+				 int verbose, 
+				 int dont_check_cons,
+				 int delivery);
+
+/*  === LOAD A COMPILED WORD SET ===
+ *
+ *  Part of the result of a compilation is a wordset (see MachTypes) which
+ *  represents a set of functions to be loaded into one code vector.  This
+ *  function takes a wordset on the heap and `loads it' into a code vector.
+ *
+ *  The result is a list of pairs of positions and code pointers, or ERROR
+ *  if an error occurs, in which case errno is set.
+ */
+
+enum /* errno */
+{
+  ELOADNEWER = 1,	/* code is in newer format than expected */
+  ELOADOLDER,		/* code is in older format than expected */
+  ELOADALIGN,		/* a code string is of unaligned length */
+  ELOADEMPTY		/* the wordset was empty */
+};
+
+extern mlval load_wordset(mlval wordset);
+
+
+#endif
+@
+
+
+1.21
+log
+@Added delivery option which discards code vector names
+@
+text
+@d18 3
+d163 5
+@
+
+
+1.20
+log
+@Changed type of load_module to allow extra parameter to indicate whether
+to check for inconsistent sets of mos
+@
+text
+@d18 4
+d157 1
+a157 1
+			 mlval modules, int verbose, int dont_check_cons);
+@
+
+
+1.19
+log
+@load_module sets the module name from the consistency information in the
+file.
+@
+text
+@d18 4
+d153 1
+a153 1
+			 mlval modules, int verbose);
+@
+
+
+1.19.1.1
+log
+@Fork for bug fixing
+@
+text
+@a17 4
+ *  Revision 1.19  1993/08/26  16:04:07  daveb
+ *  load_module sets the module name from the consistency information in the
+ *  file.
+ *
+@
+
+
+1.18
+log
+@Removed fatal errors and replaced them with error codes.
+@
+text
+@d18 3
+d147 3
+a149 1
+extern mlval load_module(const char *filename, mlval modules);
+@
+
+
+1.17
+log
+@The loader keeps track of code vectors (again) but an observer
+function can be declared from any profiler.  This gives more
+flexibility for use by the memory auditer.
+@
+text
+@d18 5
+d132 1
+a132 1
+enum
+d154 2
+a155 1
+ *  The result is a list of pairs of positions and code pointers.
+d157 8
+@
+
+
+1.16
+log
+@The profiler, rather than the loader, maintains a list of code vectors.
+@
+text
+@d18 3
+d82 1
+d89 18
+@
+
+
+1.15
+log
+@Added declare_code().
+@
+text
+@d18 3
+a84 20
+
+
+/*  == Code vector list ==
+ *
+ *  The loader maintains a list of weak arrays containing all code vectors
+ *  loaded into the runtime system.  This value is therefore an ML list of
+ *  weak arrays.
+ */
+
+extern mlval load_code_vectors;
+
+
+/*  == Declare a code vector to the loader ==
+ *
+ *  The loader needs to keep track of all the code vectors on the heap.  If
+ *  they are generated elsewhere they should be declared to the loader using
+ *  this function.
+ */
+
+extern void declare_code(mlval code);
+@
+
+
+1.14
+log
+@Added load_wordset().
+@
+text
+@d18 3
+d92 11
+@
+
+
+1.13
+log
+@Added load_code_vectors, and removed profile parameter from load_module().
+@
+text
+@d12 3
+d18 3
+a70 1
+#include "storeman.h"	/* for in_ML */
+d95 4
+a98 3
+ *  external parameters to the module.  The result is the value returned by
+ *  the module.  The module table supplied is not declared as a root while
+ *  the setup procedure is called.
+d120 14
+a133 1
+extern mlval load_module(const char *filename, mlval table);
+@
+
+
+1.12
+log
+@Returns ERROR to indicate error rather than IMPOSSIBLE.
+@
+text
+@d15 3
+d65 1
+d73 9
+a81 1
+void load_init(void);
+d83 1
+d90 3
+a92 4
+ *  external parameters to the module, and a flag indicating whether
+ *  profiling is turned on when the module is called.  The result is the
+ *  value returned by the module.  The module table supplied is not declared
+ *  as a root while the setup procedure is called.
+d114 1
+a114 1
+extern mlval load_module(const char *filename, mlval table, int profile);
+@
+
+
+1.11
+log
+@Changed module table types.  See modules.h.
+@
+text
+@d15 3
+d83 1
+a83 1
+ *  and IMPOSSIBLE is returned.
+@
+
+
+1.10
+log
+@First version of the profiler
+@
+text
+@d15 3
+d74 7
+a80 4
+ *  external parameters to the module, and a flag indicating whether the
+ *  module table can be discarded once the module is loaded.  The result is
+ *  the module structure.  In the event of an error `errno' is set to one of
+ *  the enum values below and IMPOSSIBLE is returned.
+d99 1
+a99 1
+extern mlval load_module(const char *filename, ModuleTable table, int discard,int profile);
+@
+
+
+1.9
+log
+@Added new error: ELOADVERSION.
+@
+text
+@d15 3
+d93 1
+a93 1
+extern mlval load_module(const char *filename, ModuleTable table, int discard);
+@
+
+
+1.8
+log
+@Changed error behaviour and parameterised the module table.
+@
+text
+@d15 3
+d83 1
+@
+
+
+1.7
+log
+@Added a missing #include.
+@
+text
+@d1 38
+a38 27
+/*
+ * loader.h
+ * Load an individual module into the system
+ * $Log:	loader.h,v $
+ * Revision 1.6  91/12/17  16:49:08  nickh
+ * add in_ML flag.
+ * 
+ * Revision 1.5  91/10/18  14:56:30  davidt
+ * Made loader_error now take an extra argument.
+ * 
+ * Revision 1.4  91/10/17  16:10:47  davidt
+ * Put in loader_error macro. load_module now takes different arguments,
+ * partly to deal with the slightly different behaviour required
+ * when we load the last module.
+ * 
+ * Revision 1.3  91/10/16  13:32:49  davidt
+ * I intend to change the loader so that it returns the pointer
+ * to the module and the main program updates the table of modules
+ * (instead of load_module side-effecting the table of modules).
+ * 
+ * Revision 1.2  91/05/15  15:29:51  jont
+ * Revised interface for second version of load format
+ * 
+ * Revision 1.1  91/05/14  11:08:54  jont
+ * Initial revision
+ * 
+ * Copyright (c) 1991 Harlequin Ltd.
+d41 1
+a41 1
+/* Avoid multiple inclusion */
+a47 2
+/* For efficiency */
+#ifndef mltypes_h
+d49 1
+a49 1
+#endif
+a50 2
+#define INTERMEDIATE	0
+#define FINAL		1
+d52 4
+a55 2
+/* in_ML is used by the garbage collector to tell whether the ML stack
+is live. */
+d57 1
+a57 1
+int in_ML;
+a58 5
+/*
+ * Load a ML module from a file where final == FINAL if this
+ * is the last module to be loaded (so that we can get rid of
+ * any pointers the runtime system has to loaded modules).
+ */
+a59 1
+extern mlval load_module(char *module_name, int final);
+d61 12
+a72 3
+/*
+ * Generate general loader error message (used a define to allow
+ * any type of second argument). Terminates whole program.
+d75 13
+a87 7
+#define loader_error(str,x,y) \
+{ \
+  fprintf (stderr, "[ML loader : "); \
+  fprintf (stderr, str, (x), (y)); \
+  fprintf (stderr, "]\n"); \
+  exit (-1); \
+}
+@
+
+
+1.6
+log
+@add in_ML flag.
+@
+text
+@d5 3
+d35 1
+@
+
+
+1.5
+log
+@Made loader_error now take an extra argument.
+@
+text
+@d5 3
+d40 5
+@
+
+
+1.4
+log
+@Put in loader_error macro. load_module now takes different arguments,
+partly to deal with the slightly different behaviour required
+when we load the last module.
+@
+text
+@d5 5
+d51 1
+a51 1
+#define loader_error(str,arg) \
+d54 1
+a54 1
+  fprintf (stderr, str, arg); \
+@
+
+
+1.3
+log
+@I intend to change the loader so that it returns the pointer
+to the module and the main program updates the table of modules
+(instead of load_module side-effecting the table of modules).
+@
+text
+@d5 5
+d26 2
+a27 2
+#ifndef values_h
+#include "values.h"
+d30 23
+a52 1
+extern tuple_pointer load_module(char *module_name, FILE *file);
+@
+
+
+1.2
+log
+@Revised interface for second version of load format
+@
+text
+@d5 3
+d11 1
+d14 2
+a15 1
+#ifndef loader_h /* Avoid multiple inclusion */
+d18 4
+a21 1
+#ifndef values_h /* For efficiency */
+a23 1
+#include <stdio.h>
+d25 1
+a25 5
+extern int load_module(char *, FILE *, int32);
+/*
+ * The load a module function
+ * Returns 1 if it fails, an error will have been printed
+ */
+a27 1
+/* End loader.h */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d18 1
+a18 1
+extern tuple_pointer load_module(char *, FILE *, int32 *);
+d21 1
+a21 1
+ * Returns NULL if it fails, an error will have been printed
+@

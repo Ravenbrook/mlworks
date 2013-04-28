@@ -1,0 +1,329 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.3
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_dt_wizard:1.1.2
+	MLWorks_workspace_97:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.09.11.16.04.19;	author brucem;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1;
+next	;
+
+1.1.1.1
+date	97.09.11.20.49.44;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	97.09.12.09.42.32;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	99.04.01.17.53.28;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Grammar for extracting datatypes from files.
+@
+
+
+1.1
+log
+@new unit
+Grammar for extracting datatypes from files.
+@
+text
+@require "abs_syntax";
+require "lex_parse_interface";
+require "$.basis.__int";
+
+  (*
+   *
+   * MLWorks Datatype Wizard
+   * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+   *
+   * $Log$
+   *
+   *)
+
+  (*
+     Parser definition file for extracting datatypes from a file.
+
+     Will not deal with comments.
+
+     Will try to extract all datatype declarations from any file
+    (even from plain text files if the end of the declaration is
+    detectable).
+
+   *)
+
+%%
+
+%name DT
+
+%header (functor DTLrValsFun 
+           (structure Token : TOKEN
+                  and AbsSyntax : ABS_SYNTAX
+                  and LexParseInterface : LEX_PARSE_INTERFACE)
+        )
+
+%pure
+
+%term
+   ID of string
+ | TYVAR_ID of string
+ | NUMERIC_LAB of string
+ | LONGID of string
+ | KW_ABSTYPE | KW_AND | KW_ANDALSO | KW_AS | KW_CASE | KW_DATATYPE
+ | KW_DO | KW_ELSE | KW_END | KW_EXCEPTION | KW_FN | KW_FUN | KW_HANDLE
+ | KW_IF | KW_IN | KW_INFIX | KW_INFIXR | KW_LET | KW_LOCAL | KW_NONFIX
+ | KW_OF | KW_OP | KW_OPEN | KW_ORELSE | KW_RAISE | KW_REC | KW_THEN
+ | KW_TYPE | KW_VAL | KW_WITH | KW_WITHTYPE | KW_WHILE
+ | BRAC | KET | S_BRAC | S_KET | C_BRAC | C_KET
+ | COMMA | COLON | SEMICOLON | ELIPSIS | UNDERBAR | BAR | EQUALS
+ | THICK_ARROW | THIN_ARROW | HASH | DOT | ASTERIX
+ | END
+ | BOGUS
+ | All_rights_reserved | The_Harlequin_Group_Limited | Copyright_1997
+
+%nonterm
+   FILE of AbsSyntax.datbind list list
+ | DECS of AbsSyntax.datbind list list
+ | DATBIND_LIST of AbsSyntax.datbind list
+ | DATBIND of AbsSyntax.datbind
+ | CONBIND of {vid : string, tyOpt : AbsSyntax.ty option} list
+ | OF_TY_OPT of AbsSyntax.ty option
+ | TY of AbsSyntax.ty
+ | TUPLE_TYPE of AbsSyntax.ty
+ | INCOMPLETE_TUPLE_TYPE of AbsSyntax.ty list
+ | UNARY_TY of AbsSyntax.ty
+ | LONGTYCON of string
+ | TYSEQ of AbsSyntax.ty list
+ | TYROW of {lab : string, ty : AbsSyntax.ty} list
+ | LABEL of string
+ | TYVARSEQ of string list
+ | TYVARLIST of string list
+ | JUNK | JUNK_BODY | JUNK_START_TOK | JUNK_BODY_TOK
+
+%eop END
+%noshift END
+
+%pos LexParseInterface.pos
+
+%verbose
+
+%start FILE
+
+%%
+
+FILE:
+   JUNK_BODY DECS
+     ( rev DECS )
+
+DECS:
+   DATBIND_LIST JUNK
+     ( [rev DATBIND_LIST] )
+ | DECS DATBIND_LIST JUNK
+     ( (rev DATBIND_LIST)::DECS )
+
+DATBIND_LIST:
+   KW_DATATYPE DATBIND
+     ( [DATBIND] )
+ | DATBIND_LIST KW_AND DATBIND
+     ( DATBIND :: DATBIND_LIST )
+
+DATBIND:
+   TYVARSEQ ID EQUALS CONBIND
+     ( AbsSyntax.DATBIND
+         {tyvarseq = TYVARSEQ, tycon = ID, conbind = rev CONBIND} )
+
+CONBIND:
+   ID OF_TY_OPT
+     ( [{vid = ID, tyOpt = OF_TY_OPT}] )
+ | CONBIND BAR ID OF_TY_OPT
+     ( {vid = ID, tyOpt = OF_TY_OPT} :: CONBIND )
+
+OF_TY_OPT:
+   (* Empty *)
+      ( NONE )
+ | KW_OF TY
+      ( SOME TY )
+
+TY:
+   TUPLE_TYPE
+     ( TUPLE_TYPE )
+ | TUPLE_TYPE THIN_ARROW TY
+     ( AbsSyntax.FUN(TUPLE_TYPE, TY) )
+
+TUPLE_TYPE:
+   INCOMPLETE_TUPLE_TYPE
+     ( let
+         fun cvtTuple (i, []) = []
+           | cvtTuple (i, (h::t)) =
+              {lab = Int.toString i, ty = h}::(cvtTuple (i + 1, t))
+       in
+         case INCOMPLETE_TUPLE_TYPE of
+           [ty] => ty
+         | l => AbsSyntax.TYROW(cvtTuple (1, rev l))
+       end )
+
+INCOMPLETE_TUPLE_TYPE:
+   UNARY_TY
+     ( [UNARY_TY] )
+ | INCOMPLETE_TUPLE_TYPE ASTERIX UNARY_TY
+     ( UNARY_TY :: INCOMPLETE_TUPLE_TYPE )
+
+UNARY_TY:
+   BRAC TY KET
+     ( TY )
+ | LONGTYCON
+     ( AbsSyntax.TYSEQ([], LONGTYCON) )
+ | UNARY_TY LONGTYCON
+     ( AbsSyntax.TYSEQ([ UNARY_TY ], LONGTYCON) )
+ | BRAC TYSEQ KET LONGTYCON
+     ( AbsSyntax.TYSEQ( rev TYSEQ, LONGTYCON) )
+ | C_BRAC TYROW C_KET
+     ( AbsSyntax.TYROW(rev TYROW) )
+ | TYVAR_ID
+     ( AbsSyntax.TYVAR TYVAR_ID )
+
+LONGTYCON:
+   ID
+     ( ID )
+ | LONGID
+     ( LONGID )
+
+TYSEQ:
+   TY COMMA TY
+     ( [ TY2, TY1 ] )
+ | TYSEQ COMMA TY
+     ( TY :: TYSEQ )
+
+TYROW:
+   LABEL COLON TY
+     ( [{lab = LABEL, ty = TY}] )
+ | TYROW COMMA LABEL COLON TY
+     ( {lab = LABEL, ty = TY} :: TYROW )
+
+LABEL:
+   ID
+     ( ID )
+ | NUMERIC_LAB
+     ( NUMERIC_LAB )
+
+TYVARSEQ:
+   (* Empty *)
+     ( [] )
+ | TYVAR_ID
+     ( [TYVAR_ID] )
+ | BRAC TYVARLIST KET
+     ( rev TYVARLIST )
+
+TYVARLIST:
+   TYVAR_ID
+     ( [TYVAR_ID] )
+ | TYVARLIST COMMA TYVAR_ID
+     ( TYVAR_ID :: TYVARLIST )
+
+JUNK:
+   (* Empty *)
+     ( )
+ | JUNK_START_TOK JUNK_BODY
+     ( )
+
+JUNK_BODY:
+   (* Empty *)
+     ( )
+ | JUNK_BODY JUNK_BODY_TOK
+     ( )
+ | JUNK_BODY JUNK_START_TOK
+     ( )
+
+JUNK_START_TOK:
+   KW_ABSTYPE () | KW_ANDALSO () | KW_AS () | KW_CASE ()
+ | KW_DO () | KW_ELSE () | KW_FN ()
+ | KW_FUN ()
+ | KW_END () | KW_EXCEPTION ()
+ | KW_HANDLE ()
+ | KW_IF () | KW_IN () | KW_INFIX () | KW_INFIXR () | KW_LET ()
+ | KW_LOCAL () | KW_NONFIX ()
+ | KW_OP () | KW_OPEN () | KW_ORELSE () | KW_RAISE ()
+ | KW_REC () | KW_THEN ()
+ | KW_TYPE () | KW_VAL () | KW_WITH () | KW_WITHTYPE () | KW_WHILE ()
+ | SEMICOLON ()
+ | BOGUS ()
+
+JUNK_BODY_TOK:
+   ID () | TYVAR_ID () | NUMERIC_LAB () | LONGID ()
+ | KW_AND () | KW_OF ()
+ | BRAC () | KET () | S_BRAC () | S_KET () | C_BRAC () | C_KET ()
+ | COMMA () | COLON () | ELIPSIS () | UNDERBAR ()
+ | BAR () | EQUALS ()
+ | THICK_ARROW () | THIN_ARROW () | HASH () | DOT () | ASTERIX ()
+@
+
+
+1.1.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d10 1
+a10 5
+   * $Log: dt.grm,v $
+# Revision 1.1  1997/09/11  16:04:19  brucem
+# new unit
+# Grammar for extracting datatypes from files.
+#
+@
+
+
+1.1.2.1
+log
+@branched from *NoSuchBranch* for label MLWorks_dt_wizard
+@
+text
+@d10 1
+a10 5
+   * $Log: dt.grm,v $
+# Revision 1.1  1997/09/11  16:04:19  brucem
+# new unit
+# Grammar for extracting datatypes from files.
+#
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d10 1
+a10 5
+   * $Log: dt.grm,v $
+# Revision 1.1  1997/09/11  16:04:19  brucem
+# new unit
+# Grammar for extracting datatypes from files.
+#
+@

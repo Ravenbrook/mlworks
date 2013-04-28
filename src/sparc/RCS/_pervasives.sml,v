@@ -1,0 +1,924 @@
+head	1.2;
+access;
+symbols
+	ML_beta_release_12/08/94:1.2
+	ML_beta_release_03/08/94:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.1;
+locks; strict;
+
+
+1.2
+date	94.02.11.15.57.55;	author nickh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.01.17.16.58.32;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@Moved from main/_pervasives.sml.
+@
+
+
+1.2
+log
+@y
+Fix handling of trapping operations.
+@
+text
+@(* _pervasives.sml the functor *)
+(*
+$Log: _pervasives.sml,v $
+Revision 1.1  1994/01/17  16:58:32  daveb
+Initial revision
+
+Revision 1.42  1993/07/20  12:33:35  jont
+Added unsafeintplus for generating large integers
+
+Revision 1.41  1993/07/07  16:30:02  daveb
+Removed EX*VAL values, since we no longer have exception environments.
+
+Revision 1.40  1993/05/18  17:00:55  jont
+Removed integer parameter
+
+Revision 1.39  1993/03/23  12:57:48  jont
+Added vector primitives
+
+Revision 1.38  1993/03/05  11:49:32  jont
+Added builtin string relationals
+
+Revision 1.37  1992/10/02  16:24:25  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.36  1992/09/24  12:11:37  jont
+Removed some redundant items from the signature
+
+Revision 1.35  1992/08/21  14:44:43  richard
+Added bytearray and unsafe update primitives.
+NOTE: Bytearray stuff should raise Range exception.
+
+Revision 1.34  1992/08/20  12:44:24  richard
+Changed reference to rts/__builtin_library to pervasive directory.
+
+Revision 1.33  1992/08/19  12:14:23  richard
+Added UNSAFE_UPDATE and UNSAFE_SUB.
+
+Revision 1.32  1992/08/17  13:34:43  jont
+Added inline ordof
+
+Revision 1.31  1992/08/07  16:16:02  davidt
+String structure is now pervasive.
+
+Revision 1.30  1992/06/19  15:48:58  jont
+Added ML_REQUIRE builtin for interpreter to get builtin library
+
+Revision 1.29  1992/06/18  16:44:53  jont
+Added new builtin ML_OFFSET for computing pointers into middles of
+letrec code vectors
+
+Revision 1.28  1992/06/15  17:38:15  jont
+Added various loading functions for interpreter, and tidied up
+
+Revision 1.27  1992/06/15  11:18:48  clive
+Added extra pervasive in is_fun
+
+Revision 1.26  1992/06/12  19:23:24  jont
+Added ident function to alloow type casting required by interpreter
+
+Revision 1.25  1992/05/21  19:14:56  jont
+Changed arithmetic_rshift to arshift to agree with builtin library
+
+Revision 1.24  1992/05/20  10:29:13  clive
+Added arithmetic right shift operator
+
+Revision 1.23  1992/05/18  14:25:24  clive
+Tried to neaten
+
+Revision 1.22  1992/05/13  10:49:11  clive
+Added the Bits structure
+
+Revision 1.21  1992/03/21  14:02:02  jont
+Changed makestring for Integer.makestring
+
+Revision 1.20  1992/03/03  11:46:49  richard
+Improved the method of encoding and decoding pervasives to integers.
+Updated documentation which was not corrected by other programmers.
+
+Revision 1.19  1992/03/02  17:21:24  richard
+Added EQFUN pervasive and made EQ refer to it.
+
+Revision 1.18  1992/02/19  16:59:12  clive
+Incorrectly used exsize instead of exsizeval in implicit_references
+
+Revision 1.17  1992/02/12  12:02:58  clive
+New pervasive library code
+
+Revision 1.16  1992/01/31  11:33:07  clive
+Array problems - the structure was missing
+
+Revision 1.15  1992/01/23  11:02:49  jont
+Fixed inexhaustive/redundant match problem
+
+Revision 1.14  1992/01/23  09:28:47  clive
+Added the EXSUBSCRIPTVAL and EXSIZEVAL
+
+Revision 1.13  1992/01/16  09:33:45  clive
+Added arrays to the initial basis
+
+Revision 1.12  1992/01/10  11:47:58  richard
+Added a SUBSTRING pervasive as a temporary measure so that the same code
+can be compiled under under both New Jersey and MLWorks.
+
+Revision 1.11  1991/12/20  11:49:28  richard
+Changed the implicit references to exception values rather than
+exception names.  See corresponding change in _mir_cg.
+
+Revision 1.10  91/12/18  15:11:37  richard
+ Separated exception values from exception names.
+
+Revision 1.9  91/12/10  13:57:58  richard
+Added the EQ (equal) and NE (not equal) pervasives to the
+pervasive library.
+
+Revision 1.8  91/11/28  17:07:08  richard
+Reworked those parts of the module concerned with the pervasive library.
+This module can now provide the field numbers within the library of the
+pervasives directly.  Also implemented an ordering on pervasives and
+removed the MAKE_NEW_UNIQUE pervasive.
+
+Revision 1.7  91/11/18  15:25:03  richard
+Changed the library name of mod to modulo so that it doesn't
+clash with the pervasive name when compiling.  This makes it
+easier to define.
+
+Revision 1.6  91/11/15  14:13:23  richard
+Added library_name to map pervasives on to their names in the library
+module.
+
+Revision 1.5  91/11/14  16:51:53  jont
+Added is_fun to determine if pervasives are functions, and hence can
+be eta_abstracted during compilation.
+
+Revision 1.4  91/11/14  14:06:54  richard
+Added CALL_C and SYSTEM pervasives.
+
+Revision 1.3  91/10/14  16:15:39  jont
+Added CALL_C
+
+Revision 1.2  91/09/16  16:57:54  davida
+Corrected spelling of UNIQUE (!)
+
+Revision 1.2  91/09/16  16:34:50  davida
+Corrected spelling of UNIQUE (!)
+
+Revision 1.1  91/08/23  10:57:13  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+
+require "../utils/crash";
+require "../utils/lists";
+require "../utils/newmap";
+require "../utils/diagnostic";
+require "../basics/ident";
+require "../main/pervasives";
+
+
+functor Pervasives (
+  structure Lists      : LISTS
+  structure Map	       : NEWMAP
+  structure Ident      : IDENT
+  structure Diagnostic : DIAGNOSTIC
+  structure Crash      : CRASH
+    ) : PERVASIVES =
+struct
+  structure Symbol = Ident.Symbol
+  structure Diagnostic = Diagnostic
+
+  (* The pervasives.  Note that the exceptions have two pervasives, one for *)
+  (* the exception `name' (unique) and the other for the exception value *)
+  (* (packet constructor). *)
+
+  datatype pervasive =
+    REF |
+    EXABS |
+    EXORD |
+    EXCHR |
+    EXDIV |
+    EXMOD |
+    EXQUOT |
+    EXPROD |
+    EXNEG |
+    EXSUM |
+    EXDIFF |
+    EXFLOOR |
+    EXSQRT |
+    EXEXP |
+    EXLN |
+    EXIO |
+    EXMATCH |
+    EXBIND |
+    EXINTERRUPT |
+    EXRANGE |
+    MAP |
+    REV |
+    NOT |
+    ABS |
+    FLOOR |
+    REAL |
+    SQRT |
+    SIN |
+    COS |
+    ARCTAN |
+    EXP |
+    LN |
+    SIZE |
+    CHR |
+    ORD |
+    ORDOF |
+    EXPLODE |
+    IMPLODE |
+    DEREF |
+    FDIV |
+    DIV |
+    MOD |
+    PLUS |
+    STAR |
+    MINUS |
+    HAT |
+    AT |
+    NE |
+    LESS |
+    GREATER |
+    LESSEQ |
+    GREATEREQ |
+    BECOMES |
+    O |
+    UMINUS |
+    EQ |
+    EQFUN |
+    LOAD_STRING |
+    REALPLUS |
+    INTPLUS |
+    UNSAFEINTPLUS |
+    REALSTAR |
+    INTSTAR |
+    REALMINUS |
+    INTMINUS |
+    REALUMINUS |
+    INTUMINUS |
+    INTLESS |
+    REALLESS |
+    INTGREATER |
+    REALGREATER |
+    INTLESSEQ |
+    REALLESSEQ |
+    INTGREATEREQ |
+    REALGREATEREQ |
+    INTEQ |
+    INTNE |
+    REALEQ |
+    REALNE |
+    STRINGEQ |
+    STRINGNE |
+    STRINGLT |
+    STRINGLE |
+    STRINGGT |
+    STRINGGE |
+    INTABS |
+    REALABS |
+    CALL_C |
+    ARRAY_FN |
+    LENGTH |
+    SUB |
+    UNSAFE_SUB |
+    UPDATE |
+    UNSAFE_UPDATE |
+    BYTEARRAY |
+    BYTEARRAY_LENGTH |
+    BYTEARRAY_SUB |
+    BYTEARRAY_UNSAFE_SUB |
+    BYTEARRAY_UPDATE |
+    BYTEARRAY_UNSAFE_UPDATE |
+    VECTOR |
+    VECTOR_LENGTH |
+    VECTOR_SUB |
+    EXSIZE |
+    EXSUBSCRIPT |
+    ANDB |
+    LSHIFT |
+    NOTB |
+    ORB |
+    RSHIFT |
+    ARSHIFT |
+    XORB |
+    (* Associated with the interpreter only *)
+    IDENT_FN |
+    ML_OFFSET |
+    ENTUPLE |
+    ML_CALL |
+    ML_REQUIRE |
+    LOAD_VAR |
+    LOAD_EXN |
+    LOAD_STRUCT |
+    LOAD_FUNCT
+
+  fun print_pervasive REF = "ref"
+    | print_pervasive EXABS = "<name of Abs>"
+    | print_pervasive EXORD = "<name of Ord>"
+    | print_pervasive EXCHR = "<name of Chr>"
+    | print_pervasive EXDIV = "<name of Div>"
+    | print_pervasive EXMOD = "<name of Mod>"
+    | print_pervasive EXQUOT = "<name of Quot>"
+    | print_pervasive EXPROD = "<name of Prod>"
+    | print_pervasive EXNEG = "<name of Neg>"
+    | print_pervasive EXSUM = "<name of Sum>"
+    | print_pervasive EXDIFF = "<name of Diff>"
+    | print_pervasive EXFLOOR = "<name of Floor>"
+    | print_pervasive EXSQRT = "<name of Sqrt>"
+    | print_pervasive EXEXP = "<name of Exp>"
+    | print_pervasive EXLN = "<name of Ln>"
+    | print_pervasive EXIO = "<name of Io>"
+    | print_pervasive EXMATCH = "<name of Match>"
+    | print_pervasive EXBIND = "<name of Bind>"
+    | print_pervasive EXINTERRUPT = "<name of Interrupt>"
+    | print_pervasive EXRANGE = "<name of Range>"
+    | print_pervasive MAP = "map"
+    | print_pervasive REV = "rev"
+    | print_pervasive NOT = "not"
+    | print_pervasive ABS = "abs"
+    | print_pervasive FLOOR = "floor"
+    | print_pervasive REAL = "real"
+    | print_pervasive SQRT = "sqrt"
+    | print_pervasive SIN = "sin"
+    | print_pervasive COS = "cos"
+    | print_pervasive ARCTAN = "arctan"
+    | print_pervasive EXP = "exp"
+    | print_pervasive LN = "ln"
+    | print_pervasive SIZE = "size"
+    | print_pervasive CHR = "chr"
+    | print_pervasive ORD = "ord"
+    | print_pervasive ORDOF = "ordof"
+    | print_pervasive EXPLODE = "explode"
+    | print_pervasive IMPLODE = "implode"
+    | print_pervasive DEREF = "!"
+    | print_pervasive FDIV = "/"
+    | print_pervasive DIV = "div"
+    | print_pervasive MOD = "mod"
+    | print_pervasive PLUS = "+"
+    | print_pervasive STAR = "*"
+    | print_pervasive MINUS = "-"
+    | print_pervasive HAT = "^"
+    | print_pervasive AT = "@@"
+    | print_pervasive NE = "<>"
+    | print_pervasive LESS = "<"
+    | print_pervasive GREATER = ">"
+    | print_pervasive LESSEQ = "<="
+    | print_pervasive GREATEREQ = ">="
+    | print_pervasive BECOMES = "becomes"
+    | print_pervasive O = "o"
+    | print_pervasive UMINUS = "~"
+    | print_pervasive EQ = "inline_equality"
+    | print_pervasive EQFUN = "external_equality"
+    | print_pervasive LOAD_STRING = "load_string"
+    | print_pervasive REALPLUS = "_real+"
+    | print_pervasive INTPLUS = "_int+"
+    | print_pervasive UNSAFEINTPLUS = "_unsafeint+"
+    | print_pervasive REALSTAR = "_real*"
+    | print_pervasive INTSTAR = "_int*"
+    | print_pervasive REALMINUS = "_real-"
+    | print_pervasive INTMINUS = "_int-"
+    | print_pervasive REALUMINUS = "_real~"
+    | print_pervasive INTUMINUS = "_int~"
+    | print_pervasive INTLESS = "_int<"
+    | print_pervasive REALLESS = "_real<"
+    | print_pervasive INTGREATER = "_int>"
+    | print_pervasive REALGREATER = "_real>"
+    | print_pervasive INTLESSEQ = "_int<="
+    | print_pervasive REALLESSEQ = "_real<="
+    | print_pervasive INTGREATEREQ = "_int>="
+    | print_pervasive REALGREATEREQ = "_real>="
+    | print_pervasive INTEQ = "_int="
+    | print_pervasive INTNE = "_int<>"
+    | print_pervasive REALEQ = "_real="
+    | print_pervasive REALNE = "_real<>"
+    | print_pervasive STRINGEQ = "_string="
+    | print_pervasive STRINGNE = "_string<>"
+    | print_pervasive STRINGLT = "_string<"
+    | print_pervasive STRINGLE = "_string<="
+    | print_pervasive STRINGGT = "_string>"
+    | print_pervasive STRINGGE = "_string>="
+    | print_pervasive INTABS = "_intabs"
+    | print_pervasive REALABS = "realabs"
+    | print_pervasive CALL_C = "call_c"
+    | print_pervasive ARRAY_FN = "array"
+    | print_pervasive LENGTH = "length"
+    | print_pervasive SUB = "sub"
+    | print_pervasive UPDATE = "update"
+    | print_pervasive UNSAFE_SUB = "unsafe_sub"
+    | print_pervasive UNSAFE_UPDATE = "unsafe_update"
+    | print_pervasive BYTEARRAY = "bytearray"
+    | print_pervasive BYTEARRAY_LENGTH = "bytearray_length"
+    | print_pervasive BYTEARRAY_SUB = "bytearray_sub"
+    | print_pervasive BYTEARRAY_UPDATE = "bytearray_update"
+    | print_pervasive BYTEARRAY_UNSAFE_SUB = "bytearray_unsafe_sub"
+    | print_pervasive BYTEARRAY_UNSAFE_UPDATE = "bytearray_unsafe_update"
+    | print_pervasive VECTOR = "vector"
+    | print_pervasive VECTOR_LENGTH = "vector_length"
+    | print_pervasive VECTOR_SUB = "vector_sub"
+    | print_pervasive EXSIZE = "<name of Size>"
+    | print_pervasive EXSUBSCRIPT = "<name of Subscript>"
+    | print_pervasive ANDB = "andb"
+    | print_pervasive LSHIFT = "lshift"
+    | print_pervasive NOTB = "notb"
+    | print_pervasive ORB = "orb"
+    | print_pervasive RSHIFT = "rshift"
+    | print_pervasive ARSHIFT = "arshift"
+    | print_pervasive XORB = "xorb"
+    (* Associated with the interpreter only *)
+    | print_pervasive IDENT_FN = "make_ml_value"
+    | print_pervasive ML_OFFSET = "ml_value_from_offset"
+    | print_pervasive ENTUPLE = "make_ml_value_tuple"
+    | print_pervasive ML_CALL = "call_ml_value"
+    | print_pervasive ML_REQUIRE = "ml_require"
+    | print_pervasive LOAD_VAR = "load_var"
+    | print_pervasive LOAD_EXN = "load_exn"
+    | print_pervasive LOAD_STRUCT = "load_struct"
+    | print_pervasive LOAD_FUNCT = "load_funct"
+
+  (*  == Library names ==
+   *
+   *  List of pairs relating those pervasives in the library to the names
+   *  by which they are defined in the BuiltinLibrary_ structure.
+   *
+   *  IMPORTANT:
+   *    1. Any changes to ../pervasive/__builtin_library.sml must be reflected
+   *       here.
+   *    2. All exceptions must have both a name _and_ a value.
+   *)
+
+  val constructor_name_list = [(REF,"ref")]
+
+  val value_name_list =
+    [(CALL_C,"call_c"),
+     (EQ, "inline_equality"),
+     (EQFUN,"external_equality"),
+     (NE,"<>"),
+     (LENGTH,"length"),
+     (SUB,"sub"),
+     (UPDATE,"update"),
+     (UNSAFE_SUB,"unsafe_sub"),
+     (UNSAFE_UPDATE,"unsafe_update"),
+     (FLOOR,"floor"),
+     (REAL,"real"),
+     (FDIV,"/"),
+     (DIV,"div"),
+     (LOAD_STRING,"load_string"),
+     (AT, "@@"),
+     (ARCTAN, "arctan"),
+     (CHR, "chr"),
+     (HAT, "^"),
+     (COS, "cos"),
+     (EXP, "exp"),
+     (EXPLODE, "explode"),
+     (IMPLODE, "implode"),
+     (INTABS, "int_abs"),
+     (INTEQ, "int_equal"),
+     (INTGREATER, "int_greater"),
+     (INTGREATEREQ, "int_greater_or_equal"),
+     (INTLESS, "int_less"),
+     (INTLESSEQ, "int_less_or_equal"),
+     (INTUMINUS, "int_negate"),
+     (INTNE, "int_not_equal"),
+     (INTMINUS, "int_minus"),
+     (INTSTAR, "int_multiply"),
+     (INTPLUS, "int_plus"),
+     (UNSAFEINTPLUS, "unsafeint_plus"),
+     (LN, "ln"),
+     (DEREF,"!"),
+     (BECOMES,":="),
+     (MAP, "map"),
+     (MOD, "mod"),
+     (O, "o"),
+     (NOT, "not"),
+     (ORD, "ord"),
+     (ORDOF, "ordof"),
+     (REALABS, "real_abs"),
+     (REALEQ, "real_equal"),
+     (REALGREATER, "real_greater"),
+     (REALGREATEREQ, "real_greater_or_equal"),
+     (REALLESS, "real_less"),
+     (REALLESSEQ, "real_less_or_equal"),
+     (REALUMINUS, "real_negate"),
+     (REALNE, "real_not_equal"),
+     (REALMINUS, "real_minus"),
+     (REALSTAR, "real_multiply"),
+     (REALPLUS, "real_plus"),
+     (REV, "rev"),
+     (SIN, "sin"),
+     (SIZE, "size"),
+     (SQRT, "sqrt"),
+     (STRINGEQ, "string_equal"),
+     (STRINGNE, "string_not_equal"),
+     (STRINGLT, "string_less"),
+     (STRINGLE, "string_less_equal"),
+     (STRINGGT, "string_greater"),
+     (STRINGGE, "string_greater_equal"),
+     (ARRAY_FN,"array"),
+     (BYTEARRAY, "bytearray"),
+     (BYTEARRAY_LENGTH, "bytearray_length"),
+     (BYTEARRAY_SUB, "bytearray_sub"),
+     (BYTEARRAY_UNSAFE_SUB, "bytearray_unsafe_sub"),
+     (BYTEARRAY_UPDATE, "bytearray_update"),
+     (BYTEARRAY_UNSAFE_UPDATE, "bytearray_unsafe_update"),
+     (VECTOR, "vector"),
+     (VECTOR_LENGTH, "vector_length"),
+     (VECTOR_SUB, "vector_sub"),
+     (ANDB,"andb"),
+     (LSHIFT,"lshift"),
+     (NOTB,"notb"),
+     (ORB,"orb"),
+     (RSHIFT,"rshift"),
+     (ARSHIFT,"arshift"),
+     (XORB,"xorb"),
+     (* Associated with the interpreter only *)
+     (IDENT_FN, "make_ml_value"),
+     (ML_OFFSET, "ml_value_from_offset"),
+     (ENTUPLE, "make_ml_value_tuple"),
+     (ML_CALL, "call_ml_value"),
+     (ML_REQUIRE, "ml_require"),
+     (LOAD_VAR, "load_var"),
+     (LOAD_EXN, "load_exn"),
+     (LOAD_STRUCT, "load_struct"),
+     (LOAD_FUNCT, "load_funct")]
+
+  val exception_name_list =
+    [(EXABS, "Abs"),
+     (EXBIND, "Bind"),
+     (EXCHR, "Chr"),
+     (EXDIFF, "Diff"),
+     (EXDIV, "Div"),
+     (EXEXP, "Exp"),
+     (EXFLOOR, "Floor"),
+     (EXINTERRUPT, "Interrupt"),
+     (EXIO, "Io"),
+     (EXLN, "Ln"),
+     (EXMATCH, "Match"),
+     (EXMOD, "Mod"),
+     (EXNEG, "Neg"),
+     (EXORD, "Ord"),
+     (EXPROD, "Prod"),
+     (EXQUOT, "Quot"),
+     (EXSQRT, "Sqrt"),
+     (EXSUM, "Sum"),
+     (EXSIZE, "Size"),
+     (EXSUBSCRIPT, "Subscript"),
+     (EXRANGE, "Range")]
+
+  val structure_name_list = []
+
+  val pervasives =
+    map (fn (x,y) => x)
+    (value_name_list @@ exception_name_list @@ constructor_name_list)
+
+    val _ =
+      map (fn x => ((print_pervasive x) 
+                    handle _ => 
+                      (output(std_out,"*** DANGER *** Failed to find a print_pervasive in _pervasives for something\n ");
+                       Crash.impossible "_pervasives - failure to print_pervasive for something")))
+      pervasives
+
+    (* We use the names for the pervasives in the map, so check that they are all unique *)
+    val _ =
+      Lists.reducel( fn (y,x) =>
+		    let
+		      val str = print_pervasive x
+		    in
+		      if Lists.member(str, y)
+			then Crash.impossible("print_pervasive '" ^ str ^
+					      "' is not unique")
+		      else str::y
+		    end)
+      ([],pervasives)
+
+  (* Sort the lists of pervasives with names in to the order in which they *)
+  (* will be found in the actual PervasiveLibrary_ structure.  This is the *)
+  (* same order as is generated by the lambda translator, and is: *)
+  (* sorted values & exceptions, sorted structures. *)
+
+    val library_contents =
+      let
+	fun make_cons (cons, list) =
+	  map (fn (pervasive, name) =>
+	         (cons (Symbol.find_symbol name), pervasive))
+	      list 
+
+	fun make_sorted (list, order) =
+	  map #2
+	  (Lists.qsort (fn ((id, _), (id', _)) => order (id, id')) list)
+      in
+	make_sorted
+	  (make_cons (Ident.VAR, value_name_list) @@
+	     make_cons (Ident.EXCON, exception_name_list),
+	   Ident.valid_order) @@
+	  (make_sorted (make_cons (Ident.STRID, structure_name_list),
+			Ident.strid_order))
+      end
+
+    val library_contents = library_contents
+
+    (*  === FIELD NUMBERS WITHIN THE BUILTIN LIBRARY ===
+     *
+     *  This is a function which maps pervasives on to their positions within
+     *  the BuiltinLibrary_ structure, such that a SELECT operation on
+     *  BuiltinLibrary_ using the field number gives the pervasive object.
+     *  Not all of the pervasives have definitions in the pervasive library,
+     *  in particular, the overloaded functions are not represented, but their
+     *  non-overloaded counterparts are.
+     *)
+
+    fun field_number pervasive =
+      let
+
+	fun find (_, []) =
+	  Crash.impossible
+	  ("Pervasives: I've been asked for the field number of " ^
+	   print_pervasive pervasive ^ " which doesn't occur in the " ^
+	   "pervasive library name list.")
+
+	  | find (number, pervasive'::rest) =
+	    if pervasive = pervasive' then
+	      number
+	    else
+	      find (number + 1, rest)
+
+	val field = find (0, library_contents)
+
+	val _ = Diagnostic.output 2
+	  (fn _ => ["Pervasives: Field number of " ^
+		    print_pervasive pervasive ^ " is " ^
+		    MLWorks.Integer.makestring field])
+
+	val _ = Diagnostic.output 3
+	  (fn _ =>
+	   let
+	     fun show (_, []) = []
+	       | show (n, pervasive::pervasives) =
+		 ("\n  " ^ MLWorks.Integer.makestring n ^
+		  " : " ^ print_pervasive pervasive) ::
+		 show (n+1, pervasives)
+	   in
+	     "Pervasives: library field numbers:" ::
+	     (show (0, library_contents))
+	   end)
+
+      in
+	field
+      end
+
+    val nr_fields = Lists.length library_contents
+
+
+  (*  === EXTRACT IMPLICIT REFERENCES OF PERVASIVE ===
+   *
+   *  Maps a pervasive onto the list of pervasives it references implicitly
+   *  (such as exceptions).
+   *
+   *  NOTE: At the moment the contents of the list must match what Mir_Cg
+   *  expects.
+   *
+   *  This is the machine-specific bit of this file.
+   *)
+
+    (* The MIR uses this to determine when to generate
+     * exception-handling code, as well as what information to keep in
+     * closures. *)
+
+  fun implicit_references INTPLUS          = [EXSUM]
+    | implicit_references INTSTAR          = [EXPROD]
+    | implicit_references INTMINUS         = [EXDIFF]
+    | implicit_references INTUMINUS        = [EXNEG]
+    | implicit_references INTABS           = [EXABS]
+    | implicit_references DIV              = [EXDIV]
+    | implicit_references REALPLUS         = [EXSUM]
+    | implicit_references REALSTAR         = [EXPROD]
+    | implicit_references REALMINUS        = [EXDIFF]
+    | implicit_references REALUMINUS       = [EXNEG]
+    | implicit_references REALABS          = [EXABS]
+    | implicit_references FDIV             = [EXQUOT]
+    | implicit_references MOD              = [EXMOD]
+    | implicit_references FLOOR            = [EXFLOOR]
+    | implicit_references SQRT             = [EXSQRT]
+    | implicit_references EXP              = [EXEXP]
+    | implicit_references LN               = [EXLN]
+    | implicit_references ORD              = [EXORD]
+    | implicit_references ORDOF            = [EXORD]
+    | implicit_references CHR              = [EXCHR]
+    | implicit_references ARRAY_FN         = [EXSIZE]
+    | implicit_references SUB              = [EXSUBSCRIPT]
+    | implicit_references UPDATE           = [EXSUBSCRIPT]
+    | implicit_references BYTEARRAY        = [EXSIZE]
+    | implicit_references BYTEARRAY_SUB    = [EXSUBSCRIPT]
+    | implicit_references BYTEARRAY_UPDATE = [EXSUBSCRIPT]
+    | implicit_references VECTOR_SUB       = [EXSUBSCRIPT]
+    | implicit_references EQ	           = [EQFUN]
+    | implicit_references _	           = []
+    
+  fun is_fun REF = true
+    | is_fun EXABS = false
+    | is_fun EXORD = false
+    | is_fun EXCHR = false
+    | is_fun EXDIV = false
+    | is_fun EXMOD = false
+    | is_fun EXQUOT = false
+    | is_fun EXPROD = false
+    | is_fun EXNEG = false
+    | is_fun EXSUM = false
+    | is_fun EXDIFF = false
+    | is_fun EXFLOOR = false
+    | is_fun EXSQRT = false
+    | is_fun EXEXP = false
+    | is_fun EXLN = false
+    | is_fun EXIO = false
+    | is_fun EXMATCH = false
+    | is_fun EXBIND = false
+    | is_fun EXINTERRUPT = false
+    | is_fun EXRANGE = false
+    | is_fun MAP = true
+    | is_fun REV = true
+    | is_fun NOT = true
+    | is_fun ABS = true
+    | is_fun FLOOR = true
+    | is_fun REAL = true
+    | is_fun SQRT = true
+    | is_fun SIN = true
+    | is_fun COS = true
+    | is_fun ARCTAN = true
+    | is_fun EXP = true
+    | is_fun LN = true
+    | is_fun SIZE = true
+    | is_fun CHR = true
+    | is_fun ORD = true
+    | is_fun ORDOF = true
+    | is_fun EXPLODE = true
+    | is_fun IMPLODE = true
+    | is_fun DEREF = true
+    | is_fun FDIV = true
+    | is_fun DIV = true
+    | is_fun MOD = true
+    | is_fun PLUS = false
+    | is_fun STAR = false
+    | is_fun MINUS = false
+    | is_fun HAT = true
+    | is_fun AT = true
+    | is_fun NE = true
+    | is_fun LESS = false
+    | is_fun GREATER = false
+    | is_fun LESSEQ = false
+    | is_fun GREATEREQ = false
+    | is_fun BECOMES = true
+    | is_fun O = true
+    | is_fun UMINUS = false
+    | is_fun EQ = true
+    | is_fun EQFUN = true
+    | is_fun LOAD_STRING = false
+    | is_fun REALPLUS = true
+    | is_fun INTPLUS = true
+    | is_fun UNSAFEINTPLUS = true
+    | is_fun REALSTAR = true
+    | is_fun INTSTAR = true
+    | is_fun REALMINUS = true
+    | is_fun INTMINUS = true
+    | is_fun REALUMINUS = true
+    | is_fun INTUMINUS = true
+    | is_fun INTLESS = true
+    | is_fun REALLESS = true
+    | is_fun INTGREATER = true
+    | is_fun REALGREATER = true
+    | is_fun INTLESSEQ = true
+    | is_fun REALLESSEQ = true
+    | is_fun INTGREATEREQ = true
+    | is_fun REALGREATEREQ = true
+    | is_fun INTEQ = true
+    | is_fun INTNE = true
+    | is_fun REALEQ = true
+    | is_fun REALNE = true
+    | is_fun STRINGEQ = true
+    | is_fun STRINGNE = true
+    | is_fun STRINGLT = true
+    | is_fun STRINGLE = true
+    | is_fun STRINGGT = true
+    | is_fun STRINGGE = true
+    | is_fun INTABS = true
+    | is_fun REALABS = true
+    | is_fun CALL_C = true
+    | is_fun ARRAY_FN = true
+    | is_fun LENGTH = true
+    | is_fun SUB = true
+    | is_fun UPDATE =true
+    | is_fun UNSAFE_SUB = true
+    | is_fun UNSAFE_UPDATE =true
+    | is_fun BYTEARRAY = true
+    | is_fun BYTEARRAY_LENGTH = true
+    | is_fun BYTEARRAY_SUB = true
+    | is_fun BYTEARRAY_UPDATE =true
+    | is_fun BYTEARRAY_UNSAFE_SUB = true
+    | is_fun BYTEARRAY_UNSAFE_UPDATE = true
+    | is_fun VECTOR = true
+    | is_fun VECTOR_LENGTH = true
+    | is_fun VECTOR_SUB = true
+    | is_fun EXSIZE = false
+    | is_fun EXSUBSCRIPT =false
+    | is_fun ANDB = true
+    | is_fun LSHIFT = true
+    | is_fun NOTB = true
+    | is_fun ORB = true
+    | is_fun RSHIFT = true
+    | is_fun ARSHIFT = true
+    | is_fun XORB = true
+    (* Associated with the interpreter only *)
+    | is_fun IDENT_FN = true
+    | is_fun ML_OFFSET = true
+    | is_fun ENTUPLE = true
+    | is_fun ML_CALL = true
+    | is_fun ML_REQUIRE = true
+    | is_fun LOAD_VAR = false
+    | is_fun LOAD_EXN = false
+    | is_fun LOAD_STRUCT = false
+    | is_fun LOAD_FUNCT = false
+
+  (*  === ENCODING, DECODING, AND ORDERING FUNCTIONS ===
+   *
+   *  The sort function provides a syntactic sort for a pervasive.  Pattern
+   *  matching is used, and is probably the fastest method of mapping a
+   *  given constructor onto an integer.  The inverse of the sort is done
+   *  using a Map.T.
+   *)
+
+  local
+
+    val sort_map = 
+      let
+        fun number ([],_) = []
+          | number (pervasive::rest,num) = (print_pervasive pervasive,num) :: number(rest,num+1)
+      in
+        Map.from_list
+        (String.<,op =)
+        (number (pervasives,1))
+      end
+
+    val sort = fn x => Map.apply sort_map (print_pervasive x)
+
+    val _ =
+      map (fn x => ((sort x) 
+                    handle _ => 
+                      (output(std_out,"*** DANGER *** Failed to find a sort code in _pervasives for " ^
+                              print_pervasive x ^ "\n");
+                       Crash.impossible "Failed in _pervasives - see above"))) pervasives
+  in
+    val encode = sort
+
+    local
+      val inverse =
+        Map.apply (Map.from_list
+                   ( (op<) : int * int -> bool,(op=) : int * int -> bool)
+                   (map (fn p => (encode p, p)) pervasives))
+    in
+      fun decode i =
+        inverse i
+        handle Map.Undefined =>
+          Crash.impossible 
+          ("Pervasives: Unable to find inverse of sort function for " ^ MLWorks.Integer.makestring i)
+    end
+
+    fun order (pervasive, pervasive') =
+      (sort pervasive) < (sort pervasive')
+
+  end
+
+end
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+d667 7
+a673 1
+  fun implicit_references INTSTAR          = [EXPROD]
+d677 3
+d682 1
+d685 1
+a699 1
+
+@

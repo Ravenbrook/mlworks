@@ -1,0 +1,1197 @@
+head	1.19;
+access;
+symbols
+	ML_beta_release_12/08/94:1.19
+	ML_beta_release_03/08/94:1.19
+	ML_revised_beta_release_25/05/94:1.19
+	ML_final_beta_release_02/03/94:1.19
+	mlworks-28-01-1994:1.15
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.19
+date	94.02.17.13.55.41;	author matthew;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	94.02.08.14.35.49;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.02.04.12.50.13;	author daveb;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.02.02.11.25.57;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.11.18.17.39.27;	author daveb;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.11.15.15.31.03;	author nickh;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.09.27.14.46.04;	author jont;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.09.10.17.40.48;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.08.29.13.37.35;	author daveb;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.08.28.15.57.41;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.08.26.13.42.58;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.08.25.10.23.39;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.08.17.16.33.03;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.06.01.22.16.45;	author nosa;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.04.30.09.51.01;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.29.16.12.55;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.12.08.15.36.50;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.10.19.12.09.27;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.10.08.13.23.31;	author richard;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.08.29.13.37.35;	author jont;	state Exp;
+branches;
+next	1.11.1.2;
+
+1.11.1.2
+date	93.09.10.17.05.29;	author jont;	state Exp;
+branches;
+next	1.11.1.3;
+
+1.11.1.3
+date	93.09.27.11.16.57;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Unix version of FileName.
+@
+
+
+1.19
+log
+@Added Io hander around call to realpath
+In this case the parameter filename is returned.
+@
+text
+@(*  ==== FILE NAMING UTILITIES ====
+ *          UNIX FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _unixfilename.sml,v $
+ *  Revision 1.18  1994/02/08  14:35:49  matthew
+ *  Added call to MLWutils.OS.Unix.realpath in expand_path
+ *
+ *  Revision 1.17  1994/02/04  12:50:13  daveb
+ *  Some directories weren't getting the trailing / attached.
+ *
+ *  Revision 1.16  1994/02/02  11:25:57  daveb
+ *  Module names are now in the Module module.  The functionality of
+ *  Io.trans_home_name is not in FileName.expand_path.  Minor tidying up.
+ *
+ *  Revision 1.15  1993/11/18  17:39:27  daveb
+ *  Removed extra / from result of sml_name and mo_name.
+ *
+ *  Revision 1.14  1993/11/15  15:31:03  nickh
+ *  New pervasive time structure.
+ *
+ *  Revision 1.13  1993/09/27  14:46:04  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.11.1.3  1993/09/27  11:16:57  jont
+ *  Added find_pervasive_mo for looking up pervasive mo time stamps
+ *
+ *  Revision 1.12  1993/09/10  17:40:48  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.11.1.2  1993/09/10  17:05:29  jont
+ *  Modified because module_id.sml was
+ *
+ *  Revision 1.11.1.1  1993/08/29  13:37:35  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.11  1993/08/29  13:37:35  daveb
+ *  Removed parse_home_name.
+ *
+ *  Revision 1.10  1993/08/28  15:57:41  daveb
+ *  Added cache to find_file.
+ *
+ *  Revision 1.9  1993/08/26  13:42:58  daveb
+ *  Made find_sml and find_mo similar.
+ *
+ *  Revision 1.8  1993/08/25  10:23:39  daveb
+ *  find_file was adding an extra slash to the directory name.
+ *
+ *  Revision 1.7  1993/08/17  16:33:03  daveb
+ *  Added Module type and associated functions.
+ *  Added find_file and find_mo.
+ *
+ *  Revision 1.6  1993/06/01  22:16:45  nosa
+ *  Changed Option.T to Option.opt.
+ *
+ *  Revision 1.5  1993/04/30  09:51:01  matthew
+ *  Removed exception raise for empty filename or extension.
+ *
+ *  Revision 1.4  1993/03/29  16:12:55  jont
+ *  Modified to use existing common option signature
+ *
+ *  Revision 1.3  1992/12/08  15:36:50  clive
+ *  Added a conversion from location back to string
+ *
+ *  Revision 1.2  1992/10/19  12:09:27  richard
+ *  Null path names are allowed as routes.
+ *
+ *  Revision 1.1  1992/10/08  13:23:31  richard
+ *  Initial revision
+ *
+ *)
+
+require "../basics/getenv";
+require "filename";
+
+functor UnixFileName
+  (structure Getenv : GETENV
+  ): FILENAME =
+struct
+    structure Option = Getenv.Option
+
+    type Directory = string
+    type Route = string
+
+    datatype Absolute = ABSOLUTE of Directory * string * string Option.opt
+    datatype Relative = RELATIVE of Route * string * string Option.opt
+
+    exception Parse of string
+    exception BadHomeName of string
+
+    val getwd = MLWorks.OS.Unix.getwd;
+
+    fun upto_slash(n, []) = n
+      | upto_slash(n, "/" :: _) = n
+      | upto_slash(n, _ :: rest) = upto_slash(n+1, rest)
+       
+    (* This now uses realpath to resolve symbolic links *)
+    fun expand_path string =
+      let
+        val len = size string
+
+	val expanded =
+          if string = "." then
+            MLWorks.OS.Unix.getwd ()
+          else if len = 0 orelse String.ordof(string, 0) <> ord"~" then
+            string
+          else
+            let
+              val start = upto_slash(0, explode string)
+              val name =
+                if start = 1 then
+                  case Getenv.get_user_name() of
+                    Option.PRESENT s => s
+                  | _ => raise BadHomeName string
+                else
+                  String.substring(string, 1, start-1)
+              val rest = String.substring(string, start, len-start)
+              val MLWorks.OS.Unix.PASSWD {dir, ...} =
+                MLWorks.OS.Unix.getpwnam name
+                handle MLWorks.OS.Unix.Unix _ =>
+                  raise BadHomeName string
+            in
+              dir ^ rest
+            end
+          val expanded = MLWorks.OS.Unix.realpath expanded handle (Io _) => expanded
+      in
+        if String.ordof (expanded, size expanded - 1) = ord "/" then
+	  expanded
+	else
+	  expanded ^ "/"
+      end
+
+    fun parse_file file =
+      let
+        fun find 0 = (file, Option.ABSENT)
+          | find n =
+            if String.ordof (file, n-1) = ord "." then
+              (String.substring (file, 0, n-1),
+               Option.PRESENT (String.substring (file, n, size file - n)))
+            else
+              find (n-1)
+      in
+        find (size file)
+      end
+
+    fun parse_path path =
+      let
+        fun find 0 = ("", path)
+        |   find n =
+          if String.ordof (path, n-1) = ord "/" then
+            (expand_path (String.substring (path, 0, n)),
+             String.substring (path, n, size path - n))
+          else
+            find (n-1)
+      in
+        case find (size path) of
+          (_, "") => raise Parse path
+        | other => other
+      end
+
+    fun is_full_path "" = false
+    |   is_full_path s = String.ordof (s, 0) = ord "/"
+
+    fun parse_absolute path =
+      let
+        val (location, file) = parse_path path
+        val (base, kind_opt) = parse_file file
+	val directory =
+	  if is_full_path location then location else getwd () ^ "/" ^ location
+      in
+        ABSOLUTE (directory, base, kind_opt)
+      end
+
+    fun parse_relative path =
+      let
+        val (route, file) = parse_path path
+        val (base, kind_opt) = parse_file file
+      in
+        RELATIVE (route, base, kind_opt)
+      end
+
+    fun parse_route s = expand_path s
+
+    fun parse_directory s = 
+      let val route = parse_route s
+      in 
+        if is_full_path route then route else getwd () ^ "/" ^ route
+      end
+
+    local
+      fun print (directory, base, kind_opt) =
+        implode (directory :: base ::
+                 (case kind_opt of
+                    Option.ABSENT => nil
+                  | Option.PRESENT extension => [".", extension]))
+    in
+      fun absolute_name (ABSOLUTE triple) = print triple
+      fun relative_name (RELATIVE triple) = print triple
+    end
+
+    fun directory_name s = s
+    val route_name = directory_name
+
+    fun concat_route (r1, r2) =
+      if is_full_path r2 then r2 else r1 ^ r2
+
+    (* Both Directory and Route are string, so we can re-use concat_route. *)
+    val follow = concat_route
+
+    fun prefix_route (prefix, rel as RELATIVE (route, name, ext)) =
+      if is_full_path route then
+	rel
+      else
+        RELATIVE (prefix ^ route, name, ext)
+
+    fun rel_to_abs (dir, RELATIVE (triple as (route, name, ext))) =
+      if is_full_path route then
+	ABSOLUTE triple
+      else
+        ABSOLUTE (dir ^ route, name, ext)
+
+  end;
+@
+
+
+1.18
+log
+@Added call to MLWutils.OS.Unix.realpath in expand_path
+@
+text
+@d9 3
+d128 1
+a128 1
+          val expanded = MLWorks.OS.Unix.realpath expanded
+@
+
+
+1.17
+log
+@Some directories weren't getting the trailing / attached.
+@
+text
+@d9 3
+d97 1
+d125 1
+d186 2
+a187 1
+      in if is_full_path route then route else getwd () ^ "/" ^ route
+@
+
+
+1.16
+log
+@Module names are now in the Module module.  The functionality of
+Io.trans_home_name is not in FileName.expand_path.  Minor tidying up.
+@
+text
+@d9 4
+d97 24
+d122 4
+a125 22
+        if string = "." then
+          MLWorks.OS.Unix.getwd ()
+        else if len = 0 orelse String.ordof(string, 0) <> ord"~" then
+          string
+        else
+          let
+            val start = upto_slash(0, explode string)
+            val name =
+              if start = 1 then
+                case Getenv.get_user_name() of
+                  Option.PRESENT s => s
+                | _ => raise BadHomeName string
+              else
+                String.substring(string, 1, start-1)
+            val rest = String.substring(string, start, len-start)
+            val MLWorks.OS.Unix.PASSWD {dir, ...} =
+              MLWorks.OS.Unix.getpwnam name
+              handle MLWorks.OS.Unix.Unix _ =>
+                raise BadHomeName string
+          in
+            dir ^ rest
+          end
+d177 1
+a177 4
+    fun parse_route s =
+      let val s' = expand_path s
+      in if String.ordof (s', size s' - 1) = ord "/" then s' else s' ^ "/"
+      end
+d181 1
+a181 1
+      in if is_full_path route then route else getwd () ^ route
+@
+
+
+1.15
+log
+@Removed extra / from result of sml_name and mo_name.
+@
+text
+@d9 3
+d66 1
+a66 1
+require "option";
+a67 9
+require "../main/io";
+require "../basics/symbol";
+require "../basics/module_id";
+require "../make/unix";
+(*
+require "../basics/location";
+*)
+require "diagnostic";
+require "newmap";
+d70 1
+a70 10
+  (structure Option : OPTION
+   structure Io : IO
+   structure ModuleId : MODULE_ID
+   structure Symbol : SYMBOL
+   structure Unix: UNIX
+   structure Diagnostic: DIAGNOSTIC
+   structure NewMap: NEWMAP
+   sharing type Io.Directory = string
+   sharing type ModuleId.ModuleId = Io.ModuleId
+   sharing type ModuleId.Symbol = Symbol.Symbol
+d73 1
+a73 1
+    structure Option = Option
+d75 1
+a75 1
+    type Directory = Io.Directory
+a76 5
+    type ModuleId = ModuleId.ModuleId
+
+    fun diagnostic (level, output_function) =
+      Diagnostic.output level
+        (fn verbosity => "FileName " :: (output_function verbosity))
+a79 1
+    datatype Module = MODULE of Directory * ModuleId
+d81 2
+a82 2
+    datatype Cache =
+      CACHE of (ModuleId, (Module * MLWorks.Time.time) Option.opt) NewMap.T
+d84 1
+a84 2
+    val empty_cache = CACHE (NewMap.empty' ModuleId.lt)
+    val last_cache = ref empty_cache
+d86 31
+a116 4
+    fun cache_size(CACHE cache) = NewMap.size cache
+    fun cache_list(CACHE cache) = NewMap.domain_ordered cache
+    fun update_cache (CACHE c, module_id, value) = 
+      CACHE (NewMap.define (c, module_id, Option.PRESENT value))
+a117 7
+    fun module_id (MODULE (_, m)) = m
+    fun module_dir (MODULE (s, _)) = s
+
+    fun dir_string x = x
+
+    exception Parse of string
+
+d131 17
+a147 19
+    fun parse_path (absolute, path) =
+      if (case path of
+            "" => false
+          | s => String.ordof (s, 0) = ord "/") <> absolute then
+        raise Parse path
+      else
+        let
+          fun find 0 = ("", path)
+            | find n =
+              if String.ordof (path, n-1) = ord "/" then
+                (String.substring (path, 0, n),
+                 String.substring (path, n, size path - n))
+              else
+                find (n-1)
+        in
+          case find (size path) of
+            (_, "") => raise Parse path
+          | other => other
+        end
+d151 1
+a151 1
+        val (location, file) = parse_path (true, path)
+d153 2
+d156 1
+a156 1
+        ABSOLUTE (location, base, kind_opt)
+d161 1
+a161 1
+        val (route, file) = parse_path (false, path)
+d167 10
+d188 2
+d191 2
+a192 3
+    fun to_unix module_id =
+      implode (map (fn "." => "/" | x => x)
+		   (explode (ModuleId.string module_id)))
+d194 2
+a195 2
+    fun sml_name (MODULE (l, m)) = l ^ to_unix m ^ ".sml"
+    fun mo_name (MODULE (l, m)) = l ^ to_unix m ^ ".mo"
+d197 5
+a201 2
+    fun relative_mo (path, module_id) =
+      mo_name (MODULE (path, module_id))
+d203 5
+a207 11
+    local
+      fun insert ([], _) = []
+      |   insert ([x], _) = [x]
+      |   insert (x::l, c) = x :: c :: insert (l, c)
+    in
+      fun module_string (ModuleId.MODID (s, l)) =
+        implode (insert (map Symbol.symbol_name (rev (s :: l)), "/"))
+    end
+
+    val follow = (op^)
+    val add = (op^)
+a208 57
+    fun find_file (module_id, extension, c as CACHE cache) =
+      case NewMap.tryApply' (cache, module_id) of
+	NewMap.YES x =>
+	  (diagnostic
+	   (3, fn _ => ["found ", ModuleId.string module_id,
+			extension, " in cache"]);
+	   (x, c))
+      | NewMap.NO =>
+	  let
+	    val unix_name = to_unix module_id ^ extension
+	    fun search [] = Option.ABSENT
+	      | search (dir::rest) = 
+		let
+		  val _ =
+		    diagnostic
+		    (2, fn _ => ["searching: ", dir, "/", unix_name])
+		  val filename = dir ^ "/" ^ unix_name
+		in
+		  case Unix.mtime filename of
+		    Unix.EXISTS stamp =>
+		      Option.PRESENT (MODULE (dir, module_id), stamp)
+		  | Unix.NOT_EXIST =>
+		      search rest
+		end
+
+	    val result = search (Io.get_source_path ())
+
+	    val new_cache = CACHE (NewMap.define (cache, module_id, result))
+	  in
+	    (result, new_cache)
+	  end
+
+    fun find_sml (module_id, cache) = find_file (module_id, ".sml", cache)
+
+    fun find_mo (module_id, cache) = find_file (module_id, ".mo", cache)
+
+    fun find_pervasive_mo(module_id, c as CACHE cache) =
+      case NewMap.tryApply'(cache, module_id) of
+	NewMap.YES x => (x, c)
+      | _ =>
+	  let
+	    val unix_name = to_unix module_id ^ ".mo"
+	    val dir = Io.get_pervasive_dir()
+	    val filename = dir ^ "/" ^ unix_name	      
+	  in
+	    case Unix.mtime filename of
+	      Unix.EXISTS time =>
+		let
+		  val info = Option.PRESENT(MODULE(dir, module_id), time)
+		in
+		  (info, CACHE(NewMap.define(cache, module_id, info)))
+		end
+
+	    | Unix.NOT_EXIST =>
+		(Option.ABSENT, c)
+	  end
+	handle Io.NotSet _ => (Option.ABSENT, c)
+@
+
+
+1.14
+log
+@New pervasive time structure.
+@
+text
+@d9 3
+d185 2
+a186 2
+    fun sml_name (MODULE (l, m)) = l ^ "/" ^ to_unix m ^ ".sml"
+    fun mo_name (MODULE (l, m)) = l ^ "/" ^ to_unix m ^ ".mo"
+@
+
+
+1.13
+log
+@Merging in bug fixes
+@
+text
+@d9 3
+d100 1
+a100 1
+      CACHE of (ModuleId, (Module * MLWorks.Time.Real.T) Option.opt) NewMap.T
+@
+
+
+1.12
+log
+@Merging in bug fixes
+@
+text
+@d9 6
+a76 3
+(*
+   structure Location : LOCATION
+*)
+a79 3
+(*
+   sharing type Location.T = ModuleId.Location
+*)
+a196 39
+(*
+    val utils_lists = ModuleId.from_string("utils.lists", Location.UNKNOWN)
+    val found_utils = ref false
+
+    fun check_lists(cache, extension) =
+      if (!found_utils) andalso extension = ".sml" andalso
+	(case NewMap.tryApply'(cache, utils_lists) of
+	   NewMap.NO => true
+	 | _ => false)
+	then
+	  let
+	    val list = NewMap.domain_ordered cache
+	    val _ = output(std_out, "utils.lists vanished again\n")
+	    val _ = output(std_out, "The following moduleids are now available:-\n")
+	    fun iterate f =
+	      let
+		fun it_sub [] = ()
+		  | it_sub(x :: xs) =
+		    (f x;
+		     it_sub xs)
+	      in
+		it_sub
+	      end
+	    val _ = iterate
+	      (fn x => output(std_out, ModuleId.string x ^ "\n"))
+	      list
+
+	    val _ = output(std_out, "Whereas the following moduleids were available:-\n")
+	    val _ = iterate
+	      (fn x => output(std_out, ModuleId.string x ^ "\n"))
+	      (NewMap.domain_ordered(case !last_cache of CACHE cache => cache))
+
+	  in
+	    raise Match
+	  end
+      else
+	last_cache := CACHE cache
+*)
+
+d198 3
+a200 3
+      case NewMap.tryApply' (cache, module_id)
+      of NewMap.YES x =>
+        (diagnostic
+a202 5
+(*
+	   (if module_id = utils_lists andalso extension = ".sml" then found_utils := true else ());
+	   output(std_out, to_unix module_id ^ extension ^ " found in cache\n");
+	   check_lists(cache, extension);
+*)
+d204 17
+a220 21
+      |  NewMap.NO =>
+        let
+	  val unix_name = to_unix module_id ^ extension
+(*
+	  val _ = output(std_out, "Searching for '" ^ unix_name ^ "' not in cache\n")
+	  val _ = check_lists(cache, extension)
+*)
+	  fun search [] = Option.ABSENT
+	    | search (dir::rest) = 
+	      let
+		val _ =
+		  diagnostic
+		  (2, fn _ => ["searching: ", dir, "/", unix_name])
+		val filename = dir ^ "/" ^ unix_name
+	      in
+	        case Unix.mtime filename of
+		  Unix.EXISTS stamp =>
+		    Option.PRESENT (MODULE (dir, module_id), stamp)
+	        | Unix.NOT_EXIST =>
+		    search rest
+	      end
+d222 1
+a222 1
+	  val result = search (Io.get_source_path ())
+d224 4
+a227 4
+	  val new_cache = CACHE (NewMap.define (cache, module_id, result))
+        in
+	  (result, new_cache)
+        end
+d232 22
+@
+
+
+1.11
+log
+@Removed parse_home_name.
+@
+text
+@d9 9
+d57 3
+d71 3
+a73 1
+
+d77 3
+d100 1
+d102 2
+d190 1
+a190 1
+      fun module_string (ModuleId.MODID (l, s)) =
+d197 40
+a236 1
+    fun find_file (module_id, extension, CACHE cache) =
+d242 6
+a247 1
+         (x, CACHE cache))
+d249 13
+a261 8
+        let val unix_name = to_unix module_id ^ extension
+
+	    fun search [] = Option.ABSENT
+	    |   search (dir::rest) = 
+	      let val _ =
+		    diagnostic
+		      (2, fn _ => ["searching: ", dir, "/", unix_name])
+		  val filename = dir ^ "/" ^ unix_name
+d263 5
+a267 5
+	        case Unix.mtime filename
+	        of Unix.EXISTS stamp =>
+	          Option.PRESENT (MODULE (dir, module_id), stamp)
+	        |  Unix.NOT_EXIST =>
+	          search rest
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 3
+ *  Revision 1.11  1993/08/29  13:37:35  daveb
+ *  Removed parse_home_name.
+ *
+@
+
+
+1.11.1.2
+log
+@Modified because module_id.sml was
+@
+text
+@a8 3
+ *  Revision 1.11.1.1  1993/08/29  13:37:35  jont
+ *  Fork for bug fixing
+ *
+a50 3
+(*
+require "../basics/location";
+*)
+d62 1
+a62 3
+(*
+   structure Location : LOCATION
+*)
+a65 3
+(*
+   sharing type Location.T = ModuleId.Location
+*)
+a85 1
+    val last_cache = ref empty_cache
+a86 2
+    fun cache_size(CACHE cache) = NewMap.size cache
+    fun cache_list(CACHE cache) = NewMap.domain_ordered cache
+d173 1
+a173 1
+      fun module_string (ModuleId.MODID (s, l)) =
+d180 1
+a180 40
+(*
+    val utils_lists = ModuleId.from_string("utils.lists", Location.UNKNOWN)
+    val found_utils = ref false
+
+    fun check_lists(cache, extension) =
+      if (!found_utils) andalso extension = ".sml" andalso
+	(case NewMap.tryApply'(cache, utils_lists) of
+	   NewMap.NO => true
+	 | _ => false)
+	then
+	  let
+	    val list = NewMap.domain_ordered cache
+	    val _ = output(std_out, "utils.lists vanished again\n")
+	    val _ = output(std_out, "The following moduleids are now available:-\n")
+	    fun iterate f =
+	      let
+		fun it_sub [] = ()
+		  | it_sub(x :: xs) =
+		    (f x;
+		     it_sub xs)
+	      in
+		it_sub
+	      end
+	    val _ = iterate
+	      (fn x => output(std_out, ModuleId.string x ^ "\n"))
+	      list
+
+	    val _ = output(std_out, "Whereas the following moduleids were available:-\n")
+	    val _ = iterate
+	      (fn x => output(std_out, ModuleId.string x ^ "\n"))
+	      (NewMap.domain_ordered(case !last_cache of CACHE cache => cache))
+
+	  in
+	    raise Match
+	  end
+      else
+	last_cache := CACHE cache
+*)
+
+    fun find_file (module_id, extension, c as CACHE cache) =
+d186 1
+a186 6
+(*
+	   (if module_id = utils_lists andalso extension = ".sml" then found_utils := true else ());
+	   output(std_out, to_unix module_id ^ extension ^ " found in cache\n");
+	   check_lists(cache, extension);
+*)
+	   (x, c))
+d188 8
+a195 13
+        let
+	  val unix_name = to_unix module_id ^ extension
+(*
+	  val _ = output(std_out, "Searching for '" ^ unix_name ^ "' not in cache\n")
+	  val _ = check_lists(cache, extension)
+*)
+	  fun search [] = Option.ABSENT
+	    | search (dir::rest) = 
+	      let
+		val _ =
+		  diagnostic
+		  (2, fn _ => ["searching: ", dir, "/", unix_name])
+		val filename = dir ^ "/" ^ unix_name
+d197 5
+a201 5
+	        case Unix.mtime filename of
+		  Unix.EXISTS stamp =>
+		    Option.PRESENT (MODULE (dir, module_id), stamp)
+	        | Unix.NOT_EXIST =>
+		    search rest
+@
+
+
+1.11.1.3
+log
+@Added find_pervasive_mo for looking up pervasive mo time stamps
+@
+text
+@a8 6
+ *  Revision 1.12  1993/09/10  17:40:48  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.11.1.2  1993/09/10  17:05:29  jont
+ *  Modified because module_id.sml was
+ *
+d68 3
+d74 3
+d194 39
+d234 3
+a236 3
+      case NewMap.tryApply' (cache, module_id) of
+	NewMap.YES x =>
+	  (diagnostic
+d239 5
+d245 21
+a265 17
+      | NewMap.NO =>
+	  let
+	    val unix_name = to_unix module_id ^ extension
+	    fun search [] = Option.ABSENT
+	      | search (dir::rest) = 
+		let
+		  val _ =
+		    diagnostic
+		    (2, fn _ => ["searching: ", dir, "/", unix_name])
+		  val filename = dir ^ "/" ^ unix_name
+		in
+		  case Unix.mtime filename of
+		    Unix.EXISTS stamp =>
+		      Option.PRESENT (MODULE (dir, module_id), stamp)
+		  | Unix.NOT_EXIST =>
+		      search rest
+		end
+d267 1
+a267 1
+	    val result = search (Io.get_source_path ())
+d269 4
+a272 4
+	    val new_cache = CACHE (NewMap.define (cache, module_id, result))
+	  in
+	    (result, new_cache)
+	  end
+a276 22
+
+    fun find_pervasive_mo(module_id, c as CACHE cache) =
+      case NewMap.tryApply'(cache, module_id) of
+	NewMap.YES x => (x, c)
+      | _ =>
+	  let
+	    val unix_name = to_unix module_id ^ ".mo"
+	    val dir = Io.get_pervasive_dir()
+	    val filename = dir ^ "/" ^ unix_name	      
+	  in
+	    case Unix.mtime filename of
+	      Unix.EXISTS time =>
+		let
+		  val info = Option.PRESENT(MODULE(dir, module_id), time)
+		in
+		  (info, CACHE(NewMap.define(cache, module_id, info)))
+		end
+
+	    | Unix.NOT_EXIST =>
+		(Option.ABSENT, c)
+	  end
+	handle Io.NotSet _ => (Option.ABSENT, c)
+@
+
+
+1.10
+log
+@Added cache to find_file.
+@
+text
+@d9 3
+a175 4
+
+    (* copied from _shell_utils *)
+    fun parse_home_name filename =
+      Io.trans_home_name filename handle Io.BadHomeName s => s
+@
+
+
+1.9
+log
+@Made find_sml and find_mo similar.
+@
+text
+@d9 3
+d45 2
+a46 1
+require "../utils/diagnostic";
+d55 1
+a66 1
+    type ModulePath = ModuleId.Path
+d76 8
+d178 25
+a202 2
+    fun find_file (module_id, extension) =
+      let val unix_name = to_unix module_id
+d204 4
+a207 16
+	  fun search [] = Option.ABSENT
+	  |   search (dir::rest) = 
+	    let val _ =
+		  diagnostic
+		    (2, fn _ => ["searching: ", dir, "/", unix_name, extension])
+		val filename = dir ^ "/" ^ unix_name ^ extension
+	    in
+	      case Unix.mtime filename
+	      of Unix.EXISTS stamp =>
+	        Option.PRESENT (MODULE (dir, module_id), stamp)
+	      |  Unix.NOT_EXIST =>
+	        search rest
+	    end
+      in
+	search (Io.get_source_path ())
+      end
+d209 1
+a209 1
+    fun find_sml module_id = find_file (module_id, ".sml")
+d211 1
+a211 1
+    fun find_mo module_id = find_file (module_id, ".mo")
+@
+
+
+1.8
+log
+@find_file was adding an extra slash to the directory name.
+@
+text
+@d9 3
+d166 1
+a166 1
+    fun find_file module_id =
+d173 2
+a174 2
+		    (2, fn _ => ["searching: ", dir, "/", unix_name, ".sml"])
+		val filename = dir ^ "/" ^ unix_name ^ ".sml"
+d177 2
+a178 2
+	      of Unix.EXISTS _ =>
+	        Option.PRESENT (MODULE (dir, module_id))
+d186 1
+a186 16
+    fun find_mo (mod_path, sub_module_id, dir) =
+      let
+        val module_id =
+          ModuleId.add_path (mod_path, sub_module_id)
+        val mo = relative_mo (dir, module_id)
+      in
+        case Unix.mtime mo
+        of  Unix.EXISTS mo_stamp =>
+          (diagnostic
+ 	     (2, fn _ => ["found module_id: ", ModuleId.string module_id]);
+           Option.PRESENT (mo, mo_stamp, ModuleId.path module_id))
+        |   Unix.NOT_EXIST =>
+          find_mo (ModuleId.parent mod_path, sub_module_id, dir)
+          handle
+            ModuleId.NoParent => Option.ABSENT
+        end
+d188 1
+@
+
+
+1.7
+log
+@Added Module type and associated functions.
+Added find_file and find_mo.
+@
+text
+@d9 4
+d175 1
+a175 1
+	        Option.PRESENT (MODULE (dir ^ "/", module_id))
+@
+
+
+1.6
+log
+@Changed Option.T to Option.opt.
+@
+text
+@d9 3
+d31 19
+a49 3
+
+functor UnixFileName (structure Option : OPTION) =
+  struct
+d52 12
+a63 2
+    type location = string
+    type route = string
+d65 2
+a66 2
+    datatype absolute = ABSOLUTE of location * string * string Option.opt
+    datatype relative = RELATIVE of route * string * string Option.opt
+d68 1
+a68 1
+    fun path_to_file x = x
+a81 6
+(*
+        case find (size file) of
+          ("", _) => raise Parse file
+        | (_, Option.PRESENT "") => raise Parse file
+        | other => other
+*)
+d132 20
+d154 41
+@
+
+
+1.5
+log
+@Removed exception raise for empty filename or extension.
+@
+text
+@d9 3
+d36 2
+a37 2
+    datatype absolute = ABSOLUTE of location * string * string Option.T
+    datatype relative = RELATIVE of route * string * string Option.T
+@
+
+
+1.4
+log
+@Modified to use existing common option signature
+@
+text
+@d9 3
+d50 1
+d55 2
+@
+
+
+1.3
+log
+@Added a conversion from location back to string
+@
+text
+@d9 3
+d20 1
+d23 1
+a23 1
+functor UnixFileName () =
+d25 1
+a25 1
+    structure Option = struct  datatype 'a T = PRESENT of 'a | ABSENT  end
+@
+
+
+1.2
+log
+@Null path names are allowed as routes.
+@
+text
+@d9 3
+d28 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 4
+a11 1
+ *  $Log$
+d51 1
+a51 2
+
+          fun find 0 = ("./", path)
+d60 1
+a60 2
+            ("", _) => raise Parse path
+          | (_, "") => raise Parse path
+@

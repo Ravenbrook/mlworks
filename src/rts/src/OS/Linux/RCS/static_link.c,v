@@ -1,0 +1,99 @@
+head	1.1;
+access;
+symbols
+	MLWorks_License_dev:1.1.2
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.10.04.16.28.39;	author jont;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.22.10;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.10.07.16.12.15;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.1
+log
+@new file
+@
+text
+@/* Addition to MLWorks runtime to allow it to link statically under
+ * some versions of SunOS. Dynamic linking is not a problem. Added by
+ * Nick Haines, 1994-06-14. This file is part of the X11R5
+ * distribution, and the following comment explains it quite well. */
+
+/*
+ * Stub interface to dynamic linker routines
+ * that SunOS uses but didn't ship with 4.1.
+ *
+ * The C library routine wcstombs in SunOS 4.1 tries to dynamically
+ * load some routines using the dlsym interface, described in dlsym(3x).
+ * Unfortunately SunOS 4.1 does not include the necessary library, libdl.
+ *
+ * The R5 Xlib uses wcstombs.  If you link dynamcally, your program can
+ * run even with the unresolved reference to dlsym.  However, if you
+ * link statically, you will encounter this bug.  One workaround
+ * is to include these stub routines when you link.
+ */
+
+void *dlopen(void);
+void *dlsym(void);
+int dlclose(void);
+
+void *dlopen()
+{
+    return 0;
+}
+
+void *dlsym()
+{
+    return 0;
+}
+
+int dlclose()
+{
+    return -1;
+}
+@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@

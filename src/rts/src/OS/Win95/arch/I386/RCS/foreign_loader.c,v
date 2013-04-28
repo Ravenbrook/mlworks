@@ -1,0 +1,116 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	95.10.17.13.59.16;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@/*  ==== FOREIGN OBJECT LOADER ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  This implementation provides dummy stubs for those ML ports
+ *  where foreign object loading is not yet supported.  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:NT:arch:I386:foreign_loader.c,v $
+ * Revision 1.3  1995/03/24  12:19:37  brianm
+ * Adding prototypes due to modification of header file.
+ * Simplified code to yield `unimplemented' exception.
+ *
+ * Revision 1.2  1995/03/08  15:01:22  brianm
+ * Minor corrections.
+ *
+ * Revision 1.1  1995/03/01  10:54:56  brianm
+ * new unit
+ * Foreign Object loading routines
+ *
+ *
+ */
+
+
+#include "ansi.h"
+#include "mltypes.h"
+#include "allocator.h"
+#include "values.h"
+#include "diagnostic.h"
+#include "environment.h"
+#include "exceptions.h"
+#include "foreign_loader.h"
+
+
+#if FAKE_RTS
+
+#include "mylib.h"
+#include "fake_rts.h"
+
+#endif
+
+#define raise_unimpl(str)    exn_raise_string(perv_exn_ref_value, (str))
+
+
+/* Forward decls. */
+
+static mlval load_foreign_object(mlval);
+static mlval lookup_foreign_value(mlval);
+static mlval call_unit_function(mlval);
+static mlval call_foreign_function(mlval);
+
+
+/* Definitions */
+
+static mlval load_foreign_object(mlval string)
+{
+   raise_unimpl("unimplemented : load_foreign_object");
+}
+
+
+static mlval lookup_foreign_value(mlval arg)
+{
+   raise_unimpl("unimplemented : lookup_foreign_value");
+
+}
+
+static mlval call_unit_function(mlval f_val)
+{
+   raise_unimpl("unimplemented : call_unit_function");
+}
+
+static mlval call_foreign_function(mlval f_val)
+{
+   raise_unimpl("unimplemented : call_foreign_function");
+}
+
+
+extern mlval call_ffun_error(int argv)
+{
+   raise_unimpl("unimplemented : call_ffun_error");
+}
+
+void foreign_init(void)
+{
+  env_function("load foreign object",load_foreign_object);
+  env_function("lookup foreign value",lookup_foreign_value);
+  env_function("call unit function",call_unit_function);
+  env_function("call foreign function",call_foreign_function);
+}
+@

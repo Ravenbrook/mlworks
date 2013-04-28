@@ -1,0 +1,218 @@
+head	1.7;
+access;
+symbols
+	Final_version_of_old_runtime:1.7
+	ML_revised_beta_release_25/05/94:1.7
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	92.07.27.12.47.03;	author richard;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	92.07.02.15.15.23;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.24.14.16.26;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.07.16.02.12;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.23.16.00.35;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.18.18.36.04;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.18.16.17.31;	author davidt;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	92.07.27.12.47.03;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The ML and C states are stored here.
+@
+
+
+1.7
+log
+@Moved stack_extension_count and raise_count here from the obsolete
+callc_codes.c.
+@
+text
+@/*
+ * state.c
+ * The ML and C states are stored here.
+ * $Log: state.c,v $
+ * Revision 1.6  1992/07/02  15:15:23  richard
+ * Removed vacuous initialisation.
+ *
+ * Revision 1.5  1992/03/24  14:16:26  richard
+ * Changed the types of the C and ML states.
+ *
+ * Revision 1.4  1992/01/07  16:02:12  richard
+ * Initialized ml_state to prevent garbage collector going awol.
+ *
+ * Revision 1.3  1991/10/23  16:00:35  davidt
+ * The complete register set in now stored in ml_state and c_state
+ * so that ml_callc can function correctly.
+ *
+ * Revision 1.2  91/10/18  18:36:04  davidt
+ * We don't need the setjmp stuff any more.
+ * 
+ * Revision 1.1  91/10/18  16:17:31  davidt
+ * Initial revision
+ * 
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ */
+
+#include "mltypes.h"
+#include "state.h"
+
+struct ml_state ml_state;
+struct c_state c_state;
+
+unsigned int stack_extension_count;
+unsigned int raise_count;
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 4
+ * Revision 1.7  1992/07/27  12:47:03  richard
+ * Moved stack_extension_count and raise_count here from the obsolete
+ * callc_codes.c.
+ *
+@
+
+
+1.6
+log
+@Removed vacuous initialisation.
+@
+text
+@d5 3
+d33 3
+@
+
+
+1.5
+log
+@Changed the types of the C and ML states.
+@
+text
+@d5 3
+d28 1
+a28 2
+struct ml_state ml_state = {0, 0, 0, 0, 0, 0, 0, 0};
+
+@
+
+
+1.4
+log
+@Initialized ml_state to prevent garbage collector going awol.
+@
+text
+@d5 3
+d25 1
+a25 3
+/*
+ * The ML state is stored here.
+ */
+d27 1
+a27 7
+ml_state_type ml_state = {0, 0, 0, 0, 0, 0, 0, 0};
+
+/*
+ * The C state is stored here.
+ */
+
+c_state_type c_state;
+@
+
+
+1.3
+log
+@The complete register set in now stored in ml_state and c_state
+so that ml_callc can function correctly.
+@
+text
+@d4 5
+a8 1
+ * $Log:	state.c,v $
+d26 1
+a26 1
+ml_state_type ml_state;
+@
+
+
+1.2
+log
+@We don't need the setjmp stuff any more.
+@
+text
+@d5 3
+d19 1
+a19 1
+ * The C state is stored here.
+d22 1
+a22 1
+word c_state;
+d25 1
+a25 1
+ * The current ML stack, heap and heap limit pointers.
+d28 1
+a28 1
+mlval ml_stack, ml_heap, ml_heap_limit, ml_c_arguments;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+a11 2
+#include <setjmp.h>
+
+d19 1
+a19 1
+jmp_buf c_state;
+@

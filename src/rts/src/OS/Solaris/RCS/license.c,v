@@ -1,0 +1,482 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.2
+	MLWorks_Beta_1996_07_02:1.2
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2
+	hope_poo:1.1.1
+	ML_beta_release_12/08/94:1.1.1.1
+	ML_beta_release_03/08/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	95.02.23.15.41.38;	author nickb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	94.07.08.10.43.07;	author nickh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	95.07.05.10.28.50;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.23.18;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.13.29;	author hope;	state Exp;
+branches;
+next	1.2.2.2;
+
+1.2.2.2
+date	96.10.08.16.15.16;	author jont;	state Exp;
+branches;
+next	1.2.2.3;
+
+1.2.2.3
+date	96.10.09.12.45.33;	author nickb;	state Exp;
+branches;
+next	1.2.2.4;
+
+1.2.2.4
+date	96.10.14.16.28.06;	author nickb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.32.49;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Change assignment of pid.
+@
+text
+@/*  === LICENSING ===
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The process is forked.  The parent continues with the normal running,
+ *  but traps child status changes by putting a signal handler on SIGCHLD.
+ *  The child monitors the license and exits if it expires.
+ *
+ *  Care is taken to deal with tampering.  In particular, if the child is
+ *  stopped or killed the parent exits.
+ *
+ *  Based on SunOS version 1.11
+ * 
+ *  $Log: src:OS:Solaris:license.c,v $
+ * Revision 1.1  1994/07/08  10:43:07  nickh
+ * new file
+ *
+ *
+ */
+
+#include "ansi.h"
+#include "syscalls.h"
+#include "utils.h"
+#include "diagnostic.h"
+#include "license.h"
+#include "signals.h"
+
+#include <errno.h>
+#include <sys/errno.h>
+
+void license(void)
+{
+  int pipefd[2];
+  pid_t child_pid;
+  
+  /* Start watching the child before forking */
+  signal_license_watch_child();
+
+  if(pipe(pipefd))
+    error("Unable to create pipe for licensing.  "
+	  "pipe set errno to %d.", errno);
+
+  child_pid = fork();
+
+  if(child_pid == -1)
+    switch(errno)
+    {
+      case EAGAIN:
+      error("Too many processes running to fork licensing process.");
+
+      case ENOMEM:
+      error("Insufficient memory to fork licensing process.");
+
+      default:
+      error("fork() returned an unexpected error code %d", errno);
+    }
+
+  if(child_pid == 0)
+    /* the child process */
+    signal_license_child(pipefd);
+  else
+    signal_license_child_pid = child_pid;
+
+  DIAGNOSTIC(1, "licensing process id %d", signal_license_child_pid, 0);
+}
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ * Revision 1.2  1995/02/23  15:41:38  nickb
+ * Change assignment of pid.
+ *
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ * Revision 1.2  1995/02/23  15:41:38  nickb
+ * Change assignment of pid.
+ *
+@
+
+
+1.2.2.2
+log
+@Start adding stuff to use HQN_LS
+@
+text
+@a16 3
+ * Revision 1.2.2.1  1996/10/07  16:13:29  hope
+ * branched from 1.2
+ *
+a29 1
+#include "environment.h"
+a31 3
+#include "utils.h"
+#include "values.h"
+#include "hqn_ls.h"
+a34 1
+#include <stdlib.h>
+d36 1
+a36 67
+#define N_DATA_VALUES 4
+#define N_CHALLENGES 4
+#ifndef NULL
+#define NULL 0
+#endif
+
+#define license_error_string \
+"Your license has expired or is unavailable.\n" \
+"Contact MLWorks customer support:\n" \
+"   electronic mail:  mlworks-support@@harlequin.co.uk\n" \
+"   telephone:        +44 1223 872522"
+
+hls_uint license_period = 0;
+
+static int have_a_license = 0;
+
+static hls_uint Chalvals[N_CHALLENGES] = {
+    0x611fcd8d,
+    0x2e9ea289,
+    0x31bf9fa,
+    0x412ac807,
+};
+
+static hls_uint Signature1[ 16 ] = {
+0xb7dcdb64, 0xe6ee81c8, 0x5489902c, 0x72cb5dc7,
+0xd41062cd, 0x86bdf55e, 0xa77ec367, 0xe3edf0e8,
+0x20e4d6f8, 0x959150a4, 0x1df8e445, 0x859c61e,
+0xf80ee071, 0xf5047a7c, 0x6df801dc, 0x107af490,
+};
+
+static hls_uint Signature2[ 16 ] = {
+0x1e50723a, 0x4a2b933e, 0x435ad8dd, 0x8c16e421,
+0x859faeea, 0x9c001979, 0x139dbe51, 0x5e903609,
+0xd4215649, 0x6af17a2b, 0x1f262681, 0xd808487c,
+0x14f49577, 0x5a69cb01, 0x69df87bd, 0xafd09f74,
+};
+
+static hls_uint Signature3[ 16 ] = {
+0xaf2a0a82, 0x2da69ac5, 0x4069407c, 0x4f6cb819,
+0xb7a6461a, 0xb4721837, 0x5f8a5d00, 0x2de5583d,
+0x4d0e98f, 0xf1e8d337, 0x2a814ae6, 0xdd63e341,
+0xa69fc3c5, 0x50003554, 0x955e50cb, 0xae339dd9,
+};
+
+static hls_uint Signature4[ 16 ] = {
+0x941e6469, 0xdb33f41f, 0x3c83612d, 0x1b672b08,
+0x2936e509, 0x80506043, 0x943702da, 0xc8566478,
+0xc0fd1b69, 0xa1e75f0c, 0x801626b7, 0x3a11c941,
+0x3e1b293f, 0xc50ee41b, 0xb108ccfd, 0x9b7fe4e1,
+};
+
+hls_uint *Signatures[ N_CHALLENGES ] = {
+    Signature1,
+    Signature2,
+    Signature3,
+    Signature4,
+};
+
+hls_int Databuf[ N_DATA_VALUES + 1];
+
+LSdata ls_data;
+
+static void init_lsdata(LSdata *ldata,
+			char *LicenseSystem,
+			char *PublisherName,
+			char *ProductName,
+			char *VersionString)
+d38 30
+a67 10
+  ldata->LicenseSystem = LicenseSystem;
+  ldata->PublisherName = PublisherName;
+  ldata->ProductName = ProductName;
+  ldata->VersionString = VersionString;
+  ldata->Nchals = N_CHALLENGES;
+  ldata->Chalvals = Chalvals;
+  ldata->Ndata = N_DATA_VALUES;
+  ldata->Data = Databuf;
+  ldata->Sig_Index = Signatures;
+}
+d69 1
+a69 36
+static mlval license_init(mlval arg)
+{
+  hls_int result;
+  init_lsdata(&ls_data, HQNLS_VERSION, "HARLEQUIN LTD", "MLWorks", "Version 1.0 ({Sun4c,Sun4m}/Solaris)");
+  result = ls_initialise(&ls_data);
+  printf("License started with result %d\n", result);
+  result = ls_get_license(&ls_data);
+  if (ls_get_license(&ls_data)) {
+    have_a_license = 1;
+  } else {
+    error(license_error_string);
+  }
+  return MLUNIT;
+}
+
+static void license_release(void)
+{
+  if (have_a_license) {
+    ls_release_lic(&ls_data);
+  }
+}
+
+void refresh_license(void)
+{
+  if (ls_update_lic(&ls_data)) {
+    return;
+  } else {
+    error(license_error_string);
+  }
+}
+
+void license(void)
+{
+  env_function("start license", license_init);
+  have_a_license = 0;
+  atexit(license_release);
+@
+
+
+1.2.2.3
+log
+@Call timer function.
+@
+text
+@d7 3
+a9 1
+ *  Uses the Harlequin License Server, and a timer interrupt.
+d11 4
+a16 3
+ * Revision 1.2.2.2  1996/10/08  16:15:16  jont
+ * Start adding stuff to use HQN_LS
+ *
+d56 1
+a56 3
+#define PUBLISHER_NAME	"HARLEQUIN_LTD"
+#define PRODUCT_NAME	"MLWorks"
+#define VERSION_STRING	"Version 1.0 ({Sun4c,Sun4m}/Solaris)"
+a59 2
+/* hqn_ms output follows: */
+
+d95 1
+a95 3
+/* the following made static (it is not in the hqn_ms output) */
+
+static hls_uint *Signatures[ N_CHALLENGES ] = {
+d102 1
+a102 3
+/* hqn_ms output ends */
+
+static hls_int Databuf[ N_DATA_VALUES + 1];
+d104 1
+a104 1
+static LSdata ls_data;
+d107 4
+a110 4
+			const char *LicenseSystem,
+			const char *PublisherName,
+			const char *ProductName,
+			const char *VersionString)
+d112 4
+a115 5
+  /* casts necessary because the struct defn doesn't have const qualifiers */
+  ldata->LicenseSystem = (char*)LicenseSystem;
+  ldata->PublisherName = (char*)PublisherName;
+  ldata->ProductName   = (char*)ProductName;
+  ldata->VersionString = (char*)VersionString;
+d123 1
+a123 1
+static mlval license_start(mlval arg)
+d126 1
+a126 5
+
+  init_lsdata(&ls_data, HQNLS_VERSION,
+	      PUBLISHER_NAME,
+	      PRODUCT_NAME,
+	      VERSION_STRING);
+d129 1
+a131 1
+    signal_license_timer(ls_data.UpPeriod);
+d154 1
+a154 1
+void license_init(void)
+d156 1
+a156 1
+  env_function("start license", license_start);
+@
+
+
+1.2.2.4
+log
+@Improve error behaviour.
+@
+text
+@a10 3
+ * Revision 1.2.2.3  1996/10/09  12:45:33  nickb
+ * Call timer function.
+ *
+a34 2
+#include "x.h"
+
+d47 5
+a51 5
+static char license_error_string[] = 
+  "Your license has expired or is unavailable.\n"
+  "Contact MLWorks customer support:\n"
+  "   electronic mail:  mlworks-support@@harlequin.co.uk\n"
+  "   telephone:        +44 1223 872522";
+d53 1
+a53 1
+#define PUBLISHER_NAME	"Harlequin Limited"
+d55 1
+a55 1
+#define VERSION_STRING	"Beta release for version 1.0"
+a128 9
+static void license_expired(void)
+{
+  x_reveal_podium();
+  message(license_error_string);
+  message_stderr(license_error_string);
+  while(1)
+    sleep(3600);
+}
+
+d142 3
+a144 2
+  } else
+    license_expired();
+d150 1
+a150 1
+  if (have_a_license)
+d152 1
+d157 5
+a161 2
+  if (ls_update_lic(&ls_data) == 0)
+    license_expired();
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ * Revision 1.2  1995/02/23  15:41:38  nickb
+ * Change assignment of pid.
+ *
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d16 3
+a18 1
+ *  $Log: $
+d20 1
+d36 1
+a38 1
+
+d45 1
+a45 1
+  signal_license_child_pid = fork();
+d47 1
+a47 1
+  if(signal_license_child_pid == -1)
+d60 1
+a60 1
+  if(signal_license_child_pid == 0)
+d63 2
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d16 1
+a16 4
+ *  $Log: src:OS:Solaris:license.c,v $
+ * Revision 1.1  1994/07/08  10:43:07  nickh
+ * new file
+ *
+@

@@ -1,0 +1,572 @@
+head	1.5;
+access;
+symbols
+	MLWorks_Beta_1996_07_02:1.5
+	MLWorks_Beta_1996_06_07:1.5
+	MLWorks_Beta_1996_06_06:1.5
+	MLWorks_Beta_1996_06_05:1.5
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.05.22.09.31.19;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.22.09.15.13;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.20.12.11.10;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.15.13.20.04;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.38.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.5
+log
+@Fixing merge problem in last revision
+@
+text
+@(*  ==== INITIAL BASIS : primio functor ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: _primio.sml,v $
+ * Revision 1.4  1996/05/22  09:15:13  matthew
+ * Vector changes
+ *
+ * Revision 1.3  1996/05/20  12:11:10  jont
+ * signature changes
+ *
+ * Revision 1.2  1996/05/15  13:20:04  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.1  1996/04/18  11:38:38  jont
+ * new unit
+ *
+ *  Revision 1.2  1995/05/10  14:00:21  daveb
+ *  Characters are no longer integers.
+ *  Removed definitions of BinPrimIO and TextPrimIO.
+ *
+ *  Revision 1.1  1995/04/13  13:39:08  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+require "__word8";
+require "__word8array";
+require "__word8vector";
+require "__char";
+require "__chararray";
+require "__charvector";
+require "__position";
+require "../system/__os";
+require "mono_vector";
+require "mono_array";
+require "prim_io";
+
+functor PrimIO(structure A : MONO_ARRAY
+	       val someElem : A.elem
+	       eqtype pos
+	       val posLess : pos * pos -> bool) : PRIM_IO =
+  struct
+    structure V = A.Vector
+    type elem = A.elem
+    type vector = V.vector
+    type array = A.array
+    type pos = pos
+    fun compare arg =
+      if posLess arg then
+	LESS
+      else
+	if op= arg then
+	  EQUAL
+	else
+	  GREATER
+
+    type 'a portion = {buf: 'a, i: int, sz: int option}
+
+    datatype reader = RD of 
+              {readVecNB : (int -> vector option) option,
+               readArrNB: (array portion -> int option) option,
+               readVec :   (int -> vector) option,
+               readArr:   (array portion -> int) option,
+               block      : (unit -> unit) option,
+               canInput  : (unit -> bool) option,
+               name       : string,
+               chunkSize  : int,
+               close      : unit -> unit,
+               getPos     : (unit -> pos),
+               setPos     : (pos -> unit),
+               endPos     : (unit -> pos),
+	       ioDesc : OS.IO.io_desc option}
+
+    datatype writer = WR of 
+              {writeVecNB: (vector portion -> int option) option,
+               writeArrNB: (array portion -> int option) option,
+               writeVec: (vector portion -> int) option,
+               writeArr: (array portion -> int) option,
+               block: (unit->unit) option,
+               canOutput: (unit->bool) option,
+               name: string,
+               chunkSize: int,
+               close: unit -> unit,
+               getPos : (unit->pos),
+               setPos : (pos->unit),
+               endPos : (unit->pos),
+	       ioDesc : OS.IO.io_desc option}
+
+    fun noOption convert f x = 
+      case convert f x
+        of SOME result => result
+         | NONE => raise Fail "bug in PrimIO"
+
+    fun blockingOperation(readaNoBlock,block) = 
+	     SOME(fn x => 
+		  (block(); 
+		   case readaNoBlock x 
+		     of SOME r => r
+		      | NONE => raise Fail "unexpected blocking operation"))
+
+
+    fun augmentReader (r as RD r') =
+      let
+	fun readaToReadv reada i =
+	  let
+	    val a = A.array(i,someElem)
+	  in case reada{buf=a,i=0,sz=SOME i}
+	    of SOME i' => SOME(A.extract(a,0,SOME i'))
+	  | NONE => NONE  
+	  end
+
+	fun readvToReada readv{buf: array, i: int, sz: int option} =
+	  let
+	    val nelems = case sz of
+	      SOME i => i
+	    | NONE => A.length buf - i
+	    val first = i
+	    val data = buf
+	  in
+	    case readv nelems of
+	      SOME v => SOME(let val len = V.length v
+				 fun loop i = 
+				   if i >= len then len
+				   else (A.update(data,i+first,V.sub(v,i));
+					 loop(i+1))
+			     in loop 0
+			     end)
+	    | NONE => NONE
+	  end
+
+	val readBlock' = 
+          case r
+	    of RD{readVec=SOME f,...} => SOME f
+	  | RD{readArr=SOME f,...} => SOME(noOption readaToReadv (SOME o f))
+	  | RD{readVecNB=SOME f,block=SOME b,...} =>
+	      SOME(fn i => (b(); noOption (fn x=>x) f i))
+	  | RD{readArrNB=SOME f, block=SOME b,...} =>
+	      SOME(fn x => (b(); noOption readaToReadv f x))
+	  | _ => NONE
+
+	val readaBlock' = 
+          case r
+	    of RD{readArr=SOME f,...} => SOME f
+	  | RD{readVec=SOME f,...} => SOME(noOption readvToReada (SOME o f))
+	  | RD{readArrNB=SOME f, block=SOME b,...} =>
+	      blockingOperation(f,b)
+	  | RD{readVecNB=SOME f,block=SOME b,...} =>
+	      blockingOperation(readvToReada f, b)
+	  | _ => NONE
+
+	val readNoBlock' =
+	  case r
+	    of RD{readVecNB=SOME f,...} => SOME f
+	  | RD{readArrNB=SOME f,...} => SOME(readaToReadv f)
+	  | RD{readVec=SOME f, canInput=SOME can,...} =>
+	      SOME(fn i => if can()
+			     then SOME(f i) else NONE)
+
+	  | RD{readArr=SOME f, canInput=SOME can,...} =>
+	      SOME(fn i => if can()
+			     then readaToReadv (SOME o f) i else NONE)
+	  | _ => NONE
+
+        val readaNoBlock' =
+	  case r
+	    of RD{readArrNB=SOME f,...} => SOME f
+	  | RD{readVecNB=SOME f,...} => SOME(readvToReada f)
+	  | RD{readArr=SOME f, canInput=SOME can,...} =>
+	      SOME(fn x => if can()
+			     then SOME(f x) else NONE)
+	  | RD{readVec=SOME f, canInput=SOME can,...} =>
+	      SOME(fn x => if can()
+			     then readvToReada (SOME o f) x else NONE)
+	  | _ => NONE
+
+      in RD{readVec=readBlock', readArr=readaBlock',
+	    readVecNB=readNoBlock', readArrNB=readaNoBlock',
+	    block= #block r', canInput = #canInput r',
+	    name= #name r', chunkSize= #chunkSize r',
+	    close= #close r', getPos = #getPos r', 
+	    setPos = #setPos r', endPos = #endPos r',
+	    ioDesc=NONE}
+      end
+
+    fun augmentWriter (r as WR r') =
+      let
+	fun writevToWritea writev {buf,i,sz} =
+	  let
+	    val data = buf
+	    val first = i
+	    val nelems = case sz of
+	      SOME i => i
+	    | NONE => A.length buf - i
+	    val v = A.extract(data,first,SOME nelems)
+	  in
+	    writev{buf=v,i=0,sz=SOME nelems}
+	  end
+	fun writeaToWritev writea {buf,i,sz=SOME 0} = SOME 0
+	  | writeaToWritev writea {buf,i,sz} =
+	    let
+	      val nelems = case sz of
+		SOME i => i
+	      | NONE => V.length buf - i
+	      val first = i
+	      val data = buf
+	      val a = A.array(nelems,V.sub(data,first))
+	      fun loop i = if i >= nelems then  ()
+			   else (A.update(a,i,V.sub(data,first+i));
+				 loop(i+1))
+	    in loop 1; writea{buf=a,i=0,sz=SOME nelems}
+	    end
+
+	val writeBlock' =
+          case r
+	    of WR{writeVec=SOME f,...} => SOME f
+	  | WR{writeArr=SOME f,...} => 
+	      SOME(noOption writeaToWritev (SOME o f))
+	  | WR{writeVecNB=SOME f,block=SOME b,...} =>
+	      SOME(fn i => (b(); noOption (fn x=>x) f i))
+	  | WR{writeArrNB=SOME f, block=SOME b,...} =>
+	      SOME(fn x => (b(); noOption writeaToWritev f x))
+	  | _ => NONE
+
+	val writeaBlock' = 
+          case r
+	    of WR{writeArr=SOME f,...} => SOME f
+	  | WR{writeVec=SOME f,...} => 
+	      SOME(noOption writevToWritea (SOME o f))
+	  | WR{writeArrNB=SOME f, block=SOME b,...} =>
+	      blockingOperation(f,b)
+	  | WR{writeVecNB=SOME f,block=SOME b,...} =>
+	      blockingOperation(writevToWritea f, b)
+	  | _ => NONE
+
+	val writeNoBlock' =
+	  case r
+	    of WR{writeVecNB=SOME f,...} => SOME f
+	  | WR{writeArrNB=SOME f,...} => SOME(writeaToWritev f)
+	  | WR{writeVec=SOME f, canOutput=SOME can,...} =>
+	      SOME(fn i => if can()
+			     then SOME(f i) else NONE)
+	     
+	  | WR{writeArr=SOME f, canOutput=SOME can,...} =>
+	      SOME(fn i => if can()
+			     then writeaToWritev (SOME o f) i else NONE)
+	  | _ => NONE
+
+	val writeaNoBlock' =
+	  case r
+	    of WR{writeArrNB=SOME f,...} => SOME f
+	  | WR{writeVecNB=SOME f,...} => SOME(writevToWritea f)
+	  | WR{writeArr=SOME f, canOutput=SOME can,...} =>
+	      SOME(fn x => if can() then SOME(f x) else NONE)
+	  | WR{writeVec=SOME f, canOutput=SOME can,...} =>
+	      SOME(fn x => if can() 
+			     then SOME(writevToWritea f x) else NONE)
+	  | _ => NONE
+
+      in WR{writeVec=writeBlock', writeArr=writeaBlock',
+	    writeVecNB=writeNoBlock', writeArrNB=writeaNoBlock',
+	    block= #block r', canOutput = #canOutput r',
+	    name= #name r', chunkSize= #chunkSize r',
+	    close= #close r', getPos = #getPos r', 
+	    setPos = #setPos r', endPos = #endPos r',
+	    ioDesc=NONE}
+      end
+
+  end
+@
+
+
+1.4
+log
+@Vector changes
+@
+text
+@d10 3
+d115 1
+a115 2
+<<<<<<< /usr/ldisk/matthew/ml/MLW/src/basis/_primio.sml
+	  in case reada{data=a,first=0,nelems=i}
+a116 4
+=======
+	  in case reada{buf=a,i=0,sz=SOME i}
+	    of SOME i' => SOME(A.extract(a,0,i'))
+>>>>>>> 1.3
+a139 6
+<<<<<<< /usr/ldisk/matthew/ml/MLW/src/basis/_primio.sml
+          case r of
+            Rd{readBlock=SOME f,...} => SOME f
+	  | Rd{readaBlock=SOME f,...} => SOME(noOption readaToReadv (SOME o f))
+	  | Rd{readNoBlock=SOME f,block=SOME b,...} =>
+=======
+a143 1
+>>>>>>> 1.3
+a196 3
+<<<<<<< /usr/ldisk/matthew/ml/MLW/src/basis/_primio.sml
+	    val v = A.extract(data,first,SOME nelems)
+=======
+d202 1
+a202 2
+	    val v = A.extract(data,first,nelems)
+>>>>>>> 1.3
+@
+
+
+1.3
+log
+@signature changes
+@
+text
+@d10 3
+a43 3
+	       structure V : MONO_VECTOR
+	       sharing type A.vector=V.vector
+	       sharing type A.elem=V.elem
+d48 1
+d95 3
+a97 3
+	    case convert f x
+             of SOME result => result
+	      | NONE => raise Fail "bug in PrimIO"
+d112 4
+d118 1
+d142 6
+d152 1
+d206 3
+d215 1
+@
+
+
+1.2
+log
+@pack_words moved to pack_word
+@
+text
+@d10 3
+d35 1
+d38 1
+a38 1
+require "primio";
+d45 1
+a45 1
+	       type pos
+d52 16
+a67 9
+    val posLess = posLess
+
+    type 'a portion = {data: 'a, first: int, nelems: int}
+
+    datatype reader = Rd of 
+              {readNoBlock : (int -> vector option) option,
+               readaNoBlock: (array portion -> int option) option,
+               readBlock :   (int -> vector) option,
+               readaBlock:   (array portion -> int) option,
+d76 1
+a76 1
+               findPos   : (vector portion * pos -> pos)}
+d78 5
+a82 5
+    datatype writer = Wr of 
+              {writeNoBlock: (vector portion -> int option) option,
+               writeaNoBlock: (array portion -> int option) option,
+               writeBlock: (vector portion -> int) option,
+               writeaBlock: (array portion -> int) option,
+d90 2
+a91 1
+               endPos : (unit->pos)}
+d106 1
+a106 1
+    fun augmentIn (r as Rd r') =
+d111 1
+a111 1
+	  in case reada{data=a,first=0,nelems=i}
+d116 18
+a133 10
+	fun readvToReada readv {data: array, first: int, nelems: int} =
+	  case readv nelems
+	    of SOME v => SOME(let val len = V.length v
+				  fun loop i = 
+				    if i >= len then len
+				    else (A.update(data,i+first,V.sub(v,i));
+					  loop(i+1))
+			      in loop 0
+			      end)
+	  | NONE => NONE
+d137 3
+a139 3
+	    of Rd{readBlock=SOME f,...} => SOME f
+	  | Rd{readaBlock=SOME f,...} => SOME(noOption readaToReadv (SOME o f))
+	  | Rd{readNoBlock=SOME f,block=SOME b,...} =>
+d141 1
+a141 1
+	  | Rd{readaNoBlock=SOME f, block=SOME b,...} =>
+d147 3
+a149 3
+	    of Rd{readaBlock=SOME f,...} => SOME f
+	  | Rd{readBlock=SOME f,...} => SOME(noOption readvToReada (SOME o f))
+	  | Rd{readaNoBlock=SOME f, block=SOME b,...} =>
+d151 1
+a151 1
+	  | Rd{readNoBlock=SOME f,block=SOME b,...} =>
+d157 3
+a159 3
+	    of Rd{readNoBlock=SOME f,...} => SOME f
+	  | Rd{readaNoBlock=SOME f,...} => SOME(readaToReadv f)
+	  | Rd{readBlock=SOME f, canInput=SOME can,...} =>
+d163 1
+a163 1
+	  | Rd{readaBlock=SOME f, canInput=SOME can,...} =>
+d170 3
+a172 3
+	    of Rd{readaNoBlock=SOME f,...} => SOME f
+	  | Rd{readNoBlock=SOME f,...} => SOME(readvToReada f)
+	  | Rd{readaBlock=SOME f, canInput=SOME can,...} =>
+d175 1
+a175 1
+	  | Rd{readBlock=SOME f, canInput=SOME can,...} =>
+d180 2
+a181 2
+      in Rd{readBlock=readBlock', readaBlock=readaBlock',
+	    readNoBlock=readNoBlock', readaNoBlock=readaNoBlock',
+d185 2
+a186 2
+	    setPos = #setPos r', endPos = #endPos r', 
+	    findPos = #findPos r'}
+d189 1
+a189 1
+    fun augmentOut (r as Wr r') =
+d191 1
+a191 1
+	fun writevToWritea writev {data,first,nelems} =
+d193 5
+d200 1
+a200 1
+	    writev{data=v,first=0,nelems=nelems}
+d202 2
+a203 2
+	fun writeaToWritev writea {data,first,nelems=0} = SOME 0
+	  | writeaToWritev writea {data,first,nelems} =
+d205 5
+d214 1
+a214 1
+	    in loop 1; writea{data=a,first=0,nelems=nelems}
+d217 1
+a217 1
+	val writeBlock' = 
+d219 2
+a220 2
+	    of Wr{writeBlock=SOME f,...} => SOME f
+	  | Wr{writeaBlock=SOME f,...} => 
+d222 1
+a222 1
+	  | Wr{writeNoBlock=SOME f,block=SOME b,...} =>
+d224 1
+a224 1
+	  | Wr{writeaNoBlock=SOME f, block=SOME b,...} =>
+d230 2
+a231 2
+	    of Wr{writeaBlock=SOME f,...} => SOME f
+	  | Wr{writeBlock=SOME f,...} => 
+d233 1
+a233 1
+	  | Wr{writeaNoBlock=SOME f, block=SOME b,...} =>
+d235 1
+a235 1
+	  | Wr{writeNoBlock=SOME f,block=SOME b,...} =>
+d241 3
+a243 3
+	    of Wr{writeNoBlock=SOME f,...} => SOME f
+	  | Wr{writeaNoBlock=SOME f,...} => SOME(writeaToWritev f)
+	  | Wr{writeBlock=SOME f, canOutput=SOME can,...} =>
+d247 1
+a247 1
+	  | Wr{writeaBlock=SOME f, canOutput=SOME can,...} =>
+d254 3
+a256 3
+	    of Wr{writeaNoBlock=SOME f,...} => SOME f
+	  | Wr{writeNoBlock=SOME f,...} => SOME(writevToWritea f)
+	  | Wr{writeaBlock=SOME f, canOutput=SOME can,...} =>
+d258 1
+a258 1
+	  | Wr{writeBlock=SOME f, canOutput=SOME can,...} =>
+d263 2
+a264 2
+      in Wr{writeBlock=writeBlock', writeaBlock=writeaBlock',
+	    writeNoBlock=writeNoBlock', writeaNoBlock=writeaNoBlock',
+d268 2
+a269 1
+	    setPos = #setPos r', endPos = #endPos r'}
+d272 1
+a272 2
+  end;
+
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d28 1
+a28 1
+require "__chars";
+d31 3
+a33 3
+require "__fileposint";
+require "mono_vectors";
+require "mono_arrays";
+@

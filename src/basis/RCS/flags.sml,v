@@ -1,0 +1,60 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.04.07.14.11.14;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@(* The flags signature *)
+(*
+ * Copyright (c) 1998 Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log$
+ *
+ *)
+
+(* Move the POSIX_FLAGS signature to FLAGS, because we need it here too. *)
+
+require "__sys_word";
+
+signature FLAGS =
+  sig
+
+    eqtype  flags
+
+    val toWord : flags -> SysWord.word
+    val fromWord : SysWord.word -> flags
+
+    val flags : flags list -> flags
+
+    val allSet : (flags * flags) -> bool
+    (* True if all flags in parameter 2 occur in parameter 1 *)
+
+    val anySet : (flags * flags) -> bool
+    (* True if any flags in parameter 2 occur in parameter 1 *)
+  end
+@

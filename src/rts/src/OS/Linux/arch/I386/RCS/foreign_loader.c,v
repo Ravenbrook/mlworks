@@ -1,0 +1,260 @@
+head	1.4;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.04.19.15.36.44;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.03.24.12.20.24;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.08.14.59.04;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.01.10.57.04;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+ Foreign Object loading routines
+@
+
+
+1.4
+log
+@Add check_big_endian function
+@
+text
+@/*  ==== FOREIGN OBJECT LOADER ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  This implementation provides dummy stubs for those ML ports
+ *  where foreign object loading is not yet supported.  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:Linux:arch:I386:foreign_loader.c,v $
+ * Revision 1.3  1995/03/24  12:20:24  brianm
+ * Adding prototypes due to modification of header file.
+ * Simplified code to yield `unimplemented' exception.
+ *
+ * Revision 1.2  1995/03/08  14:59:04  brianm
+ * Minor corrections
+ *
+ * Revision 1.1  1995/03/01  10:57:04  brianm
+ * new unit
+ *  Foreign Object loading routines
+ *
+ */
+
+
+#include "ansi.h"
+#include "mltypes.h"
+#include "allocator.h"
+#include "values.h"
+#include "diagnostic.h"
+#include "environment.h"
+#include "exceptions.h"
+#include "foreign_loader.h"
+
+
+#if FAKE_RTS
+
+#include "mylib.h"
+#include "fake_rts.h"
+
+#endif
+
+#define raise_unimpl(str)    exn_raise_string(perv_exn_ref_value, (str))
+
+
+/* Forward decls. */
+
+static mlval load_foreign_object(mlval);
+static mlval lookup_foreign_value(mlval);
+static mlval call_unit_function(mlval);
+static mlval call_foreign_function(mlval);
+
+
+/* Definitions */
+
+static mlval load_foreign_object(mlval string)
+{
+   raise_unimpl("unimplemented : load_foreign_object");
+}
+
+
+static mlval lookup_foreign_value(mlval arg)
+{
+   raise_unimpl("unimplemented : lookup_foreign_value");
+
+}
+
+static mlval call_unit_function(mlval f_val)
+{
+   raise_unimpl("unimplemented : call_unit_function");
+}
+
+static mlval call_foreign_function(mlval f_val)
+{
+   raise_unimpl("unimplemented : call_foreign_function");
+}
+
+
+extern mlval call_ffun_error(int argv)
+{
+   raise_unimpl("unimplemented : call_ffun_error");
+}
+
+/* ==== <ML> check_big_endian : unit -> bool
+ *
+ *  Returns true for big_endian encoding 
+ *
+ */
+static mlval check_big_endian (mlval argument)
+{
+   unsigned i = 1;
+   char *bytes;
+
+   bytes = (char *)&i;
+
+   if (0 != bytes[3]) { return(MLTRUE); };
+
+   return(MLFALSE);
+}
+
+
+void foreign_init(void)
+{
+  env_function("load foreign object",load_foreign_object);
+  env_function("lookup foreign value",lookup_foreign_value);
+  env_function("call unit function",call_unit_function);
+  env_function("call foreign function",call_foreign_function);
+
+  env_function("big endian flag", check_big_endian);
+}
+@
+
+
+1.3
+log
+@Adding prototypes due to modification of header file.
+Simplified code to yield `unimplemented' exception.
+@
+text
+@d13 4
+d85 18
+d109 2
+@
+
+
+1.2
+log
+@Minor corrections
+@
+text
+@d13 3
+a19 1
+ *
+d29 1
+a30 1
+#include "fi_call_stub.h"
+d40 1
+a40 1
+/* Definitions */
+a41 3
+mlval load_foreign_object(mlval string)
+{
+   mlval fstruct;
+d43 1
+a43 1
+   fstruct = allocate_record(3);
+d45 4
+a48 3
+   FIELD(fstruct, 0) = MLINT(0);
+   FIELD(fstruct, 1) = MLINT(0);
+   FIELD(fstruct, 2) = MLINT(0);
+a49 2
+   return(fstruct);
+}
+d51 1
+d53 1
+a53 1
+mlval lookup_foreign_value(mlval arg)
+d55 1
+a55 1
+   return(pack_foreign_value((mlval)0));
+d58 2
+a59 1
+mlval call_unit_function(mlval f_val)
+d61 2
+a62 2
+   fprintf(stderr,"call_unit_function : not yet implemented\n");
+   return(0);
+d65 1
+a65 1
+mlval call_foreign_function(mlval f_val)
+d67 1
+a67 2
+   fprintf(stderr,"call_foreign_function : not yet implemented\n");
+   return(0);
+d70 1
+a70 2
+
+mlval call_ffun_error(int argv)
+d72 1
+a72 2
+   fprintf(stderr,"call_ffun_error : not yet implemented\n");
+   return(MLINT(0));
+d76 1
+a76 13
+mlval pack_foreign_value(void *ptr)
+{
+   mlval         result;
+
+   result = allocate_record(2);
+
+   FIELD(result,0) = MLINT(0);
+   FIELD(result,1) = MLINT(0);
+
+   return(result);
+}
+
+void *unpack_foreign_value(mlval object)
+d78 1
+a78 2
+   
+   return((void *)NULL);
+@
+
+
+1.1
+log
+@new unit
+ Foreign Object loading routines
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d17 1
+d27 2
+a29 1
+#include "foreign_loader.h"
+d69 7
+@

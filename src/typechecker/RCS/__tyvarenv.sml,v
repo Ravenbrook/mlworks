@@ -1,0 +1,202 @@
+head	1.6;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.6
+date	93.02.08.17.15.04;	author matthew;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.08.11.18.02.35;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.03.12.57.09;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.18.51.57;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.42.57;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.31.41;	author colin;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.02.08.17.15.04;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatype and functions for TyVarEnv mapping from syntactic type variables
+to semantic types
+Corresponds closely to TyVarSet (U) in The Definition (section 4.2)
+@
+
+
+1.6
+log
+@Changes for BASISTYPES signature
+@
+text
+@(* __tyvarenv.sml the structure *)
+(*
+$Log: __tyvarenv.sml,v $
+Revision 1.5  1992/08/11  18:02:35  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.4  1992/08/03  12:57:09  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.3  1992/01/27  18:51:57  jont
+Added ty_debug parameter
+
+Revision 1.2  1991/11/21  16:42:57  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:31:41  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/__debug";
+require "../utils/__lists";
+require "../utils/__print";
+require "../basics/__identprint";
+require "../typechecker/__ty_debug";
+require "../typechecker/__types";
+require "__basistypes";
+require "../typechecker/_tyvarenv";
+
+structure Tyvarenv_ = Tyvarenv (
+  structure Debug     = Tyvarenv_Debug_
+  structure IdentPrint = IdentPrint_
+  structure Lists     = Lists_
+  structure Print     = Print_
+  structure Ty_Debug  = Ty_Debug_
+  structure BasisTypes = BasisTypes_
+  structure Types     = Types_
+);
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.6  1993/02/08  17:15:04  matthew
+Changes for BASISTYPES signature
+
+@
+
+
+1.5
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d29 1
+d38 1
+@
+
+
+1.4
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+d22 1
+a23 1
+require "../typechecker/__datatypes";
+d29 1
+a32 1
+  structure Datatypes = Datatypes_
+@
+
+
+1.3
+log
+@Added ty_debug parameter
+@
+text
+@d4 3
+d17 1
+d24 1
+a24 1
+structure Tyvarenv_ = Tyvarenv(
+d26 1
+d28 1
+a28 1
+  structure Ty_Debug = Ty_Debug_
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	__tyvarenv.sml,v $
+d12 4
+a17 2
+require "../utils/__debug";
+require "../utils/__print";
+d20 7
+a26 5
+structure Tyvarenv_ =
+  Tyvarenv (structure Datatypes = Datatypes_
+	    structure Types     = Types_
+	    structure Debug     = Tyvarenv_Debug_
+	    structure Print     = Print_);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

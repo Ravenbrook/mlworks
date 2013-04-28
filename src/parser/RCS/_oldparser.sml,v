@@ -1,0 +1,5137 @@
+head	1.27;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.27
+	mlworks-28-01-1994:1.27
+	Release:1.27
+	mlworks-beta-01-09-1993:1.27
+	MLWorks-1-0-4-29/01/1993:1.27
+	MLWorks-1-0-3-21/12/1992:1.27
+	MLWorks-1-0-2-15/12/1992:1.27
+	MLWorks-1-0-1-04/12/1992:1.27
+	checkpoint_17_08_92:1.26
+	Ten15_release_19-11-91:1.4
+	Ten15_release_21-08-91:1.4
+	Ten15_release_19-08-91:1.4
+	ten15_release:1.4;
+locks; strict;
+
+
+1.27
+date	92.08.18.17.48.51;	author davidt;	state Exp;
+branches
+	1.27.1.1;
+next	1.26;
+
+1.26
+date	92.08.05.16.15.21;	author jont;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.06.30.11.38.25;	author clive;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.06.24.18.17.41;	author jont;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.06.15.09.37.57;	author clive;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.06.11.08.19.42;	author clive;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.06.10.10.58.24;	author matthew;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.06.03.11.59.14;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.05.21.09.22.30;	author clive;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.05.01.11.00.14;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.05.01.10.10.49;	author clive;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.04.13.15.54.54;	author clive;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.04.10.12.25.16;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.03.30.12.27.41;	author matthew;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.03.30.11.19.12;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.03.26.12.56.01;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.03.26.11.16.00;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.03.25.20.06.18;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.02.11.10.17.39;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.02.04.18.12.04;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.01.22.17.41.21;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.01.21.11.57.12;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.11.21.17.57.06;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.06.27.13.59.01;	author colin;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.27.09.08.26;	author nickh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.19.17.36.00;	author colin;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.16.17.54;	author colin;	state Exp;
+branches;
+next	;
+
+1.27.1.1
+date	92.08.18.17.48.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Main code for the parser
+@
+
+
+1.27
+log
+@Made changes necessary to work with new parserenv signature,
+removing a lot of exception handlers in the process.
+@
+text
+@(* _parser.sml the functor *)
+(*
+$Log: _parser.sml,v $
+Revision 1.26  1992/08/05  16:15:21  jont
+Removed some structures and sharing
+
+Revision 1.25  1992/06/30  11:38:25  clive
+Call point information added, and fixed a bug with withtype
+
+Revision 1.24  1992/06/24  18:17:41  jont
+Changed to imperative implementation of namesets with hashing
+
+Revision 1.23  1992/06/15  09:37:57  clive
+Added debug information to handlers
+
+Revision 1.22  1992/06/11  08:19:42  clive
+Added marks for some error messages from the typechecker
+
+Revision 1.21  1992/06/10  10:58:24  matthew
+Changed maybe_parse_decs to cope with expressions as declarations
+
+Revision 1.20  1992/06/03  11:59:14  jont
+Made require take a terminating semicolon
+
+Revision 1.19  1992/05/21  09:22:30  clive
+Added marks to allow position reporting from the typechecker
+
+Revision 1.18  1992/05/01  11:00:14  jont
+Added an extra parameter to parse_dec and related routines to indicate
+when we are in strdec context. In this case, LOCAL must be treated as
+LOCAL strdec IN strdec END rather than LOCAL dec IN dec END. Thus
+some sequence decs may become split, and some LOCALdecs may become
+LOCALstrdecs, but I doubt this matters
+
+Revision 1.17  1992/05/01  10:10:49  clive
+Added more useful annotations to if,while,case statements to give better info in a stack backtrace
+
+Revision 1.16  1992/04/13  15:54:54  clive
+First version of the profiler
+
+Revision 1.15  1992/04/10  12:25:16  jont
+Added print parameter to functor for use when debugging
+
+Revision 1.14  1992/03/30  12:27:41  matthew
+Added some more exception handlers
+
+Revision 1.13  1992/03/30  11:19:12  richard
+Corrected pathname for ../basics/integer in a require.
+
+Revision 1.12  1992/03/26  12:56:01  matthew
+Fixed bug with atomic patterns.
+
+Revision 1.10  1992/03/25  20:06:18  matthew
+Added improved error messages.
+
+Revision 1.9  1992/02/11  10:17:39  clive
+New pervasive library code - cut some things out of the initial type basis
+
+Revision 1.8  1992/02/04  18:12:04  jont
+Made some optimisations, and removed Ident from the result
+
+Revision 1.7  1992/01/22  17:41:21  clive
+Added the exceptions and functions in the Array structure to the
+initial parser environment
+
+Revision 1.6  1992/01/21  11:57:12  jont
+Fixed problem with parsing {tyrow} tycon (I think)
+
+Revision 1.5  1991/11/21  17:57:06  jont
+Added copyright message. Fixed potential parsing error found by
+njml 0.75
+
+Revision 1.4  91/06/27  13:59:01  colin
+changed to handle Interface annotations in signature expressions
+
+Revision 1.3  91/06/27  09:08:26  nickh
+Added parsing for require topdecs.
+
+Revision 1.2  91/06/19  17:36:00  colin
+Updated to handle extra type ref field in HANDLEexp
+
+Revision 1.1  91/06/07  16:17:54  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/crash";
+require "../lexer/lexer";
+require "../utils/integer";
+require "../utils/print";
+require "parserenv";
+require "derived";
+require "parser";
+
+functor Parser
+  (structure Crash : CRASH
+   structure Lexer : LEXER
+   structure ParserEnv : PARSERENV
+   structure Derived : DERIVED
+   structure Integer : INTEGER
+   structure Print : PRINT
+   sharing Derived.Symbol = Lexer.Token.Symbol
+   sharing Derived.Absyn.IdentClass = ParserEnv.Ident
+     ) : PARSER =
+struct
+
+structure Absyn = Derived.Absyn
+structure Nameset = Absyn.Nameset
+structure Interface = Absyn.Interface
+structure Datatypes = Absyn.Datatypes
+structure Ident = Datatypes.Ident
+structure Token = Lexer.Token
+structure Symbol = Token.Symbol
+structure Lexer = Lexer
+structure Set = Absyn.Set
+structure PE = ParserEnv
+
+(* we need this to create dummy annotations *)
+fun annotate valid = (valid, ref Datatypes.NULLTYPE)
+fun annotate' (valid,marks) = (valid, ref Datatypes.NULLTYPE,marks)
+
+exception ParseError of string
+
+type ParserBasis = PE.pB
+
+fun get_next_token tokenstream =
+  let val token = (Lexer.getToken tokenstream)
+  in
+    token
+  end
+  
+fun parse_topdec (tokenstream,pB) =
+  
+let
+
+val the_token = ref (get_next_token tokenstream)
+
+fun get_the_token () =
+   !the_token
+
+fun next_token () =
+  the_token := get_next_token tokenstream
+  
+fun get_linenum () =
+  (1 + Lexer.linenum tokenstream,
+   Lexer.linepos tokenstream)
+
+fun get_marks() =
+  Absyn.tuple_to_Source_marks(get_linenum())
+
+fun linenum_as_string () =
+  let
+    val (a,b) = get_linenum()
+  in
+    Integer.makestring a ^"," ^ Integer.makestring b
+  end
+
+ val filename = 
+   Lexer.associated_filename tokenstream
+ 
+ fun generate_source_file_info () =
+   let
+     val linenum = linenum_as_string()
+   in
+     fn name => name ^ " " ^ filename ^ ":" ^ linenum
+   end
+
+fun report_parse_error message =
+  let val (ln,_) = get_linenum ()
+  in
+    raise ParseError (message ^ " in line " ^ Integer.makestring ln
+      ^ " at token "  ^ Token.makestring (get_the_token ()))
+  end
+
+fun report_unexpected_token message =
+  report_parse_error ("Expected " ^ message ^ ", found \"" ^ Token.makestring (get_the_token ()) ^ "\"")
+
+(* These functions are called when we have mutiply defined identifiers in bindings. *)
+
+fun strid_bound_twice _ = report_parse_error "STRID bound more than once"
+fun sigid_bound_twice _ = report_parse_error "SIGID bound more than once"
+fun funid_bound_twice _ = report_parse_error "FUNID bound more than once"
+fun id_bound_twice    _ = report_parse_error "Identifier bound more than once"
+
+(* these functions are for creating real identifiers from Token.LONGID's *)
+
+exception Long
+
+val asterisk = Symbol.find_symbol "*"
+val equal = Symbol.find_symbol "="
+
+fun mkVar (nil,sym) = Ident.VAR sym
+  | mkVar x = report_parse_error ("Invalid use of Long Variable " ^ Token.makestring (Token.LONGID x))
+fun mkCon (nil,sym) = Ident.CON sym
+  | mkCon x = report_parse_error ("Invalid use of Long Constructor " ^ Token.makestring (Token.LONGID x))
+fun mkExCon (nil,sym) = Ident.EXCON sym 
+  | mkExCon x = report_parse_error ("Invalid use of Long exception Constructor " ^ Token.makestring (Token.LONGID x))
+
+fun mkTyCon (nil,sym) = 
+    if sym = asterisk then
+      (report_parse_error "ASTERISK not allowed as a tycon (mkTyCon)")
+    else
+      Ident.TYCON sym
+  | mkTyCon x = report_parse_error ("Invalid use of Long Type Constructor " ^ Token.makestring (Token.LONGID x))
+
+fun mkStrId (nil,sym) = Ident.STRID sym
+  | mkStrId x = report_parse_error ("Invalid use of Long Structure Id " ^ Token.makestring (Token.LONGID x))
+fun mkSigId (nil,sym) = Ident.SIGID sym
+  | mkSigId x = report_parse_error ("Invalid use of Long Signature Id " ^ Token.makestring (Token.LONGID x))
+fun mkFunId (nil,sym) = Ident.FUNID sym
+  | mkFunId x = report_parse_error ("Invalid use of Long Function Id " ^ Token.makestring (Token.LONGID x))
+
+val mkPath = Ident.mkPath
+(* Should be done by an optimiser, but New Jersey doesn't have one *)
+
+fun mkLongVar (syms,sym) = 
+  Ident.LONGVALID (mkPath syms, Ident.VAR sym)
+
+fun mkLongCon (syms,sym) = 
+  Ident.LONGVALID (mkPath syms, Ident.CON sym)
+
+fun mkLongExCon (syms,sym) = 
+  Ident.LONGVALID (mkPath syms, Ident.EXCON sym)
+
+fun mkLongTyCon (syms,sym) = 
+    if sym = asterisk then
+      (report_parse_error "ASTERISK not allowed as a tycon (mkLongTyCon)")
+    else
+      Ident.LONGTYCON (mkPath syms, Ident.TYCON sym)
+
+fun mkLongStrId (syms,sym) = 
+  Ident.LONGSTRID (mkPath syms, Ident.STRID sym)
+
+fun spaces(x) = 
+  if x<= 0
+    then ()
+  else 
+    (output(std_out," ");
+     spaces(x-1))
+
+fun log(x) =
+  if x < 10 
+    then 0
+  else 1 + log(x div 10)
+
+fun parse_lab () =
+  let
+    fun parse_lab_aux token =
+      (case token of
+         Token.LONGID (nil,sym) => 
+           ((next_token (); Ident.LAB sym),false,Symbol.symbol_name sym)
+       | Token.LONGID x =>
+           (report_parse_error ("Invalid use of Long label " ^ Token.makestring token))
+       | Token.INTEGER s => 
+           ((next_token () ; Ident.LAB (Symbol.find_symbol s)),true,s)
+       | _ => 
+           (report_unexpected_token "label"))
+  in
+    parse_lab_aux (get_the_token ())
+  end;
+
+
+(* first the functions for parsing type expressions *)
+
+fun parse_tyvarseq () =
+  let fun parse_tyvarseq_aux (token) =
+    case token of
+      Token.TYVAR tyvar =>
+        (next_token ();
+         Ident.TYVAR tyvar ::
+         (case (get_the_token ()) of
+            Token.RESERVED (Token.COMMA) =>
+              parse_tyvarseq (next_token ())
+          | Token.RESERVED (Token.RPAR) => 
+              (next_token () ; nil)
+          | x => (report_unexpected_token "RPAR or COMMA")))
+    | x => (report_unexpected_token "TYVAR")
+   in
+     parse_tyvarseq_aux (get_the_token ())
+   end;
+
+fun parse_tyvarseq_tycon () =
+  let 
+    val tyvarseq = (case (get_the_token ()) of
+		    Token.RESERVED (Token.LPAR) =>
+		      parse_tyvarseq (next_token ())
+		  | Token.TYVAR tyvar =>
+		      (next_token () ; [Ident.TYVAR tyvar])
+		  | _ => nil)
+
+    val tycon = (case (get_the_token ()) of
+		 Token.LONGID (id) =>
+		   (next_token () ; mkTyCon id)
+	       | x => (report_unexpected_token "TYCON"))
+  in
+    (tyvarseq,tycon)
+  end
+
+
+fun parse_type_spec () =
+  let val tyvarseq_tycon = parse_tyvarseq_tycon ()
+  in
+    case (get_the_token ()) of
+      Token.RESERVED (Token.EQUAL) =>
+	(next_token () ; tyvarseq_tycon)
+    | x => (report_unexpected_token "EQUAL")
+  end
+
+fun parse_ty () =
+
+  let 
+    val tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+
+    fun parse_paren_ty () =
+      let
+	val ty = parse_ty_internal ()
+      in
+	case (get_the_token ()) of
+	  
+	  Token.RESERVED (Token.COMMA) => 
+	    let
+	      val tyseq = ty :: parse_tyseq (next_token ())
+	    in
+	      case (get_the_token ()) of
+		Token.LONGID (id) => 
+		  (next_token ();
+		   parse_ty2' (Absyn.APPty (tyseq,mkLongTyCon id)))
+	      | x => (report_unexpected_token "TYCON")
+	    end
+	  
+	| Token.RESERVED (Token.RPAR) => 
+	    (next_token () ; parse_ty2' ty)
+	    
+	| x => 
+	    (report_unexpected_token "RPAR or COMMA")
+      end
+    
+    and parse_tyseq () =
+      let
+	val ty = parse_ty_internal ()
+      in
+	ty ::
+	(case (get_the_token ()) of
+	   Token.RESERVED (Token.COMMA) => parse_tyseq (next_token ())
+	 | Token.RESERVED (Token.RPAR) => (next_token () ; nil)
+	 | x => (report_unexpected_token "RPAR or COMMA"))
+      end
+    
+    
+    and parse_tyrow () =
+      let
+	val (lab,_,_) = parse_lab ()
+      in
+	case (get_the_token ()) of
+	  Token.RESERVED (Token.COLON) =>
+	    let
+	      val ty = parse_ty_internal (next_token ())
+	    in
+	      (lab,ty) ::
+	      (case (get_the_token ()) of
+		 Token.RESERVED (Token.COMMA) =>
+		   parse_tyrow (next_token ())
+	       | Token.RESERVED (Token.RBRACE) =>
+		   (next_token () ; nil)
+	       | x => (report_unexpected_token "RBRACE or COMMA"))
+	    end
+	| x => (report_unexpected_token "COLON")
+      end
+    
+    and parse_tuple_ty (ty1) =
+      let 
+	fun parse_tuple () =
+	  case (get_the_token ()) of
+	    Token.LONGID (id) =>
+	      if id = (nil,asterisk) then
+		parse_ty2 (next_token ()) :: parse_tuple ()
+	      else
+		nil
+	  | _ => nil
+      in
+	ty1 :: parse_tuple ()
+      end
+    
+    and parse_ty_internal () =
+      parse_ty' (parse_ty1 ())
+
+    and parse_ty' (ty) =
+      case (get_the_token ()) of
+	Token.RESERVED (Token.ARROW) => 
+	  (next_token ();
+	   let
+	     val ty' = parse_ty_internal ()
+	   in
+	     Absyn.FNty (ty,ty')
+	   end)
+      | _ => ty
+	  
+    and parse_ty1 () =
+      parse_ty1' (parse_ty2 ())
+
+    and parse_ty1' (ty) =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  if id = (nil,asterisk) then
+	    Derived.make_tuple_ty (parse_tuple_ty ty)
+	  else
+	    ty
+      | _ => ty
+
+    and parse_ty2 () =
+      case (get_the_token ()) of
+	Token.RESERVED r =>
+	  (case r of
+	     
+	     Token.LBRACE => 
+	       (next_token () ; parse_ty2' (Absyn.RECORDty (parse_tyrow ())))
+	       
+	   | Token.LPAR => 
+	       (next_token () ; (parse_paren_ty ()))
+	       
+	   | x => 
+	       (report_unexpected_token "Type"))
+	     
+      | Token.TYVAR tyvar =>
+	  (next_token ();
+	   tyvarset := Set.add_member ((Ident.TYVAR tyvar), !tyvarset);
+	   parse_ty2' (Absyn.TYVARty (Ident.TYVAR tyvar)))
+	  
+      | Token.LONGID id => 
+	  (next_token ();
+	   parse_ty2' (Absyn.APPty ([], mkLongTyCon id)))
+	  
+      | x => (report_unexpected_token "Type expression")
+	
+    and parse_ty2' (ty) =
+      case (get_the_token ()) of
+	Token.LONGID (id) => 
+	  if id = (nil,asterisk) then
+	    ty
+	  else
+	    (next_token ();
+	     parse_ty2' (Absyn.APPty ([ty], mkLongTyCon id)))
+      | _ => ty
+
+  in
+
+    (parse_ty_internal (),!tyvarset)
+
+  end
+
+(* Now for patterns *)
+
+(* pE is the parser environment in which the pattern is being parsed and pVE is
+   the initial parser value environment which is augmented during parsing the
+   pattern. Note that pVE is usually the empty map but will be non empty when
+   parsing valbinds to prevent rebinding of the same name twice. *)
+
+local
+
+  fun addtyvars (tyvars,(_,_,ref_tyvarset)) =
+    ref_tyvarset := Set.union (tyvars, !ref_tyvarset)
+
+
+  fun ensure_varpat (Absyn.VALpat 
+		     (Ident.LONGVALID (_,var as Ident.VAR _),_)) = var
+    | ensure_varpat _ = (report_unexpected_token "var before as")
+
+  local  
+    fun resolve_valid (id,env as (pE,ref_pVE,_)) =
+      let
+	fun addvar var = ref_pVE := PE.addValId (id_bound_twice, var,!ref_pVE)
+      in
+	(case PE.lookupValId (id, pE) of
+	   (* syntax says only Var allowed, in absyn LongValId required ! *)
+	   Ident.VAR _ => 
+	     let
+	       val var = mkVar id
+	     in
+	       (addvar var ;
+		Ident.LONGVALID (mkPath [], mkVar id))
+	     end
+	 | Ident.CON _ => mkLongCon id
+	 | Ident.EXCON _ => mkLongExCon id)
+	   handle PE.Lookup => 
+	     let
+	       val var = mkVar id
+	     in
+	       (addvar var ; Ident.LONGVALID (mkPath [], mkVar id))
+	     end
+      end
+  in
+
+    fun resolve_valpat (id,env) = 
+      Absyn.VALpat (annotate (resolve_valid (id,env)))
+
+    fun resolve_conpat (id,env) =
+      case resolve_valid (id,env) of
+	Ident.LONGVALID (_,Ident.VAR _) =>
+	  (report_parse_error "Unbound Constructor (resolve_conpat)")
+      | valid => (annotate valid)
+  end
+
+
+  exception AtPat
+
+  (* mutually recursive pattern parsing functions start here *)
+  fun parse_atpat0 (env as (pE,_,_)) =
+    case (get_the_token ()) of
+      
+      Token.INTEGER s => 
+	(next_token () ; Absyn.SCONpat (Ident.INT s))
+
+    | Token.REAL s => 
+	(next_token () ; Absyn.SCONpat (Ident.REAL s))
+
+    | Token.STRING s =>
+	(next_token () ; Absyn.SCONpat (Ident.STRING s))
+	
+    | Token.LONGID (id as (nil,sym)) =>
+	(case PE.lookupFixity (sym,pE) of
+	   PE.NONFIX => (next_token (); resolve_valpat (id,env))
+	 | _ => raise AtPat)
+
+    (* This one guaranteed long *)
+
+    | Token.LONGID (id) => (next_token () ; resolve_valpat (id,env))
+	     
+    | Token.RESERVED r =>
+	(case r of
+	   
+	   Token.OP =>
+	     (next_token ();
+	      case (get_the_token ()) of
+		Token.LONGID (id) => (next_token () ; resolve_valpat (id,env))
+	      | x => (report_unexpected_token "identifier after OP"))
+	   
+	 | Token.UNDERBAR => (next_token () ; Absyn.WILDpat)
+			
+	 | Token.LBRACE => 
+	     (next_token () ;
+	      let 
+		val (columns,wild) = parse_patrow env
+	      in
+		Absyn.RECORDpat (columns,wild,ref Datatypes.NULLTYPE)
+	      end)
+	   
+	 | Token.LPAR => 
+             (next_token () ;
+	      case (get_the_token ()) of 
+
+		Token.RESERVED (Token.RPAR) =>
+		  (next_token () ; Derived.make_unit_pat ())
+
+	      | _ =>
+		  let
+		    val pat1 = parse_pat0 env
+		  in
+		    case (get_the_token ()) of
+
+		      Token.RESERVED (Token.COMMA) =>
+			Derived.make_tuple_pat (parse_tuple_pat (pat1,env))
+
+		    | Token.RESERVED (Token.RPAR) => 
+			(next_token () ; pat1)
+		      
+		    | x => report_unexpected_token "RPAR or COMMA"
+		  end)
+	     
+	 | Token.BRA =>
+	     (next_token () ;
+	      Derived.make_list_pat (parse_list_pat env))
+	     
+	 | x => raise AtPat)
+    | x => raise AtPat
+
+  and parse_tuple_pat (pat1,env) =
+    let fun parse_tuple () =
+      case (get_the_token ()) of
+	Token.RESERVED (Token.RPAR) => 
+	  (next_token () ; nil)
+      | Token.RESERVED (Token.COMMA) => 
+	  (next_token () ;
+	   let
+	     val pat = parse_pat0 env
+	   in
+	     pat::parse_tuple ()
+	   end)
+      | x => (report_unexpected_token "COMMA or RPAR")
+    in
+      pat1::parse_tuple ()
+    end
+
+  and parse_list_pat env =
+    let fun parse_list () = 
+      case (get_the_token ()) of
+	Token.RESERVED (Token.KET) => 
+	  (next_token () ; nil)
+      | Token.RESERVED (Token.COMMA) => 
+	  (next_token () ;
+	   let
+	     val pat = parse_pat0 env
+	   in
+	     pat::parse_list ()
+	   end)
+      | x => report_unexpected_token "COMMA or KET"
+    in
+      case (get_the_token ()) of 
+	Token.RESERVED (Token.KET) => (next_token () ; [])
+      | _ => let val pat1 = parse_pat0 env
+	     in
+	       pat1::parse_list ()
+	     end
+    end
+  
+
+  and parse_patrow env =
+    case (get_the_token ()) of
+
+      Token.RESERVED (Token.ELLIPSIS) => 
+	(next_token ();
+	 case (get_the_token ()) of
+	   Token.RESERVED (Token.RBRACE) =>
+	     (next_token (); (nil,true))
+	 | _ => (report_unexpected_token "RBRACE after ELLIPSIS"))
+
+    | _ =>
+	let 
+	  val labpat = parse_labpat env
+	  val (columns, wild) = 
+	    (case (get_the_token ()) of
+	       Token.RESERVED (Token.COMMA) =>
+		 (next_token () ; parse_patrow env)
+	     | Token.RESERVED (Token.RBRACE) =>
+		 (next_token () ; (nil, false))
+	     | x => (report_unexpected_token "RBRACE or COMMA"))
+	in
+	  (labpat::columns, wild)
+	end
+
+
+  and parse_labpat env =
+    let
+      val (lab,numeric,_) = parse_lab ()
+    in
+      case (get_the_token ()) of
+
+	Token.RESERVED (Token.EQUAL) =>
+	  (next_token (); 
+	   (lab, parse_pat0 env))
+
+      | _ =>
+	  if numeric then
+	    (report_unexpected_token "EQUAL after numeric lab")
+	  else
+	    let val Ident.LAB (sym) = lab
+	    in
+	      case (get_the_token ()) of
+		
+		Token.RESERVED (Token.COLON) => 
+		  (next_token ();
+		   let
+		     val (ty,tyvars) = parse_ty ()
+		   in
+		     (addtyvars (tyvars,env);
+		      case (get_the_token ()) of
+			Token.RESERVED (Token.AS) =>
+			  (next_token ();
+			   let
+			     val pat = parse_pat0 env
+			   in
+			     Derived.make_patrow
+			     (sym, Absyn.PRESENT ty, Absyn.PRESENT pat)
+			   end)
+		      | _ => 
+			  Derived.make_patrow
+			  (sym, Absyn.PRESENT ty, Absyn.ABSENT))
+		   end)
+
+	      | Token.RESERVED (Token.AS) => 
+		  (next_token ();
+		   let
+		     val pat = parse_pat0 env
+		   in
+		     Derived.make_patrow
+		     (sym, Absyn.ABSENT, Absyn.PRESENT pat)
+		   end)
+
+	      | _ => 
+		  Derived.make_patrow
+		  (sym, Absyn.ABSENT, Absyn.ABSENT)
+	    end
+    end
+
+  and parse_pat0 env =
+    let
+      val pat = parse_infpat env
+      fun parse_pat1' pat =
+	case (get_the_token ()) of
+
+	  Token.RESERVED (Token.COLON) =>
+	    (next_token ();
+	     let
+	       val (ty,tyvars) = parse_ty ()
+	     in
+	       (addtyvars (tyvars,env);
+		parse_pat1' (Absyn.TYPEDpat (pat,ty)))
+	     end)
+	| _ => pat
+    in
+      case (get_the_token ()) of
+
+	Token.RESERVED (Token.COLON) =>
+	  (next_token () ;
+	   let
+	     val (ty,tyvars) = parse_ty ()
+	   in
+	     (addtyvars (tyvars,env);
+	      case (get_the_token ()) of
+		Token.RESERVED (Token.AS) =>
+		  (next_token ();
+		   let 
+		     val var = ensure_varpat pat
+		     val pat' = parse_pat0 env
+		   in
+		     Absyn.TYPEDpat (Absyn.LAYEREDpat (annotate var,pat'), ty)
+		   end)
+	      | _ => parse_pat1' (Absyn.TYPEDpat (pat,ty)))
+	   end)
+
+      | Token.RESERVED (Token.AS) => 
+	  (next_token ();
+	   let
+	     val var = ensure_varpat pat
+	     val pat' = parse_pat0 env
+	   in
+	     Absyn.LAYEREDpat (annotate var,pat')
+	   end)
+
+      | _ => pat
+    end
+
+
+  and parse_infpat (env as (pE,_,_)) = 
+    let
+      fun infix_p (n) =
+	if n = 9 then
+	  parse_apppat env
+	else
+	  infix_p' (n,infix_p (n+1))
+
+      and infix_p' (n,pat) =
+	case (get_the_token ()) of
+	  Token.LONGID (id as (nil,sym)) =>
+	    let
+	      val fixity = PE.lookupFixity(sym,pE)
+	    in
+	      case fixity of
+		PE.LEFT (p) =>
+		  if p = n then
+		    (next_token ();
+		     infix_p'(n,Absyn.APPpat
+			      (resolve_conpat (id,env),
+			       Derived.make_tuple_pat[pat,infix_p(n+1)])))
+		  else
+		    pat
+	      | PE.RIGHT (p) => 
+		  if p = n then
+		    (next_token ();
+		     let
+		       val t = infix_p(n+1)
+		     in
+		       case (get_the_token ()) of
+			 Token.LONGID id' =>
+			   if id = id' then
+			     Absyn.APPpat
+			     (resolve_conpat (id,env),
+			      Derived.make_tuple_pat[pat,infix_p'(n,t)])
+			   else
+			     infix_p'(n,Absyn.APPpat
+				      (resolve_conpat (id,env),
+				       Derived.make_tuple_pat[pat,t]))
+		       | _ => infix_p'(n,Absyn.APPpat
+				       (resolve_conpat (id,env),
+					Derived.make_tuple_pat[pat,t]))
+
+		     end)
+		  else
+		    pat
+		       | _ => pat
+	    end
+	| _ => pat
+    in
+      infix_p 0
+    end
+
+  and parse_apppat env =
+    let
+      val pat = parse_atpat0 env handle AtPat => report_unexpected_token "Pattern"
+    in
+      case pat of
+	Absyn.VALpat ((longvalid as (Ident.LONGVALID (path,valid))),_) =>
+	  (case valid of
+	     
+	     Ident.VAR _ => 
+	       pat
+	  
+	   | _ => 
+	       let
+		 val pat' = parse_atpat0 env
+	       in
+		 Absyn.APPpat (annotate longvalid, pat')
+	       end handle AtPat => pat)
+
+      | _ => pat
+    end
+
+(* mutually recursive pattern parsing functions end here *)
+
+in
+  fun parse_atpat (pE,pVE) = 
+    let
+      val ref_pVE = ref pVE
+      val ref_tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+      val dec = parse_atpat0 (pE,ref_pVE,ref_tyvarset) handle AtPat => report_unexpected_token "Pattern"
+    in
+      (dec,!ref_pVE,!ref_tyvarset)
+    end
+
+  fun parse_pat (pE,pVE) = 
+    let
+      val ref_pVE = ref pVE
+      val ref_tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+      val dec = parse_pat0 (pE,ref_pVE,ref_tyvarset)
+    in
+      (dec,!ref_pVE,!ref_tyvarset)
+    end
+
+end
+
+(* parsing functions for expressions and declarations have to be defined
+   simultaneously as they are mutually recursive *)
+
+local
+
+  exception Dec
+
+  fun maybe_parse_dec (arg as (str, top,pE)) =
+    let fun doanit () =
+      if top then
+        let
+          val (exp,tyvars) = parse_exp pE
+        in
+          (Absyn.VALdec ([(Absyn.VALpat 
+                           (annotate
+                            (Ident.LONGVALID 
+                             (mkPath [],
+                              Ident.VAR (Symbol.find_symbol "it")))),
+                           exp,
+                           get_marks())],
+          nil,
+          tyvars),
+          PE.E (PE.empty_pFE,PE.empty_pVE,PE.empty_pSE),
+          Set.empty_set)
+        end
+      else
+        raise Dec
+    in
+      case (get_the_token ()) of
+        Token.RESERVED r =>
+          (case r of
+             
+             Token.SEMICOLON =>
+               if top then
+                 raise Dec (* by note at end of 3.5 *)
+               else
+                 (next_token () ; maybe_parse_dec arg)
+                 
+           | Token.VAL => 
+               (next_token () ;
+                let
+                  val (valbind,pVE) = parse_valbind pE
+                in
+                  (Absyn.VALdec valbind, 
+                   PE.E (PE.empty_pFE,pVE,PE.empty_pSE),
+                   Set.empty_set)
+                end)
+               
+           | Token.FUN => 
+	       (next_token () ;
+		let
+		  val (fvalbind,tyvarset) =
+		    parse_fvalbind (pE)
+                  val marks = get_marks()
+		in
+		  (Derived.make_fun (fvalbind,tyvarset,marks), 
+		   (* we can make this empty as there are no constructor *)
+		   (* bindings *)
+		   PE.empty_pE,Set.empty_set)
+		end)
+               
+           | Token.TYPE => 
+               (Absyn.TYPEdec (parse_typbind (next_token ())),
+                PE.empty_pE, Set.empty_set)
+               
+           | Token.DATATYPE => 
+               (next_token ();
+                let
+                  val (datbind, pVE) = parse_datbind ()
+                in
+                  case (get_the_token ()) of
+                    Token.RESERVED (Token.WITHTYPE) =>
+                      (next_token ();
+                       let
+                         val typbind = parse_typbind ()
+                       in
+                         (Derived.make_datatype_withtype (datbind,typbind),
+                          PE.E (PE.empty_pFE,pVE,PE.empty_pSE), Set.empty_set)
+                       end)
+                  | _ => 
+                      (Absyn.DATATYPEdec datbind, 
+                       PE.E (PE.empty_pFE,pVE,PE.empty_pSE), Set.empty_set)
+                end)
+               
+           | Token.ABSTYPE =>
+               (next_token ();
+                let
+                  
+                  val (datbind, pVE) = parse_datbind ()
+                  val pE' =
+                    PE.augment_pE (pE, PE.E (PE.empty_pFE,pVE,PE.empty_pSE))
+                    
+                  fun parse_withdec () =
+                    case (get_the_token ()) of
+                      Token.RESERVED (Token.WITH) => 
+                        (next_token ();
+                         let
+                           val result  = parse_dec (false, false,pE')
+                         in
+                           case (get_the_token ()) of
+                             Token.RESERVED (Token.END) =>
+                               (next_token () ; result)
+                           | x => (report_unexpected_token "END")
+                         end)
+                    | x => (report_unexpected_token "WITH")
+                        
+                in
+                  
+                  case (get_the_token ()) of
+                    Token.RESERVED (Token.WITHTYPE) =>
+                      (next_token ();
+                       let
+                         val typbind = parse_typbind ()
+                         val (dec,pE'',tyvarset) = parse_withdec ()
+                       in
+                         (Derived.make_abstype_withtype (datbind,typbind,dec),
+                          pE'', tyvarset)
+                       end)
+                  | _ => 
+                      let
+                        val (dec,pE'',tyvarset) = parse_withdec ()
+                      in
+                        (Absyn.ABSTYPEdec (datbind,dec), pE'', tyvarset)
+                      end
+                end)
+               
+           | Token.EXCEPTION => 
+               (next_token ();
+                let
+                  val (exbind, pVE, tyvarset) = parse_exbind pE
+                in
+                  (Absyn.EXCEPTIONdec exbind, 
+                   PE.E (PE.empty_pFE,pVE,PE.empty_pSE),
+                   tyvarset)
+                end)
+               
+           | Token.LOCAL => 
+               if str then raise Dec
+               else
+                 (next_token ();
+                  let 
+                    val (dec1, pE', tyvarset) = parse_dec (false, false,pE)
+                  in
+                    case (get_the_token ()) of
+                      Token.RESERVED (Token.IN) =>
+                        (next_token ();
+                         let
+                           val (dec2, pE'', tyvarset') = 
+                             parse_dec (false, false, PE.augment_pE (pE, pE'))
+                           val tyvarset'' = Set.union (tyvarset, tyvarset')
+                         in
+                           case (get_the_token ()) of
+                             Token.RESERVED (Token.END) =>
+                               (next_token () ;
+                                (Absyn.LOCALdec (dec1,dec2), pE'', tyvarset''))
+                           | x => (report_unexpected_token "END")
+                         end)
+                    | x => (report_unexpected_token "IN")
+                  end)
+                 
+           | Token.OPEN => 
+               let 
+                 val marks = get_marks()
+                 fun parse_strids () =
+                   case (get_the_token ()) of
+                     Token.LONGID (id) => 
+                       (next_token ();
+                        let
+                          val strid = mkLongStrId id
+                          val (strids,pE') = parse_strids ()
+                        in
+                          (strid :: strids,
+                           PE.augment_pE (PE.lookupStrId (id,pE), pE'))
+                        end)
+                   | _ => (nil,PE.empty_pE)
+               in
+                 case (parse_strids (next_token ())) of
+                   (nil,_) => (report_parse_error "Empty OPEN dec")
+                 | (strids, pE') => (Absyn.OPENdec (strids,marks), pE', Set.empty_set)
+               end
+             
+           | Token.INFIX => 
+               (next_token ();
+                
+                (* this is a temporary hack to ensure that a top level infix
+	         is not confused with an empty declaration *)
+                
+                (Absyn.SEQUENCEdec [Absyn.SEQUENCEdec []],
+                 PE.E
+                 ((case (get_the_token ())
+                     of Token.INTEGER s =>
+                       let
+                         val p =
+                           case size s of
+                             1 => (ord s - ord "0")
+                           | _ => report_parse_error "Only Single digit allowed for precedence"
+                       in
+                         (next_token ();
+                          PE.make_pFE (parse_ids (), PE.LEFT p))
+                       end
+                      | _ => PE.make_pFE (parse_ids (), PE.LEFT 0)), 
+                     PE.empty_pVE, 
+                     PE.empty_pSE), Set.empty_set))
+               
+           | Token.INFIXR => 
+               (next_token ();
+                (Absyn.SEQUENCEdec [Absyn.SEQUENCEdec []],
+                 PE.E
+                 ((case (get_the_token ())
+                     of Token.INTEGER s =>
+                       let
+                         val p =
+                           case size s of
+                             1 => (ord s - ord "0")
+                           | _ => report_parse_error "Only Single digit allowed for precedence"
+                       in
+                         (next_token ();
+                          PE.make_pFE (parse_ids (), PE.RIGHT p))
+                       end
+                      | _ => PE.make_pFE (parse_ids (), PE.RIGHT 0)), 
+                     PE.empty_pVE, 
+                     PE.empty_pSE), Set.empty_set))
+               
+           | Token.NONFIX =>
+               (next_token ();
+                (Absyn.SEQUENCEdec [],
+                 PE.E(PE.make_pFE (parse_ids (), PE.NONFIX),
+                      PE.empty_pVE,
+                      PE.empty_pSE),
+                 Set.empty_set))
+               
+           (* Now need to deal with expressions masquerading as declarations *)
+           (* These should be all the tokens that can start an expression *)
+           | Token.OP => doanit ()
+           | Token.BRA => doanit ()
+           | Token.HASH => doanit ()
+           | Token.LPAR => doanit ()
+           | Token.LBRACE => doanit ()
+           | Token.LET => doanit ()
+           | Token.RAISE => doanit ()
+           | Token.IF => doanit ()
+           | Token.WHILE => doanit ()
+           | Token.CASE => doanit ()
+           | Token.FN => doanit ()
+           | _ => raise Dec)
+      | _ => doanit ()
+    end
+    (* Derived.make_itdec (exp,tyvars) *)
+
+  and parse_fvalpats (pE,pVE) =
+    case (get_the_token ()) of
+      Token.RESERVED (Token.EQUAL) =>
+	(next_token ();
+	 let
+	   val (exp,tyvars) = parse_exp pE
+	 in
+	   (nil,exp,tyvars)
+	 end)
+    | Token.RESERVED (Token.COLON) => 
+	(next_token ();
+	 let
+	   val (ty,tyvars) = parse_ty ()
+	 in
+	   case (get_the_token ()) of
+	     Token.RESERVED (Token.EQUAL) =>
+	       (next_token ();
+		let
+                  val marks = get_marks()
+		  val (exp,tyvars') = parse_exp pE
+		in
+		  (nil,Absyn.TYPEDexp (exp,ty,marks),Set.union (tyvars,tyvars'))
+		end)
+	   | x => (report_unexpected_token "EQUAL")
+	 end)
+    | _ => 
+	let 
+	  val (pat,pVE',tyvars) = parse_atpat (pE,pVE)
+	  val (pats,exp,tyvars') = parse_fvalpats (pE,pVE')
+	in
+	  (pat::pats,exp,Set.union (tyvars,tyvars'))
+	end
+
+  and parse_fvalclause pE =
+    let
+      val (atpat,pVE,tyvars) = parse_atpat (pE,PE.empty_pVE)
+    in
+      case (get_the_token ()) of
+	Token.LONGID (id as (nil,sym)) =>
+	  (case PE.lookupFixity (sym,pE) of
+	     PE.NONFIX =>
+	       (case atpat of
+		  Absyn.VALpat (Ident.LONGVALID (_,var as Ident.VAR _),_) =>
+		    let
+		      val (pats,exp,tyvars') = parse_fvalpats (pE,PE.empty_pVE)
+		    in
+		      ((var,pats,exp),tyvars')
+		    end
+		| _ => (report_unexpected_token "VAR at start of fun"))
+	   | _ => 
+	       let 
+		 val var = mkVar id
+		 val _ = next_token ()
+		 val (atpat',pVE',tyvars') = parse_atpat (pE,pVE)
+		 val (pats,exp,tyvars'') = parse_fvalpats (pE,pVE')
+	       in
+		 ((var,Derived.make_tuple_pat [atpat,atpat'] :: pats,exp),
+		  Set.union (tyvars, Set.union (tyvars',tyvars'')))
+	       end)
+      | _ => 
+	   (case atpat of
+	      Absyn.VALpat (Ident.LONGVALID (_,var as Ident.VAR _),_) =>
+		let
+		  val (pats,exp,tyvars') = parse_fvalpats (pE,PE.empty_pVE)
+		in
+		  ((var,pats,exp),tyvars')
+		end
+	    | _ => (report_unexpected_token "VAR at start of fun"))
+    end	    
+
+  and parse_fvalclauses pE =
+    let 
+      val (clause,tyvars) = parse_fvalclause pE
+    in
+      (case (get_the_token ()) of
+	 Token.RESERVED (Token.VBAR) =>
+	   let
+	     val _ = next_token ()
+	     val (clauses,tyvars') = parse_fvalclauses pE
+	   in
+	     (clause::clauses,Set.union (tyvars,tyvars'))
+	   end
+       | _ => 
+	   ([clause],tyvars))
+    end
+
+
+  and parse_fvalbind (pE) =
+    let
+
+      
+      fun parse_bindings () =
+	let 
+          val annotation_function = generate_source_file_info()
+          val marks = get_marks()
+	  val (clauses,tyvars) = parse_fvalclauses pE
+	  val binding = 
+	    Derived.make_fvalbind (clauses,annotation_function,marks)
+	    handle Derived.FvalBind x => report_parse_error x
+	in
+	  case (get_the_token ()) of
+	    Token.RESERVED (Token.AND) =>
+	      let
+		val _ = next_token ()
+		val (bindings,tyvars') = 
+		  parse_bindings ()
+	      in
+		(binding::bindings,Set.union (tyvars,tyvars'))
+	      end
+	    | _ => ([binding],tyvars)
+	end
+    in
+      parse_bindings ()
+    end
+
+
+  and parse_dec(arg as (str, top,pE)) =
+    (let
+       val first as (first_dec,first_pE,first_tyvarset) =
+	 maybe_parse_dec arg
+       fun parse_decs (pE) =
+	 (let 
+	    val (dec,pE',tyvarset') = maybe_parse_dec (str, top,pE)
+	    val (decs,pE'',tyvarset'') = parse_decs (PE.augment_pE (pE,pE'))
+	  in
+	    (dec::decs, PE.augment_pE (pE',pE''), 
+	     Set.union (tyvarset',tyvarset''))
+	  end)
+	    handle Dec => (nil, PE.empty_pE, Set.empty_set)
+     in
+       case parse_decs (PE.augment_pE (pE,first_pE)) of
+	 (nil, _, _) => first
+       | (other_decs, other_pE, other_tyvarset) =>
+	   (Absyn.SEQUENCEdec (first_dec :: other_decs),
+	    PE.augment_pE (first_pE, other_pE),
+	    Set.union (first_tyvarset, other_tyvarset))
+     end) handle Dec => (Absyn.SEQUENCEdec [], PE.empty_pE, Set.empty_set)
+      
+
+  and parse_exbind (pE) =
+    let 
+      val newexcons = ref PE.empty_pVE
+
+      fun addexcon excon =
+	newexcons := PE.addValId (id_bound_twice, excon, !newexcons)
+
+      val tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+      fun addtyvars tyvars = tyvarset := Set.union (tyvars, !tyvarset)
+
+      fun parse_bindings () =
+	case (get_the_token ()) of
+	  Token.LONGID (id) =>
+	    let 
+              val marks = get_marks()
+              val annotation = generate_source_file_info()
+              val name = Symbol.symbol_name (#2 id)
+	      val excon = (next_token (); mkExCon id)
+	      val binding =
+		(case (get_the_token ()) of
+		   Token.RESERVED (Token.EQUAL) => 
+		     (next_token () ;
+		      case (get_the_token ()) of
+			Token.LONGID (id') =>
+			  ((case PE.lookupValId (id',pE) of
+                              Ident.EXCON _ => 
+                                (next_token ();
+                                 Absyn.OLDexbind (annotate excon,
+                                                  mkLongExCon id',
+                                                  marks,
+                                                  annotation name))
+                            | _ => (report_unexpected_token "LONGEXCON"))
+                              handle PE.Lookup => report_parse_error "Unbound exception constructor")
+		      | _ => (report_unexpected_token "LONGEXCON"))
+		     
+		 | Token.RESERVED (Token.OF) =>
+		     let
+		       val (ty,tyvars) = parse_ty (next_token ())
+		     in
+		       (addtyvars tyvars;
+			Absyn.NEWexbind (annotate excon, Absyn.PRESENT ty,marks,annotation name))
+		     end
+		 | _ => Absyn.NEWexbind (annotate excon, Absyn.ABSENT,marks,annotation name))
+	    in
+	      (addexcon excon;
+	       binding ::
+	       (case (get_the_token ()) of
+		  Token.RESERVED (Token.AND) =>
+		    parse_bindings (next_token ())
+		| _ => nil))
+	    end
+	| x => (report_unexpected_token "EXCON")
+    in
+      (parse_bindings (),!newexcons,!tyvarset)
+    end
+
+  and parse_conbind (pVE) =
+    let 
+      val newcons = ref pVE
+
+      fun addcon con =
+	newcons := PE.addValId (id_bound_twice, con, !newcons)
+
+      fun parse_bindings () =
+	case (get_the_token ()) of
+	  Token.LONGID (id) =>
+	    let 
+	      val con = mkCon id
+	      val binding =
+		(next_token () ;
+		 case (get_the_token ()) of
+		   Token.RESERVED (Token.OF) =>
+		     let
+		       val (ty,tyvars) = parse_ty (next_token ())
+		     in
+		       (annotate con, Absyn.PRESENT ty)
+		     end
+		 | _ => (annotate con, Absyn.ABSENT))
+	    in
+	      (addcon con;
+	       binding ::
+	       (case (get_the_token ()) of
+		  Token.RESERVED (Token.VBAR) =>
+		    parse_bindings (next_token ())
+		| _ => nil))
+	    end
+	| x => (report_unexpected_token "CON")
+    in
+      (parse_bindings (),!newcons)
+    end
+  
+  and parse_datbind () =
+    let
+      fun parse_bindings (pVE) =
+	let
+	  val (tyvarseq,tycon) = parse_type_spec ()
+	  val (conbind,pVE') = parse_conbind (pVE)
+	  val binding = (tyvarseq, tycon, ref Datatypes.NULLTYPE,conbind)
+	in
+	  (case (get_the_token ()) of
+	     Token.RESERVED (Token.AND) =>
+	       (next_token ();
+		let
+		  val (bindings,pVE'') = parse_bindings pVE'
+		in
+		  (binding::bindings,pVE'')
+		end)
+	   | _ => ([binding],pVE'))
+	end
+    in
+      parse_bindings PE.empty_pVE
+    end
+
+  and parse_typbind () =
+    let 
+      val (tyvarseq,tycon) = parse_type_spec ()
+      val (ty,tyvars) = parse_ty ()
+    in
+      (tyvarseq, tycon, ty) ::
+      (case (get_the_token ()) of
+	 Token.RESERVED (Token.AND) =>
+	   parse_typbind (next_token ())
+       | _ => nil)
+    end
+
+  and parse_valbind (pE) =
+    let 
+
+      val tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+      fun addtyvars tyvars = tyvarset := Set.union (tyvars, !tyvarset)
+
+      fun parse_bindings (pVE,in_rec) =
+	case (get_the_token ()) of
+	  Token.RESERVED (Token.REC) =>
+	    if in_rec then
+	      (next_token () ; parse_bindings (pVE,in_rec))
+	    else
+	      (nil,pVE)
+	  | _ => 
+	      let
+		val (pat,pVE',tyvars) = parse_pat (pE,pVE)
+                val marks = get_marks()
+		val binding =
+		  (addtyvars tyvars;
+		   case (get_the_token ()) of
+		     Token.RESERVED (Token.EQUAL) =>
+		       (next_token ();
+			let
+			  val (exp,tyvars') = parse_exp pE
+			in
+			  (addtyvars tyvars';
+			   if in_rec then
+			     case exp of
+			       Absyn.FNexp _ => (pat,exp,marks)
+			     | x => (report_unexpected_token "FNexp")
+			   else
+			     (pat,exp,marks))
+			end)
+		   | x => (report_unexpected_token "EQUAL"))
+	      in
+		(case (get_the_token ()) of
+		   Token.RESERVED (Token.AND) =>
+		     (next_token ();
+		      let 
+			val (bindings,pVE'') = parse_bindings (pVE',in_rec)
+		      in
+			(binding::bindings,pVE'')
+		      end)
+		 | _ => ([binding],pVE'))
+	      end
+    in
+      let
+	val (bindings1,pVE) = parse_bindings (PE.empty_pVE,false)
+      in
+	case (get_the_token ()) of
+	  Token.RESERVED (Token.REC) =>
+	    let
+	      val (bindings2,pVE') = parse_bindings (pVE,true)
+	    in
+	      ((bindings1,bindings2, !tyvarset),pVE')
+	    end
+	| _ => ((bindings1,nil, !tyvarset),pVE)
+      end
+    end
+
+  and parse_ids () =
+    let 
+      fun parse_ids () =
+	case (get_the_token ()) of 
+	  Token.LONGID (syms,sym) =>
+	    (case syms of
+	       nil => (next_token ();
+		       sym :: parse_ids ())
+	     | _ => 
+		 report_parse_error "Fixity directives cannot refer to longids")
+
+	| Token.RESERVED (Token.EQUAL) => 
+	    (next_token () ;
+	     equal :: parse_ids ())
+
+	| _ => nil
+    in
+      case parse_ids () of
+	nil => (report_parse_error "Fixity directive must have at least one id")
+      | syms => syms
+    end
+	     
+  and parse_exp (pE) = 
+    let
+      
+      val tyvarset = ref (Set.empty_set : Ident.TyVar Set.Set)
+      fun addtyvars tyvars = tyvarset := Set.union (tyvars, !tyvarset)
+
+      exception AtExp
+
+      fun resolve_valexp (id,marks) =
+	Absyn.VALexp (annotate' ((case PE.lookupValId (id, pE) of
+				 Ident.VAR _ => mkLongVar id          
+			       | Ident.CON _ => mkLongCon id
+			       | Ident.EXCON _ => mkLongExCon id)
+				handle PE.Lookup => mkLongVar id, marks))
+	
+      and parse_tuple_exp (exp1) =
+	let fun parse_tuple () =
+	  case (get_the_token ()) of
+	    Token.RESERVED (Token.RPAR) => 
+	      (next_token () ; nil)
+	  | Token.RESERVED (Token.COMMA) => 
+	      (next_token () ;
+	       let
+		 val exp = parse_exp_internal 0
+	       in
+		 exp::parse_tuple ()
+	       end)
+	  | x => (report_unexpected_token "COMMA or RPAR")
+	in
+	  exp1::parse_tuple ()
+	end
+
+      and parse_list_exp () =
+	let 
+          fun parse_list () = 
+            case (get_the_token ()) of
+              Token.RESERVED (Token.KET) => 
+                (next_token () ; nil)
+            | Token.RESERVED (Token.COMMA) => 
+                (next_token () ;
+                 let
+                   val exp = parse_exp_internal 0
+                 in
+                   exp::parse_list ()
+                 end)
+            | _ => (report_unexpected_token "COMMA or KET")
+	in
+	  case (get_the_token ()) of 
+	    Token.RESERVED (Token.KET) => (next_token () ; [])
+	  | _ => 
+              let 
+                val exp1 = parse_exp_internal 0
+              in
+                exp1::parse_list ()
+              end
+	end
+
+      and parse_sequence_exp(exp1) =
+	let fun parse_sequence () =
+	  case (get_the_token ()) of
+	    Token.RESERVED (Token.RPAR) => 
+	      (next_token () ; nil)
+	  | Token.RESERVED (Token.SEMICOLON) => 
+	      (next_token () ;
+	       let
+                 val annotation = generate_source_file_info () "part of sequence"
+                 val marks = get_marks()
+		 val exp = parse_exp_internal 0
+	       in
+		 (exp,annotation,marks)::parse_sequence ()
+	       end)
+	  | _ => (report_unexpected_token "SEMICOLON or RPAR")
+	in
+	  exp1::parse_sequence ()
+	end
+
+      and parse_atexp () =
+        let
+          val marks = get_marks()
+        in
+          (case (get_the_token ()) of
+      
+	  Token.INTEGER s => 
+	    (next_token () ; Absyn.SCONexp (Ident.INT s))
+
+	| Token.REAL s => 
+	    (next_token () ; Absyn.SCONexp (Ident.REAL s))
+	
+	| Token.STRING s => 
+	    (next_token () ; Absyn.SCONexp (Ident.STRING s))
+	    
+	| Token.LONGID (id as (nil,sym)) =>
+	    (case PE.lookupFixity (sym,pE) of
+	       PE.NONFIX => (next_token () ; resolve_valexp (id,marks))
+	     | _ => raise AtExp)
+
+	(* This one guaranteed long *)
+
+	| Token.LONGID (id) => (next_token () ; resolve_valexp (id,marks))
+
+	| Token.TYVAR _ => (report_unexpected_token "Expression")
+
+	| Token.IGNORE _ => (report_unexpected_token "Expression")
+	    
+	| Token.RESERVED r =>
+	    (case r of
+	       
+	       Token.OP =>
+		 (next_token ();
+		  case (get_the_token ()) of
+		    Token.LONGID (id) => (next_token () ; resolve_valexp (id,marks))
+		  | Token.RESERVED (Token.EQUAL) => 
+		      (next_token () ; 
+		       resolve_valexp ((nil,equal),marks))
+		  | _ => (report_unexpected_token "identifier after OP"))
+
+	     | Token.EQUAL => 
+		 (case PE.lookupFixity (equal,pE) of
+		    PE.NONFIX => (next_token () ; resolve_valexp ((nil,equal),marks))
+		  | _ => raise AtExp)
+
+	     | Token.LBRACE => 
+		 (next_token () ; Absyn.RECORDexp (parse_exprow ()))
+
+	     | Token.HASH =>
+		 (next_token () ; 
+                  let
+                    val (lab,numeric,name) = parse_lab()
+                  in 
+                         Derived.make_select(lab,
+                                             marks,
+                                             generate_source_file_info() ("#" ^ name ^ " "))
+                  end)
+
+	     | Token.LPAR => 
+
+		 (next_token ();
+		  case (get_the_token ()) of
+
+		    Token.RESERVED (Token.RPAR) => 
+		      (next_token () ; Derived.make_unit_exp ())
+
+		  | _ => 
+		      let 
+                        val annotation = generate_source_file_info ()
+			val exp1 = parse_exp_internal 0
+		      in
+			case (get_the_token ()) of
+                          
+			  Token.RESERVED (Token.COMMA) =>
+			    Derived.make_tuple_exp (parse_tuple_exp exp1)
+                            
+			| Token.RESERVED (Token.SEMICOLON) =>
+			    Derived.make_sequence_exp (parse_sequence_exp (exp1,annotation "part of a sequence",get_marks()))
+                            
+			| Token.RESERVED (Token.RPAR) => 
+			    (next_token () ; exp1)
+                            
+			| _ => (report_unexpected_token "RPAR")
+		      end)
+                 
+	     | Token.BRA => 
+		 (next_token () ;
+		  Derived.make_list_exp (get_marks()) (parse_list_exp ()))
+                 
+	     | Token.LET => 
+		 (next_token () ;
+		  let
+		    val (dec,pE',tyvars) = parse_dec (false, false,pE)
+		    val _ = addtyvars tyvars
+		    val pE'' = PE.augment_pE (pE, pE')
+                      
+		    fun parse_exps () =
+		      case (get_the_token ()) of
+			Token.RESERVED (Token.SEMICOLON) =>
+			  (next_token ();
+			   let
+                             val annotation = generate_source_file_info ()
+                             val marks = get_marks()
+			     val (exp,tyvars') = parse_exp pE''
+			     val _ = addtyvars tyvars
+			   in
+			     (exp,annotation "Part of a sequence",marks) :: parse_exps ()
+			   end)
+		      | Token.RESERVED (Token.END) => 
+			  (next_token ();
+			   nil)
+		      | _ => (report_unexpected_token "SEMICOLON or END")
+		  in
+		    case (get_the_token ()) of
+		      Token.RESERVED (Token.IN) =>
+			(next_token () ;
+			 let
+                           val annotation = generate_source_file_info()
+			   val (exp,tyvars) = parse_exp pE''
+			   val _ = addtyvars tyvars
+			 in
+			   case (get_the_token ()) of
+			     Token.RESERVED (Token.END) =>
+			       (next_token () ;
+				Absyn.LOCALexp (dec,exp))
+			   | Token.RESERVED (Token.SEMICOLON) => 
+			       Absyn.LOCALexp (dec,Derived.make_sequence_exp
+                                               ((exp,annotation "Part of a sequence",get_marks())::parse_exps ()))
+			   | _ => 
+			       (report_unexpected_token "END or SEMICOLON")
+			 end)
+		    | _ => (report_unexpected_token "IN")
+		  end)
+
+	     | _ => raise AtExp))
+        end
+    
+      and parse_exp' (n,exp) =
+        let
+          val annotation = generate_source_file_info()
+          val marks = get_marks()
+        in
+
+	case (get_the_token ()) of
+	  
+	  Token.RESERVED (Token.COLON) => 
+	    let
+              val marks = get_marks()
+	      val (ty,tyvars) = parse_ty (next_token ())
+	    in
+	      (addtyvars tyvars;
+	       parse_exp' (0,Absyn.TYPEDexp (exp,ty,marks)))
+	    end
+	  
+	| Token.RESERVED (Token.ANDALSO) =>
+	    if n <= 7 then
+	      (next_token ();
+	       let
+		 val exp' = parse_exp_internal 7
+	       in
+		 parse_exp' (0,Derived.make_andalso (exp,exp',annotation "andalso statement",marks))
+	       end)
+	    else
+	      exp
+
+	| Token.RESERVED (Token.ORELSE) =>
+	    if n <= 6 then
+	      (next_token ();
+	       let
+		 val exp' = parse_exp_internal 6
+	       in
+		 parse_exp' (0,Derived.make_orelse (exp,exp',annotation "orelse statement",marks))
+	       end)
+	    else
+	      exp
+
+	| Token.RESERVED (Token.HANDLE) =>
+	    if n <= 5 then
+	      let 
+                val marks = get_marks()
+                val annotation = generate_source_file_info()
+                val match = parse_match (next_token ())
+	      in
+		parse_exp' (0,Absyn.HANDLEexp (exp,
+					       ref Datatypes.NULLTYPE,
+					       match,marks,
+                                               annotation "handle expression"))
+	      end
+	    else
+	      exp
+      
+	| _ => exp
+        end
+
+      and parse_exprow () =
+	let
+	  val (lab,_,_) = parse_lab ()
+	in
+	  case (get_the_token ()) of
+	    Token.RESERVED (Token.EQUAL) =>
+	      (next_token ();
+	       let
+		 val exp = parse_exp_internal 0
+	       in
+		 (lab,exp) ::
+		 (case (get_the_token ()) of
+		    Token.RESERVED (Token.COMMA) =>
+		      (next_token () ; parse_exprow ())
+		  | Token.RESERVED (Token.RBRACE) =>
+		      (next_token () ; nil)
+		  | _ => (report_unexpected_token "RBRACE or COMMA"))
+	       end)
+	  | _ => (report_unexpected_token "EQUAL")
+	end
+
+      and parse_match () =
+	let
+	  val (pat,pVE,tyvars) = parse_pat (pE,PE.empty_pVE)
+	in
+	  (addtyvars tyvars;
+	   case (get_the_token ()) of
+	     Token.RESERVED (Token.DARROW) =>
+	       (next_token ();
+		let 
+		  val (exp,tyvars) = 
+		    parse_exp (PE.augment_pE 
+			       (pE, PE.E (PE.empty_pFE,pVE,PE.empty_pSE)))
+		  val _ = addtyvars tyvars
+		in
+		  (pat,exp) ::
+		  (case (get_the_token ()) of
+		     Token.RESERVED (Token.VBAR) => 
+		       parse_match (next_token ())
+		   | _ => nil)
+		end)
+	   | _ => (report_unexpected_token "DARROW"))
+	end
+      
+      and parse_exp_internal (n) =
+	
+	parse_exp' 
+	(n,
+	 (case (get_the_token ()) of
+	    Token.RESERVED (Token.RAISE) => 
+	      (next_token ();
+               let
+                 val marks = get_marks()
+               in
+		 Absyn.RAISEexp (parse_exp_internal 4,marks)
+               end)
+	      
+	  | Token.RESERVED (Token.IF) =>
+	      (next_token ();
+	       let
+                 val annotation = generate_source_file_info()
+                 val marks = get_marks()
+		 val exp1 = parse_exp_internal 3
+	       in
+		 case (get_the_token ()) of
+		   Token.RESERVED (Token.THEN) =>
+		     (next_token ();
+		      let
+			val exp2 = parse_exp_internal 3
+		      in
+			case (get_the_token ()) of
+			  Token.RESERVED (Token.ELSE) =>
+			    (next_token ();
+			     let
+			       val exp3 = parse_exp_internal 3
+			     in
+			       Derived.make_if (exp1,exp2,exp3,annotation "if statement",marks)
+			     end)
+			| _ => (report_unexpected_token "ELSE")
+		      end)
+		 | _ => (report_unexpected_token "THEN")
+	       end)
+
+	  | Token.RESERVED (Token.WHILE) => 
+	      (next_token ();
+	       let
+		 val exp1 = parse_exp_internal 2
+	       in
+		 case (get_the_token ()) of
+		   Token.RESERVED (Token.DO) =>
+		     (next_token ();
+		      let
+                        val annotation_function = generate_source_file_info()
+                        val marks = get_marks()
+			val exp2 = parse_exp_internal 2
+		      in
+			Derived.make_while (exp1,exp2,annotation_function,marks)
+		      end)
+		 | _ => (report_unexpected_token "DO")
+	       end)
+	      
+	  | Token.RESERVED (Token.CASE) => 
+	      (next_token ();
+	       let
+                 val annotation = generate_source_file_info () "Case statement"
+                 val marks = get_marks()
+		 val exp = parse_exp_internal 1
+	       in
+		 case (get_the_token ()) of
+		   Token.RESERVED (Token.OF) =>
+		     let
+		       val match = parse_match (next_token ())
+		     in
+		       Derived.make_case (exp,match,annotation,marks)
+		     end
+		 | _ => (report_unexpected_token "OF")
+	       end)
+	      
+	  | Token.RESERVED (Token.FN) =>
+	    let 
+              val annotation = (generate_source_file_info()) "anonymous function"
+              val marks = get_marks()
+	      val (a,b) = annotate (parse_match (next_token ()))
+	    in
+	      Absyn.FNexp (a,b,annotation,marks)
+	    end
+	      
+	  | _ =>
+	      parse_infexp ()))
+
+      and parse_infexp () =
+	let
+	  fun infix_e (n) = 
+	    if n = 9 then
+	      parse_appexp ()
+	    else
+	      infix_e' (n,infix_e (n+1))
+
+	  and infix_e' (n,e) =
+            let
+              val marks = get_marks()
+            in
+              case (get_the_token ()) of
+                Token.LONGID (nil,sym) => infix_sym (n,e,sym,marks)
+              | Token.RESERVED (Token.EQUAL) => 
+                  infix_sym (n,e,equal,marks)
+              | _ => e
+            end
+
+	  and infix_sym (n,e,sym,marks) =
+	    let
+	      val fixity = PE.lookupFixity(sym,pE)
+	    in
+	      case fixity of
+		PE.LEFT (p) =>
+		  if p = n then
+		    (next_token ();
+		     infix_e'(n,Absyn.APPexp
+			      (resolve_valexp ((nil,sym),marks),
+			       Derived.make_tuple_exp[e,infix_e(n+1)],
+                               get_marks(),
+                               ref Datatypes.NULLTYPE)))
+		  else
+		    e
+	      | PE.RIGHT (p) => 
+		  if p = n then
+		    (next_token ();
+		     let 
+		       val t = infix_e(n+1)
+		     in
+		       case (get_the_token ()) of
+			 Token.LONGID id' =>
+			   if (nil,sym) = id' then
+			     Absyn.APPexp 
+			     (resolve_valexp ((nil,sym),marks),
+			      Derived.make_tuple_exp[e,infix_e'(n,t)],
+                              get_marks(),
+                              ref Datatypes.NULLTYPE)
+			   else
+			     infix_e'(n,Absyn.APPexp
+				      (resolve_valexp ((nil,sym),marks),
+				       Derived.make_tuple_exp[e,t],
+                                       get_marks(),
+                                       ref Datatypes.NULLTYPE))
+		       | _ => infix_e'(n,Absyn.APPexp
+				       (resolve_valexp ((nil,sym),marks),
+					Derived.make_tuple_exp[e,t],
+                                        get_marks(),
+                                        ref Datatypes.NULLTYPE))
+			   
+(* we should really use this code but njml baulks at it 
+
+			   if (get_the_token ()) = Token.LONGID (nil,sym) then
+			     Absyn.APPexp 
+			     (resolve_valexp (nil,sym),
+			      Derived.make_tuple_exp[e,infix_e'(n,t)])
+			   else
+			     infix_e'(n,Absyn.APPexp
+				      (resolve_valexp (nil,sym),
+				       Derived.make_tuple_exp[e,t]))
+
+.... so we'll just have to wait till bootstrap phase 2 ! *)
+
+		     end)
+		  else
+		    e
+	       | _ => e
+	    end
+	in
+	  infix_e 0
+	end
+
+      and parse_appexp () =
+	parse_appexp' (parse_atexp ()
+                       handle AtExp => report_parse_error "Invalid start of expression")
+
+      and parse_appexp' (appexp) =
+        let
+          val marks = get_marks()
+        in
+          parse_appexp' (Absyn.APPexp (appexp,parse_atexp (),marks,ref Datatypes.NULLTYPE)) 
+	  handle AtExp => appexp
+        end
+    in
+      (parse_exp_internal 0, !tyvarset)
+    end
+	      
+in
+
+  val parse_dec = parse_dec
+  and parse_exp = parse_exp
+
+end
+
+(* modules stuff starts here *)
+
+
+exception Spec
+
+fun parse_sigexp (pB) =
+  case (get_the_token ()) of 
+    Token.RESERVED (Token.SIG) =>
+      (next_token ();
+       let val (spec,pE) = parse_spec pB
+       in
+	 case (get_the_token ()) of
+	   Token.RESERVED (Token.END) =>
+	     (next_token ();
+	      (Absyn.NEWsigexp (spec,ref Interface.emptyInt), pE))
+	 | _ => (report_unexpected_token "END")
+       end)
+  | Token.LONGID (id) => 
+      (next_token ();
+       let
+	 val sigid = mkSigId id 
+	 val pE = PE.lookupSigId (sigid,pB)
+       in
+	 (Absyn.OLDsigexp (sigid,ref Interface.emptyInt), pE)
+       end)
+  | _ => (report_unexpected_token "ID or SIG")
+
+and parse_valdesc () =
+  let 
+    val newvars = ref PE.empty_pVE
+
+    fun addvar var =
+      newvars := PE.addValId (id_bound_twice, var, !newvars)
+
+    fun parse_descs () =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  let 
+	    val var = mkVar id
+	    val desc =
+	      (next_token ();
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.COLON) =>
+		   (next_token ();
+		    let val (ty,tyvars) = parse_ty ()
+		    in
+		      (var,ty,tyvars)
+		    end)
+	       | _ => (report_unexpected_token "COLON"))
+	  in
+	    (addvar var;
+	     desc ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.AND) =>
+		  parse_descs (next_token ())
+	      | _ => nil))
+	  end
+      | _ => (report_unexpected_token "VAR")
+  in
+    (parse_descs (),!newvars)
+  end
+  
+and parse_typdesc () =
+  let
+    val (tyvarseq,tycon) = parse_tyvarseq_tycon ()
+  in
+    (tyvarseq, tycon) ::
+    (case (get_the_token ()) of
+       Token.RESERVED (Token.AND) =>
+	 parse_typdesc (next_token ())
+     | _ => nil)
+  end
+
+and parse_condesc (pVE) =
+  let
+    val newcons = ref pVE
+
+    fun addcon con =
+      newcons := PE.addValId (id_bound_twice, con,!newcons)
+
+    fun parse_descs () = 
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  let 
+	    val con = mkCon id
+	    val desc =
+	      (next_token ();
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.OF) =>
+		   let val (ty,tyvars) = parse_ty (next_token ())
+		   in
+		     (con, Absyn.PRESENT ty)
+		   end
+	       | _ => (con, Absyn.ABSENT))
+	  in
+	    (addcon con;
+	     desc ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.VBAR) =>
+		  parse_descs (next_token ())
+	      | _ => nil))
+	  end
+      | _ => (report_unexpected_token "CON")
+  in
+    (parse_descs (),!newcons)
+  end
+
+and parse_datdesc () =
+  let
+    fun parse_descs (pVE) =
+
+      let
+	val (tyvarseq,tycon) = parse_type_spec ()
+	val (condesc,pVE') = parse_condesc pVE
+	val desc = (tyvarseq,tycon,condesc)
+      in
+	(case (get_the_token ()) of
+	   Token.RESERVED (Token.AND) =>
+	     (next_token ();
+	      let val (descs,pVE'') = parse_descs pVE'
+		in
+		  (desc::descs,pVE'')
+	      end)
+	 | _ => ([desc],pVE'))
+      end
+  in
+    parse_descs PE.empty_pVE
+  end
+
+and parse_exdesc () =
+  let
+    val newexcons = ref PE.empty_pVE
+
+    fun addexcon excon =
+      newexcons := PE.addValId (id_bound_twice, excon, !newexcons)
+
+    fun parse_descs () =
+      case (get_the_token ()) of 
+	Token.LONGID (id) =>
+	  (next_token ();
+	   let
+	     val excon = mkExCon id
+             val marks = get_marks()
+	     val desc =
+	       (case (get_the_token ()) of
+		  Token.RESERVED (Token.OF) =>
+		    (next_token ();
+		     let 
+                       val (ty,tyvars) = parse_ty ()
+		     in
+		       (excon,Absyn.PRESENT ty,marks)
+		     end)
+		| _ => 
+		    (excon,Absyn.ABSENT,marks))
+	   in
+	     (addexcon excon;
+	      desc ::
+	      (case (get_the_token ()) of
+		 Token.RESERVED (Token.AND) =>
+		   parse_descs (next_token ())
+	       | _ => nil))
+	   end)
+      | _ => (report_unexpected_token "EXCON")
+  in
+    (parse_descs (), !newexcons)
+  end
+
+and parse_strdesc (pB) =
+  let
+    val newstrids = ref PE.empty_pSE
+
+    fun addstrid (strid, pE) =
+      newstrids := PE.addStrId (strid_bound_twice, strid, pE, !newstrids)
+
+    fun parse_descs () =
+      case (get_the_token ()) of 
+	Token.LONGID (id) =>
+	  (next_token ();
+	   let
+	     val strid = mkStrId id
+	     val desc =
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.COLON) =>
+		   (next_token ();
+		    let 
+		      val (sigexp,pE) = parse_sigexp pB
+		    in
+		      (addstrid (strid,pE) ; (strid,sigexp))
+		    end)
+	       | _ => (report_unexpected_token "COLON")
+	   in
+	     desc ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.AND) =>
+		  parse_descs (next_token ())
+	      | _ => nil)
+	   end)
+      | _ => (report_unexpected_token "STRID")
+  in
+    (parse_descs (), !newstrids)
+  end
+
+and parse_shareq () =
+  let
+    fun parse_ids (mkId) =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  (next_token ();
+	   (mkId id) ::
+	   (case (get_the_token ()) of
+	     Token.RESERVED (Token.EQUAL) =>
+	       (next_token ();
+		parse_ids mkId)
+	   | _ => nil))
+      | _ => report_unexpected_token "IDENT"
+
+    fun parse_eqs () =
+      let
+	val eq =
+	  case (get_the_token ()) of 
+	    Token.RESERVED (Token.TYPE) =>
+	      (next_token ();
+	       (Absyn.TYPEshareq (parse_ids mkLongTyCon),get_marks()))
+	  | _ => (Absyn.STRUCTUREshareq (parse_ids mkLongStrId),get_marks())
+      in
+	eq ::
+	(case (get_the_token ()) of
+	   Token.RESERVED (Token.AND) =>
+	     (next_token (); parse_eqs ())
+	 | _ => nil)
+      end
+  in
+    parse_eqs ()
+  end
+
+and maybe_parse_spec (pB) =
+  case (get_the_token ()) of
+
+    Token.RESERVED r =>
+      (case r of
+	 
+	 Token.SEMICOLON =>
+	   (next_token () ; maybe_parse_spec pB)
+	       
+       | Token.VAL => 
+	   (next_token () ;
+	    let val (valdesc, pVE) = parse_valdesc ()
+	    in
+	      (Absyn.VALspec valdesc,
+	       PE.E (PE.empty_pFE,pVE,PE.empty_pSE))
+	    end)
+	   
+       | Token.TYPE => 
+	   (next_token ();
+	    (Absyn.TYPEspec (parse_typdesc ()), PE.empty_pE))
+
+       | Token.EQTYPE => 
+	   (next_token ();
+	    (Absyn.EQTYPEspec (parse_typdesc ()), PE.empty_pE))
+	    
+       | Token.DATATYPE => 
+	    (next_token ();
+	     let val (datdesc, pVE) = parse_datdesc ()
+	     in
+	       (Absyn.DATATYPEspec datdesc,
+		PE.E (PE.empty_pFE,pVE,PE.empty_pSE))
+	     end)
+	    
+       | Token.EXCEPTION => 
+	   (next_token ();
+	    let 
+              val (exdesc, pVE) = parse_exdesc ()
+	    in
+	      (Absyn.EXCEPTIONspec exdesc,
+	       PE.E (PE.empty_pFE,pVE,PE.empty_pSE))
+	    end)
+	   
+       | Token.STRUCTURE => 
+	   (next_token ();
+	    let
+	      val (strdesc, pSE) = parse_strdesc pB
+	    in
+	      (Absyn.STRUCTUREspec strdesc,
+	       PE.E (PE.empty_pFE,PE.empty_pVE,pSE))
+	    end)
+	   
+       | Token.SHARING =>
+	   (next_token ();
+	    (Absyn.SHARINGspec (parse_shareq ()), PE.empty_pE))
+	    
+       | Token.LOCAL => 
+	    (next_token ();
+	     let 
+	       val (spec1,pE') = parse_spec pB
+	     in
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.IN) =>
+		   (next_token ();
+		    let
+		      local
+			val PE.B (pF,pG,pE) = pB
+			val pB' = PE.B (pF,pG,PE.augment_pE (pE,pE'))
+		      in
+			val (spec2,pE'') = parse_spec pB'
+		      end
+		    in
+		      case (get_the_token ()) of
+			Token.RESERVED (Token.END) =>
+			  (next_token () ;
+			   (Absyn.LOCALspec (spec1,spec2), pE''))
+		      | _ => (report_unexpected_token "END")
+		    end)
+	       | _ => (report_unexpected_token "IN")
+	     end)
+
+       | Token.OPEN => 
+	   (next_token ();
+	    let 
+	      val PE.B (_,_,pE) = pB
+
+	      fun parse_strids () =
+		case (get_the_token ()) of
+		  Token.LONGID (id) => 
+		    (next_token ();
+		     let
+		       val strid = mkLongStrId id
+		       val (strids,pE') = parse_strids ()
+		     in
+		       (strid :: strids,
+			PE.augment_pE (PE.lookupStrId (id,pE), pE'))
+		     end)
+		| _ => (nil,PE.empty_pE)
+
+	    in
+	      case (parse_strids ()) of
+		(nil,_) => (report_parse_error "Empty OPEN spec")
+	      | (strids, pE') => (Absyn.OPENspec strids, pE')
+	    end)
+	  
+       | Token.INCLUDE =>
+	   (next_token ();
+	    let 
+	      fun parse_sigids () =
+		case (get_the_token ()) of
+		  Token.LONGID (id) => 
+		    (next_token ();
+		     let
+		       val sigid = mkSigId id
+		       val (sigids,pE') = parse_sigids ()
+		     in
+		       (sigid :: sigids,
+			PE.augment_pE (PE.lookupSigId (sigid,pB), pE'))
+		     end)
+		| _ => (nil,PE.empty_pE)
+
+	    in
+	      case (parse_sigids ()) of
+		(nil,_) => (report_parse_error "Empty INCLUDE spec")
+	      | (sigids, pE') => (Absyn.INCLUDEspec sigids, pE')
+	    end)
+	   
+       | _ => raise Spec)
+  | _ => raise Spec
+
+and parse_spec (pB) =
+  (let val first as (first_spec,first_pE) = maybe_parse_spec pB
+       fun parse_specs (pB) =
+	 (let 
+	    val (spec,pE') = maybe_parse_spec pB
+	    val pB' = PE.B (PE.empty_pF,PE.empty_pG,pE')
+	    val (specs,pE'') = parse_specs (PE.augment_pB (pB,pB'))
+	  in
+	    (spec::specs, PE.augment_pE (pE',pE''))
+	  end)
+	    handle Spec => (nil, PE.empty_pE)
+   in
+     case parse_specs (PE.augment_pB 
+		       (pB,PE.B (PE.empty_pF,PE.empty_pG,first_pE))) of
+       (nil, _) => first
+     | (other_specs, other_pE) =>
+	 (Absyn.SEQUENCEspec (first_spec :: other_specs),
+	  PE.augment_pE (first_pE, other_pE))
+   end) handle Spec => (Absyn.SEQUENCEspec [], PE.empty_pE)
+     
+exception StrDec
+
+fun maybe_parse_strdec (arg as (top,pB)) =
+  case (get_the_token ()) of
+
+    Token.RESERVED (Token.SEMICOLON) =>
+      if top then
+        raise StrDec (* by note at end of 3.5 *)
+      else
+	(next_token () ; maybe_parse_strdec arg)
+
+  | Token.RESERVED (Token.STRUCTURE) =>
+      (next_token ();
+       let 
+         val (strbind,pSE) = parse_strbind pB
+       in
+	 (Absyn.STRUCTUREstrdec strbind,
+	  PE.E (PE.empty_pFE,PE.empty_pVE,pSE))
+       end)
+
+  | Token.RESERVED (Token.LOCAL) => 
+      (next_token ();
+       let
+	 val (strdec1, pE') = parse_strdec (false,pB)
+	 val pB' = PE.B (PE.empty_pF,PE.empty_pG,pE')
+       in
+	 case (get_the_token ()) of
+	   Token.RESERVED (Token.IN) =>
+	     (next_token ();
+	      let
+		val (strdec2, pE'') =
+		  parse_strdec (false,(PE.augment_pB (pB, pB')))
+	      in
+		case (get_the_token ()) of
+		  Token.RESERVED (Token.END) =>
+		    (next_token () ;
+		     (Absyn.LOCALstrdec (strdec1,strdec2), pE''))
+		| _ => (report_unexpected_token "END")
+	      end)
+	 | _ => (report_unexpected_token "IN")
+       end)
+
+  | _ => 
+      let 
+	val PE.B (_,_,pE) = pB
+	val (dec,pE',_) =
+	  parse_dec (true,top,pE)
+      (* we ignore any escaped tyvars and leave them *)
+      (* for the type checker to handle *)
+      in
+	case dec of 
+	  Absyn.SEQUENCEdec [] => raise StrDec
+	| _ => (Absyn.DECstrdec dec, pE')
+      end
+    
+
+and parse_strdec (top,pB) =
+  (let val first as (first_strdec,first_pE) = maybe_parse_strdec (top,pB)
+       fun parse_strdecs (pB) =
+	 (let 
+	    val (strdec,pE') = maybe_parse_strdec (top,pB)
+	    val pB' = PE.B (PE.empty_pF,PE.empty_pG,pE')
+	    val (strdecs,pE'') = parse_strdecs (PE.augment_pB (pB,pB'))
+	  in
+	    (strdec::strdecs, PE.augment_pE (pE',pE''))
+	  end)
+	    handle StrDec => (nil, PE.empty_pE)
+   in
+     case parse_strdecs (PE.augment_pB
+			 (pB,PE.B (PE.empty_pF,PE.empty_pG,first_pE))) of
+       (nil, _) => first
+     | (other_strdecs, other_pE) =>
+	 (Absyn.SEQUENCEstrdec (first_strdec :: other_strdecs),
+	  PE.augment_pE (first_pE, other_pE))
+   end) handle StrDec => (Absyn.SEQUENCEstrdec [], PE.empty_pE)
+
+and parse_strbind (pB) =
+  let
+    val newstrids = ref PE.empty_pSE
+
+    fun addstrid (strid, pE) =
+      newstrids := PE.addStrId (strid_bound_twice, strid, pE, !newstrids)
+
+    fun parse_bindings () =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  (next_token ();
+	   let
+	     val strid = mkStrId id
+             val marks = get_marks()
+	     val binding =
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.COLON) =>
+		   (next_token ();
+		    let val (sigexp,pE) = parse_sigexp pB
+		    in
+		      case (get_the_token ()) of
+			Token.RESERVED (Token.EQUAL) =>
+			  (next_token ();
+			   let val (strexp,_) = parse_strexp pB
+			   in
+			     (addstrid (strid,pE);
+			      (strid,Absyn.PRESENT sigexp,strexp,marks))
+			   end)
+		      | _ => (report_unexpected_token "EQUAL")
+		    end)
+	       | Token.RESERVED (Token.EQUAL) => 
+		   (next_token ();
+		    let 
+                      val marks = get_marks()
+                      val (strexp,pE) = parse_strexp pB
+		    in
+		      (addstrid (strid,pE);
+		       (strid,Absyn.ABSENT,strexp,marks))
+		    end)
+
+	       | _ => (report_unexpected_token "EQUAL or COLON")
+	   in
+	     binding ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.AND) =>
+		  parse_bindings (next_token ())
+	      | _ => nil)
+	   end)
+      | _ => (report_unexpected_token "STRID")
+  in
+    (parse_bindings (), !newstrids)
+  end
+
+and parse_strexp (pB) =
+  let 
+    fun parse_strexp_internal (fun_app) =
+      case (get_the_token ()) of
+	Token.RESERVED (Token.STRUCT) =>
+	  (next_token ();
+	   let val (strdec,pE) = parse_strdec (false,pB)
+	   in
+	     case (get_the_token ()) of
+	       Token.RESERVED (Token.END) =>
+		 (next_token ();
+		  (Absyn.NEWstrexp strdec,pE))
+	     | _ => (report_unexpected_token "END")
+	   end)
+	  
+      | Token.RESERVED (Token.LET) => 
+	  (next_token ();
+	   let 
+	     val (strdec,pE') = parse_strdec (false,pB)
+	     val pB' = PE.B (PE.empty_pF,PE.empty_pG,pE')
+	   in
+	     case (get_the_token ()) of
+	       Token.RESERVED (Token.IN) =>
+		 (next_token ();
+		  let val (strexp,pE'') = parse_strexp (PE.augment_pB (pB,pB'))
+		  in
+		    case (get_the_token ()) of
+		      Token.RESERVED (Token.END) =>
+			(next_token ();
+			 (Absyn.LOCALstrexp (strdec,strexp),pE''))
+		    | _ => (report_unexpected_token "END")
+	          end)
+	     | _ => (report_unexpected_token "IN")
+	   end)
+	       
+      | Token.LONGID (id) =>
+	  (next_token ();
+	   case (get_the_token ()) of
+	     Token.RESERVED (Token.LPAR) =>
+	       (next_token ();
+		let 
+		  val funid = mkFunId id
+		  val pE = PE.lookupFunId (funid,pB)
+		  val (strexp,_) = parse_strexp_internal true
+                  val marks = get_marks()
+		in
+		  case (get_the_token ()) of
+		    Token.RESERVED (Token.RPAR) =>
+		      (next_token ();
+		       (Absyn.APPstrexp (funid,strexp,marks),pE))
+		  | _ => 
+		      (report_unexpected_token "RPAR")
+		end)
+	   | _ => 
+	       let
+		 val strid = mkLongStrId id
+		 val PE.B (_,_,pE) = pB
+		 val pE' = PE.lookupStrId (id,pE)
+	       in
+		 (Absyn.OLDstrexp strid, pE')
+	       end)
+
+      | _ =>  
+	  (if fun_app then
+	     let val (strdec,pE) = parse_strdec (false,pB)
+	     in
+	       (Derived.make_strexp strdec,pE)
+	     end
+	   else
+	     (report_unexpected_token "Structure expression"))
+  in
+    parse_strexp_internal false
+  end
+
+fun parse_sigbind (pB) =
+  let
+    val newsigids = ref PE.empty_pG
+      
+    fun addsigid (sigid, pE) =
+      newsigids := PE.addSigId (sigid_bound_twice, sigid, pE, !newsigids)
+
+    fun parse_bindings () =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  (next_token ();
+	   let
+	     val sigid = mkSigId id
+	     val binding =
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.EQUAL) =>
+		   (next_token ();
+		    let
+                      val marks = get_marks()
+                      val (sigexp,pE) = parse_sigexp pB
+		    in
+		      (addsigid (sigid,pE); (sigid,sigexp,marks))
+		    end)
+	       | _ => (report_unexpected_token "EQUAL")
+	   in
+	     binding ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.AND) =>
+		  parse_bindings (next_token ())
+	      | _ => nil)
+	   end)
+      | _ => (report_unexpected_token "SIGID")
+  in
+    (Absyn.SIGBIND (parse_bindings ()), !newsigids)
+  end
+
+
+
+fun parse_sigdec (pB) =
+  let
+    val (sigbind,pG) = parse_sigbind pB
+    val pB' = PE.augment_pB (pB, PE.B (PE.empty_pF,pG,PE.empty_pE))
+  in
+    case (get_the_token ()) of
+      Token.RESERVED (Token.SIGNATURE) =>
+	(next_token ();
+	 let val (sigbinds,pG') = parse_sigdec pB'
+	  in
+	    (sigbind::sigbinds,PE.augment_pG (pG,pG'))
+	 end)
+    | _ => ([sigbind],pG)
+  end 
+
+fun parse_funbind (pB) =
+  let
+    val newfunids = ref PE.empty_pF
+      
+    fun addfunid (funid, pE) =
+      newfunids := PE.addFunId (funid_bound_twice, funid, pE, !newfunids)
+
+    fun strid_error _ = Crash.impossible "Found STRID in parse_funbind2"
+
+    fun parse_funbind2 (funid, strid, sigexp, pE) =
+      let
+	val pSE = PE.addStrId (strid_error, strid, pE, PE.empty_pSE)
+	val pE' = PE.E (PE.empty_pFE,PE.empty_pVE,pSE)
+	val pB' = PE.augment_pB (pB, PE.B (PE.empty_pF,PE.empty_pG,pE'))
+      in
+	case (get_the_token ()) of
+	  Token.RESERVED (Token.COLON) =>
+	    (next_token ();
+	     let val (sigexp',pE') = parse_sigexp pB
+	     in
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.EQUAL) =>
+		   (next_token ();
+		    let val (strexp,_) = parse_strexp pB'
+		    in
+		      (addfunid (funid,pE');
+		       (funid,strid,sigexp,ref (Nameset.empty_nameset()),
+			strexp,Absyn.PRESENT sigexp'))
+		    end)
+	       | _ => (report_unexpected_token "EQUAL")
+	     end)
+	| Token.RESERVED (Token.EQUAL) => 
+	    (next_token ();
+	     let val (strexp,pE') = parse_strexp pB'
+	     in
+	       (addfunid (funid,pE');
+		(funid,strid,sigexp,ref (Nameset.empty_nameset()),
+		 strexp,Absyn.ABSENT))
+	     end)
+	| _ => (report_unexpected_token "EQUAL or COLON")
+      end
+
+    fun parse_funbind3 (funid,spec,pE) =
+      let val pB' = PE.augment_pB (pB, PE.B (PE.empty_pF,PE.empty_pG,pE))
+      in
+	case (get_the_token ()) of
+	  Token.RESERVED (Token.COLON) =>
+	    (next_token ();
+	     let val (sigexp',pE') = parse_sigexp pB
+	     in
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.EQUAL) =>
+		   (next_token ();
+		    let 
+                      val marks = get_marks()
+                      val (strexp,_) = parse_strexp pB'
+		    in
+		      (addfunid (funid,pE');
+		       Derived.make_funbind
+		       (funid,
+			Absyn.NEWsigexp (spec,ref Interface.emptyInt),
+			strexp,Absyn.PRESENT sigexp',
+                        marks))
+		    end)
+	       | _ => (report_unexpected_token "EQUAL")
+	     end)
+	| Token.RESERVED (Token.EQUAL) => 
+	    (next_token ();
+	     let 
+               val (strexp,pE') = parse_strexp pB'
+               val marks = get_marks()
+	     in
+	       (addfunid (funid,pE');
+		       Derived.make_funbind
+		       (funid,
+			Absyn.NEWsigexp (spec,ref Interface.emptyInt),
+			strexp,Absyn.ABSENT,
+                        marks))
+	     end)
+	| _ => (report_unexpected_token "EQUAL or COLON")
+      end
+
+    fun stringify_longid([],x) = Ident.Symbol.symbol_name x
+      | stringify_longid(h::t,x) = Ident.Symbol.symbol_name h ^ "." ^ stringify_longid (t,x)
+
+    fun parse_bindings () =
+      case (get_the_token ()) of
+	Token.LONGID (id) =>
+	  (next_token ();
+	   let 
+             val annotation_string = 
+               (generate_source_file_info()) ("Functor " ^ stringify_longid id)
+             val marks = get_marks()
+	     val funid = mkFunId id
+	     val (a,b,c,d,e,f) =
+	       case (get_the_token ()) of
+		 Token.RESERVED (Token.LPAR) =>
+		   (next_token ();
+		    case (get_the_token ()) of
+		      Token.LONGID (id) =>
+			(next_token ();
+			 let val strid = mkStrId id
+			 in
+			   case (get_the_token ()) of
+			     Token.RESERVED (Token.COLON) =>
+			       (next_token ();
+				let val (sigexp,pE) = parse_sigexp pB
+				in
+				  case (get_the_token ()) of
+				    Token.RESERVED (Token.RPAR) =>
+				      (next_token ();
+				       parse_funbind2 (funid,strid,sigexp,pE))
+				  | _ => (report_unexpected_token "RPAR")
+				end)
+			   | _ => (report_unexpected_token "COLON")
+			 end)
+		    | _ =>
+			let val (spec,pE) = parse_spec (pB)
+			in
+			  case (get_the_token ()) of
+			    Token.RESERVED (Token.RPAR) =>
+			      (next_token ();
+			       parse_funbind3 (funid,spec,pE))
+			  | _ => (report_unexpected_token "RPAR")
+			end)
+	       | _ => (report_unexpected_token "LPAR")
+	   in
+	     (a,b,c,d,e,f,annotation_string,marks) ::
+	     (case (get_the_token ()) of
+		Token.RESERVED (Token.AND) =>
+		  parse_bindings (next_token ())
+	      | _ => nil)	     
+	   end)
+      | _ => (report_unexpected_token "FUNID")
+  in
+    (Absyn.FUNBIND (parse_bindings ()), !newfunids)
+  end
+
+
+fun parse_fundec (pB) =
+  let
+    val (funbind,pF) = parse_funbind pB
+    val pB' = PE.augment_pB (pB, PE.B (pF,PE.empty_pG,PE.empty_pE))
+  in
+    case (get_the_token ()) of
+      Token.RESERVED (Token.FUNCTOR) =>
+	(next_token ();
+	 let val (funbinds,pF') = parse_fundec pB'
+	 in
+	   (funbind::funbinds,PE.augment_pF (pF,pF'))
+	 end)
+    | _ => ([funbind],pF)
+  end 
+
+fun parse_topdec (pB) =
+  case (get_the_token ()) of
+    Token.RESERVED (Token.FUNCTOR) =>
+      (next_token ();
+       let 
+         val marks = get_marks()
+         val (funbinds,pF) = parse_fundec pB
+       in
+	 (Absyn.FUNCTORtopdec (funbinds,marks), PE.B (pF,PE.empty_pG,PE.empty_pE))
+       end)
+  | Token.RESERVED (Token.SIGNATURE) => 
+      (next_token ();
+       let val (sigbinds,pG) = parse_sigdec pB
+       in
+	 (Absyn.SIGNATUREtopdec sigbinds, PE.B (PE.empty_pF,pG,PE.empty_pE))
+       end)
+  | Token.RESERVED (Token.REQUIRE) =>
+      (next_token ();
+       (case get_the_token () of
+	  Token.STRING s =>
+	    (next_token();
+	     case get_the_token () of
+	       Token.RESERVED(Token.SEMICOLON) => (Absyn.REQUIREtopdec s,pB)
+	     | Token.RESERVED(Token.EOF) => (Absyn.REQUIREtopdec s,pB)
+	     | _ => report_unexpected_token "EOF or SEMICOLON")
+	| _ => report_unexpected_token "string"))
+  | _ => 
+      let 
+        val marks = get_marks()
+        val (strdec,pE) = parse_strdec (true,pB)
+      in
+	(Absyn.STRDECtopdec (strdec,marks), PE.B (PE.empty_pF,PE.empty_pG,pE))
+      end
+
+in
+
+  parse_topdec (pB)
+
+end
+       
+fun skip_topdec tokenstream =
+  let
+    fun findsemi () =
+      case get_next_token tokenstream of
+	Token.RESERVED (Token.SEMICOLON) => ()
+      | _ => findsemi ()
+  in
+    findsemi ()
+  end
+
+  val empty_pB = PE.empty_pB
+
+  val (initial_pB,initial_pB_for_builtin_library) = 
+    let
+      fun parse pB s =
+	let
+	  val done = ref false
+	  val ts = Lexer.mkTokenStream (fn () => if !done then
+					 ""
+						  else
+						    (done := true; s),"")
+	in
+	  parse_topdec (ts,pB)
+	end
+      
+      val (_, initial) =
+	parse empty_pB   
+	
+	"(* first value constructors *) \
+          \  datatype constructors = true | false | nil | :: | ref \
+
+          \  (* next exception constructors *) \
+          \  exception Abs and Ord and Chr and Div and Mod and Quot and Prod \
+          \ and Neg and Sum and Diff and Floor and Sqrt and Exp and Ln and Io \
+          \ and Match and Bind and Interrupt \
+
+          \  (* next value variables *) \
+          \  val map = () and rev = () and not = () and ~ = () and abs = () \
+          \  and floor = () and real = () and sqrt = () and sin = () and cos = () \
+          \  and arctan = () and exp = () and ln = () and size = () and chr = () \
+          \  and ord = () and explode = () and implode = () and ! = () \
+          \  and substring = ()   \
+          
+          \  and / = () and div = () and mod = () and + = () and * = () and - = () \
+          \  and ^ = () and @@ = () and <> = () and < = () and > = () \
+          \  and <= = () and >= = () and := = () and o = () \
+
+          \  (* finally we define the infix identifiers *) \
+          \  infix 7 / * div mod \
+          \  infix 6 + - ^ \
+          \  infix 5 @@ \
+          \  infixr 5 :: \
+          \  infix 4 <> < > <= >= =\
+          \  infix 3 := o   \
+          \\
+          \\
+          \ structure Array = \
+           \    struct     \
+           \       val update = () and length = () and array = () \
+           \         and sub = () and tabulate = () and arrayoflist = () \
+           \        exception Size and Subscript   \
+           \    end  ";
+
+      val (_, initial') =
+	parse empty_pB   
+	
+	"(* first value constructors *) \
+          \  datatype constructors = true | false | nil | :: | ref \
+
+          \  (* next value variables *) \
+          \  fun call_c = ()  \
+
+          \  (* finally we define the infix identifiers *) \
+          \  infixr 5 ::  \
+          \        "
+
+
+    in
+      (initial,initial')
+    end
+
+  val augment_pB = PE.augment_pB
+end
+@
+
+
+1.27.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 5
+$Log: _oldparser.sml,v $
+Revision 1.27  1992/08/18  17:48:51  davidt
+Made changes necessary to work with new parserenv signature,
+removing a lot of exception handlers in the process.
+
+@
+
+
+1.26
+log
+@Removed some structures and sharing
+@
+text
+@d4 3
+d88 1
+d96 11
+a106 8
+functor Parser (structure Lexer : LEXER
+		structure ParserEnv : PARSERENV
+		structure Derived : DERIVED
+                structure Integer : INTEGER
+                structure Print : PRINT
+
+		sharing Derived.Symbol = Lexer.Token.Symbol
+		sharing Derived.Absyn.IdentClass = ParserEnv.Ident
+a107 3
+		  ) : PARSER =
+
+struct
+d179 7
+d472 1
+a472 3
+	fun addvar var =
+	  (ref_pVE := PE.addValId (var,!ref_pVE)) 
+	  handle PE.Seen => (report_parse_error "Variable bound more than once (resolve_valid)")
+d489 1
+a489 2
+	       (addvar var ;
+		Ident.LONGVALID (mkPath [], mkVar id))
+d1234 1
+a1234 2
+	(newexcons := PE.addValId (excon,!newexcons)) 
+	handle PE.Seen => (report_parse_error "EXCON bound more than once")
+d1290 1
+a1290 2
+	(newcons := PE.addValId (con,!newcons)) 
+	handle PE.Seen => (report_parse_error "CON bound more than once")
+d1972 1
+a1972 2
+      (newvars := PE.addValId (var,!newvars))
+      handle PE.Seen => (report_parse_error "VAR described more than once")
+d2018 1
+a2018 2
+      (newcons := PE.addValId (con,!newcons))
+      handle PE.Seen => (report_parse_error "CON described more than once")
+d2074 1
+a2074 2
+      (newexcons := PE.addValId (excon,!newexcons))
+      handle PE.Seen => (report_parse_error "EXCON described more than once")
+d2111 2
+a2112 3
+    fun addstrid strid =
+      (newstrids := PE.addStrId (strid,!newstrids))
+      handle PE.Seen => (report_parse_error "STRID described more than once")
+d2404 2
+a2405 3
+    fun addstrid strid =
+      (newstrids := PE.addStrId (strid,!newstrids))
+      handle PE.Seen => (report_parse_error "STRID bound more than once")
+d2531 2
+a2532 3
+    fun addsigid sigid =
+      (newsigids := PE.addSigId (sigid,!newsigids))
+      handle PE.Seen => (report_parse_error "SIGID bound more than once")
+d2584 4
+a2587 3
+    fun addfunid funid =
+      (newfunids := PE.addFunId (funid,!newfunids))
+      handle PE.Seen => (report_parse_error "FUNID bound more than once")
+d2589 1
+a2589 1
+    fun parse_funbind2 (funid,strid,sigexp,pE) =
+d2591 1
+a2591 1
+	val pSE = PE.addStrId ((strid,pE),PE.empty_pSE)
+@
+
+
+1.25
+log
+@Call point information added, and fixed a bug with withtype
+@
+text
+@d4 3
+d84 1
+a84 3
+require "../typechecker/datatypes";
+require "../typechecker/nameset";
+require "../typechecker/interface";
+a85 2
+require "../basics/ident";
+require "../basics/absyn";
+d92 1
+a92 6
+functor Parser (structure Datatypes : DATATYPES
+		structure Nameset : NAMESET
+		structure Interface : INTERFACE
+		structure Lexer : LEXER
+		structure Ident : IDENT
+		structure Absyn : ABSYN
+d98 2
+a99 7
+		sharing Datatypes = Absyn.Datatypes = Derived.Datatypes
+		sharing Derived.Absyn = Absyn
+		sharing Derived.Set = Absyn.Set
+		sharing Absyn.Interface = Interface
+		sharing Absyn.Nameset = Nameset
+		sharing Ident.Symbol = Lexer.Symbol = Derived.Symbol
+		sharing Ident = Absyn.IdentClass = ParserEnv.Ident
+d104 5
+a108 2
+
+structure Symbol = Lexer.Symbol
+d110 1
+a111 1
+structure Absyn = Absyn
+@
+
+
+1.24
+log
+@Changed to imperative implementation of namesets with hashing
+@
+text
+@d4 3
+d1868 2
+a1869 1
+                               get_marks())))
+d1884 2
+a1885 1
+                              get_marks())
+d1890 2
+a1891 1
+                                       get_marks()))
+d1895 2
+a1896 1
+                                        get_marks()))
+d1928 1
+a1928 1
+          parse_appexp' (Absyn.APPexp (appexp,parse_atexp (),marks)) 
+@
+
+
+1.23
+log
+@Added debug information to handlers
+@
+text
+@d4 3
+d2606 1
+a2606 1
+		       (funid,strid,sigexp,ref Nameset.empty_nameset,
+d2616 1
+a2616 1
+		(funid,strid,sigexp,ref Nameset.empty_nameset,
+@
+
+
+1.22
+log
+@Added marks for some error messages from the typechecker
+@
+text
+@d4 3
+d1239 2
+d1253 2
+a1254 1
+                                                  marks))
+d1264 1
+a1264 1
+			Absyn.NEWexbind (annotate excon, Absyn.PRESENT ty,marks))
+d1266 1
+a1266 1
+		 | _ => Absyn.NEWexbind (annotate excon, Absyn.ABSENT,marks))
+@
+
+
+1.21
+log
+@Changed maybe_parse_decs to cope with expressions as declarations
+@
+text
+@d4 3
+d1682 1
+d1687 2
+a1688 1
+					       match,marks))
+d1817 1
+d1820 1
+a1820 1
+	      Absyn.FNexp (a,b,annotation)
+@
+
+
+1.20
+log
+@Made require take a terminating semicolon
+@
+text
+@d4 3
+d837 41
+a877 21
+    case (get_the_token ()) of
+      Token.RESERVED r =>
+	(case r of
+
+	   Token.SEMICOLON =>
+	     if top then
+	       raise Dec (* by note at end of 3.5 *)
+	     else
+	       (next_token () ; maybe_parse_dec arg)
+	       
+	 | Token.VAL => 
+	     (next_token () ;
+	      let
+		val (valbind,pVE) = parse_valbind pE
+	      in
+		(Absyn.VALdec valbind, 
+		 PE.E (PE.empty_pFE,pVE,PE.empty_pSE),
+		 Set.empty_set)
+	      end)
+
+	 | Token.FUN => 
+d889 59
+a947 107
+
+	 | Token.TYPE => 
+	     (Absyn.TYPEdec (parse_typbind (next_token ())),
+	      PE.empty_pE, Set.empty_set)
+
+	 | Token.DATATYPE => 
+	     (next_token ();
+	      let
+		val (datbind, pVE) = parse_datbind ()
+	      in
+		case (get_the_token ()) of
+		  Token.RESERVED (Token.WITHTYPE) =>
+		    (next_token ();
+		     let
+		       val typbind = parse_typbind ()
+		     in
+		       (Derived.make_datatype_withtype (datbind,typbind),
+			PE.E (PE.empty_pFE,pVE,PE.empty_pSE), Set.empty_set)
+		     end)
+		| _ => 
+		    (Absyn.DATATYPEdec datbind, 
+		     PE.E (PE.empty_pFE,pVE,PE.empty_pSE), Set.empty_set)
+	      end)
+	     
+	 | Token.ABSTYPE =>
+	     (next_token ();
+	      let
+
+		val (datbind, pVE) = parse_datbind ()
+		val pE' =
+		  PE.augment_pE (pE, PE.E (PE.empty_pFE,pVE,PE.empty_pSE))
+
+		fun parse_withdec () =
+		  case (get_the_token ()) of
+		    Token.RESERVED (Token.WITH) => 
+		      (next_token ();
+		       let
+			 val result  = parse_dec (false, false,pE')
+		       in
+			 case (get_the_token ()) of
+			   Token.RESERVED (Token.END) =>
+			     (next_token () ; result)
+			 | x => (report_unexpected_token "END")
+		       end)
+		  | x => (report_unexpected_token "WITH")
+
+	      in
+		
+		case (get_the_token ()) of
+		  Token.RESERVED (Token.WITHTYPE) =>
+		    (next_token ();
+		     let
+		       val typbind = parse_typbind ()
+		       val (dec,pE'',tyvarset) = parse_withdec ()
+		     in
+		       (Derived.make_abstype_withtype (datbind,typbind,dec),
+			pE'', tyvarset)
+		     end)
+		| _ => 
+		    let
+		      val (dec,pE'',tyvarset) = parse_withdec ()
+		    in
+		      (Absyn.ABSTYPEdec (datbind,dec), pE'', tyvarset)
+		    end
+	      end)
+	     
+	 | Token.EXCEPTION => 
+	     (next_token ();
+	      let
+		val (exbind, pVE, tyvarset) = parse_exbind pE
+	      in
+		(Absyn.EXCEPTIONdec exbind, 
+		 PE.E (PE.empty_pFE,pVE,PE.empty_pSE),
+		 tyvarset)
+	      end)
+	     
+	 | Token.LOCAL => 
+	     if str then raise Dec
+	     else
+	     (next_token ();
+	      let 
+		val (dec1, pE', tyvarset) = parse_dec (false, false,pE)
+	      in
+		case (get_the_token ()) of
+		  Token.RESERVED (Token.IN) =>
+		    (next_token ();
+		     let
+		       val (dec2, pE'', tyvarset') = 
+			 parse_dec (false, false, PE.augment_pE (pE, pE'))
+		       val tyvarset'' = Set.union (tyvarset, tyvarset')
+		     in
+		       case (get_the_token ()) of
+			 Token.RESERVED (Token.END) =>
+			   (next_token () ;
+			    (Absyn.LOCALdec (dec1,dec2), pE'', tyvarset''))
+		       | x => (report_unexpected_token "END")
+		     end)
+		| x => (report_unexpected_token "IN")
+	      end)
+
+	 | Token.OPEN => 
+	     let 
+               val marks = get_marks()
+               fun parse_strids () =
+                 case (get_the_token ()) of
+                   Token.LONGID (id) => 
+                     (next_token ();
+d949 1
+a949 2
+                        val strid = mkLongStrId id
+                        val (strids,pE') = parse_strids ()
+d951 63
+a1013 14
+                        (strid :: strids,
+                         PE.augment_pE (PE.lookupStrId (id,pE), pE'))
+                      end)
+                 | _ => (nil,PE.empty_pE)
+	     in
+	       case (parse_strids (next_token ())) of
+		 (nil,_) => (report_parse_error "Empty OPEN dec")
+	       | (strids, pE') => (Absyn.OPENdec (strids,marks), pE', Set.empty_set)
+	     end
+
+	 | Token.INFIX => 
+	     (next_token ();
+
+	      (* this is a temporary hack to ensure that a top level infix
+d1015 61
+a1075 65
+
+	      (Absyn.SEQUENCEdec [Absyn.SEQUENCEdec []],
+	       PE.E
+	       ((case (get_the_token ())
+		   of Token.INTEGER s =>
+		     let
+		       val p =
+			 case size s of
+			   1 => (ord s - ord "0")
+			 | _ => report_parse_error "Only Single digit allowed for precedence"
+		     in
+		       (next_token ();
+			PE.make_pFE (parse_ids (), PE.LEFT p))
+		     end
+		 | _ => PE.make_pFE (parse_ids (), PE.LEFT 0)), 
+		   PE.empty_pVE, 
+		   PE.empty_pSE), Set.empty_set))
+
+	 | Token.INFIXR => 
+	     (next_token ();
+	      (Absyn.SEQUENCEdec [Absyn.SEQUENCEdec []],
+	       PE.E
+	       ((case (get_the_token ())
+		   of Token.INTEGER s =>
+		     let
+		       val p =
+			 case size s of
+			   1 => (ord s - ord "0")
+			 | _ => report_parse_error "Only Single digit allowed for precedence"
+		     in
+		       (next_token ();
+			PE.make_pFE (parse_ids (), PE.RIGHT p))
+		     end
+		 | _ => PE.make_pFE (parse_ids (), PE.RIGHT 0)), 
+		   PE.empty_pVE, 
+		   PE.empty_pSE), Set.empty_set))
+
+	 | Token.NONFIX =>
+	     (next_token ();
+	      (Absyn.SEQUENCEdec [],
+	       PE.E(PE.make_pFE (parse_ids (), PE.NONFIX),
+			 PE.empty_pVE,
+			 PE.empty_pSE),
+	       Set.empty_set))
+
+	 | r => raise Dec)
+    | _ => 
+	if top then
+	  let
+	    val (exp,tyvars) = parse_exp pE
+	  in
+	    (Absyn.VALdec ([(Absyn.VALpat 
+			     (annotate
+			      (Ident.LONGVALID 
+			       (mkPath [],
+				Ident.VAR (Symbol.find_symbol "it")))),
+			     exp,
+                             get_marks())],
+			   nil,
+			   tyvars),
+	     PE.E (PE.empty_pFE,PE.empty_pVE,PE.empty_pSE),
+	     Set.empty_set)
+	  end
+	else
+	  raise Dec
+@
+
+
+1.19
+log
+@Added marks to allow position reporting from the typechecker
+@
+text
+@d4 3
+d2718 8
+a2725 3
+       (case ((get_the_token ())) of
+	  Token.STRING s => (Absyn.REQUIREtopdec s,pB)
+	| _ => (report_unexpected_token "string")))
+@
+
+
+1.18
+log
+@Added an extra parameter to parse_dec and related routines to indicate
+when we are in strdec context. In this case, LOCAL must be treated as
+LOCAL strdec IN strdec END rather than LOCAL dec IN dec END. Thus
+some sequence decs may become split, and some LOCALdecs may become
+LOCALstrdecs, but I doubt this matters
+@
+text
+@d4 7
+d107 1
+a115 1
+    (*output(std_out,(Token.makestring token) ^ "\n"); *)
+d135 3
+d227 1
+a227 1
+   let
+d229 12
+a240 12
+     (case token of
+        Token.LONGID (nil,sym) => 
+          ((next_token (); Ident.LAB sym),false)
+      | Token.LONGID x =>
+          (report_parse_error ("Invalid use of Long label " ^ Token.makestring token))
+      | Token.INTEGER s => 
+          ((next_token () ; Ident.LAB (Symbol.find_symbol s)),true)
+      | _ => 
+          (report_unexpected_token "label"))
+   in
+     parse_lab_aux (get_the_token ())
+   end;
+d332 1
+a332 1
+	val (lab,_) = parse_lab ()
+d626 1
+a626 1
+      val (lab,numeric) = parse_lab ()
+d856 1
+d858 1
+a858 1
+		  (Derived.make_fun (fvalbind,tyvarset), 
+d964 14
+a977 12
+	     let fun parse_strids () =
+	       case (get_the_token ()) of
+		 Token.LONGID (id) => 
+		   (next_token ();
+		    let
+		      val strid = mkLongStrId id
+		      val (strids,pE') = parse_strids ()
+		    in
+		      (strid :: strids,
+		       PE.augment_pE (PE.lookupStrId (id,pE), pE'))
+		    end)
+	       | _ => (nil,PE.empty_pE)
+d981 1
+a981 1
+	       | (strids, pE') => (Absyn.OPENdec strids, pE', Set.empty_set)
+d1045 2
+a1046 1
+			     exp)],
+d1074 1
+d1077 1
+a1077 1
+		  (nil,Absyn.TYPEDexp (exp,ty),Set.union (tyvars,tyvars'))
+d1150 1
+d1153 1
+a1153 1
+	    Derived.make_fvalbind (clauses,annotation_function)
+d1210 1
+d1222 2
+a1223 1
+                                                  mkLongExCon id'))
+d1233 1
+a1233 1
+			Absyn.NEWexbind (annotate excon, Absyn.PRESENT ty))
+d1235 1
+a1235 1
+		 | _ => Absyn.NEWexbind (annotate excon, Absyn.ABSENT))
+d1335 1
+d1347 1
+a1347 1
+			       Absyn.FNexp _ => (pat,exp)
+d1350 1
+a1350 1
+			     (pat,exp))
+d1409 2
+a1410 2
+      fun resolve_valexp (id) =
+	Absyn.VALexp (annotate ((case PE.lookupValId (id, pE) of
+d1414 1
+a1414 1
+				handle PE.Lookup => mkLongVar id))
+d1434 13
+a1446 12
+	let fun parse_list () = 
+	  case (get_the_token ()) of
+	    Token.RESERVED (Token.KET) => 
+	      (next_token () ; nil)
+	  | Token.RESERVED (Token.COMMA) => 
+	      (next_token () ;
+	       let
+		 val exp = parse_exp_internal 0
+	       in
+		 exp::parse_list ()
+	       end)
+	  | _ => (report_unexpected_token "COMMA or KET")
+d1450 6
+a1455 4
+	  | _ => let val exp1 = parse_exp_internal 0
+		 in
+		   exp1::parse_list ()
+		 end
+d1467 1
+d1470 1
+a1470 1
+		 (exp,annotation)::parse_sequence ()
+d1478 4
+a1481 1
+	case (get_the_token ()) of
+d1494 1
+a1494 1
+	       PE.NONFIX => (next_token () ; resolve_valexp id)
+d1499 1
+a1499 1
+	| Token.LONGID (id) => (next_token () ; resolve_valexp id)
+d1502 2
+d1511 1
+a1511 1
+		    Token.LONGID (id) => (next_token () ; resolve_valexp id)
+d1514 1
+a1514 1
+		       resolve_valexp (nil,equal))
+d1519 1
+a1519 1
+		    PE.NONFIX => (next_token () ; resolve_valexp (nil,equal))
+d1526 8
+a1533 1
+		 (next_token () ; Derived.make_select(#1(parse_lab ())))
+d1549 1
+a1549 1
+
+d1552 1
+a1552 1
+
+d1554 2
+a1555 2
+			    Derived.make_sequence_exp (parse_sequence_exp (exp1,annotation "part of a sequence"))
+
+d1558 1
+a1558 1
+
+d1561 1
+a1561 1
+
+d1564 2
+a1565 2
+		  Derived.make_list_exp (parse_list_exp ()))
+
+d1572 1
+a1572 1
+
+d1579 1
+d1583 1
+a1583 1
+			     (exp,annotation "Part of a sequence") :: parse_exps ()
+d1604 1
+a1604 1
+					           ((exp,annotation "Part of a sequence")::parse_exps ()))
+d1611 2
+a1612 1
+	     | _ => raise AtExp)
+d1617 1
+d1624 1
+d1628 1
+a1628 1
+	       parse_exp' (0,Absyn.TYPEDexp (exp,ty)))
+d1637 1
+a1637 1
+		 parse_exp' (0,Derived.make_andalso (exp,exp',annotation "andalso statement"))
+d1648 1
+a1648 1
+		 parse_exp' (0,Derived.make_orelse (exp,exp',annotation "orelse statement"))
+d1655 3
+a1657 1
+	      let val match = parse_match (next_token ())
+d1661 1
+a1661 1
+					       match))
+d1671 1
+a1671 1
+	  val (lab,_) = parse_lab ()
+d1720 5
+a1724 1
+		 Absyn.RAISEexp (parse_exp_internal 4))
+d1730 1
+d1745 1
+a1745 1
+			       Derived.make_if (exp1,exp2,exp3,annotation "if statement")
+d1762 1
+d1765 1
+a1765 1
+			Derived.make_while (exp1,exp2,annotation_function)
+d1774 1
+d1782 1
+a1782 1
+		       Derived.make_case (exp,match,annotation)
+d1807 9
+a1815 5
+	    case (get_the_token ()) of
+	      Token.LONGID (nil,sym) => infix_sym (n,e,sym)
+	    | Token.RESERVED (Token.EQUAL) => 
+		infix_sym (n,e,equal)
+	    | _ => e
+d1817 1
+a1817 1
+	  and infix_sym (n,e,sym) =
+d1826 3
+a1828 2
+			      (resolve_valexp (nil,sym),
+			       Derived.make_tuple_exp[e,infix_e(n+1)])))
+d1841 3
+a1843 2
+			     (resolve_valexp (nil,sym),
+			      Derived.make_tuple_exp[e,infix_e'(n,t)])
+d1846 3
+a1848 2
+				      (resolve_valexp (nil,sym),
+				       Derived.make_tuple_exp[e,t]))
+d1850 3
+a1852 2
+				       (resolve_valexp (nil,sym),
+					Derived.make_tuple_exp[e,t]))
+d1881 4
+a1884 1
+	parse_appexp' (Absyn.APPexp (appexp,parse_atexp ())) 
+d1886 1
+a1886 1
+
+d2043 1
+d2048 2
+a2049 1
+		     let val (ty,tyvars) = parse_ty ()
+d2051 1
+a2051 1
+		       (excon,Absyn.PRESENT ty)
+d2054 1
+a2054 1
+		    (excon,Absyn.ABSENT))
+d2124 2
+a2125 2
+	       Absyn.TYPEshareq (parse_ids mkLongTyCon))
+	  | _ => Absyn.STRUCTUREshareq (parse_ids mkLongStrId)
+d2172 2
+a2173 1
+	    let val (exdesc, pVE) = parse_exdesc ()
+d2299 2
+a2300 1
+       let val (strbind,pSE) = parse_strbind pB
+d2376 1
+d2389 1
+a2389 1
+			      (strid,Absyn.PRESENT sigexp,strexp))
+d2395 3
+a2397 1
+		    let val (strexp,pE) = parse_strexp pB
+d2400 1
+a2400 1
+		       (strid,Absyn.ABSENT,strexp))
+d2460 1
+d2465 1
+a2465 1
+		       (Absyn.APPstrexp (funid,strexp),pE))
+d2508 3
+a2510 1
+		    let val (sigexp,pE) = parse_sigexp pB
+d2512 1
+a2512 1
+		      (addsigid (sigid,pE); (sigid,sigexp))
+d2596 3
+a2598 1
+		    let val (strexp,_) = parse_strexp pB'
+d2604 2
+a2605 1
+			strexp,Absyn.PRESENT sigexp'))
+d2611 3
+a2613 1
+	     let val (strexp,pE') = parse_strexp pB'
+d2619 2
+a2620 1
+			strexp,Absyn.ABSENT))
+d2633 3
+a2635 1
+             val annotation_string = (generate_source_file_info()) ("Functor " ^ stringify_longid id)
+d2670 1
+a2670 1
+	     (a,b,c,d,e,f,annotation_string) ::
+d2701 3
+a2703 1
+       let val (funbinds,pF) = parse_fundec pB
+d2705 1
+a2705 1
+	 (Absyn.FUNCTORtopdec funbinds, PE.B (pF,PE.empty_pG,PE.empty_pE))
+d2719 3
+a2721 1
+      let val (strdec,pE) = parse_strdec (true,pB)
+d2723 1
+a2723 1
+	(Absyn.STRDECtopdec strdec, PE.B (PE.empty_pF,PE.empty_pG,pE))
+@
+
+
+1.17
+log
+@Added more useful annotations to if,while,case statements to give better info in a stack backtrace
+@
+text
+@d4 3
+d820 1
+a820 1
+  fun maybe_parse_dec (arg as (top,pE)) =
+d889 1
+a889 1
+			 val result  = parse_dec (false,pE')
+d929 2
+d933 1
+a933 1
+		val (dec1, pE', tyvarset) = parse_dec (false,pE)
+d940 1
+a940 1
+			 parse_dec (false, PE.augment_pE (pE, pE'))
+d1156 1
+a1156 1
+  and parse_dec (top,pE) =
+d1159 1
+a1159 1
+	 maybe_parse_dec (top,pE)
+d1162 1
+a1162 1
+	    val (dec,pE',tyvarset') = maybe_parse_dec (top,pE)
+d1534 1
+a1534 2
+
+		    val (dec,pE',tyvars) = parse_dec (false,pE)
+d2268 4
+a2271 3
+	val (dec,pE',_) = parse_dec (top,pE)  (* we ignore any escaped tyvars
+					         and leave them for the type
+						 checker to handle *)
+@
+
+
+1.16
+log
+@First version of the profiler
+@
+text
+@d4 3
+d1439 1
+d1442 1
+a1442 1
+		 exp::parse_sequence ()
+d1505 1
+d1514 1
+a1514 1
+			    Derived.make_sequence_exp (parse_sequence_exp exp1)
+d1539 1
+d1543 1
+a1543 1
+			     exp :: parse_exps ()
+d1554 1
+d1564 1
+a1564 1
+					           (exp::parse_exps ()))
+d1574 4
+d1594 1
+a1594 1
+		 parse_exp' (0,Derived.make_andalso (exp,exp'))
+d1605 1
+a1605 1
+		 parse_exp' (0,Derived.make_orelse (exp,exp'))
+d1622 1
+d1680 1
+d1695 1
+a1695 1
+			       Derived.make_if (exp1,exp2,exp3)
+d1722 1
+d1730 1
+a1730 1
+		       Derived.make_case (exp,match)
+@
+
+
+1.15
+log
+@Added print parameter to functor for use when debugging
+@
+text
+@d4 3
+d119 2
+a120 4
+  ((*spaces(Lexer.linepos(tokenstream) + log(1 + Lexer.linenum(tokenstream)));
+   output(std_out,"    ^\n");*)
+   [ 1 + Lexer.linenum tokenstream,
+    Lexer.linepos tokenstream])
+d122 17
+d140 1
+a140 1
+  let val ln :: _ = get_linenum ()
+a835 3
+	     let
+	       val pos = get_linenum()
+	     in
+d839 1
+a839 1
+		    parse_fvalbind (pE,pos)
+a845 1
+	     end
+d1120 1
+a1120 1
+  and parse_fvalbind (pE,marks) =
+d1123 2
+a1124 1
+      fun parse_bindings marks =
+d1126 1
+d1129 1
+a1129 1
+	    Derived.make_fvalbind (clauses,marks)
+d1137 1
+a1137 1
+		  parse_bindings (get_linenum ())
+d1144 1
+a1144 1
+      parse_bindings marks
+d1663 1
+a1663 5
+	       let
+		 val pos = get_linenum()
+	       in
+		 Absyn.RAISEexp (parse_exp_internal 4,pos)
+	       end)
+d1698 1
+d1701 1
+a1701 1
+			Derived.make_while (exp1,exp2)
+d1723 1
+a1723 1
+	      val marks = get_linenum()
+d1726 1
+a1726 1
+	      Absyn.FNexp (a,b,marks)
+d2531 2
+d2539 1
+d2541 1
+a2541 1
+	     val binding =
+d2574 1
+a2574 1
+	     binding ::
+d2652 1
+a2652 1
+						    (done := true; s))
+@
+
+
+1.14
+log
+@Added some more exception handlers
+@
+text
+@d4 3
+d54 1
+d68 1
+@
+
+
+1.13
+log
+@Corrected pathname for ../basics/integer in a require.
+@
+text
+@d4 3
+d117 5
+a121 1
+  raise ParseError (message ^ " at line " ^ Integer.makestring (hd (get_linenum ())))
+d1172 7
+a1178 6
+			  (case PE.lookupValId (id',pE) of
+			     Ident.EXCON _ => 
+			       (next_token ();
+				Absyn.OLDexbind (annotate excon,
+						 mkLongExCon id'))
+			   | _ => (report_unexpected_token "LONGEXCON"))
+@
+
+
+1.12
+log
+@Fixed bug with atomic patterns.
+@
+text
+@d4 3
+d47 1
+a47 1
+require "../basics/integer";
+@
+
+
+1.11
+log
+@Added handler for AtExp.
+@
+text
+@d438 1
+a438 1
+  exception Atpat
+d456 1
+a456 1
+	 | _ => report_parse_error ("Erroneous Infix Operator: " ^ (Token.makestring (Token.LONGID id))))
+d507 2
+a508 2
+	 | x => report_unexpected_token "Pattern")
+    | x => report_unexpected_token "Pattern"
+d732 1
+a732 1
+      val pat = parse_atpat0 env
+d746 1
+a746 1
+	       end handle Atpat => pat)
+d758 1
+a758 1
+      val dec = parse_atpat0 (pE,ref_pVE,ref_tyvarset)
+@
+
+
+1.10
+log
+@Added improved error messages.
+@
+text
+@d4 3
+d1774 2
+a1775 1
+	parse_appexp' (parse_atexp ())
+@
+
+
+1.9
+log
+@New pervasive library code - cut some things out of the initial type basis
+@
+text
+@d4 3
+d41 1
+d54 1
+d63 1
+a63 1
+		  
+d82 31
+d120 6
+a125 3
+fun mkVar (nil,sym) = Ident.VAR sym | mkVar _ = raise Long
+fun mkCon (nil,sym) = Ident.CON sym | mkCon _ = raise Long
+fun mkExCon (nil,sym) = Ident.EXCON sym | mkExCon _ = raise Long
+d129 1
+a129 1
+      raise (ParseError "ASTERISK not allowed as a tycon")
+d132 1
+a132 1
+  | mkTyCon _ = raise Long
+d134 6
+a139 3
+fun mkStrId (nil,sym) = Ident.STRID sym | mkStrId _ = raise Long
+fun mkSigId (nil,sym) = Ident.SIGID sym | mkSigId _ = raise Long
+fun mkFunId (nil,sym) = Ident.FUNID sym | mkFunId _ = raise Long
+d155 1
+a155 1
+      raise (ParseError "ASTERISK not allowed as a tycon")
+a161 9
+fun parse_topdec (tokenstream,pB) =
+  
+let
+
+val the_token = ref (Lexer.getToken tokenstream)
+
+fun next_token () = 
+  the_token := (Lexer.getToken tokenstream)
+  
+a173 6
+fun get_linenum () =
+  ((*spaces(Lexer.linepos(tokenstream) + log(1 + Lexer.linenum(tokenstream)));
+   output(std_out,"    ^\n");*)
+   [ 1 + Lexer.linenum tokenstream,
+    Lexer.linepos tokenstream])
+
+d175 14
+a188 9
+  (case !the_token of
+     Token.LONGID (nil,sym) => 
+       ((next_token (); Ident.LAB sym),false)
+   | Token.LONGID _ =>
+       raise (ParseError "Long label seen")
+   | Token.INTEGER s => 
+       ((next_token () ; Ident.LAB (Symbol.find_symbol s)),true)
+   | _ => 
+       raise (ParseError "Expected a label"))
+d194 16
+a209 12
+  case !the_token of
+    Token.TYVAR tyvar =>
+      (next_token ();
+       Ident.TYVAR tyvar ::
+       (case !the_token of
+	  Token.RESERVED (Token.COMMA) =>
+	    parse_tyvarseq (next_token ())
+	| Token.RESERVED (Token.RPAR) => 
+	    (next_token () ; nil)
+	| _ => raise (ParseError "RPAR or COMMA expected")))
+  | _ => raise (ParseError "TYVAR expected")
+      
+d212 1
+a212 1
+    val tyvarseq = (case !the_token of
+d219 1
+a219 1
+    val tycon = (case !the_token of
+d222 1
+a222 1
+	       | _ => raise (ParseError "TYCON expected"))
+d231 1
+a231 1
+    case !the_token of
+d234 1
+a234 1
+    | _ => raise (ParseError "EQUAL expected")
+d246 1
+a246 1
+	case !the_token of
+d252 1
+a252 1
+	      case !the_token of
+d256 1
+a256 1
+	      | _ => raise (ParseError "TYCON expected")
+d262 2
+a263 2
+	| _ => 
+	    raise (ParseError "RPAR or COMMA expected")
+d271 1
+a271 1
+	(case !the_token of
+d274 1
+a274 1
+	 | _ => raise (ParseError "RPAR or COMMA expected"))
+d282 1
+a282 1
+	case !the_token of
+d288 1
+a288 1
+	      (case !the_token of
+d293 1
+a293 1
+	       | _ => raise (ParseError "RBRACE or COMMA expected"))
+d295 1
+a295 1
+	| _ => raise (ParseError "COLON expected")
+d301 1
+a301 1
+	  case !the_token of
+d316 1
+a316 1
+      case !the_token of
+d330 1
+a330 1
+      case !the_token of
+d339 1
+a339 1
+      case !the_token of
+d349 2
+a350 2
+	   | _ => 
+	       raise (ParseError "Type expected"))
+d361 1
+a361 1
+      | _ => raise (ParseError "Type expected")
+d364 1
+a364 1
+      case !the_token of
+d394 1
+a394 1
+    | ensure_varpat _ = raise (ParseError "Expected a var before an as")
+d401 1
+a401 1
+	  handle PE.Seen => raise (ParseError "Variable bound more than once")
+d430 1
+a430 1
+	  raise (ParseError "Unbound Contructor")
+d439 1
+a439 1
+    case !the_token of
+d453 1
+a453 1
+	 | _ => raise Atpat)
+d464 1
+a464 1
+	      case !the_token of
+d466 1
+a466 1
+	      | _ => raise (ParseError "Expected ident after OP"))
+d479 2
+a480 2
+	     (next_token () ;
+	      case !the_token of 
+d489 1
+a489 1
+		    case !the_token of
+d497 1
+a497 1
+		    | _ => raise (ParseError "Expected an RPAR")
+d504 2
+a505 2
+	 | _ => raise Atpat)
+    | _ => raise Atpat
+a506 1
+
+d509 1
+a509 1
+      case !the_token of
+d519 1
+a519 1
+      | _ => raise (ParseError "Expected COMMA or RPAR")
+d526 1
+a526 1
+      case !the_token of
+d536 1
+a536 1
+      | _ => raise (ParseError "Expected COMMA or KET")
+d538 1
+a538 1
+      case !the_token of 
+d548 1
+a548 1
+    case !the_token of
+d552 1
+a552 1
+	 case !the_token of
+d555 1
+a555 1
+	 | _ => raise (ParseError "RBRACE expected after ELLIPSIS"))
+d561 1
+a561 1
+	    (case !the_token of
+d566 1
+a566 1
+	     | _ => raise (ParseError "RBRACE or COMMA expected"))
+d576 1
+a576 1
+      case !the_token of
+d584 1
+a584 1
+	    raise (ParseError "Expected EQUAL after numeric lab")
+d588 1
+a588 1
+	      case !the_token of
+d596 1
+a596 1
+		      case !the_token of
+d629 1
+a629 1
+	case !the_token of
+d641 1
+a641 1
+      case !the_token of
+d649 1
+a649 1
+	      case !the_token of
+d683 1
+a683 1
+	case !the_token of
+d703 1
+a703 1
+		       case !the_token of
+d779 1
+a779 1
+    case !the_token of
+d824 1
+a824 1
+		case !the_token of
+d847 1
+a847 1
+		  case !the_token of
+d853 1
+a853 1
+			 case !the_token of
+d856 1
+a856 1
+			 | _ => raise (ParseError "Expected an END")
+d858 1
+a858 1
+		  | _ => raise (ParseError "Expected a WITH")
+d862 1
+a862 1
+		case !the_token of
+d895 1
+a895 1
+		case !the_token of
+d903 1
+a903 1
+		       case !the_token of
+d907 1
+a907 1
+		       | _ => raise (ParseError "Expected an END")
+d909 1
+a909 1
+		| _ => raise (ParseError "Expected an IN")
+d914 1
+a914 1
+	       case !the_token of
+d927 1
+a927 1
+		 (nil,_) => raise (ParseError "Empty OPEN dec")
+d939 1
+a939 1
+	       ((case !the_token
+d945 1
+a945 3
+			 | _ => raise 
+			     (ParseError 
+			      "Only Single digit allowed for precedence")
+d958 1
+a958 1
+	       ((case !the_token
+d964 1
+a964 3
+			 | _ => raise 
+			     (ParseError 
+			      "Only Single digit allowed for precedence")
+d1003 1
+a1003 1
+    case !the_token of
+d1016 1
+a1016 1
+	   case !the_token of
+d1024 1
+a1024 1
+	   | _ => raise (ParseError "Expected an EQUAL")
+d1038 1
+a1038 1
+      case !the_token of
+d1049 1
+a1049 1
+		| _ => raise (ParseError "Expected a VAR at start of fun"))
+d1068 1
+a1068 1
+	    | _ => raise (ParseError "Expected a VAR at start of fun"))
+d1075 1
+a1075 1
+      (case !the_token of
+d1096 1
+a1096 1
+	    handle Derived.FvalBind x => raise ParseError x
+d1098 1
+a1098 1
+	  case !the_token of
+d1143 1
+a1143 1
+	handle PE.Seen => raise (ParseError "EXCON bound more than once")
+d1149 1
+a1149 1
+	case !the_token of
+d1154 1
+a1154 1
+		(case !the_token of
+d1157 1
+a1157 1
+		      case !the_token of
+d1164 2
+a1165 2
+			   | _ => raise (ParseError "LONGEXCON expected"))
+		      | _ => raise (ParseError "LONGEXCON expected"))
+d1178 1
+a1178 1
+	       (case !the_token of
+d1183 1
+a1183 1
+	| _ => raise (ParseError "EXCON expected")
+d1194 1
+a1194 1
+	handle PE.Seen => raise (ParseError "CON bound more than once")
+d1197 1
+a1197 1
+	case !the_token of
+d1203 1
+a1203 1
+		 case !the_token of
+d1214 1
+a1214 1
+	       (case !the_token of
+d1219 1
+a1219 1
+	| _ => raise (ParseError "CON expected")
+d1232 1
+a1232 1
+	  (case !the_token of
+d1252 1
+a1252 1
+      (case !the_token of
+d1265 1
+a1265 1
+	case !the_token of
+d1276 1
+a1276 1
+		   case !the_token of
+d1286 1
+a1286 1
+			     | _ => raise (ParseError "FNexp expected")
+d1290 1
+a1290 1
+		   | _ => raise (ParseError "EQUAL expected"))
+d1292 1
+a1292 1
+		(case !the_token of
+d1306 1
+a1306 1
+	case !the_token of
+d1320 1
+a1320 1
+	case !the_token of 
+d1326 1
+a1326 2
+		 raise 
+		   (ParseError "fixity directives cannot refer to longids"))
+d1335 1
+a1335 1
+	nil => raise (ParseError "fixity directive must have at least one id")
+d1356 1
+a1356 1
+	  case !the_token of
+d1366 1
+a1366 1
+	  | _ => raise (ParseError "Expected COMMA or RPAR")
+d1373 1
+a1373 1
+	  case !the_token of
+d1383 1
+a1383 1
+	  | _ => raise (ParseError "Expected COMMA or KET")
+d1385 1
+a1385 1
+	  case !the_token of 
+d1395 1
+a1395 1
+	  case !the_token of
+d1405 1
+a1405 1
+	  | _ => raise (ParseError "Expected SEMICOLON or RPAR")
+d1411 1
+a1411 1
+	case !the_token of
+d1431 1
+a1431 1
+	| Token.TYVAR _ => raise (ParseError "Unexpected tyvar")
+d1438 1
+a1438 1
+		  case !the_token of
+d1443 1
+a1443 1
+		  | _ => raise (ParseError "Expected ident after OP"))
+d1459 1
+a1459 1
+		  case !the_token of
+d1468 1
+a1468 1
+			case !the_token of
+d1479 1
+a1479 1
+			| _ => raise (ParseError "Expected an RPAR")
+d1495 1
+a1495 1
+		      case !the_token of
+d1507 1
+a1507 1
+		      | _ => raise (ParseError "Expected SEMICOLON or END")
+d1509 1
+a1509 1
+		    case !the_token of
+d1516 1
+a1516 1
+			   case !the_token of
+d1524 1
+a1524 1
+			       raise (ParseError "Expected END or SEMICOLON")
+d1526 1
+a1526 1
+		    | _ => raise (ParseError "Expected an IN")
+d1532 1
+a1532 1
+	case !the_token of
+d1581 1
+a1581 1
+	  case !the_token of
+d1588 1
+a1588 1
+		 (case !the_token of
+d1593 1
+a1593 1
+		  | _ => raise (ParseError "RBRACE or COMMA expected"))
+d1595 1
+a1595 1
+	  | _ => raise (ParseError "EQUAL expected")
+d1603 1
+a1603 1
+	   case !the_token of
+d1613 1
+a1613 1
+		  (case !the_token of
+d1618 1
+a1618 1
+	   | _ => raise (ParseError "DARROW expected"))
+d1625 1
+a1625 1
+	 (case !the_token of
+d1639 1
+a1639 1
+		 case !the_token of
+d1645 1
+a1645 1
+			case !the_token of
+d1653 1
+a1653 1
+			| _ => raise (ParseError "Expected ELSE")
+d1655 1
+a1655 1
+		 | _ => raise (ParseError "Expected THEN")
+d1663 1
+a1663 1
+		 case !the_token of
+d1671 1
+a1671 1
+		 | _ => raise (ParseError "Expected DO")
+d1679 1
+a1679 1
+		 case !the_token of
+d1686 1
+a1686 1
+		 | _ => raise (ParseError "Expected OF")
+d1709 1
+a1709 1
+	    case !the_token of
+d1734 1
+a1734 1
+		       case !the_token of
+d1750 1
+a1750 1
+			   if !the_token = Token.LONGID (nil,sym) then
+d1794 1
+a1794 1
+  case !the_token of 
+d1799 1
+a1799 1
+	 case !the_token of
+d1803 1
+a1803 1
+	 | _ => raise (ParseError "Expected an END")
+d1813 1
+a1813 1
+  | _ => raise (ParseError "ID or SIG expected")
+d1821 1
+a1821 1
+      handle PE.Seen => raise (ParseError "VAR described more than once")
+d1824 1
+a1824 1
+      case !the_token of
+d1830 1
+a1830 1
+	       case !the_token of
+d1837 1
+a1837 1
+	       | _ => raise (ParseError "COLON expected"))
+d1841 1
+a1841 1
+	     (case !the_token of
+d1846 1
+a1846 1
+      | _ => raise (ParseError "VAR expected")
+d1856 1
+a1856 1
+    (case !the_token of
+d1868 1
+a1868 1
+      handle PE.Seen => raise (ParseError "CON described more than once")
+d1871 1
+a1871 1
+      case !the_token of
+d1877 1
+a1877 1
+	       case !the_token of
+d1887 1
+a1887 1
+	     (case !the_token of
+d1892 1
+a1892 1
+      | _ => raise (ParseError "CON expected")
+d1906 1
+a1906 1
+	(case !the_token of
+d1925 1
+a1925 1
+      handle PE.Seen => raise (ParseError "EXCON described more than once")
+d1928 1
+a1928 1
+      case !the_token of 
+d1934 1
+a1934 1
+	       (case !the_token of
+d1946 1
+a1946 1
+	      (case !the_token of
+d1951 1
+a1951 1
+      | _ => raise (ParseError "EXCON expected")
+d1962 1
+a1962 1
+      handle PE.Seen => raise (ParseError "STRID described more than once")
+d1965 1
+a1965 1
+      case !the_token of 
+d1971 1
+a1971 1
+	       case !the_token of
+d1979 1
+a1979 1
+	       | _ => raise (ParseError "COLON expected")
+d1982 1
+a1982 1
+	     (case !the_token of
+d1987 1
+a1987 1
+      | _ => raise (ParseError "STRID expected")
+d1995 1
+a1995 1
+      case !the_token of
+d1999 1
+a1999 1
+	   (case !the_token of
+d2004 1
+a2004 1
+      | _ => raise ParseError "Expected an IDENT"
+d2009 1
+a2009 1
+	  case !the_token of 
+d2016 1
+a2016 1
+	(case !the_token of
+d2026 1
+a2026 1
+  case !the_token of
+d2084 1
+a2084 1
+	       case !the_token of
+d2095 1
+a2095 1
+		      case !the_token of
+d2099 1
+a2099 1
+		      | _ => raise (ParseError "Expected an END")
+d2101 1
+a2101 1
+	       | _ => raise (ParseError "Expected an IN")
+d2110 1
+a2110 1
+		case !the_token of
+d2124 1
+a2124 1
+		(nil,_) => raise (ParseError "Empty OPEN spec")
+d2132 1
+a2132 1
+		case !the_token of
+d2146 1
+a2146 1
+		(nil,_) => raise (ParseError "Empty INCLUDE spec")
+d2176 1
+a2176 1
+  case !the_token of
+d2180 1
+a2180 1
+	raise StrDec (* by note at end of 3.5 *)
+d2198 1
+a2198 1
+	 case !the_token of
+d2205 1
+a2205 1
+		case !the_token of
+d2209 1
+a2209 1
+		| _ => raise (ParseError "Expected an END")
+d2211 1
+a2211 1
+	 | _ => raise (ParseError "Expected an IN")
+d2253 1
+a2253 1
+      handle PE.Seen => raise (ParseError "STRID bound more than once")
+d2256 1
+a2256 1
+      case !the_token of
+d2262 1
+a2262 1
+	       case !the_token of
+d2267 1
+a2267 1
+		      case !the_token of
+d2275 1
+a2275 1
+		      | _ => raise (ParseError "Expected an EQUAL")
+d2284 2
+a2285 1
+	       | _ => raise (ParseError "Expected EQUAL or COLON")
+d2288 1
+a2288 1
+	     (case !the_token of
+d2293 1
+a2293 1
+      | _ => raise (ParseError "STRID expected")
+d2301 1
+a2301 1
+      case !the_token of
+d2306 1
+a2306 1
+	     case !the_token of
+d2310 1
+a2310 1
+	     | _ => raise (ParseError "Expected an END")
+d2319 1
+a2319 1
+	     case !the_token of
+d2324 1
+a2324 1
+		    case !the_token of
+d2328 1
+a2328 1
+		    | _ => raise (ParseError "Expected an END")
+d2330 1
+a2330 1
+	     | _ => raise (ParseError "Expected an IN")
+d2335 1
+a2335 1
+	   case !the_token of
+d2343 1
+a2343 1
+		  case !the_token of
+d2348 1
+a2348 1
+		      raise (ParseError "EXPECTED an RPAR")
+d2366 1
+a2366 1
+	     raise (ParseError "Structure expression expected"))
+d2377 1
+a2377 1
+      handle PE.Seen => raise (ParseError "SIGID bound more than once")
+d2380 1
+a2380 1
+      case !the_token of
+d2386 1
+a2386 1
+	       case !the_token of
+d2393 1
+a2393 1
+	       | _ => raise (ParseError "Expected an EQUAL")
+d2396 1
+a2396 1
+	     (case !the_token of
+d2401 1
+a2401 1
+      | _ => raise (ParseError "SIGID expected")
+d2413 1
+a2413 1
+    case !the_token of
+d2429 1
+a2429 1
+      handle PE.Seen => raise (ParseError "FUNID bound more than once")
+d2437 1
+a2437 1
+	case !the_token of
+d2442 1
+a2442 1
+	       case !the_token of
+d2451 1
+a2451 1
+	       | _ => raise (ParseError "Expected an EQUAL")
+d2461 1
+a2461 1
+	| _ => raise (ParseError "Expected an EQUAL or COLON")
+d2467 1
+a2467 1
+	case !the_token of
+d2472 1
+a2472 1
+	       case !the_token of
+d2483 1
+a2483 1
+	       | _ => raise (ParseError "Expected an EQUAL")
+d2495 1
+a2495 1
+	| _ => raise (ParseError "Expected an EQUAL or COLON")
+d2500 1
+a2500 1
+      case !the_token of
+d2506 1
+a2506 1
+	       case !the_token of
+d2509 1
+a2509 1
+		    case !the_token of
+d2514 1
+a2514 1
+			   case !the_token of
+d2519 1
+a2519 1
+				  case !the_token of
+d2523 1
+a2523 1
+				  | _ => raise (ParseError "Expected an RPAR")
+d2525 1
+a2525 1
+			   | _ => raise (ParseError "Expected a COLON")
+d2530 1
+a2530 1
+			  case !the_token of
+d2534 1
+a2534 1
+			  | _ => raise (ParseError "Expected an RPAR")
+d2536 1
+a2536 1
+	       | _ => raise (ParseError "Expected an LPAR")
+d2539 1
+a2539 1
+	     (case !the_token of
+d2544 1
+a2544 1
+      | _ => raise (ParseError "Expected a FUNID")
+d2555 1
+a2555 1
+    case !the_token of
+d2566 1
+a2566 1
+  case !the_token of
+d2581 1
+a2581 1
+       (case (!the_token) of
+d2583 1
+a2583 1
+	| _ => raise (ParseError "expected a string")))
+d2599 1
+a2599 1
+      case Lexer.getToken tokenstream of
+@
+
+
+1.8
+log
+@Made some optimisations, and removed Ident from the result
+@
+text
+@d4 3
+d2577 1
+a2577 1
+  val initial_pB = 
+d2628 14
+d2643 1
+a2643 1
+      initial
+@
+
+
+1.7
+log
+@Added the exceptions and functions in the Array structure to the
+initial parser environment
+@
+text
+@d4 4
+a62 1
+structure Ident = Ident
+d96 3
+d100 1
+a100 1
+  Ident.LONGVALID (Ident.mkPath syms, Ident.VAR sym)
+d103 1
+a103 1
+  Ident.LONGVALID (Ident.mkPath syms, Ident.CON sym)
+d106 1
+a106 1
+  Ident.LONGVALID (Ident.mkPath syms, Ident.EXCON sym)
+d112 1
+a112 1
+      Ident.LONGTYCON (Ident.mkPath syms, Ident.TYCON sym)
+d115 1
+a115 1
+  Ident.LONGSTRID (Ident.mkPath syms, Ident.STRID sym)
+d126 12
+a138 12
+  let
+    fun spaces(x) = 
+      if x<= 0
+	then ()
+	  else 
+	    (output(std_out," ");
+	     spaces(x-1))
+    fun log(x) =
+      if x < 10 
+	then 0
+      else 1 + log(x div 10)
+  in
+a142 1
+  end
+a155 1
+
+d204 2
+a205 1
+      let val ty = parse_ty_internal ()
+d210 2
+a211 1
+	    let val tyseq = ty :: parse_tyseq (next_token ())
+d228 2
+a229 1
+      let val ty = parse_ty_internal ()
+d240 2
+a241 1
+      let val (lab,_) = parse_lab ()
+d245 2
+a246 1
+	    let val ty = parse_ty_internal (next_token ())
+d280 2
+a281 1
+	   let val ty' = parse_ty_internal ()
+d367 2
+a368 1
+	     let val var = mkVar id
+d371 1
+a371 1
+		Ident.LONGVALID (Ident.mkPath [], mkVar id))
+d376 2
+a377 1
+	     let val var = mkVar id
+d380 1
+a380 1
+		Ident.LONGVALID (Ident.mkPath [], mkVar id))
+d447 2
+a448 1
+		  let val pat1 = parse_pat0 env
+d476 2
+a477 1
+	   let val pat = parse_pat0 env
+d493 2
+a494 1
+	   let val pat = parse_pat0 env
+d535 2
+a536 1
+    let val (lab,numeric) = parse_lab ()
+d554 2
+a555 1
+		   let val (ty,tyvars) = parse_ty ()
+d561 2
+a562 1
+			   let val pat = parse_pat0 env
+d574 2
+a575 1
+		   let val pat = parse_pat0 env
+d595 2
+a596 1
+	     let val (ty,tyvars) = parse_ty ()
+d607 2
+a608 1
+	   let val (ty,tyvars) = parse_ty ()
+d647 2
+a648 1
+	    let val fixity = PE.lookupFixity(sym,pE)
+d690 2
+a691 1
+    let val pat = parse_atpat0 env
+d701 2
+a702 1
+	       let val pat' = parse_atpat0 env
+d753 2
+a754 1
+	      let val (valbind,pVE) = parse_valbind pE
+d766 3
+a768 2
+		let val (fvalbind,tyvarset) =
+		  parse_fvalbind (pE,pos)
+d783 2
+a784 1
+	      let val (datbind, pVE) = parse_datbind ()
+d789 2
+a790 1
+		     let val typbind = parse_typbind ()
+d812 2
+a813 1
+		       let val result  = parse_dec (false,pE')
+d844 2
+a845 1
+	      let val (exbind, pVE, tyvarset) = parse_exbind pE
+d950 2
+a951 1
+	  let val (exp,tyvars) = parse_exp pE
+d956 1
+a956 1
+			       (Ident.mkPath [],
+d972 2
+a973 1
+	 let val (exp,tyvars) = parse_exp pE
+d979 2
+a980 1
+	 let val (ty,tyvars) = parse_ty ()
+d985 2
+a986 1
+		let val (exp,tyvars') = parse_exp pE
+d1134 2
+a1135 1
+		     let val (ty,tyvars) = parse_ty (next_token ())
+d1171 2
+a1172 1
+		     let val (ty,tyvars) = parse_ty (next_token ())
+d1201 2
+a1202 1
+		let val (bindings,pVE'') = parse_bindings pVE'
+d1245 2
+a1246 1
+			let val (exp,tyvars') = parse_exp pE
+d1269 2
+a1270 1
+      let val (bindings1,pVE) = parse_bindings (PE.empty_pVE,false)
+d1274 2
+a1275 1
+	    let val (bindings2,pVE') = parse_bindings (pVE,true)
+d1328 2
+a1329 1
+	       let val exp = parse_exp_internal 0
+d1345 2
+a1346 1
+	       let val exp = parse_exp_internal 0
+d1367 2
+a1368 1
+	       let val exp = parse_exp_internal 0
+d1502 2
+a1503 1
+	    let val (ty,tyvars) = parse_ty (next_token ())
+d1545 2
+a1546 1
+	let val (lab,_) = parse_lab ()
+d1551 2
+a1552 1
+	       let val exp = parse_exp_internal 0
+d1566 2
+a1567 1
+	let val (pat,pVE,tyvars) = parse_pat (pE,PE.empty_pVE)
+d1683 2
+a1684 1
+	    let val fixity = PE.lookupFixity(sym,pE)
+@
+
+
+1.6
+log
+@Fixed problem with parsing {tyrow} tycon (I think)
+@
+text
+@d4 3
+d2555 1
+d2567 10
+a2576 1
+          \  infix 3 := o"
+@
+
+
+1.5
+log
+@Added copyright message. Fixed potential parsing error found by
+njml 0.75
+@
+text
+@d3 5
+a7 1
+$Log:	_parser.sml,v $
+d292 1
+a292 1
+	       (next_token () ; (Absyn.RECORDty (parse_tyrow ())))
+@
+
+
+1.4
+log
+@changed to handle Interface annotations in signature expressions
+@
+text
+@d1 1
+d4 3
+d16 1
+d1911 1
+a1911 1
+	   case !the_token of
+d1915 1
+a1915 1
+	   | _ => nil)
+@
+
+
+1.3
+log
+@Added parsing for require topdecs.
+@
+text
+@d3 3
+d15 1
+d25 1
+d35 1
+d1709 1
+a1709 1
+	      (Absyn.NEWsigexp spec, pE))
+d1718 1
+a1718 1
+	 (Absyn.OLDsigexp sigid, pE)
+d2385 3
+a2387 1
+		       (funid,spec,strexp,Absyn.PRESENT sigexp'))
+d2397 3
+a2399 1
+		       (funid,spec,strexp,Absyn.ABSENT))
+@
+
+
+1.2
+log
+@Updated to handle extra type ref field in HANDLEexp
+@
+text
+@d3 3
+d2475 5
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log$
+d1470 3
+a1472 1
+		parse_exp' (0,Absyn.HANDLEexp (exp,match))
+@

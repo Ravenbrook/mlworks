@@ -1,0 +1,230 @@
+head	1.7;
+access;
+symbols
+	mlworks-28-01-1994:1.7
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4;
+locks; strict;
+comment	@# @;
+
+
+1.7
+date	93.09.23.14.17.30;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.09.07.15.21.14;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.09.02.10.18.25;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.17.13.18.16;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.08.10.19.28.04;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.22.16.50.36;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.07.31.10.07.19;	author jont;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	93.09.02.09.48.16;	author jont;	state Exp;
+branches;
+next	1.4.1.2;
+
+1.4.1.2
+date	93.09.07.15.04.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Set the given name on the latest versions over the entire tree
+@
+
+
+1.7
+log
+@Removed some rubbish from the log
+@
+text
+@#!/bin/csh
+# $Log: nametree,v $
+# Revision 1.6  1993/09/07  15:21:14  jont
+# Merged in bug fixes
+#
+# Revision 1.5  1993/09/02  10:18:25  jont
+# Merged in bug fixes
+#
+# Revision 1.4.1.2  1993/09/07  15:04:38  jont
+# Added /usr/sml/src/scripts directory
+#
+# Revision 1.4.1.1  1993/09/02  09:48:16  jont
+# Fork for bug fixing
+#
+# Revision 1.4  1992/08/17  13:18:16  jont
+# Changed use of cd for pushd and popd
+#
+# Revision 1.3  1992/08/10  19:28:04  davidt
+# Changed to use the dirs file to get the list of directories.
+#
+# Revision 1.2  1991/08/22  16:50:36  jont
+# *** empty log message ***
+#
+# Revision 1.1  91/07/31  10:07:19  jont
+# Initial revision
+# 
+# Copyright (c) 1991 Harlequin Ltd.
+if ($#argv != 1) then
+  echo Usage: nametree name
+  exit(1)
+endif
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src /usr/sml/src/scripts)
+  pushd $i
+  if (`ls RCS | wc -l` != 0) then
+    echo naming $i
+    foreach x (RCS/*,v)
+      echo ~sml/tools/setname $argv[1] $i/$x
+      ~sml/tools/setname $argv[1] $x
+    end
+  endif
+  popd
+end
+@
+
+
+1.6
+log
+@Merged in bug fixes
+@
+text
+@d3 3
+a5 1
+<<<<<<< nametree
+a8 4
+# Revision 1.4.1.1  1993/09/02  09:48:16  jont
+# Fork for bug fixing
+#
+=======
+a14 1
+>>>>>>> 1.4.1.2
+@
+
+
+1.5
+log
+@Merged in bug fixes
+@
+text
+@d3 4
+d10 8
+d35 1
+a35 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src)
+@
+
+
+1.4
+log
+@Changed use of cd for pushd and popd
+@
+text
+@d3 6
+d23 1
+a23 1
+foreach i (`cat /usr/sml/tools/dirs`)
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 3
+# Revision 1.4  1992/08/17  13:18:16  jont
+# Changed use of cd for pushd and popd
+#
+d17 1
+a17 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src)
+@
+
+
+1.4.1.2
+log
+@Added /usr/sml/src/scripts directory
+@
+text
+@a2 3
+# Revision 1.4.1.1  1993/09/02  09:48:16  jont
+# Fork for bug fixing
+#
+d20 1
+a20 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src /usr/sml/src/scripts)
+@
+
+
+1.3
+log
+@Changed to use the dirs file to get the list of directories.
+@
+text
+@d3 3
+d18 1
+a18 1
+  cd $i
+d26 1
+a26 1
+  cd ..
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d2 4
+a5 1
+# $Log:	nametree,v $
+d14 1
+a14 2
+set dirs = {lambda,basics,make,match,typechecker,codegen,utils,encoder,parser,lexgen,lexer,mir,main,sparc}
+foreach i ($dirs)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+# $Log$
+d11 1
+a11 1
+set dirs = {lambda,basics,make,match,typechecker,codegen,utils,encoder,parser,lexgen,mir,main,sparc}
+d17 1
+a17 1
+      echo ~sml/tools/setname $argv[1] $x
+@

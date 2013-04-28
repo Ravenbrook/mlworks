@@ -1,0 +1,270 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	97.11.24.11.00.58;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.01.16.49.29;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.02.27.11.50.43;	author andreww;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.11.08.39;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.50.05;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.12.15.14;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.41.54;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.14.41.18;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #1759]
+new test.
+@
+
+
+1.3
+log
+@[Bug #30323]
+@
+text
+@(* This tests that the TextIO.inputLine function correctly adds newlines.
+ *
+ *
+
+Result: OK
+
+ * Revision Log:
+ * -------------
+ * $Log: text_stream_io.sml,v $
+ *  Revision 1.2  1997/04/01  16:49:29  jont
+ *  Modify to stop displaying syserror type
+ *
+ *  Revision 1.1  1997/02/27  11:50:43  andreww
+ *  new unit
+ *  [Bug #1759]
+ *  new test.
+ *
+ *
+ *
+ * Copyright (c) 1997 Harlequin Ltd.
+ *
+ *)
+
+
+local
+  open General
+in
+
+
+  fun reportOK true = "test succeeded."
+    | reportOK false = "test failed."
+
+
+  val _ = let val out = TextIO.openOut "123"
+              val _ = TextIO.output(out,"123\n456")
+           in
+              TextIO.closeOut out
+          end
+
+  val inp = TextIO.getInstream(TextIO.openIn "123")
+             
+  val (data,inp') = TextIO.StreamIO.inputLine inp
+  val test1 = reportOK(data="123\n")
+  val (data,inp'') = TextIO.StreamIO.inputLine inp'
+  val test2 = reportOK(data = "456\n")  
+  val (data,inp''') = TextIO.StreamIO.inputLine inp''
+  val test3 = reportOK(data = "")
+   
+  val _ = TextIO.StreamIO.closeIn inp
+
+  val _ = OS.FileSys.remove "123" handle _ => () (*remove it*)
+
+end
+
+
+
+@
+
+
+1.2
+log
+@Modify to stop displaying syserror type
+@
+text
+@d10 3
+a23 17
+local
+  val _ = Shell.Options.set(Shell.Options.ValuePrinter.maximumStrDepth, 0);
+in
+  val _ =
+    (Shell.Build.loadSource "basis.__general";
+     Shell.Build.loadSource "basis.__char";
+     Shell.Build.loadSource "basis.__char_vector";
+     Shell.Build.loadSource "basis.__char_array";
+     Shell.Build.loadSource "system.__os_prim_io";
+     Shell.Build.loadSource "basis.__bin_prim_io";
+     Shell.Build.loadSource "basis.__text_prim_io";
+     Shell.Build.loadSource "basis.__text_stream_io";
+     Shell.Build.loadSource "basis.__text_io";
+     Shell.Build.loadSource "basis.__io";
+     Shell.Build.loadSource "system.__os")
+end;
+
+d42 1
+a42 1
+  val (data,inp') = TextStreamIO.inputLine inp
+d44 1
+a44 1
+  val (data,inp'') = TextStreamIO.inputLine inp'
+d46 1
+a46 1
+  val (data,inp''') = TextStreamIO.inputLine inp''
+d49 1
+a49 1
+  val _ = TextStreamIO.closeIn inp
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a9 3
+ *  Revision 1.2  1997/04/01  16:49:29  jont
+ *  Modify to stop displaying syserror type
+ *
+@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:39  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:39  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:39  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a9 3
+ *  Revision 1.2.1.1.1.1  1997/07/28  18:50:05  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #1759]
+new test.
+@
+text
+@d9 6
+a14 1
+ * $Log: text_io_3.sml,v $
+d21 16
+a36 11
+Shell.Build.loadSource "basis.__general";
+Shell.Build.loadSource "basis.__char";
+Shell.Build.loadSource "basis.__char_vector";
+Shell.Build.loadSource "basis.__char_array";
+Shell.Build.loadSource "system.__os_prim_io";
+Shell.Build.loadSource "basis.__bin_prim_io";
+Shell.Build.loadSource "basis.__text_prim_io";
+Shell.Build.loadSource "basis.__text_stream_io";
+Shell.Build.loadSource "basis.__text_io";
+Shell.Build.loadSource "basis.__io";
+Shell.Build.loadSource "system.__os";
+@

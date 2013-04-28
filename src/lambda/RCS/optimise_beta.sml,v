@@ -1,0 +1,264 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.7
+	ML_beta_release_03/08/94:1.7
+	ML_revised_beta_release_25/05/94:1.7
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+
+
+1.7
+date	93.11.25.13.31.58;	author nosa;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.10.13.52.21;	author davida;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.06.30.10.06.35;	author davida;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.04.30.14.34.04;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.14.11.30;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.10.14.51.24;	author davida;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.06.13.07.25;	author davida;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.07.10.13.52.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Beta-reduction, controlled by heuristics
+@
+
+
+1.7
+log
+@Pass recipe-generation compiler option to optimiser.
+@
+text
+@
+(*
+ * Lambda-Calculus Optimisation:  optimise_beta
+ * Advanced beta-reduction and function in-lining
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "lambdatypes";
+
+signature OPTIMISE_BETA =
+  sig
+    structure LT : LAMBDATYPES
+
+    val basic_info   : LT.LambdaInfo
+    val process_expr : LT.LambdaExp -> LT.LambdaInfo
+
+    (*  Heuristic Parameters  *)
+
+    val max_struct_dup   : int ref
+    val max_scon_space   : int ref
+    val max_func_dup     : int ref
+    val code_node_factor : int ref
+    val inline_depth     : int ref
+    val debug_inlineability : bool ref
+    val test_for_inlineability_threshold : int ref
+
+    val heuristic_beta_reduce : bool -> LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+    val function_inline       :
+      bool -> (LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp) ->
+      LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+
+    val show_debug_info : bool ref
+  end;
+
+(* $Log: optimise_beta.sml,v $
+Revision 1.6  1992/07/10  13:52:21  davida
+Removed reorder_apps
+
+Revision 1.5  1992/06/30  10:06:35  davida
+Changes to function types, addition of inlining depth control.
+
+Revision 1.4  1992/04/30  14:34:04  clive
+More work on speeding up function inlining
+
+Revision 1.3  1991/10/22  14:11:30  davidt
+Replaced impossible exception with Crash.impossible calls.
+
+Revision 1.2  91/09/10  14:51:24  davida
+Removed redundant heuristic parameter, added
+inlining optimisation.
+
+Revision 1.1  91/09/06  13:07:25  davida
+Initial revision
+ *)
+@
+
+
+1.6
+log
+@Removed reorder_apps
+@
+text
+@d28 1
+a28 1
+    val heuristic_beta_reduce : LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+d30 1
+a30 1
+      (LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp) ->
+d37 3
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a36 3
+Revision 1.6  1992/07/10  13:52:21  davida
+Removed reorder_apps
+
+@
+
+
+1.5
+log
+@Changes to function types, addition of inlining depth control.
+@
+text
+@a32 2
+    val reorder_apps : LT.LambdaExp -> LT.LambdaExp
+
+d37 3
+@
+
+
+1.4
+log
+@More work on speeding up function inlining
+@
+text
+@d24 1
+a24 1
+
+d28 1
+a28 1
+    val heuristic_beta_reduce : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d30 2
+a31 2
+      (LT.LambdaExp -> LT.LambdaExp) ->
+      LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d39 3
+@
+
+
+1.3
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@d25 3
+d38 4
+a41 1
+(* $Log:	optimise_beta.sml,v $
+@
+
+
+1.2
+log
+@Removed redundant heuristic parameter, added
+inlining optimisation.
+@
+text
+@d2 6
+a7 1
+   (*  Lambda-Calculus Optimisation:  optimise_beta  *)
+a8 6
+  (*  Advanced beta-reduction and function in-lining  *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+a10 1
+
+d12 2
+a13 2
+   sig
+      structure LT : LAMBDATYPES
+d15 2
+a16 2
+      val basic_info   : LT.LambdaInfo
+      val process_expr : LT.LambdaExp -> LT.LambdaInfo
+d18 1
+a18 1
+      (*  Heuristic Parameters  *)
+d20 4
+a23 4
+      val max_struct_dup   : int ref
+      val max_scon_space   : int ref
+      val max_func_dup     : int ref
+      val code_node_factor : int ref
+d25 4
+a28 3
+      val heuristic_beta_reduce : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+      val function_inline       : (LT.LambdaExp -> LT.LambdaExp) ->
+	 			  LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d30 1
+a30 1
+      val reorder_apps : LT.LambdaExp -> LT.LambdaExp
+d32 2
+a33 3
+      exception impossible of string
+      val show_debug_info : bool ref
+   end
+d35 4
+a39 1
+(* $Log:	optimise_beta.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a24 1
+      val max_curry_body   : int ref
+d28 2
+d38 4
+a41 1
+(* $Log$ *)
+@

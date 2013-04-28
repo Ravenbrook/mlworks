@@ -1,0 +1,52 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.10.19.14.14.58;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #70184]
+Need to customise on-the-fly for configurations
+@
+
+
+1.1
+log
+@new unit
+[Bug #70184]
+Need to customise on-the-fly for configurations
+@
+text
+@(* Copyright (C) 1998 Harlequin Group plc.  All rights reserved.
+ *
+ * Revision Log
+ * ------------
+ * $Log: $
+ *
+ *)
+
+Shell.Options.set (Shell.Options.ValuePrinter.maximumStrDepth, 0);
+
+Shell.Project.openProject "add.mlp";
+Shell.Project.setConfiguration "ARCH_OS";
+Shell.Project.compileAll ();
+Shell.Project.loadAll ();
+
+local
+  structure C = MLWorksCInterface;
+  val x = C.Int.fromInt 25;
+  val y = C.Int.fromInt 17;
+  val z = Add.add (x, y);
+in
+  val ans = C.Int.toInt z;
+end
+@

@@ -1,0 +1,1328 @@
+head	1.10;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.10
+	MLWorks_Beta_1996_06_06:1.10
+	MLWorks_Beta_1996_06_05:1.10
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.10;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	96.05.13.10.01.09;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.04.30.15.00.29;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.04.18.16.57.04;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.09.12.16.26.02;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.10.15.25.15;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.07.22.43.40;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.07.18.12.17.13;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.06.26.12.03.05;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.05.04.19.21.25;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.35.05;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.10
+log
+@Changes to basis.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_DATA ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _fi_data.sml,v $
+ * Revision 1.9  1996/04/30  15:00:29  matthew
+ * Removing utils/*integer
+ *
+ * Revision 1.8  1996/04/18  16:57:04  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.7  1995/09/12  16:26:02  daveb
+ * Word conversion functions have changed.
+ *
+ *  Revision 1.6  1995/09/10  15:25:15  brianm
+ *  Further modification for updates and general reorganisation.
+ *
+ *  Revision 1.5  1995/09/07  22:43:40  brianm
+ *  Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.4  1995/07/18  12:17:13  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.3  1995/06/26  12:03:05  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.2  1995/05/04  19:21:25  brianm
+ *  Removing restrictive eqtype constraints & introduce abstypes in
+ *  various implementing types.
+ *
+ *  Revision 1.1  1995/04/25  11:35:05  brianm
+ *  new unit
+ *  New file.
+ *
+ * Revision 1.1  1995/03/27  15:47:52  brianm
+ * new unit
+ *
+ * New file.
+ *
+ *)
+
+require "../basis/__general";
+require "../basis/__word32";
+require "../basis/__integer";
+
+require "fi_types";
+
+require "static_bytearray";
+require "fi_hostel";
+require "fi_utils";
+
+require "fi_data";
+
+functor ForeignData(
+
+   structure FIHostel : FOREIGN_HOSTEL
+   structure FIUtils  : FOREIGN_UTILS
+
+   structure FITypes : FOREIGN_TYPES
+
+) : FOREIGN_DATA =
+   struct
+
+   (* Mapping *)
+
+
+     val MLWcast  =  MLWorks.Internal.Value.cast : 'a -> 'b;
+
+     structure FITypes = FITypes
+     structure FIHostel = FIHostel
+
+     open FITypes
+
+     open General
+     open FIHostel
+
+     structure ByteArray      =  MLWorks.ByteArray
+
+     val bytearray  =  ByteArray.array
+     val copy_ba'   =  ByteArray.copy
+     val copy_ba    =
+         fn (src,src_st,len,tgt,tgt_st) =>
+            copy_ba'(src,src_st,src_st+len,tgt,tgt_st)
+
+     val length_ba  =  ByteArray.length
+     val to_list    =  ByteArray.to_list
+
+     val word32_to_hex        =  FIUtils.word32_to_hex
+     val bytearray_to_hex     =  FIUtils.bytearray_to_hex
+     val bytearray_to_string  =  FIUtils.bytearray_to_string
+     val peek_memory          =  FIUtils.peek_memory
+     
+     val addrToInt          =  Word32.toIntX
+     val intToAddr          =  Word32.fromInt
+     val pl32               =  Word32.+
+     val mi32               =  Word32.-
+
+     infix 6 pl32 mi32
+
+     val extract            =  General.valOf
+
+     val min                =  Int.min
+     val max                =  Int.max
+
+
+   (* Implementation auxiliaries *)
+
+     val null_addr = intToAddr(0)  (* Need Word32 literals as pattern match objects *) 
+
+     fun new(ref(v)) = ref(v)
+
+     fun addr_plus(a,i)    = a pl32 (intToAddr i)
+     fun addr_minus(a1,a2) = addrToInt(a1 mi32 a2)
+
+
+   (* Exported Definitions *)
+
+     exception OutOfBounds
+     exception Currency
+
+     datatype pod_mode   = LOCAL_PM | REMOTE_PM
+     datatype pod_status = PERMANENT_PS | TEMPORARY_PS
+
+     abstype ('l_type) pod =
+              POD of {
+                        hostel   : hostel,
+                        status   : pod_status,
+                        currency : bool ref,
+                        mode     : pod_mode ref,
+                        ltype    : 'l_type ref,
+                        size     : int ref,
+                        base     : address box,
+                        offset   : int ref
+                     }
+     with
+
+	fun pod{lang_type,size=pod_size,status,mode,currency,hostel} =
+	    let val new_offset = fresh_object_offset(hostel,pod_size)
+	    in
+	      POD {
+		    hostel     =  hostel,
+                    status     =  status,
+		    currency   =  ref(currency),
+                    mode       =  ref(mode),
+		    ltype      =  ref(lang_type),
+		    size       =  ref(pod_size),
+		    base       =  voidBOX(),
+		    offset     =  ref(new_offset)
+		  }
+	    end
+
+	(* NOTE: Allignment constraints on pods come from the allocation
+	   policy for hostels and only affect the origin at which a pod can be
+	   located (it's offset) and _not_ the size of the pod.  Hence, the
+	   offset is calculated from size information and the current hostel.
+
+	   In particular, the pod_size remains unaffected by the allocation
+	   policy.  The function `fresh_object_offset' takes care of checking
+	   that the new pod fits within the given hostel - and if not, takes
+	   appropriate action.
+	*)
+
+	fun pod_hostel(POD{hostel, ...}) = hostel
+
+	fun pod_status(POD{status, ...}) = status
+
+	fun pod_location(POD{offset, ...}) = !offset
+
+	fun pod_mode(POD{mode, ...}) = !mode
+
+	fun pod_currency(POD{currency, ...}) = !currency
+	fun set_pod_currency(POD{currency, ...},flag) = (currency := flag)
+
+	fun pod_type(POD{ltype, ...}) = !ltype
+	fun set_pod_type(POD{ltype, ...},new_ltype) = (ltype := new_ltype)
+
+	fun pod_size(POD{size, ...}) = !size
+	fun set_pod_size'(POD{size, ...},new_size) = (size := new_size)
+	fun set_pod_size(pod as POD{size, ...},new_size) =
+	    ( set_pod_size'(pod,new_size);
+              if (!size <> new_size) then set_pod_currency(pod, false) else ()
+            )
+
+        fun pod_base(POD{base, ...}) = getBOX(base)
+	fun set_pod_base(POD{base, ...},addr) = setBOX(base)(addr)
+
+	local
+
+	   fun pod_addr'(hostel,offset) =
+	       let val origin = hostel_origin(hostel)
+	       in
+		   addr_plus(origin,offset)
+	       end
+
+           fun update_pod_base(POD{hostel,offset,base, ...})= 
+	       let val addr = pod_addr'(hostel,!offset)
+	       in
+		 setBOX(base)(addr)
+	       end
+
+	in
+
+	    fun to_location (pod,addr) = 
+                case pod_mode(pod) of
+                  LOCAL_PM =>
+		    let val hostel    = pod_hostel(pod)
+			val origin    = hostel_origin(hostel)
+			val hostel_sz = hostel_size(hostel)
+			val new_locn  = addr_minus(addr,origin)
+		    in
+			if (0 <= new_locn) andalso (new_locn < hostel_sz)
+			then new_locn
+			else raise OutOfBounds
+		    end
+                | REMOTE_PM => raise OutOfBounds
+
+	    fun to_address (pod,locn) =
+                case pod_mode(pod) of
+                  LOCAL_PM =>
+		    let val hostel    = pod_hostel(pod)
+			val hostel_sz = hostel_size(hostel)
+		    in
+			if (0 <= locn) andalso (locn < hostel_sz)
+			then let val origin = hostel_origin(hostel)
+			     in
+				 addr_plus(origin,locn)
+			     end
+			else raise OutOfBounds
+		    end
+                | REMOTE_PM => raise OutOfBounds
+
+	   fun pod_address(POD{ base=BOX(ref(SOME(addr))), mode, offset, hostel, ...} ) =
+               (
+                 case !mode of
+		   LOCAL_PM =>
+		     if (addr = null_addr)
+		     then pod_addr'(hostel,!offset)
+		     else addr
+		 | REMOTE_PM => addr
+               )
+
+	     | pod_address(POD{ mode=ref(LOCAL_PM), base, hostel, offset, ...}) =
+	       let val addr     = pod_addr'(hostel,!offset)
+		   val new_base = if is_standard_hostel(hostel) then addr else null_addr
+	       in
+		 setBOX(base)(new_base);
+		 addr
+	       end
+
+	     | pod_address(pod) =
+               ( update_pod_base(pod);
+		 pod_base(pod)
+               )
+
+	   fun relative_location(pod,addr) =
+	       let val pod_addr = pod_address(pod)
+	       in
+		   addr_minus(addr,pod_addr)
+	       end
+
+	   fun relative_address(pod,idx) =
+	       let val pod_addr = pod_address(pod)
+	       in
+		   addr_plus(pod_addr,idx)
+	       end
+
+	   fun set_pod_mode(pod as POD{mode, base, ...},new_mode) =
+	       (
+		 mode := new_mode;
+                 case new_mode of
+                   LOCAL_PM   => resetBOX(base)
+                 | REMOTE_PM  => update_pod_base(pod)
+	       )
+	end
+
+	fun pod_value(pod, barr, offset) =
+	    if not(pod_currency(pod)) then raise Currency else
+	    let val size = pod_size(pod)
+	    in
+		if (length_ba(barr) < offset + size) then raise OutOfBounds else
+                case pod_mode(pod) of
+                  LOCAL_PM =>
+		     let val hostel = pod_hostel(pod)
+		     in
+			 case hostel_status(hostel) of
+			   WR_HS => raise WriteOnly
+			 |
+			   LOCKED_HS => raise WriteOnly
+			 |
+			   _ => let val src_ba = hostel_content(hostel)
+				in
+				    copy_ba(src_ba,pod_location(pod),size,barr,offset)
+				end
+		     end
+                | REMOTE_PM =>
+                     peek_memory
+                       { loc=pod_address(pod),
+                         arr=barr,
+                         start=offset,
+                         len=size
+                       }
+	    end handle Option => raise OutOfBounds
+
+	fun pod_value'(pod, barr, offset) =
+	    let val size = pod_size(pod)
+            in
+                case pod_mode(pod) of
+                  LOCAL_PM =>
+		    let val hostel = pod_hostel(pod)
+			val src_ba = hostel_content(hostel)
+		    in
+			copy_ba(src_ba,pod_location(pod),size,barr,offset)
+		    end
+                | REMOTE_PM =>
+                     peek_memory
+                       { loc=pod_address(pod),
+                         arr=barr,
+                         start=offset,
+                         len=size
+                       }
+            end
+
+        local
+	   fun examine_pod'(pod,addr) =
+	       ( set_pod_currency(pod,true);
+		 case pod_mode(pod) of
+		   LOCAL_PM =>
+		     let val hostel = pod_hostel(pod)
+			 val barr   = hostel_content(hostel)
+			 val offset = pod_location(pod)
+			 val size   = pod_size(pod)
+		     in
+			 peek_memory{ loc   = addr,
+				      arr   = barr,
+				      start = offset,
+				      len   = size }
+		     end
+		 | REMOTE_PM =>
+		     set_pod_base(pod,addr)                 
+	       )
+
+        in
+
+            fun examine_pod(pod,addr) =
+	      ( examine_pod'(pod,addr);
+	        set_pod_currency(pod, true)
+              )
+        end
+
+	local
+	   fun update_hostel(barr,st,len,hostel,offset) =
+	       let val dest_ba = hostel_content(hostel)
+	       in
+		   copy_ba(barr,st,len,dest_ba,offset)
+	       end
+	in
+	   fun set_pod_value(pod,barr,idx) =
+               case pod_mode(pod) of
+                 LOCAL_PM =>
+		   let val hostel  =  pod_hostel(pod)
+		   in
+		       if hostel_status(hostel) = RD_HS then raise ReadOnly else
+		       let val len_barr   =  length_ba(barr)
+			   val pod_sz     =  pod_size(pod)
+			   val upd_sz     =  min(len_barr,pod_sz)
+			   val pod_locn   =  pod_location(pod)
+			   val hostel_sz  =  hostel_size(hostel)
+			   val end_idx    =  idx + upd_sz
+		       in
+			  if (end_idx <= min(len_barr,hostel_sz))
+			  then update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+			  else if end_idx <= len_barr (* i.e. hostel too small ... *)
+			  then (
+				  expand_managed(hostel,end_idx);
+				  update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+			       )
+			  else raise OutOfBounds;
+			  set_pod_currency(pod,true)
+		       end handle Option => raise OutOfBounds
+		   end
+               | REMOTE_PM => raise ReadOnly
+
+	   fun set_pod_value'(pod,barr,idx) =
+	       let val hostel     = pod_hostel(pod)
+		   val pod_sz     = pod_size(pod)
+		   val pod_locn   = pod_location(pod)
+	       in
+		   update_hostel(barr,idx,pod_sz,hostel,pod_locn);
+		   set_pod_currency(pod,true)
+	       end
+
+	   fun copy_pod_value{from,to} =
+	       let val from_size = pod_size(from)
+	       in
+                   if not(pod_currency(from))     then raise Currency     else
+		   if (from_size > pod_size(to))  then raise OutOfBounds  else
+                   if (pod_mode(to) = REMOTE_PM)  then raise OutOfBounds  else
+                   case pod_mode(from) of
+                     LOCAL_PM =>
+		       let val from_hostel = pod_hostel(from)
+			   val barr    = hostel_content(from_hostel)
+			   val idx     = pod_location(from)
+			   val hostel  = pod_hostel(to)
+			   val to_idx  = pod_location(to)
+		       in
+			   update_hostel(barr,idx,from_size,hostel,to_idx);
+ 		           set_pod_currency(to,true)
+		       end
+                   | REMOTE_PM =>
+		       let val from_addr  = pod_address(from)
+			   val to_hostel  = pod_hostel(to)
+			   val to_idx     = pod_location(to)
+		       in
+                           peek_memory
+                             { loc=from_addr,
+			       arr=hostel_content(to_hostel),
+			       start=to_idx,
+			       len=from_size };
+ 		           set_pod_currency(to,true)
+		       end
+	       end
+
+	   fun copy_pod_value'{from,to} =
+	       if (pod_mode(to) = REMOTE_PM)  then raise OutOfBounds  else
+               let val to_hostel = pod_hostel(to)
+		   val barr      = hostel_content(to_hostel)
+                   val to_idx    = pod_location(to)
+               in
+                   pod_value'(from, barr, to_idx)
+               end
+	end
+
+	fun new_pod(POD{status,hostel,currency,mode,ltype,size,base,offset}) =
+	    POD{
+                 status    = status,
+                 hostel    = hostel,
+		 currency  = new(currency),
+                 mode      = new(mode),
+		 ltype     = new(ltype),
+		 size      = new(size),
+		 base      = newBOX(base),
+		 offset    = new(offset)
+	       }
+
+	fun dup_pod(pod as POD{status = TEMPORARY_PS, ...}) = pod
+          | dup_pod(POD{hostel,currency,mode,ltype,size,base,offset, ...}) =
+	    POD{
+                 status    = PERMANENT_PS,
+                 hostel    = hostel,
+		 currency  = new(currency),
+                 mode      = new(mode),
+		 ltype     = new(ltype),
+		 size      = new(size),
+		 base      = newBOX(base),
+		 offset    = new(offset)
+	       }
+
+	fun tmp_pod(pod as POD{status = TEMPORARY_PS, ...}) =
+	    (
+              set_pod_currency(pod, false);
+	      pod
+            )
+          | tmp_pod(POD{hostel,mode,ltype,size,base,offset, ...}) =
+	    POD{
+                 status    = TEMPORARY_PS,
+                 hostel    = hostel,
+		 currency  = ref(false),
+                 mode      = new(mode),
+		 ltype     = new(ltype),
+		 size      = new(size),
+		 base      = newBOX(base),
+		 offset    = new(offset)
+	       }
+
+	local
+
+	    fun reset_base(base) =
+		case extractBOX(base) of
+		  SOME(addr) =>
+		    if (addr = null_addr) then () else resetBOX(base)
+		|
+		   _ => ()
+
+            fun move_pod_local(hostel,size,base,offset,new_offset) =
+		(
+		  adjust_hostel(hostel,new_offset,!size);
+		  reset_base(base);
+		  offset := new_offset
+		)
+
+            fun move_pod_remote(base,incr) =
+                let val cur_addr = getBOX(base)
+                    val new_addr = addr_plus(cur_addr,incr)
+                in
+                    setBOX(base)(new_addr)
+                end
+
+            fun set_addr_remote(base,addr) = setBOX(base)(addr)
+
+            fun set_addr_local(hostel,size,base,offset,addr) =
+                let val origin     = hostel_origin(hostel)
+                    val new_offset = addr_minus(addr,origin)
+                in
+                    move_pod_local(hostel,size,base,offset,new_offset)
+                end
+	in
+
+	    fun move_pod'(POD{mode=ref(REMOTE_PM), base, ...}, incr) =
+                move_pod_remote(base,incr)
+
+              | move_pod'(POD{hostel, base, offset, size, ...}, new_offset) =
+                move_pod_local(hostel, size, base, offset, new_offset)
+
+	    fun offset_pod'(POD{mode=ref(REMOTE_PM),base, ...}, incr) =
+                move_pod_remote(base,incr)
+
+              | offset_pod'(POD{hostel, base, offset, size, ...},incr) =
+                let val new_offset = (!offset + incr)
+                in
+                    move_pod_local(hostel, size, base, offset, new_offset)
+                end
+
+	    fun set_pod_address'(POD{mode=ref(REMOTE_PM),base, ...}, addr) =
+                set_addr_remote(base,addr)
+
+              | set_pod_address'(POD{hostel, base, offset, size, ...}, addr) =
+                set_addr_local(hostel, size, base, offset, addr)
+
+
+	  fun move_pod(pod,arg) =
+              ( move_pod'(pod,arg); set_pod_currency(pod,false) )
+
+	  fun offset_pod(pod,arg) =
+              ( offset_pod'(pod,arg); set_pod_currency(pod,false) )
+
+          fun set_pod_address(pod, arg) =
+              ( set_pod_address'(pod,arg); set_pod_currency(pod,false) )
+
+	end
+
+     (* Diagnostic tools *)
+
+        local
+
+            fun str_pod_status (PERMANENT_PS) = "permanent"
+              | str_pod_status (TEMPORARY_PS) = "temporary"
+
+            fun str_currency(true)  = "valid"
+              | str_currency(false) = "not valid"
+
+            fun str_pod_mode(LOCAL_PM)  = "local"
+              | str_pod_mode(REMOTE_PM) = "remote"
+
+            fun str_base(BOX(ref(some_addr))) = some_addr
+
+	    fun pod_data'(pod,size) =
+		let val ba = bytearray(size,0)
+		in
+		    pod_value'(pod,ba,0); (* don't check currency *)
+                    ba
+                end
+        in
+
+	    fun pod_info
+		  type_info
+		  (POD{status, currency, mode, ltype, size, base, offset, hostel}) =
+		{ hostel    = hostel,
+		  status    = str_pod_status(status),
+		  currency  = str_currency(!currency),
+		  mode      = str_pod_mode(!mode),
+                  langtype  = type_info(!ltype),
+                  size      = !size,
+                  base      = str_base(base),
+                  offset    = !offset
+                }
+
+           fun pod_data(pod) =
+               let val size = pod_size(pod)
+                   val ba   = pod_data'(pod,size)
+               in
+		   to_list(ba)
+               end
+
+           fun pod_data_hex(pod) =
+               let val size = pod_size(pod)
+                   val ba   = pod_data'(pod,size)
+               in
+		   bytearray_to_hex{arr=ba,st=0,len=size}
+               end
+
+           fun pod_data_ascii(pod) =
+               let val size = pod_size(pod)
+                   val ba   = pod_data'(pod,size)
+               in
+		   bytearray_to_string{arr=ba,st=0,len=size}
+               end
+        end
+     end
+   end;  (* structure FOREIGN_DATA *) 
+@
+
+
+1.9
+log
+@Removing utils/*integer
+@
+text
+@d12 3
+d99 2
+a100 2
+     val addrToInt          =  Word32.IntCvt.extend
+     val intToAddr          =  Word32.IntCvt.from
+@
+
+
+1.8
+log
+@initbasis becomes basis
+@
+text
+@d12 3
+d47 1
+a47 2
+
+require "../utils/integer";
+a61 2
+   structure Integer  : INTEGER
+
+d105 2
+a106 2
+     val min                =  Integer.min
+     val max                =  Integer.max
+@
+
+
+1.7
+log
+@Word conversion functions have changed.
+@
+text
+@d12 3
+d35 4
+a38 5
+# Revision 1.1  1995/03/27  15:47:52  brianm
+# new unit
+#
+# New file.
+#
+d42 2
+a43 2
+require "../initbasis/__general";
+require "../initbasis/__word32";
+@
+
+
+1.6
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d12 3
+d94 2
+a95 2
+     val addrToInt          =  Word32.signExtend
+     val intToAddr          =  Word32.intToWord
+@
+
+
+1.5
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d12 3
+d68 2
+@
+
+
+1.4
+log
+@Changing names of deferred data-type operators (stream-edit)
+@
+text
+@d12 3
+d125 1
+a125 1
+                        base     : address deferred,
+d140 1
+a140 1
+		    base       =  voidDF(),
+d177 2
+a178 2
+        fun pod_base(POD{base, ...}) = getDF(base)
+	fun set_pod_base(POD{base, ...},addr) = setDF(base)(addr)
+d191 1
+a191 1
+		 setDF(base)(addr)
+d225 1
+a225 1
+	   fun pod_address(POD{ base=DF(ref(SOME(addr))), mode, offset, hostel, ...} ) =
+d239 1
+a239 1
+		 setDF(base)(new_base);
+d264 1
+a264 1
+                   LOCAL_PM   => resetDF(base)
+d279 1
+a279 1
+			   WR_H => raise WriteOnly
+d281 1
+a281 1
+			   LOCKED_H => raise WriteOnly
+d355 1
+a355 1
+		       if hostel_status(hostel) = RD_H then raise ReadOnly else
+d434 1
+a434 1
+		 base      = newDF(base),
+d447 1
+a447 1
+		 base      = newDF(base),
+d464 1
+a464 1
+		 base      = newDF(base),
+d471 1
+a471 1
+		case extractDF(base) of
+d473 1
+a473 1
+		    if (addr = null_addr) then () else resetDF(base)
+d485 1
+a485 1
+                let val cur_addr = getDF(base)
+d488 1
+a488 1
+                    setDF(base)(new_addr)
+d491 1
+a491 1
+            fun set_addr_remote(base,addr) = setDF(base)(addr)
+d547 1
+a547 1
+            fun str_base(DF(ref(some_addr))) = some_addr
+@
+
+
+1.3
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d12 3
+d174 1
+a174 1
+        fun pod_base(POD{base, ...}) = extractDF(base)
+d468 1
+a468 1
+		case getDF(base) of
+d482 1
+a482 1
+                let val cur_addr = extractDF(base)
+@
+
+
+1.2
+log
+@Removing restrictive eqtype constraints & introduce abstypes in
+various implementing types.
+@
+text
+@d12 4
+d56 1
+a56 1
+     val MLWcast  =  MLWorks.Internal.Value.cast (fn x => x) : 'a -> 'b;
+d64 10
+a73 1
+     structure ByteArray    =  MLWorks.ByteArray
+d75 4
+a78 1
+     val peek_memory        =  FIUtils.peek_memory
+a86 7
+     val copy_ba'           =  ByteArray.copy
+     val copy_ba  =
+         fn (src,src_st,len,tgt,tgt_st) =>
+            copy_ba'(src,src_st,src_st+len,tgt,tgt_st)
+
+     val length_ba          =  ByteArray.length
+
+d105 1
+d108 3
+d113 2
+a114 1
+                        hostel   : hostel deferred,
+d116 3
+a118 2
+                        ltype    : 'l_type deferred,
+                        size     : int deferred,
+d124 1
+a124 1
+	fun pod{lang_type,size=pod_size,currency,hostel} =
+d128 2
+a129 1
+		    hostel     =  DF(ref(SOME(hostel))),
+d131 4
+a134 3
+		    ltype      =  DF(ref(SOME(lang_type))),
+		    size       =  DF(ref(SOME(pod_size))),
+		    base       =  DF(ref(NONE)),
+d150 3
+a152 1
+	fun pod_hostel(POD{hostel, ...}) = extractDF(hostel)
+d156 2
+d161 80
+a240 2
+	fun pod_type(POD{ltype, ...}) = extractDF(ltype)
+	fun set_pod_type(POD{ltype, ...},new_ltype) = setDF(ltype)(new_ltype)
+d242 11
+a252 2
+	fun pod_size(POD{size, ...}) = extractDF(size)
+	fun set_pod_size(POD{size, ...},new_size) = setDF(size)(new_size)
+d254 8
+a261 1
+	exception OutOfBounds
+d263 2
+a264 2
+	fun pod_value(pod as POD{currency, ...}, barr, offset) =
+	    if not(!currency) then raise Currency else
+d267 22
+a288 13
+		if (length_ba(barr) < size + offset) then raise OutOfBounds else
+		let val hostel = pod_hostel(pod)
+		in
+		    case hostel_status(hostel) of
+		      WR_H => raise WriteOnly
+		    |
+		      LOCKED_H => raise WriteOnly
+		    |
+		      _ => let val src_ba = hostel_content(hostel)
+			   in
+			       copy_ba(src_ba,pod_location(pod),size,barr,offset)
+			   end
+		end
+d291 1
+a291 1
+	fun pod_value'(pod, barr,offset) =
+d293 43
+a335 5
+		val hostel = pod_hostel(pod)
+		val src_ba = hostel_content(hostel)
+	    in
+		copy_ba(src_ba,pod_location(pod),size,barr,offset)
+	    end
+d345 3
+a347 9
+	       let val hostel     = pod_hostel(pod)
+	       in
+		   if hostel_status(hostel) = RD_H then raise ReadOnly else
+		   let val len_barr   = length_ba(barr)
+		       val pod_sz     = pod_size(pod)
+		       val upd_sz     = min(len_barr,pod_sz)
+		       val pod_locn   = pod_location(pod)
+		       val hostel_sz  = hostel_size(hostel)
+		       val end_idx    = idx + upd_sz
+d349 20
+a368 10
+		      if (end_idx <= min(len_barr,hostel_sz))
+		      then update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+		      else if end_idx <= len_barr (* i.e. hostel too small ... *)
+		      then (
+			      expand_managed(hostel,end_idx);
+			      update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+			   )
+		      else raise OutOfBounds
+		   end handle Option => raise OutOfBounds
+	       end
+d375 2
+a376 1
+		   update_hostel(barr,idx,pod_sz,hostel,pod_locn)
+d379 1
+a379 1
+	   fun copy_pod_value {from,to} =
+d382 26
+a407 9
+		   if (from_size > pod_size(to)) then raise OutOfBounds else
+		   let val from_hostel = pod_hostel(from)
+		       val barr    = hostel_content(from_hostel)
+		       val idx     = pod_location(from)
+		       val hostel  = pod_hostel(to)
+		       val to_idx  = pod_location(to)
+		   in
+		       update_hostel(barr,idx,from_size,hostel,to_idx)
+		   end
+d410 8
+a417 15
+	   fun snapshot_pod(pod,addr) =
+	       let val hostel = pod_hostel(pod)
+		   val barr   = hostel_content(hostel)
+		   val offset = pod_location(pod)
+		   val size   = pod_size(pod)
+	       in
+   debugP("snapshot pod : addr  = ")(addr);
+   debugP("snapshot pod : start = ")(offset);
+   debugP("snapshot pod : len   = ")(size);
+
+		   peek_memory{ loc   = addr,
+				arr   = barr,
+				start = offset,
+				len   = size }
+	       end
+d420 4
+a423 2
+	fun dup_pod(POD{hostel,currency,ltype,size,base,offset}) =
+	    POD{ hostel    = newDF(hostel),
+d425 3
+a427 2
+		 ltype     = newDF(ltype),
+		 size      = newDF(size),
+d432 12
+a443 1
+	local
+d445 16
+a460 57
+	   fun pod_addr(hostel,offset) =
+	       let val origin = hostel_origin(hostel)
+	       in
+		   addr_plus(origin,offset)
+	       end
+
+	in
+
+	    fun to_location (pod,addr) = 
+		let val hostel    = pod_hostel(pod)
+		    val origin    = hostel_origin(hostel)
+		    val hostel_sz = hostel_size(hostel)
+		    val new_locn  = addr_minus(addr,origin)
+		in
+		    if (0 <= new_locn) andalso (new_locn < hostel_sz)
+		    then new_locn
+		    else raise OutOfBounds
+		end
+
+	    fun to_address (pod,locn) = 
+		let val hostel    = pod_hostel(pod)
+		    val hostel_sz = hostel_size(hostel)
+		in
+		    if (0 <= locn) andalso (locn < hostel_sz)
+		    then let val origin = hostel_origin(hostel)
+			 in
+			     addr_plus(origin,locn)
+			 end
+		    else raise OutOfBounds
+		end
+
+	   fun pod_address(POD{ base=DF(ref(SOME(addr))), offset, hostel, ...} ) =
+		 if (addr = null_addr)
+		 then pod_addr(extractDF(hostel),!offset)
+		 else addr
+
+	     | pod_address(POD{ base, hostel, offset, ...}) =
+	       let val hostel   = extractDF(hostel)
+		   val addr     = pod_addr(hostel,!offset)
+		   val new_base = if is_standard_hostel(hostel) then addr else null_addr
+	       in
+		 setDF(base)(new_base);
+		 addr
+	       end
+
+	   fun relative_location(pod,addr) =
+	       let val pod_addr = pod_address(pod)
+	       in
+		   addr_minus(addr,pod_addr)
+	       end
+
+	   fun relative_address(pod,idx) =
+	       let val pod_addr = pod_address(pod)
+	       in
+		   addr_plus(pod_addr,idx)
+	       end
+	end
+d471 22
+d495 30
+a524 10
+	    fun move_pod(POD{hostel,base,offset,size, ...},new_offset) =
+		let val hostel    =  extractDF(hostel)
+		    val pod_size  =  extractDF(size)
+		in
+		    (
+		      adjust_hostel(hostel,new_offset,pod_size);
+		      reset_base(base);
+		      offset := new_offset
+		    )
+		end
+a525 2
+	    fun offset_pod(pod as POD{offset, ...},incr) =
+		move_pod(pod, !offset + incr)
+d527 58
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d11 5
+a15 1
+ *  $Log: fi_data.sml,v $
+d96 3
+a98 1
+     datatype ('l_type) pod =
+d107 1
+a107 227
+
+     exception Currency
+
+     fun pod{lang_type,size=pod_size,currency,hostel} =
+         let val new_offset = fresh_object_offset(hostel,pod_size)
+         in
+           POD {
+                 hostel     =  DF(ref(SOME(hostel))),
+                 currency   =  ref(currency),
+                 ltype      =  DF(ref(SOME(lang_type))),
+                 size       =  DF(ref(SOME(pod_size))),
+                 base       =  DF(ref(NONE)),
+                 offset     =  ref(new_offset)
+               }
+         end
+
+     (* NOTE: Allignment constraints on pods come from the allocation
+        policy for hostels and only affect the origin at which a pod can be
+        located (it's offset) and _not_ the size of the pod.  Hence, the
+        offset is calculated from size information and the current hostel.
+
+        In particular, the pod_size remains unaffected by the allocation
+        policy.  The function `fresh_object_offset' takes care of checking
+        that the new pod fits within the given hostel - and if not, takes
+        appropriate action.
+     *)
+
+     fun pod_hostel(POD{hostel, ...}) = extractDF(hostel)
+
+     fun pod_location(POD{offset, ...}) = !offset
+
+     fun pod_currency(POD{currency, ...}) = !currency
+     fun set_pod_currency(POD{currency, ...},flag) = (currency := flag)
+
+     fun pod_type(POD{ltype, ...}) = extractDF(ltype)
+     fun set_pod_type(POD{ltype, ...},new_ltype) = setDF(ltype)(new_ltype)
+
+     fun pod_size(POD{size, ...}) = extractDF(size)
+     fun set_pod_size(POD{size, ...},new_size) = setDF(size)(new_size)
+
+     exception OutOfBounds
+
+     fun pod_value(pod as POD{currency, ...}, barr, offset) =
+         if not(!currency) then raise Currency else
+         let val size = pod_size(pod)
+         in
+             if (length_ba(barr) < size + offset) then raise OutOfBounds else
+             let val hostel = pod_hostel(pod)
+             in
+                 case hostel_status(hostel) of
+                   WR_H => raise WriteOnly
+                 |
+                   LOCKED_H => raise WriteOnly
+                 |
+                   _ => let val src_ba = hostel_content(hostel)
+                        in
+                            copy_ba(src_ba,pod_location(pod),size,barr,offset)
+                        end
+             end
+         end handle Option => raise OutOfBounds
+
+     fun pod_value'(pod, barr,offset) =
+         let val size = pod_size(pod)
+             val hostel = pod_hostel(pod)
+             val src_ba = hostel_content(hostel)
+         in
+             copy_ba(src_ba,pod_location(pod),size,barr,offset)
+         end
+
+     local
+        fun update_hostel(barr,st,len,hostel,offset) =
+            let val dest_ba = hostel_content(hostel)
+            in
+                copy_ba(barr,st,len,dest_ba,offset)
+            end
+     in
+        fun set_pod_value(pod,barr,idx) =
+            let val hostel     = pod_hostel(pod)
+            in
+                if hostel_status(hostel) = RD_H then raise ReadOnly else
+                let val len_barr   = length_ba(barr)
+                    val pod_sz     = pod_size(pod)
+                    val upd_sz     = min(len_barr,pod_sz)
+                    val pod_locn   = pod_location(pod)
+                    val hostel_sz  = hostel_size(hostel)
+                    val end_idx    = idx + upd_sz
+                in
+                   if (end_idx <= min(len_barr,hostel_sz))
+                   then update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+                   else if end_idx <= len_barr (* i.e. hostel too small ... *)
+                   then (
+                           expand_managed(hostel,end_idx);
+                           update_hostel(barr,idx,upd_sz,hostel,pod_locn)
+                        )
+                   else raise OutOfBounds
+                end handle Option => raise OutOfBounds
+            end
+
+        fun set_pod_value'(pod,barr,idx) =
+            let val hostel     = pod_hostel(pod)
+                val pod_sz     = pod_size(pod)
+                val pod_locn   = pod_location(pod)
+            in
+                update_hostel(barr,idx,pod_sz,hostel,pod_locn)
+            end
+
+        fun copy_pod_value {from,to} =
+            let val from_size = pod_size(from)
+            in
+                if (from_size > pod_size(to)) then raise OutOfBounds else
+                let val from_hostel = pod_hostel(from)
+                    val barr    = hostel_content(from_hostel)
+                    val idx     = pod_location(from)
+                    val hostel  = pod_hostel(to)
+                    val to_idx  = pod_location(to)
+                in
+                    update_hostel(barr,idx,from_size,hostel,to_idx)
+                end
+            end
+
+        fun snapshot_pod(pod,addr) =
+            let val hostel = pod_hostel(pod)
+                val barr   = hostel_content(hostel)
+                val offset = pod_location(pod)
+                val size   = pod_size(pod)
+            in
+debugP("snapshot pod : addr  = ")(addr);
+debugP("snapshot pod : start = ")(offset);
+debugP("snapshot pod : len   = ")(size);
+
+                peek_memory{ loc   = addr,
+                             arr   = barr,
+                             start = offset,
+                             len   = size }
+            end
+     end
+
+     fun dup_pod(POD{hostel,currency,ltype,size,base,offset}) =
+         POD{ hostel    = newDF(hostel),
+              currency  = new(currency),
+              ltype     = newDF(ltype),
+              size      = newDF(size),
+              base      = newDF(base),
+              offset    = new(offset)
+            }
+
+     local
+
+        fun pod_addr(hostel,offset) =
+            let val origin = hostel_origin(hostel)
+            in
+                addr_plus(origin,offset)
+            end
+
+     in
+         
+         fun to_location (pod,addr) = 
+             let val hostel    = pod_hostel(pod)
+                 val origin    = hostel_origin(hostel)
+                 val hostel_sz = hostel_size(hostel)
+                 val new_locn  = addr_minus(addr,origin)
+             in
+                 if (0 <= new_locn) andalso (new_locn < hostel_sz)
+                 then new_locn
+                 else raise OutOfBounds
+             end
+
+         fun to_address (pod,locn) = 
+             let val hostel    = pod_hostel(pod)
+                 val hostel_sz = hostel_size(hostel)
+             in
+                 if (0 <= locn) andalso (locn < hostel_sz)
+                 then let val origin = hostel_origin(hostel)
+                      in
+                          addr_plus(origin,locn)
+                      end
+                 else raise OutOfBounds
+             end
+
+        fun pod_address(POD{ base=DF(ref(SOME(addr))), offset, hostel, ...} ) =
+              if (addr = null_addr)
+              then pod_addr(extractDF(hostel),!offset)
+              else addr
+
+          | pod_address(POD{ base, hostel, offset, ...}) =
+            let val hostel   = extractDF(hostel)
+                val addr     = pod_addr(hostel,!offset)
+                val new_base = if is_standard_hostel(hostel) then addr else null_addr
+            in
+              setDF(base)(new_base);
+              addr
+            end
+
+        fun relative_location(pod,addr) =
+            let val pod_addr = pod_address(pod)
+            in
+                addr_minus(addr,pod_addr)
+            end
+
+        fun relative_address(pod,idx) =
+            let val pod_addr = pod_address(pod)
+            in
+                addr_plus(pod_addr,idx)
+            end
+     end
+
+     local
+
+         fun reset_base(base) =
+             case getDF(base) of
+               SOME(addr) =>
+                 if (addr = null_addr) then () else resetDF(base)
+             |
+                _ => ()
+
+     in
+
+         fun move_pod(POD{hostel,base,offset,size, ...},new_offset) =
+             let val hostel    =  extractDF(hostel)
+                 val pod_size  =  extractDF(size)
+             in
+                 (
+                   adjust_hostel(hostel,new_offset,pod_size);
+                   reset_base(base);
+                   offset := new_offset
+                 )
+             end
+d109 228
+a336 2
+         fun offset_pod(pod as POD{offset, ...},incr) =
+             move_pod(pod, !offset + incr)
+d338 1
+a338 1
+   end;  (* signature FOREIGN_DATA *) 
+@

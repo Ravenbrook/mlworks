@@ -1,0 +1,65 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.01.18.16.23.46;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.25.17.16.32;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+The OS.FileSys structure from the basis.
+@
+
+
+1.2
+log
+@OS reorganisation: Since the pervasive library no longer
+contains OS specific stuff, parameterise the functor with
+the Win32 structure.
+@
+text
+@(* FILE SYSTEM INTERFACE *)
+(*
+ * Copyright Harlequin Ltd. 1994.
+ *
+ * $Log: __filesys.sml,v $
+# Revision 1.1  1995/01/25  17:16:32  daveb
+# new unit
+# The OS.FileSys structure from the basis.
+#
+ *
+ *)
+
+require "_win_ntfilesys";
+require "__win32";
+
+structure FileSys_ =
+  Win_ntFileSys (structure Win32 = Win32_)
+@
+
+
+1.1
+log
+@new unit
+The OS.FileSys structure from the basis.
+@
+text
+@d5 5
+a9 1
+ * $Log$
+d14 1
+d17 1
+a17 1
+  Win_ntFileSys ()
+@

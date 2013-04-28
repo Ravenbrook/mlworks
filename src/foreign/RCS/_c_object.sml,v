@@ -1,0 +1,1631 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.19.13.59.06;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Renamed file.
+@
+
+
+1.1
+log
+@new unit
+Renamed file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C DATA/TYPE STRUCTURES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _c_data.sml,v $
+ * Revision 1.11  1996/05/01  11:48:18  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.10  1996/04/30  15:03:06  matthew
+ * Removing MLWorks.Integer
+ *
+ * Revision 1.9  1996/04/18  16:56:02  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.8  1996/02/15  12:29:19  brianm
+ * Modifications due to byte-ordering considerations.
+ *
+ *  Revision 1.7  1995/09/10  17:46:44  brianm
+ *  Further modification for updates and general reorganisation.
+ *
+ *  Revision 1.5  1995/09/07  22:43:38  brianm
+ *  Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.4  1995/07/20  23:07:25  brianm
+ *  adding new_object.
+ *
+ *  Revision 1.3  1995/07/18  12:17:12  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.2  1995/06/26  10:40:45  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.1  1995/04/25  11:28:19  brianm
+ *  new unit
+ *  New file.
+ *
+ * Revision 1.1  1995/03/27  15:49:53  brianm
+ * new unit
+ * New file.
+ *
+ *)
+
+require "../basis/__integer";
+require "../basis/__general";
+
+require "../utils/lists";
+
+require "types";
+require "codeset";
+require "data";
+require "utils";
+
+require "c_store";
+require "c_data";
+
+
+functor CObject(
+
+   structure FICodeSet : FOREIGN_CODESET
+   structure FIObject   : FOREIGN_OBJECT
+   structure FIUtils  : FOREIGN_UTILS
+
+   structure CStore  : C_STORE
+
+   structure Lists    : LISTS
+
+   sharing type
+       CStore.store = FIObject.store 
+
+) : C_OBJECT = 
+   struct
+
+     open General
+     open FIObject
+
+     structure CStore = CStore
+     structure FITypes = CStore.FITypes
+
+     open CStore
+     open FITypes
+
+   (* Mapping *)
+
+     (* Internal utilities *)
+
+     val MLWcast  =  MLWorks.Internal.Value.cast : 'a -> 'b
+
+     val to_real_repn    =  MLWorks.Internal.Value.real_to_string
+     val from_real_repn  =  MLWorks.Internal.Value.string_to_real
+
+     (* Internal ByteArray operators *)
+
+     structure ByteArray  = MLWorks.ByteArray
+
+     val bytearray    =  ByteArray.array
+ 
+     val sub_ba       =  ByteArray.sub
+     val update_ba    =  ByteArray.update
+     val find_ba      =  ByteArray.find_default
+     val subarray_ba  =  ByteArray.subarray
+
+     val from_string  =  ByteArray.from_string
+     val to_string    =  ByteArray.to_string
+
+     val unsafe_sub_ba      =  MLWorks.Internal.Value.unsafe_bytearray_sub
+     val unsafe_update_ba   =  MLWorks.Internal.Value.unsafe_bytearray_update
+
+     val int_to_bytearray     =  FIUtils.int_to_bytearray
+     val bytearray_to_int     =  FIUtils.bytearray_to_int
+
+     val word32_to_bytearray  =  FIUtils.word32_to_bytearray
+     val bytearray_to_word32  =  FIUtils.bytearray_to_word32
+
+     val string_to_bytearray  =  FIUtils.string_to_bytearray
+     val bytearray_to_string  =  FIUtils.bytearray_to_string
+
+     val disp                 =  FIUtils.disp
+     val word32_to_hex        =  FIUtils.word32_to_hex
+     val word32_to_bytearray  =  FIUtils.word32_to_bytearray
+     val bytearray_to_word32  =  FIUtils.bytearray_to_word32
+
+     val int_string   =  Int.toString
+
+
+     (* OBJECT operators *)
+
+     val object'               =    FIObject.object
+
+     val object_address        =    FIObject.object_address
+     val object_location       =    FIObject.object_location
+
+     val to_address         =    FIObject.to_address
+     val to_location        =    FIObject.to_location
+
+     val move_object           =    FIObject.move_object
+     val offset_object         =    FIObject.offset_object
+     val examine_object        =    FIObject.examine_object
+
+     val set_object_address'   =    FIObject.set_object_address'
+
+     val new_object'           =    FIObject.new_object
+     val dup_object'           =    FIObject.dup_object
+     val tmp_object'           =    FIObject.tmp_object
+
+     val copy_object_value     =    FIObject.copy_object_value
+     val copy_object_value'    =    FIObject.copy_object_value'
+
+     val object_type           =    FIObject.object_type
+     val set_object_type'      =    FIObject.set_object_type
+
+     val object_size           =    FIObject.object_size
+     val set_object_size       =    FIObject.set_object_size'
+
+
+     (* Modified OBJECT operators *)
+
+     val object_value      =  FIObject.object_value
+     val object_value'     =  FIObject.object_value'
+     val set_object_value  =  FIObject.set_object_value 
+
+
+     (* Utilities mapping *)
+
+     val int_string   =    Int.toString
+
+     val extract      =    General.valOf
+
+     val reducel      =    Lists.reducel
+     val llength      =    Lists.length
+     val zip          =    Lists.zip   
+     val findp        =    Lists.findp
+     val check_order  =    Lists.check_order   
+     val sort         =    Lists.msort
+
+     val max          =    Int.max
+
+     (* Implementation Utilities *)
+
+     fun new(ref(x)) = ref(x)
+
+  (* C TYPE STRUCTURE *)
+
+     type name        = string
+     type field       = string
+     type member      = string
+     type enum_value  = string
+     type tag         = string
+
+     (* A representation of C type's in ML ...
+
+	The ML type c_type provides a representation of a C type descriptor
+	as an ML value.
+     *)
+
+     datatype pointer_kind  = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+
+     datatype c_type =
+        SIZE_OF of { size : int box, ctype : c_type }
+     |
+        VOID_TYPE
+     |
+        CHAR_TYPE           | UNSIGNED_CHAR_TYPE | SIGNED_CHAR_TYPE
+     |
+        SHORT_TYPE          | INT_TYPE           | LONG_TYPE
+     |
+        UNSIGNED_SHORT_TYPE | UNSIGNED_INT_TYPE  | UNSIGNED_LONG_TYPE
+     |
+        FLOAT_TYPE          | DOUBLE_TYPE        | LONG_DOUBLE_TYPE
+     |
+        STRING_TYPE   of { length : int }
+     |
+        TYPENAME_TYPE of { name : name,
+                        defn : c_type box,
+                        size : int box }
+     |
+        POINTER_TYPE     of { ctype : c_type, mode : pointer_kind ref }
+     |
+        STRUCT_TYPE   of { tag    : tag option,
+                        fields : c_field list,
+                        size   : int box }
+     |
+        UNION_TYPE    of { tag      : tag option,
+                        variants : c_variant list ref,
+                        size     : int box,
+                        current  : c_variant box }
+     |
+        ARRAY_TYPE    of { length : int, ctype : c_type }
+     |
+        ENUM_TYPE     of { tag   : tag option,
+                        elems : enum_value list,
+                        card  : int box }
+
+     and  c_variant = CVNT of { name  : name,
+                                ctype : c_type,
+                                size  : int box }
+
+     and  c_field =   CFLD of { name    : name,
+                                ctype   : c_type,
+                                size    : int box,
+                                padding : int box,
+                                offset  : int box }
+
+
+     local
+	fun lookup_itemlist p (ni_lst,nm) =  findp (p nm) ni_lst
+
+	fun find_field   nm (CFLD{name, ...}) =  (name = nm)
+
+	fun find_variant nm (CVNT{name, ...}) =  (name = nm)
+     in
+        val lookup_variant  = lookup_itemlist find_variant
+        val lookup_field    = lookup_itemlist find_field
+     end
+
+     fun variant_name (CVNT{name, ...}) = name
+     fun field_name   (CFLD{name, ...}) = name
+
+     local
+
+        fun dup_items (dup_itm_fn) =
+            let fun dup_itms(cur_itm::itms,seen_flag,sofar) =
+		    let val dup_itm = dup_itm_fn(cur_itm)
+			val (new_flag, new_itm) =
+			    case dup_itm of
+			      SOME(new_val) => (true,new_val)
+			    | NONE          => (seen_flag,cur_itm)
+		    in
+			dup_itms(itms,new_flag,new_itm::sofar)
+		    end
+
+		  | dup_itms([],seen_flag,sofar) =
+		    if seen_flag then SOME(rev(sofar)) else NONE
+            in
+                fn items => dup_itms(items,false,[])
+            end
+
+        fun new_variant (vnt_lst, current) =
+            case extractBox(current) of
+              SOME(cur_vnt) =>
+                 let val name    = variant_name cur_vnt
+                     val new_vnt = lookup_variant(vnt_lst,name)
+                 in
+                     makeBox(new_vnt)
+                 end
+            | NONE => voidBox()
+
+       (*
+          Certain components of C types are stateful - they have dynamic
+	  structure.  Since different instances can change their structure
+  	  independently, we always copy them on update - ensuring that
+	  modifying these doesn't change other instances.
+        *)
+
+	fun dup_type(ctype) =
+            case dup_type'(ctype) of
+              SOME(ctype') => ctype'
+            | NONE         => ctype
+
+	and dup_type'(POINTER_TYPE{ctype,mode}) =
+	    let val new_ctype = dup_type(ctype)
+		val new_ty    = POINTER_TYPE{ ctype = new_ctype,
+				        mode  = new(mode)
+				      }
+	    in
+	       SOME(new_ty)
+	    end
+
+	  | dup_type'(UNION_TYPE{tag,variants,size,current}) =
+	    let val new_variants = dup_variants(!variants)
+                val new_current = new_variant(new_variants,current)
+                val new_ty = UNION_TYPE{ tag      = tag,
+				      variants = ref(new_variants),
+				      size     = size,
+				      current  = new_current }
+	    in
+	       SOME(new_ty)
+	    end
+
+          | dup_type'(SIZE_OF{size, ctype}) =
+            (case dup_type'(ctype) of
+               SOME(ctype') =>
+                 SOME(SIZE_OF{ size = newBox(size), ctype = ctype' })
+             | _ => NONE
+            )
+
+          | dup_type'(ARRAY_TYPE{length, ctype}) =
+            (case dup_type'(ctype) of
+               SOME(ctype') =>
+                 SOME(ARRAY_TYPE{ length = length, ctype = ctype' })
+             | _ => NONE
+            )
+
+          | dup_type'(STRUCT_TYPE{tag,fields,size}) =
+            (case dup_fields'(fields) of
+               SOME(new_fields) =>
+                 SOME(STRUCT_TYPE
+			{ tag    = tag,
+			  fields = new_fields,
+			  size   = size }
+                     )
+             | _ => NONE
+            )
+
+	  | dup_type'(ty) = NONE
+
+        and dup_variants(variants) =
+            case dup_variants'(variants) of
+              SOME(new_variants) => new_variants
+            | NONE               => variants
+
+        and dup_variants'(variants) = dup_items(dup_variant')(variants)
+
+        and dup_variant'(CVNT{name,ctype,size}) =
+            case dup_type'(ctype) of
+              SOME(new_ctype) =>
+                SOME(CVNT
+                      { name  = name,
+		        ctype = new_ctype,
+		        size  = size }
+                    )
+            | _ => NONE
+
+        and dup_fields'(fields) = dup_items(dup_field')(fields)
+
+        and dup_field'(CFLD{name,ctype,size,padding,offset}) =
+            case dup_type'(ctype) of
+              SOME(new_ctype) =>
+                SOME(CFLD
+                      { name    = name,
+		        ctype   = new_ctype,
+		        size    = size,
+                        padding = padding,
+                        offset  = offset }
+                    )
+            | _ => NONE
+
+     in
+
+       val dup_type = dup_type
+
+     end
+
+
+     (* Size constants *)
+     val char_size                = 1
+     val short_int_size           = 2
+     val int_size                 = 4
+     val long_int_size            = 8
+     val real_size                = 8
+
+     local
+
+       val unsigned_short_int_size  = short_int_size
+       val unsigned_int_size        = int_size
+       val unsigned_long_int_size   = long_int_size
+
+       val double_size              = real_size
+       val long_double_size         = real_size
+
+       val pointer_size             = int_size
+       val enum_size                = int_size
+       val void_size                = 0
+
+       fun pad_size_of (CHAR_TYPE             ,_)   = int_size
+         | pad_size_of (UNSIGNED_CHAR_TYPE    ,_)   = int_size
+         | pad_size_of (SIGNED_CHAR_TYPE      ,_)   = int_size
+         | pad_size_of (SHORT_TYPE            ,_)   = int_size
+         | pad_size_of (UNSIGNED_SHORT_TYPE   ,_)   = int_size
+         | pad_size_of (_, size) = size
+
+       fun padding_adjustment(_,_,_) = 0
+
+       fun variant_leq (CVNT{name=nm1, ...}, CVNT{name=nm2, ...}) = (nm1 <= nm2)
+
+       fun norm_variants(vnt_l) =
+           if check_order variant_leq vnt_l then vnt_l
+           else sort variant_leq vnt_l
+
+     in
+
+       fun size_of(SIZE_OF{size=(ref(SOME(size))), ...}) = size
+
+         | size_of(SIZE_OF{size, ctype}) =
+              let val i = size_of(ctype)
+              in
+                (setBox size i);
+                i
+              end
+
+         | size_of(VOID_TYPE)             = void_size
+
+         | size_of(CHAR_TYPE)             = char_size
+         | size_of(UNSIGNED_CHAR_TYPE)    = char_size
+         | size_of(SIGNED_CHAR_TYPE)      = char_size
+
+         | size_of(SHORT_TYPE)            = short_int_size
+         | size_of(INT_TYPE)              = int_size
+         | size_of(LONG_TYPE)             = long_int_size
+
+         | size_of(UNSIGNED_SHORT_TYPE)   = unsigned_short_int_size
+         | size_of(UNSIGNED_INT_TYPE)     = unsigned_int_size
+         | size_of(UNSIGNED_LONG_TYPE)    = unsigned_long_int_size
+
+         | size_of(FLOAT_TYPE)            = real_size
+         | size_of(DOUBLE_TYPE)           = double_size
+         | size_of(LONG_DOUBLE_TYPE)      = long_double_size
+
+         | size_of(STRING_TYPE{length})   = length  (* includes null sentinel *)
+         
+         | size_of(TYPENAME_TYPE{size=(ref(SOME(size))), ...}) = size          
+
+         | size_of(TYPENAME_TYPE{size, defn, ...}) =
+              let val i = size_of(getBox(defn))
+              in
+                (setBox size i);
+                i
+              end
+
+         | size_of(POINTER_TYPE(_)) = pointer_size
+
+         | size_of(STRUCT_TYPE{size=(ref(SOME(size))), ...}) = size
+
+         | size_of(STRUCT_TYPE{fields,size, ...}) =
+             let val i = size_of_struct(fields)
+             in
+               (setBox size i);
+               i
+             end
+
+         | size_of(UNION_TYPE{size=(ref(SOME(size))), ...}) = size
+
+         | size_of(UNION_TYPE{variants,size, ...}) =
+             let val vnts = !variants
+                 val i = size_of_union(vnts)
+             in
+                 variants := norm_variants(vnts);  (* sorted by name *)
+                 (setBox size i);
+                 i
+             end
+
+         | size_of(ARRAY_TYPE { length, ctype }) = length * size_of(ctype)
+
+         | size_of(ENUM_TYPE {card=(ref(SOME(_))), ...}) = enum_size
+
+         | size_of(ENUM_TYPE {card,elems, ...}) =
+             ( setBox card (llength elems);
+               enum_size
+             )
+
+
+       and size_of_field(cur_offset,CFLD{size=(ref(SOME(size))), ...}) =
+           size + cur_offset
+
+         | size_of_field(cur_offset,CFLD{ctype,size,offset,padding, ...}) =
+           let val new_size    = size_of (ctype)
+               val pad_size    = pad_size_of (ctype,new_size)
+               val pad_offset  = padding_adjustment(ctype,pad_size,new_size) 
+           in
+               setBox size    pad_size;
+               setBox padding pad_offset;
+               setBox offset  (cur_offset + pad_offset);
+               pad_size + cur_offset
+           end
+
+
+       and size_of_struct(fld_lst) = reducel size_of_field (0,fld_lst)
+
+
+       and size_of_variant(cur_size,CVNT{size=(ref(SOME(size))), ctype, ...}) =
+           max(size,cur_size)
+
+         | size_of_variant(cur_size,CVNT{size, ctype, ...}) =
+           let val obj_size = size_of(ctype)
+           in
+	       setBox size obj_size;
+               max(obj_size,cur_size)
+           end
+
+
+       and size_of_union(vnt_lst) = reducel size_of_variant (0,vnt_lst)
+
+     end
+
+
+     local
+
+       fun equal_type'
+             ( SIZE_OF{ctype=cty1, ...}
+             , SIZE_OF{ctype=cty2, ...}
+             ) = equal_type'(cty1,cty2)
+
+         | equal_type'
+             ( TYPENAME_TYPE{name=nm1, ...}
+             , TYPENAME_TYPE{name=nm2, ...}
+             ) = (nm1 = nm2)
+
+         | equal_type'
+             ( POINTER_TYPE{ctype=cty1, ...}
+             , POINTER_TYPE{ctype=cty2, ...}
+             ) = equal_type'(cty1,cty2)
+
+         | equal_type'
+             ( STRUCT_TYPE{tag=SOME(tg1), ...}
+             , STRUCT_TYPE{tag=SOME(tg2), ...}
+             ) = (tg1 = tg2)
+
+         | equal_type'
+             ( STRUCT_TYPE{tag=NONE,fields=fld_lst1, ...}
+             , STRUCT_TYPE{tag=NONE,fields=fld_lst2, ...}
+             ) = equal_fields(fld_lst1,fld_lst2)
+
+         | equal_type'
+             ( UNION_TYPE{tag=SOME(tg1), ...}
+             , UNION_TYPE{tag=SOME(tg2), ...}
+             ) = (tg1 = tg2)
+
+         | equal_type'
+             ( UNION_TYPE{tag=NONE,variants=ref(vnt_lst1), ...}
+             , UNION_TYPE{tag=NONE,variants=ref(vnt_lst2), ...}
+             ) = equal_variants(vnt_lst1,vnt_lst2)
+
+         | equal_type'(cty1,cty2) = (cty1 = cty2)    
+
+       and equal_variants
+             ( CVNT{name=nm1, ctype=cty1, ...}::vnt_lst1
+             , CVNT{name=nm2, ctype=cty2, ...}::vnt_lst2
+             ) = (nm1 = nm2) andalso equal_type'(cty1,cty2)
+                             andalso equal_variants(vnt_lst1,vnt_lst2)
+
+         | equal_variants([],[])  = true
+
+         | equal_variants(_,_)    = false
+
+       and equal_fields
+             ( CFLD{name=nm1, ctype=cty1, ...}::fld_lst1
+             , CFLD{name=nm2, ctype=cty2, ...}::fld_lst2
+             ) = (nm1 = nm2) andalso equal_type'(cty1,cty2)
+                             andalso equal_fields(fld_lst1,fld_lst2)
+
+         | equal_fields([],[])  = true
+
+         | equal_fields(_,_)    = false
+
+     in
+
+       fun equal_type(cty1,cty2) =
+             (cty1 = cty2) orelse equal_type'(cty1,cty2)
+
+     end
+
+     local
+       fun mk_field (str,ty) =
+           CFLD { name    = str,
+                  ctype   = ty,
+                  size    = voidBox(),
+                  padding = voidBox(),
+                  offset  = voidBox() }
+
+       fun mk_variant (str,ty) =
+           CVNT { name    = str,
+                  ctype   = ty,
+                  size    = voidBox() }
+     in
+
+       fun mk_struct_t (nm,flds) =
+	   STRUCT_TYPE { tag    = SOME(nm),
+		      fields = map mk_field flds, 
+		      size   = voidBox()
+		    }
+
+       fun mk_union_t (nm,vnts) =
+	   UNION_TYPE { tag      = SOME(nm),
+		     variants = ref(map mk_variant vnts),
+		     size     = voidBox(),
+                     current  = voidBox()
+		    }
+
+       fun mk_star_t (ty) =
+           POINTER_TYPE { ctype = ty, mode = ref(LOCAL_PTR) }
+
+       fun mk_typename (nm) =
+           TYPENAME_TYPE { name = nm,
+                        defn = voidBox(),
+                        size = voidBox()
+                      }
+
+       fun mk_enum_t (nm,elem_lst) =
+           ENUM_TYPE { tag = SOME(nm),
+                    elems = elem_lst,
+                    card  = makeBox(llength elem_lst)
+                  }
+     end
+
+
+  (* C VALUE STRUCTURE *)
+
+     type 'a object   =  'a FIObject.object
+
+     type c_object    =  c_type object
+
+     val object_to_c_object  :  c_type object -> c_object   = (fn x => x)
+     val c_object_to_object  :  c_object -> c_type object   = (fn x => x)
+
+     val object_mode      : c_object -> object_mode         =  object_mode
+     val set_object_mode  : c_object * object_mode -> unit  =  set_object_mode
+
+     type c_char   =  int
+
+     type c_short_int = int
+     type c_int       = int
+     type c_long_int  = int
+
+     type c_real         = real
+     type c_double       = real
+     type c_long_double  = real
+
+     exception ForeignType
+     exception StoreAccess
+
+     val set_object_type  : (c_object * c_type) -> unit =
+	 fn (obj,ctype) =>
+	   set_object_type'(obj,dup_type(ctype))
+
+     val new_object : c_object -> c_object =
+	 fn (obj) =>
+	   let val new_object   =  new_object'(obj)
+	       val new_ctype =  object_type(obj)
+	   in
+	     set_object_type(new_object,new_ctype);
+	     new_object
+	   end
+
+     val dup_object : c_object -> c_object =
+	 fn (obj) =>
+	   let val new_object   =  dup_object'(obj)
+	       val new_ctype =  object_type(obj)
+	   in
+	     set_object_type(new_object,new_ctype);
+	     new_object
+	   end
+
+     val tmp_object : c_object -> c_object =
+	 fn (obj) =>
+	   let val new_object   =  tmp_object'(obj)
+	       val new_ctype =  object_type(obj)
+	   in
+	     set_object_type(new_object,new_ctype);
+	     new_object
+	   end
+
+     fun object{ctype,store} =
+	 let val object_size = size_of(ctype)
+	 in
+	     object'{ lang_type  =  dup_type(ctype),
+		   status     =  PERMANENT_OBJECT,
+		   size       =  object_size,
+		   mode       =  LOCAL_OBJECT,
+		   currency   =  true,
+		   store     =  store }
+	 end
+
+     fun copy_object_info{from=src_pd,to=tgt_pd} =
+         let val from_type = object_type(src_pd)
+             val from_size = object_size(src_pd)
+         in
+           set_object_type(tgt_pd,from_type);
+           set_object_size(tgt_pd,from_size);
+           copy_object_value{from=src_pd,to=tgt_pd}
+         end
+
+
+     (* Object extraction/insertion utilities *)
+
+     val data_buffer = bytearray(size_of(LONG_DOUBLE_TYPE),0)
+     (* To cut down on allocation, a fixed data buffer is used
+        for passing small items such as characters, integers and
+        reals (of various standard sizes).
+
+        !! NOT THREAD-SAFE !!
+      *)
+
+     fun f_object_value(obj) =
+           ( object_value(obj,data_buffer,0);
+             data_buffer
+           )
+
+     fun f_object_value'(obj) =
+           ( object_value'(obj,data_buffer,0);
+             data_buffer
+           )
+
+     fun set_int'(obj,i) =
+       ( int_to_bytearray{len=int_size,arr=data_buffer,src=i,st=0};
+         set_object_value(obj,data_buffer,0)
+       ) handle _ => raise StoreAccess
+
+     fun get_int'(obj)  =
+         bytearray_to_int{arr=f_object_value(obj),st=0,len=int_size}
+
+     fun set_word32'(obj,wd) =
+       ( word32_to_bytearray{arr=data_buffer,src=wd,st=0};
+         set_object_value(obj,data_buffer,0)
+       ) handle _ => raise StoreAccess
+
+     fun get_word32'(obj)  =  bytearray_to_word32{arr=f_object_value(obj),st=0}
+
+     fun set_char'(obj,ch) =
+         if (0 <= ch) andalso (ch < 256)
+         then ( update_ba(data_buffer,0,ch);
+                set_object_value(obj,data_buffer,0)
+              )
+         else raise StoreAccess
+
+     fun get_char'(obj) =
+         ( object_value(obj,data_buffer,0);
+           sub_ba(data_buffer,0)
+         )
+
+     fun get_signed_char'(obj) =
+         let val ch = get_char'(obj)
+         in
+             if (ch < 128) then ch else (ch - 256)
+         end
+
+     fun address_to_bytearray(addr) =
+           ( word32_to_bytearray{arr=data_buffer,src=addr,st=0};
+             data_buffer
+           )
+
+     fun bytearray_to_address(ba)  =  bytearray_to_word32{arr=ba,st=0}
+
+     local
+        val real_size = size_of(LONG_DOUBLE_TYPE)
+     in
+        fun get_real'(obj) =
+            let val buffer   = f_object_value(obj)
+                val repn_str = bytearray_to_string{arr=buffer,st=0,len=real_size}
+            in
+                from_real_repn(repn_str)
+            end
+     end
+
+     fun set_real'(obj,r) =
+         let val real_str = to_real_repn(r)
+         in
+             string_to_bytearray{arr=data_buffer,src=real_str,st=0};
+             set_object_value(obj,data_buffer,0)
+         end
+
+
+     (* Setters ... *)
+
+     fun set_unsigned_char(obj,ch) =
+         case object_type(obj) of
+           CHAR_TYPE          => set_char'(obj,ch)
+         |
+           UNSIGNED_CHAR_TYPE => set_char'(obj,ch)
+         |
+           _ => raise ForeignType
+
+     val set_char = set_unsigned_char
+
+     fun set_signed_char(obj,ch) =
+         case object_type(obj) of
+           CHAR_TYPE        => set_char'(obj,(ch mod 256))
+         |
+           SIGNED_CHAR_TYPE => set_char'(obj,(ch mod 256))
+         |
+           _ => raise ForeignType
+
+     fun set_short(obj,i) =
+         case object_type(obj) of
+           SHORT_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_int(obj,i) =
+         case object_type(obj) of
+           INT_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_long(obj,i) =
+         case object_type(obj) of
+           LONG_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned_short(obj,i) =
+         case object_type(obj) of
+           UNSIGNED_SHORT_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned(obj,i) =
+         case object_type(obj) of
+           UNSIGNED_INT_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned_long(obj,i) =
+         case object_type(obj) of
+           UNSIGNED_LONG_TYPE  => set_int'(obj,i)
+         |
+           _ => raise ForeignType
+
+     fun set_word32(obj,wd) =
+         case object_type(obj) of
+           UNSIGNED_INT_TYPE  => set_word32'(obj,wd)
+         |
+           _ => raise ForeignType
+
+     fun set_enum(obj,i) =
+         case object_type(obj) of
+           ENUM_TYPE{card, ...} =>
+             (
+              (if (0 <= i) andalso (i < getBox(card))
+               then set_int'(obj,i)
+               else raise ForeignType
+              ) handle Option => raise ForeignType
+             )
+         |
+           _ => raise ForeignType
+
+
+     fun set_float(obj,r) =
+         case object_type(obj) of
+           FLOAT_TYPE  => set_real'(obj,r)
+         |
+           _ => raise ForeignType
+
+     fun set_double(obj,r) =
+         case object_type(obj) of
+           DOUBLE_TYPE  => set_real'(obj,r)
+         |
+           _ => raise ForeignType
+
+     fun set_long_double(obj,r) =
+         case object_type(obj) of
+           LONG_DOUBLE_TYPE  => set_real'(obj,r)
+         |
+           _ => raise ForeignType
+
+ 
+     fun set_string(obj, str) =
+         case object_type(obj) of
+           STRING_TYPE{length}  =>
+              if (size(str) <= length)
+              then set_object_value(obj,from_string(str),0)
+              else raise StoreAccess
+         |
+           _ => raise ForeignType
+
+
+     fun set_local_ptr(ptr_object) =
+         case object_type(ptr_object) of
+           POINTER_TYPE{mode=mode as ref(RELATIVE_PTR), ...} =>
+              let val rel_ptr = f_object_value(ptr_object)
+                  val idx     = bytearray_to_int{arr=rel_ptr,st=0,len=int_size}
+                  val addr    = to_address(ptr_object,idx)
+                  val ba      = address_to_bytearray(addr)          
+              in
+                  mode := LOCAL_PTR;
+                  set_object_value(ptr_object,ba,0)
+              end
+         |
+           POINTER_TYPE(_) => ()
+         |
+           _ => raise ForeignType
+
+
+     fun set_relative_ptr(ptr_object) =
+         case object_type(ptr_object) of
+           POINTER_TYPE{mode=mode as ref(LOCAL_PTR), ...} =>
+              let val abs_ptr = f_object_value(ptr_object)
+                  val addr    = bytearray_to_address(abs_ptr)
+                  val idx     = to_location(ptr_object,addr)
+              in
+                set_int'(ptr_object,idx);
+                mode := RELATIVE_PTR
+              end
+         |
+           POINTER_TYPE(_) => ()
+         |
+           _ => raise ForeignType
+
+
+     fun set_remote_ptr(ptr_object) =
+         case object_type(ptr_object) of
+           POINTER_TYPE{mode=ref(REMOTE_PTR), ...} => ()
+         |
+           POINTER_TYPE{mode=mode as ref(LOCAL_PTR), ...} =>
+             ( mode := REMOTE_PTR )
+         |
+           POINTER_TYPE{mode, ...} =>
+             ( set_local_ptr(ptr_object);
+               mode:= REMOTE_PTR
+             )
+         |
+           _ => raise ForeignType
+
+     local
+         fun set_array'(elem_object,rel_offset,contents,buf) =
+             let fun doit([]) = ()
+                   | doit(p::pl) =
+                     ( object_value(p,buf,0);
+                       set_object_value(elem_object,buf,0);
+                       offset_object(elem_object,rel_offset);
+                       doit(pl)
+                     )
+             in
+                doit(contents)
+             end
+     in
+         fun set_array(obj,contents,st) =
+             case object_type(obj) of
+                ARRAY_TYPE{length,ctype} =>
+                  if (st + llength(contents) > length)
+                  then raise StoreAccess
+                  else let val elem_size   =  size_of ctype
+                           val elem_object    =  dup_object'(obj)
+                           val init_posn   =  st * elem_size
+                           val elem_buffer =  bytearray(elem_size,0)
+                       in
+                           set_object_type(elem_object,ctype);
+                           set_object_size(elem_object,elem_size);
+                           offset_object(elem_object,init_posn);
+                           set_array'(elem_object,elem_size,contents,elem_buffer);
+                           set_object_currency(obj,true)
+                       end
+             |
+                _ => raise ForeignType
+     end
+
+     local
+        fun set_struct'(fld_object,fld_lst,object_lst) =
+            let fun doit(offset,CFLD{size, ...}::fld_lst,p::pl) =
+                    ( offset_object(fld_object,offset);
+                      copy_object_info{from=p,to=fld_object};
+                      doit(getBox(size),fld_lst,pl)
+                    )
+                  | doit(_,_::_,_) = raise ForeignType
+                  | doit(_,_,_)    = ()
+            in
+                doit(0,fld_lst,object_lst)
+            end
+     in
+         fun set_struct(obj,items) =
+             case object_type(obj) of
+               STRUCT_TYPE{fields, ...} =>
+                  if (llength(fields) <> llength(items))
+                  then raise StoreAccess
+                  else ( set_struct'(dup_object'(obj),fields,items);
+			 set_object_currency(obj,true)
+                       )
+             |
+                _ => raise ForeignType
+
+	 fun set_field{record=obj,field=name,data} =
+	     case object_type(obj) of
+	       STRUCT_TYPE{fields, ...} =>
+		  let val CFLD{ctype, offset, ...} = lookup_field(fields,name)
+		  in
+		      if not(equal_type(object_type(data),ctype))
+                      then raise StoreAccess
+                      else let val size   = size_of(ctype)
+			       val offset = getBox(offset)
+			       val object'   = dup_object'(obj)
+			   in
+			       set_object_type(obj',ctype);
+			       set_object_size(obj',size);
+			       offset_object(obj',offset);
+			       copy_object_value{from=data,to=obj'}
+			   end
+		  end
+	     |
+		_ =>  raise ForeignType
+     end
+
+     fun set_union{union=obj,data} =
+         case object_type(obj) of
+           UNION_TYPE{current=(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+              in
+                  if not(equal_type(object_type(data),ctype))
+                  then raise StoreAccess
+                  else copy_object_value{from=data,to=obj}
+              end
+         |
+            _ => raise ForeignType
+
+     fun set_member{union=obj,member} =
+         case object_type(obj) of
+           UNION_TYPE{variants, current, ...} =>
+              let val variant = lookup_variant(!variants,member)
+              in
+                  (setBox current variant)
+              end
+         |
+            _ => raise ForeignType
+
+     fun index_object{array=src_pd,tgt=tgt_pd,index=idx} =
+         case object_type(src_pd) of
+           ARRAY_TYPE{length,ctype} =>
+              if (0 <= idx) andalso (idx < length)
+              then let val elem_size = size_of(ctype)
+                       val base_posn = object_location(src_pd)
+                       val abs_posn  = base_posn + (idx * elem_size)
+                   in
+                       set_object_type(tgt_pd,ctype);
+                       set_object_size(tgt_pd,elem_size);          
+                       move_object(tgt_pd,abs_posn);
+		       set_object_currency(tgt_pd,true)
+                   end
+              else raise StoreAccess
+         |
+            _ => raise ForeignType
+
+     fun deref_object{ptr=src_pd,tgt=tgt_pd} =
+         case object_type(src_pd) of
+           POINTER_TYPE{ctype, mode=ref(RELATIVE_PTR)} =>
+              let val item_size = size_of(ctype)
+                  val rel_ptr   = f_object_value(src_pd)
+                  val loc_posn  = bytearray_to_int{arr=rel_ptr,st=0,len=int_size}
+              in
+                  set_object_type(tgt_pd,ctype);
+                  set_object_size(tgt_pd,item_size);               
+                  move_object(tgt_pd,loc_posn);
+		  set_object_currency(tgt_pd,true)
+              end
+         |
+           POINTER_TYPE{ctype, mode=ref(LOCAL_PTR)} =>
+              let val item_size = size_of(ctype)
+                  val loc_ptr   = f_object_value(src_pd)
+                  val addr      = bytearray_to_address(loc_ptr)
+                  val loc_posn  = to_location(src_pd,addr)
+              in
+                  set_object_type(tgt_pd,ctype);
+                  set_object_size(tgt_pd,item_size);               
+                  move_object(tgt_pd,loc_posn);
+		  set_object_currency(tgt_pd,true)
+              end
+         |
+           POINTER_TYPE{ctype, mode=ref(REMOTE_PTR)} =>
+              let val item_size = size_of(ctype)
+                  val far_ptr   = f_object_value(src_pd)
+                  val addr      = bytearray_to_word32{arr=far_ptr,st=0}
+              in
+                  set_object_type(tgt_pd,ctype);
+                  set_object_size(tgt_pd,item_size);               
+                  examine_object(tgt_pd,addr)
+              end
+         |
+            _ => raise ForeignType
+
+     fun select_object{record=src_pd,tgt=tgt_pd,field=name} =
+	 case object_type(src_pd) of
+	   STRUCT_TYPE{fields, ...} =>
+	     let val field  =  lookup_field(fields,name)
+		 val CFLD{offset,ctype, ...}  =  field
+		 val obj_size  =  size_of(ctype)
+		 val fld_posn  =  getBox(offset)
+                 val src_posn  =  object_location(src_pd)
+                 val abs_posn  =  fld_posn + src_posn
+	     in
+		 set_object_type(tgt_pd,ctype);
+		 set_object_size(tgt_pd,obj_size);
+		 move_object(tgt_pd,abs_posn);
+		 set_object_currency(tgt_pd,true)
+	     end
+	 |
+	    _ => raise ForeignType
+
+     fun coerce_object{union=src_pd,tgt=tgt_pd} =
+         case object_type(src_pd) of
+           UNION_TYPE{current=(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+                  val new_size = size_of(ctype)
+              in
+                  set_object_type(tgt_pd,ctype);
+                  set_object_size(tgt_pd,new_size);
+		  set_object_currency(tgt_pd,object_currency(src_pd))
+              end
+         |
+            _ => raise ForeignType
+
+
+     fun copy_index_object(obj,idx) =
+         let val new_object = new_object(obj)
+         in
+             index_object{array=obj,tgt=new_object,index=idx};
+             new_object
+         end
+
+     fun copy_deref_object(obj) =
+         let val new_object = new_object(obj)
+         in
+             deref_object{ptr=obj,tgt=new_object};
+             new_object
+         end
+
+     fun copy_select_object(obj,name) =
+         let val new_object = new_object(obj)
+         in
+             select_object{record=obj,tgt=new_object,field=name};
+             new_object
+         end
+
+     fun copy_coerce_object(obj) =
+         let val new_object = new_object(obj)
+         in
+             coerce_object{union=obj,tgt=new_object};
+             new_object
+         end
+
+     fun set_addr {obj,addr} =
+         let val object_addr = get_word32'(addr)
+         in
+             set_object_address'(obj,object_addr);
+	     set_object_currency(obj,true)
+         end
+
+     local
+
+        fun set_addr(ptr_object,addr_object) =
+            if object_size(addr_object) = object_size(ptr_object)
+            then copy_object_value'{from=addr_object,to=ptr_object}
+            else raise StoreAccess
+
+        fun set_addr_of(ptr_object,val_object) =
+            let val addr = object_address(val_object)
+                val ba   = address_to_bytearray(addr)
+            in
+                set_object_value(ptr_object,ba,0)
+            end
+
+     in
+
+       fun set_ptr_addr{ptr=ptr_object,addr=addr_object} =
+            case object_type(ptr_object) of
+              POINTER_TYPE{mode=ref(LOCAL_PTR), ...}  => set_addr(ptr_object,addr_object)
+            |
+              POINTER_TYPE{mode=ref(REMOTE_PTR), ...} => set_addr(ptr_object,addr_object)
+            |
+              _ => raise ForeignType
+
+        fun set_ptr_addr_of{ptr=ptr_object,data=val_object} =
+            case object_type(ptr_object) of
+              POINTER_TYPE{mode=ref(LOCAL_PTR), ...} => set_addr_of(ptr_object,val_object)
+            |
+              POINTER_TYPE{mode=ref(REMOTE_PTR), ...} => set_addr_of(ptr_object,val_object)
+            |
+              POINTER_TYPE{mode=ref(RELATIVE_PTR), ...} =>
+                 let val loc_posn = object_location(val_object)
+                 in
+                     set_int'(ptr_object,loc_posn)
+                 end
+            |
+              _ => raise ForeignType
+     end
+
+     fun set_ptr_data{ptr=src_object,data=from_object} =
+         let val to_object  = copy_deref_object(src_object)
+         in
+             copy_object_info{from=from_object,to=to_object}
+         end
+
+     fun set_ptr_type{ptr=src_object,data=from_object} =
+         case object_type(src_object) of
+            POINTER_TYPE{mode=ref(ptr_mode), ...} =>
+	       let val ty       = object_type(from_object)
+		   val ptr_type = POINTER_TYPE{mode=ref(ptr_mode),ctype=ty}
+		   val ptr_size = size_of(ptr_type)
+	       in
+		   set_object_type(src_object,ptr_type);
+		   set_object_size(src_object,ptr_size)
+	       end
+          |
+            _ => raise ForeignType
+
+     fun cast_ptr_type{ptr=src_object,ctype} =
+         case object_type(src_object) of
+            POINTER_TYPE{mode=ref(ptr_mode), ...} =>
+	       let val ptr_type = POINTER_TYPE{mode=ref(ptr_mode),ctype=ctype}
+		   val ptr_size = size_of(ptr_type)
+	       in
+		   set_object_type(src_object,ptr_type);
+		   set_object_size(src_object,ptr_size)
+	       end
+          |
+            _ => raise ForeignType
+
+     fun index_object_location(obj,idx) =
+         case object_type(obj) of
+           ARRAY_TYPE{length,ctype} =>
+              if (0 <= idx) andalso (idx < length)
+              then let val elem_size = size_of(ctype)
+                       val rel_posn  = idx * elem_size
+                   in
+                       object_location(obj) + rel_posn
+                   end
+              else raise StoreAccess
+         |
+            _ => raise ForeignType
+
+     fun deref_object_location(obj) =
+         case object_type(obj) of
+           POINTER_TYPE{mode=ref(RELATIVE_PTR), ...} => get_int'(obj)
+         |
+           POINTER_TYPE{mode=ref(LOCAL_PTR), ...} =>
+              let val loc_ptr   = f_object_value(obj)
+                  val addr      = bytearray_to_address(loc_ptr)
+                  val loc_posn  = to_location(obj,addr)
+              in
+                  loc_posn
+              end
+         |
+            _ => raise ForeignType
+
+     fun select_object_location(obj,name) =
+         case object_type(obj) of
+           STRUCT_TYPE{fields, ...} =>
+             let val field = lookup_field(fields,name)
+                 val CFLD{offset, ...} = field
+                 val rel_posn = getBox(offset)
+             in
+                 object_location(obj) + rel_posn
+             end
+         |
+            _ => raise ForeignType
+
+     val coerce_object_location = object_location
+
+
+     fun index_object_type(obj) =
+         case object_type(obj) of
+           ARRAY_TYPE{ctype, ...} => ctype 
+         |
+            _ => raise ForeignType
+
+     fun deref_object_type(obj) =
+         case object_type(obj) of
+           POINTER_TYPE{ctype, ...} => ctype
+         |
+            _ => raise ForeignType
+
+     fun select_object_type(obj,name) =
+         case object_type(obj) of
+           STRUCT_TYPE{fields, ...} =>
+             let val CFLD{ctype, ...} = lookup_field(fields,name)
+             in
+                 ctype
+             end
+         |
+            _ => raise ForeignType
+
+     fun coerce_object_type(obj) =
+         case object_type(obj) of
+           UNION_TYPE{current=(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+              in
+                  ctype
+              end
+         |
+            _ => raise ForeignType
+
+
+     fun index_object_size(obj)        = size_of(index_object_type(obj))
+     fun deref_object_size(obj)        = size_of(deref_object_type(obj))
+     fun select_object_size(obj,name)  = size_of(select_object_type(obj,name))
+     fun coerce_object_size(obj)       = size_of(coerce_object_type(obj))
+
+     fun advance_object(obj) = offset_object(obj,object_size(obj))
+     fun retard_object(obj)  = offset_object(obj,~(object_size(obj)))
+         
+
+     (* Getters ... *)
+
+     fun get_unsigned_char(obj) =
+         case object_type(obj) of
+           CHAR_TYPE          => get_char'(obj)
+         |
+           UNSIGNED_CHAR_TYPE => get_char'(obj)
+         |
+           _ => raise ForeignType
+
+     val get_char = get_unsigned_char
+
+     fun get_signed_char(obj) =
+         case object_type(obj) of
+           CHAR_TYPE        => get_signed_char'(obj)
+         |
+           SIGNED_CHAR_TYPE => get_signed_char'(obj)
+         |
+           _ => raise ForeignType
+
+
+     fun get_short(obj) =
+         case object_type(obj) of
+           SHORT_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_int(obj) =
+         case object_type(obj) of
+           INT_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_long(obj) =
+         case object_type(obj) of
+           LONG_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned_short(obj) =
+         case object_type(obj) of
+           UNSIGNED_SHORT_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned(obj) =
+         case object_type(obj) of
+           UNSIGNED_INT_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned_long(obj) =
+         case object_type(obj) of
+           UNSIGNED_LONG_TYPE  => get_int'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_word32(obj) =
+         case object_type(obj) of
+           UNSIGNED_INT_TYPE  => get_word32'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_enum(obj) =
+         case object_type(obj) of
+           ENUM_TYPE{card, ...} =>
+             let val i = get_int'(obj)
+             in
+                if (0 <= i) andalso (i < getBox(card))
+                then i
+                else raise ForeignType
+             end
+         |
+           _ => raise ForeignType
+
+     fun get_float(obj) =
+         case object_type(obj) of
+           FLOAT_TYPE  => get_real'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_double(obj) =
+         case object_type(obj) of
+           DOUBLE_TYPE  => get_real'(obj)
+         |
+           _ => raise ForeignType
+
+     fun get_long_double(obj) =
+         case object_type(obj) of
+           LONG_DOUBLE_TYPE  => get_real'(obj)
+         |
+           _ => raise ForeignType
+
+     local
+        fun zerop (i) = (i = 0)
+        fun find_string_end(length,buffer) = find_ba (zerop,length) buffer
+     in
+        fun get_string(obj) =
+            case object_type(obj) of
+              STRING_TYPE{length}  =>
+                 let val buffer = bytearray(length,0)
+                 in
+                     object_value(obj,buffer,0);
+                     let val end_idx = find_string_end(length,buffer)
+                         val str_buf = subarray_ba(buffer,0,end_idx)
+                     in
+                         to_string(str_buf)
+                     end
+                 end
+            |
+              _ => raise ForeignType
+     end
+
+     val get_data = copy_deref_object
+
+     fun get_struct(obj) =
+         case object_type(obj) of
+           STRUCT_TYPE{fields, ...} =>
+             let fun doit(fld::fld_lst,pl) =
+                     let val CFLD{offset,ctype, ...} = fld
+                         val new_object   =  new_object(obj)
+                         val rel_posn  =  getBox(offset)
+                         val size      =  size_of(ctype)
+                     in
+                         set_object_type(new_object,ctype);
+                         set_object_size(new_object,size);
+                         offset_object(new_object,rel_posn);
+                         doit(fld_lst,new_object::pl)
+                     end
+                   | doit([],object_lst) = rev object_lst
+             in
+                 doit(fields,[])
+             end
+         |
+            _ => raise ForeignType
+
+     val get_field = copy_select_object
+
+     val get_union = copy_coerce_object
+
+     local
+         fun get_array'(obj,len,rel_offset) =
+             let fun doit(k,rel_posn,pl) =
+                     if (k < 0) then rev pl else
+                     let val new_object = new_object(obj)
+                     in
+                       offset_object(new_object,rel_posn);
+                       doit(k-1,rel_posn + rel_offset,new_object::pl)
+                     end
+             in
+                doit(len-1,object_location(obj),[])
+             end
+     in
+         fun get_array(obj) =
+             case object_type(obj) of
+                ARRAY_TYPE{length,ctype} =>
+                  let val elem_size   =  size_of ctype
+                      val elem_object    =  dup_object'(obj)
+                  in
+                      set_object_type'(elem_object,ctype);
+                      set_object_size(elem_object,elem_size);
+                      get_array'(elem_object,length,elem_size)
+                  end
+             |
+                _ => raise ForeignType
+     end
+
+     val object_type : c_object -> c_type  =  object_type
+
+     fun cast_object_type(obj,ctype) =
+       ( set_object_size(obj,size_of ctype);
+         set_object_type(obj,ctype)
+       )
+
+     (* Diagnostic tools *)
+
+     local
+
+        fun str_ptr_mode(LOCAL_PTR)     = "local"
+          | str_ptr_mode(RELATIVE_PTR)  = "relative"
+          | str_ptr_mode(REMOTE_PTR)    = "remote"
+
+        fun str_field_list (sep,CFLD{name=name', ...}::nml') =
+	    let fun doit(CFLD{name, ...}::nml,strl) = doit(nml,name::sep::strl)
+                  | doit(_,strl) = rev strl
+            in
+                String.implode(doit(nml',[name']))
+            end
+          | str_field_list (_,[]) = ""
+
+        fun str_current((ref(SOME(CVNT{name, ...})))) = name
+          | str_current(_) = "<none>"
+
+     in
+
+	fun c_type_info(SIZE_OF{ctype, ...}) = c_type_info(ctype)
+
+	  | c_type_info(VOID_TYPE)             = "VOID_TYPE" 
+
+	  | c_type_info(CHAR_TYPE)             = "CHAR_TYPE"
+	  | c_type_info(UNSIGNED_CHAR_TYPE)    = "UNSIGNED_CHAR_TYPE"
+	  | c_type_info(SIGNED_CHAR_TYPE)      = "SIGNED_CHAR_TYPE"
+
+	  | c_type_info(SHORT_TYPE)            = "SHORT_TYPE"
+	  | c_type_info(INT_TYPE)              = "INT_TYPE"
+	  | c_type_info(LONG_TYPE)             = "LONG_TYPE"
+
+	  | c_type_info(UNSIGNED_SHORT_TYPE)   = "UNSIGNED_SHORT_TYPE"
+	  | c_type_info(UNSIGNED_INT_TYPE)     = "UNSIGNED_INT_TYPE"
+	  | c_type_info(UNSIGNED_LONG_TYPE)    = "UNSIGNED_LONG_TYPE"
+
+	  | c_type_info(FLOAT_TYPE)            = "FLOAT_TYPE"
+	  | c_type_info(DOUBLE_TYPE)           = "DOUBLE_TYPE"
+	  | c_type_info(LONG_DOUBLE_TYPE)      = "LONG_DOUBLE_TYPE"
+
+	  | c_type_info(STRING_TYPE{length})   = "STRING_TYPE[" ^ int_string(length) ^ "]"
+
+	  | c_type_info(TYPENAME_TYPE{name, ...}) = "TYPENAME_TYPE[" ^ name ^ "]"
+
+	  | c_type_info(POINTER_TYPE{ctype,mode}) =
+	    "POINTER_TYPE[" ^ str_ptr_mode(!mode) ^ ";" ^ c_type_info(ctype) ^ "]"
+
+	  | c_type_info(STRUCT_TYPE{tag=NONE, fields, ...}) =
+	    "STRUCT_TYPE[<none>;" ^ str_field_list (",",fields) ^ "]"
+
+	  | c_type_info(STRUCT_TYPE{tag=SOME(name), fields, ...}) =
+	    "STRUCT_TYPE[" ^ name ^ ";" ^ str_field_list(",",fields) ^ "]"
+
+	  | c_type_info(UNION_TYPE{tag=NONE, current, ...}) =
+	    "UNION_TYPE[<none>;" ^ str_current(current) ^ "]"
+
+	  | c_type_info(UNION_TYPE{tag=SOME(name), current, ...}) =
+	    "UNION_TYPE[" ^ name ^ ";" ^ str_current(current) ^ "]"
+
+	  | c_type_info(ARRAY_TYPE { length, ctype }) =
+            "ARRAY_TYPE[" ^ c_type_info(ctype) ^ "," ^ int_string(length) ^ "]"
+
+	  | c_type_info(ENUM_TYPE{tag=NONE, ...}) =
+	    "ENUM_TYPE[<none>]"
+
+	  | c_type_info(ENUM_TYPE{tag=SOME(name), ...}) =
+	    "ENUM_TYPE[" ^ name ^ "]"
+
+        val object_info = fn (object : c_object) => object_info c_type_info object
+
+	val object_data         : c_object -> int list  = object_data
+	val object_data_hex     : c_object -> string    = object_data_hex
+	val object_data_ascii   : c_object -> string    = object_data_ascii
+
+        fun view_object object =
+            let val { store, status, currency, mode, langtype, size, base, offset } =
+                    object_info object
+
+                val data = object_data_hex object
+            in
+                String.implode   [ "\n\n",
+                            "   Object (", mode, ", ", status, ", ", currency, ")\n",
+                            "       type      = ", langtype, "\n",
+                            "       size      = ", int_string(size), "\n",
+                (case base of
+                   NONE =>  ""
+                 | SOME(addr) =>
+                            "       position  = " ^  word32_to_hex(addr) ^ "\n"),
+                            "       offset    = ", int_string(offset), "\n",
+                            "       data      = 0x[", data, "]\n",
+                            "\n\n" ]
+            end
+
+	val disp_object = disp view_object
+
+     end
+
+
+   end; (* signature C_OBJECT *)
+@

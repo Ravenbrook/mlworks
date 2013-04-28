@@ -1,0 +1,250 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Open_Beta2_1996_10_11:1.3.3
+	MLWorks_License_dev:1.3.2
+	MLWorks_1_open_beta_1996_09_13:1.3.1
+	MLWorks_Open_Beta_1996_08_22:1.3
+	MLWorks_Beta_1996_07_02:1.3
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3
+	hope_poo:1.2.1
+	ML_beta_release_12/08/94:1.2.1.1
+	ML_beta_release_03/08/94:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.01.29.15.30.41;	author stephenb;	state Exp;
+branches
+	1.3.1.1
+	1.3.2.1
+	1.3.3.1;
+next	1.2;
+
+1.2
+date	94.06.09.14.28.15;	author nickh;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	94.06.09.10.52.40;	author nickh;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	95.07.05.10.29.31;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	96.09.13.11.22.48;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.2.1
+date	96.10.07.16.12.57;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.3.1
+date	96.10.17.11.32.12;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.3
+log
+@Add <unistd.h>
+@
+text
+@/*  === LICENSING ===
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The process is forked.  The parent continues with the normal running,
+ *  but traps child status changes by putting a signal handler on SIGCHLD.
+ *  The child monitors the license and exits if it expires.
+ *
+ *  Care is taken to deal with tampering.  In particular, if the child is
+ *  stopped or killed the parent exits.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:SunOS:license.c,v $
+ * Revision 1.2  1994/06/09  14:28:15  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:52:40  nickh
+ * new file
+ *
+ *  Revision 1.11  1994/01/28  17:22:49  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.9  1994/01/04  10:31:37  nickh
+ *  Update best-before date to 1st April.
+ *
+ *  Revision 1.8  1993/09/28  09:46:54  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.7.1.2  1993/09/28  09:44:29  jont
+ *  Fixed to poll license expiry regularly
+ *
+ *  Revision 1.7.1.1  1993/09/01  09:32:09  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.7  1993/09/01  09:32:09  daveb
+ *  Changed BEST_BEFORE date to 1994-01-01 00:00:00.
+ *
+ *  Revision 1.6  1993/05/11  13:18:47  daveb
+ *  Increased a diagnostic level.
+ *
+ *  Revision 1.5  1993/04/26  10:44:05  richard
+ *  Increased diagnostic levels.
+ *
+ *  Revision 1.4  1993/03/25  14:30:00  daveb
+ *  Added a few extra checks and diagnostics.  Used sigblock instead of
+ *  sigvec where appropriate.
+ *
+ *  Revision 1.3  1993/02/01  13:14:03  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.2  1993/01/06  16:50:36  richard
+ *  The mechanism is now considerably more secure.  The parent and child
+ *  roles have been swapped so that interfering with the child is easily
+ *  spotted.  The child monitors the status of the parent using a dummy
+ *  pipe.
+ *
+ *  Revision 1.1  1992/12/21  15:38:29  richard
+ *  Initial revision
+ *
+ */
+
+#include "ansi.h"
+#include "utils.h"
+#include "diagnostic.h"
+#include "license.h"
+#include "signals.h"
+
+#include <unistd.h>
+#include <errno.h>
+#include <sys/errno.h>
+
+void license(void)
+{
+  int pipefd[2];
+  
+  /* Start watching the child before forking */
+
+  signal_license_watch_child();
+
+  if(pipe(pipefd))
+    error("Unable to create pipe for licensing.  "
+	  "pipe set errno to %d.", errno);
+
+  signal_license_child_pid = fork();
+
+  if(signal_license_child_pid == -1)
+    switch(errno)
+    {
+      case EAGAIN:
+      error("Too many processes running to fork licensing process.");
+
+      case ENOMEM:
+      error("Insufficient memory to fork licensing process.");
+
+      default:
+      error("fork() returned an unexpected error code %d", errno);
+    }
+
+  if(signal_license_child_pid == 0)
+    /* the child process */
+    signal_license_child(pipefd);
+
+  DIAGNOSTIC(1, "licensing process id %d", signal_license_child_pid, 0);
+}
+@
+
+
+1.3.3.1
+log
+@branched from 1.3
+@
+text
+@a16 3
+ * Revision 1.3  1996/01/29  15:30:41  stephenb
+ * Add <unistd.h>
+ *
+@
+
+
+1.3.2.1
+log
+@branched from 1.3
+@
+text
+@a16 3
+ * Revision 1.3  1996/01/29  15:30:41  stephenb
+ * Add <unistd.h>
+ *
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a16 3
+ * Revision 1.3  1996/01/29  15:30:41  stephenb
+ * Add <unistd.h>
+ *
+@
+
+
+1.2
+log
+@new file
+@
+text
+@d17 3
+a65 1
+#include "syscalls.h"
+d71 1
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a16 3
+ * Revision 1.2  1994/06/09  14:28:15  nickh
+ * new file
+ *
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d16 4
+a19 1
+ *  $Log: license.c,v $
+@

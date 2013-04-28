@@ -1,0 +1,512 @@
+head	1.15;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.9
+	ML_final_beta_release_02/03/94:1.9
+	mlworks-28-01-1994:1.8
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.15
+date	95.06.08.13.37.17;	author daveb;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	95.06.08.09.26.18;	author daveb;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.06.06.09.34.24;	author daveb;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.03.02.17.10.37;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.01.13.15.27.06;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.07.12.15.42.32;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.02.21.20.55.43;	author nosa;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.12.09.19.35.34;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.08.06.13.59.28;	author nosa;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	93.05.07.10.51.24;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.05.05.17.35.35;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.04.23.13.15.20;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.04.02.17.14.37;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.04.01.09.41.08;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.26.16.50.17;	author matthew;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	93.08.06.13.59.28;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@First version of windowing inspector
+@
+
+
+1.15
+log
+@Removed Widget type.
+@
+text
+@(*
+ *  Copyright (c) 1993 Harlequin Ltd.
+ *  $Log: inspector_tool.sml,v $
+ *  Revision 1.14  1995/06/08  09:26:18  daveb
+ *  Removed debugger function arguments.
+ *
+ *  Revision 1.13  1995/06/06  09:34:24  daveb
+ *  Removed inspect_variable.
+ *
+ * 
+ *  Revision 1.12  1995/03/02  17:10:37  daveb
+ *  Added inspect_variable, with takes a context and looks the value up
+ *  in that.
+ *
+ *  Revision 1.11  1995/01/13  15:27:06  daveb
+ *  Replaced Option structure with references to MLWorks.Option.
+ *  
+ *  Revision 1.10  1994/07/12  15:42:32  daveb
+ *  Replaced ToolData structure with ToolData type and Option structure.
+ *  
+ *  Revision 1.9  1994/02/21  20:55:43  nosa
+ *  Boolean indicator for Monomorphic debugger decapsulation.
+ *  
+ *  Revision 1.8  1993/12/09  19:35:34  jont
+ *  Added copyright message
+ *  
+ *  Revision 1.7  1993/08/06  13:59:28  nosa
+ *  Debugger-window now passed to Inspector-tool functions.
+ *  
+ *  Revision 1.6  1993/05/07  10:51:24  daveb
+ *  Added string argument to inspect_value - this is displayed in the input
+ *  text widget on startup.
+ *  
+ *  Revision 1.5  1993/05/05  17:35:35  daveb
+ *  Renamed inspect to create, and changed its type so that inspectors can
+ *  be added to the list of tools on the Works menu.
+ *  Added a debugger function to eval_string.
+ *  
+ *  Revision 1.4  1993/04/23  13:15:20  matthew
+ *  Added inspect_value function
+ *  
+ *  Revision 1.3  1993/04/02  17:14:37  matthew
+ *  inspect takes a ShellData argument -- this should probably be
+ *  a ShellState though
+ *  
+ *  Revision 1.2  1993/04/01  09:41:08  matthew
+ *  Added UserOptions parameter to inspect
+ *  
+ *  Revision 1.1  1993/03/26  16:50:17  matthew
+ *  Initial revision
+ *  
+ *)
+
+signature INSPECTORTOOL =
+  sig
+    type Type
+    type ToolData
+
+    val create : ToolData -> unit
+
+    val inspect_value :
+      bool
+      -> string * (MLWorks.Internal.Value.ml_value * Type) * ToolData
+      -> unit
+  end
+
+@
+
+
+1.14
+log
+@Removed debugger function arguments.
+@
+text
+@d4 3
+a56 1
+    type Widget
+@
+
+
+1.13
+log
+@Removed inspect_variable.
+@
+text
+@d4 3
+d57 1
+a57 15
+    val create : 
+      (Widget * string * ToolData  ->
+      ((string * {name : string, loc : string, 
+                  details : string * string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string) * 
+                  (unit -> string * ((string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string)) list),
+                   string * ((string * (Type * MLWorks.Internal.Value.ml_value 
+                                            * string)) list))
+                  MLWorks.Option.union ref MLWorks.Option.option} list *
+        (string -> unit) *
+        ((unit -> unit) MLWorks.Option.option
+         * (unit -> unit) MLWorks.Option.option) -> unit) *
+       (string -> unit)))
+      -> ToolData -> unit
+d59 4
+a62 15
+    val inspect_value : bool ->
+      (Widget * string * ToolData  ->
+      ((string * {name : string, loc : string, 
+                  details : string * string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string) * 
+                  (unit -> string * ((string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string)) list),
+                   string * ((string * (Type * MLWorks.Internal.Value.ml_value 
+                                            * string)) list))
+                  MLWorks.Option.union ref MLWorks.Option.option} list *
+        (string -> unit) *
+        ((unit -> unit) MLWorks.Option.option 
+         * (unit -> unit) MLWorks.Option.option) -> unit) *
+       (string -> unit)))
+      -> string * (MLWorks.Internal.Value.ml_value * Type) * ToolData -> unit
+@
+
+
+1.12
+log
+@Added inspect_variable, with takes a context and looks the value up
+in that.
+@
+text
+@d2 45
+a46 4
+ * Copyright (c) 1993 Harlequin Ltd.
+ $Log: inspector_tool.sml,v $
+Revision 1.11  1995/01/13  15:27:06  daveb
+Replaced Option structure with references to MLWorks.Option.
+a47 36
+Revision 1.10  1994/07/12  15:42:32  daveb
+Replaced ToolData structure with ToolData type and Option structure.
+
+Revision 1.9  1994/02/21  20:55:43  nosa
+Boolean indicator for Monomorphic debugger decapsulation.
+
+Revision 1.8  1993/12/09  19:35:34  jont
+Added copyright message
+
+Revision 1.7  1993/08/06  13:59:28  nosa
+Debugger-window now passed to Inspector-tool functions.
+
+Revision 1.6  1993/05/07  10:51:24  daveb
+Added string argument to inspect_value - this is displayed in the input
+text widget on startup.
+
+Revision 1.5  1993/05/05  17:35:35  daveb
+Renamed inspect to create, and changed its type so that inspectors can
+be added to the list of tools on the Works menu.
+Added a debugger function to eval_string.
+
+Revision 1.4  1993/04/23  13:15:20  matthew
+Added inspect_value function
+
+Revision 1.3  1993/04/02  17:14:37  matthew
+inspect takes a ShellData argument -- this should probably be
+a ShellState though
+
+Revision 1.2  1993/04/01  09:41:08  matthew
+Added UserOptions parameter to inspect
+
+Revision 1.1  1993/03/26  16:50:17  matthew
+Initial revision
+
+*)
+
+a51 1
+    type Context
+a68 16
+
+    val inspect_variable :
+      (Widget * string * ToolData  ->
+      ((string * {name : string, loc : string, 
+                  details : string * string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string) * 
+                  (unit -> string * ((string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string)) list),
+                   string * ((string * (Type * MLWorks.Internal.Value.ml_value 
+                                            * string)) list))
+                  MLWorks.Option.union ref MLWorks.Option.option} list *
+        (string -> unit) *
+        ((unit -> unit) MLWorks.Option.option 
+         * (unit -> unit) MLWorks.Option.option) -> unit) *
+       (string -> unit)))
+      -> string * Context * ToolData -> unit
+@
+
+
+1.11
+log
+@Replaced Option structure with references to MLWorks.Option.
+@
+text
+@d4 3
+d47 1
+d65 16
+@
+
+
+1.10
+log
+@Replaced ToolData structure with ToolData type and Option structure.
+@
+text
+@d4 3
+a39 2
+require "../utils/option";
+
+a45 2
+    structure Option: OPTION
+
+d55 1
+a55 1
+                  Option.option ref Option.opt} list *
+d57 2
+a58 2
+        ((unit -> unit) Option.opt 
+         * (unit -> unit) Option.opt) -> unit) *
+d71 1
+a71 1
+                  Option.option ref Option.opt} list *
+d73 2
+a74 2
+        ((unit -> unit) Option.opt 
+         * (unit -> unit) Option.opt) -> unit) *
+@
+
+
+1.9
+log
+@Boolean indicator for Monomorphic debugger decapsulation.
+@
+text
+@d4 3
+d37 1
+a37 1
+require "tooldata";
+d43 1
+d45 1
+a45 1
+    structure ToolData : TOOL_DATA
+d48 1
+a48 1
+      (Widget * string * ToolData.ToolData  ->
+d56 1
+a56 1
+                  ToolData.ShellTypes.Option.option ref ToolData.ShellTypes.Option.opt} list *
+d58 2
+a59 2
+        ((unit -> unit) ToolData.ShellTypes.Option.opt 
+         * (unit -> unit) ToolData.ShellTypes.Option.opt) -> unit) *
+d61 2
+a62 1
+      -> ToolData.ToolData -> unit
+d64 1
+a64 1
+      (Widget * string * ToolData.ToolData  ->
+d72 1
+a72 1
+                  ToolData.ShellTypes.Option.option ref ToolData.ShellTypes.Option.opt} list *
+d74 2
+a75 2
+        ((unit -> unit) ToolData.ShellTypes.Option.opt 
+         * (unit -> unit) ToolData.ShellTypes.Option.opt) -> unit) *
+d77 1
+a77 1
+      -> string * (MLWorks.Internal.Value.ml_value * Type) * ToolData.ToolData -> unit
+@
+
+
+1.8
+log
+@Added copyright message
+@
+text
+@d4 3
+d48 4
+a51 4
+                  (unit -> string * (string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string)) list,
+                   string * (string * (Type * MLWorks.Internal.Value.ml_value 
+                                            * string)) list) 
+d58 1
+a58 1
+    val inspect_value :
+d63 4
+a66 4
+                  (unit -> string * (string * (Type 
+                                             * MLWorks.Internal.Value.ml_value * string)) list,
+                   string * (string * (Type * MLWorks.Internal.Value.ml_value 
+                                            * string)) list)
+@
+
+
+1.7
+log
+@Debugger-window now passed to Inspector-tool functions.
+@
+text
+@d2 1
+d4 3
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 3
+Revision 1.7  1993/08/06  13:59:28  nosa
+Debugger-window now passed to Inspector-tool functions.
+
+@
+
+
+1.6
+log
+@Added string argument to inspect_value - this is displayed in the input
+text widget on startup.
+@
+text
+@d3 4
+d27 2
+d32 19
+a50 2
+    type ToolData
+    val create : ToolData -> unit
+d52 14
+a65 1
+      string * (MLWorks.Internal.Value.ml_value * Type) * ToolData -> unit
+@
+
+
+1.5
+log
+@Renamed inspect to create, and changed its type so that inspectors can
+be added to the list of tools on the Works menu.
+Added a debugger function to eval_string.
+@
+text
+@d3 5
+d29 1
+a29 1
+      (MLWorks.Internal.Value.ml_value * Type) * ToolData -> unit
+@
+
+
+1.4
+log
+@Added inspect_value function
+@
+text
+@d3 3
+a19 1
+    type Widget
+d21 4
+a24 3
+    type ShellData
+    val inspect : ShellData * Widget -> unit
+    val inspect_value : (MLWorks.Internal.Value.ml_value * Type) * ShellData * Widget -> unit
+@
+
+
+1.3
+log
+@inspect takes a ShellData argument -- this should probably be
+a ShellState though
+@
+text
+@d3 4
+d18 1
+d21 1
+@
+
+
+1.2
+log
+@Added UserOptions parameter to inspect
+@
+text
+@d3 3
+d14 2
+a15 3
+    type Context
+    type UserOptions
+    val inspect : UserOptions * Context ref * Widget -> unit
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 3
+d12 2
+a13 1
+    val inspect : Context ref * Widget -> unit
+@

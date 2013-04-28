@@ -1,0 +1,165 @@
+head	1.6;
+access;
+symbols
+	Final_version_of_old_runtime:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.3;
+locks; strict;
+
+
+1.6
+date	93.08.26.15.43.10;	author daveb;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	93.03.24.15.40.44;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.01.15.11.34.35;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.18.08.16;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.17.16.54.13;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.16.14.16.35;	author davidt;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.08.26.15.43.10;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@This generates a signature file objectfile.sml which contains the
+object file opcodes (generated from opcodes.h).
+@
+
+
+1.6
+log
+@Added HEADER_SIZE.
+@
+text
+@BEGIN {
+	print "(* objectfile.sml the signature *)";
+	print "(*";
+	print " * Object file opcodes";
+	print " * Machine generated file : DO NOT ALTER";
+	print " * Generated from : objectfile.h";
+	print " * Copyright (c) 1991 Harlequin Ltd.";
+	print " *)";
+	print ("\nsignature OBJECTFILE =");
+	print ("sig");
+      }
+
+/#define GOOD_MAGIC/ {
+	 print("  val", $2, ": int");
+       }
+
+/#define HEADER_SIZE/ {
+	 print("  val", $2, ": int");
+       }
+
+/#define OBJECT_FILE_VERSION/ {
+	 print("  val", $2, ": int");
+       }
+
+/#define OPCODE_.*/ {
+	 print("  val", $2, ": int");
+       }
+
+END {
+	print ("end;");
+    }
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@@
+
+
+1.5
+log
+@Corrected #define symbols to upper case.
+.,
+@
+text
+@d17 4
+@
+
+
+1.4
+log
+@Added object_file_version field.
+@
+text
+@d17 1
+a17 1
+/#define object_file_version/ {
+d21 1
+a21 1
+/#define opcode_.*/ {
+@
+
+
+1.3
+log
+@Added copyright message to generated files
+@
+text
+@d17 4
+@
+
+
+1.2
+log
+@Now deals with the magic number GOOD_MAGIC which goes at the
+start of the object file.
+@
+text
+@d2 2
+a3 1
+	print "\n(*";
+d7 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 1
+a5 1
+	print " * Generated from : opcodes.h";
+d11 4
+d16 1
+a16 1
+	 print("  val", $2, ": int")
+@

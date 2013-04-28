@@ -1,0 +1,68 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	98.05.07.11.57.18;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.09.06.15.46.00;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30292]
+Renamed from integer.sml
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@require "number";
+
+structure Integer : NUMBER =
+  struct
+
+    type 'a T = int
+
+    val zero = 0
+    val one = 1
+    val two = 2
+    val three = 3
+
+    fun successor n = n+1
+    fun add n m = n+m : int
+    fun multiply m n = n*m : int
+
+    fun reduce f a 0 = a
+      | reduce f a n = reduce f (f a) (n-1)
+
+  end
+@
+
+
+1.1
+log
+@new unit
+[Bug #30292]
+Renamed from integer.sml
+@
+text
+@@

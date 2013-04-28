@@ -1,0 +1,224 @@
+head	1.4;
+access;
+symbols
+	Final_version_of_old_runtime:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.08.07.08.44.47;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.08.05.09.53.10;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.24.10.40.07;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.23.11.22.54;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.08.07.08.44.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Global root manager
+@
+
+
+1.4
+log
+@Added weak_length and changed the type of weak_apply.
+@
+text
+@/*  ==== GLOBAL C ROOTS ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  The runtime system needs to maintain some global C roots, such as the
+ *  module table, debugger hook, etc.  These must be saved with a heap image
+ *  and restored when it is reloaded.  This code takes care of organising
+ *  the global roots.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: global.h,v $
+ *  Revision 1.3  1992/08/05  09:53:10  richard
+ *  Added weak list utilities.
+ *
+ *  Revision 1.2  1992/07/24  10:40:07  richard
+ *  Added a hook function to global roots.
+ *
+ *  Revision 1.1  1992/07/23  11:22:54  richard
+ *  Initial revision
+ *
+ */
+
+#ifndef global_h
+#define global_h
+
+#include "mltypes.h"
+
+
+/*  === DECLARE A ROOT AS GLOBAL ===
+ *
+ *  This function is similar to declare_root() except that the root is
+ *  remembered for inclusion in the global root (see below).  It performs an
+ *  implicit delcare_root().  The root must be given a unique name which is
+ *  used by global_pack() and global_unpack() to save and restore the root
+ *  in a value.  (The of the root is not used as its `name' to maintain
+ *  compatability between runtime systems and images.)
+ *
+ *  A pointer to a function may also be passed.  If this is not NULL then
+ *  rather than update the root, global_unpack() calls the function with the
+ *  root and its new value.
+ *
+ *  The string passed must not be updated or deallocated.
+ */
+
+extern void declare_global(const char *name, mlval *root, void (*f)(mlval *root, mlval value));
+
+
+/*  === PACK/UNPACK THE GLOBAL ROOTS ===
+ *
+ *  global_pack() packs the roots that have been declared as global together
+ *  in a single ML value, together with their declared names.
+ *  global_unpack() takes a value previously returned by global_pack() and
+ *  assigns the global roots from the values it contains.
+ *
+ *  global_unpack() returns zero iff the package passed does not match the
+ *  current declared global roots.
+ */
+
+extern mlval global_pack(void);
+extern int global_unpack(mlval package);
+
+
+
+/*  === ROOT UTILITIES ===
+ *
+ *  One of the common uses for global roots is to keep track of values on
+ *  the ML heap, but not to keep them alive by doing so.  These functions
+ *  administer lists of such values.
+ */
+
+
+/*  == Make a new list ==
+ *
+ *  The granularity paramter determines the size of the tables on the list.
+ *  It should be larger for lists which are expected to contain more values.
+ *  A good value for a small list is 16.
+ */
+
+extern mlval weak_new(size_t granularity);
+
+
+/*  == Add a value to a list ==
+ *
+ *  Returns the new list.  The list parameter may be updated and should not
+ *  be used again.
+ */
+
+extern mlval weak_add(mlval list, mlval value);
+
+
+/*  == Calculate length of list ==
+ *
+ *  Returns the number of elements in the list.
+ */
+
+extern size_t weak_length(mlval list);
+
+
+/*  == Fix values on a list ==
+ *
+ *  Applies the function f to all values on a list, including an index.  The
+ *  function should return a (possibly different) value to replace the value
+ *  to which it is applied.  This returned value may be DEAD to expunge the
+ *  value from the list.  Returns the new list.
+ */
+
+extern void weak_apply(mlval list, mlval (*f)(unsigned int index, mlval));
+
+
+#endif
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a14 3
+ *  Revision 1.4  1992/08/07  08:44:47  richard
+ *  Added weak_length and changed the type of weak_apply.
+ *
+@
+
+
+1.3
+log
+@Added weak list utilities.
+@
+text
+@d15 3
+d94 8
+d104 4
+a107 4
+ *  Applies the function f to all values on a list.  The function should
+ *  return a (possibly different) value to replace the value to which it is
+ *  applied.  This returned value may be DEAD to expunge the value from the
+ *  list.  Returns the new list.
+d110 1
+a110 1
+extern mlval weak_apply(mlval list, mlval (*f)(mlval));
+@
+
+
+1.2
+log
+@Added a hook function to global roots.
+@
+text
+@d15 3
+d61 39
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 4
+a17 1
+ *  $Log$
+d35 4
+d42 1
+a42 1
+extern void declare_global(const char *name, mlval *root);
+@

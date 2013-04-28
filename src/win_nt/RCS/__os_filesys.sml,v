@@ -1,0 +1,47 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.08.12.29.52;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Changed name from filesys inline with lastest filename conventions.
+@
+
+
+1.1
+log
+@new unit
+Changed name from filesys inline with lastest filename conventions.
+@
+text
+@(* FILE SYSTEM INTERFACE *)
+(*
+ * Copyright Harlequin Ltd. 1994.
+ *
+ * $Log: __filesys.sml,v $
+ * Revision 1.2  1996/01/18  16:23:46  stephenb
+ * OS reorganisation: Since the pervasive library no longer
+ * contains OS specific stuff, parameterise the functor with
+ * the Win32 structure.
+ *
+# Revision 1.1  1995/01/25  17:16:32  daveb
+# new unit
+# The OS.FileSys structure from the basis.
+#
+ *
+ *)
+
+require "_win_ntfilesys";
+require "__win32";
+
+structure OSFileSys_ = Win_ntFileSys (structure Win32 = Win32_)
+@

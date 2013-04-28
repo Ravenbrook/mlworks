@@ -1,0 +1,164 @@
+head	1.2;
+access;
+symbols
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+
+
+1.2
+date	92.11.30.18.29.27;	author matthew;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.10.26.15.24.11;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.11.30.18.29.27;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Generic stream objects
+@
+
+
+1.2
+log
+@No longer used.
+@
+text
+@NOT USED
+(*  ==== GENERALISED STREAMS ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Implementation
+ *  --------------
+ *  The implementation is very simple.  `Methods' for the various functions
+ *  are simply extracted from the record.  The `open_in' and `close_in'
+ *  functions are derived from the pervasive environment to act on
+ *  file-derived streams in the obvious way.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _stream.sml,v $
+Revision 1.1  1992/10/26  15:24:11  matthew
+Initial revision
+
+ *)
+
+require "stream";
+
+functor Stream () : STREAM =
+  struct
+
+    exception Io = Io
+
+    datatype instream =
+      instream of {input		: int -> string,
+                   lookahead		: unit -> string,
+                   end_of_stream	: unit -> bool,
+                   clear_eof		: unit -> unit,
+                   close_in		: unit -> unit}
+
+    fun open_in string =
+      let
+        val standard_instream = MLWorks.IO.open_in string
+      in
+        instream {input =	  fn int => MLWorks.IO.input (standard_instream, int),
+                  lookahead =	  fn ()  => MLWorks.IO.lookahead standard_instream,
+                  end_of_stream = fn ()  => MLWorks.IO.end_of_stream standard_instream,
+                  clear_eof =	  fn ()  => MLWorks.IO.clear_eof standard_instream,
+                  close_in =	  fn ()  => MLWorks.IO.close_in standard_instream}
+      end
+
+    fun end_of_stream (instream {end_of_stream, ...}) = end_of_stream ()
+    fun input (instream {input, ...}, int) = input int
+    fun clear_eof (instream {clear_eof, ...}) = clear_eof ()
+    fun lookahead (instream {lookahead, ...}) = lookahead ()
+    fun close_in (instream {close_in, ...}) = close_in ()
+
+    val std_in =
+      instream {input =	          fn int => MLWorks.IO.input (MLWorks.IO.std_in, int),
+                lookahead =	  fn ()  => MLWorks.IO.lookahead MLWorks.IO.std_in,
+                end_of_stream =   fn ()  => MLWorks.IO.end_of_stream MLWorks.IO.std_in,
+                clear_eof =	  fn ()  => MLWorks.IO.clear_eof MLWorks.IO.std_in,
+                close_in =	  fn ()  => MLWorks.IO.close_in MLWorks.IO.std_in}
+
+    datatype outstream =
+      outstream of {output	: string -> unit,
+                    flush_out	: unit -> unit,
+                    close_out	: unit -> unit}
+
+      
+
+    fun open_out string =
+      let
+        val standard_outstream = MLWorks.IO.open_out string
+      in
+        outstream {output =	fn string => MLWorks.IO.output (standard_outstream, string),
+                   flush_out =	fn ()     => MLWorks.IO.flush_out standard_outstream,
+                   close_out =	fn ()     => MLWorks.IO.close_out standard_outstream}
+      end
+
+    fun output (outstream {output, ...}, string) = output string
+    fun flush_out (outstream {flush_out, ...}) = flush_out ()
+    fun close_out (outstream {close_out, ...}) = close_out ()
+
+    local
+      val stream_ref = ref {output = fn s => MLWorks.IO.output(MLWorks.IO.std_out,s),
+                            flush_out = fn () => MLWorks.IO.flush_out MLWorks.IO.std_out,
+                            close_out = fn () => MLWorks.IO.close_out MLWorks.IO.std_out}
+    in
+      val std_out = outstream {output = fn s => (#output (!stream_ref)) s,
+                               flush_out = fn () => (#flush_out (!stream_ref))(),
+                               close_out = fn () => (#close_out(!stream_ref))()}
+      fun with_standard_output (outstream stream) f =
+        let
+          val oldstream = (!stream_ref)
+          val _ = stream_ref := stream
+          val result = f () handle exn => (stream_ref := oldstream; raise exn)
+        in
+          stream_ref := oldstream;
+          result
+        end
+    end
+  end;
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a15 3
+Revision 1.2  1992/11/30  18:29:27  matthew
+No longer used.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d15 4
+a18 1
+ *  $Log$
+d52 7
+d79 18
+@

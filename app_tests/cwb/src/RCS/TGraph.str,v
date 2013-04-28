@@ -1,0 +1,453 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.33.56;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: TGraph.str,v 1.4 1994/10/31 17:48:24 pxs Exp $";
+functor TGraph  ( structure PG   : POLYGRAPH;
+                  structure SL   : SORTEDLIST;
+                  structure Trie : TRIE;
+                  structure AS   : ACCSET;
+                    sharing type PG.act = AS.act ) : TGRAPH =
+struct
+   structure PG = PG
+   structure AS = AS
+
+   exception Empty_set
+
+(*****************************************************************************)
+(* S O R T I N G   A N D   M E R G I N G                                     *)
+(*                                                                           *)
+(* "st_ord" is an ordering on states, where the field "id" is the key.       *)
+(* "statesort" specializes "sort" to states, using "st_ord" as the ordering. *)
+(* "merge_state_sets" merges two sets (ordered lists) of states into one set.*)
+(* "merge_list_of_state_sets merges a list of sets (ordered lists) of states *)
+(*     into one set.                                                         *)
+(* "merge_list_of_suclists" merges a list of successor lists into one list.  *)
+(*     A successor list is a list of pairs of actions and state sets where:  *)
+(*         - the list of pairs is ordered on actions, and                    *)
+(*         - each state set is an ordered list of states, and                *)
+(*         - an action can appear in at most one pair.                       *)
+(* "coalesce_suclists" takes a list of deref'ed "suc" fields, dereferences   *)
+(*     the derivative lists in each "suc" field, and merges the result.      *)
+(*****************************************************************************)
+
+   fun st_ord (ref(PG.S{id=id1,...}),ref(PG.S{id=id2,...})) = (id1 <= id2)
+   fun statesort x = SL.sort st_ord true x
+   fun merge_state_sets x = SL.merge st_ord true x
+   fun merge_list_of_state_sets x = SL.bigmerge st_ord true x
+   fun merge_list_of_suclists x =
+       let fun pair_le ((a,_),(a',_)) = (PG.act_le(a,a'))
+           fun strip a [] = ([],[])
+             | strip a (L as (a',strefset)::t) =
+               if PG.act_le(a',a) then let val (L1,L2) = strip a t
+                                       in (strefset::L1,L2)
+                                      end
+               else ([],L)
+           fun coal [] = []
+             | coal (L as (a,_)::t) =
+               let val (strefsetl,rest) = strip a L
+                in (a,merge_list_of_state_sets strefsetl)::(coal rest)
+               end
+        in (coal o (SL.bigmerge pair_le false)) x
+       end
+   fun coalesce_suclists x = (merge_list_of_suclists o
+                           (map (map (fn (a,lref)=>(a,!lref))))) x
+
+(*****************************************************************************)
+(* F U N C T I O N S   I N V O L V I N G   T A U S                           *)
+(*                                                                           *)
+(* "tau_set" returns the set of tau_derivatives of a state.  It is assumed   *)
+(* this is stored in the field "taus" in the state (and that it is ordered). *)
+(*                                                                           *)
+(* "tau_closure" computes the transitive closure of a set (ordered list) of  *)
+(* states wrt the --tau--> relation.  The result is a set (ordered list) of  *)
+(* states.                                                                   *)
+(*****************************************************************************)
+
+   fun tau_set (ref(PG.S{taus,...})) = !taus
+   val ids_of = fn x => map (fn ref(PG.S{id,...}) => id) x
+   fun tau_closure strefset =
+       merge_list_of_state_sets (strefset::(map tau_set strefset))
+
+(*****************************************************************************)
+(* M I S C E L L A N E O U S   F U N C T I O N S                             *)
+(*                                                                           *)
+(* "insert" inserts a list of state ids (which are integers) into the given  *)
+(*     trie and binds the list to value v in the trie.                       *)
+(* "lookup" looks up a list of state ids in the given trie.                  *)
+(* "ids_of" computes the ids of a list of states.                            *)
+(* "deref_suc_field" returns the deref'ed suc field of the inputted state.   *)
+(* "massage_state" takes a state and performs the following:                 *)
+(*      (1) sorts each list of derivatives in the "suc" field, and           *)
+(*      (2) removes the tau derivatives from the "suc" field and stores them *)
+(*          in the "taus" field.                                             *)
+(*      (3) sets "mark" and "gldiv" to false (this is necessary for the      *)
+(*          correct computation of divergence information in the function    *)
+(*          "set_gldiv").                                                    *)
+(*     This function is intended to be used to "preprocess" the states in    *)
+(*     the old graph from which states in T/D-graphs will be constructed.    *)
+(*****************************************************************************)
+
+   val int_le : (int * int) -> bool = (op <=)
+   val insert = fn x => Trie.insert int_le x
+   val lookup = fn x => Trie.lookup int_le x
+   fun deref_suc_field (ref(PG.S{suc,...})) = !suc
+   fun massage_stref (ref(PG.S{suc,taus,mark,gldiv,...})) =
+       let fun sort_ders [] = []
+             | sort_ders ((a,derref)::tl) =
+               ( derref := statesort (!derref);
+                 if PG.act_eq(a,PG.tau) then
+                    ( taus := (!derref); sort_ders tl )
+                 else ((a,derref)::(sort_ders tl)) )
+        in suc := sort_ders (!suc);
+           mark := false;
+           gldiv := false
+       end
+
+(*****************************************************************************)
+(* M K D G R A P H                                                           *)
+(*                                                                           *)
+(* "mkDgraph" makes the deterministic trace-equivalent graph corresponding   *)
+(* to the transition graph corresponding to the given polygraph and init     *)
+(* function. The algorithm used is described on pp. 22-24 in "Introduction   *)
+(* to Automata Theory" by Hopcroft and Ullman; essentially, the states in    *)
+(* the deterministic graph being constructed correspond to sets of states in *)
+(* the original graph.  A trie is used to keep track of which sets of old    *)
+(* states have already been assigned new states.  The parameters have the    *)
+(* following meanings:                                                       *)
+(* g    - the input graph                                                    *)
+(* init - the "state intialization" function.  This function is used to      *)
+(*        create the info for a new state from an agent.                     *)
+(*****************************************************************************)
+
+   fun mkDgraph g init =
+       let val idnr = ref 0                (* counter used for state ids *)
+           val newg = ref []               (* the list of new states     *)
+           val env = ref (Trie.empty)      (* trie used to keep track of *)
+                                           (* which sets of old states   *)
+                                           (* are bound to new states    *)
+
+(*****************************************************************************)
+(* "initstate" takes a set (ordered list) of states and generates a new      *)
+(* state whose keycopy is that of the first state on the list *)
+(* and whose info field contains the value of the initialization function    *)
+(* applied to "stset".                                                       *)
+(*****************************************************************************)
+
+           fun initstate [] = raise Empty_set
+             | initstate (strefset as
+			  (ref(PG.S{keycopy=keycopy,...})::_)) =
+                  PG.S{keycopy = keycopy,
+                      id      = (inc idnr; !idnr),
+                      suc     = ref nil,
+                      prdiv   = false,
+                      gldiv   = ref false,
+                      info    = init strefset,
+                      taus    = ref nil,
+                      newtaus = ref nil,
+                      tauarr  = ref (Array.array (1,false)),
+                      mark    = ref false,
+                      p_id    = ref 1}
+
+(*****************************************************************************)
+(* "mkstate" returns the new state constructed for the set (ordered list) of *)
+(* ids of the tau closure of "stset" by looking up "stset" in the trie "env".*)
+(* If there is no such binding, a new state is created and the transitions   *)
+(* of the new state computed by calling "mklinks" with the updated env.      *)
+(* taucl    - the set of states reachable from "stset" via some number       *)
+(*            (possibly 0) of tau-moves.                                     *)
+(* ids      - the ids of states in "taucl".                                  *)
+(*****************************************************************************)
+
+           fun mkstate strefset =
+                   let val taucl = tau_closure strefset
+                       val ids = ids_of taucl
+                    in (lookup(ids,!env))
+                        handle Trie.Not_in_trie =>
+                           let val newstref = ref (initstate taucl)
+                            in newg := newstref::(!newg);
+                               env := insert (ids,newstref) (!env);
+                               mklinks newstref (coalesce_suclists
+                                       (map deref_suc_field taucl));
+                               newstref
+                           end
+                   end
+
+(*****************************************************************************)
+(* "mklinks" builds the successor list for a state on the basis of a list    *)
+(* of action-list of (old) state pairs.  If the list is empty, nothing needs *)
+(* to be done.  Otherwise, add an action-list of new state pair, where the   *)
+(* only element on the list of new states is the new state corresponding to  *)
+(* the list of old states.                                                   *)
+(*****************************************************************************)
+
+           and mklinks _ [] = ()
+             | mklinks (stref as (ref(PG.S{suc,...}))) ((a,ders)::tl) =
+                   (mklinks stref tl;
+                    suc := (a,ref [mkstate ders])::(!suc))
+           val (stref,streflist) = PG.transcl g
+        in app massage_stref streflist; (mkstate [stref],!newg)
+       end
+
+(*****************************************************************************)
+(* S T A B I L I T Y   A N D   A C T I O N   S E T S                         *)
+(*                                                                           *)
+(* "stable" determines is a predicate on states that is true of states that  *)
+(*          are stable (have no tau-derivatives).                            *)
+(* "actset" returns the set (ordered list) of actions a state may            *)
+(*          perform.                                                         *)
+(* "actsets_of_stabsts returns the list of action sets of the                *)
+(*          stable states on the inputted list of states.                    *)
+(*****************************************************************************)
+
+   fun stable x = (null o tau_set) x
+   fun actset (ref(PG.S{suc,...})) = map fst (!suc)
+   fun actsets_of_stabsts [] = []
+     | actsets_of_stabsts (sref::tl) =
+       let val actsets_of_tail = actsets_of_stabsts tl
+        in if (stable sref) then (actset sref)::actsets_of_tail
+           else actsets_of_tail
+       end
+
+(*****************************************************************************)
+(* O P E N   N O D E S   A N D   D I V E R G E N C E                         *)
+(*                                                                           *)
+(* "stmem" determines if the given state is a member of a given list of      *)
+(*    states.  Note that the list need not be ordered.                       *)
+(* "is_open" determines if a state is open, assuming that the "gldiv" field  *)
+(*    has been set appropriately at some point.                              *)
+(* "exists_open_state" returns true if the list of states fed in as an argu- *)
+(*    ment has an open state on it (assuming that the "gldiv" field has been *)
+(*    set appropriately for each state in the list).                         *)
+(* "set_gldiv" determines if a state is open and stores this information in  *)
+(*    the "gldiv" field of the state. For the purposes of testing equivalen- *)
+(*    ces and preorders, a state (in a transition graph where the transitive *)
+(*    closure of --t--> has been computed) can be open in one of three ways. *)
+(*      (1) The state is underspecified.  This holds if "prdiv" is true.     *)
+(*      (2) The state is a tau-derivative of itself.                         *)
+(*      (3) The state has a tau-derivative that is globally divergent.       *)
+(*    For technical reasons, the "mark" field is set to true if the state is *)
+(*    found not to be globally divergent.                                    *)
+(*    NOTE:  This function only works properly if the --tau--> relation in   *)
+(*           the original graph is transitive!  This insures that there is   *)
+(*           no possibility of an infinite loop.                             *)
+(*****************************************************************************)
+
+   fun stmem stref [] = false
+     | stmem (stref as (ref(PG.S{id=id1,...}))) ((ref(PG.S{id=id2,...}))::tl) =
+          (id1 = id2) orelse (stmem stref tl)
+   fun is_open (PG.S{gldiv,...}) = (!gldiv)
+   val exists_open_state = fn x => exists (fn x => is_open(!x)) x
+   fun set_gldiv (stref as (ref(PG.S{prdiv,gldiv,mark,...}))) =
+       if (!gldiv) orelse (!mark) then ()
+       else if prdiv then gldiv := true
+       else let val taus = tau_set stref
+             in if (stmem stref taus) then gldiv := true
+                else ( app set_gldiv taus;
+                       if (exists_open_state taus) then gldiv := true
+                       else mark := true )
+            end
+
+(*****************************************************************************)
+(* "buildTgraph" is used to construct both Tgraphs and STgraphs; which is    *)
+(* constructed depends on the value of the parameter "Tflag".  If "Tflag" is *)
+(* "true", then the Tgraph corresponding to the other three parameters is    *)
+(* built; if "Tflag" is "false", then the STgraph is built.                  *)
+(*****************************************************************************)
+
+   fun buildTgraph Tflag g init =
+       let val idnr = ref 0                 (* counter used for state ids *)
+           val newg = ref []                (* the list of new states     *)
+           val env  = ref (Trie.empty)      (* environment used to keep   *)
+                                            (* track of sets of old states*)
+                                            (* bound to new states.       *)
+
+(*****************************************************************************)
+(* "initstate" builds a new state on the basis of a set (list) of states and *)
+(* a boolean value representing whether or not a previous new state is open. *)
+(* Note that the info field is computed by applying the function "init" to   *)
+(* the list of old states *and* the accset corresponding to the list of old  *)
+(* states.  Also note that "divergence information" (contained in the        *)
+(* "openp" parameter) is stored both in "prdiv" and in "gldiv".              *)
+(*****************************************************************************)
+
+           fun initstate [] openp = raise Empty_set
+             | initstate (strefset as
+			  ((ref(PG.S{keycopy=keycopy,...}))::_)) openp =
+                PG.S{keycopy=keycopy,
+                     id      = (idnr := (!idnr) + 1; (!idnr)),
+                     suc     = ref nil,
+                     prdiv   = openp,
+                     gldiv   = ref openp,
+                     info    = let val accset =
+                                       if openp then AS.empty
+                                       else AS.mkaccset
+                                            (actsets_of_stabsts strefset)
+                                in init strefset accset
+                               end,
+                     taus    = ref nil,
+                     newtaus = ref nil,
+                     tauarr  = ref (Array.array (1,false)),
+                     mark    = ref false,
+                     p_id    = ref 1 }
+
+(*****************************************************************************)
+(* In a Tgraph, every successor of an "open" node must itself be open.  This *)
+(* implies that it is possible for the same set of old states to give rise   *)
+(* to two new states, one with no divergent ancestor and one with a divergent*)
+(* ancestor. Accordingly, the trie used to store information about the new   *)
+(* states that old sets of states correspond to may have to associate two new*)
+(* states with the sets of old states in the trie. To handle this eventuality*)
+(* efficiently, the value associated with a set of old states in the         *)
+(* "environment trie" is a reference to a list of new states. One of these   *)
+(* lists will have either one or two elements, one for the "open" and one for*)
+(* the "closed" case.                                                        *)
+(*                                                                           *)
+(* "maniplref" handles these references to lists of new states. It           *)
+(* is called by "mkstate" when it has been determined that a set of states is*)
+(* bound to something in the "environment trie" (which is the parameter "e"  *)
+(* to this function). "maniplref" determines if there is a state in          *)
+(* the list (pointed to by "lref") whose "openness" is the same as that of   *)
+(* the boolean parameter b. If there is such a state, it is returned; other- *)
+(* wise, a new state is constructed, "newg" and "lref" updated, and "mklink" *)
+(* called. Notice that if there are two states on the list then one of them  *)
+(* must be the appropriate state to return.                                  *)
+(*****************************************************************************)
+
+           fun maniplref lref taucl b =
+               ( case (!lref) of
+                 [stref] => if (b = (is_open (!stref))) then stref
+                            else let val newstref = ref(initstate taucl b)
+                                  in newg := newstref::(!newg);
+                                     lref := newstref::(!lref);
+
+(*****************************************************************************)
+(* If "Tflag" is true, or if the state we've just built is closed, then we   *)
+(* want to construct the successors of the state.  If "Tflag" is false, then *)
+(* an STgraph is being constructed, and if the state is open then we should  *)
+(* not build any successors for the state.  Note that "b" is "true" iff the  *)
+(* state is open.                                                            *)
+(*****************************************************************************)
+
+                                     if Tflag orelse (not b) then
+                                        mklinks newstref
+                                         (coalesce_suclists
+                                          (map deref_suc_field taucl))
+                                     else ();
+                                     newstref
+                                 end
+               | [sref1,sref2] =>  if b = (is_open (!sref1)) then sref1
+                                   else sref2
+	       | _ => raise Panic )	(* shouldn't happen *)
+
+(*****************************************************************************)
+(* "mkstate" returns a state associated with the set "stset" of old states.  *)
+(* It does so by calling "maniplref" on the list reference associ-           *)
+(* ated with "stset" in the "environment trie" "env".  If there is no such   *)
+(* reference, then a new state is built, added to "newg", and "mklinks"      *)
+(* called with the environment updated by binding "stset" to a reference to  *)
+(* a list containing only the new state.                                     *)
+(*****************************************************************************)
+
+           and mkstate strefset openp =
+               let val taucl = tau_closure strefset
+                   val ids = ids_of taucl
+                   val open_pred = openp orelse
+                                   (exists_open_state taucl)
+                in (maniplref (lookup(ids,!env)) taucl open_pred)
+                   handle Trie.Not_in_trie =>
+                      let val newstref = ref(initstate taucl open_pred)
+                       in newg := newstref::(!newg);
+                          env  := insert (ids, ref [newstref]) (!env);
+
+(*****************************************************************************)
+(* As in "maniplref", we only want to build the successors of the            *)
+(* new state if we are building a Tgraph, or if not, then if the state is    *)
+(* closed.                                                                   *)
+(*****************************************************************************)
+
+                          if (Tflag orelse (not open_pred)) then
+                             mklinks newstref (coalesce_suclists
+                                     (map deref_suc_field taucl))
+                          else ();
+                          newstref
+                      end
+               end
+
+(*****************************************************************************)
+(* "mklinks" constructs the successor list of a given state "st" in exactly  *)
+(* the same way "mklinks" does in "mkDgraph.                                 *)
+(*****************************************************************************)
+
+           and mklinks _ [] = ()
+             | mklinks (stref as (ref(PG.S{suc,gldiv,...}))) ((a,ders)::tl) =
+               ( mklinks stref tl;
+                 suc := (a,ref [mkstate ders (!gldiv)])::(!suc) )
+
+           val (stref,streflist) = PG.transcl g
+
+        in app massage_stref streflist;
+           app set_gldiv streflist;
+           (mkstate [stref] false,!newg)
+       end
+
+(*****************************************************************************)
+(* M K T G R A P H   A N D   M K S T G R A P H                               *)
+(*                                                                           *)
+(* These functions are the obvious specializations of "buildTgraph".  Note   *)
+(* that a strange feature of the implementation of the type checking         *)
+(* algorithm prevents defining these as their eta-reduced equivalents, eg:   *)
+(*    val mkTgraph = buildTgraph true                                        *)
+(*    val mkSTgraph = buildTgraph false                                      *)
+(*****************************************************************************)
+
+   fun mkTgraph x = buildTgraph true x
+   fun mkSTgraph x = buildTgraph false x
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

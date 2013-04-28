@@ -1,0 +1,119 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	95.04.19.23.37.57;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.27.15.48.58;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.2
+log
+@General updating to reach prototype level for ML FI.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_STRUCTURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_struct.sml,v $
+# Revision 1.1  1995/03/27  15:48:58  brianm
+# new unit
+# New file.
+#
+ *
+ *)
+
+require "fi_types";
+
+signature FOREIGN_STRUCTURE =
+   sig
+
+     structure FITypes : FOREIGN_TYPES
+
+     type name
+     type filename
+
+       sharing type name       = FITypes.name  
+       sharing type filename   = FITypes.filename
+
+     type foreign_module
+     type foreign_structure
+
+     datatype load_mode = IMMEADIATE_LM | DEFERRED_LM
+
+     val load_structure : filename * load_mode -> foreign_structure
+     val file_info : foreign_structure -> (filename * load_mode)
+
+     val files_loaded : unit -> filename list
+     val symbols      : foreign_structure -> name list
+
+     datatype value_type = CODE_VT | VAR_VT | NONE_VT
+
+     val symbol_info : foreign_structure * name -> value_type
+
+     val module : foreign_structure -> foreign_module
+
+   end;
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d1 1
+a1 1
+(*  ==== FOREIGN INTERFACE : FOREIGN_STRUCT ====
+d11 5
+a15 1
+ *  $Log$
+d19 1
+d21 1
+a21 1
+signature FOREIGN_STRUCT =
+d24 9
+d35 1
+a35 1
+     eqtype filename
+d37 2
+a38 1
+     datatype load_type = IMMEADIATE | DYNAMIC
+d40 2
+a41 2
+     val load_object : filename * load_type -> foreign_structure
+     val file_info : foreign_structure -> (filename * load_type)
+d43 1
+a43 2
+     val files_loaded : () -> filename list
+     val symbols : foreign_structure -> string list
+d45 1
+a45 1
+     datatype object_type = CODE | VAR
+d47 1
+a47 1
+     val symbol_info : foreign_structure * string -> object_type option
+@

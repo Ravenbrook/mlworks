@@ -1,0 +1,173 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	92.02.28.15.25.19;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.02.27.15.28.43;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.02.28.15.25.19;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Sets with given equality function to avoid inefficiencies of
+polymorphic eqaulity
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@(* _eqset.sml the functor *)
+(*
+$Log: _eqset.sml,v $
+Revision 1.1  1992/02/27  15:28:43  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "set";
+require "eqset";
+	
+functor EqSet(
+  structure Set : SET
+  structure EqType :
+	    sig
+	      eqtype el_type
+              val el_eq : el_type * el_type -> bool
+	    end
+) : EQSET =
+
+  struct
+    structure Set = Set
+    (* standard list functions - could import from List *)
+
+    fun length l =
+      let
+	fun len (acc,[]) = acc
+	| len (acc,_::ls) = len(acc+1,ls)
+      in 
+	len (0,l)
+      end
+
+    fun reduce_left f =
+      let 
+	fun itl (i,[]) = i
+	| itl (i,x::xs) = itl(f(x,i),xs)
+      in 
+	itl
+      end
+
+    type el_type = EqType.el_type
+    type EqSet = el_type list
+
+    val eqfn = EqType.el_eq
+    val empty_set = []
+
+    fun empty_setp [] = true
+    | empty_setp _ = false
+
+    fun is_member(_, []) = false
+    | is_member(a,h::t) = eqfn(a, h) orelse is_member (a,t)
+
+    fun add_member (m,l) = if is_member (m,l) then l else m::l
+
+    fun singleton e = [e]
+
+    fun union ([],l) = l
+    | union (h::t,l) = union (t,add_member (h,l))
+
+    fun intersection(set1,set2) =
+      let 
+	fun intersect(result,h::t,set) = 
+	  if is_member (h,set)
+	    then intersect(h::result,t,set)
+	  else intersect(result,t,set)
+	| intersect(result,[],set) = result
+      in
+	case set2 of
+	  [] => []
+	| _ => intersect([],set1,set2)
+      end
+
+    fun subset ([],l2) = true
+    | subset (h::t,l2) = 
+      is_member (h,l2) 
+      andalso 
+      subset (t,l2)
+
+    fun setdiff ([],_) = []
+    | setdiff (h::t,l) =
+      if is_member (h,l) 
+	then setdiff(t,l) else h::setdiff(t,l)
+
+    fun seteq(set1,set2) =
+      (length(set1) = length(set2)) andalso subset(set1,set2)
+	  
+    fun set_to_list set = set
+
+    fun set_to_set set = Set.list_to_set set
+
+    fun list_to_set alist = reduce_left add_member (empty_set,alist)
+
+    val map = fn f => fn s => Set.list_to_set (map f s)
+
+    fun set_print ([], _) = ""
+    | set_print(x, printfun) =
+      let
+	fun print_sub([], acc) = implode(rev acc)
+	| print_sub([x], acc) = implode(rev(printfun x :: acc))
+	| print_sub(x :: xs, acc) = print_sub(xs, "," :: printfun x :: acc)
+      in
+	print_sub(x, [])
+      end
+  end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/02/28  15:25:19  jont
+*** empty log message ***
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d89 2
+@

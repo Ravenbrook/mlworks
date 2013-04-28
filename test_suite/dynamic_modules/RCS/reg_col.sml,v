@@ -1,0 +1,85 @@
+head	1.2;
+access;
+symbols
+	ML_beta_release_12/08/94:1.2
+	ML_beta_release_03/08/94:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.03.24.13.17.00;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.02.16.17.13.13;	author johnk;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Removed loop part pending production of a better test
+@
+text
+@(*
+Register colouring failure checker, for bug 495
+Result: OK
+ 
+$Log: reg_col.sml,v $
+# Revision 1.1  1994/02/16  17:13:13  johnk
+# new file
+#
+Copyright (c) 1994 Harlequin Ltd.
+*)
+
+functor TTYListener (
+  val with_standard_input : (unit -> 'a) -> 'a
+  val with_debugger_type : (unit -> 'a) -> 'a
+          ) =
+struct
+  val strref = ref ""
+
+  fun loop () =
+    (let 
+       val _ = output(std_out, "Hello world\n")
+       val _ = strref := ""
+     in
+       with_debugger_type
+       (fn _ =>
+	with_standard_input
+	(fn _ => (output (std_out, "calling handler\n"); ([], true))))
+     end
+   handle Interrupt => ([],false);
+     loop())
+
+end;
+
+structure Foo =
+  TTYListener(val with_standard_input = fn f => f() val with_debugger_type = fn f => f ());
+
+(*
+val _ = Foo.loop()
+*)
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d5 4
+a8 1
+$Log$
+d37 1
+d39 1
+@

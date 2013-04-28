@@ -1,0 +1,131 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.11.56.31;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.29.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991,1994 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+
+(* Constraints, external and internal view *)
+(* There is an ugly SourceGroup bug workaround in here
+   -fp Tue Apr 28 10:03:28 1992 *)
+(* Added unify_failure -er *)
+
+signature CONSTRAINTS_DATATYPES =
+sig
+
+  structure Term : TERM
+
+  datatype eqterm
+   = Rigid of Term.term * (Term.term * Term.term list)
+   | Gvar of Term.term * (Term.term * Term.term list)
+   | Flex of Term.term * Term.term
+   | Abstraction of Term.term
+   | Quant of Term.term
+   | Any of Term.term
+
+   datatype dpair = Dpair of eqterm * eqterm
+
+   datatype constraint = Con of dpair list
+
+end
+
+signature CONSTRAINTS =
+sig
+
+  include CONSTRAINTS_DATATYPES 
+
+  datatype unify_failure
+   = FailArgs 
+   | FailOccursCheck of Term.term
+   | FailFuntype of Term.occurs * Term.term
+   | FailClash of Term.term * Term.term
+   | FailDependency of Term.term * Term.term * Term.term list * Term.term list
+
+  exception Nonunifiable of unify_failure
+
+  val bare_term : eqterm -> Term.term
+
+  val mkDpair : eqterm * eqterm -> dpair
+
+  val empty_constraint : constraint
+  val is_empty_constraint : constraint -> bool
+  val makestring_constraint : constraint -> string
+
+  val makestring_unify_failure : unify_failure -> string
+  val makestring_dpair : dpair -> string
+  val makestring_dset : dpair list -> string
+
+  (* anno makes obvious annotations, reclassify tries hard *)
+  val anno : Term.term -> eqterm
+  val reclassify : Term.term -> eqterm
+
+end  (* signature CONSTRAINTS *)
+
+
+signature CONSTRAINTS_ABSTRACT =
+sig
+
+  structure Term : TERM
+
+  datatype unify_failure
+   = FailArgs 
+   | FailOccursCheck of Term.term
+   | FailFuntype of Term.occurs * Term.term
+   | FailClash of Term.term * Term.term
+   | FailDependency of Term.term * Term.term * Term.term list * Term.term list
+
+  exception Nonunifiable of unify_failure
+
+  type constraint
+  val empty_constraint : constraint
+  val is_empty_constraint : constraint -> bool
+  val makestring_constraint : constraint -> string
+  val makestring_unify_failure : unify_failure -> string
+
+end  (* signature CONSTRAINTS_ABSTRACT *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,517 @@
+head	1.5;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	92.09.09.16.16.07;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.09.08.11.53.06;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.09.04.08.32.49;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.08.31.17.32.32;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.08.28.15.41.23;	author richard;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.09.09.16.16.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compilation error handler.
+@
+
+
+1.5
+log
+@Oops!  The default action of report was to stop.
+@
+text
+@(*  ==== COMPILATION ERROR HANDLING ====
+ *                FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _error.sml,v $
+ *  Revision 1.4  1992/09/08  11:53:06  richard
+ *  Changed wrap function to narrow the error limits rather than just
+ *  setting them.  This helps nested wraps.
+ *
+ *  Revision 1.3  1992/09/04  08:32:49  richard
+ *  Eliminated the 'a result type and made behaviour of wrap
+ *  consistent with that of report.
+ *
+ *  Revision 1.2  1992/08/31  17:32:32  richard
+ *  Many improvements.
+ *
+ *)
+
+require "../utils/lists";
+require "../utils/integer";
+require "../utils/option";
+require "../basics/location";
+require "error";
+
+functor Error (structure Lists		: LISTS
+               structure Integer	: INTEGER
+               structure Location	: LOCATION
+               structure Option		: OPTION
+
+               val default_stream : outstream) : ERROR =
+  struct
+    structure Location = Location
+
+    val stream = ref default_stream
+
+    datatype severity =
+      ADVICE |                          (* e.g. `unnecessary op' *)
+      WARNING |                         (* legal, but odd *)
+      NONSTANDARD |                     (* non-standard, but understood *)
+      RECOVERABLE |                     (* recoverable error *)
+      FATAL |                           (* can't continue *)
+      EXTERNAL_FAULT |                  (* fault external to compiler *)
+      FAULT                             (* fault in the compiler *)
+
+    datatype error =
+      ERROR of severity * Location.T * string
+
+    local
+      fun sort ADVICE = 0
+        | sort WARNING = 1
+        | sort NONSTANDARD = 2
+        | sort RECOVERABLE = 3
+        | sort FATAL = 4
+        | sort FAULT = 4
+        | sort EXTERNAL_FAULT = 4
+    in
+      val (op<) = fn (s1, s2) => sort s1 < sort s2
+    end
+
+    exception Stop of error
+
+    val stop_limits = ref ([] : severity list)
+    val finish_limits = ref ([] : severity list)
+    val warn_limits = ref ([] : severity list)
+    val errors = ref ([] : error Option.T ref list)
+
+    fun stops severity =
+      let
+        val limit =
+          case !stop_limits of
+            limit::_ => limit
+          | [] => FATAL
+      in
+        not (severity < limit)
+      end
+
+    fun write (ERROR (severity, location, message)) =
+      let
+        val print =
+          Lists.iterate (fn s => MLWorks.IO.output_string (!stream, s))
+      in
+        print [Location.to_string location, ": "];
+        print
+        [case severity
+           of ADVICE => "advice"
+            | WARNING => "warning"
+            | NONSTANDARD => "non-SML feature"
+            | RECOVERABLE => "error"
+            | FATAL => "fatal error"
+            | FAULT => "compiler fault"
+            | EXTERNAL_FAULT => "external fault",
+         ": ", message, "\n"]
+      end
+
+    fun wrap (stop_limit, finish_limit, warn_limit) function argument =
+      let
+        val outer_stop = !stop_limits
+        val outer_warn = !warn_limits
+        val outer_finish = !finish_limits
+        val outer_errors = !errors
+        val error = ref Option.ABSENT
+
+        local
+          fun narrow (l, []) = l
+            | narrow (l, limit::_) = if limit < l then limit else l
+        in
+          val stop_limit = narrow (stop_limit, outer_stop)
+          val finish_limit = narrow (finish_limit, outer_finish)
+        end
+      in
+        stop_limits   := stop_limit   :: outer_stop;
+        warn_limits   := warn_limit   :: outer_warn;
+        finish_limits := finish_limit :: outer_finish;
+        errors        := error        :: outer_errors;
+        let
+          val result = function argument
+        in
+          case !error of
+            Option.ABSENT => ()
+          | Option.PRESENT (error as ERROR (severity, _, _)) =>
+              if severity < finish_limit then
+                ()
+              else
+                raise Stop error;
+          stop_limits   := outer_stop;
+          warn_limits   := outer_warn;
+          finish_limits := outer_finish;
+          errors        := outer_errors;
+          result
+        end
+        handle Stop error =>
+          (stop_limits   := outer_stop;
+           warn_limits   := outer_warn;
+           finish_limits := outer_finish;
+           errors        := outer_errors;
+           raise Stop error)
+      end
+
+    and report (error as ERROR (severity, location, message)) =
+      case (!stop_limits, !warn_limits, !errors) of
+        ([], [], []) =>
+          (write error; if severity < FATAL then () else raise Stop error)
+      | (stop_limit::_, warn_limit::_, error'::_) =>
+          (if severity < warn_limit then () else write error;
+           if severity < stop_limit then
+             if
+               case !error' of
+                 Option.ABSENT => true
+               | Option.PRESENT (ERROR (severity', _, _)) => severity' < severity 
+             then
+               error' := Option.PRESENT error
+             else
+               ()
+           else
+             raise Stop error)
+      | _ =>
+          let
+            val fault = 
+              (ERROR (FAULT, Location.UNKNOWN, "Stacks unbalanced in error handler"))
+          in
+            write error;
+            write fault;
+            raise Stop fault
+          end
+
+    and report' error =
+      (report error;
+       raise Stop error)
+
+  end;
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 3
+ *  Revision 1.5  1992/09/09  16:16:07  richard
+ *  Oops!  The default action of report was to stop.
+ *
+@
+
+
+1.4
+log
+@Changed wrap function to narrow the error limits rather than just
+setting them.  This helps nested wraps.
+@
+text
+@d9 4
+d143 25
+a167 24
+      case (!stop_limits, !warn_limits, !errors)
+        of ([], [], []) => (write error; raise Stop error)
+         | (stop_limit::_, warn_limit::_, error'::_) =>
+             (if severity < warn_limit then () else write error;
+              if severity < stop_limit then
+                if
+                  case !error' of
+                    Option.ABSENT => true
+                  | Option.PRESENT (ERROR (severity', _, _)) => severity' < severity 
+                then
+                  error' := Option.PRESENT error
+                else
+                  ()
+              else
+                raise Stop error)
+         | _ =>
+             let
+               val fault = 
+                 (ERROR (FAULT, Location.UNKNOWN, "Stacks unbalanced in error handler"))
+             in
+               write error;
+               write fault;
+               raise Stop fault
+             end
+@
+
+
+1.3
+log
+@Eliminated the 'a result type and made behaviour of wrap
+consistent with that of report.
+@
+text
+@d9 4
+d62 1
+a62 1
+    val stop_flags = ref ([] : error Option.T ref list)
+d64 1
+d66 9
+a74 7
+    fun stops ADVICE = false
+      | stops WARNING = false
+      | stops NONSTANDARD = false
+      | stops RECOVERABLE = false
+      | stops FATAL = true
+      | stops EXTERNAL_FAULT = true
+      | stops FAULT = true
+d94 1
+a94 1
+    fun wrap (stop_limit, warn_limit) function argument =
+d96 13
+a108 4
+        val old_stop = !stop_limits
+        val old_warn = !warn_limits
+        val old_flags = !stop_flags
+        val stop_flag = ref Option.ABSENT
+d110 4
+a113 3
+        stop_limits := stop_limit :: old_stop;
+        warn_limits := warn_limit :: old_warn;
+        stop_flags  := stop_flag  :: old_flags;
+d117 12
+a128 7
+          case !stop_flag
+            of Option.PRESENT error => raise Stop error
+             | Option.ABSENT =>
+               (stop_limits := old_stop;
+                warn_limits := old_warn;
+                stop_flags  := old_flags;
+                result)
+d131 4
+a134 3
+          (stop_limits := old_stop;
+           warn_limits := old_warn;
+           stop_flags  := old_flags;
+d139 3
+a141 5
+      case (!stop_limits, !warn_limits, !stop_flags)
+        of ([], [], []) =>
+          (write error;
+           if stops severity then raise Stop error else ())
+         | (stop_limit::_, warn_limit::_, stop_flag::_) =>
+d143 11
+a153 7
+                if severity < stop_limit then () else
+                  if stops severity then
+                    raise Stop error
+                  else
+                    case !stop_flag
+                      of Option.ABSENT => stop_flag := Option.PRESENT error
+                       | Option.PRESENT _ => ())
+@
+
+
+1.2
+log
+@Many improvements.
+@
+text
+@d8 4
+a11 1
+ *  $Log$
+d17 1
+d20 6
+a25 3
+functor Error (structure Lists : LISTS
+               structure Integer : INTEGER
+               structure Option : OPTION) : ERROR =
+d27 1
+d29 1
+a29 1
+    val stream = ref std_out
+a39 6
+    datatype location =
+      UNKNOWN |
+      FILE of string |
+      LINE of string * int |
+      POSITION of string * int * int
+
+d41 1
+a41 5
+      ERROR of severity * location * string
+
+    datatype 'a result =
+      SUCCESS of 'a |
+      FAILURE of error
+d61 26
+d106 1
+a106 1
+                SUCCESS result)
+d112 1
+a112 1
+           FAILURE error)
+d115 23
+a137 51
+    fun write (ERROR (severity, location, message)) =
+      let
+        val print =
+          Lists.iterate (fn s => MLWorks.IO.output_string (!stream, s))
+      in
+        case location
+          of UNKNOWN => ()
+           | FILE file                     => print [file, ": "]
+           | LINE (file, line)             => print [file, ":", Integer.makestring line, ": "]
+           | POSITION (file, line, column) => print [file, ":", Integer.makestring line, ",",
+                                                     Integer.makestring column, ": "];
+        print
+        [case severity
+           of ADVICE => "advice"
+            | WARNING => "warning"
+            | NONSTANDARD => "non-SML feature"
+            | RECOVERABLE => "error"
+            | FATAL => "fatal error"
+            | FAULT => "compiler fault"
+            | EXTERNAL_FAULT => "external fault",
+         ": ", message, "\n"]
+      end
+
+    fun report (error as ERROR (severity, location, message)) =
+      let
+        val (stop_limit, warn_limit, stop_flag) =
+          case (!stop_limits, !warn_limits, !stop_flags)
+            of ([], [], []) => (write error; raise Stop error)
+             | (stop_limit::_, warn_limit::_, stop_flag::_) =>
+                 (stop_limit, warn_limit, stop_flag)
+             | _ =>
+               let
+                 val fault = 
+                   (ERROR (FAULT, UNKNOWN, "Stacks unbalanced in error handler"))
+               in
+                 write error;
+                 write fault;
+                 raise Stop fault
+               end
+      in
+        if severity < warn_limit then () else write error;
+        if severity < stop_limit then () else
+          case severity
+            of ADVICE => stop_flag := Option.PRESENT error
+             | WARNING => stop_flag := Option.PRESENT error
+             | NONSTANDARD => stop_flag := Option.PRESENT error
+             | RECOVERABLE => stop_flag := Option.PRESENT error
+             | FATAL => raise Stop error
+             | EXTERNAL_FAULT => raise Stop error
+             | FAULT => raise Stop error
+      end
+d139 1
+a139 1
+    fun report' error =
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d13 1
+d17 2
+a18 1
+               structure Integer : INTEGER) : ERROR =
+d59 3
+a61 2
+    val stop = ref ([] : severity list)
+    val warn = ref ([] : severity list)
+d65 4
+a68 2
+        val old_stop = !stop
+        val old_warn = !warn
+d70 19
+a88 13
+        (stop := stop_limit :: old_stop;
+         warn := warn_limit :: old_warn;
+         let
+           val result = function argument
+         in
+           stop := old_stop;
+           warn := old_warn;
+           SUCCESS result
+         end
+         handle Stop error =>
+           (stop := old_stop;
+            warn := old_warn;
+            FAILURE error))
+d91 1
+a91 1
+    fun report (error as ERROR (severity, location, message)) =
+a92 8
+        val stop_limit =
+          case !stop
+            of [] => raise Stop error
+             | stop_limit::_ => stop_limit
+        val warn_limit =
+          case !warn
+            of [] => raise Stop error
+             | warn_limit::_ => warn_limit
+d96 45
+a140 23
+        if severity < warn_limit then
+          ()
+        else
+          (case location
+             of UNKNOWN => ()
+              | FILE file                     => print [file, ": "]
+              | LINE (file, line)             => print [file, ":", Integer.makestring line, ": "]
+              | POSITION (file, line, column) => print [file, ":", Integer.makestring line, ",",
+                                                        Integer.makestring column, ": "];
+           print
+           [case severity
+              of ADVICE => "advice"
+               | WARNING => "warning"
+               | NONSTANDARD => "non-SML feature"
+               | RECOVERABLE => "error"
+               | FATAL => "fatal error"
+               | FAULT => "compiler fault"
+               | EXTERNAL_FAULT => "external fault",
+            ": ", message, "\n"]);
+        if severity < stop_limit then
+          ()
+        else
+          raise Stop error
+d142 4
+@

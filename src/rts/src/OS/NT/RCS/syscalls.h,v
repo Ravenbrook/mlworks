@@ -1,0 +1,337 @@
+head	1.4;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.02.13.16.24.12;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.01.15.16.13.25;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.08.02.16.13.33;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.12.14.24.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.4
+log
+@Add GetSystemInfo template
+@
+text
+@/*  ==== NT SYSCALL DECLARATIONS HEADER ====
+ *
+ *  Copyright (C) 1994 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  This header declares system calls which are not declared in
+ *  system header files. 
+ *
+ *  $Id: src:OS:NT:syscalls.h,v 1.3 1996/01/15 16:13:25 matthew Exp $
+ *  $Log: src:OS:NT:syscalls.h,v $
+ * Revision 1.3  1996/01/15  16:13:25  matthew
+ * Adding some more stuff
+ *
+ *
+ */
+
+#ifndef syscall_h
+#define syscall_h
+
+#include "win32_syscalls.h"
+#endif /* syscall_h */
+@
+
+
+1.3
+log
+@Adding some more stuff
+@
+text
+@d10 1
+a10 1
+ *  $Id: src:OS:NT:syscalls.h,v 1.2 1995/08/02 16:13:33 jont Exp $
+d12 3
+d21 1
+a21 85
+typedef void *LPVOID;
+typedef unsigned long DWORD;
+#define PAGE_NOACCESS          0x01
+#define PAGE_READONLY          0x02
+#define PAGE_READWRITE         0x04
+#define PAGE_WRITECOPY         0x08
+#define PAGE_EXECUTE           0x10
+#define PAGE_EXECUTE_READ      0x20
+#define PAGE_EXECUTE_READWRITE 0x40
+#define PAGE_EXECUTE_WRITECOPY 0x80
+#define PAGE_GUARD            0x100
+#define PAGE_NOCACHE          0x200
+#define MEM_COMMIT           0x1000
+#define MEM_RESERVE          0x2000
+#define MEM_DECOMMIT         0x4000
+#define MEM_RELEASE          0x8000
+#define MEM_FREE            0x10000
+#define MEM_PRIVATE         0x20000
+#define MEM_MAPPED          0x40000
+#define MEM_TOP_DOWN       0x100000
+
+extern void * VirtualAlloc(LPVOID start, DWORD length, DWORD alloc_type, DWORD prot);
+extern int VirtualFree(LPVOID start, DWORD length, DWORD free_type);
+typedef struct _SYSTEM_INFO {
+    DWORD dwOemId;
+    DWORD dwPageSize;
+    LPVOID lpMinimumApplicationAddress;
+    LPVOID lpMaximumApplicationAddress;
+    DWORD dwActiveProcessorMask;
+    DWORD dwNumberOfProcessors;
+    DWORD dwProcessorType;
+    DWORD dwAllocationGranularity;
+    DWORD dwReserved;
+} SYSTEM_INFO, *LPSYSTEM_INFO;
+extern DWORD GetLastError(void);
+
+typedef struct  _FILETIME
+{
+  DWORD dwLowDateTime;
+  DWORD dwHighDateTime;
+} FILETIME;
+
+typedef void *HANDLE;
+
+typedef unsigned short WORD;
+typedef char CHAR;
+
+typedef struct  _SYSTEMTIME
+{
+  WORD wYear;
+  WORD wMonth;
+  WORD wDayOfWeek;
+  WORD wDay;
+  WORD wHour;
+  WORD wMinute;
+  WORD wSecond;
+  WORD wMilliseconds;
+} SYSTEMTIME;
+
+#define MAX_PATH 260
+
+typedef struct _WIN32_FIND_DATAA {
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeHigh;
+    DWORD nFileSizeLow;
+    DWORD dwReserved0;
+    DWORD dwReserved1;
+    CHAR   cFileName[ MAX_PATH ];
+    CHAR   cAlternateFileName[ 14 ];
+} WIN32_FIND_DATAA, *PWIN32_FIND_DATAA, *LPWIN32_FIND_DATAA, WIN32_FIND_DATA;
+
+#define INVALID_HANDLE_VALUE (HANDLE)-1
+
+#define FALSE 0
+#define TRUE 1
+
+extern void winmain_init(void);
+
+#define GetFullPathName GetFullPathNameA
+#define GetCurrentDirectory GetCurrentDirectoryA
+#define FindFirstFile FindFirstFileA
+
+@
+
+
+1.2
+log
+@Remove some irrelevant includes
+@
+text
+@d1 1
+a1 1
+/*  ==== UNIX SYSCALL DECLARATIONS HEADER ====
+d7 1
+a7 1
+ *  This header declares Unix system calls which are not declared in
+d10 3
+a12 1
+ *  $Id: src:OS:NT:syscalls.h,v 1.1 1994/12/12 14:24:51 jont Exp $
+a16 10
+
+#if 0
+/* Hardly anything gets defined properly in SunOS header files */
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <math.h>
+#endif
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d10 1
+a10 1
+ *  $Id: src:OS:Linux:syscalls.h,v 1.1 1994/10/04 16:33:03 jont Exp $
+d16 1
+a20 3
+#ifndef OS_NT
+#include <sys/time.h>
+#endif
+a21 4
+#ifndef OS_NT
+#include <sys/resource.h>
+#include <sys/socket.h>
+#endif
+a23 36
+
+/* files */
+
+/* open has an optional argument for mode. Files which use the mode
+should define OPEN_MODE_ARGUMENT before including this file. C is a
+language too stupid to live */
+
+/*
+extern int open (const char *path, int flags
+#ifdef OPEN_MODE_ARGUMENT
+, mode_t mode
+#endif
+		 );
+*/
+
+extern int close (int fd);
+extern int read (int fd, char *buf, int nbyte);
+extern int write (int fd, char *buf, unsigned int nbyte);
+extern char *getwd (char *pathname);
+extern char* realpath(char *path,char resolved_path[]);
+extern int chdir (char *path);
+extern int rmdir (char *path);
+#ifndef OS_NT
+extern int unlink (char *path);
+#endif
+extern int fsync (int fd);
+extern int pipe (int fd[2]);
+
+/* GNU has its own header files, which do not use ANSI-style function
+prototypes for certain functions. For mkdir this is a problem since
+mode_t is a type with implicit promotion. */
+
+#if defined(__GNUC__) || defined(OS_NT)
+extern int mkdir ();
+#else
+extern int mkdir (char *path, mode_t mode);
+d26 84
+a109 89
+/* time */
+
+extern int gettimeofday(struct timeval *tp, struct timezone *tzp);
+/*
+extern int setitimer (int which, struct itimerval *value, struct itimerval *ovalue);
+*/
+
+/* memory */
+
+#ifndef OS_NT
+extern int brk (caddr_t addr);
+extern caddr_t sbrk (int incr);
+#endif
+extern int plock (int op);
+extern void bcopy (char *b1, char *b2, int length);
+#ifndef OS_NT
+extern int munmap (caddr_t addr, size_t len); /* mmap is in <sys/mman.h> */
+#endif
+extern int getpagesize (void);
+
+/* signals */
+
+extern int sigblock (int mask);
+extern int sigvec (int sig, struct sigaction *vec, struct sigaction *ovec);
+extern int sigstack (struct sigstack *ss, struct sigstack *oss);
+
+/* processes */
+
+extern int getpid(void);
+extern int sleep(unsigned int seconds);
+extern int kill (int pid, int signal);
+#ifndef OS_NT
+extern volatile void _exit (int status);
+#endif
+extern int getrusage (int who, struct rusage *rusage);
+extern int execve (char *path, char *argv[], char *envp[]);
+extern int execv (char *path, char *argv[]);
+extern int execvp (char *file, char *argv[]);
+extern int fork (void);
+extern int vfork (void);
+extern char **environ;
+
+/* uids */
+
+extern int seteuid(int euid);
+extern int getuid(void);
+
+/* sockets */
+
+#ifndef OS_NT
+extern int socket (int domain, int type, int protocol);
+#endif
+/*
+extern int connect (int s, struct sockaddr *name, unsigned int namelen);
+extern int bind (int s, struct sockaddr *name, unsigned int namelen);
+extern int getsockname (int s, struct sockaddr *name, unsigned int *namelen);
+extern int getpeername (int s, struct sockaddr *name, unsigned int *namelen);
+*/
+#ifndef OS_NT
+extern int listen (int s, int backlog);
+#endif
+/*
+extern int accept (int s, struct sockaddr *name, unsigned int *namelen);
+*/
+
+/* passwords */
+
+extern void setpwent(void);
+extern void endpwent(void);
+
+/* option parsing */
+
+extern char *optarg;
+extern int optind;
+
+/* math */
+
+/* have to give a full prototype of matherr to avoid a warning */
+
+/*
+extern int matherr(struct exception *exn);
+*/
+
+/* misc */
+
+#ifndef OS_NT
+extern int gethostname (char *name, int namelen);
+#endif
+extern char *sys_errlist [];
+@

@@ -1,0 +1,177 @@
+head	1.3;
+access;
+symbols
+	Final_version_of_old_runtime:1.3
+	ML_revised_beta_release_25/05/94:1.3
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	93.04.28.14.37.58;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.10.26.13.51.32;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.27.16.18.31;	author richard;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	93.04.28.14.37.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Runtime environment management
+@
+
+
+1.3
+log
+@Changed env_function and env_asm_function to return the closure produced
+@
+text
+@/*  ==== RUNTIME ENVIRONMENT ====
+ *
+ *  Copyright (C) 1992 Harleqiun Ltd
+ *
+ *  Description
+ *  -----------
+ *  The runtime system communicates ML values to ML via a `runtime
+ *  envinroment' which is a mapping from strings to ML values.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: environment.h,v $
+ *  Revision 1.2  1992/10/26  13:51:32  richard
+ *  env_lookup() now returns an error code rather than raising
+ *  and exception directly.  It is no longer called directly
+ *  from ML.  See pervasives.c.
+ *
+ *  Revision 1.1  1992/07/27  16:18:31  richard
+ *  Initial revision
+ *
+ */
+
+#ifndef environment_h
+#define environment_h
+
+#include "mltypes.h"
+
+
+
+/*  === INITIALISE ===
+ *
+ *  Sets up an empty runtime environment and declares various roots.
+ */
+
+extern void env_init(void);
+
+
+
+/*  === ADD VALUES TO ENVIRONMENT ===
+ *
+ *  These functions bind strings to values in the runtime environment.
+ */
+
+/*  == Bind value ==
+ *
+ *  Binds a simple value to a string
+ */
+
+extern void env_value(const char *name, mlval value);
+
+
+/*  == Bind C function ==
+ *
+ *  Packages up the C function to make it callable from ML as an ML function
+ *  and binds it to a name.
+ */
+
+extern mlval env_function(const char *name, mlval (*f)(mlval));
+
+
+/*  == Bind assembler function ==
+ *
+ *  Packages up a GC-clean assembler subroutine to make it callable from ML
+ *  as an ML function and binds it to a name.
+ */
+
+extern mlval env_asm_function(const char *name, mlval (*f)(mlval));
+
+
+/*  === LOOK UP VALUE IN ENVIRONMENT ===
+ *
+ *  This function is looks up the ML value (or function closure) associated
+ *  with a string in the runtime environemnt.  It returns ERROR if the
+ *  string is unbound.
+ */
+
+extern mlval env_lookup(const char *name);
+
+
+#endif
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a12 3
+ *  Revision 1.3  1993/04/28  14:37:58  jont
+ *  Changed env_function and env_asm_function to return the closure produced
+ *
+@
+
+
+1.2
+log
+@env_lookup() now returns an error code rather than raising
+and exception directly.  It is no longer called directly
+from ML.  See pervasives.c.
+@
+text
+@d13 5
+d58 1
+a58 1
+extern void env_function(const char *name, mlval (*f)(mlval));
+d67 1
+a67 1
+extern void env_asm_function(const char *name, mlval (*f)(mlval));
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d67 3
+a69 2
+ *  This function is called from ML (where it is called `call_c') to extract
+ *  a value from the runtime environment.
+d72 1
+a72 1
+extern mlval env_lookup(mlval name);
+@

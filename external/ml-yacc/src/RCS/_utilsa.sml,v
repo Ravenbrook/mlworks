@@ -1,0 +1,184 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.05.25.19.11.08;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@require "utils";
+require "$.basis.__list";
+
+
+(* ML-Yacc Parser Generator (c) 1989 Andrew W. Appel, David R. Tarditi *)
+
+(* Implementation of ordered sets using ordered lists and red-black trees.  The
+   code for red-black trees was originally written by Norris Boyd, which was
+   modified for use here.
+*)   
+
+(* ordered sets implemented using ordered lists.
+
+   Upper bound running times for functions implemented here:
+
+   app  = O(n)
+   card = O(n)
+   closure = O(n^2)
+   difference = O(n+m), where n,m = the size of the two sets used here.
+   empty = O(1)
+   exists = O(n)
+   find = O(n)
+   fold = O(n)
+   insert = O(n)
+   is_empty = O(1)
+   make_list = O(1)
+   make_set = O(n^2)
+   partition = O(n)
+   remove = O(n)
+   revfold = O(n)
+   select_arb = O(1)
+   set_eq = O(n), where n = the cardinality of the smaller set
+   set_gt = O(n), ditto
+   singleton = O(1)
+   union = O(n+m)
+*)
+
+
+functor ListOrdSet(B : sig type elem
+		  	val gt : elem * elem -> bool
+			val eq : elem * elem -> bool
+		    end ) : ORDSET =
+
+struct
+ type elem = B.elem
+ val elem_gt = B.gt
+ val elem_eq = B.eq 
+
+ type set = elem list
+ exception Select_arb
+ val empty = nil
+
+ val insert = fn (key,s) =>
+	let fun f (l as (h::t)) =
+		 if elem_gt(key,h) then h::(f t)
+		 else if elem_eq(key,h) then key::t
+		 else key::l
+ 	      | f nil = [key]
+	in f s
+	end
+		
+ val select_arb = fn nil => raise Select_arb
+ 		   | a::b => a
+
+ val exists = fn (key,s) =>
+	let fun f (h::t) = if elem_gt(key,h) then f t
+			   else elem_eq(h,key) 
+ 	      | f nil = false
+	in f s
+	end
+
+ val find = fn (key,s) =>
+	let fun f (h::t) = if elem_gt(key,h) then f t
+			   else if elem_eq(h,key) then SOME h
+			   else NONE
+ 	      | f nil = NONE
+	in f s
+	end
+   
+ fun revfold f lst init = List.foldl f init lst
+ fun fold f lst init = List.foldr f init lst
+ val app = List.app
+
+fun set_eq(h::t,h'::t') = 
+	(case elem_eq(h,h')
+	  of true => set_eq(t,t')
+	   | a => a)
+  | set_eq(nil,nil) = true
+  | set_eq _ = false
+
+fun set_gt(h::t,h'::t') =
+	(case elem_gt(h,h')
+	  of false => (case (elem_eq(h,h'))
+			of true => set_gt(t,t')
+			 | a => a)
+	   |  a => a)
+  | set_gt(_::_,nil) = true
+  | set_gt _ = false
+		
+fun union(a as (h::t),b as (h'::t')) =
+	  if elem_gt(h',h) then h::union(t,b)
+	  else if elem_eq(h,h') then h::union(t,t')
+	  else h'::union(a,t')
+  | union(nil,s) = s
+  | union(s,nil) = s
+
+val make_list = fn s => s
+
+val is_empty = fn nil => true | _ => false
+
+val make_set = fn l => List.foldr insert [] l
+
+val partition = fn f => fn s =>
+    fold (fn (e,(yes,no)) =>
+	    if (f e) then (e::yes,no) else (e::no,yes)) s (nil,nil)
+
+val remove = fn (e,s) =>
+    let fun f (l as (h::t)) = if elem_gt(h,e) then l
+			      else if elem_eq(h,e) then t
+			      else h::(f t)
+	  | f nil = nil
+    in f s
+    end
+
+ (* difference: X-Y *)
+
+ fun difference (nil,_) = nil
+   | difference (r,nil) = r
+   | difference (a as (h::t),b as (h'::t')) =
+	  if elem_gt (h',h) then h::difference(t,b)
+	  else if elem_eq(h',h) then difference(t,t')
+	  else difference(a,t')
+
+ fun singleton X = [X]
+
+ fun card(S) = fold (fn (a,count) => count+1) S 0
+
+      local
+	    fun closure'(from, f, result) =
+	      if is_empty from then result
+	      else
+		let val (more,result) =
+			fold (fn (a,(more',result')) =>
+				let val more = f a
+				    val new = difference(more,result)
+				in (union(more',new),union(result',new))
+				end) from
+				 (empty,result)
+		in closure'(more,f,result)
+		end
+      in
+         fun closure(start, f) = closure'(start, f, start)
+      end
+end
+@

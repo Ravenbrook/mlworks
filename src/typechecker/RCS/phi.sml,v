@@ -1,0 +1,298 @@
+head	1.9;
+access;
+symbols
+	ML_beta_release_12/08/94:1.9
+	ML_beta_release_03/08/94:1.9
+	ML_revised_beta_release_25/05/94:1.9
+	ML_final_beta_release_02/03/94:1.9
+	mlworks-28-01-1994:1.9
+	Release:1.9
+	mlworks-beta-01-09-1993:1.9
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.4
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.9
+date	93.03.04.10.42.04;	author matthew;	state Exp;
+branches
+	1.9.1.1;
+next	1.8;
+
+1.8
+date	93.02.19.15.37.29;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.02.08.15.06.58;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.02.01.14.20.31;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.11.26.17.03.17;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.12.12.56.05;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.53.09;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.19.12.19.06;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.44.43;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.13.00;	author jont;	state Exp;
+branches;
+next	;
+
+1.9.1.1
+date	93.03.04.10.42.04;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor Signature (N)(S,(N'),S') Datatype and associated functions
+See p31 of The Definition
+@
+
+
+1.9
+log
+@Options & Info changes
+@
+text
+@(* phi.sml the signature *)
+(*
+$Log: phi.sml,v $
+Revision 1.8  1993/02/19  15:37:29  matthew
+Removed names_of_phi
+
+Revision 1.7  1993/02/08  15:06:58  matthew
+Changes for BASISTYPES signature
+
+Revision 1.6  1993/02/01  14:20:31  matthew
+Removed redundant require
+
+Revision 1.5  1992/11/26  17:03:17  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.4  1992/08/12  12:56:05  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.3  1991/11/21  16:53:09  jont
+Added copyright message
+
+Revision 1.2  91/11/19  12:19:06  jont
+Merging in comments from Ten15 branch to main trunk
+
+Revision 1.1.1.1  91/11/19  11:13:00  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  11:44:43  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(* The type Phi corresponds to the class FunSig of semantic objects as
+defined in the Definiton (p31). This module defines the type and
+relevant functions over it, all of which are simple *)
+
+require "basistypes";
+require "../main/options";
+
+signature PHI =
+  sig
+    structure BasisTypes : BASISTYPES
+    structure Options : OPTIONS
+    val string_phi : Options.print_options -> BasisTypes.Phi -> string
+    val phi_copy : BasisTypes.Phi -> BasisTypes.Phi
+  end
+@
+
+
+1.9.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.9  1993/03/04  10:42:04  matthew
+Options & Info changes
+
+@
+
+
+1.8
+log
+@Removed names_of_phi
+@
+text
+@d4 3
+d41 1
+d46 2
+a47 2
+      
+    val string_phi : BasisTypes.Info.options -> BasisTypes.Phi -> string
+@
+
+
+1.7
+log
+@Changes for BASISTYPES signature
+@
+text
+@d4 3
+a43 1
+    val names_of_phi : BasisTypes.Phi -> BasisTypes.Nameset
+@
+
+
+1.6
+log
+@Removed redundant require
+@
+text
+@d4 3
+d34 1
+a34 1
+require "sigma";
+d38 5
+a42 8
+    structure Sigma : SIGMA
+    
+    datatype Phi = 
+      PHI of (Sigma.Nameset.Nameset * (Sigma.Nameset.Datatypes.Str * Sigma.Sigma))
+
+    val string_phi : Sigma.Nameset.Info.options -> Phi -> string
+    val names_of_phi : Phi -> Sigma.Nameset.Nameset
+    val phi_copy : Phi -> Phi
+@
+
+
+1.5
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+a31 1
+require "../main/info";
+@
+
+
+1.4
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d28 1
+d37 1
+a37 1
+    val string_phi : Phi -> string
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	phi.sml,v $
+a22 3
+
+require "datatypes";
+require "nameset";
+a26 1
+    structure Datatypes : DATATYPES
+a27 1
+    structure Nameset : NAMESET
+a28 2
+    sharing Datatypes = Sigma.Datatypes = Nameset.Datatypes
+
+d30 1
+a30 1
+      PHI of (Nameset.Nameset * (Datatypes.Str * Sigma.Sigma))
+d33 1
+a33 1
+    val names_of_phi : Phi -> Nameset.Nameset
+@
+
+
+1.2
+log
+@Merging in comments from Ten15 branch to main trunk
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 6
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	phi.sml,v $
+Revision 1.1  91/06/07  11:44:43  colin
+Initial revision
+
+a3 6
+
+(* The type Phi corresponds to the class FunSig of semantic objects as
+defined in the Definiton (p31). This module defines the type and
+relevant functions over it, all of which are simple *)
+
+
+@

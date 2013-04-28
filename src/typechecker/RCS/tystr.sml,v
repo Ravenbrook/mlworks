@@ -1,0 +1,319 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.9
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.10
+date	93.02.08.13.26.36;	author matthew;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	92.12.21.21.00.28;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.10.30.15.40.29;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.27.20.05.12;	author davidt;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.26.16.10.20;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.16.18.47.18;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.04.17.16.07;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.56.03;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.19.12.19.31;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.46.38;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.13.12;	author jont;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.02.08.13.26.36;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Type Structures (type function + constructor environment)
+@
+
+
+1.10
+log
+@Removed open Datatypes
+@
+text
+@(* tystr.sml the signature *)
+(*
+$Log: tystr.sml,v $
+Revision 1.9  1992/12/21  21:00:28  jont
+Anel's last changes
+
+Revision 1.8  1992/10/30  15:40:29  jont
+Added special maps for tyfun_id, tyname_id, strname_id
+
+Revision 1.7  1992/08/27  20:05:12  davidt
+Yet more changes to get structure copying working better.
+
+Revision 1.6  1992/08/26  16:10:20  jont
+Anel's changes (added two new exceptions).
+
+Revision 1.5  1992/07/16  18:47:18  jont
+Changed to use btrees for renaming of tynames and strnames
+
+Revision 1.4  1992/07/04  17:16:07  jont
+Anel's changes for improved structure copying
+
+Revision 1.3  1991/11/21  16:56:03  jont
+Added copyright message
+
+Revision 1.2  91/11/19  12:19:31  jont
+*** empty log message ***
+
+Revision 1.1.1.1  91/11/19  11:13:12  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  11:46:38  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+
+A TyStr is a type structure as defined in the Definition (page 17).
+This module defines functions on TyStrs, including enrichment (page
+34). (The type TyStr is defined in datatypes.sml).
+
+*)
+
+require "../typechecker/datatypes";
+
+signature TYSTR =
+  sig
+    structure Datatypes : DATATYPES
+
+    exception TyfunError
+    exception TypeDiffer
+    val string_tystr   : int * Datatypes.Tystr -> string
+    val tystr_enriches : Datatypes.Tystr * Datatypes.Tystr -> bool 
+    val tystr_copy     : Datatypes.Tystr * (Datatypes.Tyname) Datatypes.Tyfun_id.Map.T -> Datatypes.Tystr
+    val tystr_union    : Datatypes.Tystr * Datatypes.Tystr -> Datatypes.Tystr
+    val get_ce : Datatypes.Tystr -> Datatypes.Valenv
+  end;
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.10  1993/02/08  13:26:36  matthew
+Removed open Datatypes
+
+@
+
+
+1.9
+log
+@Anel's last changes
+@
+text
+@d4 3
+a50 2
+    open Datatypes
+
+d53 5
+a57 5
+    val string_tystr   : int * Tystr -> string
+    val tystr_enriches : Tystr * Tystr -> bool 
+    val tystr_copy     : Tystr * (Tyname) Tyfun_id.Map.T -> Tystr
+    val tystr_union    : Tystr * Tystr -> Tystr
+    val get_ce : Tystr -> Valenv
+@
+
+
+1.8
+log
+@Added special maps for tyfun_id, tyname_id, strname_id
+@
+text
+@d4 3
+d51 1
+a51 1
+    exception Inconsistent
+@
+
+
+1.7
+log
+@Yet more changes to get structure copying working better.
+@
+text
+@d4 3
+a38 1
+require "../utils/newmap";
+a42 1
+    structure NewMap : NEWMAP
+d51 1
+a51 1
+    val tystr_copy     : Tystr * (Tyfun_id.Tyfun_id, Tyname) NewMap.T -> Tystr
+@
+
+
+1.6
+log
+@Anel's changes (added two new exceptions).
+@
+text
+@d4 3
+d50 1
+a50 4
+(*    val tystr_copy     : Tystr * (Tyname * Tyname) list * (Tyname -> Tyname) ->
+      Tystr * (Tyname * Tyname) list*)
+    val tystr_copy     : Tystr * (Tyfun_id.Tyfun_id, Tyname) NewMap.T * 
+      (Tyname -> Tyname) -> Tystr * (Tyfun_id.Tyfun_id, Tyname) NewMap.T
+d53 1
+a53 2
+
+  end
+@
+
+
+1.5
+log
+@Changed to use btrees for renaming of tynames and strnames
+@
+text
+@d4 3
+d43 2
+@
+
+
+1.4
+log
+@Anel's changes for improved structure copying
+@
+text
+@d4 3
+d30 1
+d35 1
+d44 2
+a45 2
+    val tystr_copy     : Tystr * (Tyfun_id.Tyfun_id * Tyname) list * 
+      (Tyname -> Tyname) -> Tystr * (Tyfun_id.Tyfun_id * Tyname) list
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	tystr.sml,v $
+d37 4
+a40 2
+    val tystr_copy     : Tystr * (Tyname * Tyname) list * (Tyname -> Tyname) ->
+      Tystr * (Tyname * Tyname) list
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 9
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	tystr.sml,v $
+Revision 1.1  91/06/07  11:46:38  colin
+Initial revision
+
+a3 9
+
+(*
+
+A TyStr is a type structure as defined in the Definition (page 17).
+This module defines functions on TyStrs, including enrichment (page
+34). (The type TyStr is defined in datatypes.sml).
+
+*)
+
+@

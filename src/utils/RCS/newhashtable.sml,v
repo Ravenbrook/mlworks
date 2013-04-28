@@ -1,0 +1,233 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.7
+	ML_beta_release_03/08/94:1.7
+	ML_revised_beta_release_25/05/94:1.7
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	92.09.22.13.04.50;	author clive;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	92.09.22.09.02.21;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.09.16.09.44.50;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.09.14.13.44.43;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.13.16.16.25;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.24.11.35.12;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.16.11.05.48;	author jont;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	92.09.22.13.04.50;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@A hash table allowing more than one per functor application
+@
+
+
+1.7
+log
+@Needed to make some type variables weak
+@
+text
+@(* newhashtable the signature *)
+(*
+$Log: newhashtable.sml,v $
+Revision 1.6  1992/09/22  09:02:21  clive
+Changed hashtables to a single structure implementation
+
+Revision 1.5  1992/09/16  09:44:50  clive
+Added tryLookup
+
+Revision 1.4  1992/09/14  13:44:43  jont
+Added a lookup_default function to assign a default value when the
+key is not found
+
+Revision 1.3  1992/08/13  16:16:25  davidt
+Added fold and iterate functions.
+
+Revision 1.2  1992/07/24  11:35:12  clive
+Added some functionality including the printing of statistics, and resizing
+
+Revision 1.1  1992/07/16  11:05:48  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+signature NEWHASHTABLE =
+  sig
+    type ('_Key,'_Value) HashTable
+    datatype 'a option = YES of 'a | NO
+    exception Lookup 
+    val new     : int * ('_Key * '_Key -> bool) * ('_Key -> int) -> ('_Key,'_Value) HashTable
+    val lookup  : (('_Key,'_Value) HashTable * '_Key) -> '_Value
+    val lookup_default  : (('_Key,'_Value) HashTable * '_Value * '_Key) -> '_Value
+    val tryLookup : (('_Key,'_Value) HashTable * '_Key) -> '_Value option
+    val update  : (('_Key,'_Value) HashTable * '_Key * '_Value) -> unit
+    val delete  : (('_Key,'_Value) HashTable * '_Key) -> unit
+    val to_list : ('_Key,'_Value) HashTable -> ('_Key * '_Value) list
+    val copy    : ('_Key,'_Value) HashTable -> ('_Key,'_Value) HashTable
+    val map     : ('_Key * '_Value -> '_Value) -> ('_Key,'_Value) HashTable -> ('_Key,'_Value) HashTable
+    val fold    : ('a * '_Key * '_Value -> 'a) -> ('a * ('_Key,'_Value) HashTable) -> 'a
+    val iterate : ('_Key * '_Value -> unit) -> ('_Key,'_Value) HashTable -> unit
+    val stats : ('_Key,'_Value) HashTable -> {size:int, count:int, smallest:int, largest:int}
+    val string_hash_table_stats : ('_Key,'_Value) HashTable -> string
+  end
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.7  1992/09/22  13:04:50  clive
+Needed to make some type variables weak
+
+@
+
+
+1.6
+log
+@Changed hashtables to a single structure implementation
+@
+text
+@d4 3
+d32 3
+a34 3
+    val lookup  : (('Key,'Value) HashTable * 'Key) -> 'Value
+    val lookup_default  : (('Key,'Value) HashTable * 'Value * 'Key) -> 'Value
+    val tryLookup : (('Key,'Value) HashTable * 'Key) -> 'Value option
+d36 2
+a37 2
+    val delete  : (('Key,'Value) HashTable * 'Key) -> unit
+    val to_list : ('Key,'Value) HashTable -> ('Key * 'Value) list
+d40 4
+a43 4
+    val fold    : ('a * 'Key * 'Value -> 'a) -> ('a * ('Key,'Value) HashTable) -> 'a
+    val iterate : ('Key * 'Value -> unit) -> ('Key,'Value) HashTable -> unit
+    val stats : ('Key,'Value) HashTable -> {size:int, count:int, smallest:int, largest:int}
+    val string_hash_table_stats : ('Key,'Value) HashTable -> string
+@
+
+
+1.5
+log
+@Added tryLookup
+@
+text
+@d4 3
+d25 1
+a25 3
+    type HashTable
+    type Key
+    type Value
+d27 14
+a40 13
+    exception Lookup of Key
+    val new     : unit -> HashTable
+    val lookup  : (HashTable * Key) -> Value
+    val lookup_default  : (HashTable * Value * Key) -> Value
+    val tryLookup : (HashTable * Key) -> Value option
+    val update  : (HashTable * Key * Value) -> unit
+    val delete  : (HashTable * Key) -> unit
+    val to_list : HashTable -> (Key * Value) list
+    val copy    : HashTable -> HashTable
+    val fold    : ('a * Key * Value -> 'a) -> ('a * HashTable) -> 'a
+    val iterate : (Key * Value -> unit) -> HashTable -> unit
+    val stats : HashTable -> {size:int, count:int, smallest:int, largest:int}
+    val string_hash_table_stats : HashTable -> string
+@
+
+
+1.4
+log
+@Added a lookup_default function to assign a default value when the
+key is not found
+@
+text
+@d4 4
+d25 1
+d30 1
+@
+
+
+1.3
+log
+@Added fold and iterate functions.
+@
+text
+@d4 3
+d24 1
+@
+
+
+1.2
+log
+@Added some functionality including the printing of statistics, and resizing
+@
+text
+@d4 3
+d19 4
+a22 4
+    val new : unit -> HashTable
+    val lookup : (HashTable * Key) -> Value
+    val update : (HashTable * Key * Value) -> unit
+    val delete : (HashTable * Key) -> unit
+d24 3
+a26 1
+    val copy : HashTable -> HashTable
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d22 2
+@

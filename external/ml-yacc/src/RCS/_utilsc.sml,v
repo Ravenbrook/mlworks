@@ -1,0 +1,187 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.05.25.19.11.11;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@require "utils";
+require "$.basis.__list";
+
+
+(* ML-Yacc Parser Generator (c) 1989 Andrew W. Appel, David R. Tarditi *)
+
+(* Implementation of ordered sets using ordered lists and red-black trees.  The
+   code for red-black trees was originally written by Norris Boyd, which was
+   modified for use here.
+*)   
+
+
+signature TABLE =
+   sig
+	type 'a table
+	type key
+	val size : 'a table -> int
+	val empty: 'a table
+	val exists: (key * 'a table) -> bool
+	val find : (key * 'a table)  ->  'a option
+	val insert: ((key * 'a) * 'a table) -> 'a table
+	val make_table : (key * 'a ) list -> 'a table
+	val make_list : 'a table -> (key * 'a) list
+	val fold : ((key * 'a) * 'b -> 'b) -> 'a table -> 'b -> 'b
+   end
+
+functor Table (B : sig type key
+		      val gt : (key * key) -> bool
+		     end
+		) : TABLE =
+struct
+
+ datatype Color = RED | BLACK
+ type key = B.key
+
+ abstype 'a table = EMPTY
+		  | TREE of ((B.key * 'a ) * Color * 'a table * 'a table)
+ with
+
+ val empty = EMPTY
+
+ fun insert(elem as (key,data),t) =
+  let val key_gt = fn (a,_) => B.gt(key,a)
+      val key_lt = fn (a,_) => B.gt(a,key)
+	fun f EMPTY = TREE(elem,RED,EMPTY,EMPTY)
+        | f (TREE(k,BLACK,l,r)) =
+	    if key_gt k
+	    then case f r
+		 of r as TREE(rk,RED, rl as TREE(rlk,RED,rll,rlr),rr) =>
+			(case l
+			 of TREE(lk,RED,ll,lr) =>
+				TREE(k,RED,TREE(lk,BLACK,ll,lr),
+					   TREE(rk,BLACK,rl,rr))
+			  | _ => TREE(rlk,BLACK,TREE(k,RED,l,rll),
+						TREE(rk,RED,rlr,rr)))
+		  | r as TREE(rk,RED,rl, rr as TREE(rrk,RED,rrl,rrr)) =>
+			(case l
+			 of TREE(lk,RED,ll,lr) =>
+				TREE(k,RED,TREE(lk,BLACK,ll,lr),
+					   TREE(rk,BLACK,rl,rr))
+			  | _ => TREE(rk,BLACK,TREE(k,RED,l,rl),rr))
+	          | r => TREE(k,BLACK,l,r)
+	    else if key_lt k
+	    then case f l
+	         of l as TREE(lk,RED,ll, lr as TREE(lrk,RED,lrl,lrr)) =>
+			(case r
+			 of TREE(rk,RED,rl,rr) =>
+				TREE(k,RED,TREE(lk,BLACK,ll,lr),
+					   TREE(rk,BLACK,rl,rr))
+			  | _ => TREE(lrk,BLACK,TREE(lk,RED,ll,lrl),
+						TREE(k,RED,lrr,r)))
+		  | l as TREE(lk,RED, ll as TREE(llk,RED,lll,llr), lr) =>
+			(case r
+			 of TREE(rk,RED,rl,rr) =>
+				TREE(k,RED,TREE(lk,BLACK,ll,lr),
+					   TREE(rk,BLACK,rl,rr))
+			  | _ => TREE(lk,BLACK,ll,TREE(k,RED,lr,r)))
+	          | l => TREE(k,BLACK,l,r)
+	    else TREE(elem,BLACK,l,r)
+        | f (TREE(k,RED,l,r)) =
+	    if key_gt k then TREE(k,RED,l, f r)
+	    else if key_lt k then TREE(k,RED, f l, r)
+	    else TREE(elem,RED,l,r)
+   in case f t
+      of TREE(k,RED, l as TREE(_,RED,_,_), r) => TREE(k,BLACK,l,r)
+       | TREE(k,RED, l, r as TREE(_,RED,_,_)) => TREE(k,BLACK,l,r)
+       | t => t
+  end
+
+ fun exists(key,t) =
+  let fun look EMPTY = false
+	| look (TREE((k,_),_,l,r)) =
+		if B.gt(k,key) then look l
+		else if B.gt(key,k) then look r
+		else true
+   in look t
+   end
+
+ fun find(key,t) =
+  let fun look EMPTY = NONE
+	| look (TREE((k,data),_,l,r)) =
+		if B.gt(k,key) then look l
+		else if B.gt(key,k) then look r
+		else SOME data
+   in look t
+  end
+
+  fun fold f t start =
+	let fun scan(EMPTY,value) = value
+	      | scan(TREE(k,_,l,r),value) = scan(l,f(k,scan(r,value)))
+	in scan(t,start)
+	end
+
+  fun make_table l = List.foldr insert empty l
+
+  fun size S = fold (fn (_,count) => count+1) S 0
+
+  fun make_list table = fold (op ::) table nil
+
+  end
+end;
+
+(* assumes that a functor Table with signature TABLE from table.sml is
+   in the environment *)
+
+signature HASH =
+  sig
+    type table
+    type elem
+
+    val size : table -> int
+    val add : elem * table -> table
+    val find : elem * table -> int option
+    val exists : elem * table -> bool
+    val empty : table
+  end
+
+(* hash: creates a hash table of size n which assigns each distinct member
+   a unique integer between 0 and n-1 *)
+
+functor Hash(B : sig type elem
+		     val gt : elem * elem -> bool
+		 end) : HASH =
+struct
+    type elem=B.elem
+    structure HashTable = Table(type key=B.elem
+				val gt = B.gt)
+
+    type table = {count : int, table : int HashTable.table}
+
+    val empty = {count=0,table=HashTable.empty}
+    val size = fn {count,table} => count
+    val add = fn (e,{count,table}) =>
+		{count=count+1,table=HashTable.insert((e,count),table)}
+    val find = fn (e,{table,count}) => HashTable.find(e,table)
+    val exists = fn (e,{table,count}) => HashTable.exists(e,table)
+end;
+@

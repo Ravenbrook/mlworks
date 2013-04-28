@@ -1,0 +1,70 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.05.24.09.20.20;	author io;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.23.10.56.23;	author io;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@fixing...
+@
+text
+@(* test/auxil.sml -- Auxiliary functions for test cases 
+ * modified for MLWorks use Fri May 24 10:17:58 1996
+ * $Log$
+ *)
+
+Shell.Build.loadSource "basis.toplevel";
+Shell.Build.loadSource "basis.__integer";
+Shell.Options.set (Shell.Options.ValuePrinter.maximumSeqSize,20000);
+
+val output = MLWorks.IO.output
+val std_out = MLWorks.IO.std_out
+val flush_out = MLWorks.IO.flush_out
+infix 1 seq
+fun e1 seq e2 = e2;
+fun say s = (output(std_out, s); flush_out std_out);
+fun check b = if b then "OK" else "WRONG";
+fun check' f = (if f () then "OK" else "WRONG") handle _ => "EXN";
+
+fun range (from, to) p = 
+    let open Int
+    in
+	(from > to) orelse (p from) andalso (range (from+1, to) p)
+    end;
+
+fun checkrange bounds = check o range bounds;
+
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d2 2
+a3 1
+ * modified for MLWorks use Fri May 17 10:25:32 1996
+d6 2
+a7 2
+Shell.File.loadSource "basis/toplevel";
+Shell.File.loadSource "basis/__integer";
+@

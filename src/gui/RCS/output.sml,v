@@ -1,0 +1,55 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	95.07.27.10.13.35;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved from motif
+@
+
+
+1.1
+log
+@new unit
+Moved from motif
+@
+text
+@(*
+ * Copyright (c) 1994 Harlequin Ltd.
+ * 
+ * $Log: output.sml,v $
+ * Revision 1.4  1995/06/14  13:27:52  daveb
+ * Removed redundant get_context parameter.
+ *
+ *  Revision 1.3  1995/05/31  11:03:16  daveb
+ *  Combined the show_output and hide_output fields of the result into
+ *  a single function of type bool->unit, for use with Toggle buttons.
+ *
+ *  Revision 1.2  1994/08/01  10:10:07  daveb
+ *  Moved environment options to preferences structure.
+ * 
+ *  Revision 1.1  1994/06/21  18:53:41  daveb
+ *  new file
+ * 
+ *)
+
+signature OUTPUT_WINDOW =
+sig
+  type Widget
+  type preferences
+
+  val create:
+    {parent: Widget, title: string, get_preferences: unit -> preferences}
+    -> {outstream: outstream, output_widget: Widget,
+	show_output: bool -> unit, output_visible: unit -> bool}
+end;
+@

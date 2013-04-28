@@ -1,0 +1,62 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.32.46;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C_STRUCTURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "fi_types";
+require "fi_struct";
+require "c_struct";
+
+functor CStruct(
+
+     structure FITypes : FOREIGN_TYPES
+  structure FIStruct : FOREIGN_STRUCTURE
+
+) : C_STRUCTURE =
+   struct
+
+     structure FITypes = FITypes
+     open FITypes
+
+     open FIStruct
+
+     type foreign_structure = foreign_structure
+     type c_structure = foreign_structure
+
+     val to_struct : c_structure -> foreign_structure = (fn x => x)
+
+   end;
+@

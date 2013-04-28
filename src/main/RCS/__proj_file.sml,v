@@ -1,0 +1,316 @@
+head	1.6;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.6.1
+	MLWorks_21c0_1999_03_25:1.6
+	MLWorks_20c1_1998_08_20:1.6
+	MLWorks_20c0_1998_08_04:1.6
+	MLWorks_20b2c2_1998_06_19:1.6
+	MLWorks_20b2_Windows_1998_06_12:1.6
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.6
+date	98.06.08.12.20.08;	author mitchell;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	98.04.20.15.27.26;	author johnh;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.02.12.21.00;	author johnh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.14.40.03;	author johnh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.06.16.01.38;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.09.11.15.29.11;	author johnh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.09.11.15.29.12;	author johnh;	state Exp;
+branches;
+next	1.1.1.2;
+
+1.1.1.2
+date	97.09.12.14.39.07;	author johnh;	state Exp;
+branches;
+next	1.1.1.3;
+
+1.1.1.3
+date	97.10.31.15.58.32;	author daveb;	state Exp;
+branches;
+next	1.1.1.4;
+
+1.1.1.4
+date	97.11.28.16.55.39;	author daveb;	state Exp;
+branches;
+next	1.1.1.5;
+
+1.1.1.5
+date	97.12.23.12.27.43;	author daveb;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	99.04.01.17.58.12;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file on MLWorks_workspace_97
+@
+
+
+1.6
+log
+@[Bug #30418]
+Convert to use sectioned files
+@
+text
+@(*
+ * $Log: __proj_file.sml,v $
+ *  Revision 1.5  1998/04/20  15:27:26  johnh
+ *  [Bug #50073]
+ *  Add Getenv and other structures.
+ *
+ *  Revision 1.4  1998/03/02  12:21:00  johnh
+ *  [Bug #30365]
+ *  Implement support for subprojects.
+ *
+ *  Revision 1.3  1998/02/23  14:40:03  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *  Revision 1.1.1.5  1997/12/23  12:27:43  daveb
+ *  [Bug #30071]
+ *  Added Diagnostic parameter.
+ *
+ *  Revision 1.1.1.4  1997/11/28  16:55:39  daveb
+ *  [Bug #30071]
+ *  Removed List argument.
+ *
+ *  Revision 1.1.1.3  1997/10/31  15:58:32  daveb
+ *  [Bug #30071]
+ *  Added Info parameter.
+ *
+ *  Revision 1.1.1.2  1997/09/12  14:39:07  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *
+ * 
+ * Copyright (C) 1997.  The Harlequin Group Limited.  All rights reserved.
+ *
+ *)
+
+
+require "^.basis.__text_io";
+require "^.system.__getenv";
+require "^.utils.__terminal";
+
+require "^.system.__os";
+require "../main/__info";
+require "../utils/_diagnostic";
+require "../utils/__text";
+require "../utils/__lists";
+
+require "__sectioned_file";
+require "_proj_file";
+
+structure ProjFile_ =
+  ProjFile (
+    structure OS = OS
+    structure TextIO = TextIO
+    structure SectionedFile = SectionedFile
+    structure Getenv = Getenv_
+    structure Terminal = Terminal
+
+    structure Info = Info_
+    structure Lists = Lists_
+    structure Diagnostic =
+      Diagnostic (structure Text = Text_)
+  )
+@
+
+
+1.6.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a2 4
+ *  Revision 1.6  1998/06/08  12:20:08  mitchell
+ *  [Bug #30418]
+ *  Convert to use sectioned files
+ *
+@
+
+
+1.5
+log
+@[Bug #50073]
+Add Getenv and other structures.
+@
+text
+@d3 4
+d48 1
+d55 1
+@
+
+
+1.4
+log
+@[Bug #30365]
+Implement support for subprojects.
+@
+text
+@d3 4
+d33 6
+d48 5
+@
+
+
+1.3
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d3 4
+d32 1
+a32 1
+
+d39 1
+@
+
+
+1.2
+log
+@new unit
+[Bug #30071]
+Stores project file information for the new Project Workspace.
+@
+text
+@@
+
+
+1.1
+log
+@new file on MLWorks_workspace_97
+@
+text
+@d1 37
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a0 16
+(*
+ * $Log: __proj_file.sml,v $
+ *
+ * 
+ * Copyright (C) 1997.  The Harlequin Group Limited.  All rights reserved.
+ *
+ *)
+
+require "../basis/__list";
+
+require "_proj_file";
+
+structure ProjFile_ =
+  ProjFile (
+    structure List = List
+  )@
+
+
+1.1.1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@@
+
+
+1.1.1.3
+log
+@[Bug #30071]
+Added Info parameter.
+@
+text
+@a2 4
+ *  Revision 1.1.1.2  1997/09/12  14:39:07  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+a9 1
+require "../main/__info";
+d16 1
+a16 2
+    structure Info = Info_
+  )
+@
+
+
+1.1.1.4
+log
+@[Bug #30071]
+Removed List argument.
+@
+text
+@a2 4
+ *  Revision 1.1.1.3  1997/10/31  15:58:32  daveb
+ *  [Bug #30071]
+ *  Added Info parameter.
+ *
+d13 1
+d20 1
+@
+
+
+1.1.1.5
+log
+@[Bug #30071]
+Added Diagnostic parameter.
+@
+text
+@a2 4
+ *  Revision 1.1.1.4  1997/11/28  16:55:39  daveb
+ *  [Bug #30071]
+ *  Removed List argument.
+ *
+a17 3
+require "../utils/_diagnostic";
+require "../utils/__text";
+
+a23 2
+    structure Diagnostic =
+      Diagnostic (structure Text = Text_)
+@

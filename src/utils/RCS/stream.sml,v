@@ -1,0 +1,129 @@
+head	1.2;
+access;
+symbols
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+
+
+1.2
+date	92.11.30.18.29.18;	author matthew;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.10.26.15.24.07;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.11.30.18.29.18;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Generic stream objects
+@
+
+
+1.2
+log
+@No longer used.
+@
+text
+@NOT USED
+(*  ==== GENERALISED STREAMS ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  This module provides functions on streams which are exactly like those
+ *  specified in the Definition, except that in and outstreams can be
+ *  constructed from any suitable set of functions.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: stream.sml,v $
+Revision 1.1  1992/10/26  15:24:07  matthew
+Initial revision
+
+ *)
+
+signature STREAM =
+  sig
+    exception Io of string
+    type instream
+    val instream  : {input		: int -> string,
+                     lookahead		: unit -> string,
+                     end_of_stream	: unit -> bool,
+                     clear_eof		: unit -> unit,
+                     close_in		: unit -> unit} -> instream
+    val open_in		: string -> instream
+    val end_of_stream	: instream -> bool
+    val input		: instream * int -> string
+    val clear_eof	: instream -> unit
+    val lookahead	: instream -> string
+    val close_in	: instream -> unit
+
+    val std_in          : instream
+
+    type outstream
+    val outstream : {output		: string -> unit,
+                     flush_out		: unit -> unit,
+                     close_out		: unit -> unit} -> outstream
+    val open_out	: string -> outstream
+    val output		: outstream * string -> unit
+    val flush_out	: outstream -> unit
+    val close_out	: outstream -> unit
+
+    val std_out         : outstream
+    val with_standard_output : outstream -> (unit -> 'a) -> 'a
+
+  end;
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a14 3
+Revision 1.2  1992/11/30  18:29:18  matthew
+No longer used.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d14 4
+a17 1
+ *  $Log$
+a21 1
+
+a22 1
+
+a23 1
+
+a28 1
+
+d36 1
+a38 1
+
+a41 1
+
+d46 3
+@

@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.11.14.17;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.splitBaseExt.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "basis.toplevel";
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = splitBaseExt "" = {base = "", ext = NONE};
+
+val b = splitBaseExt ".login" = {base = ".login", ext = NONE};
+
+val c = splitBaseExt "/.login" = {base = "/.login", ext = NONE};
+
+val d = splitBaseExt "a" = {base = "a", ext = NONE};
+
+val e = splitBaseExt "a." = {base = "a.", ext = NONE};
+
+val f = splitBaseExt "a.b" = {base = "a", ext = SOME "b"};
+
+val g = splitBaseExt "a.b.c" = {base = "a.b", ext = SOME "c"};
+
+val h = splitBaseExt "/a.b" = {base = "/a", ext = SOME "b"};
+
+val i = splitBaseExt "/c/a.b" = {base = "/c/a", ext = SOME "b"};
+
+val j = splitBaseExt "/c/a/b/.d" = {base = "/c/a/b/.d", ext = NONE};
+
+val k = splitBaseExt "/c.a/b.d" = {base = "/c.a/b", ext = SOME "d"};
+
+val l = splitBaseExt "/c.a/bd" = {base = "/c.a/bd", ext = NONE};
+
+val m = splitBaseExt "/c/a/b.foo.bar" = {base = "/c/a/b.foo", ext = SOME "bar"};
+
+val n = splitBaseExt "/c/a/b.foo" = {base = "/c/a/b", ext = SOME "foo"};
+
+val p = splitBaseExt ".news/comp" = {base = ".news/comp", ext = NONE};
+@

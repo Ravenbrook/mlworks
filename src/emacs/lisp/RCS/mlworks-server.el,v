@@ -1,0 +1,377 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.5
+	ML_beta_release_03/08/94:1.5
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4;
+locks; strict;
+comment	@;;; @;
+
+
+1.10
+date	95.10.23.17.46.21;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.10.23.13.00.04;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.10.20.16.41.03;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.10.03.15.24.50;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.10.02.14.19.15;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.09.27.19.05.56;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.08.03.15.34.02;	author matthew;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	93.06.17.11.13.44;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.05.12.12.31.56;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.15.14.27.29;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	93.08.03.15.34.02;	author jont;	state Exp;
+branches;
+next	1.4.1.2;
+
+1.4.1.2
+date	93.09.27.19.03.25;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@MLWorks Emacs server
+@
+
+
+1.10
+log
+@Used the before-changes hook to remove highlight when the buffer changes.
+@
+text
+@;;;	==== MLWORKS EMACS SERVER ====
+;;;
+;;; Copyright (C) 1993 Harlequin Ltd
+;;;
+;;; This file is part of MLWorks.  Consult MLWorks documentation for
+;;; details of how to use the MLWorks server.
+;;;
+;;; $Id: mlworks-server.el,v 1.9 1995/10/23 13:00:04 daveb Exp $
+
+(defvar mlworks-server:program "$MLWORKSDIR/lib/emacs/etc/mlworks-server"
+  "The path of the program which listens for MLWorks Emacs server requests.")
+
+(defvar mlworks-server:process nil
+  "The Emacs process object of the server process, or nil if never started.")
+
+(defvar mlworks-server:buffer "*MLWorks server*"
+  "The name of a buffer to which server requests and messages are appended.
+This facility is provided purely for the information of the user.  No
+buffer is used if this variable is nil.")
+
+(defun mlworks-server ()
+  "Start the MLWorks Emacs server.
+The server listens for requests from MLWorks to edit files and pops
+them up in a buffer."
+  (interactive)
+  (and mlworks-server:process
+       (delete-process mlworks-server:process))
+  (setq mlworks-server:process
+	(start-process "mlworks-server" nil
+		       mlworks-server:program))
+  (set-process-filter mlworks-server:process 'mlworks-server:filter)
+  (process-kill-without-query mlworks-server:process)
+  (if mlworks-server:buffer
+      (bury-buffer (get-buffer-create mlworks-server:buffer)))
+  mlworks-server:process)
+
+(defun mlworks-server:filter (process string)
+  "Filter function for the MLWorks Emacs server process.
+The server process sends Emacs lisp expressions.  These are appended
+to the buffer mlworks-server:buffer if it is non-nil, then evaluated."
+  (if mlworks-server:buffer
+      (save-excursion
+	(switch-to-buffer mlworks-server:buffer)
+	(goto-char (point-max))
+	(insert "[")
+	(insert string)
+	(insert "]")
+	(bury-buffer)))
+  (eval (read string)))
+
+(defun mlworks-x-y-to-pos (x y)
+   "Converts a line and column in MLWorks co-ordinates to an emacs position"
+   (save-excursion
+      (goto-char (point-min))
+      (next-line (1- x))
+      (+ (point) (1- y))))
+   
+(defvar mlworks-overlay nil "The current highlighted overlay")
+
+(defun mlworks-unhighlight ()
+   "Removes an existing mlworks highlight"
+   (interactive)
+   (if (null mlworks-overlay) () (delete-overlay mlworks-overlay)))
+
+(defun mlworks-undo-highlight (begin end)
+   "Version of mlworks-unhighlight for installation on the before-changes hook"
+   (if (null mlworks-overlay)
+       ()
+       (if (eq (overlay-buffer mlworks-overlay) (current-buffer))
+           (mlworks-unhighlight)
+           ())))
+	
+(make-variable-buffer-local 'mlworks-undo-highlight-installed)
+
+(defvar mlworks-undo-highlight-installed nil
+   "True if we have installed a change function")
+
+(defun mlworks-install-change-fn ()
+   "Installs a function that removes the highlight when the buffer is changed"
+    (interactive)
+    (unless mlworks-undo-highlight-installed
+        (make-local-variable 'before-change-functions)
+        (setq before-change-functions
+              (cons 'mlworks-undo-highlight before-change-functions))
+	(put 'before-change-functions 'permanent-local t)
+        (setq mlworks-undo-highlight-installed t)
+	(put 'mlworks-undo-highlight-installed 'permanent-local t)))
+
+(defun mlworks-highlight (s_line s_col e_line e_col)
+   "Highlights a section of text specified by two points given in MLWorks
+co-ordinates"
+   (let* ((start-pos (mlworks-x-y-to-pos s_line s_col))
+          (end-pos (mlworks-x-y-to-pos e_line (1+ e_col)))
+          (overlay (make-overlay start-pos end-pos)))
+      (mlworks-unhighlight)
+      (overlay-put overlay 'face 'highlight)
+      (mlworks-install-change-fn)
+      (setq mlworks-overlay overlay)
+      'highlight))
+
+;; Raises the window showing a specified buffer
+
+(defun raise-window (buffer)
+     "Raise the frame showing BUFFER to the top."
+     (interactive "bRaise buffer: ")
+     (let ((window (get-buffer-window buffer 0)))
+          (cond (window (raise-frame (window-frame window)))
+                (t (error "Current buffer not in any frame")))))
+
+;; Raises the window showing the current buffer
+
+(defun raise-this-window ()
+     "Raise the frame showing the current buffer to the top."
+     (interactive)
+     (raise-window (current-buffer)))
+
+@
+
+
+1.9
+log
+@Added unhighlighting code.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.8 1995/10/20 16:41:03 daveb Exp $
+d10 1
+a10 2
+;(defvar mlworks-server:program "$MLWORKSDIR/lib/emacs/etc/mlworks-server"
+(defvar mlworks-server:program "/u/daveb/ml/MLW/src/emacs/etc/mlworks-server"
+d65 24
+d97 1
+@
+
+
+1.8
+log
+@Added function to pop emacs to front
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.7 1995/10/03 15:24:50 daveb Exp $
+d10 2
+a11 1
+(defvar mlworks-server:program "$MLWORKSDIR/lib/emacs/etc/mlworks-server"
+d52 1
+a52 1
+(defun x-y-to-pos (x y)
+d59 8
+a66 2
+(defvar mlworks-highlight nil "The current highlighted overlay")
+(defun set-highlight (s_line s_col e_line e_col)
+d69 2
+a70 2
+   (let* ((start-pos (x-y-to-pos s_line s_col))
+          (end-pos (x-y-to-pos e_line (1+ e_col)))
+d72 1
+a72 1
+      (if (null mlworks-highlight) () (delete-overlay mlworks-highlight))
+d74 1
+a74 1
+      (setq mlworks-highlight overlay)
+@
+
+
+1.7
+log
+@Corrected apparent off-by-one error in highlighting code.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.6 1995/10/02 14:19:15 daveb Exp $
+d45 1
+d47 1
+a58 1
+
+d69 16
+@
+
+
+1.6
+log
+@Added commands to highlight region.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.5 1993/09/27 19:05:56 daveb Exp $
+d62 1
+a62 1
+          (end-pos (x-y-to-pos e_line e_col))
+a67 2
+
+
+@
+
+
+1.5
+log
+@Merged in bug fix.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.4 1993/08/03 15:34:02 matthew Exp daveb $
+d48 23
+@
+
+
+1.4
+log
+@Added call to bury-buffer after writing to mlworks-server:buffer
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.3 1993/06/17 11:13:44 richard Exp $
+d10 1
+a10 1
+(defvar mlworks-server:program "$LIBDIR/lib/emacs/etc/mlworks-server"
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.4 1993/08/03 15:34:02 matthew Exp jont $
+@
+
+
+1.4.1.2
+log
+@Changed LIBDIR to MLWORKSDIR for installation script.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.4.1.1 1993/08/03 15:34:02 jont Exp daveb $
+d10 1
+a10 1
+(defvar mlworks-server:program "$MLWORKSDIR/lib/emacs/etc/mlworks-server"
+@
+
+
+1.3
+log
+@The MLWorks server buffer is created when the process is started
+and buried.  This prevents it appearing at the top of the buffer
+stack when the first request is received.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.2 1993/05/12 12:31:56 richard Exp richard $
+d45 2
+a46 1
+	(insert string)))
+@
+
+
+1.2
+log
+@Changed MLHOME to LIBDIR for substitution by the installation script.
+@
+text
+@d8 1
+a8 1
+;;; $Id: mlworks-server.el,v 1.1 1993/03/15 14:27:29 richard Exp richard $
+d33 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 1
+a8 1
+;;; $Id$
+d10 1
+a10 1
+(defvar mlworks-server:program "$MLHOME/aux/emacs/etc/mlworks-server"
+@

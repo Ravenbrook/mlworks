@@ -1,0 +1,90 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.04.17.15.27.39;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Provide an OS independent way of terminating MLWorks.
+@
+
+
+1.1
+log
+@new unit
+Provide an OS independent way of terminating MLWorks.
+@
+text
+@(* Copyright (C) 1996 Harlequin Ltd.
+ *
+ * See exit.sml for documentation.
+ *
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+
+structure Exit_ =
+  struct
+    val env = MLWorks.Internal.Runtime.environment
+
+    type status = int
+
+    val success : status = 0
+
+    val failure : status = 1
+
+    val uncaughtIOException : status = 2
+
+    val badUsage : status = 3
+
+    val stop : status = 4
+
+    val save : status = 5
+
+    val badInput : status = 6
+
+    fun terminate (x:status):'a = env "system os exit"
+
+    val exitActions = ref [] : (unit -> unit) list ref
+
+    val exiting = ref false : bool ref
+
+
+    fun atExit action =
+      if !exiting
+      then ()
+      else  exitActions := action::(!exitActions)
+
+
+    (* exit is a little convoluted because it must satisfy the
+     * following requirement on OS.Process.exit :-
+     *
+     *   Calls to *exit* do not return, but should cause the remainder 
+     *   of the functions registered with *atExit* to be executed.
+     *)
+    fun exit exitCode =
+      let 
+        fun exit' [] = terminate exitCode
+          | exit' (action::actions) = 
+              (exitActions := actions;
+               (action () handle _ => ());
+               exit' actions)
+      in
+        exiting := true;
+        exit' (!exitActions)
+      end
+
+  end
+@

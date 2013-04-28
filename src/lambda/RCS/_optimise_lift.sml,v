@@ -1,0 +1,176 @@
+head	1.5;
+access;
+symbols
+	ML_beta_release_12/08/94:1.5
+	ML_beta_release_03/08/94:1.5
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	92.08.05.18.08.48;	author jont;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.03.27.13.25.08;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.16.27.02;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.22.14.54.08;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.09.09.45.06;	author davida;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.08.05.18.08.48;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Lifting subexpressions.
+@
+
+
+1.5
+log
+@Removed some structures and sharing
+@
+text
+@
+(*
+ * Lambda-Calculus Optimisation: _optimise_lift
+ * Lifting expressions to higher scopes
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/print";
+require "optimise_lib";
+require "optimise_lift";
+require "lambdatypes";
+
+functor OptimiseLift(
+  structure Print : PRINT
+  structure Lib : OPTIMISE_LIB
+  structure LT : LAMBDATYPES
+) : OPTIMISE_LIFT =
+struct
+  structure LT = LT
+  val show_debug_info = ref true;
+  fun info message = if !show_debug_info then Print.print message else ()
+
+
+  (*************************************************)
+  (*  Lifting Lambda-Expressions to Higher Scopes  *)
+  (*************************************************)
+
+  fun lift_expressions info expression = expression
+end;
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@@
+
+
+1.4
+log
+@Added Print parameter and removed pervasive print
+@
+text
+@d12 1
+d17 1
+d20 1
+a23 1
+  structure LT = Lib.LT
+@
+
+
+1.3
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@d9 1
+a9 1
+require "lambdatypes";
+d13 4
+a16 1
+functor OptimiseLift(structure Lib : OPTIMISE_LIB) : OPTIMISE_LIFT =
+d19 1
+a19 1
+  fun info message = if !show_debug_info then print message else ()
+@
+
+
+1.2
+log
+@Took out imposs function and exception impossible.
+@
+text
+@d18 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 6
+a7 1
+   (*  Lambda-Calculus Optimisation:  _optimise_lift  *)
+a8 6
+       (*  Lifting expressions to higher scopes  *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+a12 1
+
+a14 3
+
+  open Lib  infix mem == ++ -- (* !!! *)
+   
+a17 4
+  exception impossible of string
+  fun imposs message = raise impossible message
+
+
+d23 1
+a23 6
+
+
+
+
+end  (* of functor *)
+
+@

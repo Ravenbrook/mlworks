@@ -1,0 +1,82 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.12.21.08;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.30.05;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1992 by Carnegie Mellon University *)
+(* Modified: Ekkehard Rohwedder <er@@cs.cmu.edu>     *)
+
+signature STORE =
+sig
+
+  structure Term : TERM
+  structure Sign : SIGN
+  structure Progtab : PROGTAB
+
+  structure Switch : SWITCH
+
+  datatype topdecl
+     = Static of Sign.sign
+     | Dynamic of Sign.sign * Progtab.progentry list * Term.sign_entry list
+
+  val topenv  : ((string * int * topdecl) list) ref
+
+  val enter_top : string -> topdecl -> unit
+  val find_top : string -> (string * int * topdecl) option
+
+  val dload_one : string -> unit
+  val sload_one : string -> unit
+
+  val find_sig : string -> Sign.sign
+
+  val help : unit -> unit
+  val addhelp : (unit -> unit) -> unit
+
+  val topsign  : unit -> Sign.sign
+
+end  (* signature STORE *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

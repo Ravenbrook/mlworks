@@ -1,0 +1,683 @@
+head	1.7;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.7.5.1.1
+	MLWorks_gui_1996_12_18:1.7.6
+	MLWorks_1_0_Win32_1996_12_17:1.7.5
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.7.3.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.7.3.1
+	MLWorks_1_0_Irix_1996_11_28:1.7.3.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.7.4
+	MLWorks_1_0_Unix_1996_11_14:1.7.3
+	MLWorks_Open_Beta2_1996_10_11:1.7.2
+	MLWorks_License_dev:1.7.1
+	MLWorks_1_open_beta_1996_09_13:1.6.1
+	MLWorks_Open_Beta_1996_08_22:1.6
+	MLWorks_Beta_1996_07_02:1.4
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.4
+	MLWorks_Beta_1996_05_31:1.4
+	MLWorks_Beta_1996_05_30:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	96.09.18.15.23.54;	author io;	state Exp;
+branches
+	1.7.1.1
+	1.7.2.1
+	1.7.3.1
+	1.7.4.1
+	1.7.5.1
+	1.7.6.1;
+next	1.6;
+
+1.6
+date	96.08.16.15.53.35;	author daveb;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	96.08.09.14.02.48;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.21.13.06.40;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.17.09.38.37;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.15.13.03.29;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.37.10;	author jont;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	96.09.13.11.10.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	96.10.07.16.01.45;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.2.1
+date	96.10.17.11.19.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.3.1
+date	96.11.14.12.43.33;	author hope;	state Exp;
+branches
+	1.7.3.1.1.1;
+next	;
+
+1.7.3.1.1.1
+date	96.11.28.14.55.27;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.4.1
+date	96.11.22.18.04.01;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.5.1
+date	96.12.17.17.42.55;	author hope;	state Exp;
+branches
+	1.7.5.1.1.1;
+next	;
+
+1.7.5.1.1.1
+date	97.02.24.11.31.33;	author hope;	state Exp;
+branches;
+next	;
+
+1.7.6.1
+date	96.12.18.09.36.55;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.7
+log
+@[Bug #1603]
+convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+@
+text
+@(*  ==== INITIAL BASIS : WORD 8 ARRAY ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  Word8 arrays are identified with MLWorks bytearray objects - note that
+ *  the basic MONO_ARRAY signature is reduced functionality from our own
+ *  ByteArray signature.
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __word8array.sml,v $
+ * Revision 1.6  1996/08/16  15:53:35  daveb
+ * Removed unused reference to ByteArray.from_string.
+ *
+ * Revision 1.5  1996/08/09  14:02:48  daveb
+ * [Bug #1536]
+ * [Bug #1536]
+ * Word8Vector.vector no longer shares with string.
+ *
+ * Revision 1.4  1996/05/21  13:06:40  matthew
+ * Updating
+ *
+ * Revision 1.3  1996/05/17  09:38:37  matthew
+ * Moved Bits to MLWorks.Internal.Bits
+ *
+ * Revision 1.2  1996/05/15  13:03:29  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.1  1996/04/18  11:37:10  jont
+ * new unit
+ *
+ *  Revision 1.3  1996/03/20  14:43:27  matthew
+ *  Changes for new language definition
+ *
+ *  Revision 1.2  1995/05/16  14:21:09  daveb
+ *  Added function to copy part of a string into a bytearray.
+ *
+ *  Revision 1.1  1995/03/22  20:22:09  brianm
+ *  new unit
+ *  New file.
+ * 
+ *
+ *)
+
+require "mono_array";
+require "__word8";
+require "__word8vector";
+
+structure Word8Array : MONO_ARRAY =
+  struct
+    type elem = Word8.word
+    structure Vector = Word8Vector
+    datatype array = A of MLWorks.Internal.ByteArray.bytearray
+
+    val maxLen = MLWorks.Internal.ByteArray.maxLen
+
+    fun check_size n =
+      if n < 0 orelse n > maxLen then raise Size else n
+
+    fun array (i: int, e: elem) : array =
+      A (MLWorks.Internal.ByteArray.array (check_size i, MLWorks.Internal.Value.cast e))
+
+    fun tabulate (i : int, f : int -> elem) : array =
+      A (MLWorks.Internal.ByteArray.tabulate (check_size i,MLWorks.Internal.Value.cast f))
+
+    (* uses toplevel List.length which is overridden afterwords *)
+    fun fromList (l : elem list) : array =
+      (check_size (length l);
+       A (MLWorks.Internal.ByteArray.arrayoflist (MLWorks.Internal.Value.cast l)))
+
+    val length   : array -> int                     = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.length) 
+    val sub      : (array * int) -> elem            = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.sub)
+    val update   : (array * int * elem) -> unit     = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.update)
+
+    val extract  : (array * int * int option ) -> Vector.vector =
+      fn (A a,i,len) =>
+      let
+        val len =
+          case len of
+            SOME l => l
+          | NONE => MLWorks.Internal.ByteArray.length a - i
+      in 
+        if i >= 0 andalso len >= 0 andalso i + len <= MLWorks.Internal.ByteArray.length a
+          then MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.substring (a,i,len))
+        else raise Subscript
+      end
+
+    
+    fun copy { src=A(src_ba), si, len, dst=A(dst_ba), di } =
+      let
+        val l = case len of
+          SOME l => l
+        | NONE => MLWorks.Internal.ByteArray.length src_ba - si
+      in
+        if si >= 0 andalso l >= 0 andalso si + l <= MLWorks.Internal.ByteArray.length src_ba
+          andalso di >= 0 andalso di + l <= MLWorks.Internal.ByteArray.length dst_ba
+          then MLWorks.Internal.ByteArray.copy(src_ba, si, si+l, dst_ba, di)
+        else raise Subscript
+      end
+
+    fun copyv_ba (from, start, len, to, start') =
+      let
+        val finish = start+len
+        val l1 = Vector.length from
+        val l2 = MLWorks.Internal.ByteArray.length to
+        val unsafe_update = MLWorks.Internal.Value.unsafe_bytearray_update
+        val unsafe_sub = MLWorks.Internal.Value.unsafe_string_sub
+      in
+        if start < 0 orelse start > l1 orelse start+len > l1 orelse
+           start' < 0 orelse start' + len  > l2 then
+          raise Subscript
+        else
+          let
+            fun copy' 0 = ()
+              | copy' n =
+                let
+                  val n' = n-1
+                in
+                  (unsafe_update (to, start'+n', unsafe_sub (MLWorks.Internal.Value.cast from, start+n'));
+                   copy' n')
+                end
+          in
+            copy' len
+          end
+      end
+
+    fun copyVec {src, si, len, dst=A(dst_ba), di} =
+      let
+        val len =
+          case len of
+            SOME l => l
+          | _ => Vector.length src - si
+      in
+        copyv_ba(src, si, len, dst_ba, di)
+      end
+
+    fun app f vector =
+      let
+	val l = length vector
+	fun iterate n =
+	  if n = l then
+	    ()
+	  else
+	    (f(sub(vector, n));
+	     iterate(n+1))
+      in
+	iterate 0
+      end
+
+    fun appi f (array, i, j) =
+      let
+	val l = length array
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun iterate' n =
+	  if n >= len then
+	    ()
+	  else
+	    (f (n, sub (array, n));
+	     iterate'(n+1))
+      in
+	iterate' i
+      end
+
+    fun foldl f b array =
+      let
+	val l = length array
+	fun reduce(n, x) =
+	  if n = l then
+	    x
+	  else
+	    reduce(n+1, f(sub(array, n), x))
+      in
+	reduce(0, b)
+      end
+
+    fun foldr f b array =
+      let
+	val l = length array
+	fun reduce(n, x) =
+	  if n < 0 then
+	    x
+	  else
+	    reduce(n-1, f(sub(array, n), x))
+      in
+	reduce(l-1, b)
+      end
+
+    fun foldli f b (array, i, j) =
+      let
+	val l = length array
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce (n, x) =
+	  if n >= l then
+	    x
+	  else
+	    reduce(n+1, f(n, sub(array, n), x))
+      in
+	reduce(i, b)
+      end
+
+    fun foldri f b (array, i, j) =
+      let
+	val l = length array
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce (n, x) =
+	  if n < i then
+	    x
+	  else
+	    reduce(n-1, f(n, sub(array, n), x))
+      in
+	reduce(len-1, b)
+      end
+
+    fun modify f array =
+      let
+	val l = length array
+	fun iterate n =
+	  if n = l then
+	    ()
+	  else
+	    (update(array, n, f(sub(array, n)));
+	     iterate(n+1))
+      in
+	iterate 0
+      end
+
+    fun modifyi f (array, i, j) =
+      let
+	val l = length array
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun iterate n =
+	  if n >= l then
+	    ()
+	  else
+	    (update(array, n, f(n, sub(array, n)));
+	     iterate(n+1))
+      in
+	iterate i
+      end
+
+  end
+@
+
+
+1.7.6.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.7.5.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.7.5.1.1.1
+log
+@branched from 1.7.5.1
+@
+text
+@a14 3
+ * Revision 1.7.5.1  1996/12/17  17:42:55  hope
+ * branched from 1.7
+ *
+@
+
+
+1.7.4.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.7.3.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.7.3.1.1.1
+log
+@branched from 1.7.3.1
+@
+text
+@a14 3
+ * Revision 1.7.3.1  1996/11/14  12:43:33  hope
+ * branched from 1.7
+ *
+@
+
+
+1.7.2.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.7.1.1
+log
+@branched from 1.7
+@
+text
+@a14 4
+ * Revision 1.7  1996/09/18  15:23:54  io
+ * [Bug #1603]
+ * convert MLWorks.ByteArray to MLWorks.Internal.ByteArray or equivalent basis functions
+ *
+@
+
+
+1.6
+log
+@Removed unused reference to ByteArray.from_string.
+@
+text
+@d15 3
+a48 1
+
+a49 1
+require "__list";
+d56 1
+d58 1
+a58 19
+    (* From here, the same as __chararray *)
+    structure Bits = MLWorks.Internal.Bits
+
+    val MLWcast         = MLWorks.Internal.Value.cast
+
+    structure ByteArray = MLWorks.ByteArray
+    type bytearray      = ByteArray.bytearray
+
+    val array_ba        = ByteArray.array
+    val tabulate_ba     = ByteArray.tabulate
+    val arrayoflist_ba  = ByteArray.arrayoflist
+    val length_ba       = ByteArray.length
+    val sub_ba          = ByteArray.sub
+    val update_ba       = ByteArray.update
+    val substring_ba    = ByteArray.substring
+    val copy_ba         = ByteArray.copy
+    datatype array = A of bytearray
+
+    val maxLen = ByteArray.maxLen
+d64 1
+a64 1
+      A (array_ba (check_size i, MLWcast e))
+d67 1
+a67 1
+      A (tabulate_ba (check_size i,MLWcast f))
+d69 1
+d71 2
+a72 2
+      (check_size (List.length l);
+       A (arrayoflist_ba (MLWcast l)))
+d74 3
+a76 3
+    val length   : array -> int                     = MLWcast(length_ba) 
+    val sub      : (array * int) -> elem            = MLWcast(sub_ba)
+    val update   : (array * int * elem) -> unit     = MLWcast(update_ba)
+d84 1
+a84 1
+          | NONE => length_ba a - i
+d86 2
+a87 2
+        if i >= 0 andalso len >= 0 andalso i + len <= length_ba a
+          then MLWcast(substring_ba (a,i,len))
+d96 1
+a96 1
+        | NONE => length_ba src_ba - si
+d98 3
+a100 3
+        if si >= 0 andalso l >= 0 andalso si + l <= length_ba src_ba
+          andalso di >= 0 andalso di + l <= length_ba dst_ba
+          then copy_ba(src_ba, si, si+l, dst_ba, di)
+d108 1
+a108 1
+        val l2 = ByteArray.length to
+d122 1
+a122 2
+                  (unsafe_update
+		     (to, start'+n', unsafe_sub (MLWcast from, start+n'));
+@
+
+
+1.6.1.1
+log
+@branched from 1.6
+@
+text
+@a14 3
+ * Revision 1.6  1996/08/16  15:53:35  daveb
+ * Removed unused reference to ByteArray.from_string.
+ *
+@
+
+
+1.5
+log
+@[Bug #1536]
+[Bug #1536]
+Word8Vector.vector no longer shares with string.
+@
+text
+@d15 5
+a72 2
+
+    val from_string     = ByteArray.from_string
+@
+
+
+1.4
+log
+@Updating
+@
+text
+@d15 3
+a41 2
+require "toplevel";
+require "__general";
+d134 2
+a135 1
+                  (unsafe_update (to, start'+n', unsafe_sub (from, start+n'));
+@
+
+
+1.3
+log
+@Moved Bits to MLWorks.Internal.Bits
+@
+text
+@d15 3
+d39 1
+d42 1
+d47 2
+d50 1
+d66 1
+d70 1
+a70 5
+    fun pow2(n)         = Bits.lshift(1,n)
+
+    datatype array = A of bytearray
+
+    type elem = Word8.word
+d72 2
+a73 1
+    type vector = Word8Vector.vector
+d75 2
+a76 1
+    val maxlen = pow2(28)
+d78 2
+a79 2
+    val array    : (int * elem) -> array            = MLWcast(array_ba)
+    val tabulate : (int * (int -> elem)) -> array   = MLWcast(tabulate_ba)
+d81 3
+a83 1
+    val arrayOfList : elem list -> array            = MLWcast(arrayoflist_ba)
+a87 1
+    val extract  : (array * int * int) -> vector    = MLWcast(substring_ba)
+d89 14
+d104 10
+a113 1
+        copy_ba(src_ba, si, len, dst_ba, di)
+d115 1
+a115 1
+    fun copyv_ba (from, start, finish, to, start') =
+d117 2
+a118 1
+        val l1 = Word8Vector.length from
+d123 3
+a125 4
+        if start < 0 orelse start > l1 orelse finish > l1 orelse
+           start > finish orelse
+           start' < 0 orelse start' + finish - start > l2 then
+          raise ByteArray.Copy (start, finish, start')
+d133 1
+a133 2
+                  (unsafe_update
+  		     (to, start'+n', unsafe_sub (from, start+n'));
+d137 1
+a137 1
+            copy' (finish - start)
+d141 121
+a261 2
+    fun copyv {src, si, len, dst=A(dst_ba), di} =
+      copyv_ba(src, si, len, dst_ba, di)
+@
+
+
+1.2
+log
+@pack_words moved to pack_word
+@
+text
+@d15 3
+d42 2
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d14 4
+a17 1
+ *  $Log$
+d31 1
+a31 1
+require "mono_arrays";
+@

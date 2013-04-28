@@ -1,0 +1,67 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.11.28.03;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.isAbsolute.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = isAbsolute "" = false;
+
+val b = isAbsolute "/";
+
+val c = isAbsolute "/a";
+
+val d = isAbsolute "//a";
+
+val e = isAbsolute "//";
+
+val f = isAbsolute "/.";
+
+val g = isAbsolute "/..";
+
+val h = isAbsolute "." = false;
+
+val i = isAbsolute ".." = false;
+
+val j = isAbsolute "a//" = false;
+@

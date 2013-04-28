@@ -1,0 +1,80 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.12.12.38;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.getParent.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = getParent "/" = "/";
+
+val b = getParent "a" = ".";
+
+val c = getParent "a/" = "a/..";
+
+val d = getParent "a///" = "a///..";
+
+val e = getParent "a/b" = "a";
+
+val f = getParent "a/b/" = "a/b/..";
+
+val g = getParent ".." = "../..";
+
+val h = getParent "." = "..";
+
+val i = getParent "../" = "../.."
+
+val j = getParent "./" = "./..";
+
+val k = getParent "" = "..";
+
+val l = getParent "/abc" = "/";
+
+val m = getParent "/abc." = "/";
+
+val p = getParent "/abc.." = "/";
+
+val q = getParent "/abc/.." = "/abc/../..";
+
+val r = getParent "../.." = "../../..";
+
+val r = getParent "/abc/." = "/abc/..";
+@

@@ -1,0 +1,220 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.4
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_MM_adapt:1.1.3
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_workspace_97:1.1.2
+	MLWorks_dt_wizard:1.1.1
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	97.05.22.09.16.14;	author johnh;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1;
+next	;
+
+1.1.1.1
+date	97.09.10.19.30.24;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	97.09.11.21.00.00;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	97.10.31.13.43.11;	author nickb;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	99.04.01.18.00.15;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #01702]
+Moved mlw_win32_strerror from being auto generated to this file plus
+other functions that were duplicated across a number of files.
+@
+
+
+1.1
+log
+@new unit
+[Bug #01702]
+Moved mlw_win32_strerror from being auto generated to this file plus
+other functions that were duplicated across a number of files.
+@
+text
+@/*  === Win32 Error & String functions ===
+ *
+ *  Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ */
+
+#include <windows.h>
+#include "exceptions.h"      /* exn_raise_syserr */
+#include "allocator.h"       /* ml_string */
+
+/* A note on error codes
+ * ---------------------
+ * 
+ * Most Win32 functions that fail set an error code that can be obtained
+ * using GetLastError.  Unfortunately, Win32 doesn't seem to support all
+ * the functionallity MLWorks needs and so some use needs to be made of
+ * routines that are to be found in the Visual C++ compatability (Unix) 
+ * library.  These routines generally set errno when they fail.  This means
+ * that there are two types of error codes that needs to be returned by
+ * OS.SysErr when a failure occurs.  The simple approach would be to 
+ * define syserror as something like :-
+ *
+ *   datatype syserror = WIN32_ERROR int | UNIX_ERROR int
+ *
+ * and then just inject the error code into the correct one.  Note that
+ * this would be different from the Unix definition which can get by
+ * with just
+ *
+ *   type syserror = int
+ * 
+ * Unfortunately, due to problems with the rebinding of exceptions, the
+ * SysErr exception is defined in MLWorks.Internal.Error and has the type
+ * 
+ *   type syserror = int
+ *   exception SysError of syserror Option.option
+ *
+ * i.e. it is hardwired to be just an int :-<
+ *
+ * The solution adopted for Win32 is to squeeze both types of error
+ * into the one int by encoding them as :-
+ *
+ *   Win32 error == (GetLastError()<<1)|0
+ *   Unix error  == (errno<<1)|1
+ *
+ * This is feasible because errno rarely gets above 100 and the error code
+ * portion of GetLastError is a 16-bit value.
+ *
+ */
+
+mlval mlw_win32_strerror(unsigned int error_code)
+{
+  /* error_code should be the code returned by a call to GetLastError() */
+  LPSTR lpMsgBuf;
+  mlval error_string;
+
+  FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+		NULL, error_code,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf, 0, NULL);
+
+  error_string = ml_string((char*)lpMsgBuf);
+  LocalFree(lpMsgBuf);
+
+  return error_string;
+}  
+
+void mlw_raise_win32_syserr(int error_code)
+{
+  exn_raise_syserr(mlw_win32_strerror(error_code), (error_code<<1));
+}
+
+void mlw_raise_c_syserr(int errno)
+{
+  exn_raise_syserr(ml_string(strerror(errno)), (errno<<1)|1);
+}
+
+
+
+
+@
+
+
+1.1.4.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d7 1
+a7 7
+ *  $Log: src:OS:Win32:win32_error.c,v $
+ * Revision 1.1  1997/05/22  09:16:14  johnh
+ * new unit
+ * [Bug #01702]
+ * Moved mlw_win32_strerror from being auto generated to this file plus
+ * other functions that were duplicated across a number of files.
+ *
+@
+
+
+1.1.3.1
+log
+@branched from trunk for label MLWorks_MM_adapt
+@
+text
+@d7 1
+a7 7
+ *  $Log: src:OS:Win32:win32_error.c,v $
+ * Revision 1.1  1997/05/22  09:16:14  johnh
+ * new unit
+ * [Bug #01702]
+ * Moved mlw_win32_strerror from being auto generated to this file plus
+ * other functions that were duplicated across a number of files.
+ *
+@
+
+
+1.1.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d7 1
+a7 7
+ *  $Log: src:OS:Win32:win32_error.c,v $
+ * Revision 1.1  1997/05/22  09:16:14  johnh
+ * new unit
+ * [Bug #01702]
+ * Moved mlw_win32_strerror from being auto generated to this file plus
+ * other functions that were duplicated across a number of files.
+ *
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d7 1
+a7 7
+ *  $Log: src:OS:Win32:win32_error.c,v $
+ * Revision 1.1  1997/05/22  09:16:14  johnh
+ * new unit
+ * [Bug #01702]
+ * Moved mlw_win32_strerror from being auto generated to this file plus
+ * other functions that were duplicated across a number of files.
+ *
+@

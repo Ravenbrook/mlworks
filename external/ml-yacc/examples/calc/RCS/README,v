@@ -1,0 +1,87 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.09.14.12.59.34;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.18.41.22;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.2
+log
+@[Bug #30412]
+Update for projects
+@
+text
+@This is a sample interactive calculator built using ML-Yacc and ML-Lex.
+
+To construct it, first use ML-Yacc on the file "calc.grm" to construct
+the files "calc_grm.sml" and "_calc_grm.sml".  This can be done by
+loading ML-Yacc and typing "ParseGen.parseGen "calc.grm"".  Then
+construct the lexer by using ML-Lex on the file calc.lex.
+("LexGen.lexGen "calc.lex").
+
+To load it into Harlequin MLWorks, in the GUI open the project yacccalc.mlp
+in the project workspace tool and compile and load the targets using
+Project > Compile Target Sources and Project > Load Targets.
+This will build the calculator structure automatically.
+
+The end result of loading these files is a structure Calc containing a
+function named parse.  The calculator can be invoked by applying that
+function to a value of type unit.  The calculator reads from the
+standard input.  There is no attempt to fix input errors since this
+is an interactive parser.
+
+The calculator reads a sequence of expressions from the standard input
+and prints the value of each expression after reading the expression.
+Expressions must be separated by semicolons.  An expression is not
+evaluated until the semicolon is encountered.  The calculator
+terminates when an end-of-file is encountered.
+
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@d6 1
+a6 1
+construct the lexer by using ML_Lex on the file calc.lex.
+d9 4
+a12 12
+To load it into Harlequin MLWorks, first extend the source path to
+point to the directory containing the ML-Yacc library directory, lib.
+To do this in the GUI, use the Paths=>Source_Path dialog.  Alternatively,
+one can type
+
+	Shell.Path.setSourcePath(<directory>::(Shell.Path.sourcePath()));
+
+Then, simply type 
+
+	Shell.File.loadSource "__join";
+
+and this will build the calculator structure automatically.
+@

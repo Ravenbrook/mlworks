@@ -1,0 +1,114 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+
+
+1.2
+date	93.12.09.19.29.49;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.10.09.14.56.41;	author clive;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.10.09.14.56.41;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Tracing module
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@(*
+$Log: trace.sml,v $
+Revision 1.1  1992/10/09  14:56:41  clive
+Initial revision
+
+ * Copyright (c) 1993 Harlequin Ltd.
+*)
+
+require "debugger_types";
+
+signature TRACE =
+  sig
+
+    structure Debugger_Types : DEBUGGER_TYPES
+
+    val trace_frames : ((MLWorks.Internal.Debugger.StackFrame * MLWorks.Internal.Debugger.StackFrame ref) list) ref
+    val add_trace_frame : MLWorks.Internal.Debugger.StackFrame * MLWorks.Internal.Debugger.StackFrame ref -> unit
+    val remove_trace_frame : MLWorks.Internal.Debugger.StackFrame * MLWorks.Internal.Debugger.StackFrame ref -> unit
+
+    val are_we_tracing : unit -> bool 
+    val are_we_breakpointing : unit -> bool 
+
+    val get_next_frame : MLWorks.Internal.Debugger.StackFrame -> bool * MLWorks.Internal.Debugger.StackFrame * int 
+    
+    datatype Search = Found | NotFound
+    val find_object : MLWorks.Internal.Value.ml_value -> Search
+
+    val trace : Debugger_Types.information -> ('a -> 'b) -> bool
+    val untrace : ('a -> 'b) -> bool
+    val untrace_all : unit -> unit
+    val breakpoint : Debugger_Types.information -> ('a -> 'b) -> bool
+    val unbreakpoint : ('a -> 'b) -> bool
+    val unbreakpoint_all : unit -> unit
+
+  end
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 5
+a6 1
+$Log: $
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 1
+a2 4
+$Log: trace.sml,v $
+Revision 1.1  1992/10/09  14:56:41  clive
+Initial revision
+
+@

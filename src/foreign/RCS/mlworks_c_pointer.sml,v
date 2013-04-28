@@ -1,0 +1,264 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.07.03.09.40.56;	author stephenb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.07.01.15.34.49;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.18.53;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.50.01;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.53.40;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * The signature that (almost) all pointer types should satisfy.
+ *
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+
+require "$.basis.__word";
+
+signature MLWORKS_C_POINTER =
+  sig
+    type 'a ptr
+
+
+    (*
+     * value is the type of object that the pointer points at.
+     *)
+    type value
+
+
+
+    (*
+     * size specifies the size of a value in bytes.
+     *)
+    val size : Word.word
+
+
+
+    (*
+     * ! dereferences the pointer to return the value it points at.
+     *
+     * Assuming the existence of the following C type declarations assuming
+     * that value is defined elsewhere :-
+     *
+     *   typedef value * ptr;
+     *   ptr   vp;
+     *
+     * then `:=' is equivalent to doing :-
+     *
+     *   *vp;
+     *
+     *)
+    val ! : value ptr -> value
+
+
+
+    (*
+     * `:=' alters the value pointed at by the pointer to be the new value.
+     *
+     * Assuming the existence of the following C type declarations assuming
+     * that `value' is defined elsewhere :-
+     *
+     *   typedef value * ptr;
+     *   value v;
+     *   ptr   vp;
+     *
+     * then `:=' is equivalent to doing :-
+     *
+     *   *vp= v;
+     *
+     *)
+    val := : value ptr * value -> unit
+
+
+
+    (*
+     * make allocates (with malloc) enough space for a value and
+     * returns a pointer to it.  
+     *
+     * make returns null if malloc cannot allocate enough space.
+     *
+     * Assuming the existence of the following C type declarations assuming
+     * that value is defined elsewhere :-
+     *
+     *   typedef value * ptr;
+     *
+     * then make is equivalent to the following C function :-
+     *
+     *   ptr * make()
+     *   {
+     *     return (ptr)malloc(sizeof(value));
+     *   }
+     *)
+    val make : unit -> value ptr
+
+
+
+    (* makeArray n
+     *
+     * makeArray allocates (with malloc) enough space for n values and
+     * returns a pointer to the first one.
+     *
+     * makeArray returns null if malloc cannot allocate enough space or if
+     * the requested number is less than or equal to 0.
+     *
+     * Assuming the existence of the following C type declarations assuming
+     * that value is defined elsewhere :-
+     *
+     *   typedef value * ptr;
+     *
+     * then makeArray is equivalent to the following C function :-
+     *
+     *   ptr * makeArray(int n)
+     *   {
+     *     if (n < 0)
+     *       return NULL;
+     *     else
+     *      return (ptr)malloc(sizeof(value)*n);
+     *   }
+     *)
+    val makeArray : int -> value ptr
+
+
+
+    (*
+     * free deallocates the space (using free from the C library) pointed
+     * to by the pointer.  The result is undefined if :-
+     *
+     *  - the space pointed to the pointer was not indirectly allocated
+     *    with malloc, realloc or calloc from the C library.
+     *  - the pointer points to space which has already been passed to
+     *    free.
+     *)
+    val free : value ptr -> unit
+
+
+
+    (* next p offset
+     * prev p offset
+     *
+     * next and prev provide a way to perform limited pointer arithmetic.
+     * next adds offset to p to form another pointer and sub subtracts
+     * offset from p to form another pointer.  The offset is scaled by
+     * the size of the value being pointed at so an offset of 0 returns
+     * the original pointer, an offset of 1 returns a pointer to the next
+     * (previous) value.  When dealing with arrays, next can be combined
+     * with ! and := to define equivalents of the sub and update functions
+     * that are available in SML arrays :-
+     *
+     *   fun sub (p, n) = ! (next (p, n))
+     *   fun update (p, v, n) = (next (p, n)) := v
+     *)
+    val next : value ptr * Word.word -> value ptr
+    val prev : value ptr * Word.word -> value ptr
+  end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d7 1
+a7 5
+ * $Log: mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:56  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d7 1
+a7 5
+ * $Log: mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:56  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d7 1
+a7 5
+ * $Log: mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:56  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

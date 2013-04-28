@@ -1,0 +1,984 @@
+head	1.7;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.7
+	MLWorks_Beta_1996_06_06:1.7
+	MLWorks_Beta_1996_06_05:1.7
+	MLWorks_Beta_1996_06_03:1.7
+	MLWorks_Beta_1996_05_31:1.7
+	MLWorks_Beta_1996_05_30:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	96.05.22.11.46.07;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.01.16.31.58;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.03.21.10.38.02;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.21.10.38.02;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.03.15.11.16.52;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.06.20.17.59;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.26.15.07.45;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Test suite for NT path names.
+@
+
+
+1.7
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Test suite for NT path names.
+
+Result: OK
+ 
+ * $Log: basis:win_ntpath.sml,v $
+ * Revision 1.6  1996/05/01  16:31:58  jont
+ * Fixing up after changes to toplevel visible string and io stuff
+ *
+ * Revision 1.5  1996/03/21  10:38:02  matthew
+ * Updating
+ *
+ * Revision 1.3  1995/03/15  11:16:52  daveb
+ * Removed trailing separators from dir component.
+ *
+ * Revision 1.2  1995/03/06  20:17:59  daveb
+ * Removed the "last" component from exploded paths, and replaced
+ * splitPath with splitExt and splitLast.
+ *
+ * Revision 1.1  1995/01/26  15:07:45  daveb
+ * new unit
+ * Test suite for NT path names.
+ *
+ * Copyright (c) 1994 Harlequin Ltd.
+ *
+ *)
+
+Shell.Build.loadSource "win_nt.__path";
+Shell.Build.loadSource "basis.__integer";
+
+structure Win_ntPath = Path_;
+
+val dummyExplodedPath = {arcs=[], root= Win_ntPath.ABS "error"}
+
+val tests =
+[
+(* 0 *)
+Win_ntPath.parent = "..",
+
+Win_ntPath.current = ".",
+
+Win_ntPath.isAbsolute "" = false,
+
+Win_ntPath.isAbsolute "\\" = true,
+
+Win_ntPath.isAbsolute "a:" = true,
+
+Win_ntPath.isAbsolute "z:\\foo" = true,
+
+Win_ntPath.isAbsolute "\\\\pingu\\pub" = true
+handle Path => false,
+
+Win_ntPath.isAbsolute "\\\\pingu\\\\" = true
+handle Path => false,
+
+Win_ntPath.isAbsolute "\\\\foo" = false
+handle Path => true,
+
+Win_ntPath.isAbsolute "." = false,
+
+(* 10 *)
+Win_ntPath.isAbsolute "foo" = false,
+
+Win_ntPath.isRelative "" = true,
+
+Win_ntPath.isRelative "\\" = false,
+
+Win_ntPath.isRelative "a:" = false,
+
+Win_ntPath.isRelative "z:\\foo" = false,
+
+Win_ntPath.isRelative "\\\\pingu\\pub" = false
+handle Path => false,
+
+Win_ntPath.isRelative "\\\\pingu\\\\" = false
+handle Path => false,
+
+Win_ntPath.isRelative "\\\\foo" = false
+handle Path => true,
+
+Win_ntPath.isRelative "." = true,
+
+Win_ntPath.isRelative "foo" = true,
+
+(* 20 *)
+(Win_ntPath.explodePath "a:\\foo\\\\spong.ext\\bar.sml"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "", "spong.ext", "bar.sml"], root=Win_ntPath.ABS "a:\\"},
+
+(Win_ntPath.explodePath "a:foo\\\\spong.ext\\bar.sml"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "", "spong.ext", "bar.sml"], root=Win_ntPath.ABS "a:"},
+
+(Win_ntPath.explodePath "foo\\spong\\"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "spong", ""], root=Win_ntPath.REL},
+
+(Win_ntPath.explodePath "\\\\pingu\\pub\\foo\\spong"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "spong"], root=Win_ntPath.ABS "\\\\pingu\\pub"},
+
+(Win_ntPath.explodePath "\\\\pingu\\pub"
+ handle _ => dummyExplodedPath) =
+  {arcs=[], root=Win_ntPath.ABS "\\\\pingu\\pub"},
+
+(Win_ntPath.explodePath ""
+ handle _ => dummyExplodedPath) =
+  {arcs=[], root=Win_ntPath.REL},
+
+(Win_ntPath.explodePath "\\"
+ handle _ => dummyExplodedPath) =
+  {arcs=[], root=Win_ntPath.ABS "\\"},
+
+(Win_ntPath.implodePath
+  {arcs=["foo", "", "spong", "bar.sml"], root=Win_ntPath.ABS "\\"}
+   handle _ => "error") =
+  "\\foo\\\\spong\\bar.sml",
+
+(Win_ntPath.implodePath
+  {arcs=["foo", "spong", "bar"], root=Win_ntPath.ABS "\\\\pingu\\pub"}
+   handle _ => "error") =
+  "\\\\pingu\\pub\\foo\\spong\\bar",
+
+(Win_ntPath.implodePath
+  {arcs=["foo", "spong.ext", "bar.sml"], root=Win_ntPath.ABS "a:"}
+   handle _ => "error") =
+  "a:foo\\spong.ext\\bar.sml",
+
+(* 30 *)
+(Win_ntPath.implodePath {arcs=["foo", "spong", ""], root=Win_ntPath.REL}
+ handle _ => "error") =
+  "foo\\spong\\",
+
+(Win_ntPath.implodePath {arcs=[], root=Win_ntPath.REL}
+ handle _ => "error") =
+  ".",
+
+Win_ntPath.root "\\foo" = Win_ntPath.ABS "\\"
+handle _ => false,
+
+Win_ntPath.root "\\" = Win_ntPath.ABS "\\"
+handle _ => false,
+
+Win_ntPath.root "a:foo\\bar" = Win_ntPath.ABS "a:"
+handle _ => false,
+
+Win_ntPath.root "a:\\foo\\bar" = Win_ntPath.ABS "a:\\"
+handle _ => false,
+
+Win_ntPath.root "\\\\pingu\\pub\\foo\\bar" = Win_ntPath.ABS "\\\\pingu\\pub"
+handle _ => false,
+
+Win_ntPath.root "\\\\pingu\\pub" = Win_ntPath.ABS "\\\\pingu\\pub"
+handle _ => false,
+
+Win_ntPath.root "" = Win_ntPath.REL
+handle _ => false,
+
+Win_ntPath.isValidPath "..\\\\foo\\.sml" = true
+handle _ => false,
+
+(* 40 *)
+Win_ntPath.isValidPath "" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "A:" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\\\pingu\\pub" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\\\pingu\\pub\\foo" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo\"\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo*\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo/\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo:\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo<\\bar" = false
+handle _ => false,
+
+(* 50 *)
+Win_ntPath.isValidPath "\\foo>\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo\n\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo\t\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo\000\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo\248\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo$%'-_@@{}~`! #(),+=[];\\bar" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\foo^\\bar" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "\\fo.o.\\bar" = true
+handle _ => false,
+
+Win_ntPath.isValidPath "foo\\12345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234567890123456789012345\
+\678901234567890123456789012345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234\\bar.sml" = true
+handle _ => true,
+
+Win_ntPath.isValidPath "foo\\12345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234567890123456789012345\
+\678901234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345\\bar.sml" = false
+handle _ => false,
+
+(* 60 *)
+Win_ntPath.isValidRoot "" = false
+handle _ => false,
+
+Win_ntPath.isValidRoot "\\" = true
+handle _ => false,
+
+Win_ntPath.isValidRoot "a:" = true
+handle _ => false,
+
+Win_ntPath.isValidRoot "a:foo" = false
+handle _ => false,
+
+Win_ntPath.isValidRoot "z:\\" = true
+handle _ => false,
+
+Win_ntPath.isValidRoot "z:\\foo" = false
+handle _ => false,
+
+Win_ntPath.isValidRoot "\\\\pingu\\pub" = true
+handle _ => false,
+
+Win_ntPath.isValidRoot "\\\\foo" = false
+handle _ => false,
+
+Win_ntPath.isValidRoot "." = false
+handle _ => false,
+
+Win_ntPath.isValidRoot "foo" = false
+handle _ => false,
+
+(* 70 *)
+Win_ntPath.isValidArc "" = true
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\000bazsd" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\\bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\"bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo*bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo/bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo:bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo<bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo>bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\nbar" = false
+handle _ => false,
+
+(* 80 *)
+Win_ntPath.isValidArc "foo\tbar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\000bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo\248bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo?bar" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "foo$%'-_@@{}~`! #(),+=[];bar" = true
+handle _ => false,
+
+Win_ntPath.isValidArc "foo^bar" = true
+handle _ => false,
+
+Win_ntPath.isValidArc "fo.o.bar" = true
+handle _ => false,
+
+Win_ntPath.isValidArc "12345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234" = true
+handle _ => false,
+
+Win_ntPath.isValidArc "12345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\12345678901234567890123456789012345678901234567890123456789012345" = false
+handle _ => false,
+
+Win_ntPath.isValidArc "\\" = false
+handle _ => false,
+
+(* 90 *)
+(Win_ntPath.getParent "\\foo\\bar.sml"
+ handle
+   Win_ntPath.Path => "No Parent"
+ | _ => "error") =
+  "\\foo",
+
+(Win_ntPath.getParent "a:\\foo\\bar\\"
+ handle
+   Win_ntPath.Path => "No Parent"
+ | _ => "error") =
+  "a:\\foo\\bar",
+
+(Win_ntPath.getParent "foo"
+ handle
+   Win_ntPath.Path => "No Parent"
+ | _ => "error") =
+  "No Parent",
+
+(Win_ntPath.getParent "\\foo"
+ handle
+   Win_ntPath.Path => "No Parent"
+ | _ => "error") =
+  "\\",
+
+(Win_ntPath.getParent ""
+ handle
+   Win_ntPath.Path => "No Parent"
+ | _ => "error") =
+  "No Parent",
+
+(Win_ntPath.concatPath ("foo", "\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(Win_ntPath.concatPath ("foo", "\\\\pingu\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(Win_ntPath.concatPath ("\\foo", "bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "\\foo\\bar",
+
+(Win_ntPath.concatPath ("", "bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "bar",
+
+(Win_ntPath.mkAbsolute ("\\foo", "bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(* 100 *)
+(Win_ntPath.mkAbsolute ("foo", "..\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(Win_ntPath.mkAbsolute ("foo", "\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "\\bar\\foo",
+
+(Win_ntPath.mkAbsolute ("foo", "a:bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "a:bar\\foo",
+
+(Win_ntPath.mkAbsolute ("\\foo", "\\\\pingu\\foo\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "\\foo",
+
+(Win_ntPath.mkRelative ("\\foo", "bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(Win_ntPath.mkRelative ("foo", "..\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(Win_ntPath.mkRelative ("foo", "a:bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(Win_ntPath.mkRelative ("..\\foo", "\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "..\\foo",
+
+(Win_ntPath.mkRelative ("A:\\bar\\foo", "a:\\bar\\")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(Win_ntPath.mkRelative ("b:\\bar\\foo", "a:\\bar\\")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(* 110 *)
+(Win_ntPath.mkRelative
+   ("\\\\pingu\\pub\\spong\\foo", "\\\\pingu\\pub\\spong\\bar\\")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "..\\foo",
+
+(Win_ntPath.mkRelative ("a:spong\\foo", "a:bar\\")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "..\\spong\\foo",
+
+(Win_ntPath.mkRelative ("\\bar\\foo", "\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(Win_ntPath.mkRelative ("\\spong\\foo", "\\spong\\bar")
+ handle
+   Win_ntPath.Path => "Invalid"
+ | _ => "error") =
+  "..\\foo",
+
+Win_ntPath.mkCanonical "" = "."
+handle _ => false,
+
+Win_ntPath.mkCanonical "foo\\.." = "."
+handle _ => false,
+
+Win_ntPath.mkCanonical "a:\\foo\\." = "a:\\foo"
+handle _ => false,
+
+Win_ntPath.mkCanonical "foo1\\\\..\\..\\\\foo2\\bar.sml" = "..\\foo2\\bar.sml"
+handle _ => false,
+
+Win_ntPath.mkCanonical "foo1.ext\\.\\foo2\\..\\bar.sml." = "foo1.ext\\bar.sml"
+handle _ => false,
+
+Win_ntPath.mkCanonical "a:foo1\\..\\..\\foo2\\bar.sml " = "a:foo2\\bar.sml"
+handle _ => false,
+
+(* 120 *)
+Win_ntPath.splitLast "a:\\foo\\bar.sml" =
+  {dir="a:\\foo",  last="bar.sml"}
+handle _ => false,
+
+Win_ntPath.splitLast "foo\\bar" =
+  {dir="foo", last="bar"}
+handle _ => false,
+
+Win_ntPath.splitLast "\\\\pingu\\pub\\foo\\bar" =
+  {dir="\\\\pingu\\pub\\foo", last="bar"}
+handle _ => false,
+
+Win_ntPath.splitLast "\\\\pingu\\pub\\" =
+  {dir="\\\\pingu\\pub", last=""}
+handle _ => false,
+
+Win_ntPath.splitLast "a:\\foo" =
+  {dir="a:\\", last="foo"}
+handle _ => false,
+
+Win_ntPath.splitLast "a:" =
+  {dir="a:", last=""}
+handle _ => false,
+
+Win_ntPath.splitLast "\\" =
+  {dir="\\", last=""}
+handle _ => false,
+
+Win_ntPath.splitLast "." =
+  {dir="", last="."}
+handle _ => false,
+
+Win_ntPath.splitLast "..." =
+  {dir="", last="..."}
+handle _ => false,
+
+Win_ntPath.splitLast "bar." =
+  {dir="", last="bar."}
+handle _ => false,
+
+(* 130 *)
+Win_ntPath.splitLast "" =
+  {dir="", last=""}
+handle _ => false,
+
+Win_ntPath.addLast {dir="\\foo\\", last="bar.sml"} =
+  "\\foo\\bar.sml"
+handle _ => false,
+
+Win_ntPath.addLast {dir="a:foo", last="bar.sml"} =
+  "a:foo\\bar.sml"
+handle _ => false,
+
+Win_ntPath.addLast {dir="\\", last=""} = "\\"
+handle _ => false,
+
+Win_ntPath.addLast {dir="", last=""} = ""
+handle _ => false,
+
+Win_ntPath.dir "\\foo\\bar.sml" = "\\foo"
+handle _ => false,
+
+Win_ntPath.dir "\\foo\\" = "\\foo"
+handle _ => false,
+
+Win_ntPath.dir "\\\\pingu\\pub" = "\\\\pingu\\pub"
+handle _ => false,
+
+Win_ntPath.dir "a:\\foo" = "a:\\"
+handle _ => false,
+
+Win_ntPath.dir "a:" = "a:"
+handle _ => false,
+
+(* 140 *)
+Win_ntPath.dir "" = ""
+handle _ => false,
+
+Win_ntPath.dir "foo" = ""
+handle _ => false,
+
+Win_ntPath.last "\\foo\\bar.sml" = "bar.sml"
+handle _ => false,
+
+Win_ntPath.last "a:foo\\" = ""
+handle _ => false,
+
+Win_ntPath.last "" = ""
+handle _ => false,
+
+Win_ntPath.splitExt "\\foo\\bar.sml" =
+  {name="\\foo\\bar", ext=Win_ntPath.EXT "sml"}
+handle _ => false,
+
+Win_ntPath.splitExt "a:foo\\.sml" =
+  {name="a:foo\\", ext=Win_ntPath.EXT "sml"}
+handle _ => false,
+
+Win_ntPath.splitExt "\\foo\\bar" =
+  {name="\\foo\\bar", ext=Win_ntPath.NOEXT}
+handle _ => false,
+
+Win_ntPath.splitExt "\\foo\\" =
+  {name="\\foo\\", ext=Win_ntPath.NOEXT}
+handle _ => false,
+
+Win_ntPath.splitExt "" =
+  {name="", ext=Win_ntPath.NOEXT}
+handle _ => false,
+
+(* 150 *)
+Win_ntPath.ext "\\foo\\bar.sml" = Win_ntPath.EXT "sml"
+handle _ => false,
+
+Win_ntPath.ext "a:foo\\.sml" = Win_ntPath.EXT "sml"
+handle _ => false,
+
+Win_ntPath.ext "\\foo\\bar" = Win_ntPath.NOEXT
+handle _ => false,
+
+Win_ntPath.ext "\\foo\\" = Win_ntPath.NOEXT
+handle _ => false,
+
+Win_ntPath.ext "" = Win_ntPath.NOEXT
+handle _ => false,
+
+Win_ntPath.name "\\foo\\bar.sml" = "\\foo\\bar"
+handle _ => false,
+
+Win_ntPath.name "a:foo\\.sml" = "a:foo\\"
+handle _ => false,
+
+Win_ntPath.name "\\foo\\bar" = "\\foo\\bar"
+handle _ => false,
+
+Win_ntPath.name "\\foo\\" = "\\foo\\"
+handle _ => false,
+
+Win_ntPath.name "" = ""
+handle _ => false
+
+(* 160 *)
+];
+
+fun foldl f b [] = b
+|   foldl f b (h::t) = foldl f (f (h, b)) t
+
+fun check_result (true, (l, i)) = (l, i+1)
+|   check_result (false, (l, i)) = (i::l, i+1);
+
+fun print_list [] = ()
+|   print_list [i] =
+  MLWorks.IO.output (MLWorks.IO.std_out, Int.toString i ^ "\n")
+|   print_list (i::t) =
+  (MLWorks.IO.output (MLWorks.IO.std_out, Int.toString i ^ ", ");
+   print_list t);
+
+val failures =
+  rev (#1 (foldl check_result ([], 0) tests));
+
+val _ =
+  case failures of
+  [] => MLWorks.IO.output (MLWorks.IO.std_out, "All tests succeeded\n") |
+  l =>
+    (MLWorks.IO.output (MLWorks.IO.std_out, "The following tests failed:\n");
+     print_list l)
+
+@
+
+
+1.6
+log
+@Fixing up after changes to toplevel visible string and io stuff
+@
+text
+@d6 3
+d27 2
+a28 2
+Shell.Module.loadSource "win_nt.__path";
+Shell.Module.loadSource "basis.__integer";
+@
+
+
+1.5
+log
+@Updating
+@
+text
+@d5 18
+a22 16
+$Log: basis:win_ntpath.sml,v $
+# Revision 1.3  1995/03/15  11:16:52  daveb
+# Removed trailing separators from dir component.
+#
+# Revision 1.2  1995/03/06  20:17:59  daveb
+# Removed the "last" component from exploded paths, and replaced
+# splitPath with splitExt and splitLast.
+#
+# Revision 1.1  1995/01/26  15:07:45  daveb
+# new unit
+# Test suite for NT path names.
+#
+
+Copyright (c) 1994 Harlequin Ltd.
+
+*)
+d25 1
+d644 1
+a644 1
+  output (std_out, MLWorks.Integer.makestring i ^ "\n")
+d646 1
+a646 1
+  (output (std_out, MLWorks.Integer.makestring i ^ ", ");
+d654 1
+a654 1
+  [] => output (std_out, "All tests succeeded\n") |
+d656 1
+a656 1
+    (output (std_out, "The following tests failed:\n");
+@
+
+
+1.4
+log
+@Updating
+@
+text
+@@
+
+
+1.3
+log
+@Removed trailing separators from dir component.
+@
+text
+@d6 3
+d22 1
+a22 1
+Shell.Make.make_module "win_nt.__path";
+@
+
+
+1.2
+log
+@Removed the "last" component from exploded paths, and replaced
+splitPath with splitExt and splitLast.
+@
+text
+@d6 4
+d487 1
+a487 1
+  {dir="a:\\foo\\",  last="bar.sml"}
+d491 1
+a491 1
+  {dir="foo\\", last="bar"}
+d495 1
+a495 1
+  {dir="\\\\pingu\\pub\\foo\\", last="bar"}
+d499 1
+a499 1
+  {dir="\\\\pingu\\pub\\", last=""}
+d502 2
+a503 2
+Win_ntPath.splitLast "a:foo" =
+  {dir="a:", last="foo"}
+d545 1
+a545 1
+Win_ntPath.dir "\\foo\\bar.sml" = "\\foo\\"
+d548 1
+a548 1
+Win_ntPath.dir "\\foo\\" = "\\foo\\"
+d554 1
+a554 1
+Win_ntPath.dir "a:foo" = "a:"
+@
+
+
+1.1
+log
+@new unit
+Test suite for NT path names.
+@
+text
+@d5 5
+a9 1
+$Log$
+d19 1
+a19 1
+val dummyExplodedPath = {arcs=[], last="error", root= Win_ntPath.ABS "error"}
+a20 2
+val dummySplitPath = {dir="error", name="error", ext=Win_ntPath.EXT "error"}
+
+d74 1
+a74 1
+  {arcs=["foo", "", "spong.ext"], last="bar.sml", root=Win_ntPath.ABS "a:\\"},
+d78 1
+a78 1
+  {arcs=["foo", "", "spong.ext"], last="bar.sml", root=Win_ntPath.ABS "a:"},
+d82 1
+a82 1
+  {arcs=["foo", "spong"], last="", root=Win_ntPath.REL},
+d84 1
+a84 1
+(Win_ntPath.explodePath "\\\\pingu\\pub\\foo\\spong\\"
+d86 1
+a86 1
+  {arcs=["foo", "spong"], last="", root=Win_ntPath.ABS "\\\\pingu\\pub"},
+d90 1
+a90 1
+  {arcs=[], last="", root=Win_ntPath.ABS "\\\\pingu\\pub"},
+d94 1
+a94 1
+  {arcs=[], last="", root=Win_ntPath.REL},
+d98 1
+a98 1
+  {arcs=[], last="", root=Win_ntPath.ABS "\\"},
+d101 1
+a101 1
+  {arcs=["foo", "", "spong"], last="bar.sml", root=Win_ntPath.ABS "\\"}
+d106 1
+a106 1
+  {arcs=["foo", "spong"], last="bar", root=Win_ntPath.ABS "\\\\pingu\\pub"}
+d111 1
+a111 1
+  {arcs=["foo", "spong.ext"], last="bar.sml", root=Win_ntPath.ABS "a:"}
+d116 1
+a116 1
+(Win_ntPath.implodePath {arcs=["foo", "spong"], last="", root=Win_ntPath.REL}
+d120 1
+a120 1
+(Win_ntPath.implodePath {arcs=[], last="", root=Win_ntPath.REL}
+d122 1
+a122 1
+  "",
+d320 1
+a320 1
+  "\\foo\\",
+d326 1
+a326 1
+  "a:\\foo\\",
+d469 1
+a469 1
+Win_ntPath.mkCanonical "a:\\foo\\." = "a:\\foo\\"
+d482 2
+a483 2
+Win_ntPath.splitPath "a:\\foo\\bar.sml" =
+  {dir="a:\\foo\\", ext=Win_ntPath.EXT "sml", name="bar"}
+d486 2
+a487 2
+Win_ntPath.splitPath "foo\\bar" =
+  {dir="foo\\", ext=Win_ntPath.NOEXT, name="bar"}
+d490 2
+a491 2
+Win_ntPath.splitPath "\\\\pingu\\pub\\foo\\bar" =
+  {dir="\\\\pingu\\pub\\foo\\", ext=Win_ntPath.NOEXT, name="bar"}
+d494 2
+a495 2
+Win_ntPath.splitPath "\\\\pingu\\pub\\" =
+  {dir="\\\\pingu\\pub\\", ext=Win_ntPath.NOEXT, name=""}
+d498 2
+a499 2
+Win_ntPath.splitPath "a:foo" =
+  {dir="a:", ext=Win_ntPath.NOEXT, name="foo"}
+d502 2
+a503 2
+Win_ntPath.splitPath "a:" =
+  {dir="a:", ext=Win_ntPath.NOEXT, name=""}
+d506 2
+a507 2
+Win_ntPath.splitPath "\\" =
+  {dir="\\", ext=Win_ntPath.NOEXT, name=""}
+d510 2
+a511 2
+Win_ntPath.splitPath "." =
+  {dir="", ext=Win_ntPath.NOEXT, name="."}
+d514 2
+a515 2
+Win_ntPath.splitPath "..." =
+  {dir="", ext=Win_ntPath.NOEXT, name="..."}
+d518 2
+a519 2
+Win_ntPath.splitPath "bar." =
+  {dir="", ext=Win_ntPath.NOEXT, name="bar."}
+d523 2
+a524 2
+Win_ntPath.splitPath "" =
+  {dir="", ext=Win_ntPath.NOEXT, name=""}
+d527 1
+a527 1
+Win_ntPath.makePath {dir="\\foo\\", ext=Win_ntPath.EXT "sml", name="bar"} =
+d531 1
+a531 1
+Win_ntPath.makePath {dir="a:foo", ext=Win_ntPath.EXT "sml", name="bar"} =
+d535 1
+a535 1
+Win_ntPath.makePath {dir="\\", ext=Win_ntPath.NOEXT, name=""} = "\\"
+d538 1
+a538 1
+Win_ntPath.makePath {dir="", ext=Win_ntPath.NOEXT, name=""} = ""
+d572 2
+a573 1
+Win_ntPath.name "\\foo\\bar.sml" = "bar"
+d576 2
+a577 1
+Win_ntPath.name "\\foo\\.sml" = ""
+d580 2
+a581 1
+Win_ntPath.name "a:foo\\bar" = "bar"
+d584 2
+a585 1
+Win_ntPath.name "\\foo\\" = ""
+d588 2
+a589 1
+Win_ntPath.name "" = ""
+d608 1
+a608 1
+Win_ntPath.base "\\foo\\bar.sml" = "\\foo\\bar"
+d611 1
+a611 1
+Win_ntPath.base "a:foo\\.sml" = "a:foo\\"
+d614 1
+a614 1
+Win_ntPath.base "\\foo\\bar" = "\\foo\\bar"
+d617 1
+a617 1
+Win_ntPath.base "\\foo\\" = "\\foo\\"
+d620 1
+a620 1
+Win_ntPath.base "" = ""
+@

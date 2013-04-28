@@ -1,0 +1,688 @@
+head	1.6;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.5;
+locks; strict;
+comment	@ *  @;
+
+
+1.6
+date	92.09.22.09.37.47;	author clive;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.06.09.11.14.31;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.01.10.32.52;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.05.19.11.12.37;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.05.05.12.53.18;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.04.29.16.04.02;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.09.22.09.37.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Register preallocator.
+Functor.
+@
+
+
+1.6
+log
+@Got rid of some handles using tryApply and co
+@
+text
+@(*  ==== REGISTER PREALLOCATOR ====
+ *            FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The preallocator uses a heuristic method to merge registers in large
+ *  blocks.  This is particularly effective in reducing the number of
+ *  registers which require assignment where there is a large amount of data
+ *  structure construction going on.
+ *
+ *  For the long block the set of registers whose use is entirely confined
+ *  to the block is worked out, then the first and last use of each register
+ *  found.  This information is then used to re-use dead registers which
+ *  will not be used again by merging them with registers coming into use
+ *  for the first time.  Thus, a fast partial colouring is achieved.
+ *
+ *  Notes
+ *  -----
+ *  At present only the GC registers are treated.  It is probably
+ *  unnecessary to treat non GC and FP registers as they are not generally
+ *  very numerous.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _preallocator.sml,v $
+ *  Revision 1.5  1992/06/09  11:14:31  richard
+ *  Fixed bug with register counting.
+ *  Analysis does not take place if there are fewer than 100 registers.
+ *
+ *  Revision 1.4  1992/06/01  10:32:52  richard
+ *  Made use of mutable register sets and new Map operations.
+ *
+ *  Revision 1.3  1992/05/19  11:12:37  richard
+ *  Improved use of Map.apply.
+ *
+ *  Revision 1.2  1992/05/05  12:53:18  richard
+ *  The registers confined are now calculated locally from the
+ *  instruction annotations rather than from block annotations as
+ *  this is more efficient than the general set squashing that was
+ *  going on in the annotator.
+ *
+ *  Revision 1.1  1992/04/29  16:04:02  richard
+ *  Initial revision
+ *
+ *  Revision 1.1  1992/04/29  15:47:26  richard
+ *  Initial revision
+ *
+ *)
+
+
+require "../utils/diagnostic";
+require "../utils/lists";
+require "../utils/newmap";
+require "../utils/crash";
+require "mirregisters";
+require "mirprocedure";
+require "mirtypes";
+require "preallocator";
+
+
+functor Preallocator (
+
+  structure MirTypes		: MIRTYPES
+  structure MirProcedure	: MIRPROCEDURE
+  structure MirRegisters	: MIRREGISTERS
+  structure Diagnostic		: DIAGNOSTIC
+  structure Lists		: LISTS
+  structure Map			: NEWMAP
+  structure Crash		: CRASH
+
+  sharing MirTypes = MirProcedure.MirTypes = MirRegisters.MirTypes
+  sharing MirTypes.Text = Diagnostic.Text
+
+) : PREALLOCATOR =
+
+  struct
+
+    structure MirTypes = MirTypes
+    structure MirProcedure = MirProcedure
+    structure Diagnostic = Diagnostic
+
+    fun crash message = Crash.impossible ("Preallocator: " ^ message)
+
+    val $ = Diagnostic.Text.from_string
+    val ^^ = Diagnostic.Text.concatenate
+    infix ^^
+    fun diagnostic (level, output_function) =
+      Diagnostic.output_text level
+      (fn verbosity => $"Preallocator: " ^^ (output_function verbosity))
+
+
+    (*  == Registers to leave alone ==
+     *
+     *  This is the set of registers which must not be merged with other
+     *  registers.  The preassigned registers (such as the argument) must
+     *  retain their identity and the reserved registers (such as the stack
+     *  pointer) mustn't be used for anything else.
+     *)
+
+    val not_susceptible =
+      MirTypes.GC.Pack.union (#gc MirRegisters.preassigned, #gc MirRegisters.reserved)
+
+
+
+    (*  == Find out the confined registers ==
+     *
+     *  An alist of MirProcedure.blocks is analysed to discover the
+     *  registers whose use is confined entirely to a single block.  A map
+     *  of block tags to sets of such registers is returned.
+     *)
+
+    fun confined blocks =
+      let
+        datatype uses = ONCE of MirTypes.tag | MANY
+
+        fun block (map, []) = map
+          | block (map, (tag, MirProcedure.B ({defined = {gc = defined, ...},
+                                               referenced = {gc = referenced, ...},
+                                               ...}, instructions)) :: blocks) =
+            let
+              fun count (map, register) =
+                (case Map.apply' (map, register) of
+                   Map.YES x =>
+                     (case x of
+                       once as ref (ONCE tag') => if tag = tag' then () else once := MANY
+                     | ref MANY => ();
+                         map)
+                 | Map.NO =>
+                     Map.define (map, register, ref (ONCE tag)))
+            in
+              block
+              (MirTypes.GC.Pack.reduce count (MirTypes.GC.Pack.reduce count (map, referenced), defined),
+               blocks)
+            end
+
+        val confined_map =
+          Map.tryApply
+          (Map.from_list' MirTypes.order_tag
+           (map (fn (tag, _) => (tag, ref MirTypes.GC.Pack.empty)) blocks))
+
+        fun convert (register, ref MANY) = ()
+          | convert (register, ref (ONCE tag)) =
+            let
+              val set = 
+                case confined_map tag of
+                  Map.YES x => x
+                | Map.NO =>
+                    crash ("Block " ^ MirTypes.print_tag tag ^ " was referenced by the uses map " ^
+                         "but isn't in the block list.")
+            in
+              set := MirTypes.GC.Pack.add' (!set, register)
+            end
+
+        val initial_map =
+          Map.from_list' MirTypes.GC.order
+          (map (fn r => (r, ref MANY)) (MirTypes.GC.Pack.to_list not_susceptible))
+      in
+        Lists.iterate convert (Map.to_list (block (initial_map, blocks)));
+        confined_map
+      end
+
+
+
+    (*  === ANALYSE A PROCEDURE FOR MERGERS ===
+     *
+     *  The entire procedure is analysed block-by-block looking for
+     *  registers to merge together.
+     *)
+
+    fun analyse (MirProcedure.P (annotation, name, start, blocks)) =
+      if #gc (#nr_registers annotation) < 100 then
+        {gc = [], non_gc = [], fp = []}
+      else
+        let
+          val _ = diagnostic (1, fn _ => $"procedure " ^^ $(MirTypes.print_tag start))
+
+          val block_list = MirProcedure.Map.to_list blocks
+
+          val confined_map = confined block_list
+
+
+          (*  == Analyse a single block ==
+           *
+           *  Blocks larger than a certain size are scanned to find the first
+           *  and last use (and therefore the maximum lifespan) of the
+           *  registers confined to that block.  This information is then used
+           *  to merge registers with disjoint lifetimes in an imperfect but
+           *  fast manner.
+           *)
+
+          fun block (hints, (tag, MirProcedure.B (annotation, instructions))) =
+            if #length annotation < 20 then
+              hints
+            else
+              let
+                val _ = diagnostic (1, fn _ => $"block " ^^ $(MirTypes.print_tag tag))
+
+                val confined = 
+                  case confined_map tag of
+                    Map.YES x => x
+                  | Map.NO =>
+                      crash ("Block " ^ MirTypes.print_tag tag ^ " is not in the confined map.")
+
+                val _ =
+                  diagnostic (3, fn _ =>
+                              Lists.reducel
+                              (fn (text, r) => text ^^ $" " ^^ MirTypes.GC.to_text r)
+                              ($"confined GC registers:", MirTypes.GC.Pack.to_list confined))
+
+                val alive =
+                  Map.tryApply
+                  (Map.from_list' MirTypes.GC.order 
+                   (map (fn r => (r, (ref false, ref false))) (MirTypes.GC.Pack.to_list confined)))
+
+                fun scan [] = []
+                  | scan ((MirProcedure.I ({defined, referenced, ...}, _))::instructions) =
+                    let
+                      val first =
+                        Lists.reducel
+                        (fn (first, r) =>
+                         (case alive r of
+                            Map.YES x => 
+                              (case x of
+                                (ref true, _) => first
+                              | (earlier as ref false, _) => (earlier := true; r::first))
+                          | Map.NO => first))
+                        ([], MirTypes.GC.Pack.to_list (#gc defined))
+
+                      val rest = scan instructions
+
+                      val last =
+                        Lists.reducel
+                        (fn (last, r) =>
+                         (case alive r of
+                            Map.YES x =>
+                              (case x of
+                                (_, ref true) => last
+                              | (_, later as ref false) => (later := true; r::last))
+                          | Map.NO => last))
+                        ([], MirTypes.GC.Pack.to_list (#gc referenced))
+                    in
+                      (first, last)::rest
+                    end
+
+                val lives = scan instructions
+
+                val _ =
+                  diagnostic (3, fn _ =>
+                              Lists.reducel
+                              (fn (text, (f,l)) =>
+                               let fun p s = Lists.reducel (fn (text, r) => text ^^ MirTypes.GC.to_text r ^^ $" ") ($"", s)
+                               in text ^^ $"first: " ^^ p f ^^ $"  last: " ^^ p l ^^ $"\n" end)
+                              ($"lives: ", lives))
+
+                val alive_list = map (fn r => (r, ref (ref true))) (MirTypes.GC.Pack.to_list confined)
+                val alive_map = Map.apply (Map.from_list' MirTypes.GC.order alive_list)
+
+                fun merge (mergers, []) = mergers
+                  | merge (mergers, (first, last)::rest) =
+                    let
+                      val _ = Lists.iterate (fn r => !(alive_map r) := false) last
+
+                      fun assign (mergers, [], _) = mergers
+                        | assign (mergers, rs, []) = mergers
+                        | assign (mergers, rs, (_, ref (ref true))::rest) = assign (mergers, rs, rest)
+                        | assign (mergers, r::rs, (dead, ref alive)::rest) =
+                          ((alive_map r) := alive;
+                            alive := true;
+                            assign ((r, dead)::mergers, rs, rest))
+
+                      val mergers' = assign (mergers, first, alive_list)
+                    in
+                     merge (mergers', rest)
+                    end
+              in
+                merge (hints, lives)
+              end
+
+            val gc_hints = Lists.reducel block ([], block_list)
+
+            val _ = diagnostic
+              (2, fn _ =>
+               Lists.reducel
+               (fn (text, (r,r')) => text ^^ MirTypes.GC.to_text r ^^ $" -> " ^^ MirTypes.GC.to_text r' ^^ $"\n")
+               ($"mergers: ", gc_hints))
+
+        in
+          {gc = gc_hints,
+           non_gc = [],
+           fp = []}
+        end
+
+  end
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a27 3
+ *  Revision 1.6  1992/09/22  09:37:47  clive
+ *  Got rid of some handles using tryApply and co
+ *
+@
+
+
+1.5
+log
+@Fixed bug with register counting.
+Analysis does not take place if there are fewer than 100 registers.
+@
+text
+@d28 4
+d124 8
+a131 6
+                (case Map.apply' (map, register)
+                   of once as ref (ONCE tag') => if tag = tag' then () else once := MANY
+                    | ref MANY => ();
+                 map)
+                  handle Map.Undefined =>
+                    Map.define (map, register, ref (ONCE tag))
+d139 1
+a139 1
+          Map.apply
+d146 5
+a150 3
+              val set = confined_map tag
+                handle Map.Undefined =>
+                  crash ("Block " ^ MirTypes.print_tag tag ^ " was referenced by the uses map " ^
+d200 5
+a204 3
+                val confined = !(confined_map tag)
+                  handle Map.Undefined =>
+                    crash ("Block " ^ MirTypes.print_tag tag ^ " is not in the confined map.")
+d213 1
+a213 1
+                  Map.apply
+d223 6
+a228 4
+                         (case alive r
+                            of (ref true, _) => first
+                             | (earlier as ref false, _) => (earlier := true; r::first))
+                             handle Map.Undefined => first)
+d236 6
+a241 4
+                         (case alive r
+                            of (_, ref true) => last
+                             | (_, later as ref false) => (later := true; r::last))
+                            handle Map.Undefined => last)
+@
+
+
+1.4
+log
+@Made use of mutable register sets and new Map operations.
+@
+text
+@d28 3
+d121 1
+a121 1
+                   of once as ref (ONCE tag') => once := MANY
+d165 26
+a190 2
+      let
+        val _ = diagnostic (1, fn _ => $"procedure " ^^ $(MirTypes.print_tag start))
+d192 3
+a194 95
+        val block_list = MirProcedure.Map.to_list blocks
+
+        val confined_map = confined block_list
+
+
+        (*  == Analyse a single block ==
+         *
+         *  Blocks larger than a certain size are scanned to find the first
+         *  and last use (and therefore the maximum lifespan) of the
+         *  registers confined to that block.  This information is then used
+         *  to merge registers with disjoint lifetimes in an imperfect but
+         *  fast manner.
+         *)
+
+        fun block (hints, (tag, MirProcedure.B (annotation, instructions))) =
+          if #length annotation < 20 then
+            hints
+          else
+            let
+              val _ = diagnostic (1, fn _ => $"block " ^^ $(MirTypes.print_tag tag))
+
+              val confined = !(confined_map tag)
+                handle Map.Undefined =>
+                  crash ("Block " ^ MirTypes.print_tag tag ^ " is not in the confined map.")
+
+              val _ =
+                diagnostic (3, fn _ =>
+                            Lists.reducel
+                            (fn (text, r) => text ^^ $" " ^^ MirTypes.GC.to_text r)
+                            ($"confined GC registers:", MirTypes.GC.Pack.to_list confined))
+
+              val alive =
+                Map.apply
+                (Map.from_list' MirTypes.GC.order 
+                 (map (fn r => (r, (ref false, ref false))) (MirTypes.GC.Pack.to_list confined)))
+
+              fun scan [] = []
+                | scan ((MirProcedure.I ({defined, referenced, ...}, _))::instructions) =
+                  let
+                    val first =
+                      Lists.reducel
+                      (fn (first, r) =>
+                       (case alive r
+                          of (ref true, _) => first
+                           | (earlier as ref false, _) => (earlier := true; r::first))
+                           handle Map.Undefined => first)
+                      ([], MirTypes.GC.Pack.to_list (#gc defined))
+                        
+                    val rest = scan instructions
+                        
+                    val last =
+                      Lists.reducel
+                      (fn (last, r) =>
+                       (case alive r
+                          of (_, ref true) => last
+                           | (_, later as ref false) => (later := true; r::last))
+                          handle Map.Undefined => last)
+                      ([], MirTypes.GC.Pack.to_list (#gc referenced))
+                  in
+                    (first, last)::rest
+                  end
+
+              val lives = scan instructions
+
+              val _ =
+                diagnostic (3, fn _ =>
+                            Lists.reducel
+                            (fn (text, (f,l)) =>
+                             let fun p s = Lists.reducel (fn (text, r) => text ^^ MirTypes.GC.to_text r ^^ $" ") ($"", s)
+                             in text ^^ $"first: " ^^ p f ^^ $"  last: " ^^ p l ^^ $"\n" end)
+                            ($"lives: ", lives))
+
+              val alive_list = map (fn r => (r, ref (ref true))) (MirTypes.GC.Pack.to_list confined)
+              val alive_map = Map.apply (Map.from_list' MirTypes.GC.order alive_list)
+
+              fun merge (mergers, []) = mergers
+                | merge (mergers, (first, last)::rest) =
+                  let
+                    val _ = Lists.iterate (fn r => !(alive_map r) := false) last
+
+                    fun assign (mergers, [], _) = mergers
+                      | assign (mergers, rs, []) = mergers
+                      | assign (mergers, rs, (_, ref (ref true))::rest) = assign (mergers, rs, rest)
+                      | assign (mergers, r::rs, (dead, ref alive)::rest) =
+                        ((alive_map r) := alive;
+                          alive := true;
+                          assign ((r, dead)::mergers, rs, rest))
+
+                    val mergers' = assign (mergers, first, alive_list)
+                  in
+                   merge (mergers', rest)
+                  end
+            in
+              merge (hints, lives)
+            end
+d196 84
+a279 13
+          val gc_hints = Lists.reducel block ([], block_list)
+
+          val _ = diagnostic
+            (2, fn _ =>
+             Lists.reducel
+             (fn (text, (r,r')) => text ^^ MirTypes.GC.to_text r ^^ $" -> " ^^ MirTypes.GC.to_text r' ^^ $"\n")
+             ($"mergers: ", gc_hints))
+
+      in
+        {gc = gc_hints,
+         non_gc = [],
+         fp = []}
+      end
+@
+
+
+1.3
+log
+@Improved use of Map.apply.
+@
+text
+@d28 3
+a85 2
+    val GCorder = (fn (r,r') => if r=r' then Map.EQUAL else if MirTypes.GC.order (r,r') then Map.LESS else Map.GREATER)
+
+d96 1
+a96 3
+      MirTypes.GC.Set.union
+      (MirTypes.GC.Set.from_list (MirRegisters.Set.set_to_list (#gc MirRegisters.preassigned)),
+       MirTypes.GC.Set.from_list (MirRegisters.Set.set_to_list (#gc MirRegisters.reserved)))
+d112 3
+a114 1
+          | block (map, (tag, MirProcedure.B (_, instructions)) :: blocks) =
+d116 7
+a122 19
+              fun instruction (map, []) = map
+                | instruction (map, (MirProcedure.I ({defined, referenced, ...}, _)) :: instructions) =
+                  let
+                    fun count (map, register) =
+                      (case Map.apply' (map, register)
+                         of ref MANY => map
+                          | once as ref (ONCE tag') =>
+                            (if tag <> tag' then once := MANY
+                             else ();
+                             map))
+                      handle Map.Undefined =>
+                        Map.define (map, register, ref (ONCE tag))
+                  in
+                    instruction
+                    (MirTypes.GC.Set.reduce count
+                     (MirTypes.GC.Set.reduce count (map, #gc referenced),
+                      #gc defined),
+                     instructions)
+                  end
+d124 3
+a126 1
+              block (instruction (map, instructions), blocks)
+d131 2
+a132 3
+          (Map.from_list
+           (fn (tag, tag') => if tag=tag' then Map.EQUAL else if MirTypes.order_tag (tag, tag') then Map.LESS else Map.GREATER)
+           (map (fn (tag, _) => (tag, ref MirTypes.GC.Set.empty)) blocks))
+d142 1
+a142 1
+              set := MirTypes.GC.Set.add (!set, register)
+d146 2
+a147 2
+          Map.from_list GCorder
+          (map (fn r => (r, ref MANY)) (MirTypes.GC.Set.to_list not_susceptible))
+d194 1
+a194 1
+                            ($"confined GC registers:", MirTypes.GC.Set.to_list confined))
+d198 2
+a199 2
+                (Map.from_list GCorder 
+                 (map (fn r => (r, (ref false, ref false))) (MirTypes.GC.Set.to_list confined)))
+d211 1
+a211 1
+                      ([], MirTypes.GC.Set.to_list (#gc defined))
+d222 1
+a222 1
+                      ([], MirTypes.GC.Set.to_list (#gc referenced))
+d237 2
+a238 2
+              val alive_list = map (fn r => (r, ref (ref true))) (MirTypes.GC.Set.to_list confined)
+              val alive_map = Map.apply (Map.from_list GCorder alive_list)
+@
+
+
+1.2
+log
+@The registers confined are now calculated locally from the
+instruction annotations rather than from block annotations as
+this is more efficient than the general set squashing that was
+going on in the annotator.
+@
+text
+@d28 6
+d119 1
+a119 1
+                      (case Map.apply map register
+d139 4
+a142 3
+          Map.from_list
+          (fn (tag, tag') => if tag=tag' then Map.EQUAL else if MirTypes.order_tag (tag, tag') then Map.LESS else Map.GREATER)
+          (map (fn (tag, _) => (tag, ref MirTypes.GC.Set.empty)) blocks)
+d147 1
+a147 1
+              val set = Map.apply confined_map tag
+d196 1
+a196 1
+              val confined = !(Map.apply confined_map tag)
+d207 3
+a209 2
+                Map.from_list GCorder 
+                (map (fn r => (r, (ref false, ref false))) (MirTypes.GC.Set.to_list confined))
+d217 1
+a217 1
+                       (case Map.apply alive r
+d228 1
+a228 1
+                       (case Map.apply alive r
+d248 1
+a248 1
+              val alive_map = Map.from_list GCorder alive_list
+d253 1
+a253 1
+                    val _ = Lists.iterate (fn r => !(Map.apply alive_map r) := false) last
+d259 1
+a259 1
+                        ((Map.apply alive_map r) := alive;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d28 3
+d40 1
+d55 1
+d68 2
+d95 63
+d170 2
+d189 3
+a191 8
+              val confined =
+                Lists.reducel
+                (fn (confined, (tag', MirProcedure.B ({referenced, ...}, _))) =>
+                 if tag = tag' then
+                   confined
+                 else
+                   MirTypes.GC.Set.difference (confined, #gc referenced))
+                (MirTypes.GC.Set.difference (#gc (#defined annotation), not_susceptible), block_list)
+@

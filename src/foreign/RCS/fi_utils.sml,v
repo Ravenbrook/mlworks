@@ -1,0 +1,158 @@
+head	1.4;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.4
+	MLWorks_Beta_1996_05_31:1.4
+	MLWorks_Beta_1996_05_30:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.03.28.13.50.11;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.02.14.16.51.37;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.21.16.31.54;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.43.41;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.4
+log
+@Sharing constraints
+@
+text
+@(*  ==== FOREIGN INTERFACE : UTILITIES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is a collection of items that it was useful
+ *  to group together.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_utils.sml,v $
+ * Revision 1.3  1996/02/14  16:51:37  brianm
+ * Additions to allow for different data repn's (e.g. endianness).
+ *
+ *  Revision 1.2  1995/06/21  16:31:54  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.1  1995/04/25  11:43:41  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "fi_types";
+
+signature FOREIGN_UTILS =
+   sig
+
+     structure FITypes : FOREIGN_TYPES
+
+     type bytearray = FITypes.bytearray
+     type word32 = FITypes.word32
+     type address = FITypes.address
+
+     val disp       : ('a -> string) -> 'a -> 'a
+     val sep_items  : 'a -> 'a list -> 'a list
+     val term_items : 'a -> 'a list -> 'a list
+
+     val is_big_endian : bool
+
+     (* integer mapping functions - correct byte order for host *)
+     val int_to_bytearray : {src:int, len:int, arr:bytearray, st:int} -> unit
+     val bytearray_to_int : {arr:bytearray, st:int, len:int} -> int
+
+     val string_to_bytearray : {src:string, arr:bytearray, st:int} -> unit
+     val bytearray_to_string : {arr:bytearray, st:int, len:int} -> string
+     val bytearray_to_hex    : {arr:bytearray, st:int, len:int} -> string
+
+     val word32_to_bytearray : {src:word32, arr:bytearray, st:int} -> unit
+     val word32_to_hex       : word32 -> string
+     val bytearray_to_word32 : {arr:bytearray, st:int} -> word32
+
+     val peek_memory : { loc   : address,
+                         arr   : bytearray,
+                         start : int,
+                         len   : int } -> unit
+
+         (* This copies memory from any (mapped) non-overlapping address.
+            Checks are performed for array size and for overlapping regions.
+          *)
+
+   end;
+   
+@
+
+
+1.3
+log
+@Additions to allow for different data repn's (e.g. endianness).
+@
+text
+@d13 3
+d33 3
+a35 7
+     type bytearray
+     type word32
+     type address
+
+       sharing type bytearray  = FITypes.bytearray
+       sharing type word32     = FITypes.word32
+       sharing type address    = FITypes.address
+@
+
+
+1.2
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d13 3
+d42 5
+a46 2
+     val int_to_bytearray : {src:int, arr:bytearray, st:int} -> unit
+     val bytearray_to_int : {arr:bytearray, st:int} -> int
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d17 1
+d35 4
+d44 1
+d47 1
+@

@@ -1,0 +1,475 @@
+head	1.18;
+access;
+symbols
+	ML_beta_release_12/08/94:1.17
+	ML_beta_release_03/08/94:1.17
+	ML_revised_beta_release_25/05/94:1.17
+	ML_final_beta_release_02/03/94:1.17
+	mlworks-28-01-1994:1.17
+	Release:1.16
+	mlworks-beta-01-09-1993:1.16
+	MLWorks-1-0-4-29/01/1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.10
+	MLWorks-1-0-2-15/12/1992:1.10
+	MLWorks-1-0-1-04/12/1992:1.10
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.18
+date	95.02.13.15.49.39;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.12.09.19.27.36;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.08.06.08.51.51;	author daveb;	state Exp;
+branches
+	1.16.1.1;
+next	1.15;
+
+1.15
+date	93.05.10.13.49.56;	author daveb;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.03.11.13.44.37;	author matthew;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.03.08.16.04.16;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.02.09.11.01.07;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.02.04.14.26.42;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.11.10.13.05.15;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.10.07.13.51.37;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.09.10.08.50.25;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.26.18.34.10;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.24.16.09.48;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.20.14.11.00;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.13.13.29.04;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.07.13.07.31;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.03.16.57.36;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.06.22.15.19.29;	author clive;	state Exp;
+branches;
+next	;
+
+1.16.1.1
+date	93.08.06.08.51.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@First version
+@
+
+
+1.18
+log
+@Changes to Debugger_Types
+@
+text
+@(* get_type_information.sml the signature *)
+(*
+$Log: get_type_information.sml,v $
+Revision 1.17  1993/12/09  19:27:36  jont
+Added copyright message
+
+Revision 1.16  1993/08/06  08:51:51  daveb
+Removed pervasive_library_dir.
+
+Revision 1.15  1993/05/10  13:49:56  daveb
+Removed options argument to get_type_information.
+
+Revision 1.14  1993/03/11  13:44:37  matthew
+Signature revisions
+
+Revision 1.13  1993/03/08  16:04:16  matthew
+Options & Info changes
+
+Revision 1.12  1993/02/09  11:01:07  matthew
+Typechecker structure changes
+
+Revision 1.11  1993/02/04  14:26:42  matthew
+Rationalised substructures.
+
+Revision 1.10  1992/11/10  13:05:15  matthew
+Changed Error structure to Info
+
+Revision 1.9  1992/10/07  13:51:37  richard
+Added some missing sharing constraints.
+
+Revision 1.8  1992/09/10  08:50:25  richard
+Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+
+Revision 1.7  1992/08/26  18:34:10  jont
+Removed some redundant structures and sharing
+
+Revision 1.6  1992/08/24  16:09:48  clive
+Added details about leafness to the debug information
+
+Revision 1.5  1992/08/20  14:11:00  davidt
+Made changes to allow copying of mo files.
+
+Revision 1.4  1992/08/13  13:29:04  clive
+Neatening up, plus changes due to lower level sharing changes
+
+Revision 1.3  1992/07/07  13:07:31  clive
+Changes when implementing call point annotation
+
+Revision 1.2  1992/07/03  16:57:36  jont
+Added code generation information to that returned
+
+Revision 1.1  1992/06/22  15:19:29  clive
+Initial revision
+
+ * Copyright (c) 1993 Harlequin Ltd.
+*)
+
+require "../main/info";
+require "../lambda/environtypes" ;
+require "../debugger/debugger_types";
+
+signature GETTYPEINFORMATION =
+sig
+  structure EnvironTypes : ENVIRONTYPES
+  structure Debugger_Types : DEBUGGER_TYPES
+
+  type ParserBasis
+  type TypeBasis
+  type Options
+
+  sharing type Debugger_Types.Type = EnvironTypes.LambdaTypes.Type
+
+  val get_type_information :
+    Options ->
+    string -> 
+    ParserBasis * TypeBasis * Debugger_Types.information * EnvironTypes.Top_Env
+end
+@
+
+
+1.17
+log
+@Added copyright message
+@
+text
+@d4 3
+d70 1
+d75 1
+a75 1
+    Debugger_Types.Options.options ->
+@
+
+
+1.16
+log
+@Removed pervasive_library_dir.
+@
+text
+@d4 3
+d53 1
+@
+
+
+1.16.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.16  1993/08/06  08:51:51  daveb
+Removed pervasive_library_dir.
+
+@
+
+
+1.15
+log
+@Removed options argument to get_type_information.
+@
+text
+@d4 3
+a69 2
+    
+  val pervasive_library_dir : string ref
+@
+
+
+1.14
+log
+@Signature revisions
+@
+text
+@d4 3
+a54 1
+  structure Info : INFO
+a63 1
+    Info.options ->
+@
+
+
+1.13
+log
+@Options & Info changes
+@
+text
+@d4 3
+d59 1
+a59 1
+  sharing Debugger_Types.Datatypes = EnvironTypes.LambdaTypes.Datatypes
+d63 1
+a63 1
+    Debugger_Types.Options.print_options ->
+@
+
+
+1.12
+log
+@Typechecker structure changes
+@
+text
+@d4 3
+d43 1
+a43 2
+require "../typechecker/basistypes";
+require "../parser/parser";
+d49 1
+a49 2
+  structure Parser : PARSER
+  structure BasisTypes : BASISTYPES
+d53 2
+a54 2
+  sharing BasisTypes.Datatypes = Debugger_Types.Datatypes =
+    Parser.Absyn.Datatypes = EnvironTypes.LambdaTypes.Datatypes
+d56 1
+a56 2
+  sharing Debugger_Types.Info = BasisTypes.Info =
+    Parser.Lexer.Info 
+d58 5
+a62 2
+  val get_type_information : Debugger_Types.Info.options -> string -> 
+    Parser.ParserBasis * BasisTypes.Basis * Debugger_Types.information * EnvironTypes.Top_Env
+@
+
+
+1.11
+log
+@Rationalised substructures.
+@
+text
+@d4 3
+d40 1
+a40 1
+require "../typechecker/basis";
+d48 1
+a48 1
+  structure Basis : BASIS
+d52 1
+a52 1
+  sharing Basis.Tyvarenv.Datatypes = Debugger_Types.Datatypes =
+d55 1
+a55 1
+  sharing Debugger_Types.Info = Basis.Sigenv.Sigma.Nameset.Info =
+d59 1
+a59 1
+    Parser.ParserBasis * Basis.Basis * Debugger_Types.information * EnvironTypes.Top_Env
+@
+
+
+1.10
+log
+@Changed Error structure to Info
+@
+text
+@d4 3
+a40 1
+require "../main/info";
+d48 3
+a50 1
+  structure Info : INFO
+d52 2
+a53 3
+  sharing Basis.Tyvarenv.Datatypes =
+    Debugger_Types.Datatypes =
+    Parser.Absyn.Datatypes
+d55 1
+a55 1
+  val get_type_information : Info.options -> string -> 
+@
+
+
+1.9
+log
+@Added some missing sharing constraints.
+@
+text
+@d4 3
+d38 1
+d46 1
+d52 1
+a52 1
+  val get_type_information : string -> 
+@
+
+
+1.8
+log
+@Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+@
+text
+@d4 4
+d42 4
+@
+
+
+1.7
+log
+@Removed some redundant structures and sharing
+@
+text
+@d4 3
+d40 1
+a40 4
+    Parser.ParserBasis * Basis.Basis * 
+    (string,Debugger_Types.Datatypes.Type * bool * 
+     (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Datatypes.NewMap.T *
+    EnvironTypes.Top_Env
+@
+
+
+1.6
+log
+@Added details about leafness to the debug information
+@
+text
+@d4 3
+a23 1
+require "../utils/diagnostic";
+a24 1
+require "../typechecker/datatypes";
+d39 1
+a39 1
+     (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T *
+@
+
+
+1.5
+log
+@Made changes to allow copying of mo files.
+@
+text
+@d4 3
+d37 2
+a38 1
+    (string,Debugger_Types.Datatypes.Type * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T *
+@
+
+
+1.4
+log
+@Neatening up, plus changes due to lower level sharing changes
+@
+text
+@d4 3
+d37 1
+a37 1
+  val pervasive_library_path : string ref
+@
+
+
+1.3
+log
+@Changes when implementing call point annotation
+@
+text
+@d4 3
+d17 1
+d31 1
+a31 1
+    (string,Basis.Datatypes.Type * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T *
+@
+
+
+1.2
+log
+@Added code generation information to that returned
+@
+text
+@d4 3
+d16 1
+d23 2
+d26 2
+a27 1
+    Parser.ParserBasis * Basis.Basis * (string * Basis.Datatypes.Type) list *
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d20 2
+a21 1
+    Parser.ParserBasis * Basis.Basis * (string * Basis.Datatypes.Type) list
+@

@@ -1,0 +1,766 @@
+head	1.18;
+access;
+symbols
+	ML_beta_release_12/08/94:1.16
+	ML_beta_release_03/08/94:1.16
+	ML_revised_beta_release_25/05/94:1.16
+	ML_final_beta_release_02/03/94:1.16
+	mlworks-28-01-1994:1.15
+	Release:1.14
+	mlworks-beta-01-09-1993:1.14
+	MLWorks-1-0-4-29/01/1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.9
+	MLWorks-1-0-2-15/12/1992:1.9
+	MLWorks-1-0-1-04/12/1992:1.9
+	checkpoint_17_08_92:1.4
+	Ten15_release_21-08-91:1.2
+	Ten15_release_19-08-91:1.2
+	ten15_release:1.2;
+locks; strict;
+
+
+1.18
+date	95.01.17.11.16.52;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	94.09.19.13.02.43;	author matthew;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.11.19.14.32.33;	author nosa;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.08.16.11.26.20;	author nosa;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.07.22.11.04.21;	author nosa;	state Exp;
+branches
+	1.14.1.1;
+next	1.13;
+
+1.13
+date	93.03.10.15.57.40;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.03.09.13.05.16;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.02.01.18.08.29;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.01.14.16.01.48;	author nosa;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.11.30.13.26.00;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.04.15.35.43;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.10.02.16.49.50;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.09.15.15.28.30;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.26.12.53.48;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.04.19.16.28;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.10.19.29.03;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.25.12.23.43;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.24.17.08.37;	author jont;	state Exp;
+branches;
+next	;
+
+1.14.1.1
+date	93.07.22.11.04.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Utilities for match translation within _lambda
+@
+
+
+1.18
+log
+@More debugger rationalization
+@
+text
+@(* _lambdautils.sml the functor *)
+(*
+$Log: _lambdautils.sml,v $
+Revision 1.17  1994/09/19  13:02:43  matthew
+Abstraction of debug information in lambdatypes
+
+Revision 1.16  1993/11/19  14:32:33  nosa
+Type function spills for Modules Debugger.
+
+Revision 1.15  1993/08/16  11:26:20  nosa
+Debugger info now includes compilation-instance and
+runtime-instance for polymorphic debugger.
+
+Revision 1.14  1993/07/22  11:04:21  nosa
+More information in Match Environments for local and closure variable
+inspection in the debugger.
+
+Revision 1.13  1993/03/10  15:57:40  matthew
+Signature revisions
+
+Revision 1.12  1993/03/09  13:05:16  matthew
+Absyn changes
+
+Revision 1.11  1993/02/01  18:08:29  matthew
+Rationalised parameter structure
+
+Revision 1.10  1993/01/14  16:01:48  nosa
+Deleted label handling in lambda translator.
+
+Revision 1.9  1992/11/30  13:26:00  jont
+Took out a number of unnecessary map operations
+
+Revision 1.8  1992/11/04  15:35:43  jont
+Changes to allow IntNewMap to be used on MatchVar
+
+Revision 1.7  1992/10/02  16:49:50  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.6  1992/09/15  15:28:30  clive
+Got rid of handles involving hash tables
+
+Revision 1.5  1992/08/26  12:53:48  jont
+Removed some redundant structures and sharing
+
+Revision 1.4  1992/08/04  19:16:28  jont
+Removed various uses of NewMap.to_list in favour of fold and union
+
+Revision 1.3  1992/06/10  19:29:03  jont
+changed to use newmap
+
+Revision 1.2  1991/06/25  12:23:43  jont
+Fit for full implementation of trans_match
+
+Revision 1.1  91/06/24  17:08:37  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "lambdautils";
+require "../utils/intnewmap";
+require "../match/match";
+require "lambdatypes";
+
+functor LambdaUtils(
+  structure LambdaTypes: LAMBDATYPES
+  structure MatchMap : INTNEWMAP
+  structure Match: MATCH
+
+  sharing type Match.Absyn.Type = LambdaTypes.Type
+  sharing type Match.Matchvar = MatchMap.object
+                    ) : LAMBDAUTILS =
+struct
+  structure LambdaTypes = LambdaTypes
+  structure MatchMap = MatchMap
+  structure Match = Match
+
+  datatype MatchEnv = 
+    ME of (LambdaTypes.LVar * LambdaTypes.VarInfo ref LambdaTypes.Option.opt) MatchMap.T
+
+  val empty_match_env = ME(MatchMap.empty)
+
+  fun add_match_env(pair, ME me) = ME(MatchMap.define'(me, pair))
+  fun lookup_match(mv, ME me) = MatchMap.apply'(me, mv)
+
+end
+@
+
+
+1.17
+log
+@Abstraction of debug information in lambdatypes
+@
+text
+@d4 3
+@
+
+
+1.16
+log
+@Type function spills for Modules Debugger.
+@
+text
+@d4 3
+d76 1
+a76 6
+    ME of ((LambdaTypes.LVar,(LambdaTypes.LVar * 
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt
+                   * (LambdaTypes.Tyfun ref * (int,int) LambdaTypes.Option.option ref) list) ref 
+             * (int,int) LambdaTypes.Option.option ref LambdaTypes.Option.opt) 
+                              LambdaTypes.Option.opt) ref) 
+            LambdaTypes.Option.option) MatchMap.T
+@
+
+
+1.15
+log
+@Debugger info now includes compilation-instance and
+runtime-instance for polymorphic debugger.
+@
+text
+@d4 4
+d74 2
+a75 1
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt) ref 
+@
+
+
+1.14
+log
+@More information in Match Environments for local and closure variable
+inspection in the debugger.
+@
+text
+@d4 4
+d70 2
+a71 1
+            (string * LambdaTypes.Type ref) 
+@
+
+
+1.14.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 4
+Revision 1.14  1993/07/22  11:04:21  nosa
+More information in Match Environments for local and closure variable
+inspection in the debugger.
+
+@
+
+
+1.13
+log
+@Signature revisions
+@
+text
+@d4 3
+d64 5
+a68 1
+  datatype MatchEnv = ME of (LambdaTypes.LVar) MatchMap.T
+@
+
+
+1.12
+log
+@Absyn changes
+@
+text
+@d4 3
+d53 1
+a53 2
+  sharing type Match.Absyn.Type = LambdaTypes.Datatypes.Type
+  sharing type Match.Absyn.Structure = LambdaTypes.Datatypes.Structure
+a57 1
+  structure NewMap = LambdaTypes.Datatypes.NewMap
+@
+
+
+1.11
+log
+@Rationalised parameter structure
+@
+text
+@d4 3
+d50 2
+a51 1
+  sharing Match.Absyn.Datatypes = LambdaTypes.Datatypes
+@
+
+
+1.10
+log
+@Deleted label handling in lambda translator.
+@
+text
+@d4 3
+d46 4
+a49 2
+    sharing type Match.Matchvar = MatchMap.object
+) : LAMBDAUTILS =
+@
+
+
+1.9
+log
+@Took out a number of unnecessary map operations
+@
+text
+@d4 3
+d35 1
+a35 1
+require "../utils/lists";
+d41 4
+a44 2
+  structure Lists: LISTS
+  structure Match: MATCH) : LAMBDAUTILS =
+d48 1
+d51 7
+a57 113
+  datatype MatchEnv = ME of (LambdaTypes.LVar) Match.MatchMap.T
+  datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) NewMap.T
+  datatype LabelNode = LABEL of Match.Label | GOTO of Match.Label
+  datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) NewMap.T
+
+  fun label_order(lab, lab') =
+    let
+      val lab = Match.label_number lab
+      val lab' = Match.label_number lab'
+    in
+      lab < lab' 
+    end
+
+  fun node_order(n1, n2) = case n1 of
+    LABEL lab1 => (case n2 of
+      LABEL lab2 => label_order(lab1, lab2)
+    | _ => true)
+  | GOTO lab1 => (case n2 of
+      GOTO lab2 => label_order(lab1, lab2)
+    | _ => false)
+
+  val empty_match_env = ME(Match.MatchMap.empty)
+  val empty_label_env = LE(NewMap.empty (label_order,op =))
+  val empty_labels = LABELS(NewMap.empty (node_order,op =))
+
+  fun add_match_env(pair, ME me) = ME(Match.MatchMap.define'(me, pair))
+  fun lookup_match(mv, ME me) = Match.MatchMap.apply'(me, mv)
+  fun add_list(map, list) =
+    Lists.reducel
+    Match.MatchMap.define'
+    (map, list)
+
+  fun augment_label_env(LE le1, LE le2) = LE(NewMap.union(le1, le2))
+
+  fun add_label_env(pair, LE le) =
+    LE(NewMap.define'(le, pair))
+  fun lookup_label(lab, LE le) = NewMap.apply'(le, lab)
+  fun add_label_occ(pair, LABELS labels) =
+    LABELS (NewMap.define'(labels, pair))
+  fun find_label(labnode, LABELS labels) = NewMap.apply'(labels, labnode)
+  fun label_occurs(label, LABELS labels) =
+    case NewMap.tryApply'(labels, label) of
+      NewMap.YES _ => true
+    | NewMap.NO => false
+  fun find_labels tree = case tree of
+      Match.ERROR => empty_labels
+    | Match.LEAF _  => empty_labels
+    | Match.RECORD(_, _, _, tree') => find_labels tree'
+    | Match.SCON(_, scon_tree_list, default) =>
+      let val main_list = map #2 scon_tree_list
+      in
+	case default of
+	  Match.ABSENT => scan_list main_list
+	  | Match.PRESENT tree' => scan_list(tree' :: main_list)
+      end
+    | Match.CONSTRUCTOR(_, _, valid_mv_tree_list, default) =>
+      let val main_list = map #3 valid_mv_tree_list
+      in
+	case default of
+	  Match.ABSENT => scan_list main_list
+	  | Match.PRESENT tree' => scan_list(tree' :: main_list)
+      end
+    | Match.LABEL(label, tree') =>
+      add_label_occ((LABEL label, LambdaTypes.PRESENT tree'), find_labels tree')
+    | Match.GOTO label =>
+      add_label_occ((GOTO label, LambdaTypes.ABSENT), empty_labels)
+
+  and scan_list [] = empty_labels
+  | scan_list (h :: t) =
+  let
+    val LABELS tail_map = scan_list t
+    val LABELS head_map = find_labels h
+  in
+    LABELS(NewMap.union(tail_map, head_map))
+  end
+
+  fun scan_tree(tree, LE labelenv) =
+  let
+    val LABELS labels_map = find_labels tree
+(*
+    val label_domain = NewMap.domain labelenv
+*)
+  in
+(*
+    LABELS(Lists.reducel
+	   (fn (map, label) =>
+	    NewMap.undefine(NewMap.undefine(map, LABEL label), GOTO label))
+	    (labels_map, label_domain))
+*)
+    LABELS
+    (NewMap.fold
+     (fn (map, label, _) =>
+      NewMap.undefine(NewMap.undefine(map, LABEL label), GOTO label))
+     (labels_map, labelenv))
+  end
+
+  fun find_repeats [] = []
+    | find_repeats((LABELS h) :: t) =
+      let
+	fun search(_, _, []) = []
+	  | search(label, this, h :: t) = case label of
+	    LABEL lab =>
+	      if label_occurs(GOTO lab, h) then [(lab, find_label(label, this))]
+	      else search(label, this, t)
+	  | GOTO lab =>
+	      if label_occurs(LABEL lab, h) then [(lab, find_label(LABEL lab, h))]
+	      else search(label, this, t)
+	val this_list =
+	  Lists.reducel (op @@) ([], map (fn x => search(x, LABELS h, t))
+				(NewMap.domain h))
+      in
+	this_list @@ (find_repeats t)
+      end
+@
+
+
+1.8
+log
+@Changes to allow IntNewMap to be used on MatchVar
+@
+text
+@d4 3
+d124 1
+d126 1
+d128 1
+d130 9
+a138 5
+	   NewMap.undefine
+	   (Lists.reducel
+	    NewMap.undefine
+	    (labels_map, map (fn label => LABEL label) label_domain),
+	    map (fn label => GOTO label) label_domain))
+d140 1
+d142 16
+a157 15
+  | find_repeats((LABELS h) :: t) =
+  let fun search(_, _, []) = []
+    | search(label, this, h :: t) = case label of
+      LABEL lab =>
+      if label_occurs(GOTO lab, h) then [(lab, find_label(label, this))]
+      else search(label, this, t)
+    | GOTO lab =>
+      if label_occurs(LABEL lab, h) then [(lab, find_label(LABEL lab, h))]
+      else search(label, this, t)
+    val this_list =
+      Lists.reducel (op @@) ([], map (fn x => search(x, LABELS h, t))
+        (NewMap.domain h))
+  in
+    this_list @@ (find_repeats t)
+  end
+@
+
+
+1.7
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+a27 1
+require "lambdatypes";
+d31 1
+d42 1
+a42 1
+  datatype MatchEnv = ME of (Match.Matchvar, LambdaTypes.LVar) NewMap.T
+a46 8
+  fun mv_order(mv, mv') =
+    let
+      val mv = Match.from_Matchvar mv
+      val mv' = Match.from_Matchvar mv'
+    in
+      mv < mv' 
+    end
+
+d63 1
+a63 1
+  val empty_match_env = ME(NewMap.empty (mv_order,op =))
+d67 2
+a68 4
+  fun foldleft f (e, xs) = Lists.reducel f (e, xs)
+
+  fun add_match_env((mv, lv), ME me) = ME(NewMap.define(me, mv, lv))
+  fun lookup_match(mv, ME me) = NewMap.apply'(me, mv)
+d71 1
+a71 1
+    (fn (map, (d, r)) => NewMap.define(map, d, r))
+d76 2
+a77 2
+  fun add_label_env((lab, lv), LE le) =
+    LE(NewMap.define(le, lab, lv))
+d79 2
+a80 2
+  fun add_label_occ((labnode, treeopt), LABELS labels) =
+    LABELS (NewMap.define(labels, labnode, treeopt))
+d123 1
+a123 1
+    LABELS(foldleft
+d125 1
+a125 1
+	   (foldleft
+d141 1
+a141 1
+      foldleft (op @@) ([], map (fn x => search(x, LABELS h, t))
+@
+
+
+1.6
+log
+@Got rid of handles involving hash tables
+@
+text
+@d4 3
+d49 1
+a49 7
+      if mv = mv' then
+	NewMap.EQUAL
+      else
+	if mv < mv' then
+	  NewMap.LESS
+	else
+	  NewMap.GREATER
+d57 1
+a57 7
+      if lab = lab' then
+	NewMap.EQUAL
+      else
+	if lab < lab' then
+	  NewMap.LESS
+	else
+	  NewMap.GREATER
+d63 1
+a63 1
+    | _ => NewMap.LESS)
+d66 1
+a66 1
+    | _ => NewMap.GREATER)
+d68 3
+a70 3
+  val empty_match_env = ME(NewMap.empty mv_order)
+  val empty_label_env = LE(NewMap.empty label_order)
+  val empty_labels = LABELS(NewMap.empty node_order)
+@
+
+
+1.5
+log
+@Removed some redundant structures and sharing
+@
+text
+@d4 3
+d99 3
+a101 1
+    (NewMap.apply'(labels, label); true) handle NewMap.Undefined => false
+@
+
+
+1.4
+log
+@Removed various uses of NewMap.to_list in favour of fold and union
+@
+text
+@d4 3
+a20 1
+require "../utils/newmap";
+a25 1
+  structure NewMap: NEWMAP
+d30 1
+a30 1
+  structure NewMap = NewMap
+@
+
+
+1.3
+log
+@changed to use newmap
+@
+text
+@d4 3
+d86 1
+a86 2
+  fun augment_label_env(LE le1, LE le2) =
+    LE(add_list(le1, NewMap.to_list le2))
+d121 2
+a122 1
+  let val LABELS tail_map = scan_list t
+d125 1
+a125 1
+    LABELS(add_list(tail_map, NewMap.to_list head_map))
+@
+
+
+1.2
+log
+@Fit for full implementation of trans_match
+@
+text
+@d3 4
+a6 1
+$Log:	_lambdautils.sml,v $
+d15 1
+a15 1
+require "../utils/map";
+d21 1
+a21 1
+  structure Map: MAP
+d26 1
+a26 1
+  structure Map = Map
+d29 2
+a30 2
+  datatype MatchEnv = ME of (Match.Matchvar, LambdaTypes.LVar) Map.Map
+  datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) Map.Map
+d32 1
+a32 1
+  datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) Map.Map
+d34 13
+a46 3
+  val empty_match_env = ME Map.empty_map
+  val empty_label_env = LE Map.empty_map
+  val empty_labels = LABELS Map.empty_map
+d48 13
+a60 1
+  fun foldleft f (e, xs) = Lists.foldl (fn x => (fn y => f(x, y))) e xs
+d62 1
+a62 1
+  fun labelnode_order(n1, n2) = case n1 of
+d64 2
+a65 2
+      LABEL lab2 => Match.label_number lab1 < Match.label_number lab2
+    | _ => true)
+d67 2
+a68 2
+      GOTO lab2 => Match.label_number lab1 < Match.label_number lab2
+    | _ => false)
+d70 13
+a82 6
+  fun add_match_env((mv, lv), ME me) =
+    ME(Map.add((mv, lv), me, (fn (x, y) =>
+      (Match.from_Matchvar x) < (Match.from_Matchvar y))))
+  fun lookup_match(mv, ME me) = Map.lookup(mv, me)
+  fun compare_labels(l1, l2) =
+     (Match.label_number l1) < (Match.label_number l2)
+d84 2
+a85 1
+    LE(Map.plus(le1, le2, compare_labels))
+d87 2
+a88 2
+    LE(Map.add((lab, lv), le, compare_labels))
+  fun lookup_label(lab, LE le) = Map.lookup(lab, le)
+d90 2
+a91 2
+    LABELS (Map.add((labnode, treeopt), labels, labelnode_order))
+  fun find_label(labnode, LABELS labels) = Map.lookup(labnode, labels)
+d93 1
+a93 1
+    Map.domain_member(label, labels)
+d122 1
+a122 1
+    LABELS(Map.plus(tail_map, head_map, labelnode_order))
+d128 1
+a128 1
+    val label_domain = Map.domain labelenv
+d130 6
+a135 3
+    LABELS(foldleft Map.remove(foldleft Map.remove
+      (labels_map, map (fn label => LABEL label) label_domain),
+        map (fn label => GOTO label) label_domain))
+d149 1
+a149 1
+        (Map.domain h))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+a14 1
+require "../utils/integer";
+a19 1
+  structure Integer: INTEGER
+a36 12
+  fun foldright f (xs, e) = Lists.foldr	(fn x => (fn y => f(x, y))) e xs
+
+  fun filter(f_list, filter_fun) = 
+  let
+    fun filter_sub([]) = []
+    | filter_sub(h :: t) =
+    if filter_fun h then h :: (filter_sub t)
+    else filter_sub t
+  in
+    filter_sub f_list
+  end
+
+d55 4
+a58 6
+  fun lookup_label(lab, LE le) = let (*val _ = print ("lookup_label looking up " ^ (Integer.makestring(Match.label_number lab)) ^ " in env size " ^ (Integer.makestring(length (Map.domain le)))) *) in Map.lookup(lab, le) end
+  fun add_label_occ((labnode, treeopt), LABELS labels) = let (*
+val _ = print("Adding " ^ case labnode of LABEL l => "LABEL" ^ (Integer.makestring(Match.label_number l)) | GOTO l => "GOTO" ^ Integer.makestring(Match.label_number l)) *) in
+    LABELS (Map.add((labnode, treeopt), labels, labelnode_order)) end
+  fun find_label(labnode, LABELS labels) =  let (* val _ = print ("find_label looking up " ^ (Integer.makestring(Match.label_number(case labnode of LABEL lab => lab | GOTO lab => lab))) ^ " in env size " ^ (Integer.makestring(length (Map.domain labels)))) *) in 
+Map.lookup(labnode, labels) end
+d61 1
+a61 1
+  fun find_labels tree = let (*val _ = print "find_labels" *)in case tree of
+d83 1
+a83 1
+end
+d93 1
+a93 1
+  let (*val _ = print "scan_tree"*)
+@

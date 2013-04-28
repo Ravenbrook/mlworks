@@ -1,0 +1,339 @@
+head	1.10;
+access;
+symbols
+	Final_version_of_old_runtime:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ *  @;
+
+
+1.10
+date	93.08.26.18.46.15;	author daveb;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	93.08.12.13.48.52;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.06.22.11.14.42;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.20.10.09.52;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.06.30.09.40.31;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.12.16.47.55;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.20.16.00.20;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.12.23.13.18.45;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.19.16.01.42;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.18.13.08.35;	author davidt;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.08.26.18.46.15;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Simple run-time system utilities.
+@
+
+
+1.10
+log
+@The runtime reads the module name from the consistency information in the
+file.  Therefore module_name() isn't needed any more.
+@
+text
+@/*  ==== MISCELLANEOUS UTILITY FUNCTIONS ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  $Log: utils.h,v $
+ *  Revision 1.9  1993/08/12  13:48:52  daveb
+ *  Replaced basename with module_name.
+ *
+ *  Revision 1.8  1993/06/22  11:14:42  richard
+ *  Moved stack backtrace here from GC and top-level handler.
+ *
+ *  Revision 1.7  1992/07/20  10:09:52  richard
+ *  Added is_ml_frame().
+ *
+ *  Revision 1.6  1992/06/30  09:40:31  richard
+ *  Moved some declarations to storeman.h.
+ *
+ *  Revision 1.5  1992/03/12  16:47:55  richard
+ *  Made basename() take a const argument.
+ *
+ *  Revision 1.4  1992/01/20  16:00:20  richard
+ *  Changed message() and error() to use variable argument lists.
+ *
+ *  Revision 1.3  1991/12/23  13:18:45  richard
+ *  Changed the names of runtime_error() and runtime_message() to preserve
+ *  the six-character monocase uniqueness required by ANSI.  Added basename().
+ *
+ *  Revision 1.2  91/12/19  16:01:42  richard
+ *  Added an exit code to runtime_error().
+ * 
+ *  Revision 1.1  91/10/18  13:08:35  davidt
+ *  Initial revision
+ */
+
+
+#ifndef utils_h
+#define utils_h
+
+#include "mltypes.h"
+#include "storeman.h"	/* prototypes for message() and error() */
+
+#include <stdio.h>
+
+
+/*  == Is a frame an ML frame? ==
+ *
+ *  This function examines a stack frame to determine whether it is that of
+ *  an ML function, and returns the functions code vector if so.  Otherwise
+ *  it returns MLUNIT.
+ */
+
+extern mlval is_ml_frame(struct stack_frame *sp);
+
+
+/*  == Stack backtrace ==  */
+
+extern void backtrace(FILE *stream, struct stack_frame *sp, int depth_max);
+
+
+#endif
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a5 4
+ *  Revision 1.10  1993/08/26  18:46:15  daveb
+ *  The runtime reads the module name from the consistency information in the
+ *  file.  Therefore module_name() isn't needed any more.
+ *
+@
+
+
+1.9
+log
+@Replaced basename with module_name.
+@
+text
+@d6 3
+a42 11
+
+
+/*  == Extract module name of file ==
+ *
+ *  Given a file name string this function strips off the leading occurrence
+ *  of mod_path (if present) and `.mo' suffices and returns an ML string with
+ *  the result.  THe mod_path may be reset by the -path command line option.
+ */
+
+extern const char* mod_path;
+extern mlval module_name(const char *path);
+@
+
+
+1.8
+log
+@Moved stack backtrace here from GC and top-level handler.
+@
+text
+@d6 3
+d42 1
+a42 1
+/*  == Extract basename of file ==
+d44 3
+a46 3
+ *  Given a file name string this function strips off any leading path
+ *  components and `.mo' suffices and returns an ML string with the
+ *  result.
+d49 2
+a50 1
+extern mlval basename(const char *path);
+@
+
+
+1.7
+log
+@Added is_ml_frame().
+@
+text
+@d6 3
+d36 2
+d57 5
+@
+
+
+1.6
+log
+@Moved some declarations to storeman.h.
+@
+text
+@d6 3
+d42 10
+@
+
+
+1.5
+log
+@Made basename() take a const argument.
+@
+text
+@d6 3
+d28 1
+a28 17
+
+
+/*  == Output a runtime message ==
+ *
+ *  Writes a suitably formatted message on the standard error stream.  May
+ *  call malloc().
+ */
+
+extern void message(const char *, ...);
+
+
+/*  == Output message and exit ==
+ *
+ *  As for message() but terminates the program with a failed exit code.
+ */
+
+extern void error(const char *, ...);
+@
+
+
+1.4
+log
+@Changed message() and error() to use variable argument lists.
+@
+text
+@d6 3
+d51 1
+a51 1
+extern mlval basename(char *);
+@
+
+
+1.3
+log
+@Changed the names of runtime_error() and runtime_message() to preserve
+the six-character monocase uniqueness required by ANSI.  Added basename().
+@
+text
+@d5 5
+a9 1
+ *  $Log:	utils.h,v $
+d26 2
+a27 2
+ *  Writes a suitably formatted message on the standard error stream,
+ *  but is guaranteed not to call malloc() in doing so.
+d30 1
+a30 1
+extern void message(char *);
+d35 1
+a35 2
+ *  As for `runtime_message' but terminates the program with a failed
+ *  exit code.
+d38 1
+a38 1
+extern void error(char *);
+@
+
+
+1.2
+log
+@Added an exit code to runtime_error().
+@
+text
+@d1 7
+a7 6
+/*
+ * utils.h
+ * Simple run-time system utilities.
+ * $Log:	utils.h,v $
+ * Revision 1.1  91/10/18  13:08:35  davidt
+ * Initial revision
+d9 2
+a10 2
+ * 
+ * Copyright (c) 1991 Harlequin Ltd.
+d13 1
+a13 1
+/* Avoid multiple inclusion */
+d17 7
+a23 2
+/*
+ * Print a message.
+d26 1
+a26 1
+extern void runtime_message(char *);
+d28 5
+a32 2
+/*
+ * Print an error message and exit.
+d35 12
+a46 1
+extern void runtime_error(int, char *);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+ * $Log$
+d8 1
+d26 1
+a26 1
+extern void runtime_error(char *);
+@

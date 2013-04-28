@@ -1,0 +1,152 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	91.10.10.15.47.32;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.10.10.10.08.58;	author richard;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.10.10.15.47.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Fast but memory inefficient set implementation.
+This is the structure.
+@
+
+
+1.2
+log
+@Fixed seteq.
+@
+text
+@(* fastset.sml the functor *)
+
+(* $Log:$
+Copyright (C) 1991 Harlequin Ltd
+*)
+
+require "lists";
+require "set";
+
+
+(* FastSet is an implementation of SET that does not filter out *)
+(* duplicates until the set is converted to a list. *)
+	
+functor FastSet (
+
+  structure Lists : LISTS
+
+) : SET =
+
+  struct
+
+    type ''a Set = ''a list
+
+    val empty_set = []
+
+    fun empty_setp [] = true
+      | empty_setp _ = false
+
+    val is_member = Lists.member
+
+    val add_member = op::
+
+    fun singleton e = [e]
+
+    val union = op@@
+
+    fun intersection(set1,set2) =
+      let 
+	fun intersect(result,h::t,set) = 
+	  if is_member (h,set)
+	    then intersect(h::result,t,set)
+	  else intersect(result,t,set)
+	  | intersect(result,[],set) = result
+      in
+	if (set2=[]) then
+	  []
+	else
+	  intersect([],set1,set2)
+      end
+
+    fun subset ([],l2) = true
+      | subset (h::t,l2) = 
+	is_member (h,l2) 
+	andalso 
+	subset (t,l2)
+
+    fun setdiff ([],_) = []
+      | setdiff (h::t,l) =
+	if is_member (h,l) then
+	  setdiff(t,l)
+	else
+	  h::setdiff(t,l)
+
+    fun seteq(set1,set2) =
+      subset(set1,set2)
+      andalso 
+      subset(set2,set1)
+	  
+    val set_to_list = Lists.filter
+
+    val list_to_set = fn x=>x
+
+    val map = map
+
+    fun set_print ([],printfun) = ""
+      | set_print ([h],printfun) = printfun h
+      | set_print (h::t,printfun) = 
+	printfun h ^ ", " ^ set_print (t,printfun)
+
+  end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+(* $Log: _fastset.sml,v $
+Revision 1.2  1991/10/10  15:47:32  richard
+Fixed seteq.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d67 1
+a67 1
+      (Lists.length(set1) = Lists.length(set2))
+d78 1
+a78 1
+	printfun h ^ "," ^ set_print (t,printfun)
+@

@@ -1,0 +1,71 @@
+head	1.2;
+access;
+symbols
+	ML_beta_release_12/08/94:1.2
+	ML_beta_release_03/08/94:1.2
+	ML_revised_beta_release_25/05/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	94.06.21.13.00.22;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.05.13.15.55.16;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Revised interface.
+@
+text
+@(* Error Browser *)
+
+(*
+$Log$
+
+Copyright (c) 1994 Harlequin Ltd.
+*)
+
+signature ERROR_BROWSER =
+sig
+  type Widget
+  type error
+  type location
+
+  val create:
+    {parent: Widget,
+     errors: error list,
+     action_message: string,
+     file_message: string,
+     edit_action: location -> (unit -> unit),
+     redo_action: unit -> unit}
+    -> unit
+end;
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d13 1
+a13 2
+  type options
+  type Context
+d16 6
+a21 2
+    Widget * error list * string * string * (unit -> Context)
+      * (unit -> options) * (unit -> unit)
+@

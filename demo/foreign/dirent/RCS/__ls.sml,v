@@ -1,0 +1,197 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_workspace_97:1.2.1
+	MLWorks_20m1_1997_10_23:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	98.01.22.19.06.59;	author jkbrook;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.07.03.10.10.02;	author stephenb;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.07.02.10.07.21;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.11.30.16.47.08;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.3
+log
+@[Bug #70047]
+Syntax for delivery has changed
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * A very simple version of ls implemented using the dirent interface.
+ * It produces output akin to an unsorted version of "ls -1a".
+ * 
+ * Revision Log
+ * ------------
+ * $Log: foreign:dirent:__ls.sml,v $
+ *  Revision 1.2  1997/07/03  10:10:02  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *)
+
+require "$.system.__os";     (* OS.Process.exit *)
+require "$.basis.__word";
+require "$.foreign._mlworks_c_pointer";
+require "$.foreign.__mlworks_c_interface";
+require "$.foreign.__mlworks_c_resource";
+require "__dirent";
+
+
+(* This is an application which is going to be delivered so there 
+ * is nothing to be exported from the structure
+ *)
+
+structure Ls : sig end = 
+  struct
+    
+    exception OutOfMemory
+    exception NoSuchDirectory of string
+
+    structure C = MLWorksCInterface
+
+    val withNonNullResource = MLWorksCResource.withNonNullResource
+
+    fun withCString str action = 
+      withNonNullResource (C.CharPtr.free, OutOfMemory, str, action)
+
+    fun withDirectory directoryName action =
+      withCString (C.CharPtr.fromString directoryName)
+        (fn cDirectoryName =>
+          withNonNullResource (Dirent.closedir, NoSuchDirectory directoryName,
+                               Dirent.opendir cDirectoryName, action))
+
+    fun applyPair (f, g) x = (f x, g x)
+
+    fun dirApp (f, dir) =
+      let 
+        val entry = Dirent.readdir dir
+      in
+        if entry = C.null then
+          ()
+        else
+          (f entry;  dirApp (f, dir))
+      end
+
+    val wordFromUshort = Word.fromLargeWord o C.Ushort.toLargeWord
+
+    val direntName : Dirent.struct'dirent -> string
+      = C.CharPtr.copySubString
+      o applyPair (Dirent.struct'dirent'd_name,
+                   wordFromUshort o Dirent.struct'dirent'd_namlen)
+
+
+    structure direntPtr = MLWorksCPointer
+      (type value = Dirent.struct'dirent
+       val size = Dirent.struct'dirent'size'
+       val addr = Dirent.struct'dirent'addr'
+       structure C = C);
+
+    val printName = print o direntName o direntPtr.!
+
+    fun longListing directoryName = ()
+
+
+    fun shortListing directoryName =
+      withDirectory directoryName
+        (fn dir =>
+           dirApp (fn entry => (printName entry; print "\n"), dir))
+
+
+    (*
+    **.fix.stderr: the usage message should be displayed on stderr.
+    **.fix.prog-name: the usage message should include the name of the program.
+    *)
+    fun usage () =
+      (print "[ directory ]\n";
+      OS.Process.exit 1)
+
+
+
+    fun parseArgs ([directoryName]) = shortListing directoryName
+      | parseArgs ([]) = shortListing "."
+      | parseArgs _ = usage ()
+
+    fun main () = parseArgs (MLWorks.arguments ())
+                  handle
+                    OutOfMemory => print "Out of Memory\n"
+                  | NoSuchDirectory d => 
+                      print ("No such directory: " ^ d ^ "\n")
+
+    val _ = MLWorks.Deliver.deliver ("simplels", main, MLWorks.Deliver.CONSOLE);
+
+  end
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d8 5
+a12 1
+ * $Log$
+d103 1
+a103 1
+    val _ = MLWorks.Deliver.deliver ("simplels", main, true);
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d8 1
+a8 5
+ * $Log: foreign:dirent:__ls.sml,v $
+ *  Revision 1.2  1997/07/03  10:10:02  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

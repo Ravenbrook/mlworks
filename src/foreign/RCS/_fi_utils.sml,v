@@ -1,0 +1,552 @@
+head	1.10;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.10
+	MLWorks_Beta_1996_06_06:1.10
+	MLWorks_Beta_1996_06_05:1.10
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.10;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	96.05.17.13.22.42;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.17.09.56.49;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.01.11.39.24;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.04.30.14.51.47;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.04.18.17.06.56;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.02.14.16.51.29;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.09.12.10.39.29;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.09.09.13.29.38;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.25.14.18.20;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.40.13;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.10
+log
+@Fixing bungle
+@
+text
+@(*  ==== FOREIGN INTERFACE : UTILITIES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _fi_utils.sml,v $
+ * Revision 1.9  1996/05/17  09:56:49  matthew
+ * Moved Bits to MLWorks.Internal
+ *
+ * Revision 1.8  1996/05/01  11:39:24  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.7  1996/04/30  14:51:47  matthew
+ * Removing MLWorks.Integer
+ *
+ * Revision 1.6  1996/04/18  17:06:56  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.5  1996/02/14  16:51:29  brianm
+ * Additions to allow for different data repn's (e.g. endianness).
+ *
+ *  Revision 1.4  1995/09/12  10:39:29  daveb
+ *  Changed name of run-time function.
+ *
+ *  Revision 1.3  1995/09/09  13:29:38  brianm
+ *  Further modification for updates and general reorganisation.
+ *
+ *  Revision 1.2  1995/06/25  14:18:20  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.1  1995/04/25  11:40:13  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__integer";
+require "../basis/__general";
+require "../utils/lists";
+
+require "fi_types";
+require "fi_utils";
+
+functor ForeignUtils(
+
+     structure FITypes : FOREIGN_TYPES
+     structure Lists   : LISTS
+
+) : FOREIGN_UTILS =
+   struct
+
+      structure Bits = MLWorks.Internal.Bits
+
+      structure FITypes = FITypes
+      open FITypes
+
+      open General
+
+      structure ByteArray = MLWorks.ByteArray
+
+   (* Mapping *)
+
+      val MLWcast         =  MLWorks.Internal.Value.cast : 'a -> 'b
+      val MLWenvironment  =  MLWorks.Internal.Runtime.environment;
+
+      fun env s = MLWcast(MLWenvironment s);
+      
+      (* ByteArray operations *)
+
+      val bytearray     =  ByteArray.array
+
+      val sub_bytearray =  ByteArray.subarray
+      val to_list       =  ByteArray.to_list
+      val sub_ba        =  MLWorks.Internal.Value.unsafe_bytearray_sub
+      val update_ba     =  MLWorks.Internal.Value.unsafe_bytearray_update
+      val copy_ba'      =  ByteArray.copy
+      val copy_ba  =
+          fn (src,src_st,len,tgt,tgt_st) =>
+             copy_ba'(src,src_st,src_st+len,tgt,tgt_st)
+
+      val sub_s         =  MLWorks.Internal.Value.unsafe_string_sub
+      val update_s      =  MLWorks.Internal.Value.unsafe_string_update
+      val alloc_string  =  MLWorks.Internal.Value.alloc_string
+
+      val int_string    =  Int.toString
+
+
+      (* Word32 Operators *)
+
+      val word32_repn   : word32 -> bytearray  =  env "word32 word to bytearray";
+      val word32_abstr  : bytearray -> word32  =  env "word32 bytearray to word";
+
+      (* Bit operators *)
+
+      val rshift  =  Bits.rshift
+      val andb    =  Bits.andb
+      val lshift  =  Bits.lshift
+
+      val tl      =  Lists.tl
+
+   (* Implementation auxiliaries *)
+
+      fun mask_lower(i) = andb(i,255)
+
+      fun get_upper_bits(i) = rshift(i,8)
+
+
+   (* Exported Definitions *)
+
+      fun disp view_fn x =
+          let val str = view_fn(x)
+          in
+              MLWorks.IO.output(MLWorks.IO.std_out,str);
+	      x
+          end
+
+      fun sep_items sep =
+	  let fun doit(x::y,r) = doit(y,x::sep::r)
+		| doit([],r) = rev r
+	  in
+              fn []       => []
+               | (h :: t) => doit(t,[h])
+	  end
+
+      fun term_items sep =
+	  let fun doit(x::y,r) = doit(y,x::sep::r)
+		| doit([],r) = rev (sep :: r)
+	  in
+              fn []       => []
+               | (h :: t) => doit(t,[h])
+	  end
+
+
+      local
+
+	 (* integer mapping - standard byte order *)
+	 fun int_to_bytearray{src,len,arr=ba,st} =
+	     let fun doit(k,idx,n) =
+		     if (k < 1) then () else
+		     let val lwb = mask_lower(n)
+			 val upb = get_upper_bits(n)
+		     in
+		       update_ba(ba,idx,lwb);
+		       doit(k-1,idx-1,upb)
+		     end
+	     in
+		 doit(len,st+len-1,src)
+	     end
+
+	fun bytearray_to_int{arr=ba,st,len} =
+	    let fun doit(k,idx,v) =
+		    if (k < 1) then v else
+		    let val lwb = sub_ba(ba,idx)
+			val new_v = lshift(v,8) + lwb
+		    in
+			doit(k-1,idx+1,new_v)
+		    end
+	    in
+		doit(len,st,0)
+	    end
+
+	 (* integer mapping - reversed byte order *)
+	 fun int_to_bytearray_rev{src,len,arr=ba,st} =
+	     let fun doit(k,idx,n) =
+		     if (k < 1) then () else
+		     let val lwb = mask_lower(n)
+			 val upb = get_upper_bits(n)
+		     in
+		       update_ba(ba,idx,lwb);
+		       doit(k-1,idx+1,upb)
+		     end
+	     in
+		 doit(len,st,src)
+	     end
+
+	fun bytearray_to_int_rev{arr=ba,st,len} =
+	    let fun doit(k,idx,v) =
+		    if (k < 1) then v else
+		    let val lwb = sub_ba(ba,idx)
+			val new_v = lshift(v,8) + lwb
+		    in
+			doit(k-1,idx-1,new_v)
+		    end
+	    in
+		doit(len,st+len-1,0)
+	    end
+
+     in
+        val is_big_endian : bool = (env "big endian flag" ())
+
+        val int_to_bytearray =
+            if is_big_endian then int_to_bytearray
+                             else int_to_bytearray_rev
+ 
+        val bytearray_to_int =
+            if is_big_endian then bytearray_to_int
+                             else bytearray_to_int_rev
+     end
+
+     fun string_to_bytearray{src=str,arr=ba,st} =
+         let val size' = size(str) - 1
+             fun doit(k,idx) =
+                 if (k < 0) then () else
+                 let val byte = sub_s(str,k)
+                 in
+                   update_ba(ba,idx,byte);
+                   doit(k-1,idx-1)
+                 end
+         in
+             doit(size',st+size')
+         end
+         
+     fun bytearray_to_string{arr=ba,st,len} =
+         let val str = alloc_string(len+1)
+             val len' = len - 1
+             fun doit(k,idx) =
+                 if (k < 0) then str else
+                 let val byte = sub_ba(ba,idx)
+                 in
+                   update_s(str,k,byte);
+                   doit(k-1,idx-1)
+                 end
+         in
+           doit(len',st+len');
+           str
+         end
+
+     fun word32_to_bytearray{src=wd,arr=ba,st} =
+         let val src_ba = word32_repn( wd )
+         in
+             copy_ba(src_ba,0,4,ba,st)
+         end
+
+     fun bytearray_to_word32{arr=ba,st} =
+         let val wd_repn = bytearray(4,0)
+         in
+           copy_ba(ba,st,4,wd_repn,0);
+           word32_abstr( wd_repn )
+         end
+
+     local
+        val a = String.ord("A")
+
+        fun hex_digit(i) =
+            if 0 <= i andalso i <= 9
+            then int_string(i)
+            else String.chr(a + (i - 10))
+
+        fun hex_byte(i,strl) =
+            let val hi = andb(rshift(i,4),15)
+                val lo = andb(i,15)
+            in
+                hex_digit(lo) :: hex_digit(hi) :: strl
+            end
+
+        fun hex_byte'(i,strl) =
+            let val hi = andb(rshift(i,4),15)
+                val lo = andb(i,15)
+            in
+                " " :: hex_digit(lo) :: hex_digit(hi) :: strl
+            end
+
+        fun loop(f) =
+            let fun doit([],strl)   = strl
+	          | doit(i::l,strl) = doit(l, f(i,strl))
+            in
+                doit
+            end
+     in
+	fun word32_to_hex (wd) =
+            let val loopf = loop hex_byte
+                val ba    = word32_repn(wd)
+                val data  = loopf(to_list(ba),["x", "0"])
+            in
+                String.implode(rev(data))
+            end
+
+	fun bytearray_to_hex {arr,st,len} =
+            let val loopf = loop hex_byte'
+                val ba    = sub_bytearray(arr,st,st+len)
+                val data  = loopf(to_list(ba),[])
+            in
+                if data = nil then "" else
+                String.implode(rev(tl(data)))
+            end
+     end
+
+     local
+       val peek_mem : (address * bytearray * int * int) -> unit = 
+             env "bytearray peek memory"
+     in
+       fun peek_memory {loc, arr, start, len} =
+             peek_mem(loc,arr,start,len)
+             handle _ => raise Fail("peek_memory")
+     end
+   end;
+@
+
+
+1.9
+log
+@Moved Bits to MLWorks.Internal
+@
+text
+@d11 3
+d60 1
+a60 1
+      structure Bits = MLWorks.Bits
+@
+
+
+1.8
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@d11 6
+d56 2
+@
+
+
+1.7
+log
+@Removing MLWorks.Integer
+@
+text
+@d11 3
+d110 1
+a110 1
+              output(std_out,str);
+d239 1
+a239 1
+        val a = ord("A")
+d244 1
+a244 1
+            else chr(a + (i - 10))
+d272 1
+a272 1
+                implode(rev(data))
+d281 1
+a281 1
+                implode(rev(tl(data)))
+@
+
+
+1.6
+log
+@initbasis becomes basis
+@
+text
+@d11 3
+d33 1
+d79 1
+a79 1
+      val int_string    =  MLWorks.Integer.makestring
+@
+
+
+1.5
+log
+@Additions to allow for different data repn's (e.g. endianness).
+@
+text
+@d11 3
+d30 1
+a30 1
+require "../initbasis/__general";
+@
+
+
+1.4
+log
+@Changed name of run-time function.
+@
+text
+@d11 3
+a93 2
+      val int_size = 4
+      val int_size' = int_size - 1
+d121 1
+a121 12
+      fun int_to_bytearray{src,arr=ba,st} =
+          let fun doit(k,idx,n) =
+                  if (k < 0) then () else
+                  let val lwb = mask_lower(n)
+                      val upb = get_upper_bits(n)
+                  in
+                    update_ba(ba,idx,lwb);
+                    doit(k-1,idx-1,upb)
+                  end
+          in
+              doit(int_size',st+int_size',src)
+          end
+d123 63
+a185 11
+     fun bytearray_to_int{arr=ba,st} =
+         let fun doit(k,idx,v) =
+                 if (k < 0) then v else
+                 let val lwb = sub_ba(ba,idx)
+                     val new_v = lshift(v,8) + lwb
+                 in
+                     doit(k-1,idx+1,new_v)
+                 end
+         in
+             doit(int_size',st,0)
+         end
+@
+
+
+1.3
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d11 3
+d74 1
+a74 1
+      val word32_repn   : word32 -> bytearray  =  env "word32 to bytearray";
+@
+
+
+1.2
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d11 3
+d31 1
+a48 9
+
+      (* Word32 Operators *)
+
+      (* The implementation of the following operators critically exploits the
+         implementation of Word32.word values as bytearrays of length 4.
+       *)
+      val word32_repn   : word32 -> bytearray  =  MLWcast
+      val word32_abstr  : bytearray -> word32  =  MLWcast
+      
+d67 8
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d10 4
+a13 1
+ *  $Log$
+d15 1
+d19 1
+d27 1
+a27 1
+
+d40 1
+a40 1
+      val MLWcast         =  MLWorks.Internal.Value.cast (fn x => x) : 'a -> 'b
+d54 2
+d58 2
+d71 2
+d77 2
+d90 24
+d179 47
+@

@@ -1,0 +1,244 @@
+head	1.8;
+access;
+symbols
+	ML_beta_release_12/08/94:1.7
+	ML_beta_release_03/08/94:1.7
+	ML_revised_beta_release_25/05/94:1.7
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	95.07.18.11.51.22;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.03.11.17.07.58;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.04.16.10.46.26;	author matthew;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	93.04.02.15.05.31;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.19.14.57.45;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.03.15.17.13.49;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.03.08.15.18.43;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.02.17.52.49;	author daveb;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.04.16.10.46.26;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Listener window for motif.
+@
+
+
+1.8
+log
+@Adding "external listener" flag
+@
+text
+@(* listener.sml the signature *)
+
+(*
+$Log: listener.sml,v $
+Revision 1.7  1994/03/11  17:07:58  matthew
+Removed Exit exn
+
+Revision 1.6  1993/04/16  10:46:26  matthew
+Changed type of create function
+
+Revision 1.5  1993/04/02  15:05:31  matthew
+Removed Incremental structure
+
+Revision 1.4  1993/03/19  14:57:45  matthew
+create takes application exit function
+
+Revision 1.3  1993/03/15  17:13:49  matthew
+Simplified type of create
+Renamed ShellData to Args
+
+Revision 1.2  1993/03/08  15:18:43  matthew
+Changes for ShellData type
+
+Revision 1.1  1993/03/02  17:52:49  daveb
+Initial revision
+
+
+Copyright (c) 1993 Harlequin Ltd.
+*)
+
+signature LISTENER =
+sig
+  type ToolData
+
+  val create : bool -> ToolData -> unit
+end;
+@
+
+
+1.7
+log
+@Removed Exit exn
+@
+text
+@d5 3
+d35 1
+a35 1
+  val create : ToolData -> unit
+@
+
+
+1.6
+log
+@Changed type of create function
+@
+text
+@d5 3
+a30 2
+
+  exception Exit
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+Revision 1.6  1993/04/16  10:46:26  matthew
+Changed type of create function
+
+@
+
+
+1.5
+log
+@Removed Incremental structure
+@
+text
+@d5 3
+d27 1
+a27 3
+  type Widget
+
+  type Args
+d31 1
+a31 2
+  val create : Args * (unit -> unit) * Widget -> unit
+
+@
+
+
+1.4
+log
+@create takes application exit function
+@
+text
+@d5 3
+a21 2
+require "../interpreter/incremental";
+
+a23 2
+  structure Incremental: INCREMENTAL
+
+@
+
+
+1.3
+log
+@Simplified type of create
+Renamed ShellData to Args
+@
+text
+@d5 4
+d31 1
+a31 1
+  val create : Args * Widget -> unit
+@
+
+
+1.2
+log
+@Changes for ShellData type
+@
+text
+@d5 3
+d23 1
+a23 1
+  type ShellData
+d27 1
+a27 1
+  val create : ShellData * Widget * (ShellData -> unit -> unit) -> unit
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+$Log$
+d8 1
+d19 2
+a20 2
+  type UserOptions
+  type PrinterDescriptor
+d24 1
+a24 21
+  val create : 
+    (*
+    (string * (string * string) list * (string -> string) -> unit) -> 
+    						  (* debugger window fn *)
+    *)
+    UserOptions *
+    PrinterDescriptor *
+    Incremental.options *
+    Incremental.InterMake.Compiler.BasisTypes.Info.options *
+    Incremental.context *
+    ({line : int, subline : int, name : string, topdec : int} -> string) *
+    Widget *
+    ( UserOptions *
+      PrinterDescriptor *
+      Incremental.options *
+      Incremental.InterMake.Compiler.BasisTypes.Info.options *
+      Incremental.context ref *
+      ({line : int, subline : int, name : string, topdec : int} -> string) ->
+	unit -> unit
+    )->
+      unit
+@

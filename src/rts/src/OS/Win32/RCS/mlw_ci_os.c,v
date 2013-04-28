@@ -1,0 +1,459 @@
+head	1.5;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.5.1
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.4
+	MLWorks_20b2_Windows_1998_06_12:1.4
+	MLWorks_20b1c1_1998_05_07:1.4
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_MM_adapt:1.3.3
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_workspace_97:1.3.2
+	MLWorks_dt_wizard:1.3.1
+	MLWorks_20m0_1997_06_20:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	98.10.05.11.01.24;	author jont;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	98.02.24.11.21.40;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.06.30.12.31.38;	author stephenb;	state Exp;
+branches
+	1.3.1.1
+	1.3.2.1
+	1.3.3.1;
+next	1.2;
+
+1.2
+date	97.05.21.15.40.03;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.06.11.10.16;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	97.09.10.19.36.06;	author brucem;	state Exp;
+branches;
+next	;
+
+1.3.2.1
+date	97.09.11.21.04.32;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.3.1
+date	97.10.31.13.47.33;	author nickb;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	99.04.01.18.03.21;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30030]
+@
+
+
+1.5
+log
+@[Bug #70182]
+Use error rather than exn_raise_syserr for errors during mlw_ci_load_files
+@
+text
+@/* Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * This is the OS dependent part of the C<->ML interface.
+ * Implements dynamic loading of shared objects via LoadLibrary.
+ *
+ * Revision Log
+ * ------------
+ *
+ * $Log: src:OS:Win32:mlw_ci_os.c,v $
+ * Revision 1.4  1998/02/24  11:21:40  jont
+ * [Bug #70018]
+ * Modify declare_root to accept a second parameter
+ * indicating whether the root is live for image save
+ *
+ * Revision 1.3  1997/06/30  12:31:38  stephenb
+ * [Bug #30029]
+ * Add mlw_ci_raise_syserr
+ *
+ * Revision 1.2  1997/05/21  15:40:03  johnh
+ * [Bug #01702]
+ * Changed definition of exn_raise_syserr.
+ *
+ * Revision 1.1  1997/05/06  11:10:16  stephenb
+ * new unit
+ * [Bug #30030]
+ *
+**
+*/
+
+#include <windows.h>		/* LoadLibrary, GetProcAddress */
+#include "exceptions.h"		/* exn_raise_syserr */
+#include "gc.h"			/* declare_root, retract_root */
+#include "global.h"		/* declare_global, GLOBAL_DEFAULT */
+#include "allocator.h"          /* ml_string */
+#include "mlw_ci.h"
+#include "mlw_ci_globals.h"	/* mlw_c_init_globals */
+#include "mlw_ci_os_init.h"	/* mlw_ci_os_init */
+#include "win32_error.h"	/* mlw_raise_c_syerr */
+#include "utils.h"		/* error */
+
+
+mlw_ci_export mlw_val mlw_ci_raise_syserr(int i)
+{
+  mlw_raise_c_syserr(i);
+  return mlw_val_unit;		/* not reached */
+}
+
+
+
+/*
+** An ML list of pairs of the form (file_name, init_function_name).
+** This indicates which .DLL files have been loaded into MLWorks.
+** 
+** A list suffices because the only requirements of the collection
+** are :-
+** 
+** 1) it should be cheap in time and space to add an element to the collection.
+** 2) it should should support a reasonably direct method of either
+**    applying a function to each element in the collection or iterating
+**    over each element.
+**
+** Keep this in sync with <URI:hope://MLWsrc/rts/src/OS/Unix/mlw_ci_os.c>.
+*/
+static mlw_val mlw_ci_files;
+
+
+
+/*
+** MLWorksDynamicLibrary.openLibrary : string * string -> MLWorksDynamicLibary.library
+**
+*/
+static mlw_val mlw_ci_file_open_file(mlw_val arg)
+{
+  LPCSTR file_name= file_name= mlw_ci_str_to_charp(mlw_arg(arg, 0));
+  LPCSTR init_name= mlw_ci_str_to_charp(mlw_arg(arg, 1));
+  HINSTANCE dll_handle;
+
+  if ((dll_handle= LoadLibrary(file_name)) == NULL) {
+    mlw_raise_win32_syserr(GetLastError());
+  } else {
+    FARPROC init_function= GetProcAddress(dll_handle, init_name);
+    if (init_function == NULL) {
+      mlw_raise_win32_syserr(GetLastError());
+    } else {
+      declare_root(&arg, 0);
+      init_function();
+      retract_root(&arg);
+    }
+  }
+
+  mlw_ci_files= mlw_cons(arg, mlw_ci_files);
+  return mlw_ci_void_ptr_from_voidp(dll_handle);
+}
+
+
+
+
+/*
+** MLWorksDynamicLibrary.closeLibrary : (MLWorksDynamicLibrary.library * string option) -> unit
+**
+*/
+static mlw_val mlw_ci_file_close_file(mlw_val arg)
+{
+  HMODULE dll_handle= mlw_ci_void_ptr_to_voidp(mlw_arg(arg, 0));
+  mlw_val optional_fin= mlw_arg(arg, 1);
+  if (!mlw_val_option_is_none(optional_fin)) {
+    LPCSTR fini_name= mlw_ci_str_to_charp(mlw_val_option_some(optional_fin));
+    FARPROC fini_function= GetProcAddress(dll_handle, fini_name);
+    if (fini_function == NULL) {
+      mlw_raise_win32_syserr(GetLastError());
+    } else {
+      fini_function();
+    }
+  }
+  if (FreeLibrary(dll_handle) != 0) 
+    mlw_raise_win32_syserr(GetLastError());
+  return mlw_val_unit;
+}
+
+
+
+/*
+** Called as a fixup for the C.files root.
+** It loads all the .DLL files.
+*/
+static void mlw_ci_load_files(mlw_val files)
+{
+  mlw_val fs= files;
+  declare_root(&fs, 0);
+  for (; fs != MLNIL; fs= MLTAIL(fs)) {
+    mlw_val h= MLHEAD(fs);
+    LPCSTR file_name= mlw_ci_str_to_charp(mlw_val_rec_field(h, 0));
+    LPCSTR init_name= mlw_ci_str_to_charp(mlw_val_rec_field(h, 1));
+    HINSTANCE dll_handle;
+    if ((dll_handle= LoadLibrary(file_name)) == NULL) {
+      retract_root(&fs);
+      error("%s", CSTRING(mlw_win32_strerror(GetLastError())));
+    } else {
+      FARPROC init_function= GetProcAddress(dll_handle, init_name);
+      if (init_function == NULL) {
+	retract_root(&fs);
+	error("%s", CSTRING(mlw_win32_strerror(GetLastError())));
+      } else {
+	/* XXX: If this raises an exception, the fs root will be left
+         * dangling .
+	 * In fact, if this raises an exception, the world will die
+	 * as we are in the middle of fixing global roots.
+	 */
+	init_function();
+      }
+    }
+  }
+  retract_root(&fs);
+}
+
+
+
+static void mlw_ci_load(char const *name, mlw_val *root, mlw_val value)
+{
+  mlw_ci_load_files(value);
+  *root= value;
+}
+
+
+
+/*
+** mlw_ci_init_globals creates a global that will hold the list of
+** loaded .dlls.  This must be called before the global representing
+** the environment is declared.  See the following for more info
+** <URI:spring://ML_Notebook/Design/FI/Core#stub.c.c.reload-order>
+*/
+void mlw_ci_init_globals(void)
+{
+
+  mlw_ci_files= MLNIL;
+  declare_global("C.files", &mlw_ci_files, GLOBAL_DEFAULT, NULL, mlw_ci_load, NULL);
+}
+
+
+
+/*
+** mlw_ci_os_init initialises any OS specific parts of the ML<->C interface.
+** This should be called from the OS-independent initialisation --
+** <URI:hope://MLWsrc/rts/src/mlw_ci.c#mlw_ci_init>.
+*/
+void mlw_ci_os_init(void)
+{
+  mlw_ci_register_function("C.File.openFile",  mlw_ci_file_open_file);
+  mlw_ci_register_function("C.File.closeFile", mlw_ci_file_close_file);
+}
+@
+
+
+1.5.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a9 4
+ * Revision 1.5  1998/10/05  11:01:24  jont
+ * [Bug #70182]
+ * Use error rather than exn_raise_syserr for errors during mlw_ci_load_files
+ *
+@
+
+
+1.4
+log
+@[Bug #70018]
+Modify declare_root to accept a second parameter
+indicating whether the root is live for image save
+@
+text
+@d2 13
+a14 8
+**
+** This is the OS dependent part of the C<->ML interface.
+** Implements dynamic loading of shared objects via LoadLibrary.
+**
+** Revision Log
+** ------------
+**
+** $Log: src:OS:Win32:mlw_ci_os.c,v $
+d39 1
+a39 1
+
+d137 1
+a137 1
+      mlw_raise_win32_syserr(GetLastError());
+d142 1
+a142 1
+	mlw_raise_win32_syserr(GetLastError());
+d145 3
+a147 1
+         * dangling 
+@
+
+
+1.3
+log
+@[Bug #30029]
+Add mlw_ci_raise_syserr
+@
+text
+@d10 4
+d80 1
+a80 1
+      declare_root(&arg);
+d124 1
+a124 1
+  declare_root(&fs);
+@
+
+
+1.3.3.1
+log
+@branched from trunk for label MLWorks_MM_adapt
+@
+text
+@a9 4
+ * Revision 1.3  1997/06/30  12:31:38  stephenb
+ * [Bug #30029]
+ * Add mlw_ci_raise_syserr
+ *
+@
+
+
+1.3.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a9 4
+ * Revision 1.3  1997/06/30  12:31:38  stephenb
+ * [Bug #30029]
+ * Add mlw_ci_raise_syserr
+ *
+@
+
+
+1.3.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@a9 4
+ * Revision 1.3  1997/06/30  12:31:38  stephenb
+ * [Bug #30029]
+ * Add mlw_ci_raise_syserr
+ *
+@
+
+
+1.2
+log
+@[Bug #01702]
+Changed definition of exn_raise_syserr.
+@
+text
+@d10 4
+d29 10
+d60 1
+a60 1
+** C.File.openFile : string * string -> C.File.file
+d65 2
+a66 2
+  LPCSTR file_name= file_name= mlw_val_str_to_charp(mlw_arg(arg, 0));
+  LPCSTR init_name= mlw_val_str_to_charp(mlw_arg(arg, 1));
+d70 1
+a70 1
+    exn_raise_syserr(ml_string("XXXS"), 0);
+d74 1
+a74 1
+      exn_raise_syserr(ml_string("XXXB"), 0);
+d83 1
+a83 1
+  return mlw_val_c_void_ptr_from_voidp(dll_handle);
+d90 1
+a90 1
+** C.File.closeFile : (C.File.file * string option) -> unit
+d95 1
+a95 1
+  HMODULE dll_handle= mlw_val_c_void_ptr_to_voidp(mlw_arg(arg, 0));
+d98 1
+a98 1
+    LPCSTR fini_name= mlw_val_str_to_charp(mlw_val_option_some(optional_fin));
+d101 1
+a101 1
+      exn_raise_syserr(ml_string("XXXH"), 0);
+d107 1
+a107 1
+    exn_raise_syserr(ml_string("XXXG"), 0);
+d113 4
+d123 2
+a124 2
+    LPCSTR file_name= mlw_val_str_to_charp(mlw_val_rec_field(h, 0));
+    LPCSTR init_name= mlw_val_str_to_charp(mlw_val_rec_field(h, 1));
+d128 1
+a128 1
+      exn_raise_syserr(ml_string("XXXP"), 0);
+d133 1
+a133 1
+	exn_raise_syserr(ml_string("XXXO"), 0);
+@
+
+
+1.1
+log
+@new unit
+[Bug #30030]
+@
+text
+@d9 5
+a13 1
+** $Log$
+d21 1
+d56 1
+a56 1
+    exn_raise_syserr("XXXS", 0);
+d60 1
+a60 1
+      exn_raise_syserr("XXXB", 0);
+d87 1
+a87 1
+      exn_raise_syserr("XXXH", 0);
+d93 1
+a93 1
+    exn_raise_syserr("XXXG", 0);
+d110 1
+a110 1
+      exn_raise_syserr("XXXP", 0);
+d115 1
+a115 1
+	exn_raise_syserr("XXXO", 0);
+@

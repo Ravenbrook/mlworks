@@ -1,0 +1,191 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.07.03.09.43.37;	author stephenb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.07.02.13.00.58;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.18.48;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.49.56;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.53.35;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * MLWORKS_DYNAMIC_LIBRARY provides a mechanism for dynamically loading
+ * code, from a .DLL under Win32 or .so under Unix, into MLWorks and 
+ * binding to an SML function.
+ * 
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+signature MLWORKS_DYNAMIC_LIBRARY =
+  sig
+    type library
+
+    (*
+     * syerror and SysErr are the same type and exception that are
+     * defined in the OS and MLWORKS_C_INTERFACE signatures.
+     *)
+    type syserror
+    exception SysErr of (string * syserror option)
+
+
+    (* openLibrary fileName initialisationFunctionName
+     *
+     * openLibrary opens a dynamic library -- a .so under Unix  
+     * and a .DLL under Win32.  The first argument is the name of
+     * the library including the extension (.so or .dll as appropriate).
+     * and the second is the name of the initialisation function to
+     * call when the library is loaded.  If the library cannot be loaded
+     * then the SysErr exception is raised.
+     *
+     *   val x = openLibrary ("ndbm.so", "mlw_stub_init_ndbm");
+     *
+     * The initialisation function registers any functions in the .so/.DLL
+     * that need to be called from MLWorks.  Note that the names from
+     * every .so/.DLL is registered in the same global namespace.
+     *)
+    val openLibrary : string * string -> library
+
+
+
+    (* bind functionName
+     * 
+     * bind binds a function with the given functionName to an SML value.
+     * For example, the following binds the C function called "add" to the
+     * SML function called addInt :-
+     *
+     *   structure C = MLWorksCInterface
+     *   val addInt : C.Int.int -> C.Int.int = bind "add"
+     * 
+     * Note that bind does not take a library as an argument since as noted
+     * in the description of openLibrary the initialisation function for each
+     * library makes any exported functions available in a global namespace.
+     *)
+    val bind : string -> 'a
+
+
+
+    (* closeLibrary library finisalisationFunctionName
+     *
+     * closeLibrary closes the library and if a finalisationFunctionName
+     * is supplied, calls that function before the library is closed.
+     *
+     * This should be called when you no longer need to reference the 
+     * functions in the library.
+     *
+     * Once closeLibrary has been called on a library, attempting to
+     * call any of the functions that are defined in the library has
+     * an undefined effect.
+     *)
+    val closeLibrary : library * string option -> unit
+
+
+  end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d9 1
+a9 5
+ * $Log: mlworks_dynamic_library.sml,v $
+ *  Revision 1.2  1997/07/03  09:43:37  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d9 1
+a9 5
+ * $Log: mlworks_dynamic_library.sml,v $
+ *  Revision 1.2  1997/07/03  09:43:37  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d9 1
+a9 5
+ * $Log: mlworks_dynamic_library.sml,v $
+ *  Revision 1.2  1997/07/03  09:43:37  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

@@ -1,0 +1,561 @@
+head	1.9;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.7.1
+	MLWorks_21c0_1999_03_25:1.7
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.9
+date	99.05.27.10.20.59;	author johnh;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	99.05.13.15.34.23;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	99.03.19.12.17.10;	author daveb;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	99.03.19.12.13.44;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	99.03.19.10.48.13;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	99.03.18.14.23.51;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.02.02.16.02.09;	author mitchell;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.10.27.14.20.48;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.04.07.14.29.08;	author jont;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	99.04.01.18.10.20;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.9
+log
+@[Bug #190553]
+Fix require statements for bootstrap compiler.
+@
+text
+@(* the windows structure *)
+(*
+ * Copyright (c) 1998 Harlequin Group plc
+ *
+ * See signature for details
+ *
+ * $Log: __windows.sml,v $
+ *  Revision 1.8  1999/05/13  15:34:23  daveb
+ *  [Bug #190553]
+ *  Use OSExit instead of Exit.
+ *
+ *  Revision 1.7  1999/03/19  12:17:10  daveb
+ *  [Bug #190523]
+ *  Remove redundant require.
+ *
+ *  Revision 1.6  1999/03/19  12:13:44  daveb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ * Revision 1.4  1999/03/18  14:23:51  daveb
+ * [Bug #190523]
+ * Revised to new spec, mainly involving changes to execute functions.
+ *
+ * Revision 1.3  1999/02/02  16:02:09  mitchell
+ * [Bug #190500]
+ * Remove redundant require statements
+ *
+ * Revision 1.2  1998/10/27  14:20:48  jont
+ * [Bug #70220]
+ * Add reap function
+ *
+ * Revision 1.1  1998/04/07  14:29:08  jont
+ * new unit
+ ** No reason given. **
+ *
+ *
+ *)
+
+require "^.rts.gen.I386.NT.keys";
+require "^.rts.gen.I386.NT.statuses";
+require "^.basis.__sys_word";
+require "^.basis.__text_io";
+require "^.basis.__bin_prim_io";
+require "^.basis.__io";
+require "^.basis.__char_array";
+require "^.basis.__char_vector";
+require "__os_exit";
+require "^.basis.__word8_array";
+require "^.basis.__word8_vector";
+require "^.basis.__bin_stream_io";
+require "__os_prim_io";
+require "^.basis._imperative_io";
+require "^.basis.__bit_flags";
+require "windows";
+
+structure Windows : WINDOWS =
+  struct
+    structure Key =
+      struct
+	open BitFlags
+	open Keys;
+      end
+
+    val env = MLWorks.Internal.Runtime.environment
+
+    structure Reg =
+      struct
+	type hkey = SysWord.word;
+
+        val classesRoot = env"nt reg hkey classes root"
+	val currentUser = env"nt reg hkey current user"
+	val localMachine = env"nt reg hkey local machine"
+	val users = env"nt reg hkey users"
+
+	datatype options =
+	  VOLATILE
+	| NON_VOLATILE
+
+	datatype create_result =
+	  CREATED_NEW_KEY of hkey
+	| OPENED_EXISTING_KEY of hkey
+
+	val createKeyEx = env"nt reg create key ex"
+ 
+	val openKeyEx = env"nt reg open key ex"
+ 
+	val queryValueEx = env"nt reg query value ex"
+ 
+	val setValueEx = env"nt reg set value ex"
+ 
+	val closeKey = env"nt reg close key"
+
+	val deleteKey = env"nt reg delete key"
+
+      end
+    structure DDE =
+      struct
+	type info = MLWorks.Internal.Value.ml_value
+	(* ML has no ability to manipulate this *)
+
+	val startDialog = env"dde start dialog"
+
+	val executeString = env"dde send execute string"
+ 
+	val stopDialog = env"dde stop dialog"
+      end
+
+    (* File system *)
+
+    val fileTimeToLocalFileTime= env"Windows.fileTimeToLocalFileTime"
+
+    val localFileTimeToFileTime = env"Windows.localFileTimeToFileTime"
+
+    val getVolumeInformation = env"Windows.getVolumeInformation"
+
+    (* Process creation *)
+
+    val findExecutable = env "Windows.findExecutable"
+
+    val openDocument = env "Windows.openDocument"
+
+    val launchApplication = env "Windows.launchApplication"
+
+    val hasOwnConsole = env "Windows.hasOwnConsole"
+
+    type ('a, 'b) proc = MLWorks.Internal.Value.ml_value
+    (* Type of processes created by execute.
+       ML has no ability to manipulate this.
+     *)
+ 
+    val execute = env "Windows.execute" : string * string list -> MLWorks.Internal.Value.ml_value
+
+    (* streams_of p; returns the handles for the stdOut and stdIn
+       streams of the child process (in that order).
+     *)
+    val streams_of = env "Windows.streamsOf" :
+          MLWorks.Internal.Value.ml_value ->
+   	    OSPrimIO.file_desc * OSPrimIO.file_desc
+
+    val executeNullStreams = env "Windows.executeNullStreams" :
+		string * string list -> MLWorks.Internal.Value.ml_value
+
+    val reap = env "Windows.reap" (* : ('a, 'b) proc -> OS.Process.status *)
+
+    fun simpleExecute arg =
+      let
+        val proc = executeNullStreams arg
+      in
+        reap proc
+      end
+  
+    local
+      (* daveb, 3/1/99 -- I don't understand why JonT used functor calls here,
+	 instead of just using TextIO and BinIO. *)
+      structure TextIO' =
+	ImperativeIO(structure StreamIO = TextIO.StreamIO
+		     structure Vector = CharVector
+		     structure Array = CharArray)
+
+      structure BinIO' =
+	ImperativeIO(structure StreamIO = BinStreamIO
+		     structure Vector = Word8Vector
+		     structure Array = Word8Array)
+
+      (* mkStdIn raw_in; produces a full reader from
+	 a Windows Handle. *)
+      fun augmentRd (raw_in, name) =
+        BinPrimIO.augmentReader
+	  (BinPrimIO.RD
+	     {readVec = SOME(fn i => MLWorks.Internal.Value.cast(MLWorks.Internal.IO.read(raw_in, i))),
+	      readVecNB =NONE,
+	      readArr = NONE,
+	      readArrNB = NONE,
+	      block = NONE,
+	      canInput = SOME(fn ()=> MLWorks.Internal.IO.can_input(raw_in)>0),
+	      avail = fn()=>NONE,
+	      name = concat ["<child process ", name, ">"],
+	      chunkSize =  1,                        (* arbitrary! *)
+	      close = fn () =>
+	      (raise MLWorks.Internal.IO.Io
+		 {name = concat ["<child process ", name, ">"],
+		  function = "close",
+		  cause = Fail ("Cannot close " ^ name)}),
+		 getPos = SOME(fn ()=> MLWorks.Internal.IO.seek(raw_in,0,1)
+			       handle MLWorks.Internal.Error.SysErr _ => 0),
+		 setPos = SOME(fn newPos => (ignore(MLWorks.Internal.IO.seek(raw_in,newPos,0));())
+			       handle MLWorks.Internal.Error.SysErr _ => ()),
+		 endPos = NONE,
+		 verifyPos = SOME(fn ()=> MLWorks.Internal.IO.seek(raw_in,0,1)
+				  handle MLWorks.Internal.Error.SysErr _ => 0),
+		 ioDesc = NONE})	 (* this value cannot be redirected dynamically *)
+
+     (* augmentWr (raw_out, name); produces a full writer from
+	 a Windows Handle. *)
+      fun augmentWr (raw_out, name) =
+ 	    BinPrimIO.augmentWriter
+	    (BinPrimIO.WR
+	     {writeVec = SOME
+	      (MLWorks.Internal.Value.cast
+	       (fn {buf,i,sz=NONE} =>
+		MLWorks.Internal.IO.write(raw_out,buf,i,size buf-i)
+	        | {buf,i,sz=SOME n} =>
+		MLWorks.Internal.IO.write(raw_out,buf,i,n))),
+	      writeVecNB = NONE,
+	      writeArrNB = NONE,
+	      writeArr = NONE,
+	      block = NONE,
+	      canOutput = SOME(fn () => true),
+	      name = concat ["<child process ",  name, ">"],
+	      chunkSize = 1,               (* arbitrary! *)
+	      close = fn () =>
+	      raise MLWorks.Internal.IO.Io
+		{name = concat ["<child process ", name, ">"],
+		 function = "close",
+		 cause = Fail ("Cannot close " ^ name)},
+	      getPos = SOME(fn ()=> MLWorks.Internal.IO.seek(raw_out,0,1)
+			    handle MLWorks.Internal.Error.SysErr _ => 0),
+	      setPos = SOME(fn newPos => (ignore(MLWorks.Internal.IO.seek(raw_out,newPos,0));()) 
+			    handle MLWorks.Internal.Error.SysErr _ => ()),
+	      endPos = NONE,
+	      verifyPos = SOME(fn ()=> MLWorks.Internal.IO.seek(raw_out,0,1)
+			       handle MLWorks.Internal.Error.SysErr _ => 0),
+	      ioDesc=NONE})
+
+      (* mkStdOut returns an _IN_streams; mkStdIn returns an _OUT_stream.  *)
+      fun mkStdOut raw_out = augmentRd (raw_out, "StdOut")
+      fun mkStdIn raw_in = augmentWr (raw_in, "StdIn")
+    in
+      fun binInstreamOf proc =
+	let
+	  val (raw_out, _) = streams_of proc
+	  val stdOut = mkStdOut raw_out
+	in
+          BinIO'.mkInstream(BinIO'.StreamIO.mkInstream(stdOut, Word8Vector.fromList []))
+	end
+
+      fun binOutstreamOf proc =
+	let
+	  val (_, raw_in) = streams_of proc 
+	  val stdIn = mkStdIn raw_in
+	in 
+          BinIO'.mkOutstream(BinIO'.StreamIO.mkOutstream(stdIn, IO.NO_BUF))
+	end
+
+      fun textInstreamOf proc =
+	let
+	  val (raw_out, _) = streams_of proc
+	  val stdOut = mkStdOut raw_out
+	  val prim_out = OSPrimIO.translateIn stdOut
+	in
+          TextIO'.mkInstream(TextIO'.StreamIO.mkInstream(prim_out, ""))
+	end
+
+      fun textOutstreamOf proc =
+	let
+	  val (_, raw_in) = streams_of proc
+	  val stdIn = mkStdIn raw_in
+	  val prim_in = OSPrimIO.translateOut stdIn
+	in
+          TextIO'.mkOutstream(TextIO'.StreamIO.mkOutstream(prim_in, IO.NO_BUF))
+	end
+    end
+
+    (* The Status structure defines the possible interpretations of 
+	OS.Process.status values. *)
+    structure Status = Status
+
+
+    val fromStatus = OSExit.fromStatus
+ 
+    val exit = OSExit.os_exit
+  end
+@
+
+
+1.8
+log
+@[Bug #190553]
+Use OSExit instead of Exit.
+@
+text
+@d8 4
+d47 1
+a47 1
+require "^.basis.__os_exit";
+@
+
+
+1.7
+log
+@[Bug #190523]
+Remove redundant require.
+@
+text
+@d8 4
+d43 1
+a43 1
+require "^.basis.__exit";
+d265 1
+a265 1
+    val fromStatus = Exit_.fromStatus
+d267 1
+@
+
+
+1.7.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a7 4
+ *  Revision 1.7  1999/03/19  12:17:10  daveb
+ *  [Bug #190523]
+ *  Remove redundant require.
+ *
+@
+
+
+1.6
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d8 8
+a42 1
+require "^.basis.__text_stream_io";
+d217 1
+a217 1
+      (* mkStdOut and mkStdErr return _IN_streams; mkStdIn returns an _OUT_stream.  *)
+@
+
+
+1.5
+log
+@Automatic checkin:
+changed attribute _comment to ''
+@
+text
+@@
+
+
+1.4
+log
+@[Bug #190523]
+Revised to new spec, mainly involving changes to execute functions.
+@
+text
+@@
+
+
+1.3
+log
+@[Bug #190500]
+Remove redundant require statements
+@
+text
+@d8 8
+a15 4
+# Revision 1.2  1998/10/27  14:20:48  jont
+# [Bug #70220]
+# Add reap function
+#
+d24 1
+d31 5
+d38 1
+a38 1
+require "^.basis.__flags";
+d45 1
+a45 1
+	open Flags
+a89 2
+	val requestString = env"dde send request string"
+
+d103 1
+a103 6
+    (* Two methods are provided for spawning sub-processes.  shellExecute
+       opens the application associated with a file.  execute opens an
+       executable, returning a value that can be used to connect to the stdIn
+       and stdOut streams of the spawned process (if it is a console
+       application).  Neither of these wait for the spawned process to
+       terminate (use OS.Process.system for that).  *)
+d105 1
+a105 1
+    val findExecutable = env"Windows.findExecutable"
+d107 1
+a107 1
+    val shellExecute = env"Windows.shellExecute"
+d109 1
+a109 1
+    val newConsole = env"Windows.newConsole"
+d111 6
+a116 9
+    val hasOwnConsole = env"Windows.hasOwnConsole"
+
+    type proc = MLWorks.Internal.Value.ml_value
+    (* Type of processes created by execute *)
+    (* ML has no ability to manipulate this *)
+
+    val execute = env"Windows.execute";
+
+    val streams_of = env"Windows.streamsOf"
+d118 19
+d138 2
+d144 11
+a154 7
+    in
+      fun streamsOf proc =
+	let
+	  val (raw_in, raw_out) = streams_of proc
+	  (* Convert these to full TextIO streams *)
+	  val stdIn = BinPrimIO.augmentReader
+	    (BinPrimIO.RD
+d162 1
+a162 1
+	      name = "<child process stdIn>",
+d166 1
+a166 1
+		 {name = "<child process stdIn>",
+d168 1
+a168 1
+		  cause = Fail "Cannot close stdIn"}),
+d176 1
+a176 1
+		 ioDesc = NONE}) (* this value cannot be redirected dynamically*)
+d178 4
+a181 2
+	  val stdOut =
+	    BinPrimIO.augmentWriter
+d194 1
+a194 1
+	      name = "<child process stdOut>",
+d198 1
+a198 1
+		{name = "<child process stdOut>",
+d200 1
+a200 1
+		 cause = Fail "Cannot close stdOut"},
+d210 19
+a228 4
+	  val prim_in = OSPrimIO.translateIn stdIn
+	  val text_in = TextIO'.mkInstream(TextIO'.StreamIO.mkInstream(prim_in, ""))
+	  val prim_out = OSPrimIO.translateOut stdOut
+	  val text_out = TextIO'.mkOutstream(TextIO'.StreamIO.mkOutstream(prim_out, IO.NO_BUF))
+d230 5
+d236 10
+a245 1
+	  (text_in, text_out)
+d248 8
+a255 1
+    val reap = env"Windows.reap"
+@
+
+
+1.2
+log
+@[Bug #70220]
+Add reap function
+@
+text
+@d8 4
+a26 1
+require "__os";
+a27 2
+require "^.basis.__text_stream_io";
+require "__time";
+d120 1
+a120 1
+	ImperativeIO(structure StreamIO = TextStreamIO
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@d7 5
+a11 1
+ * $Log$
+d191 1
+@

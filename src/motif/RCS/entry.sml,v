@@ -1,0 +1,116 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.07.14.16.38.45;	author io;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+move context_browser bits over.
+@
+
+
+1.1
+log
+@new unit
+move context_browser bits over.
+@
+text
+@(*
+ * Copyright (c) 1995 Harlequin Ltd.
+ *
+ * $Log$
+ *
+ *)
+
+require "../main/options";
+require "../typechecker/basis";
+require "../typechecker/types";
+require "../basics/ident";
+require "../main/user_options";
+require "../interpreter/user_context";
+
+
+(* This is auxilliary stuff from browser_tools with regard to searching
+   and display
+ *)
+
+
+signature ENTRY =
+sig
+
+  structure Basis : BASIS
+  structure Ident : IDENT
+  structure Types : TYPES
+  structure Options : OPTIONS
+    
+  datatype Entry =
+    VAR    of (Ident.ValId * Types.Datatypes.Typescheme)
+  | CONVAR of (Ident.ValId * Types.Datatypes.Typescheme)
+  | CONENV of (Ident.ValId * Types.Datatypes.Typescheme)
+  | EXN    of (Ident.ValId * Types.Datatypes.Typescheme)
+  | TYPE   of Ident.TyCon * Types.Datatypes.Tystr
+  (* unconverted *)
+  | STR    of Ident.StrId * Types.Datatypes.Structure
+  | SIG    of Ident.SigId * Basis.BasisTypes.Sigma
+  | FUN    of Ident.FunId * Basis.BasisTypes.Phi
+  (* converted for search munging purposes  *)
+  | NSIG   of Ident.SigId * (Entry list)  | NSTR   of Ident.StrId * (Entry list)
+  | NFUN   of Ident.FunId * (Entry list)
+
+  val update :
+    (string * bool *
+     {showSig : bool,
+      showStr : bool,
+      showFun : bool,
+      searchInitial : bool,
+      showType : bool})
+    ->
+    {showSig : bool,
+     showStr : bool,
+     showFun : bool,
+     searchInitial : bool,
+     showType : bool}
+
+(*
+  val new :
+    {showSig : bool,
+     showStr : bool,
+     showFun : bool,
+     searchInitial : bool,
+     showType : bool}
+*)    
+    
+  val browse_env : Types.Datatypes.Env -> Entry list
+  val browse_entry : bool -> Entry -> Entry list
+
+  (* basic context browser displayer *)
+  val printEntry : Options.print_options -> Entry -> string
+
+  (* munged context browser displayer for use by search
+     to gain access to the qualified identifiers
+   *)
+  val printEntry1 :
+    {showSig : bool,
+     showStr : bool,
+     showFun : bool,
+     searchInitial : bool,
+     showType : bool}
+    ->
+    Options.print_options -> (Entry list) -> (string list list)
+  val massage : Entry -> Entry
+
+  val env2entry : Types.Datatypes.Env -> (Entry list)
+  val basis2entry : Basis.BasisTypes.Basis -> (Entry list)
+    
+  val get_id : Entry -> (string * bool)
+  
+end;
+@

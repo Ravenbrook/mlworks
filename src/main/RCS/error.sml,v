@@ -1,0 +1,272 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.09.08.11.53.55;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.09.04.08.27.40;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.08.31.17.24.37;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.08.28.15.30.05;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.09.08.11.53.55;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Compilation error handler.
+@
+
+
+1.4
+log
+@Changed wrapper to supply an immediate stop level.  The behaviour of nested
+wraps has also changed.
+@
+text
+@(*  ==== COMPILATION ERROR HANDLING ====
+ *                SIGNATURE
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The error handler deals with all kinds of failure and error reporting
+ *  from the compiler.  It uses two basic operations, `report' and `wrap',
+ *  which are a bit like `raise' and `handle'.
+ *
+ *  The report operation is used to indicate that an error has occurred.
+ *  Its actions depend on the surrounding wrapper (if any), but this need
+ *  not concern the code using it.
+ *
+ *  The wrap operation is used to control the action of report within a
+ *  function.  It takes three parameters: the stop limit, finish limit, and
+ *  warn limit.  The stop limit controls whether an reporting error of a
+ *  given severity returns, i.e., controls whether the reporter is allowed
+ *  to continue.  The finish limit controls whether the wrapper itself
+ *  returns when the function it wraps is complete.  The warn limit controls
+ *  the level of error message output caused by report.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: error.sml,v $
+ *  Revision 1.3  1992/09/04  08:27:40  richard
+ *  Eliminated the 'a result type and improved documentation.
+ *
+ *  Revision 1.2  1992/08/31  17:24:37  richard
+ *  Added report', Stop, and improved documentation.
+ *
+ *  Revision 1.1  1992/08/28  15:30:05  richard
+ *  Initial revision
+ *
+ *)
+
+require "../basics/location";
+
+signature ERROR =
+  sig
+
+    structure Location : LOCATION
+
+    datatype severity =
+      ADVICE |                          (* e.g. `unnecessary op' *)
+      WARNING |                         (* legal, but odd *)
+      NONSTANDARD |                     (* non-standard, but understood *)
+      RECOVERABLE |                     (* recoverable error *)
+      FATAL |                           (* can't continue *)
+      EXTERNAL_FAULT |                  (* fault external to compiler *)
+      FAULT                             (* fault in the compiler *)
+
+    val <		: severity * severity -> bool
+
+    datatype error =
+      ERROR of severity * Location.T * string
+
+
+    (*  == Error stream ==
+     *
+     *  Error messages are written to this stream.
+     *)
+
+    val stream	: outstream ref
+
+
+    (*  === REPORT AN ERROR ===
+     *
+     *  The action of report and report' depends on the severity of the
+     *  error and whether a `wrap' function is currently active (see
+     *  `wrap').
+     *
+     *  The report function will return if `stop' of the severity of the
+     *  error is false.  The result of `stop' is controlled by a surrounding
+     *  wrapper, and defaults to true if there is none.  It will print the
+     *  message if there is no wrapper or if the wrapper has print level not
+     *  greater than the error severity.
+     *
+     *  The report' function does not return, and prints the message with
+     *  the same criteria as the report function.
+     *)
+
+    exception Stop of error
+    val stops	: severity -> bool
+    val report  : error -> unit
+    val report' : error -> 'a           (* doesn't return *)
+
+
+    (*  === WRAP A STAGE ===
+     *
+     *  wrap (stop, finish, print) f
+     *
+     *  Controls the action of the report and report' functions within the
+     *  function f.  The report functions will only print messages not less
+     *  severe than `print', and return for errors not less severe than
+     *  `stop'.  The wrap function will return a result iff there were no
+     *  errors of equal or greater severity than `finish' when f returns,
+     *  otherwise it raises Stop.
+     *
+     *  If a wrapper occurs within another then the inner stop, finish, and
+     *  print parameters narrowed to the outer ones.  In other words, you
+     *  cannot make `report' more lenient.
+     *)
+
+    val wrap : severity * severity * severity -> ('a -> 'b) -> 'a -> 'b
+
+  end;
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a26 4
+ *  Revision 1.4  1992/09/08  11:53:55  richard
+ *  Changed wrapper to supply an immediate stop level.  The behaviour of nested
+ *  wraps has also changed.
+ *
+@
+
+
+1.3
+log
+@Eliminated the 'a result type and improved documentation.
+@
+text
+@d9 2
+a10 1
+ *  from the compiler.
+d12 12
+d27 3
+d75 4
+a78 2
+     *  error is false.  It will print the message if there is no wrapper or
+     *  if the wrapper has print level not greater than the error severity.
+d92 1
+a92 1
+     *  wrap (stop, print) f
+d95 9
+a103 4
+     *  function f.  The report functions will only print messages of equal
+     *  or greater severity than `print', and the wrap function will return
+     *  a result iff there were no errors of equal or greater severity than
+     *  `stop', otherwise it raises Stop.
+d106 1
+a106 1
+    val wrap : severity * severity -> ('a -> 'b) -> 'a -> 'b
+@
+
+
+1.2
+log
+@Added report', Stop, and improved documentation.
+@
+text
+@d14 3
+d22 2
+d27 2
+a39 6
+    datatype location =
+      UNKNOWN |
+      FILE of string |
+      LINE of string * int |
+      POSITION of string * int * int
+
+d41 1
+a41 1
+      ERROR of severity * location * string
+a42 3
+    datatype 'a result =
+      SUCCESS of 'a |
+      FAILURE of error
+a43 1
+
+d54 10
+a63 6
+     *  The action of report and report' depends on whether a `wrap'
+     *  function is currently active (see `wrap').  If there is no wrapper
+     *  both functions raise Stop with their argument.  The report function
+     *  will return if there is a wrapper and the error is less severe than
+     *  FATAL, but may cause the wrapper to fail later.  The report'
+     *  function causes the wrapper to fail immediately.
+d67 1
+d75 1
+d79 2
+a80 2
+     *  a SUCCESS result iff there were no errors of equal or greater
+     *  severity than `stop'.
+d83 1
+a83 1
+    val wrap : severity * severity -> ('a -> 'b) -> 'a -> 'b result
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 1
+a9 4
+ *  from the compiler.  The `wrap' function is used to wrap a stage of
+ *  compilation in an error handler, and is passed a maximum severity.  If
+ *  an error not less severe that that is received the stage fails with that
+ *  error.
+d13 4
+a16 1
+ *  $Log$
+a21 2
+    val stream	: outstream ref
+
+d46 34
+a80 2
+
+    val report : error -> unit
+@

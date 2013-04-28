@@ -1,0 +1,211 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.13.39.47;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.10.17.12.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Naive implementation of distinctions. *)
+functor Distinction(structure T : TEST;
+		    structure SL : SORTEDLIST) : DISTINCTION =
+struct
+    structure T = T
+    structure N = T.N
+
+    type distinction = (N.name * N.name) list
+
+    val EMPTY = []
+
+    fun le(a,b) =
+	let fun subset ([],_) = true
+	      | subset (_,[]) = false
+	      | subset ((n as (n1,m1))::t1,(n2,m2)::t2) =
+		if N.le(n1,n2) then
+		    N.le(n2,n1) andalso N.eq(m1,m2) andalso subset(t1,t2)
+		else subset(n::t1,t2)
+	in
+	    subset(a,b)
+	end
+
+    fun names(D) =
+	let fun names([]) = []
+	      | names ((a,b)::t) = a::b::(names t)
+	in
+	    SL.sort N.le true (names D)
+	end
+    
+    fun d_le ((a,c),(b,d)) =		(* a<=b & (a<b | c<=d) *)
+	N.le(a,b) andalso (not(N.le(b,a)) orelse N.le(c,d))
+    fun sortpair(a,b) = if N.le (a,b) then (a,b) else (b,a)
+
+    fun mkstr(d) =
+	let fun mkstr_d(a,b) = (N.mkstr a)^"#"^(N.mkstr b)
+	in
+	    "{" ^ (Lib.mapconcat mkstr_d d ",") ^ "}"
+	end
+
+    fun makstr(d,nl) =
+	let fun mkstr_d(a,b) = (N.makstr (a,nl))^"#"^(N.makstr (b,nl))
+	in
+	    "{" ^ (Lib.mapconcat mkstr_d d ",") ^ "}"
+	end
+
+    fun increase(D,n) =
+	map (fn (x,y) => (N.increment(x,n),N.increment(y,n))) D
+
+    fun join(d1,d2) = SL.merge d_le true (d1,d2)
+
+    fun add_n_distinct(n,free,d) = (* add n new names dist from free to d *)
+    (* increase all in d by n, add {0..n} x free *)
+	let val _ = if !Flags.tracelevel > 5 then print("add_n("^(makestring n)^",["^(Lib.mapconcat N.mkstr free ",")^"],"^(mkstr d)^")\n") else ()
+	    val D' = d (* increase(d,n) *)
+	    fun foo(i,n) =
+		if i = 0 then []
+		else let val nn = N.mkname("",i-1)
+		     in if N.eq(n,nn) then foo(i-1,n)
+			else (sortpair(n,nn))::(foo(i-1,n))
+		     end
+	    val d0 = SL.sort d_le true (Lib.mapcan (fn f => foo(n,f)) free)
+	    val _ = if !Flags.tracelevel > 5 then print("d0="^(mkstr d0)^"\n") else ()
+	in
+	    SL.merge d_le true (d0,D')
+	end
+
+    (* add nl distinct from free to d *)
+    fun add_distinct_names(nl,free,d) =
+	(if !Flags.tracelevel > 5 then
+	     print ("add_distinct: ["^(Lib.mapconcat N.mkstr nl ",")^"],["^(Lib.mapconcat N.mkstr free ",")^"],"^(mkstr d)^"\n") else ();
+	let fun foo([],n) = []
+	      | foo((h::t),n) =
+		if N.eq(h,n) then foo(t,n)
+		else (sortpair(h,n))::(foo(t,n))
+	    val d0 = SL.sort d_le true (Lib.mapcan (fn f=>foo(nl,f)) free)
+	in
+	    SL.merge d_le true (d0,d)
+	end)
+
+    (* Add a nu name n distinct from all in free *)
+    fun add_distinct (n,free,d) =
+	fold (fn (f,l) => SL.add d_le true (sortpair(n,f),l)) (SL.remove (fn x=>x) N.le (n,free)) d
+
+    fun add_distinct_pair((a,b),d) =
+	if N.eq (a,b) then raise Lib.disaster((N.mkstr a)^" not distinct from "^(N.mkstr b))
+	else
+	    SL.add d_le true (sortpair(a,b),d)
+
+
+   (* remove all names in the distinction that don't occur in f *)
+    fun prune (f,d) =
+	let fun prune ([],d) = []
+	      | prune (_,[]) = []
+	      | prune (f as f1::fr,d as (dh as (a,b))::dr) =
+		let val member = SL.member N.le
+		in
+		    if N.le (f1,a) then
+			if N.le(a,f1) then		(* a=f1 *)
+			    if member(b,fr) then
+				dh::(prune(f,dr))	(* keep (a,b) *)
+			    else prune(f,dr)
+			else				(* f1<a *)
+			    prune(fr,d)
+		    else				(* f1>a *)
+			prune(f,dr)
+		end
+	    val f0 = SL.sort N.le true f
+	in
+	if !Flags.tracelevel > 4 then print("prune(["^(Lib.mapconcat N.mkstr f0 ",")^"],"^(mkstr d)^")\n") else ();
+	    let val d1 = prune(f0,d)
+	    in if !Flags.tracelevel > 4 then print("=> "^(mkstr d1)^"\n") else ();
+		d1
+	    end
+	end
+
+
+    (* test M respects distinction D *)
+    (* true if no pair a,b of D is implied by M *)
+    fun respects(M,[]) = true
+      | respects(M,(a,b)::t) =
+	(* #### silly. *)
+	not (T.implies(M,T.match(a,b))) andalso respects(M,t)
+
+    fun substitute (eXvList, []) = []
+      | substitute (eXvList, D) =
+	let fun names([]) = []
+	      | names ((a,b)::r) = a::b::(names r)
+	    val dense = if null D then [] else N.fill (Lib.del_dups N.eq (names D)) (*[(fn (a,b)=>if N.le(a,b) then b else a) (Lib.max (fn ((a,b),(c,d))=> N.le(a,c) andalso N.le(a,d) andalso N.le(b,c) andalso N.le(b,d)) D)]*) (* (map #2 eXvList) *)
+	    val sted = Lib.sort (fn ((_,a),(_,b)) => N.le(b,a)) eXvList
+	    fun idify ([],[]) = []
+	      | idify ([],x) = []
+	      | idify (n::r,l as (p as (e,v))::s) =
+		if N.eq(n,v) then p::(idify (r,s))
+		else (n,n)::(idify (r,l))
+	      | idify (n::r,[]) =
+		map (fn x=>(x,x)) (n::r)
+	    val fied = idify (dense,sted)
+	    fun filt [] = []
+	      | filt ((h as (a,b))::t) =
+		if N.eq(a,b) then filt t else h::(filt t)
+	in
+	    SL.sort d_le true
+	    (filt (map (fn (x,y) =>
+			sortpair(N.beta_reduce x ((map #1 fied),0),
+				 N.beta_reduce y ((map #1 fied),0))) D))
+	end
+
+(* **** non-deBruijn version
+    (* substitute a for b *)
+    fun substitute(a,b,[]) = []
+      | substitute(a,b,D) =
+	let fun filt [] = []
+	      | filt ((h as (a,b))::t) =
+		if N.eq(a,b) then filt t else h::(filt t)
+	in
+	    (* #### could be more clever *)
+	    SL.sort d_le true (filt (map (fn (x,y) => sortpair(N.substitute(a,b,x),N.substitute(a,b,y))) D))
+	end
+**** *)
+
+end
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

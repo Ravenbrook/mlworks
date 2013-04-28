@@ -1,0 +1,134 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.3
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_workspace_97:1.1.2
+	MLWorks_dt_wizard:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.08.22.10.03.31;	author brucem;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1;
+next	;
+
+1.1.1.1
+date	97.09.10.19.19.26;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	97.09.11.20.50.37;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	99.04.01.17.54.18;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+File describing how to compile the Foreign Interface parser.
+@
+
+
+1.1
+log
+@new unit
+File describing how to compile the Foreign Interface parser.
+@
+text
+@(*
+ * Foreign Interface parser: How to compile the parser:
+ * 
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * $Log$
+ *
+ *)
+
+
+The parser is generated from the MLWorks versions of sml-yacc and sml-lex
+(by Appel, Tarditi and Mattson).
+
+You must have executables of both sml-yacc and sml-lex (see their
+documentation for how to produce these).
+
+Create the source files using the commands
+  sml-yacc -pass a fi.grm a
+and
+  sml-lex -pass a fi.lex a
+
+This produces the files fi_grm.sml, _fi_grm.sml and fi_lex.sml.
+
+Compile the file __fi_parser (which contains the structure FIParser) using
+either the GUI (with the Basis loaded) or the batch compiler.  Some
+sml-yacc files are required when compiling, you must add the sml-yacc source
+directory to the path so that the compiler can find them.
+
+The signatures required by code using the parser are FI_ABS_SYNTAX and
+FI_PARSER (in fi_abs_syntax and fi_parser).
+The structure FIParser (in fi_parser) corresponds to the FI_PARSER
+signature and will be required by code using the parser.
+@
+
+
+1.1.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:README,v $
+# Revision 1.1  1997/08/22  10:03:31  brucem
+# new unit
+# File describing how to compile the Foreign Interface parser.
+#
+@
+
+
+1.1.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:README,v $
+# Revision 1.1  1997/08/22  10:03:31  brucem
+# new unit
+# File describing how to compile the Foreign Interface parser.
+#
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:README,v $
+# Revision 1.1  1997/08/22  10:03:31  brucem
+# new unit
+# File describing how to compile the Foreign Interface parser.
+#
+@

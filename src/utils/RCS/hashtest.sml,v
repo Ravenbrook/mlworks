@@ -1,0 +1,108 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.2
+date	91.11.21.17.04.12;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.06.07.15.58.26;	author colin;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.11.21.17.04.12;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Test file for SML hashtable extension
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@(* hashtest.sml *)
+(*
+$Log:	hashtest.sml,v $
+Revision 1.1  91/06/07  15:58:26  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+structure Spec : HASHSPEC = 
+  struct 
+    type Key = int
+    type Value = string
+    val size = 63
+    fun hash n = n
+    val eq = (op =) 
+  end;
+
+structure HT = HashTable (Spec);
+
+exception Test
+
+val s = "hello"
+
+fun test 0 = ()
+  | test n =
+    (HT.update (n,s);
+     if HT.lookup (n) = s then test (n-1) else raise Test)
+
+
+fun test2 0 = ()
+  | test2 n =
+    (HT.lookup 100;
+     test2 (n-1));
+    
+
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: hashtest.sml,v $
+Revision 1.2  1991/11/21  17:04:12  jont
+Added copyright message
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

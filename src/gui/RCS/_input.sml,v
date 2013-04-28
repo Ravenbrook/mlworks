@@ -1,0 +1,332 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.08.08.10.31.05;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.27.10.57.36;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.07.27.10.11.54;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved from motif
+@
+
+
+1.3
+log
+@Adding make_buttons function to capi
+@
+text
+@(*
+ *  Copyright (c) 1993 Harlequin Ltd.
+ *  $Log: _input.sml,v $
+ * Revision 1.2  1995/07/27  10:57:36  matthew
+ * Moved capi etc. to gui
+ *
+ * Revision 1.1  1995/07/27  10:11:54  matthew
+ * new unit
+ * Moved from motif
+ *
+ * Revision 1.8  1995/07/03  15:34:51  matthew
+ * Capification
+ *
+ *  Revision 1.7  1995/06/19  14:00:49  daveb
+ *  Split this into two panes, one showing the previous input, one for
+ *  typing new input.
+ *  Also removed the menu bar, and checked for multiple calls (as this
+ *  code is not re-entrant).
+ *
+ *  Revision 1.6  1995/06/13  17:19:04  daveb
+ *  Added initial message to be sure that layout is done correctly.
+ *
+ *  Revision 1.5  1995/05/31  11:00:21  daveb
+ *  Made contexts only visible if full_menus set.
+ *  Combined the show_output and hide_output fields of the result into
+ *  a single function of type bool->unit, for use with Toggle buttons.
+ *
+ *  Revision 1.4  1995/04/13  17:49:24  daveb
+ *  Xm.doInput is back to taking unit.
+ *  
+ *  Revision 1.3  1995/04/06  15:42:35  daveb
+ *  Type of Xm.doInput has changed.
+ *  
+ *  Revision 1.2  1994/07/28  13:12:23  daveb
+ *  Removed twee message.
+ *  
+ *  Revision 1.1  1994/07/05  19:51:01  daveb
+ *  new file
+ *  
+ *)
+
+require "../utils/lists";
+require "capi";
+require "menus";
+
+require "input";
+
+functor InputWindow(
+  structure Lists : LISTS
+  structure Capi : CAPI
+  structure Menus : MENUS
+
+  sharing type Menus.Widget = Capi.Widget
+) : INPUT_WINDOW =
+struct
+
+  type Widget = Capi.Widget
+
+  val do_debug = false
+  fun debug s =
+    if do_debug then output(MLWorks.IO.terminal_out,s ^ "\n") else ()
+
+  fun create (parent, title, applicationShell) =
+    let
+      val shell = Capi.make_toplevel_shell  ("inputShell",title ^ " Input",parent,[])
+      val frame = Capi.make_managed_widget ("main", Capi.Form, shell, [])
+      val no_input_message = "No input required."
+
+      val promptLabel = Capi.make_managed_widget ("promptLabel", Capi.Label, frame,[])
+      val _ = Capi.set_label_string (promptLabel, no_input_message)
+      val panedWindow = Capi.make_managed_widget ("panedWindow", Capi.Paned, frame, [])
+      val outputPane = Capi.make_managed_widget ("outputPane", Capi.Form, panedWindow, [])
+      val outputLabel = Capi.make_managed_widget ("outputLabel", Capi.Label,outputPane, [])
+      val (scrolloutput,textoutput) = Capi.make_scrolled_text("textoutput",outputPane, [])
+      val inputPane = Capi.make_managed_widget ("inputPane", Capi.Form, panedWindow, [])
+      val inputLabel = Capi.make_managed_widget	("inputLabel", Capi.Label, inputPane, [])
+      val (scrollinput,textinput) = Capi.make_scrolled_text ("textinput",inputPane, [])
+      val buttonPane =  Capi.make_managed_widget ("buttonPane", Capi.RowColumn, frame, [])
+        
+      val buttons_update_function_ref = ref (fn () => ())
+      fun buttons_update_function () = (!buttons_update_function_ref) ()
+      val send_enabled = ref false
+      fun prompt n =
+	let val message =
+	      "Please input " ^ MLWorks.Integer.makestring n ^
+ 	      (if n = 1 then " character" else " characters");
+	in
+          send_enabled := true;
+          buttons_update_function();
+          Capi.set_label_string (promptLabel,message)
+        end
+
+      fun unprompt () =
+        (send_enabled := false;
+         buttons_update_function ();
+         Capi.set_label_string (promptLabel,no_input_message))
+
+      val quit_funs = ref []
+
+      fun do_quit_funs _ =
+	(Lists.iterate (fn f => f ()) (!quit_funs);
+	 quit_funs := [])
+
+      val input_visible_ref = ref false
+        
+      fun input_visible () = !input_visible_ref
+
+      fun show_input b =
+	(input_visible_ref := b;
+	 if b then
+	   (Capi.manage shell;
+	    Capi.set_focus textinput;
+            Capi.to_front shell)
+	 else
+	   (do_quit_funs();
+	    Capi.unmanage shell))
+
+      (* input_flag is true when the evaluation has prompted the user for
+	 more input, and is set to false when the user clicks on the "send"
+	 button (or the "eof" button). *)
+      val input_flag = ref false;
+
+      (* input_pos records how many characters have been read from the
+	 input.  The insertion point of the output window is set to this
+	 position, to indicate which characters in the buffer are unread. *)
+
+      val input_pos = ref 0;
+
+      fun send _ = input_flag := false;
+
+      local 
+        val posref = ref 0
+        val strref = ref ""
+            
+        fun input_fun n =
+          (input_flag := true;
+	   prompt n;
+	   show_input true;
+           Capi.event_loop input_flag;
+	   let
+	     val str = Capi.Text.get_string textinput
+	     val len = size str
+	   in 
+	     unprompt ();
+             debug ("Input line is:" ^ str ^ ":");
+	     Capi.Text.insert (textoutput, Capi.Text.get_last_position textoutput, str);
+             Capi.Text.set_string (textinput, "");
+	     str
+           end)
+
+        fun refill_buff n =
+          let val new_string = input_fun n
+          in
+            posref := 0;
+            strref := new_string
+          end
+
+        val eof_flag = ref false
+      in
+        fun get_input n =
+          let
+            val string = !strref
+            val pointer = !posref
+            val len = size string
+	  in
+	    if !input_flag then
+	      (* Another call to get_input has already been made.
+		 This call can only happen because we don't have a concurrent
+		 environment.  Just return "" as a dummy value. *)
+	      ""
+	    else if !eof_flag then
+              ""
+            else if pointer + n > len then
+	      (input_pos := (!input_pos + len - pointer);
+	       refill_buff (n - len + pointer);
+               String.substring (string,pointer,len-pointer)
+               ^ get_input (n - len + pointer))
+            else
+              let val result = String.substring (string,pointer,n)
+              in
+                posref := (!posref + n);
+	        input_pos := (!input_pos + n);
+                Capi.Text.set_insertion_position (textoutput, !input_pos);
+                result
+              end
+          end
+
+        fun clear_input _ =
+	  let
+	    val str = Capi.Text.get_string textoutput
+	    val len = size str
+	    val new_str = String.substring (str, 0, !input_pos)
+	  in
+            debug "Clearing input";
+	    Capi.Text.set_string (textoutput, new_str);
+	    Capi.Text.set_insertion_position (textoutput, !input_pos);
+            posref := 0;
+            strref := "";
+            eof_flag := false
+	  end
+          
+        fun do_lookahead () =
+          if !eof_flag then
+             ""
+          else if !posref >= size (!strref) then
+             (refill_buff 1;
+              do_lookahead ())
+          else 
+	    String.substring (!strref, !posref, 1)
+               
+        fun close_in _ = eof_flag := true
+
+        fun closed_in () = !eof_flag
+          
+        fun clear_eof () = eof_flag := false
+      end;
+
+      val instream = 
+        MLWorks.IO.instream
+	  {input = get_input,
+           lookahead = do_lookahead,
+           end_of_stream = fn () => do_lookahead () = "",
+           clear_eof = clear_eof,
+           close_in = close_in,
+           closed_in = closed_in}
+
+      val buttonspec =
+        [Menus.PUSH ("sendButton",
+                     fn _ => (send ();
+                              Capi.set_focus textinput),
+                     fn _ => !send_enabled),
+         Menus.PUSH ("eofButton",
+                     fn _ => (close_in ();
+                              send ();
+                              Capi.set_focus textinput),
+                     fn _ => !send_enabled),
+         Menus.PUSH ("clearButton",
+                     fn _ => (clear_input ();
+                              Capi.set_focus textinput),
+                     fn _ => true),
+         Menus.PUSH ("dismissButton",
+                     fn _ => (show_input false;
+                              Capi.set_focus textinput),
+                     fn _ => true)]
+    in
+      buttons_update_function_ref :=
+      Menus.make_buttons (buttonPane,buttonspec);
+      Capi.Layout.lay_out [Capi.Layout.OTHER promptLabel,
+                           Capi.Layout.TEXT panedWindow,
+                           Capi.Layout.OTHER buttonPane,
+                           Capi.Layout.SPACE];
+      Capi.Layout.lay_out [Capi.Layout.OTHER inputLabel,
+                           Capi.Layout.OTHER scrollinput];
+      Capi.Layout.lay_out [Capi.Layout.OTHER outputLabel,
+                           Capi.Layout.OTHER scrolloutput];
+
+      Capi.Callback.add (frame, 
+                         Capi.Callback.Unmap,
+                         fn _ => (input_visible_ref := false;
+                                  do_quit_funs ()));
+      Capi.Callback.add (shell, Capi.Callback.Destroy,do_quit_funs);
+      Capi.manage textinput;
+      Capi.manage textoutput;
+      Capi.set_focus textinput;
+      buttons_update_function ();
+      {instream = instream, input_widget = shell,
+       input_visible = input_visible, clear_input = clear_input,
+       show_input = show_input}
+    end
+          
+end;
+@
+
+
+1.2
+log
+@Moved capi etc. to gui
+@
+text
+@d4 3
+d247 1
+a247 1
+      Menus.make_submenus (buttonPane,buttonspec);
+@
+
+
+1.1
+log
+@new unit
+Moved from motif
+@
+text
+@d4 4
+d40 2
+a41 2
+require "../library/capi";
+require "../library/menus";
+@

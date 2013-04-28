@@ -1,0 +1,93 @@
+head	1.2;
+access;
+symbols
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	92.01.02.11.52.39;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.12.19.17.00.28;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.01.02.11.52.39;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Like coall, but checks out the old ten15 stuff as well
+@
+
+
+1.2
+log
+@Changed file to use RCS version 5.6.
+@
+text
+@#!/bin/csh
+# $Log: coallall,v $
+# Revision 1.1  1991/12/19  17:00:28  jont
+# Initial revision
+#
+# Copyright (c) 1991 Harlequin Ltd.
+if ($#argv != 0) then
+  echo Usage: coallall
+  exit(1)
+endif
+coall
+set dirs = {codegen,encoder}
+set nonomatch
+foreach i ($dirs)
+  echo Checking directory $i
+  pushd $i > /dev/null
+  ls RCS/*,v
+  ~sml/tools/cout RCS/*,v
+  popd > /dev/null
+end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 3
+# Revision 1.2  1992/01/02  11:52:39  richard
+# Changed file to use RCS version 5.6.
+#
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+# $Log$
+d13 1
+d15 5
+a19 9
+  pushd $i
+  if (`ls RCS | wc -l` != 0) then
+    echo checking $i
+    foreach x (RCS/*,v)
+      echo ~sml/tools/cout $x
+      ~sml/tools/cout $x
+    end
+  endif
+  popd
+@

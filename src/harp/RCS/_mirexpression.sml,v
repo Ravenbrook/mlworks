@@ -1,0 +1,3409 @@
+head	1.28;
+access;
+symbols
+	ML_beta_release_12/08/94:1.28
+	ML_beta_release_03/08/94:1.28
+	ML_revised_beta_release_25/05/94:1.28
+	ML_final_beta_release_02/03/94:1.28
+	mlworks-28-01-1994:1.28
+	Release:1.28
+	mlworks-beta-01-09-1993:1.28
+	MLWorks-1-0-4-29/01/1993:1.27
+	MLWorks-1-0-3-21/12/1992:1.27
+	MLWorks-1-0-2-15/12/1992:1.27
+	MLWorks-1-0-1-04/12/1992:1.27
+	checkpoint_17_08_92:1.27;
+locks; strict;
+comment	@ *  @;
+
+
+1.28
+date	93.04.27.13.44.03;	author richard;	state Exp;
+branches
+	1.28.1.1;
+next	1.27;
+
+1.27
+date	92.05.27.13.29.27;	author richard;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	92.05.13.11.24.03;	author richard;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.04.15.15.41.54;	author richard;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.04.13.15.00.33;	author clive;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.03.05.16.23.18;	author richard;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.02.05.16.21.45;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.01.14.14.17.22;	author jont;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.01.03.16.00.26;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	91.12.09.11.45.40;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	91.12.02.14.35.52;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	91.11.20.14.13.33;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	91.11.19.14.31.40;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	91.11.12.16.30.37;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	91.11.08.16.31.34;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	91.10.18.10.34.54;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	91.10.17.12.01.53;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.10.16.12.28.46;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.10.11.10.02.35;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.10.10.12.59.42;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.10.02.11.59.10;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.09.25.15.34.16;	author richard;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	91.09.24.14.48.28;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.09.20.10.29.02;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.19.14.42.02;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.18.16.28.33;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.17.15.15.15;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	91.09.26.14.23.01;	author richard;	state Exp;
+branches;
+next	;
+
+1.28.1.1
+date	93.04.27.13.44.03;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Module to perform forward dataflow optimisations (available expression
+substitution and copy propagation). Created from version 1.8 of
+_mirdataflow.sml.
+This is the functor.
+@
+
+
+1.28
+log
+@Changed PROFILE instruction to INTERCEPT.
+@
+text
+@(*  ==== AVAILABLE EXPRESSION ANALYSIS ====
+ *                FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _mirexpression.sml,v $
+ *  Revision 1.27  1992/05/27  13:29:27  richard
+ *  Changed Sets to Packs.
+ *
+ *  Revision 1.26  1992/05/13  11:24:03  richard
+ *  Altered functions in `cancel' to use free variables rather then
+ *  #field selectors from records.
+ *
+ *  Revision 1.25  1992/04/15  15:41:54  richard
+ *  Subroutine calls now cancel REFALIAS expressions.  A subroutine may
+ *  update any ref cell, after all.
+ *
+ *  Revision 1.24  1992/04/13  15:00:33  clive
+ *  First version of the profiler
+ *
+ *  Revision 1.23  1992/03/05  16:23:18  richard
+ *  Changed to use MirProcedure annotated procedures.  This is a stopgap
+ *  as the whole thing needs rewriting more efficiently in the near future.
+ *
+ *)
+
+
+require "../utils/diagnostic";
+require "../utils/crash";
+require "../utils/set";
+require "../utils/lists";
+require "../utils/print";
+require "../utils/option";
+require "mirtypes";
+require "mirtables";
+require "mirregisters";
+require "mirprocedure";
+require "mirprint";
+require "mirexpression";
+
+
+functor MirExpression(
+
+  structure MirProcedure	: MIRPROCEDURE
+  structure MirTypes		: MIRTYPES
+  structure MirPrint		: MIRPRINT
+  structure MirTables		: MIRTABLES
+  structure MirRegisters	: MIRREGISTERS
+  structure Lists		: LISTS
+  structure Crash		: CRASH
+  structure Set			: SET
+  structure Option		: OPTION
+  structure Diagnostic		: DIAGNOSTIC
+
+  sharing MirTypes = MirPrint.MirTypes = MirRegisters.MirTypes = MirProcedure.MirTypes = MirTables.MirTypes
+  sharing Set = MirRegisters.Set
+  sharing Option = MirRegisters.Option
+
+) : MIREXPRESSION =
+
+struct
+
+  structure MirProcedure = MirProcedure
+  structure MirTypes = MirTypes
+  structure Diagnostic = Diagnostic
+
+
+  (*  == Diagnostic output ==  *)
+
+  fun diagnostic (level, output_function) =
+    Diagnostic.output level
+    (fn verbosity => "Expression: " :: (output_function verbosity))
+
+  fun crash message = Crash.impossible ("Expression: " ^ message)
+
+
+
+  (*  === CONTROLLING SWITCHES ===  *)
+
+  val copy_propagation = ref true
+  val expression_substitution = ref true
+
+
+
+  (*  === MISCELLANEOUS UTILITY FUNCTIONS ===  *)
+
+
+  (*  == Untag a tagged instruction ==  *)
+
+  local
+    open MirTypes
+  in
+    fun untag_binary ADDV = ADD
+      | untag_binary SUBV = SUB
+      | untag_binary MULV = MULS
+      | untag_binary DIVV = DIVS
+      | untag_binary MODV = MODS
+
+    fun untag_binaryfp FADDV = FADD
+      | untag_binaryfp FSUBV = FSUB
+      | untag_binaryfp FMULV = FMUL
+      | untag_binaryfp FDIVV = FDIV
+
+    fun untag_unaryfp FABSV = FABS
+      | untag_unaryfp FNEGV = FNEG
+      | untag_unaryfp FSQRTV = FSQRT
+      | untag_unaryfp FLOGEV = FLOGE
+      | untag_unaryfp FETOXV = FETOX
+  end
+
+
+
+  (*  === DATA TYPES ===  *)
+
+  (*  == Data structure for Available Expression analysis ==
+   *
+   *  BINARYEXP and UNARYEXP denote the use of binary or unary
+   *  operators. COPY shows that a register contains the same value as
+   *  another. MEMALIAS denotes the equality of a register and a
+   *  memory location, which is more useful in ML than in imperative
+   *  languages.
+   *)
+
+  datatype expression =
+    COPY of MirTypes.gp_operand |
+    COPYFP of MirTypes.fp_operand |
+    MEMALIAS of MirTypes.reg_operand *
+	        MirTypes.gp_operand |
+    REFALIAS of MirTypes.reg_operand *
+                MirTypes.gp_operand |
+    BINARYEXP of MirTypes.binary_op *
+                 MirTypes.gp_operand *
+		 MirTypes.gp_operand |
+    BINARYFPEXP of MirTypes.binary_fp_op *
+    		   MirTypes.fp_operand *
+		   MirTypes.fp_operand |
+    UNARYEXP of MirTypes.unary_op * MirTypes.gp_operand |
+    UNARYFPEXP of MirTypes.unary_fp_op * MirTypes.fp_operand
+
+  datatype exp_set = EXPSET of (MirTypes.any_register * expression) list
+
+
+
+  (*  === CONVERT EXPRESSIONS TO STRINGS FOR DIAGNOSTIC OUTPUT ===
+   *
+   *  The expression set is coverted into a list of string suitable for
+   *  input to Diagnostic.output.
+   *)
+
+  fun string_of_exp (COPY(operand)) =
+      MirPrint.gp_operand operand
+
+    | string_of_exp (COPYFP(operand)) =
+      MirPrint.fp_operand operand
+
+    | string_of_exp (UNARYEXP(unary_op,operand)) =
+      (MirPrint.unary_op unary_op) ^" "^ MirPrint.gp_operand operand
+
+    | string_of_exp (BINARYEXP(binary_op,operand1,operand2)) =
+      (MirPrint.gp_operand operand1) ^" "^
+      (MirPrint.binary_op binary_op) ^" "^
+      (MirPrint.gp_operand operand2)
+
+    | string_of_exp (UNARYFPEXP(unary_op,operand)) =
+      (MirPrint.unary_fp_op unary_op) ^" "^ MirPrint.fp_operand operand
+
+    | string_of_exp (BINARYFPEXP(binary_op,operand1,operand2)) =
+      (MirPrint.fp_operand operand1) ^" "^
+      (MirPrint.binary_fp_op binary_op) ^" "^
+      (MirPrint.fp_operand operand2)
+
+    | string_of_exp (MEMALIAS(operand1,operand2)) =
+      "[" ^
+      (MirPrint.reg_operand operand1) ^
+      "+" ^
+      (MirPrint.gp_operand operand2) ^
+      "]"
+
+    | string_of_exp (REFALIAS(operand1,operand2)) =
+      "REF[" ^
+      (MirPrint.reg_operand operand1) ^
+      "+" ^
+      (MirPrint.gp_operand operand2) ^
+      "]"
+
+  fun string_of_binding (bound, exp) =
+    MirPrint.any_reg bound ^ " = " ^ string_of_exp exp
+
+  fun strings_of_exp_set (EXPSET(exps)) =
+    map (fn binding => string_of_binding binding ^ "; ") exps
+
+
+
+  (*  === COMPARE AND SEARCH ON EXPRESSIONS ===
+   *
+   *  same checks to see if two expressions denote the same value. Simple
+   *  equality cannot be used because some expressions can be
+   *  represented in more than one way, for example: A+B = B+A.
+   *
+   *  search looks for a matching expression (using same) in an exp_set. It
+   *  returns the (register, expression) pair or raises NoExpression.
+   *)
+
+  local
+    open MirTypes
+  in
+
+    fun same (BINARYEXP(ADD,op1,op2),BINARYEXP(ADD,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYEXP(MULU,op1,op2),BINARYEXP(MULU,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYEXP(MULS,op1,op2),BINARYEXP(MULS,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYEXP(AND,op1,op2),BINARYEXP(AND,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYEXP(OR,op1,op2),BINARYEXP(OR,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYEXP(EOR,op1,op2),BINARYEXP(EOR,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYFPEXP(FADD,op1,op2),BINARYFPEXP(FADD,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (BINARYFPEXP(FMUL,op1,op2),BINARYFPEXP(FMUL,op1',op2')) =
+	(op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+      | same (exp,exp') = exp=exp';
+
+
+    exception NoExpression = Lists.Find
+
+    fun search (exp, EXPSET bindings) =
+      Lists.findp (fn (_,bound_exp) => same (exp,bound_exp)) bindings
+
+  end
+
+
+  (*  === GENERATE AVAILABLE EXPRESSIONS FROM AN OPCODE ===
+   *
+   *  This function analyses an opcode to find out what possible
+   *  expressions it makes available. For example ADD a b c makes the
+   *  expression a=b+c available (until a, b or c is changed, see
+   *  cancel).
+   *
+   *  The result is an expression binding (MirTypes.any_register *
+   *  expression), or NoNewExpressions is raised. Care is taken not to
+   *  generate self-referential available expressions.
+   *)
+
+  local
+    open MirTypes
+
+    fun gp_reference (GP_GC_REG reg, GC_REG reg') = reg=reg'
+      | gp_reference (GP_NON_GC_REG reg, NON_GC_REG reg') = reg=reg'
+      | gp_reference _ = false
+  in
+    fun generate (UNARY(MOVE, reg, gp)) = 
+        if gp_reference (gp, reg) then [] else [(reg_to_any reg, COPY gp)]
+
+      | generate (UNARY(operator, reg, gp)) =
+        if gp_reference (gp, reg) then [] else [(reg_to_any reg, UNARYEXP(operator, gp))]
+
+      | generate (UNARYFP(FMOVE, fp1, fp2)) =
+	if fp1 = fp2 then [] else [(fp_to_any fp1, COPYFP fp2)]
+
+      | generate (UNARYFP(operator, fp1, fp2)) =
+	if fp1 = fp2 then [] else [(fp_to_any fp1, UNARYFPEXP(operator, fp2))]
+
+	(* N.B. It is safe to convert tagged operations into *)
+	(* untagged available expressions because, if an overflow *)
+	(* does not occur then it can not occur if the same *)
+	(* expression is evaluated again. *)
+
+      | generate (TUNARYFP(operator, _, fp1, fp2)) =
+	if fp1 = fp2 then [] else [(fp_to_any fp1, UNARYFPEXP(untag_unaryfp operator, fp2))]
+
+      | generate (BINARY(operator, reg, gp1, gp2)) =
+	if gp_reference (gp1, reg) orelse gp_reference (gp2, reg) then [] else
+          [(reg_to_any reg, BINARYEXP(operator, gp1, gp2))]
+
+      | generate (TBINARY(operator, _, reg, gp1, gp2)) =
+	if gp_reference (gp1,reg) orelse gp_reference (gp2,reg)	then [] else
+          [(reg_to_any reg, BINARYEXP(untag_binary operator, gp1, gp2))]
+
+      | generate (BINARYFP(operator, fp1, fp2, fp3)) =
+	if fp2 = fp1 orelse fp3 = fp1 then [] else
+          [(fp_to_any fp1, BINARYFPEXP(operator, fp2, fp3))]
+
+      | generate (TBINARYFP(operator, _, fp1, fp2, fp3)) =
+	if fp2 = fp1 orelse fp3 = fp1 then [] else
+          [(fp_to_any fp1, BINARYFPEXP(untag_binaryfp operator, fp2, fp3))]
+
+	(* N.B. LD and ST instructions make a register into an alias of a *)
+	(* memory. An ST instruction does not invalidate LD-generated *)
+	(* expressions, since, in ML, a normal cell is only stored once. An *)
+	(* STREF instruction does invalidate LDREF-generated expressions. *)
+
+      | generate (STOREOP(LD, reg, reg1, gp2)) =
+	if reg = reg1 orelse gp_reference (gp2,reg) then [] else
+          [(reg_to_any reg, MEMALIAS(reg1, gp2))]
+
+      | generate (STOREOP(ST, reg, reg1, gp2)) =
+	if reg = reg1 orelse gp_reference (gp2,reg) then [] else
+          [(reg_to_any reg, MEMALIAS(reg1, gp2))]
+
+      | generate (STOREOP(LDREF, reg, reg1, gp2)) =
+	if reg = reg1 orelse gp_reference (gp2,reg) then [] else
+          [(reg_to_any reg, REFALIAS(reg1, gp2))]
+
+      | generate (STOREOP(STREF, reg, reg1, gp2)) =
+	if reg = reg1 orelse gp_reference (gp2,reg) then [] else
+          [(reg_to_any reg, REFALIAS(reg1, gp2))]
+
+      | generate (STOREFPOP(_, fp, reg1, gp2)) =
+	[(fp_to_any fp, MEMALIAS(reg1, gp2))]
+
+      | generate _ = []
+
+  end
+
+
+
+  (*  === USE AVAILABLE EXPRESSIONS IN OPCODE ===
+   *
+   *  Given an unannotated opcode and expressions, this function attempts to
+   *  use any available expressions to optimise it. It returns a list of
+   *  opcodes to replace the opcode with.
+   *)
+
+  local
+
+    open MirTypes
+
+
+    (*  == Search expression set for a copy of a register ==
+     *
+     *  There are three versions of this, one for each of gp_operands,
+     *  reg_operands and fp_operands. They search the expressions to
+     *  see if the register is a straight copy of an earlier register.
+     *  If it is, then that register is returned. Otherwise the
+     *  original operand is returned.
+     *
+     *  In the case of gp_operands it may be possible to substitute a
+     *  register for the literal value zero if the machine has the facility.
+     *)
+
+    fun copy_of_gp_operand (operand as MirTypes.GP_IMM_INT 0) _ =
+        (case MirRegisters.zero
+           of Option.PRESENT zero => MirTypes.GP_GC_REG zero
+            | Option.ABSENT => operand)
+
+      | copy_of_gp_operand (operand as MirTypes.GP_IMM_ANY 0) _ =
+        (case MirRegisters.zero
+           of Option.PRESENT zero => MirTypes.GP_GC_REG zero
+            | Option.ABSENT => operand)
+        
+      | copy_of_gp_operand operand (EXPSET bindings) =
+        let
+	  val reg = gp_to_any operand
+
+	  fun f [] = operand
+	    | f ((bound, COPY operand')::bindings) =
+	      if reg=bound then operand' else f bindings
+	    | f (_::bindings) = f bindings
+	in
+	  f bindings
+	end
+        handle NotAnyRegister => operand
+
+    fun copy_of_reg_operand operand (EXPSET bindings) =
+	let
+	  val reg = reg_to_any operand
+
+	  fun gp_to_reg (GP_GC_REG reg) = GC_REG reg
+	    | gp_to_reg (GP_NON_GC_REG reg) = NON_GC_REG reg
+	    | gp_to_reg _ = raise NotAnyRegister
+
+	  fun f [] = operand
+	    | f ((bound, COPY operand')::bindings) =
+	      if reg=bound then
+		gp_to_reg operand'
+		handle NotAnyRegister => f bindings
+	      else
+		f bindings
+	    | f (_::bindings) = f bindings
+	in
+	  f bindings
+	end
+
+    fun copy_of_fp_operand operand (EXPSET bindings) =
+	let
+	  val reg = fp_to_any operand
+
+	  fun f [] = operand
+	    | f ((bound, COPYFP operand')::bindings) =
+	      if reg=bound then operand' else f bindings
+	    | f (_::bindings) = f bindings
+	in
+	  f bindings
+	end
+
+  in
+
+    (* See comment before local *)
+
+    fun use_expressions expressions opcode =
+    let
+
+      (*  == Copy propagation ==
+       *
+       *  This replaces the (register) operands of an opcode with the
+       *  register from which they were copied earlier, if any. This
+       *  eliminates needless duplication of registers. The dead
+       *  registers this creates will hopefully be eliminated later by
+       *  live variable analysis.
+       *)
+
+      fun propagate (UNARY(operation,reg,operand)) =
+	  UNARY(operation, reg, copy_of_gp_operand operand expressions)
+
+	| propagate (UNARYFP(operation,reg,operand)) =
+	  UNARYFP(operation, reg, copy_of_fp_operand operand expressions)
+
+	| propagate (TUNARYFP(operation,tag,reg,operand)) =
+	  TUNARYFP(operation, tag, reg, copy_of_fp_operand operand expressions)
+
+	| propagate (BINARY(operation,reg,operand1,operand2)) =
+	  BINARY(operation, reg,
+		 copy_of_gp_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+
+	| propagate (BINARYFP(operation,reg,operand1,operand2)) =
+	  BINARYFP(operation, reg,
+		   copy_of_fp_operand operand1 expressions,
+		   copy_of_fp_operand operand2 expressions)
+
+	| propagate (TBINARYFP(operation,tag,reg,operand1,operand2)) =
+	  TBINARYFP(operation, tag, reg,
+		    copy_of_fp_operand operand1 expressions,
+		    copy_of_fp_operand operand2 expressions)
+
+	| propagate (TBINARY(operation,tag,reg,operand1,operand2)) =
+	  TBINARY(operation, tag, reg,
+		  copy_of_gp_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREOP(ST,reg,operand1,operand2)) =
+	  STOREOP(ST,
+		  copy_of_reg_operand reg expressions,
+		  copy_of_reg_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREOP(STB,reg,operand1,operand2)) =
+	  STOREOP(STB,
+		  copy_of_reg_operand reg expressions,
+		  copy_of_reg_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREOP(STREF,reg,operand1,operand2)) =
+	  STOREOP(STREF,
+		  copy_of_reg_operand reg expressions,
+		  copy_of_reg_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREFPOP(FST,reg,operand1,operand2)) =
+	  STOREFPOP(FST,
+		    copy_of_fp_operand reg expressions,
+		    copy_of_reg_operand operand1 expressions,
+		    copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREFPOP(FSTREF,reg,operand1,operand2)) =
+	  STOREFPOP(FSTREF,
+		    copy_of_fp_operand reg expressions,
+		    copy_of_reg_operand operand1 expressions,
+		    copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREOP(operation,reg,operand1,operand2)) =
+	  STOREOP(operation, reg,
+		  copy_of_reg_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREFPOP(operation,reg,operand1,operand2)) =
+	  STOREFPOP(operation, reg,
+		    copy_of_reg_operand operand1 expressions,
+		    copy_of_gp_operand operand2 expressions)
+
+	| propagate (TEST(operation,tag,operand1,operand2)) =
+	  TEST(operation, tag,
+	       copy_of_gp_operand operand1 expressions,
+	       copy_of_gp_operand operand2 expressions)
+
+	| propagate (FTEST(operation,tag,operand1,operand2)) =
+	  FTEST(operation, tag,
+		copy_of_fp_operand operand1 expressions,
+		copy_of_fp_operand operand2 expressions)
+
+	| propagate (BRANCH_AND_LINK(operation,REG operand)) =
+	  BRANCH_AND_LINK(operation,
+			  REG (copy_of_reg_operand operand expressions))
+
+	| propagate (opcode as BRANCH_AND_LINK _) = opcode
+
+	| propagate (TAIL_CALL(operation,REG operand)) =
+	  TAIL_CALL(operation, REG (copy_of_reg_operand operand expressions))
+
+	| propagate (opcode as TAIL_CALL _) = opcode
+
+	| propagate (SWITCH(operation,operand,tags)) =
+	  SWITCH(operation, copy_of_reg_operand operand expressions, tags)
+
+	| propagate (STACKOP(PUSH,operand,offset)) =
+	  STACKOP(PUSH, copy_of_reg_operand operand expressions, offset)
+
+	| propagate (opcode as STACKOP _) = opcode
+
+	| propagate (REAL(ITOF,operand1,operand2)) =
+	  REAL(ITOF, operand1, copy_of_gp_operand operand2 expressions)
+
+	| propagate (FLOOR(FTOI,tag,operand1,operand2)) =
+	  FLOOR(FTOI, tag, operand1, copy_of_fp_operand operand2 expressions)
+
+	| propagate (BRANCH(operation,REG operand)) =
+	  BRANCH(operation, REG (copy_of_reg_operand operand expressions))
+
+	| propagate (opcode as BRANCH _) = opcode
+
+	| propagate RAISE = RAISE
+
+	| propagate(opcode as CALL_C) = opcode
+
+	| propagate(opcode as ALLOCATE _) = opcode
+
+	| propagate(opcode as ALLOCATE_STACK _) = opcode
+
+	| propagate(opcode as DEALLOCATE_STACK _) = opcode
+
+	| propagate(opcode as ADR _) = opcode
+
+	| propagate(opcode as INTERCEPT) = opcode
+
+	| propagate(opcode as ENTER) = opcode
+
+	| propagate(opcode as RTS) = opcode
+
+	| propagate(opcode as NEW_HANDLER _) = opcode
+
+	| propagate(opcode as OLD_HANDLER) = opcode
+
+	| propagate(opcode as COMMENT _) = opcode
+
+
+      (*  == Available expression substitution ==
+       *
+       *  The opcode is examined to see if it is duplicating an
+       *  earlier operation, the result of which is still in a
+       *  register somewhere. If it is, then the opcode is replaced by
+       *  a MOVE from that register. This avoids duplicated effort,
+       *  but may create redundant MOVE instructions. These will
+       *  hopefully be picked up later by live variable analysis.
+       *
+       *  SPECIAL CASES:
+       *    Any operation which has side effects should not be substituted.
+       *    Substitution is not performed for COPY expressions on registers.
+       *)
+
+      fun subst opcode =
+        if MirTables.has_side_effects opcode then
+          opcode
+        else
+
+          (* Find out which expression would be generated by the *)
+          (* opcode if it were executed. *)
+          (* COPY expressions of registers are not substituted --- *)
+          (* we want to reduce the number of registers, so we use *)
+          (* the earliest copy, not the latest. *)
+
+          case generate opcode
+            of [(_, COPY _)] => opcode
+             | [(_, COPYFP _)] => opcode
+             | [(reg, expression)] =>
+
+               (* Now, does that expression occur in the available *)
+               (* expressions? If it does then replace the opcode by a *)
+               (* MOVE. *)
+
+               ((case (reg, search (expression, expressions))
+                   of (GC reg1, (GC reg2, _))         => UNARY(MOVE, GC_REG reg1, GP_GC_REG reg2)
+                    | (NON_GC reg1, (NON_GC reg2, _)) => UNARY(MOVE, NON_GC_REG reg1, GP_NON_GC_REG reg2)
+                    | (FLOAT reg1, (FLOAT reg2, _))   => UNARYFP(FMOVE, FP_REG reg1, FP_REG reg2)
+                    | _ => opcode) handle NoExpression => opcode)
+
+             | [] => opcode
+             | _ => crash "An opcode generated more than one expression.  I can't cope!"
+
+
+      (* Copy propagation is applied first, then available expression *)
+      (* substitution. This ensures that available expressions *)
+      (* generated by the optimised opcode will use the earliest *)
+      (* avaiable copy of a datum, and therefore are in a canonical *)
+      (* form. *)
+
+      val propped = if !copy_propagation then propagate opcode else opcode
+      val subbed = if !expression_substitution then subst propped else propped
+
+      val _ = diagnostic
+        (3, fn _ =>
+         MirPrint.opcode opcode ::
+         (if opcode = propped then [] else
+            ["-propagated-> ", MirPrint.opcode propped]) @@
+         (if propped = subbed then [] else
+            ["-substituted-> ", MirPrint.opcode subbed]))
+    in
+      subbed
+    end
+
+  end
+
+
+
+  (*  === ADD NEW AVAILABLE EXPRESSIONS TO EXISTING ONES ===
+   *
+   *  Given a set of expressions, a set of registers defined, and an opcode
+   *  this function returns the set of expressions available _after_ its
+   *  execution.  This involves analysing the opcode (see generate) and
+   *  also cancelling earlier expressions which are overwritten by
+   *  it.
+   *)
+
+  fun add_available (EXPSET expressions, defined as {gc, non_gc, fp}, opcode) =
+      let
+
+	val _ = diagnostic (5, fn _ => ["updating expressions for ", MirPrint.opcode opcode])
+
+	(*  == Cancel expressions made unavailable ==
+	 *
+	 *  Expressions which depend on changed registers are removed
+	 *  from the exp_set.
+	 *)
+
+	local
+	  open MirTypes
+
+	  fun bind_updated (GC r)     = MirTypes.GC.Pack.member (gc, r)
+            | bind_updated (NON_GC r) = MirTypes.NonGC.Pack.member (non_gc, r)
+            | bind_updated (FLOAT r)  = MirTypes.FP.Pack.member (fp, r)
+
+	  fun gp_updated (GP_GC_REG r)     = MirTypes.GC.Pack.member (gc, r)
+            | gp_updated (GP_NON_GC_REG r) = MirTypes.NonGC.Pack.member (non_gc, r)
+            | gp_updated _ = false
+
+	  fun reg_updated (GC_REG r)     = MirTypes.GC.Pack.member (gc, r)
+            | reg_updated (NON_GC_REG r) = MirTypes.NonGC.Pack.member (non_gc, r)
+
+	  fun fp_updated (FP_REG r) = MirTypes.FP.Pack.member (fp, r)
+	in
+
+          fun cancel (bound, expression) =
+            bind_updated bound orelse
+            case expression
+              of COPY gp => gp_updated gp
+               | COPYFP fp => fp_updated fp
+               | BINARYEXP (_, gp1, gp2) => gp_updated gp1 orelse gp_updated gp2
+               | BINARYFPEXP (_, fp1, fp2) => fp_updated fp1 orelse fp_updated fp2
+               | UNARYEXP (_, gp) => gp_updated gp
+               | UNARYFPEXP (_, fp) => fp_updated fp
+               | MEMALIAS (reg, gp) => reg_updated reg orelse gp_updated gp
+                   
+                 (* It isn't possible to tell which REF cells are updated by an *)
+                 (* STREF instruction, so I have to assume that they all are. *)
+                 (* Therefore, an STREF instruction cancels all REFALIAS *)
+                 (* expressions. *)
+
+               | REFALIAS (reg, gp) =>
+                 (case opcode
+                    of STOREOP(STREF, _, _, _) => true
+                     | BRANCH_AND_LINK _ => true
+                     | _ => reg_updated reg orelse gp_updated gp)
+
+          fun keep binding = not (cancel binding)
+
+          fun cancel' binding =
+            cancel binding andalso (diagnostic (5, fn _ => ["cancelling ", string_of_binding binding]); true)
+                        
+        end
+
+	val expunged_expressions = Lists.filterp keep expressions
+
+      in
+
+	EXPSET (generate opcode @@ expunged_expressions)
+
+      end
+
+
+
+  (*  === ANALYSE EXPRESSIONS IN A SINGLE BLOCK ===
+   *
+   *  Takes a block and returns one, tupled with a list of other block
+   *  tags reachable, and the dataflow information at the point of
+   *  branching. It will also attempt to substitute available
+   *  expressions in opcodes by calling use_expressions.
+   *)
+
+  local
+
+    (*  == Process the opcodes in the block ==
+     *
+     *  This does the main work of analysing the block. It is written
+     *  iteratively. done accumulates the processed opcodes in reverse
+     *  order. others accumulates a list of other blocks referenced,
+     *  tupled with the expressions available when referenced. Note
+     *  that live variable information is discarded because it is
+     *  invalidated by the optimisations.
+     *)
+
+    fun process _ ([], done, others) = (rev done, others)
+
+      | process expressions
+	        ((instruction as MirProcedure.I (annotation, opcode))::instructions,
+		 done,
+		 others) =
+	  let
+	    val opcode' = use_expressions expressions opcode
+	    val expressions' = add_available (expressions, #defined annotation, opcode')
+
+	    val _ =
+	      diagnostic (4, fn _ =>
+			  ["after ", MirPrint.opcode opcode', " the expressions are "] @@
+			  strings_of_exp_set expressions')
+
+            (* Make a list of blocks that might be jumped to from *)
+            (* here, with the expressions that are available at the *)
+	    (* time. *)
+	    val reachable_blocks =
+	      map (fn tag => (tag, expressions'))
+              let
+                val tags = MirProcedure.Set.set_to_list (#branches annotation)
+              in
+                case #except annotation
+                  of MirProcedure.Option.ABSENT => tags
+                   | MirProcedure.Option.PRESENT tag => tag::tags
+              end
+
+	  in
+	    process expressions'
+	            (instructions,
+		     opcode'::done,
+		     reachable_blocks @@ others)
+	  end
+
+  in
+
+    (* See comment above local *)
+
+    fun analyse_block expressions (tag, MirProcedure.B (annotation, instructions)) =
+    let
+
+      val _ = diagnostic (2, fn _ => ["processing block ", MirTypes.print_tag tag,
+				      " with expressions "] @@ strings_of_exp_set expressions)
+
+      val (opcodes, reachable_blocks) = process expressions (instructions, [], [])
+    in
+      (MirTypes.BLOCK (tag, opcodes), reachable_blocks)
+    end
+
+  end
+
+
+
+  (*  === ANALYSE EXPRESSIONS IN A PROCEDURE ===
+   *
+   *  This one's complicated. When a block is analysed, it generates a
+   *  list of other blocks that could be reached, and the sets of
+   *  expressions available on their entry (see analyse_block).
+   *  However, in a procedure there may be more that one jump to a
+   *  block, and the expressions available in this case are the
+   *  _intersection_ of those from the blocks it came from. But, you
+   *  can't tell which blocks go where until you analyse them, so...
+   *  This starts with the first block and analyses it. Then it
+   *  analyses the reachable blocks, BUT, if any have been analysed
+   *  before it checks to see whether they were done with more
+   *  stringent sets of expressions (i.e. a subset of the current
+   *  expressions) --- in which case it doesn't try again. If the
+   *  expressions weren't more stringent, it takes the intersection of
+   *  the previous expressions and the current ones and re-analyses
+   *  that block (which in turn generates more references, and so on).
+   *  Eventually this terminates, because the sets must get smaller in
+   *  order to cause re-analysis.
+   *)
+
+  fun analyse (original_proc as MirProcedure.P (annotation, name, start_tag, original_block_map)) =
+  let
+
+    val _ = diagnostic (1, fn _ => ["processing procedure ", MirTypes.print_tag start_tag])
+
+    (* Find the intersection of two sets of available expressions. *)
+
+    fun intersect_expressions (EXPSET e1, e2) =
+    let
+      fun i ([], passed) = passed
+	| i ((binding as (reg,exp))::bindings, passed) =
+	  let
+	    val (reg', _) = search (exp, e2)
+	  in
+	    if reg = reg' then
+	      i (bindings, binding::passed)
+	    else
+	      i (bindings, passed)
+	  end
+	  handle NoExpression => i (bindings, passed)
+    in
+      EXPSET( i (e1,[]) )
+    end
+
+
+    (* Are two sets of available expressions the same? *)
+
+    fun same_set (EXPSET e1, expressions as EXPSET e2) =
+    let
+      fun subset [] = true
+	| subset ((reg,exp)::bindings) =
+	  let
+	    val (reg', _) = search (exp, expressions)
+	  in
+	    (reg = reg') andalso (subset bindings)
+	  end
+    in
+      (Lists.length(e1) = Lists.length(e2))
+      andalso subset e1
+    end
+
+
+    (* Filter out duplicate analysed blocks in a list. *)
+
+    fun remove_duplicates blocks_with_expressions =
+    let
+      fun find_block(tag,blocks) =
+	(Lists.findp (fn (MirTypes.BLOCK(tag',_)) => tag=tag') blocks; true)
+	handle Lists.Find => false;
+
+      fun r ([],done) = rev done
+	| r ((block as MirTypes.BLOCK(tag,_), _)::blocks, done) =
+	  if find_block(tag,done)
+	  then r (blocks, done)
+	  else r (blocks, block::done)
+    in
+      r (blocks_with_expressions, [])
+    end
+
+
+    (*  == Decide which set of expressions to use ==
+     *
+     *  If it's already been analysed with a subset then raise
+     *  ItsBeenDone. If it's never been analysed, then expressions is
+     *  returned. Otherwise the intersection of the previous try and
+     *  expressions is returned.
+     *)
+
+    exception ItsBeenDone
+
+    fun choose_expressions (tag, expressions, blocks_done) =
+      let
+	val (_, previous_expressions) =
+	  Lists.findp
+	  (fn (MirTypes.BLOCK(tag',_),_) => tag=tag')
+	  blocks_done;
+
+	val least_expressions =
+	  intersect_expressions(previous_expressions, expressions)
+      in
+  	if same_set (previous_expressions, least_expressions)
+	then raise ItsBeenDone
+	else least_expressions
+      end
+      handle Lists.Find => expressions
+
+
+    (*  == Process the block list ==
+     *
+     *  This does most of the work of analysing the procedure. At the
+     *  end of processing duplicate analyses of blocks are removed
+     *  from blocks_done. The ordering of block will, by this time, be
+     *  totally whacko.
+     *)
+
+    fun process (blocks_done, []) = remove_duplicates(blocks_done)
+
+      | process (blocks_done, (tag, expressions)::rest) =
+	let
+
+	  val expressions_to_try = choose_expressions (tag, expressions, blocks_done)
+	  val block_to_try_them_on = MirProcedure.Map.apply original_block_map tag
+	  val (block, reachable_blocks) =
+	    analyse_block expressions_to_try (tag, block_to_try_them_on)
+
+	in
+	  process ((block, expressions_to_try)::blocks_done,
+		   rest @@ reachable_blocks)
+	end
+
+        handle ItsBeenDone => process (blocks_done, rest)
+             | MirProcedure.Map.Undefined =>
+               crash ("There's a branch to a block tagged " ^ MirTypes.print_tag tag ^
+                      " which I can't find in the current procedure.");
+
+    (* Start the ball rolling with an empty expression set. *)
+    val processed_blocks = process ([], [(start_tag, EXPSET [])])
+
+  in
+
+    MirTypes.PROC (name, start_tag, #parameters annotation, processed_blocks)
+
+  end
+
+end
+@
+
+
+1.28.1.1
+log
+@Fork for bug fixing
+@
+text
+@a11 3
+ *  Revision 1.28  1993/04/27  13:44:03  richard
+ *  Changed PROFILE instruction to INTERCEPT.
+ *
+@
+
+
+1.27
+log
+@Changed Sets to Packs.
+@
+text
+@d12 3
+d549 1
+a549 1
+	| propagate(opcode as PROFILER _) = opcode
+@
+
+
+1.26
+log
+@Altered functions in `cancel' to use free variables rather then
+#field selectors from records.
+@
+text
+@d12 4
+d650 3
+a652 3
+	  fun bind_updated (GC r)     = MirTypes.GC.Set.member (gc, r)
+            | bind_updated (NON_GC r) = MirTypes.NonGC.Set.member (non_gc, r)
+            | bind_updated (FLOAT r)  = MirTypes.FP.Set.member (fp, r)
+d654 2
+a655 2
+	  fun gp_updated (GP_GC_REG r)     = MirTypes.GC.Set.member (gc, r)
+            | gp_updated (GP_NON_GC_REG r) = MirTypes.NonGC.Set.member (non_gc, r)
+d658 2
+a659 2
+	  fun reg_updated (GC_REG r)     = MirTypes.GC.Set.member (gc, r)
+            | reg_updated (NON_GC_REG r) = MirTypes.NonGC.Set.member (non_gc, r)
+d661 1
+a661 1
+	  fun fp_updated (FP_REG r) = MirTypes.FP.Set.member (fp, r)
+@
+
+
+1.25
+log
+@Subroutine calls now cancel REFALIAS expressions.  A subroutine may
+update any ref cell, after all.
+@
+text
+@d12 4
+d646 3
+a648 3
+	  fun bind_updated (GC r)     = MirTypes.GC.Set.member (#gc defined, r)
+            | bind_updated (NON_GC r) = MirTypes.NonGC.Set.member (#non_gc defined, r)
+            | bind_updated (FLOAT r)  = MirTypes.FP.Set.member (#fp defined, r)
+d650 2
+a651 2
+	  fun gp_updated (GP_GC_REG r)     = MirTypes.GC.Set.member (#gc defined, r)
+            | gp_updated (GP_NON_GC_REG r) = MirTypes.NonGC.Set.member (#non_gc defined, r)
+d654 2
+a655 2
+	  fun reg_updated (GC_REG r)     = MirTypes.GC.Set.member (#gc defined, r)
+            | reg_updated (NON_GC_REG r) = MirTypes.NonGC.Set.member (#non_gc defined, r)
+d657 1
+a657 1
+	  fun fp_updated (FP_REG r) = MirTypes.FP.Set.member (#fp defined, r)
+d682 2
+d689 1
+a689 1
+	val expunged_expressions = Lists.filterp (not o cancel') expressions
+@
+
+
+1.24
+log
+@First version of the profiler
+@
+text
+@d12 3
+d675 1
+@
+
+
+1.23
+log
+@Changed to use MirProcedure annotated procedures.  This is a stopgap
+as the whole thing needs rewriting more efficiently in the near future.
+@
+text
+@d12 4
+d535 2
+d784 1
+a784 1
+  fun analyse (original_proc as MirProcedure.P (annotation, start_tag, original_block_map)) =
+d904 1
+a904 1
+    MirTypes.PROC (start_tag, #parameters annotation, processed_blocks)
+@
+
+
+1.22
+log
+@Abolished PREVIOUS_ENVIRONMENT and PRESERVE_ALL_REGS.
+@
+text
+@d1 12
+a12 5
+(* _mirexpression.sml the functor *)
+(*
+$Log: _mirexpression.sml,v $
+Revision 1.21  1992/01/14  14:17:22  jont
+Raise no longer has a parameter
+a13 3
+Revision 1.20  1992/01/03  16:00:26  richard
+Added the use of the zero register (if present) as an earlier
+`copy' of the literal zero.
+a14 80
+Revision 1.19  1991/12/09  11:45:40  richard
+Prevented substitution of ANY COPY expressions.  This enables the
+tail-recursive optimisation of some functions, but is really just
+a
+fix until register vertex merging is implemented in the register
+allocator.
+
+Revision 1.18  91/12/02  14:35:52  jont
+Added tail call operation
+
+Revision 1.17  91/11/20  14:13:33  jont
+Added exception generating fp opcodes to tables
+
+Revision 1.16  91/11/19  14:31:40  richard
+Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+
+Revision 1.15  91/11/12  16:30:37  jont
+Fixed typo whereby FTOI was transformed to ITOF
+
+Revision 1.14  91/11/08  16:31:34  richard
+Changed the way use_expressions returns the modified opcode, and
+introduced REFALIAS expressions.
+
+Revision 1.13  91/10/18  10:34:54  richard
+Allowed available expression substitution in MOVE instructions other
+than plain register moves.
+Fixed logical error with debugging output.
+
+Revision 1.12  91/10/17  12:01:53  richard
+Now uses Switches module to control optimisation and debugging output.
+
+Revision 1.11  91/10/16  12:28:46  richard
+Implemented floating point expression analysis and tidied up
+some cases involving GC and NON_GC registers.
+
+Revision 1.10  91/10/11  10:02:35  richard
+Slight alterations to cope with new MirTypes.
+
+Revision 1.9  91/10/10  12:59:42  richard
+Fixed debugging output to use Print module. Changed RESTORE_REGS
+special case to PREVIOUS_ENVIRONMENT.
+
+Revision 1.7  91/10/02  11:59:10  jont
+Removed real register options, these are being done elsewhere
+
+Revision 1.6  91/09/25  15:34:16  richard
+Added code to comment out rather than delete optimisations.
+Improved generate and fixed regs_updated_by by using register
+conversion functions in MirTypes.
+Added code to cope with the RESTORE_REGS special case.
+Fixed cancel by using more general pattern matching and register
+conversion.
+Added code to produce listings if requested.
+
+Revision 1.5  91/09/24  14:48:28  richard
+Generalised matching between expressions and applied this to expression
+substitution. Expression substitution generalised to use expression
+generation to analyse opcodes.
+Expression intersection now uses proper matching of expressions so that
+fewer are discarded when control flow joins. 
+
+Revision 1.4  91/09/20  10:29:02  richard
+MODV instruction added to available expressions. Prevented copy propagation
+from cancelled registers.
+
+Revision 1.3  91/09/19  14:42:02  richard
+Switched off debugging information.
+
+Revision 1.2  91/09/18  16:28:33  richard
+Removed code which explicitly followed the flow of control and
+replaced with invocations of the MirFlow module, which is new.
+
+Revision 1.1  91/09/17  15:15:15  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+d24 1
+a24 1
+require "miropttypes";
+a25 1
+require "switches";
+d31 10
+a40 11
+  structure MirOptTypes	: MIROPTTYPES
+  structure MirTypes	: MIRTYPES
+  structure MirTables	: MIRTABLES
+  structure MirPrint	: MIRPRINT
+  structure MirRegisters: MIRREGISTERS
+  structure Lists	: LISTS
+  structure Crash	: CRASH
+  structure Set		: SET
+  structure Option	: OPTION
+  structure Switches	: SWITCHES
+  structure Diagnostic	: DIAGNOSTIC
+d42 2
+a43 5
+  sharing MirTypes = MirPrint.MirTypes =
+    MirRegisters.MirTypes = MirOptTypes.MirTypes = MirTables.MirTypes
+
+  sharing MirTables.Set = Set = MirRegisters.Set = MirTables.MirTypes.Set
+
+d50 2
+a51 3
+
+  structure MirOptTypes = MirOptTypes
+  structure Switches = Switches
+a52 1
+ 
+d59 1
+a59 2
+    (fn verbosity =>
+     "MIR Optimiser (Expression): " :: (output_function verbosity))
+d61 1
+d64 8
+d75 1
+a75 1
+  (*  Convert tagged binary operation to its untagged equivelent  *)
+d80 5
+a84 6
+    fun untag ADDV = ADD
+      | untag SUBV = SUB
+      | untag MULV = MULS
+      | untag DIVV = DIVS
+      | untag MODV = MODS
+  end;
+d86 4
+d91 6
+d98 2
+d243 1
+a243 1
+    open MirTypes;
+d247 1
+a247 1
+      | gp_reference _ = false;
+d249 2
+a251 11
+    exception NoNewExpressions;
+
+        (* N.B. MOVE is not a genuine available expression, it is *)
+        (* actually used in reverse to do copy propagation. See *)
+        (* use_expressions. *)
+
+    fun generate (UNARY(MOVE, reg, gp)) =
+        if gp_reference (gp, reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, COPY gp)
+
+d253 1
+a253 3
+        if gp_reference (gp, reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, UNARYEXP(operator, gp))
+d256 1
+a256 3
+	if fp1 = fp2
+	then raise NoNewExpressions
+	else (fp_to_any fp1, COPYFP fp2)
+d259 1
+a259 3
+	if fp1 = fp2
+	then raise NoNewExpressions
+	else (fp_to_any fp1, UNARYFPEXP(operator, fp2))
+d261 8
+d270 2
+a271 3
+	if gp_reference (gp1, reg) orelse gp_reference (gp2, reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, BINARYEXP(operator, gp1, gp2))
+a272 5
+	  (* N.B. It is safe to convert tagged binary operations into *)
+	  (* untagged available expressions because, if an overflow *)
+	  (* does not occur then it can not occur if the same *)
+	  (* expression is evaluated again. *)
+
+d274 2
+a275 3
+	if gp_reference (gp1,reg) orelse gp_reference (gp2,reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, BINARYEXP(untag operator, gp1, gp2))
+d278 2
+a279 3
+	if fp2 = fp1 orelse fp3 = fp1
+	then raise NoNewExpressions
+	else (fp_to_any fp1, BINARYFPEXP(operator, fp2, fp3))
+d281 4
+d291 2
+a292 3
+	if reg = reg1 orelse gp_reference (gp2,reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, MEMALIAS(reg1, gp2))
+d295 2
+a296 3
+	if reg = reg1 orelse gp_reference (gp2,reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, MEMALIAS(reg1, gp2))
+d299 2
+a300 3
+	if reg = reg1 orelse gp_reference (gp2,reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, REFALIAS(reg1, gp2))
+d303 2
+a304 3
+	if reg = reg1 orelse gp_reference (gp2,reg)
+	then raise NoNewExpressions
+	else (reg_to_any reg, REFALIAS(reg1, gp2))
+d307 1
+a307 1
+	(fp_to_any fp, MEMALIAS(reg1, gp2))
+d309 1
+a309 1
+      | generate _ = raise NoNewExpressions
+d398 1
+a398 1
+    fun use_expressions expressions (opcode, _, successors) =
+d557 3
+d561 5
+a565 6
+	  if MirTables.has_side_effects opcode then
+	    opcode
+	  else
+	    let
+	      (* Find out which expression would be generated by the *)
+	      (* opcode if it were executed. *)
+d567 4
+a570 1
+	      val (reg, expression) = generate opcode
+d572 3
+a574 11
+	    in
+	      (* COPY expressions of registers are not substituted --- *)
+	      (* we want to reduce the number of registers, so we use *)
+	      (* the earliest copy, not the latest. *)
+	      case expression
+		of COPY _ => opcode
+		 | COPYFP _ => opcode
+		 | _ =>
+		     (* Now, does that expression occur in the available *)
+		     (* expressions? If it does then replace the opcode by a *)
+		     (* MOVE. *)
+d576 5
+a580 8
+		     (case (reg, search (expression, expressions))
+			of (GC reg1, (GC reg2, _)) => 
+			  UNARY(MOVE, GC_REG reg1, GP_GC_REG reg2)
+			 | (NON_GC reg1, (NON_GC reg2, _)) =>
+			     UNARY(MOVE, NON_GC_REG reg1, GP_NON_GC_REG reg2)
+			 | (FLOAT reg1, (FLOAT reg2, _)) =>
+			     UNARYFP(FMOVE, FP_REG reg1, FP_REG reg2)
+			 | _ => opcode)
+d582 2
+a583 1
+			handle NoExpression => opcode
+a584 1
+	    end
+a585 7
+	    (* NoNewExpressions may have been raised by the generate in the *)
+	    (* let above. In this case the opcode isn't suceptible to *)
+	    (* substitution. *)
+
+	    handle NoNewExpressions => opcode;
+
+
+d592 2
+a593 10
+      val propped =
+	if !Switches.copy_propagation then
+	  propagate opcode
+	else
+	  opcode
+      val subbed =
+	if !Switches.expression_substitution then
+	  subst propped
+	else
+	  propped
+d595 7
+a601 31
+      fun make_comment (prefix, op1, op2) =
+	if op1 = op2 then []
+	else
+	let
+	  val message = 
+	    prefix ^ ": " ^ (MirPrint.opcode op1) ^
+	    " -> " ^ (MirPrint.opcode op2)
+	in
+	  diagnostic (3, fn _ => [message]);
+	  if !Switches.comment_out then
+	    [(MirTypes.COMMENT message,
+	      MirOptTypes.REGS_UNKNOWN,
+	      MirOptTypes.SUCCS [])]
+	  else
+	    []
+	end
+
+      val comments =
+	(make_comment ("copy propagation", opcode, propped)) @@
+	(make_comment ("expression subst", propped, subbed))
+
+      (* These optimisations may produce a MOVE X,X type instruction. These *)
+      (* are deleted, of course. *)
+
+      val useless =
+	case subbed
+	  of UNARY(MOVE, GC_REG r, GP_GC_REG r') => r=r'
+	   | UNARY(MOVE, NON_GC_REG r, GP_NON_GC_REG r') => r=r'
+	   | UNARYFP(FMOVE, FP_REG r, FP_REG r') => r=r'
+	   | _ => false
+
+d603 1
+a603 6
+
+      if useless then
+	comments
+      else
+	(subbed, MirOptTypes.REGS_UNKNOWN, successors) :: comments
+
+d612 3
+a614 3
+   *  Given a set of expressions and an opcode this function returns
+   *  the set of expressions available _after_ its execution. This
+   *  involves analysing the opcode (see generate) and
+d616 1
+a616 1
+   *  it. (e.g., if a register that they depend on is changed).
+d619 1
+a619 1
+  fun add_available (EXPSET expressions, (opcode, _, _)) =
+d622 1
+a622 2
+	val _ = diagnostic (5, fn _ => ["updating expressions for ",
+					MirPrint.opcode opcode])
+a623 10
+	(* Determine which registers are changed by the opcode, i.e. the *)
+	(* set of register births. *)
+
+	val updated_regs = MirTables.defined_by opcode
+
+	val _ = diagnostic (5, fn _ =>
+			    ["registers defined: ",
+			     Set.set_print (updated_regs, MirPrint.any_reg)])
+
+
+d633 3
+a635 2
+	  fun bind_updated reg  =
+	    Set.is_member (reg, updated_regs);
+d637 3
+a639 3
+	  fun gp_updated gp_operand =
+	    Set.is_member (MirTypes.gp_to_any gp_operand, updated_regs)
+	    handle MirTypes.NotAnyRegister => false;
+d641 2
+a642 2
+	  fun reg_updated reg_operand =
+	    Set.is_member (MirTypes.reg_to_any reg_operand, updated_regs)
+d644 1
+a644 3
+	  fun fp_updated fp_operand =
+	    Set.is_member (MirTypes.fp_to_any fp_operand, updated_regs)
+
+d647 15
+a661 1
+	  fun cancel [] = []
+d663 4
+a666 5
+	    | cancel ((bind as (bound, COPY(gp))) :: bindings) =
+	      if (bind_updated bound) orelse (gp_updated gp) then
+		kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+d668 4
+a671 5
+	    | cancel ((bind as (bound, COPYFP(fp))) :: bindings) =
+	      if (bind_updated bound) orelse (fp_updated fp) then
+		kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+d673 1
+a673 7
+	    | cancel ((bind as (bound, BINARYEXP(_,gp1,gp2))) :: bindings) =
+	      if (bind_updated bound)
+	      orelse (gp_updated gp1)
+	      orelse (gp_updated gp2) then
+	        kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+a674 53
+	    | cancel ((bind as (bound, BINARYFPEXP(_,fp1,fp2))) :: bindings) =
+	      if (bind_updated bound)
+	      orelse (fp_updated fp1)
+	      orelse (fp_updated fp2) then
+	        kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+
+	    | cancel ((bind as (bound, UNARYEXP(_,gp))) :: bindings) =
+	      if (bind_updated bound) orelse (gp_updated gp) then
+		kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+
+	    | cancel ((bind as (bound, UNARYFPEXP(_,fp))) :: bindings) =
+	      if (bind_updated bound) orelse (fp_updated fp) then
+		kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+
+	    | cancel ((bind as (bound, MEMALIAS(reg, gp))) :: bindings) =
+	      if (bind_updated bound)
+	      orelse (reg_updated reg)
+	      orelse (gp_updated gp) then
+	        kill (bind, bindings)
+	      else
+		bind::(cancel bindings)
+
+	      (* It isn't possible to tell which REF cells are updated by an *)
+	      (* STREF instruction, so I have to assume that they all are. *)
+	      (* Therefore, an STREF instruction cancels all REFALIAS *)
+	      (* expressions. *)
+
+	    | cancel ((bind as (bound, REFALIAS(reg, gp))) :: bindings) =
+	      case opcode
+		of STOREOP(STREF, _, _, _) => kill (bind, bindings)
+		 | _ =>
+		   if (bind_updated bound)
+		     orelse (reg_updated reg)
+		     orelse (gp_updated gp) then
+		     kill (bind, bindings)
+		   else
+		     bind::(cancel bindings)
+
+	  and kill (bind, bindings) =
+	    (diagnostic (5, fn _ =>
+			 ["cancelling ", string_of_binding bind]);
+	     cancel bindings)
+
+	end
+
+	val expunged_expressions = cancel expressions
+
+d677 1
+a677 3
+	EXPSET ((generate opcode) :: expunged_expressions)
+	handle NoNewExpressions =>
+	  EXPSET expunged_expressions
+d679 1
+a679 1
+      end;
+d706 1
+a706 1
+	        ((opcode as (_, _, MirOptTypes.SUCCS successors))::opcodes,
+d710 2
+a711 3
+	    val new_opcodes = use_expressions expressions opcode
+	    val new_expressions =
+	      Lists.reducel add_available (expressions, new_opcodes)
+d715 2
+a716 6
+			  ("after " ::
+			   (map (fn (opcode,_,_) =>
+				 MirPrint.opcode opcode ^ "; ")
+			    new_opcodes)) @@
+			  ("the expressions are " ::
+			   strings_of_exp_set new_expressions))
+d722 8
+a729 1
+	      map (fn tag => (tag,new_expressions)) successors
+d732 3
+a734 3
+	    process new_expressions
+	            (opcodes,
+		     new_opcodes @@ done,
+a737 7
+      | process _ ((opcode,_,_)::_,_,_) =
+	Crash.impossible
+	("MirOptimiser (Expression): I've come across a instruction "^
+         "with unknown successors, which shouldn't happen as they " ^
+	 "are supposed to be generated by the MirFlow module. The " ^
+	 "instruction is " ^ (MirPrint.opcode opcode) ^ ".")
+
+d742 1
+a742 1
+    fun analyse_block expressions (MirOptTypes.BLOCK(tag, opcodes)) =
+d745 2
+a746 4
+      val _ = diagnostic (2, fn _ => ["processing block ",
+				      MirTypes.print_tag tag,
+				      " with expressions "] @@
+			             strings_of_exp_set expressions)
+d748 1
+a748 5
+      val (new_opcodes, reachable_blocks) =
+	process expressions (opcodes, [], []);
+
+      val block = MirOptTypes.BLOCK(tag, new_opcodes);
+
+d750 2
+a751 2
+      (block, reachable_blocks)
+    end;
+d753 1
+a753 1
+  end;
+d778 1
+a778 2
+  fun analyse (original_proc as
+	       MirOptTypes.PROC(start_tag, params, original_blocks)) =
+d781 1
+a781 2
+    val _ = diagnostic (1, fn _ => ["processing procedure ",
+				    MirTypes.print_tag start_tag])
+d800 1
+a800 1
+    end;
+d817 1
+a817 1
+    end;
+d825 1
+a825 1
+	(Lists.findp (fn (MirOptTypes.BLOCK(tag',_)) => tag=tag') blocks; true)
+d829 1
+a829 1
+	| r ((block as MirOptTypes.BLOCK(tag,_), _)::blocks, done) =
+d835 1
+a835 1
+    end;
+d846 1
+a846 1
+    exception ItsBeenDone;
+d852 1
+a852 1
+	  (fn (MirOptTypes.BLOCK(tag',_),_) => tag=tag')
+d862 1
+a862 1
+      handle Lists.Find => expressions;
+d878 2
+a879 5
+	  val expressions_to_try =
+	    choose_expressions (tag, expressions, blocks_done);
+
+	  val block_to_try_them_on = MirOptTypes.get_block original_proc tag;
+
+d881 1
+a881 1
+	    analyse_block expressions_to_try block_to_try_them_on
+a883 1
+
+a885 1
+
+a886 6
+      handle ItsBeenDone => process (blocks_done, rest)
+	   | MirOptTypes.NoSuchBlock =>
+	Crash.impossible("MirOptimiser (Dataflow): There's a branch to "^
+			 "a block tagged "^(MirTypes.print_tag tag)^
+			 " which I can't find in the current "^
+			 "procedure.");
+d888 5
+d898 1
+a898 1
+    MirOptTypes.make_proc(start_tag, params, processed_blocks)
+d900 1
+a900 1
+  end;
+d902 1
+a902 2
+
+end; (* of functor *)
+@
+
+
+1.21
+log
+@Raise no longer has a parameter
+@
+text
+@d4 3
+a611 2
+	| propagate(opcode as PRESERVE_ALL_REGS) = opcode
+
+a613 2
+	| propagate(opcode as PREVIOUS_ENVIRONMENT) = opcode
+
+a618 3
+(*
+	| propagate anything_else = anything_else
+*)
+d620 1
+a745 5
+   *
+   *  Note: PREVIOUS_ENVIRONMENT has an odd effect, it updates all
+   *  registers except the argument, closure pointers (but may change
+   *  their names) and the global register. Since expressions between
+   *  these are unlikely, all expressions are cancelled.
+d748 1
+a748 3
+  fun add_available (_, (MirTypes.PREVIOUS_ENVIRONMENT, _, _)) = EXPSET []
+
+    | add_available (EXPSET expressions, (opcode, _, _)) =
+@
+
+
+1.20
+log
+@Added the use of the zero register (if present) as an earlier
+`copy' of the literal zero.
+@
+text
+@d4 4
+d595 1
+a595 2
+	| propagate (RAISE operand) =
+	  RAISE(copy_of_reg_operand operand expressions)
+@
+
+
+1.19
+log
+@Prevented substitution of ANY COPY expressions.  This enables the
+tail-recursive optimisation of some functions, but is really just
+a
+fix until register vertex merging is implemented in the register
+allocator.
+@
+text
+@d3 8
+a10 1
+$Log:	_mirexpression.sml,v $
+d89 1
+d109 1
+d118 2
+d406 3
+d411 11
+a421 1
+    fun copy_of_gp_operand operand (EXPSET bindings) =
+@
+
+
+1.18
+log
+@Added tail call operation
+@
+text
+@d4 3
+d627 1
+a627 2
+		of COPY (MirTypes.GP_GC_REG _) => opcode
+		 | COPY (MirTypes.GP_NON_GC_REG _) => opcode
+@
+
+
+1.17
+log
+@Added exception generating fp opcodes to tables
+@
+text
+@d4 3
+d539 5
+@
+
+
+1.16
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d4 5
+d458 3
+d471 5
+d505 6
+d535 2
+d543 1
+a543 2
+	| propagate (CONVOP(ITOF,operand1,operand2)) =
+	  CONVOP(ITOF, operand1, copy_of_gp_operand operand2 expressions)
+d545 2
+a546 2
+	| propagate (CONVOP(FTOI,operand1,operand2)) =
+	  CONVOP(FTOI, copy_of_fp_operand operand1 expressions, operand2)
+d548 3
+d554 2
+d559 1
+a559 1
+	| propagate anything_else = anything_else;
+d561 24
+@
+
+
+1.15
+log
+@Fixed typo whereby FTOI was transformed to ITOF
+@
+text
+@d4 3
+d66 1
+a89 1
+  structure Print	: PRINT
+d91 1
+d105 1
+d109 1
+a109 1
+  (* == Debugging information output == *)
+d111 4
+a114 4
+  fun info message =
+    if !Switches.expression_debug then
+      Print.print ("MIR Optimiser (Expression): "^message^"\n")
+    else ();
+d166 1
+a166 1
+  (*  === DEBUGGING OUTPUT FUNCTIONS ===
+d168 2
+a169 2
+   *  These are tedious, messy and have nothing to do with any
+   *  algorithm, so just ignore them.
+d172 1
+a172 1
+  fun print_exp (COPY(operand)) =
+d175 1
+a175 1
+    | print_exp (COPYFP(operand)) =
+d177 2
+a178 2
+    
+    | print_exp (UNARYEXP(unary_op,operand)) =
+d180 2
+a181 2
+      
+    | print_exp (BINARYEXP(binary_op,operand1,operand2)) =
+d185 2
+a186 2
+      
+    | print_exp (UNARYFPEXP(unary_op,operand)) =
+d188 2
+a189 2
+      
+    | print_exp (BINARYFPEXP(binary_op,operand1,operand2)) =
+d193 2
+a194 2
+      
+    | print_exp (MEMALIAS(operand1,operand2)) =
+d201 1
+a201 1
+    | print_exp (REFALIAS(operand1,operand2)) =
+a206 4
+      
+  fun print_exp_set (EXPSET(exps)) =
+    Lists.to_string (fn (bound,exp) =>
+		     MirPrint.any_reg bound ^" = "^ print_exp exp) exps
+d208 2
+d211 2
+d214 2
+d620 1
+a620 1
+	  info message;
+d675 3
+d683 3
+d687 1
+d716 1
+a716 1
+		cancel bindings
+d722 1
+a722 1
+		cancel bindings
+d730 1
+a730 1
+	        cancel bindings
+d738 1
+a738 1
+	        cancel bindings
+d744 1
+a744 1
+		cancel bindings
+d750 1
+a750 1
+		cancel bindings
+d758 1
+a758 1
+	        cancel bindings
+d769 1
+a769 1
+		of STOREOP(STREF, _, _, _) => cancel bindings
+d774 1
+a774 1
+		     cancel bindings
+d778 5
+d828 9
+a862 3
+      val _ =
+	info ("block "^(MirTypes.print_tag tag)^" with "^
+	      (print_exp_set expressions ));
+d864 5
+d906 3
+@
+
+
+1.14
+log
+@Changed the way use_expressions returns the modified opcode, and
+introduced REFALIAS expressions.
+@
+text
+@d4 4
+d519 1
+a519 1
+	  CONVOP(ITOF, copy_of_fp_operand operand1 expressions, operand2)
+@
+
+
+1.13
+log
+@Allowed available expression substitution in MOVE instructions other
+than plain register moves.
+Fixed logical error with debugging output.
+@
+text
+@d4 5
+d142 2
+d191 7
+d320 4
+a323 4
+	  (* N.B. LD and ST make a register into an alias of a memory *)
+	  (* cell. In ML, a normal cell is only stored once, so this *)
+	  (* is a valid assumption. It is different for REFs, which *)
+	  (* may be volatile. *)
+d335 10
+d356 3
+a358 5
+   *  Given an opcode and expressions, this function attempts to use
+   *  any available expressions to optimise it. It returns the new
+   *  opcode (unannotated) tupled with a list of annotated comments
+   *  (which is nil if !Switches.comment_out is false).
+   *  The comments contain details of any optimisations performed.
+d424 1
+a424 1
+    fun use_expressions expressions opcode =
+d508 2
+a509 2
+	| propagate (STACKOP(PUSH,operand)) =
+	  STACKOP(PUSH, copy_of_reg_operand operand expressions)
+d602 1
+a602 2
+	if op1 = op2 then
+	  []
+d616 1
+a616 1
+	end;
+d622 10
+d634 4
+a637 1
+      (subbed, comments)
+d641 1
+a641 1
+  end;
+d659 1
+a659 1
+  fun add_available (_, MirTypes.PREVIOUS_ENVIRONMENT) = EXPSET []
+d661 1
+a661 1
+    | add_available (EXPSET expressions, opcode) =
+d667 1
+a667 1
+	val updated_regs = MirTables.defined_by opcode;
+d691 1
+d744 16
+d797 1
+a797 1
+	        ((opcode,_,MirOptTypes.SUCCS successors)::opcodes,
+d801 1
+a801 1
+	    val (new_opcode, comments) = use_expressions expressions opcode;
+d803 1
+a803 1
+	      add_available(expressions, new_opcode);
+a804 8
+	    (* Annotate the new opcode with its successor information, *)
+	    (* and apped any comments. *)
+
+	    val new_annotated_opcodes =
+	      rev ((new_opcode,
+		    MirOptTypes.REGS_UNKNOWN,
+		    MirOptTypes.SUCCS successors) :: comments);
+
+d814 1
+a814 1
+		     new_annotated_opcodes @@ done,
+@
+
+
+1.12
+log
+@Now uses Switches module to control optimisation and debugging output.
+@
+text
+@d4 3
+d163 1
+a163 1
+      (MirPrint.unary_op unary_op) ^ MirPrint.gp_operand operand
+d166 2
+a167 2
+      (MirPrint.gp_operand operand1) ^
+      (MirPrint.binary_op binary_op) ^
+d171 1
+a171 1
+      (MirPrint.unary_fp_op unary_op) ^ MirPrint.fp_operand operand
+d174 2
+a175 2
+      (MirPrint.fp_operand operand1) ^
+      (MirPrint.binary_fp_op binary_op) ^
+d179 1
+a179 1
+      "[ " ^
+d181 1
+a181 1
+      "+ " ^
+d183 1
+a183 1
+      "] ";
+d186 2
+a187 8
+    "{" ^
+    (Lists.foldl (fn a => fn b => a^" "^b) ""
+     (map (fn (reg,exp) =>
+	   (MirPrint.any_reg reg) ^ "= " ^ (print_exp exp)) exps)) ^
+    "}";
+    
+  fun print_opcode ((opcode,_), expressions) =
+    "  " ^ (MirPrint.opcode opcode) ^ "\n    " ^ (print_exp_set expressions)
+d515 1
+a515 2
+       *    MOVE generates a COPY expression, but this should not be applied
+       *         here. See copy propagation above.
+d518 1
+a518 1
+      fun subst (opcode as UNARY(MOVE,_,_)) = opcode
+a519 2
+	| subst opcode =
+
+d530 11
+a540 3
+	      (* Now, does that expression occur in the available *)
+	      (* expressions? If it does then replace the opcode by a *)
+	      (* MOVE. *)
+d542 8
+a549 8
+	      (case (reg, search (expression, expressions))
+		 of (GC reg1, (GC reg2, _)) => 
+		    UNARY(MOVE, GC_REG reg1, GP_GC_REG reg2)
+		  | (NON_GC reg1, (NON_GC reg2, _)) =>
+		    UNARY(MOVE, NON_GC_REG reg1, GP_NON_GC_REG reg2)
+		  | (FLOAT reg1, (FLOAT reg2, _)) =>
+		    UNARYFP(FMOVE, FP_REG reg1, FP_REG reg2)
+		  | _ => opcode)
+d551 1
+a551 1
+	      handle NoExpression => opcode
+d589 6
+a594 3
+	  [(MirTypes.COMMENT message,
+	    MirOptTypes.REGS_UNKNOWN,
+	    MirOptTypes.SUCCS [])]
+d598 2
+a599 5
+	if !Switches.comment_out then
+	  (make_comment ("copy propagation", opcode, propped)) @@
+	  (make_comment ("expression subst", propped, subbed))
+	else
+	  []
+@
+
+
+1.11
+log
+@Implemented floating point expression analysis and tidied up
+some cases involving GC and NON_GC registers.
+@
+text
+@d4 4
+d60 1
+d75 1
+d88 1
+a93 5
+  val show_info = false		(* false to disable debugging output *)
+  val show_code = false		(* false to disable listings *)
+  val comment_out = false	(* comment out changes rather than *)
+				(* deleting them *)
+
+d95 1
+a95 1
+    if show_info then
+a98 4
+  fun code_info message =
+    if show_code then
+      Print.print (message ^ "\n")
+    else ();
+a100 1
+
+d338 2
+a339 2
+   *  (which is nil if comment_out is false). The comments contain
+   *  details of any optimisations performed.
+d566 10
+a575 2
+      val propped = propagate opcode;
+      val subbed = subst propped;
+d593 5
+a597 2
+	(make_comment ("copy propagation", opcode, propped)) @@
+	(make_comment ("expression subst", propped, subbed));
+a794 1
+      val _ = code_info (MirOptTypes.print_block block)
+@
+
+
+1.10
+log
+@Slight alterations to cope with new MirTypes.
+@
+text
+@d4 3
+d87 3
+a89 3
+  val show_info = false;	(* false to disable debugging output *)
+  val show_code = false;	(* false to disable listings *)
+  val comment_out = false;	(* comment out changes rather than *)
+d134 3
+d140 3
+d144 1
+a144 2
+    MEMALIAS of MirTypes.reg_operand *
+	        MirTypes.gp_operand
+d158 3
+d170 8
+d229 6
+d238 1
+a238 1
+    exception NoExpression;
+a241 2
+      handle Lists.Find =>
+	raise NoExpression
+d275 1
+a275 1
+	else (MirTypes.reg_to_any reg, COPY gp)
+d277 1
+a277 1
+      | generate (UNARY(unary_op, reg, gp)) =
+d280 1
+a280 1
+	else (MirTypes.reg_to_any reg, UNARYEXP(unary_op, gp))
+d282 11
+a292 1
+      | generate (BINARY(binary_op, reg, gp1, gp2)) =
+d295 1
+a295 1
+	else (MirTypes.reg_to_any reg, BINARYEXP(binary_op, gp1, gp2))
+d302 1
+a302 1
+      | generate (TBINARY(t_op, _, reg, gp1, gp2)) =
+d305 1
+a305 1
+	else (MirTypes.reg_to_any reg, BINARYEXP(untag t_op, gp1, gp2))
+d307 5
+d320 1
+a320 1
+	else (MirTypes.reg_to_any reg, MEMALIAS(reg1, gp2))
+d325 1
+a325 1
+	else (MirTypes.reg_to_any reg, MEMALIAS(reg1, gp2))
+d327 3
+d332 1
+a332 1
+  end;
+a349 16
+    (*  == Search expression set for an expression ==
+     *
+     *  Given an exp_set and an expression, this function returns the
+     *  register in which the expression is to be found, or raises
+     *  NoExpression. The register is formed into a gp_operand.
+     *
+     *  NOTE: This can't cope with FLOAT registers.
+     *)
+
+    fun reg_of_exp exp expressions =
+      case search (exp, expressions)
+	of (GC reg, _) => GP_GC_REG reg
+	 | (NON_GC reg, _) => GP_NON_GC_REG reg
+	 | _ => raise NoExpression
+
+
+d352 5
+a356 5
+     *  There are two versions of this, one for gp_operands and one
+     *  for reg_operands. They search the expressions to see if the
+     *  register is a straight copy of an earlier register. If it is,
+     *  then that register is returned. Otherwise the original operand
+     *  is returned.
+d359 1
+a359 1
+    fun copy_of_gp_operand (operand as GP_GC_REG reg) (EXPSET bindings) =
+d361 2
+d364 2
+a365 2
+	    | f ((GC reg',COPY operand')::bindings) =
+	      if reg=reg' then operand' else f bindings
+d370 1
+d372 3
+a374 1
+      | copy_of_gp_operand operand _ = operand;
+d376 3
+a379 2
+    fun copy_of_reg_operand (operand as GC_REG reg) (EXPSET bindings) =
+	let
+d381 6
+a386 2
+	    | f ((GC reg',COPY(GP_GC_REG operand'))::bindings) =
+	      if reg=reg' then GC_REG operand' else f bindings
+d392 3
+a394 1
+      | copy_of_reg_operand operand _ = operand;
+d396 7
+d423 3
+d431 5
+d441 24
+d467 2
+a468 2
+		 copy_of_reg_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+d470 5
+d477 2
+a478 2
+		 copy_of_gp_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+d480 5
+d492 15
+d520 1
+a520 2
+       *    ST generates an available expression, but is not suceptible to
+       *       substitution(!)
+d525 1
+a525 2
+      fun subst (opcode as STOREOP(ST,_,_,_)) = opcode
+	| subst (opcode as UNARY(MOVE,_,_)) = opcode
+d529 6
+a534 3
+	  let
+	    (* Find out which expression would be generated by the *)
+	    (* opcode if it were executed. *)
+d536 1
+a536 1
+	    val (reg, expression) = generate opcode
+d538 4
+a541 13
+	    val reg_op =
+	      case reg
+		of GC reg => GC_REG reg
+		 | NON_GC reg => NON_GC_REG reg
+		 | _ =>
+		     Crash.unimplemented
+		     ("An opcode generated a floating-point available "^
+		      "expression. Substitution can't cope!");
+				
+	  in
+	    (* Now, does that expression occur in the available *)
+	    (* expressions? If it does then replace the opcode by a *)
+	    (* MOVE. *)
+d543 8
+a550 3
+	    UNARY(MOVE, reg_op, reg_of_exp expression expressions)
+	    handle NoExpression => opcode
+	  end
+d552 1
+a552 3
+	  (* NoNewExpressions may have been raised by the generate in the *)
+	  (* let above. In this case the opcode isn't suceptible to *)
+	  (* substitution. *)
+d554 1
+a554 1
+	  handle NoNewExpressions => opcode;
+d556 3
+d560 3
+d644 3
+d657 6
+d671 8
+d685 6
+d699 1
+a699 1
+	end;
+@
+
+
+1.9
+log
+@Fixed debugging output to use Print module. Changed RESTORE_REGS
+special case to PREVIOUS_ENVIRONMENT.
+@
+text
+@d4 3
+a6 2
+Revision 1.8  91/10/09  16:22:28  richard
+*** empty log message ***
+d692 2
+a693 1
+  fun analyse (original_proc as MirOptTypes.PROC(start_tag, original_blocks)) =
+d817 1
+a817 1
+    MirOptTypes.make_proc(start_tag, processed_blocks)
+@
+
+
+1.7
+log
+@Removed real register options, these are being done elsewhere
+@
+text
+@d4 6
+d48 1
+d59 1
+d68 1
+a68 1
+    MirRegisters.MirTypes = MirOptTypes.MirTypes
+d70 2
+d85 1
+a85 1
+  val comment_out = true;	(* comment out changes rather than *)
+d89 3
+a91 1
+    if show_info then print ("MIR Optimiser (Expression): "^message) else ();
+d94 3
+a96 1
+    if show_code then print message else ();
+a140 12
+  (*  === MISCELLANEOUS DATA ===  *)
+
+  (*  == Fixed registers ==
+   *
+   *  These registers are used for special purposes by the code.
+   *)
+
+    val fn_arg_reg = MirTypes.GC MirRegisters.fn_arg;  (* function argument *)
+    val cl_arg_reg = MirTypes.GC MirRegisters.cl_arg;  (* closure pointer argument *)
+
+
+
+a293 42
+  (*  === GENERATE SET OF CHANGED REGISTERS ===
+   *
+   *  This function analyses a single opcode to see what registers it
+   *  alters.
+   *
+   *  NOTE: This function is not complete.
+   *)
+
+  local
+    open MirTypes
+  in
+
+    fun regs_updated_by (UNARY(_,reg,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (BINARY(_,reg,_,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (TBINARY(_,_,reg,_,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (STOREOP(LD,reg,_,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (STOREOP(LDREF,reg,_,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (STOREOP(LDB,reg,_,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (ALLOCATE(_,reg,_)) =
+	  Set.singleton(MirTypes.reg_to_any reg)
+
+      | regs_updated_by (BRANCH_AND_LINK(_,_)) =
+	  Set.list_to_set [fn_arg_reg, cl_arg_reg]
+
+      | regs_updated_by _ = Set.empty_set
+
+  end;
+
+
+
+d506 4
+a509 3
+   *  Note: RESTORE_REGS has an odd effect, it updates all registers
+   *  except the argument and closure pointers. Since expressions
+   *  between these are unlikely, all expressions are cancelled.
+d512 1
+a512 1
+  fun add_available (_, MirTypes.RESTORE_REGS(_,_)) = EXPSET []
+d520 1
+a520 1
+	val updated_regs = regs_updated_by opcode;
+d530 1
+a530 1
+	  open MirTypes;
+@
+
+
+1.6
+log
+@Added code to comment out rather than delete optimisations.
+Improved generate and fixed regs_updated_by by using register
+conversion functions in MirTypes.
+Added code to cope with the RESTORE_REGS special case.
+Fixed cancel by using more general pattern matching and register
+conversion.
+Added code to produce listings if requested.
+@
+text
+@d4 9
+d134 2
+a135 7
+  local
+    val (fn_arg,_) = MirRegisters.fn_arg;
+    val (cl_arg,_) = MirRegisters.cl_arg;
+  in
+    val fn_arg_reg = MirTypes.GC fn_arg;  (* function argument *)
+    val cl_arg_reg = MirTypes.GC cl_arg;  (* closure pointer argument *)
+  end;
+d235 2
+a236 2
+    fun gp_reference (GP_GC_REG(reg,_), GC_REG(reg',_)) = reg=reg'
+      | gp_reference (GP_NON_GC_REG(reg,_), NON_GC_REG(reg',_)) = reg=reg'
+d359 2
+a360 2
+	of (GC reg,_) => GP_GC_REG (reg,ABSENT)
+	 | (NON_GC reg,_) => GP_NON_GC_REG (reg,ABSENT)
+d373 1
+a373 1
+    fun copy_of_gp_operand (operand as GP_GC_REG(reg,_)) (EXPSET bindings) =
+d386 1
+a386 1
+    fun copy_of_reg_operand (operand as GC_REG(reg,_)) (EXPSET bindings) =
+d473 1
+a473 1
+	    val (reg, expression) = generate opcode;
+d477 2
+a478 2
+		of GC reg => GC_REG (reg, ABSENT)
+		 | NON_GC reg => NON_GC_REG (reg, ABSENT)
+@
+
+
+1.6.1.1
+log
+@This is a modified version to use the reworked MirTypes module
+(ver 1.23.1.1). This module is correct, but work has been suspended
+on this branch because of the amount of time it would take to convert
+the code generator (Mir_Cg) module.
+@
+text
+@a3 9
+Revision 1.6  91/09/25  15:34:16  richard
+Added code to comment out rather than delete optimisations.
+Improved generate and fixed regs_updated_by by using register
+conversion functions in MirTypes.
+Added code to cope with the RESTORE_REGS special case.
+Fixed cancel by using more general pattern matching and register
+conversion.
+Added code to produce listings if requested.
+
+d64 2
+a65 2
+  val show_info = true;		(* false to disable debugging output *)
+  val show_code = true;		(* false to disable listings *)
+d106 1
+a106 1
+    COPY of MirTypes.operand |
+d108 5
+a112 5
+                 MirTypes.operand *
+		 MirTypes.operand |
+    UNARYEXP of MirTypes.unary_op * MirTypes.operand |
+    MEMALIAS of MirTypes.operand *
+	        MirTypes.operand
+d114 1
+a114 1
+  datatype exp_set = EXPSET of (MirTypes.operand * expression) list
+d118 17
+d142 1
+a142 1
+      MirPrint.operand operand
+d144 2
+a145 2
+    | print_exp (UNARYEXP(operator,operand)) =
+      (MirPrint.unary_op operator) ^ MirPrint.operand operand
+d147 4
+a150 4
+    | print_exp (BINARYEXP(operator,operand1,operand2)) =
+      (MirPrint.operand operand1) ^
+      (MirPrint.binary_op operator) ^
+      (MirPrint.operand operand2)
+d154 1
+a154 1
+      (MirPrint.operand operand1) ^
+d156 1
+a156 1
+      (MirPrint.operand operand2) ^
+d163 1
+a163 1
+	   (MirPrint.operand reg) ^ "= " ^ (print_exp exp)) exps)) ^
+d229 5
+a233 1
+    open MirTypes
+d242 2
+a243 2
+    fun generate (UNARY(MOVE, operand1, operand2)) =
+        if operand1 = operand2
+d245 1
+a245 1
+	else (operand1, COPY operand2)
+d247 2
+a248 2
+      | generate (UNARY(operator, operand1, operand2)) =
+        if operand1 = operand2
+d250 1
+a250 1
+	else (operand1, UNARYEXP(operator, operand2))
+d252 2
+a253 2
+      | generate (BINARY(operator, operand1, operand2, operand3)) =
+	if operand1 = operand2 orelse operand1 = operand3
+d255 1
+a255 1
+	else (operand1, BINARYEXP(operator, operand2, operand3))
+d262 2
+a263 2
+      | generate (TBINARY(operator, _, operand1, operand2, operand3)) =
+	if operand1 = operand2 orelse operand1 = operand3
+d265 1
+a265 1
+	else (operand1, BINARYEXP(untag operator, operand2, operand3))
+d272 2
+a273 2
+      | generate (STOREOP(LD, operand1, operand2, operand3)) =
+	if operand1 = operand2 orelse operand1 = operand3
+d275 1
+a275 1
+	else (operand1, MEMALIAS(operand2, operand3))
+d277 2
+a278 2
+      | generate (STOREOP(ST, operand1, operand2, operand3)) =
+	if operand1 = operand2 orelse operand1 = operand3
+d280 1
+a280 1
+	else (operand1, MEMALIAS(operand2, operand3))
+d301 1
+a301 1
+	  Set.singleton(reg)
+d304 1
+a304 1
+	  Set.singleton(reg)
+d307 1
+a307 1
+	  Set.singleton(reg)
+d310 1
+a310 1
+	  Set.singleton(reg)
+d313 1
+a313 1
+	  Set.singleton(reg)
+d316 1
+a316 1
+	  Set.singleton(reg)
+d319 1
+a319 1
+	  Set.singleton(reg)
+d321 2
+a322 2
+      | regs_updated_by (LINK(_,_)) =
+	  Set.list_to_set [MirRegisters.fn_arg, MirRegisters.cl_arg]
+a323 3
+      | regs_updated_by (LINK_REG(_,_)) =
+	  Set.list_to_set [MirRegisters.fn_arg, MirRegisters.cl_arg]
+
+d348 3
+a350 1
+     *  NoExpression.
+d354 4
+a357 5
+      let
+	val (register, _) = search (exp, expressions)
+      in
+	register
+      end
+d362 5
+a366 4
+     *  These search the expressions to see if the register is a
+     *  straight copy of an earlier register. If it is, then that
+     *  register is returned. Otherwise the original operand is
+     *  returned.
+d369 9
+a377 9
+    fun copy_of_operand reg (EXPSET bindings) =
+      let
+	fun f [] = reg
+	  | f ((reg', COPY operand')::bindings) =
+	    if reg=reg' then operand' else f bindings
+	  | f (_::bindings) = f bindings
+      in
+	f bindings
+      end
+d379 16
+d411 2
+a412 2
+      fun propagate (UNARY(operator,operand1,operand2)) =
+	  UNARY(operator, operand1, copy_of_operand operand2 expressions)
+d414 4
+a417 4
+	| propagate (BINARY(operator,operand1,operand2,operand3)) =
+	  BINARY(operator, operand1,
+		 copy_of_operand operand2 expressions,
+		 copy_of_operand operand3 expressions)
+d419 4
+a422 4
+	| propagate (TBINARY(operator,tag,operand1,operand2,operand3)) =
+	  TBINARY(operator, tag, operand1,
+		  copy_of_operand operand2 expressions,
+		  copy_of_operand operand3 expressions)
+d424 4
+a427 4
+	| propagate (STOREOP(operator,operand1,operand2,operand3)) =
+	  STOREOP(operator, operand1,
+		 copy_of_operand operand2 expressions,
+		 copy_of_operand operand3 expressions)
+d429 4
+a432 4
+	| propagate (TEST(operator,tag,operand1,operand2)) =
+	  TEST(operator, tag,
+		 copy_of_operand operand1 expressions,
+		 copy_of_operand operand2 expressions)
+d434 3
+a436 3
+	| propagate (LINK_REG(operator, operand1)) =
+	  LINK_REG(operator,
+		   copy_of_operand operand1 expressions)
+d438 2
+a439 2
+	| propagate (SWITCH(operator,operand,tags)) =
+	  SWITCH(operator, copy_of_operand operand expressions, tags)
+d471 9
+d485 1
+a485 1
+	    UNARY(MOVE, reg, reg_of_exp expression expressions)
+d542 3
+a544 4
+   *  Note: RESTORE_REGS (of nil) has an odd effect, it updates all
+   *  registers except the argument and closure pointers. Since
+   *  expressions between these are unlikely, all expressions are
+   *  cancelled.
+d547 1
+a547 1
+  fun add_available (_, MirTypes.RESTORE_REGS[]) = EXPSET []
+d570 6
+a575 2
+	  fun operand_updated operand =
+	    Set.is_member (operand, updated_regs);
+d580 2
+a581 3
+	    | cancel ((bind
+		       as (bound, COPY(operand))) :: bindings) =
+	      if (bind_updated bound) orelse (operand_updated operand) then
+d586 1
+a586 2
+	    | cancel ((bind as
+		       (bound, BINARYEXP(_,operand1,operand2))) :: bindings) =
+d588 2
+a589 2
+	      orelse (operand_updated operand1)
+	      orelse (operand_updated operand2) then
+d594 2
+a595 2
+	    | cancel ((bind as (bound, UNARYEXP(_,operand))) :: bindings) =
+	      if (bind_updated bound) orelse (operand_updated operand) then
+d600 1
+a600 1
+	    | cancel ((bind as (bound, MEMALIAS(reg, operand))) :: bindings) =
+d602 2
+a603 2
+	      orelse (operand_updated reg)
+	      orelse (operand_updated operand) then
+@
+
+
+1.5
+log
+@Generalised matching between expressions and applied this to expression
+substitution. Expression substitution generalised to use expression
+generation to analyse opcodes.
+Expression intersection now uses proper matching of expressions so that
+fewer are discarded when control flow joins. 
+@
+text
+@d4 7
+d64 1
+a64 1
+  val show_info = true;		(* false to disable debugging output *)
+d66 2
+d231 2
+a232 1
+    fun gp_reference (GP_GC_REG(reg,_), reg') = reg=reg'
+a233 3
+
+    fun reg_reference (GC_REG(reg,_), reg') = reg=reg'
+      | reg_reference _ = false
+d242 2
+a243 2
+    fun generate (UNARY(MOVE,GC_REG(reg,_),value)) =
+        if gp_reference (value,reg)
+d245 1
+a245 1
+	else (GC reg, COPY value)
+d247 2
+a248 2
+      | generate (UNARY(unary_op,GC_REG(reg,_),value)) =
+        if gp_reference (value,reg)
+d250 1
+a250 1
+	else (GC reg, UNARYEXP(unary_op, value))
+d252 2
+a253 2
+      | generate (BINARY(binary_op,GC_REG(reg,_),value1,value2)) =
+	if gp_reference (value1,reg) orelse gp_reference (value2,reg)
+d255 1
+a255 1
+	else (GC reg, BINARYEXP(binary_op, value1, value2))
+d262 2
+a263 2
+      | generate (TBINARY(t_op,_,GC_REG(reg,_),value1,value2)) =
+	if gp_reference (value1,reg) orelse gp_reference (value2,reg)
+d265 1
+a265 1
+	else (GC reg, BINARYEXP(untag t_op, value1, value2))
+d272 2
+a273 2
+      | generate (STOREOP(LD,GC_REG(reg,_),value1,value2)) =
+	if reg_reference (value1,reg) orelse gp_reference (value2,reg)
+d275 1
+a275 1
+	else (GC reg, MEMALIAS(value1, value2))
+d277 2
+a278 2
+      | generate (STOREOP(ST,GC_REG(reg,_),value1,value2)) =
+	if reg_reference (value1,reg) orelse gp_reference (value2,reg)
+d280 1
+a280 1
+	else (GC reg, MEMALIAS(value1, value2))
+d300 2
+a301 2
+    fun regs_updated_by (UNARY(_,GC_REG(reg1,_),_)) =
+	  Set.singleton(GC reg1)
+d303 2
+a304 2
+      | regs_updated_by (BINARY(_,GC_REG(reg1,_),_,_)) =
+	  Set.singleton(GC reg1)
+d306 2
+a307 2
+      | regs_updated_by (TBINARY(_,_,GC_REG(reg1,_),_,_)) =
+	  Set.singleton(GC reg1)
+d309 2
+a310 2
+      | regs_updated_by (STOREOP(LD,GC_REG(reg1,_),_,_)) =
+	  Set.singleton(GC reg1)
+d312 2
+a313 2
+      | regs_updated_by (STOREOP(LDREF,GC_REG(reg1,_),_,_)) =
+	  Set.singleton(GC reg1)
+d315 2
+a316 2
+      | regs_updated_by (STOREOP(LDB,GC_REG(reg1,_),_,_)) =
+	  Set.singleton(GC reg1)
+d318 2
+a319 2
+      | regs_updated_by (ALLOCATE(_,GC_REG(reg1,_),_)) =
+	  Set.singleton(GC reg1)
+d333 4
+a336 1
+   *  any available expressions to optimise it.
+d493 1
+a493 1
+	  handle NoNewExpressions => opcode
+a494 1
+    in
+d502 2
+a503 7
+      let
+	fun display s op1 op2 =
+	  if op1=op2 then
+	    ()
+	  else
+	    info(s^"\n  "^(MirPrint.opcode op1)^
+		 " -> "^(MirPrint.opcode op2));
+d505 23
+a527 7
+	val propped = propagate opcode;
+	val _ = display "Copy propagation " opcode propped;
+	val subbed = subst propped;
+	val _ = display "Expression substitution " propped subbed
+      in
+	subbed
+      end
+d541 4
+d547 1
+a547 2
+  fun add_available (EXPSET expressions, opcode) =
+  let
+d549 2
+a550 2
+    (* Determine which registers are changed by the opcode, i.e. the *)
+    (* set of register births. *)
+d552 2
+a553 1
+    val updated_regs = regs_updated_by opcode;
+d555 1
+a556 5
+    (*  == Cancel expressions made unavailable ==
+     *
+     *  Expressions which depend on changed registers are removed
+     *  from the exp_set.
+     *)
+d558 5
+a562 3
+    local
+      open MirTypes
+    in
+d564 2
+a565 1
+      fun cancel [] = []
+d567 2
+a568 4
+        | cancel ((bind as (_,COPY(GP_GC_REG(reg,_)))) :: bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d570 3
+a572 5
+	| cancel ((bind as (_,BINARYEXP(_,_,GP_GC_REG(reg,_)))) ::
+		  bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d574 3
+a576 5
+	| cancel ((bind as (_,BINARYEXP(_,GP_GC_REG(reg,_),_))) ::
+		  bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d578 1
+a578 5
+	| cancel ((bind as (_,UNARYEXP(_,GP_GC_REG(reg,_)))) ::
+		  bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d580 5
+a584 5
+	| cancel ((bind as (_,MEMALIAS(_,GP_GC_REG(reg,_)))) ::
+		  bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d586 7
+a592 4
+	| cancel ((bind as (_,MEMALIAS(GC_REG(reg,_),_))) :: bindings) =
+	    if Set.is_member(GC reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d594 5
+a598 4
+	| cancel ((bind as (reg,_))::bindings) =
+	    if Set.is_member(reg, updated_regs)
+	    then cancel bindings
+	    else bind::(cancel bindings)
+d600 7
+a606 1
+    end;
+d608 1
+a608 1
+    val expunged_expressions = cancel expressions
+d610 1
+a610 1
+  in
+d612 1
+a612 3
+    EXPSET ((generate opcode) :: expunged_expressions)
+    handle NoNewExpressions =>
+      EXPSET expunged_expressions
+d614 3
+a616 1
+  end;
+d618 1
+d621 1
+d649 3
+a651 6
+	    val new_opcode = use_expressions expressions opcode;
+	    val new_expressions = add_available(expressions, new_opcode);
+	    val new_annotated_opcode =
+	      (new_opcode,
+	       MirOptTypes.REGS_UNKNOWN,
+	       MirOptTypes.SUCCS successors);
+d653 8
+d670 1
+a670 1
+		     new_annotated_opcode :: done,
+d687 4
+d692 5
+a696 1
+	process expressions (opcodes, [], [])
+d698 1
+a698 1
+      (MirOptTypes.BLOCK(tag, new_opcodes), reachable_blocks)
+a827 4
+
+	  val _ =
+	    info ("Trying block "^(MirTypes.print_tag tag)^" with "^
+		  (print_exp_set expressions_to_try ));
+@
+
+
+1.4
+log
+@MODV instruction added to available expressions. Prevented copy propagation
+from cancelled registers.
+@
+text
+@d4 4
+d57 1
+a57 1
+  val show_info = false;	(* false to disable debugging output *)
+d162 45
+d212 5
+a216 2
+   *  cancel). The result is an exp_set. Care is taken not to generate
+   *  self-referential available expressions.
+d229 1
+a229 3
+	  (* N.B. MOVE is not a genuine available expression, it is *)
+	  (* actually used in reverse to do copy propagation. See *)
+	  (* use_expressions. *)
+d231 5
+a235 1
+    fun generate_expressions (UNARY(MOVE,GC_REG(reg,_),value)) =
+d237 2
+a238 2
+	then EXPSET []
+	else EXPSET [(GC reg, COPY value)]
+d240 1
+a240 1
+      | generate_expressions (UNARY(unary_op,GC_REG(reg,_),value)) =
+d242 2
+a243 2
+	then EXPSET []
+	else EXPSET [(GC reg, UNARYEXP(unary_op, value))]
+d245 1
+a245 1
+      | generate_expressions (BINARY(binary_op,GC_REG(reg,_),value1,value2)) =
+d247 2
+a248 2
+	then EXPSET []
+	else EXPSET [(GC reg, BINARYEXP(binary_op, value1, value2))]
+d255 1
+a255 1
+      | generate_expressions (TBINARY(t_op,_,GC_REG(reg,_),value1,value2)) =
+d257 2
+a258 2
+	then EXPSET []
+	else EXPSET [(GC reg, BINARYEXP(untag t_op, value1, value2))]
+d265 1
+a265 1
+      | generate_expressions (STOREOP(LD,GC_REG(reg,_),value1,value2)) =
+d267 2
+a268 2
+	then EXPSET []
+	else EXPSET [(GC reg, MEMALIAS(value1, value2))]
+d270 1
+a270 1
+      | generate_expressions (STOREOP(ST,GC_REG(reg,_),value1,value2)) =
+d272 2
+a273 2
+	then EXPSET []
+	else EXPSET [(GC reg, MEMALIAS(value1, value2))]
+d275 1
+a275 1
+      | generate_expressions _ = EXPSET []
+d338 3
+a340 3
+     *  NoExpression. Some expressions are symmetric, so they will
+     *  match either way around (e.g., BINARYEXP(ADD,a,b) and
+     *  BINARYEXP(ADD,b,a)).
+d343 5
+a347 1
+    exception NoExpression;
+a348 2
+    fun reg_of_exp exp (EXPSET bindings) =
+    let
+a349 30
+      fun same (BINARYEXP(ADD,op1,op2),BINARYEXP(ADD,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(MULU,op1,op2),BINARYEXP(MULU,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(MULS,op1,op2),BINARYEXP(MULS,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(AND,op1,op2),BINARYEXP(AND,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(OR,op1,op2),BINARYEXP(OR,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(EOR,op1,op2),BINARYEXP(EOR,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (exp,exp') = exp=exp';
+
+
+      fun f [] = raise NoExpression
+	| f ((reg,bound_exp)::bindings) =
+	  if same (exp,bound_exp) then reg else f bindings
+
+    in
+      f bindings
+    end;
+
+
+d442 6
+d450 2
+a451 4
+      fun subst (UNARY(unaryop,reg1,operand)) =
+	  (case reg_of_exp (UNARYEXP(unaryop,operand)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+d453 1
+a453 4
+	| subst (BINARY(binaryop,reg1,operand1,operand2)) =
+	  (case reg_of_exp (BINARYEXP(binaryop,operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+d455 3
+a457 5
+	| subst (TBINARY(taggedop,tag,reg1,operand1,operand2)) =
+	  (case reg_of_exp
+	        (BINARYEXP(untag taggedop,operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+d459 1
+a459 4
+	     (* LD and ST are treated slightly specially. If a LD of a *)
+	     (* memory cell which is available in a register takes *)
+	     (* place, it is replaced by a MOVE from that register (as *)
+	     (* for other expressions). An ST is not optimised. *)
+d461 13
+a473 4
+	| subst (STOREOP(LD,reg1,operand1,operand2)) =
+	  (case reg_of_exp (MEMALIAS(operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+d475 3
+a477 1
+        | subst anything_else = anything_else
+d479 3
+d483 2
+d503 1
+a503 1
+	val subbed = (subst propped) handle NoExpression => propped;
+d518 1
+a518 1
+   *  involves analysing the opcode (see generate_expressions) and
+d527 1
+a527 2
+    (* set of register births. Determine the expressions generated *)
+    (* by the opcode. *)
+a529 1
+    val EXPSET(new_bindings) = generate_expressions opcode;
+d583 1
+a583 1
+    end
+d585 2
+d588 5
+a592 1
+    EXPSET (new_bindings @@ (cancel expressions))
+d688 1
+a688 1
+  fun analyse (MirOptTypes.PROC(start_tag, original_blocks)) =
+d693 1
+a693 1
+    fun intersect_expressions (EXPSET e1, EXPSET e2) =
+d695 11
+a705 5
+      fun i ([],_,passed) = passed
+	| i (x::xs,ys,passed) =
+	  if Lists.member(x,ys)
+	  then i (xs,ys,x::passed)
+	  else i (xs,ys,passed)
+d707 1
+a707 1
+      EXPSET( i(e1,e2,[]) )
+d713 1
+a713 1
+    fun same (EXPSET e1, EXPSET e2) =
+d716 6
+a721 5
+	| subset (x::xs) =
+	  Lists.member(x,e2) andalso subset xs;
+
+      fun length (n,[]) = n
+	| length (n,_::rest) = length(n+1,rest)
+d723 2
+a724 1
+      subset e1 andalso length(0,e1)=length(0,e2)
+d766 1
+a766 1
+  	if same (previous_expressions, least_expressions)
+d789 1
+a789 4
+	  val block_to_try_them_on =
+	    Lists.findp
+	    (fn (MirOptTypes.BLOCK(tag',_)) => tag=tag')
+	    original_blocks;
+d805 2
+a806 2
+	   | Lists.Find =>
+	Crash.impossible("MirOptimiser (dataflow): There's a branch to "^
+d809 1
+a809 1
+			 "procedure.")
+d811 3
+d816 1
+a816 2
+    (* Start the ball rolling with an empty expression set. *)
+    MirOptTypes.PROC(start_tag, process ([], [(start_tag, EXPSET [])]))
+@
+
+
+1.3
+log
+@Switched off debugging information.
+@
+text
+@d4 3
+d76 1
+d507 5
+@
+
+
+1.2
+log
+@Removed code which explicitly followed the flow of control and
+replaced with invocations of the MirFlow module, which is new.
+@
+text
+@d4 4
+d50 2
+a51 2
+  val show_info = true;		(* false to disable debugging output *)
+  val show_code = true;		(* false to disable listings *)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log:$
+d15 1
+a17 1
+require "mir_cg";
+d26 1
+a26 1
+  structure Mir_Cg	: MIR_CG
+d33 1
+a33 1
+    Mir_Cg.MirTypes = MirOptTypes.MirTypes
+d105 2
+a106 3
+    val (fn_arg,_) = Mir_Cg.fn_arg;
+    val (cl_arg,_) = Mir_Cg.cl_arg;
+    val (cl_arg',_) = Mir_Cg.cl_arg'
+a109 1
+    val cl_arg'_reg = MirTypes.GC cl_arg' (* own copy of closure pointer *)
+d452 1
+a452 1
+	    info(s^" "^(MirPrint.opcode op1)^
+d558 2
+a559 1
+     *  that live variable information is discarded.
+a563 4
+        (* N.B. Don't process anything after an unconditional branch *)
+	(* or a procedure exit. Any code after such an instruction can *)
+	(* never be reached. *)
+
+d565 1
+a565 22
+	        (((opcode as MirTypes.BRANCH(_,MirTypes.TAG tag),_))::_,
+		 done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available (expressions, new_opcode)
+	  in
+	    process new ([],
+			 (new_opcode,MirOptTypes.UNKNOWN)::done,
+			 (tag,new)::others)
+	  end
+
+      | process expressions
+	        (((opcode as MirTypes.RTS,_))::_, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode)
+	  in
+	    process new ([], (new_opcode,MirOptTypes.UNKNOWN)::done, others)
+	  end
+
+      | process expressions
+	        (((opcode as MirTypes.SWITCH(_,_,tags),_))::_,
+d570 9
+a578 1
+	    val new = add_available (expressions, new_opcode);
+d580 1
+a580 6
+	      map (fn tag => (tag,new)) tags
+	  in
+	    process new ([],
+			 (new_opcode,MirOptTypes.UNKNOWN)::done,
+			 reachable_blocks @@ others)
+	  end
+a581 7
+      | process expressions
+	        (((opcode as MirTypes.TEST(_,tag,_,_),_))::opcodes,
+		 done,
+		 others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode)
+d583 1
+a583 1
+	    process new
+d585 2
+a586 2
+		     (new_opcode,MirOptTypes.UNKNOWN)::done,
+		     (tag,new)::others)
+d589 6
+a594 10
+      | process expressions
+	        ((opcode,_)::opcodes, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode);
+	  in
+	    process new (opcodes,
+			 (new_opcode,MirOptTypes.UNKNOWN)::done,
+			 others)
+	  end
+d671 1
+a671 1
+	handle Find => false;
+d707 1
+a707 1
+      handle Find => expressions;
+d745 1
+a745 1
+	   | Find =>
+@

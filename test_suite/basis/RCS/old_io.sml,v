@@ -1,0 +1,175 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.5
+	MLWorks_20b0_1998_03_20:1.5
+	MLWorks_20m2_1998_02_16:1.4
+	MLWorks_20m1_1997_10_23:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	98.02.18.11.56.01;	author mitchell;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.11.21.10.45.00;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.09.24.09.24.11;	author brucem;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.07.18.14.17.30;	author brucem;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.07.18.13.27.56;	author brucem;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Test I/O facilities of Old structure.
+@
+
+
+1.5
+log
+@[Bug #30349]
+Fix test to avoid non-unit sequence warning
+@
+text
+@(* Test of I/O facilities in Old structure (emmulation of SML'90 basis)
+ * 
+ * Result: OK
+ * 
+ * $Log: old_io.sml,v $
+ *  Revision 1.4  1997/11/21  10:45:00  daveb
+ *  [Bug #30323]
+ *
+ *  Revision 1.3  1997/09/24  09:24:11  brucem
+ *  [Bug #30153]
+ *  Old has changed to SML90.
+ *
+ *  Revision 1.2  1997/07/18  14:17:30  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *
+ * Copyright (C) 1997 The Harlequin Group Limited. All rights reserved.
+ *)
+
+local
+open SML90; (* So it looks like the SML'90 Basis *)
+in
+
+  val _ = TextIO.closeOut (TextIO.openOut "old_io.txt");
+    (* ensure that file exists *)
+  val _ = OS.FileSys.remove "old_io.txt" handle _ => () (*remove it*)
+  (*At this point, the file is guaranteed not to exist *)
+
+
+
+val test1 = output (std_out, "test1\n");
+
+val os = open_out "old_io.txt";
+
+val test2 = output(os, "test2\n");
+
+val test3 = close_out os;
+
+val is = open_in "old_io.txt";
+
+val test4 = input (is, 10);
+
+val test5 = close_in is;
+
+val test6 = (output (os, "test4\n"); "wrong")
+             handle Io "Output stream is closed" => "right"
+                  | _ => "wrong";
+
+val test7 = (ignore(open_in "/this does not exist"); "wrong")
+            handle Io "Cannot open /this does not exist" => "right"
+                 | _ => "wrong"
+
+val test8 = (ignore(open_out "/"); "wrong")
+            handle Io "Cannot open /" => "right"
+                 | _ => "wrong"
+
+  val _ = OS.FileSys.remove "old_io.txt" handle _ => () (*remove it*)
+end
+@
+
+
+1.4
+log
+@[Bug #30323]
+@
+text
+@d6 3
+d50 1
+a50 1
+val test7 = (open_in "/this does not exist"; "wrong")
+d54 1
+a54 1
+val test8 = (open_out "/"; "wrong")
+@
+
+
+1.3
+log
+@[Bug #30153]
+Old has changed to SML90.
+@
+text
+@d6 4
+a17 5
+Shell.Options.set (Shell.Options.ValuePrinter.maximumStrDepth, 0);
+Shell.Build.loadSource "basis.__sml90";
+Shell.Build.loadSource "basis.__text_io";
+Shell.Build.loadSource "system.__os";
+
+d56 1
+a56 1
+end@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d5 5
+a9 1
+ * $Log:$
+d15 1
+a15 1
+Shell.Build.loadSource "basis.__old";
+d20 1
+a20 1
+open Old; (* So it looks like the SML'90 Basis *)
+@
+
+
+1.1
+log
+@new unit
+Test I/O facilities of Old structure.
+@
+text
+@@

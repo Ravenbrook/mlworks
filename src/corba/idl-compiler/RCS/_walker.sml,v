@@ -1,0 +1,572 @@
+head	1.4;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.4.1
+	MLWorks_21c0_1999_03_25:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	99.03.10.15.48.10;	author clive;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	99.03.09.15.04.15;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.03.09.09.24.22;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.03.03.17.24.39;	author clive;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	99.04.01.17.53.02;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #170104]
+Walk the parse tree, accumulating an environment, calling a user function at each point
+@
+
+
+1.4
+log
+@[Bug #170104]
+Pass readonly attribute into environment tag
+@
+text
+@(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/_walker.sml,v 1.3 1999/03/09 15:04:15 clive Exp $" *)
+
+require "absyn";
+require "walker";
+
+functor Walker (structure Absyn : ABSYN) : WALKER =
+
+struct
+
+  structure Absyn = Absyn
+
+  datatype scope_discriminator = INTERFACE | MODULE | FORWARD | STRUCT | OPERATION | MEMBER | ENUM | ENUM_MEMBER 
+				| EXCEPTION | ATTRIBUTE of bool | CONST | TYPEDEF
+
+  datatype 'a environment_element = 
+    non_scoped of { name : string, path : string list, disc : scope_discriminator, data : 'a }  
+  | dataless_non_scoped of { name : string }
+  | scoped     of { name : string, path :string list, disc : scope_discriminator, 
+		    data : 'a, environment : 'a environment_element list }
+ 
+  type 'a environment = 'a environment_element list
+ 
+  type current_walker_state = { include_path : string list, current_pragmas : string list, depth : int }
+
+  type ''a data_generator =
+     (Absyn.definition * Absyn.type_description * current_walker_state * ''a environment * ''a environment * string list 
+			* Absyn.const_exp_def list -> ''a)
+
+  open Absyn
+
+  exception LookupFailed of string list
+
+  fun lookup_scoped_name (name_path path, env) =
+    let
+
+      fun find (name, []) = raise LookupFailed path
+        | find (path as [name], (entry as non_scoped data)::t) =
+		if name = #name data
+		then entry
+		else find (path, t)
+        | find (path as [name], (entry as scoped data)::t) =
+		if name = #name data
+		then entry
+		else find (path, t)
+	| find (path as (name::rest_path),
+		(scoped data)::t) = 
+		if name = #name data
+		then find (rest_path, #environment data)
+		else find(path,t)
+	| find (_,_) = raise LookupFailed path
+
+    in
+	find (path,env)
+    end
+
+  exception FailedToFindAccumulation
+
+  fun capture_added_entries (old,new) =
+  let
+    fun accumulate (old, new as (h::t), acc) =
+      if old=new
+      then rev acc
+      else accumulate (old,t,h::acc)
+      | accumulate ([],[],acc) = acc
+      | accumulate (_,[], acc) = raise FailedToFindAccumulation
+  in
+    accumulate (old, new, [])
+  end 
+
+  exception InheritingFromNonInterface
+
+  fun accumulate_inherited_interfaces (paths, env) =
+   let
+    fun accumulate ([], accumulated_env) = accumulated_env
+      | accumulate (h::t, accumulated_env) =
+        let 
+          val lookup = lookup_scoped_name (h, env)
+	in
+  	  case lookup of
+	    scoped {disc=INTERFACE, environment=interface_env,...} => 
+	       accumulate  (t, interface_env @@ accumulated_env)
+	  | _ => raise InheritingFromNonInterface 
+        end
+    in
+ 	accumulate (paths, env)
+    end
+
+ fun append_all ([]) = []
+   | append_all (h::t) = h @@ append_all (t)
+
+ fun generate_member_environment (tree_node, the_type, current_state, names, env, id, data_generator, ty) = 
+	map (fn name_details =>
+             case name_details of
+		simple_declarator_def name => 
+		  non_scoped{ name=name, disc=ty, path = name :: id,
+				data=data_generator (tree_node, the_type, current_state, [], env, name :: id, [])}
+	      | array_declarator_def (name, dimensions) =>
+		  non_scoped {name=name, disc=ty, path = name :: id,
+				data=data_generator (tree_node, the_type, current_state, [], env, name :: id, dimensions)})
+	   names
+
+ fun generate_structure_members_environment (tree_node, current_state, members, env, id, data_generator, ty) =
+  append_all
+  (map
+   (fn element =>
+     case element of member_description {the_type, names} =>
+       generate_member_environment(tree_node, the_type, current_state, names, env, id, data_generator,ty ))
+   members)
+
+ exception WalkerError of string
+
+ fun walk_the_tree (defs, env, additional_info_maker) =
+ let
+  fun walk_the_tree_aux ([],current_state, env, id) = (env, current_state)
+    
+    | walk_the_tree_aux (tree_node :: rest_nodes, current_state, env, id) =
+      case tree_node of
+
+        operation_def {name,...} =>
+  	  walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		non_scoped {name=name, disc=OPERATION, path = name :: id,
+			data=additional_info_maker (tree_node,type_void,current_state, [], env, name::id,[])} :: env,
+		id)
+
+      | module_def {module_name,definitions,...} =>
+	(let
+	  val old_defn = lookup_scoped_name (name_path [module_name], env)
+        in
+   	  case old_defn of
+	    scoped module_env =>
+		let
+		  val walk_env = #environment module_env @@ env
+		  val (new_env, current_state) = walk_the_tree_aux (definitions, current_state, walk_env, module_name::id)
+		  val captured_entries = capture_added_entries (walk_env, new_env)
+		  val after_env = captured_entries @@ #environment module_env
+		in
+		  walk_the_tree_aux(
+			rest_nodes,
+			current_state,
+			scoped {name=module_name,
+				disc=MODULE,
+				path = module_name ::id,
+				environment = after_env,
+				data = additional_info_maker 
+					(tree_node, type_void,current_state, env, captured_entries, module_name :: id,[])} :: env,
+			id)
+		end
+	  | _ => raise LookupFailed ["non module"]
+	end
+	handle LookupFailed _ => 
+	let 
+	  val (new_env, current_state) = walk_the_tree_aux (definitions, current_state, env, module_name::id)
+	  val captured_entries = capture_added_entries (env, new_env)
+        in
+	  walk_the_tree_aux(
+            	rest_nodes,
+	  	current_state,
+	  	scoped
+	  	{name=module_name, 
+	   	disc = MODULE,
+		path = module_name :: id,
+	   	environment = captured_entries, 
+	   	data = additional_info_maker(tree_node, type_void, current_state, captured_entries, env, module_name:: id, [])}
+					 :: env,
+	   id)
+	end)
+
+      | interface_def {interface_name,definitions,supers,...} =>
+	let 
+	  val old_env = accumulate_inherited_interfaces (supers, env)
+	  val (new_env,current_state) = walk_the_tree_aux (definitions, current_state, old_env, interface_name::id)
+	  val captured_entries = capture_added_entries (old_env, new_env)
+       in
+          walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+	 	scoped
+	  	{name=interface_name,
+	   	disc = INTERFACE, 
+		path = interface_name::id,
+	   	environment = captured_entries,
+	   	data = additional_info_maker (tree_node, type_void, current_state, captured_entries, env, interface_name::id, [])}
+					 :: env,
+		id)
+	end
+
+      | pragma_placeholder pragma =>
+	let
+	in
+	  walk_the_tree_aux(
+		rest_nodes,
+		{ include_path = #include_path current_state, 
+		  current_pragmas = pragma :: #current_pragmas current_state,
+		  depth = #depth current_state
+		},
+		env,
+		id)
+	end
+
+      | forward_def interface_name =>
+	walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		scoped {
+			name=interface_name,
+			disc=FORWARD,
+			path = interface_name :: id,
+			environment = [],
+			data = additional_info_maker (tree_node, type_void, current_state, [], env, interface_name :: id, [])}
+					 :: env,
+		id)
+
+      | structure_def (type_struct{name,members}) =>
+          walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		scoped {
+			name=name,
+			disc=STRUCT,
+			path = name :: id,
+			environment=env,
+			data = additional_info_maker (tree_node, type_void, current_state, [], env, name::id, [])} :: env,
+		id)
+
+      | structure_def _ => raise WalkerError "Non-structure in structure_def"
+
+      | attribute_def {readonly, the_type, slots,...} =>
+	walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		generate_member_environment 
+	           (tree_node, the_type, current_state, slots, env, id, additional_info_maker,ATTRIBUTE readonly) @@ env,
+		id)
+
+      | const_def {the_type, name,...} =>
+	walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		generate_member_environment (tree_node, the_type, current_state,
+						[simple_declarator_def name], env, id, additional_info_maker, CONST) 
+			@@ env,
+		id)
+
+      | enum_def (type_desc as (type_enum (name,elements))) =>
+	  walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		map (fn name => dataless_non_scoped {name=name })
+                     elements 
+		@@
+		(scoped {
+			name=name,
+			disc=ENUM,
+			path = name :: id,
+			environment=[],
+			data = additional_info_maker (tree_node, type_void, current_state, [], env, name::id, [])} :: env),
+		id)
+
+      | enum_def _ => raise WalkerError "Non-enumeration in enum_def"
+
+      | typedef_def {the_type, names} =>
+	walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		generate_member_environment 
+			(tree_node, the_type, current_state, names, env, id, additional_info_maker,TYPEDEF) @@ env,
+		id)
+
+      | exception_def {name,members} =>
+          walk_the_tree_aux(
+		rest_nodes,
+		current_state,
+		scoped {
+			name=name,
+			disc=EXCEPTION,
+			path = name :: id,
+			environment=env,
+			data = additional_info_maker (tree_node, type_void, current_state, [], env, name::id, [])} :: env,
+		id)
+
+      | include_begin_placeholder file =>
+	  walk_the_tree_aux(
+		rest_nodes,
+		{ 
+		  include_path = file :: #include_path current_state, 
+		  current_pragmas = #current_pragmas current_state,
+		  depth = #depth current_state + 1
+		},
+		env,
+		id)
+
+      | include_end_placeholder _ =>
+	  walk_the_tree_aux(
+		rest_nodes,
+		{ 
+		  include_path = tl (#include_path current_state), 
+		  current_pragmas = #current_pragmas current_state,
+		  depth = #depth current_state - 1
+		},
+		env,
+		id)
+
+      val (env,_) = walk_the_tree_aux (defs, { include_path = [], current_pragmas = [], depth = 0 } ,[], [])
+ in
+    env
+ end 
+
+end;
+
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/_walker.sml,v 1.4 1999/03/10 15:48:10 clive Exp $" *)
+@
+
+
+1.3
+log
+@[Bug #170104]
+Keep information about include path and pragma status
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/_walker.sml,v 1.2 1999/03/09 09:24:22 clive Exp $" *)
+d13 1
+a13 1
+				| EXCEPTION | ATTRIBUTE | CONST | TYPEDEF
+d41 4
+d229 1
+a229 1
+      | attribute_def {the_type, slots,...} =>
+d234 1
+a234 1
+	           (tree_node, the_type, current_state, slots, env, id, additional_info_maker,ATTRIBUTE) @@ env,
+@
+
+
+1.2
+log
+@[Bug #170104]
+Call the walker to emit some code
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/_walker.sml,v 1.1 1999/03/03 17:24:39 clive Exp $" *)
+a5 2
+require "$.basis.__text_io";
+
+d12 2
+a13 1
+datatype scope_discriminator = INTERFACE | MODULE | FORWARD | STRUCT | OPERATION | MEMBER | ENUM | ENUM_MEMBER | EXCEPTION
+d16 1
+a16 1
+    non_scoped of { name : string, disc : scope_discriminator, data : 'a }  
+d18 2
+a19 1
+  | scoped     of { name : string, disc : scope_discriminator, data : 'a, environment : 'a environment_element list }
+d23 6
+d60 1
+a60 1
+      | accumulate ([],[],[]) = []
+d74 1
+a74 1
+        in
+d87 1
+a87 1
+ fun generate_member_environment (tree_node, the_type, names, env, data_generator) = 
+d91 2
+a92 1
+		  non_scoped{ name=name, disc=MEMBER, data=data_generator (tree_node, the_type, env, [])}
+d94 2
+a95 1
+		  non_scoped {name=name, disc=MEMBER, data=data_generator (tree_node, the_type, env, dimensions)})
+d98 1
+a98 1
+ fun generate_structure_members_environment (tree_node, members, env, data_generator) =
+d103 1
+a103 1
+       generate_member_environment(tree_node, the_type, names, env, data_generator))
+d108 1
+a108 1
+ fun walk_the_tree (defs, env, additional_info_maker, type_info_maker) =
+d110 1
+a110 1
+  fun walk_the_tree_aux ([],env, id) = env
+d112 1
+a112 1
+    | walk_the_tree_aux (tree_node :: rest_nodes, env, id) =
+d118 3
+a120 1
+		non_scoped {name=name, disc=OPERATION, data=additional_info_maker (tree_node,env, env, name::id)} :: env,
+d131 3
+a133 1
+		  val new_env = walk_the_tree_aux (definitions, walk_env, module_name::id)
+d137 1
+d140 4
+a143 2
+				environment = capture_added_entries (walk_env, new_env) @@ #environment module_env,
+				data = additional_info_maker (tree_node, walk_env, new_env,id)} :: env,
+d150 2
+a151 1
+	  val new_env = walk_the_tree_aux (definitions, env, module_name::id)
+d154 2
+a155 1
+            rest_nodes,
+d159 4
+a162 2
+	   	environment = capture_added_entries (env, new_env), 
+	   	data = additional_info_maker(tree_node, env, new_env, id)} :: env,
+d169 2
+a170 1
+	  val new_env = walk_the_tree_aux (definitions, old_env, interface_name::id)
+d174 2
+a175 1
+	 	 scoped
+d178 4
+a181 2
+	   	environment = capture_added_entries (old_env, new_env),
+	   	data = additional_info_maker (tree_node, old_env, new_env, id)} :: env,
+d185 4
+a188 2
+      | pragma_placeholder =>
+	walk_the_tree_aux(
+d190 4
+d196 1
+d201 1
+d205 1
+d207 2
+a208 1
+			data = additional_info_maker (tree_node, env, env, id)} :: env,
+d214 1
+d218 1
+d220 1
+a220 1
+			data = additional_info_maker (tree_node, env, env, id)} :: env,
+d228 3
+a230 1
+		generate_member_environment (tree_node, the_type, slots, env, type_info_maker) @@ env,
+d236 3
+a238 1
+		generate_member_environment (tree_node, the_type, [simple_declarator_def name], env, type_info_maker) 
+d245 1
+d252 1
+d254 1
+a254 1
+			data = additional_info_maker (tree_node, env, env, id)} :: env),
+d262 3
+a264 1
+		generate_member_environment (tree_node, the_type, names, env, type_info_maker) @@ env,
+d270 1
+d274 1
+d276 1
+a276 1
+			data = additional_info_maker (tree_node, env, env, id)} :: env,
+d279 1
+a279 1
+      | include_begin_placeholder _ =>
+d282 5
+d293 5
+d301 1
+d303 1
+a303 1
+    walk_the_tree_aux (defs, [], [])
+@
+
+
+1.1
+log
+@new unit
+[Bug #170104]
+Walk the parse tree, accumulating an environment, calling a user function at each point
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/absyn.sml,v 1.1 1999/02/19 17:05:41 clive Exp $" *)
+d6 2
+d14 1
+a14 1
+datatype scope_discriminator = INTERFACE | MODULE
+d17 2
+a18 1
+    non_scoped of { name : string, data : 'a }  
+d54 1
+d78 23
+a100 1
+ fun walk_the_tree (defs, env, additional_info_maker) =
+d103 1
+d107 1
+a107 1
+        operation_def {name,...} => 
+d110 1
+a110 1
+		non_scoped {name=name, data=additional_info_maker (tree_node,env, env, name::id)} :: env,
+d114 20
+a133 1
+	(* Assume not opening module *)
+d145 1
+a145 1
+	end
+d151 1
+a151 1
+        in
+d157 1
+a157 1
+	   	environment = capture_added_entries (env, new_env),
+d161 85
+d248 1
+a248 1
+ end
+d251 1
+@

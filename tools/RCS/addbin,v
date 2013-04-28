@@ -1,0 +1,152 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.2
+	MLWorks_Beta_1996_07_02:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	96.08.12.11.34.12;	author daveb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	96.06.10.13.12.03;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.44.42;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.38.00;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.56.55;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Add binary files to the system
+@
+
+
+1.2
+log
+@Ensured that expr can handle files called "index", etc.
+@
+text
+@#!/bin/sh
+# $Log: addbin,v $
+# Revision 1.1  1996/06/10  13:12:03  jont
+# new unit
+# Add binary files to the system
+#
+# 
+# Copyright (c) Harlequin Ltd. 1996
+
+SML_HOME=/u/sml; export SML_HOME
+SML=$SML_HOME/MLW; export SML
+PATH=$SML/tools:$SML/images:/usr/local/bin:$PATH; export PATH
+script=`basename $0`
+usage="USAGE: $script <File1> [<File2>...]"
+
+shift `expr $OPTIND - 1`
+
+if [ "$#" -lt 1 ]; then
+    echo $usage
+    exit
+fi
+
+add_file () {
+       # strip trailing /
+       tmp=`expr match X$1 X'\(.*[^/]\)'`
+       eval `findcomp $tmp`
+	  # defines $dir, $compound, $unit
+       if [ -z "$compound" ]
+       then
+         $script failed : .compound file not found
+       else
+         chmod ugo-w $tmp
+         cd $dir
+         hope add -binary -filedate -compound $compound -unit $unit
+       fi
+}
+
+for i in $*
+do
+  (if [ $i = '/' ]
+   then
+     echo $script: ignoring /
+   else
+     add_file $i
+   fi)
+done
+
+exit
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a2 3
+# Revision 1.2  1996/08/12  11:34:12  daveb
+# Ensured that expr can handle files called "index", etc.
+#
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a2 3
+# Revision 1.2  1996/08/12  11:34:12  daveb
+# Ensured that expr can handle files called "index", etc.
+#
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a2 3
+# Revision 1.2  1996/08/12  11:34:12  daveb
+# Ensured that expr can handle files called "index", etc.
+#
+@
+
+
+1.1
+log
+@new unit
+Add binary files to the system
+@
+text
+@d2 5
+a6 1
+# $Log$
+d25 1
+a25 1
+       tmp=`expr match $1 '\(.*[^/]\)'`
+@

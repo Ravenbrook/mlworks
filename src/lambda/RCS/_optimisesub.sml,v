@@ -1,0 +1,2205 @@
+head	1.13;
+access;
+symbols
+	mlworks-28-01-1994:1.13
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.13
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.11
+	Ten15_release_21-08-91:1.4
+	Ten15_release_19-08-91:1.3;
+locks; strict;
+
+
+1.13
+date	92.10.26.14.46.14;	author daveb;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	92.09.15.14.54.59;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.24.11.38.32;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.06.15.15.01.49;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.10.22.12.50.49;	author davidt;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.09.05.17.48.26;	author davida;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.09.04.11.41.19;	author davida;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.08.27.15.58.02;	author davida;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.08.27.14.26.24;	author davida;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.08.19.16.52.18;	author davida;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.08.13.16.22.58;	author davida;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.09.18.43.05;	author davida;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.08.06.16.00.06;	author davida;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	92.10.26.14.46.14;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Subfunctions for the second phase of optimisation.
+@
+
+
+1.13
+log
+@Minor changes to support the new type of SWITCHes.
+@
+text
+@(*  _optimisesubphase.sml    *)
+(* Sub-phases in lambda-optimiser *)
+
+(*
+$Log: _optimisesub.sml,v $
+Revision 1.12  1992/09/15  14:54:59  clive
+Got rid of handles involving hash tables
+
+Revision 1.11  1992/07/24  11:38:32  clive
+Modified to use the new hashtables
+
+Revision 1.10  1992/06/15  15:01:49  clive
+LambdaExp is no longer an equality type, so replaced calls to = with LS.lambda_equality
+
+Revision 1.9  1991/10/22  12:50:49  davidt
+Replaced impossible exception with Crash.impossible calls.
+
+Revision 1.8  91/09/05  17:48:26  davida
+asdasdasdasd
+
+Revision 1.7  91/09/04  11:41:19  davida
+Added more constant folding: map, and various
+equality checks.
+
+Revision 1.6  91/08/27  15:58:02  davida
+Removed select_lift
+
+Revision 1.5  91/08/27  14:26:24  davida
+Lots of changes: 
+ - Added identities to constant folding
+ - Changed for new form of Primitives ("pervasive" datatype)
+ - Altered debug flag form
+ - CSE expands subexpressions in order to detect
+   alpha-convertible fn's
+ - Parameterised functor for builtin con.tag's & ord/chr fn's
+
+Revision 1.4  91/08/19  16:52:18  davida
+Early attempts at constant folding
+
+Revision 1.3  91/08/13  16:22:58  davida
+Improved structure of CSE loop.
+ 
+Revision 1.2  91/08/09  18:43:05  davida
+Early attempts at common sub-expression elimination.
+ 
+Revision 1.1  91/08/06  16:00:06  davida
+Initial revision
+ 
+ 
+ Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/set";
+require "../utils/table";
+require "../utils/bignum";
+require "../utils/_hashtable";
+require "../basics/ident";
+require "../main/primitives";
+require "../main/pervasives";
+require "lambdatypes";
+require "lambdasub";
+require "environ";
+require "optimisesub";
+require "__lambdaprint";   (* temporary whilst there are print *)
+			   (* statements here.	       #####   *)
+
+functor OptimiseSub (structure LT   : LAMBDATYPES
+		     and LS         : LAMBDASUB
+		     and Environ    : ENVIRON
+		     and Primitives : PRIMITIVES
+		     and Pervasives : PERVASIVES
+		     and Ident      : IDENT
+		     and Set        : SET 
+		     and Table      : TABLE
+		     and BigNum     : BIGNUM
+
+		     val primitive_list_cons : LT.LambdaExp
+		     and primitive_list_nil  : LT.LambdaExp
+		     val primitive_true  : LT.LambdaExp
+		     and primitive_false : LT.LambdaExp
+
+		     exception Ord and Chr
+		     val ord_fold_function : string -> int
+		     and chr_fold_function : int -> string
+
+		     sharing type Pervasives.pervasive = (* Ha! I know this! *)
+			                    LT.Primitive        
+
+		     sharing Set = LS.Set
+		     sharing LS.LambdaTypes = Environ.LambdaTypes = 
+			Primitives.LambdaTypes = LT
+		     sharing Environ.EnvironTypes = Primitives.EnvironTypes
+		     sharing Ident = Environ.Ident 
+   (*#####*)	     sharing LT = LambdaPrint_.LambdaTypes) : OPTIMISESUB = 
+ struct
+  structure LT = LT;
+	 
+
+  (**************************)
+  (*  Heuristic Parameters  *)
+  (**************************)
+
+
+
+
+  (**************)
+  (* Miscellany *)
+  (**************)
+     
+  val show_info = true      (* false to disable and hopefully remove code *)
+
+  fun info s = if show_info
+		  then print s
+	       else ()
+
+  (* aliases for Set functions *)
+  val mem = Set.is_member;
+  val == = Set.seteq;
+  val ++ = Set.add_member;
+  val nullset = Set.empty_set;
+  infix mem;
+  infix ==;
+  infix ++;
+      
+  val assoc = LS.assoc;
+  fun swap f (x,y) = f (y,x);
+  fun fst (x,y) = x;
+  fun snd (x,y) = y;
+  fun curry f x y = f (x,y);
+  fun apfst f (x,y) = (f x, y);
+  fun apsnd f (x,y) = (x, f y);
+  fun partition pred list =
+     let
+	fun part(ys,ns,[]) = (rev ys, rev ns)
+	  | part(ys,ns,x::xs) = if pred x 
+				   then part(x::ys,ns,xs)
+				else part(ys,x::ns,xs)
+     in 
+	part ([],[],list)
+     end
+  fun zip ([],[]) = []
+    | zip (x::xs,y::ys) = (x,y)::(zip(xs,ys))
+    | zip _ = []
+	
+  fun forall pred [] = true
+    | forall pred (x::xs) = (pred x) andalso forall pred xs
+
+  (**************************************)
+  (*  Common-Subexpression Elimination  *)
+  (**************************************)
+  
+
+  (* table mapping variables to subexpressions *)
+
+  type varcount_table = (LT.LVar, LT.LambdaExp * int) Table.table
+	
+  val empty_table : varcount_table = 
+     Table.empty_table (Table.TableSpec{eq = (op =),
+					order = LT.LVar_order})
+	
+  val subs_table = ref empty_table
+  val cse_marker = ref (LT.new_LVar())
+
+  fun represents_cse var = LT.LVar_order(!cse_marker,var)
+
+  val expand_subexprs =
+     let
+	fun expand (expr as LT.VAR v) = if represents_cse v 
+					   then 
+					      fst(Table.lookup(v,!subs_table))
+					else expr
+	  | expand expr = expr
+     in
+	LS.apply_outermost expand
+     end
+      
+
+  (* construct a hashtable for hashing on subexpressions *)
+  
+  structure LambdaHashTable =
+    NewHashTable(
+        structure Crash = Crash
+        structure Lists = Lists
+        local
+          open LT 
+        in
+          type Key    = LambdaExp
+          type Value  = LVar
+          val size    = 2000
+          val modval  = 32768
+            
+          (*  Hash function - must hash alpha-convertible terms to  *)
+          (*  the same place, yet we'd like free variables to be    *)
+          (*  distinguished...  unless of course they represent     *)
+          (*  replaced expressions.				 *)
+            
+          fun hash x = 
+            let
+              infix isin
+              fun a isin [] = false
+                | a isin (b::bs) = (a=b) orelse (a isin bs)
+                  
+              fun ug a = a mod modval + 1
+                
+              fun h (bvs, SCON _) = 2
+                | h (bvs, INT _)  = 3
+                | h (bvs, BUILTIN _) = 5
+                | h (bvs, VAR v)  = if (v isin bvs) then 7
+                                    else 
+                                      if represents_cse v
+                                        then 
+					  h (bvs,
+					     fst(Table.lookup(v,!subs_table)))
+                                      else (11 + (int_of_LVar v))
+                | h (bvs, FN (bv,e)) = 13 + (h (bv::bvs, e))
+                | h (bvs, APP (e1,e2)) = ug (15 * h(bvs,e1) + 
+                                             17 * h(bvs,e2)) 
+                | h (bvs, SWITCH(e,LambaTypes.ABSENT,_,_)) = ug (19 * h (bvs,e))
+                | h (bvs, SWITCH(e,LambaTypes.PRESENT{lv, ...},_,_)) =
+		   ug (19 * h (lv::bvs,e))
+                | h (bvs, STRUCT [e]) = 23 + h (bvs,e)
+                | h (bvs, STRUCT (e1::e2::_)) = ug(29 * h (bvs,e1)+
+                                                   31 * h (bvs,e2))
+                | h (bvs, SELECT (f,e)) = ug(37 + 41 * fromField(f)
+                                             + 43 * h(bvs,e))
+                | h (bvs, RAISE e) = ug(47 * h(bvs,e))
+                | h (bvs, HANDLE (e1,_)) = ug(53 * h(bvs,e1))
+                | h (bvs, LETREC ([bv],[e],_)) = ug(59 * h(bv::bvs,e))
+                | h (bvs, LETREC (bvs',e1::e2::_,_)) = ug(61 * 
+                                                          h(bvs' @@bvs,e1) +
+                                                          67 *
+                                                          h(bvs' @@bvs,e1))
+                | h _ = 1
+            in
+              h ([],x)
+            end
+          
+          fun eq(x,y) = LS.alpha_convertible (expand_subexprs x,
+                                              expand_subexprs y);
+        end)
+    
+  fun print_stats () =
+    if count>0
+      then print ("Lambda Hashtable statistics: "^
+                  LambdaHashTable.string_hash_table_stats(lambdahashtable) ^ "\n")
+    else ()
+
+  
+  local
+    
+   val is_shiftable = LS.is_shiftable nullset
+     
+   fun clear_tables () = (subs_table := empty_table;
+			  cse_marker := LT.new_LVar())
+     
+  in
+    
+    fun common_subexpr_elim initial_expression =
+      let
+        
+        fun get_var key = 
+          let
+            val full_expr = expand_subexprs key
+          in
+            case LambdaHashTable.lookup_returning_option full_expr of
+              LambdaHashTable.YES var => 
+                let
+                  val (expr,count) = Table.lookup(var,!subs_table)
+                  val _ = subs_table := 
+                    Table.overwrite((var,(expr,count+1)),!subs_table)
+                in
+                  LT.VAR var
+                end
+            | LambdaHashTable.NO => 
+                let
+                  val newvar = LT.new_LVar()
+                  val _ = LambdaHashTable.update (full_expr,newvar)
+                  val _ = subs_table :=
+                    Table.add_new((newvar,(key,0)),!subs_table)
+                in
+                  LT.VAR newvar
+                end
+          end
+        
+        fun elim_subexprs expression =
+          let
+            val _ = clear_tables()
+              
+            (*  sub-expressions to ignore  *)
+              
+            fun atomic (e as LT.VAR _) = true
+              | atomic (e as LT.SCON _) = true
+              | atomic (e as LT.INT _) = true
+              | atomic (e as LT.BUILTIN _) = true
+              | atomic _ = false
+                
+            fun dontdoit (LT.STRUCT []) = true
+              | dontdoit _ = false
+                
+                
+            (*  Convert all sub-expressions into lambda-variables. *)
+                
+            fun varify expr =
+              if (atomic expr) orelse (dontdoit expr)
+                then expr
+              else
+                get_var expr
+                
+                
+            (*  Common expressions are put into a LET enclosing the      *)
+            (*  smallest possible lambda-expression.  An alternative     *)
+            (*  would be to put them as far out as possible, cf selects  *)
+
+	     fun unvarify expr1 =
+	      let
+	       fun abs_smallest (expr2, (var,subexpr)) =
+		  let
+		     val occns = LS.occurrences (var,expr2)
+		  in
+		     if occns>1 
+			andalso (info ("subexpr appears more than once: v"^
+				       (LT.printLVar var));
+				 (is_shiftable (expand_subexprs subexpr)))
+
+			(* or moving it wouldn't cause it to be eval'd *)
+			(* before any other shiftable expr's           *)
+
+			then
+			    (* locate smallest sub-expression  *)
+			    (* containing all instances of var *)
+			 let
+			  val _ = info ("attempting to abstract v"^
+					(LT.printLVar var))
+			  val done = ref false 
+			  exception BombOut
+
+			  fun locate inexpr = 
+			     if (!done) then inexpr  
+			     else 
+			      if (LS.occurrences (var,inexpr) = occns)
+			       then 
+				  (if (LS.whnf subexpr) orelse
+                                     (* (LT.VAR var) mem (LS.evaluation_set inexpr) *)
+                                     LS.is_in_evaluation_set (LT.VAR var) inexpr
+				      then (done:=true;
+					    info ("abstracting for v"^
+						  (LT.printLVar var));
+					    LT.APP(LT.FN(var,inexpr),subexpr))
+				   else (info "can't abstract it!";
+					 raise BombOut))
+			      else inexpr
+			 in
+			    (LS.apply_innermost locate expr2)
+			     handle BombOut => 
+				LS.substitute [(var,subexpr)] expr2
+			 end
+
+		     else LS.substitute [(var,subexpr)] expr2
+
+		  end
+		  
+		   val subexprs = Table.alist_of_table (!subs_table)
+		   val (left,removed) = partition (fn(_,(_,c))=>c=0) subexprs
+		   val subslist = map (fn(v,(e,_))=>(v,e)) left
+		   val abslist = map (fn(v,(e,_))=>(v,e)) removed  
+		    
+
+		   val _ = print_stats();   (* #### to see stats *)
+		      
+		   val _ = if (length(subexprs))>0 then 
+     let
+	val _ = print ("Abstracting "^(makestring(length abslist))^
+		       " shiftable subexpressions.  Leaving "^
+		       (makestring(length subslist))^" alone.")
+	val _ =	if (length(abslist))>0 then 
+      let
+	 
+	 val _ = print ("Varified expression: ")
+	 val _ = LambdaPrint_.print_lambda expr1
+	 val _ = print ("Sub-expressions :\n"^
+			(implode 
+			 (map (fn (v,(e,c))=>
+			       (LambdaPrint_.string_of_lambda 
+				(LT.VAR v))^" =====> "^
+			       (LambdaPrint_.string_of_lambda e)^
+			       " occurrences: "^
+			       (makestring (c+1))^"\n") subexprs)))
+      in () end else ()
+     in () end else ()
+							 
+	val abslist = map (fn(v,(e,_))=>(v,e)) subexprs
+	val subslist = []
+	val absd_exp = LS.reduce_left abs_smallest (expr1,rev abslist)
+	val subd_exp = LS.rec_substitute subslist absd_exp
+		in
+		   subd_exp
+		end
+	  in
+	     unvarify (LS.apply_innermost varify expression)
+	  end
+	  
+    in
+       elim_subexprs initial_expression
+    end
+  end;  (* of local *)
+
+
+
+
+
+
+ (***********************************************)
+ (*  CONSTANT FOLDING  &  ALGEBRAIC IDENTITIES  *)
+ (***********************************************)
+
+local
+   exception Div and Mod
+
+  (*************************************************)
+  (*  functions for building and extracting lists  *)
+  (*************************************************)
+ 
+  fun make_primitive_list [] = primitive_list_nil
+    | make_primitive_list (x::xs) = LT.STRUCT[primitive_list_cons,
+					  LT.STRUCT[x,make_primitive_list xs]]
+
+  exception cant_find_list 
+  fun extract_primitive_list (LT.STRUCT[tag,LT.STRUCT[element,tail]]) =
+	   			if tag=primitive_list_cons
+				   then element::(extract_primitive_list tail)
+				else raise cant_find_list
+    | extract_primitive_list tag = 
+      				if tag=primitive_list_nil
+				   then []
+				else raise cant_find_list
+
+  fun is_const_list l = (extract_primitive_list l;
+			 true) handle cant_find_list => false;
+
+
+  (*******************************)
+  (*  Specific Function Folding  *)
+  (*******************************)
+
+  fun fold_map (original, map_fn, map_list) =
+     if (is_const_list map_list) andalso (LS.whnf map_fn)
+	then
+	   let
+	      val thelist = extract_primitive_list map_list
+	   in
+	      if (length thelist <= (!max_map_fold_length))
+		then 
+		  (info "folded map";
+		   make_primitive_list (map (fn x=>LT.APP(map_fn,x)) thelist))
+	      else original
+	   end
+     else original
+
+
+  fun fold_rev original listexpr =
+     (let
+	 val thelist = extract_primitive_list listexpr
+	 val result  = make_primitive_list (rev thelist)
+      in
+	 (info "folded rev"; result)
+      end) handle cant_find_list => original
+
+
+  fun fold_explode _ (LT.SCON (Ident.STRING string)) =
+     (info "folded explode";
+      make_primitive_list (map (LT.SCON o Ident.STRING) (explode string)))
+    | fold_explode original _ = original
+
+
+  fun fold_implode original listexpr =
+     (let
+	 val thelist = extract_primitive_list listexpr
+
+	 fun destruct_string (LT.SCON (Ident.STRING s)) = s
+	   | destruct_string _ = imposs "Non string in implode fold list"
+
+	 val result = LT.SCON (Ident.STRING 
+			       (implode (map destruct_string thelist)))
+      in
+	 (info "folded implode"; result)
+      end) handle cant_find_list => original
+
+
+  fun fold_ord _ (LT.SCON (Ident.STRING s)) =
+     (case (explode s) of
+	 [] => raise Ord
+       | (x::_) => (info "folded ord";
+		    LT.SCON (Ident.INT (makestring (ord_fold_function x)))))
+    | fold_ord original _ = original;
+      
+
+  fun fold_chr _ (LT.SCON (Ident.INT i)) =
+     let
+	fun makeint(acc, x::xs) = makeint(acc*10 + ord x-ord "0", xs)
+	  | makeint(acc, []) = acc
+     in
+	LT.SCON (Ident.STRING (chr_fold_function (makeint(0,explode i))))
+     end
+   | fold_chr original _ = original;
+  
+
+  fun concat_fold _ (LT.SCON(Ident.STRING s1),
+		     LT.SCON(Ident.STRING s2)) = LT.SCON(Ident.STRING(s1^s2))
+    | concat_fold original _ = original
+
+
+  fun fold_size _ (LT.SCON(Ident.STRING s)) = LT.SCON(Ident.INT 
+						      (makestring (size s)))
+    | fold_size original _ = original
+
+
+  (***********************)
+  (*  Simple Identities  *)  (* NB:- rely on unique reps for SCON's *)
+  (***********************)
+
+  fun plus_ident (_,  (LT.SCON(Ident.INT "0"), y)) = y
+    | plus_ident (_,  (x, LT.SCON(Ident.INT "0"))) = x
+    | plus_ident (sum, _) = sum
+
+
+  fun minus_ident (_, (x, LT.SCON(Ident.INT "0"))) = x
+    | minus_ident (_, (LT.SCON(Ident.INT "0"), y)) = LT.APP(LT.BUILTIN 
+							     P.INTUMINUS,
+							    y)
+    | minus_ident (diff, (x,y)) = if x=y 
+				     then (LT.SCON(Ident.INT "0"))
+				  else diff
+
+
+  fun times_ident (_,    (zero as LT.SCON(Ident.INT "0"), y)) = zero
+    | times_ident (_,    (x, zero as LT.SCON(Ident.INT "0"))) = zero
+    | times_ident (_,    (x, LT.SCON(Ident.INT "1")))         = x
+    | times_ident (_,    (LT.SCON(Ident.INT "1"), y))         = y
+    | times_ident (prod, _)                                   = prod
+
+
+  fun div_ident (_,    (x, LT.SCON(Ident.INT "1"))) = x
+    | div_ident (_,    (x, LT.SCON(Ident.INT "0"))) = raise Div
+    | div_ident (_,    (LT.SCON(Ident.INT "0"), _)) = LT.SCON(Ident.INT "0")
+    | div_ident (same, (x,y)) = if x=y 
+				   then LT.SCON(Ident.INT "1")
+				else same
+
+
+  fun mod_ident (_,    (x, LT.SCON(Ident.INT "1"))) = LT.SCON(Ident.INT "0")
+    | mod_ident (_,    (x, LT.SCON(Ident.INT "0"))) = raise Mod
+    | mod_ident (_,    (LT.SCON(Ident.INT "0"), y)) = LT.SCON(Ident.INT "0")
+    | mod_ident (same, (x,y)) = if x=y 
+				   then LT.SCON(Ident.INT "0")
+				else same
+
+
+  fun append_ident_fold (original,(list1,list2)) =
+     let
+	exception cant_find_nil
+
+	fun replace_end (LT.STRUCT[tag,value]) =
+	   if tag=primitive_list_cons
+	      then (case value of
+		       (LT.STRUCT[element,tail]) => 
+			  LT.STRUCT[tag,LT.STRUCT[element,replace_end tail]]
+		     | _ => raise cant_find_nil)
+	   else raise cant_find_nil
+
+	  | replace_end tag = 
+	    if tag=primitive_list_nil
+	       then (info "folded @@"; list2)
+	    else raise cant_find_nil
+     in
+	if list2 = primitive_list_nil
+	   then list1
+	else (replace_end list1) handle cant_find_nil => original
+     end;
+
+  fun concat_ident (_,  (x, LT.SCON(Ident.STRING ""))) = x
+    | concat_ident (_,  (LT.SCON(Ident.STRING ""), y)) = y
+    | concat_ident (cc, _) = cc
+
+
+  fun eq_ident (test, (x,y)) = if x=y 
+				  then primitive_true
+			       else test
+
+  fun ne_ident (test, (x,y)) = if x=y
+				   then primitive_false
+				else test
+
+in
+  (***********************)
+  (*  The Main Function  *)
+  (***********************)
+
+  fun fold_constants expression =
+     let
+	fun findexn s = 
+	   case (Environ.lookup_exn(Ident.EXCON(Symbol.find_symbol s),
+				    Primitives.initial_env)) of
+	      Environ.EnvironTypes.PRIM p => p
+	    | _ => imposs ("Expected primitive exn in environment for "^s)
+     
+	fun is_const (LT.SCON _) = true
+	  | is_const (LT.INT _)  = true
+	  | is_const l = is_const_list l
+
+	fun K x _ = x
+
+	fun mkexn ex = LT.RAISE (LT.STRUCT [LT.BUILTIN ex,LT.STRUCT[]]);
+
+	fun decon_int (LT.SCON (Ident.INT s)) = BigNum.string_to_bignum s
+	  | decon_int _ = imposs "descon_int: bad arg"
+
+	fun recon_int bn = LT.SCON (Ident.INT (BigNum.bignum_to_string bn))
+
+	fun recon_bool true  = primitive_true
+	  | recon_bool false = primitive_false
+
+	fun wob_fold_eq (x,y) = recon_bool (x=y)   (* x&y must be constant *)
+	and wob_fold_ne (x,y) = recon_bool (x<>y)
+
+	fun big_wobble1 f x     = recon_int(f (decon_int x))
+	fun big_wobble2 f (x,y) = recon_int(f (decon_int x,decon_int y))
+	fun big_boolwob f (x,y) = recon_bool(f (decon_int x,decon_int y))
+
+	fun foldc (original as LT.APP(LT.APP(LT.BUILTIN p, map_fn),map_list)) =
+
+	   (* --- folding map --- *)
+
+	   (case p of
+	       P.MAP => fold_map (original, map_fn, map_list)
+	     | _ => original)
+
+	  | foldc (original as LT.APP(LT.BUILTIN p, l as LT.STRUCT[x,y])) =
+
+	   (* --- folding binary functions --- *)
+
+	   if (is_const x) andalso (is_const y)
+	      then
+		 ((case p of
+		    P.INTPLUS      => big_wobble2 BigNum.+
+		  | P.INTMINUS     => big_wobble2 BigNum.-
+		  | P.INTSTAR      => big_wobble2 BigNum.*
+		  | P.DIV          => big_wobble2 BigNum.div
+		  | P.MOD          => big_wobble2 BigNum.mod
+		  | P.INTLESS      => big_boolwob BigNum.<
+		  | P.INTGREATER   => big_boolwob BigNum.>
+		  | P.INTLESSEQ    => big_boolwob BigNum.<=
+		  | P.INTGREATEREQ => big_boolwob BigNum.>=
+		  | P.EQ           => wob_fold_eq
+		  | P.INTEQ 	   => wob_fold_eq
+		  | P.REALEQ       => curry eq_ident original
+		  | P.STRINGEQ     => wob_fold_eq
+		  | P.NE           => wob_fold_ne
+		  | P.INTNE        => wob_fold_ne
+		  | P.REALNE       => curry ne_ident original
+		  | P.STRINGNE     => wob_fold_ne
+		  | P.AT           => curry append_ident_fold original
+		  | P.HAT          => concat_fold original
+		  | _              => K original) (x,y))
+		      
+		      handle BigNum.Runtime s => mkexn (findexn s)
+
+	    (* --- Algebraic Identities & List Arg Folds --- *)
+
+	   else 
+	      ((case p of
+		   P.INTPLUS   => plus_ident
+		 | P.INTMINUS  => minus_ident
+		 | P.INTSTAR   => times_ident
+		 | P.DIV       => div_ident
+		 | P.MOD       => mod_ident
+		 | P.AT        => append_ident_fold
+		 | P.HAT       => concat_ident
+		 | P.EQ        => eq_ident
+		 | P.INTEQ     => eq_ident
+		 | P.REALEQ    => eq_ident
+		 | P.STRINGEQ  => eq_ident
+		 | P.NE        => ne_ident
+		 | P.INTNE     => ne_ident
+		 | P.REALNE    => ne_ident
+		 | P.STRINGNE  => ne_ident
+		 | P.IMPLODE   => K (fold_implode original l)
+		 | P.REV       => K (fold_rev original l)
+		 | _           => K original) (original,(x,y))
+		     
+		   handle Div => mkexn P.EXDIV
+			| Mod => mkexn P.EXMOD)
+
+
+
+	  | foldc (original as LT.APP(LT.BUILTIN p, x)) =
+
+	   (* --- folding unary functions --- *)
+	    
+	   if (is_const x)
+	      then
+		 ((case p of
+		     P.INTABS     => big_wobble1 BigNum.abs
+		   | P.INTUMINUS  => big_wobble1 BigNum.~
+		   | P.ORD        => fold_ord original
+		   | P.CHR        => fold_chr original
+		   | P.REV        => fold_rev original     (* picks up nil *)
+		   | P.IMPLODE    => fold_implode original (* ditto        *)
+		   | P.EXPLODE    => fold_explode original 
+		   | P.SIZE       => fold_size original
+		   | _            => K original) x)
+
+		      handle BigNum.Runtime s => mkexn (findexn s)
+			   | Ord => mkexn P.EXORD
+			   | Chr => mkexn P.EXCHR
+
+	   else original
+
+	  | foldc original = original
+
+     in
+	LS.apply_innermost foldc expression
+     end;
+
+end (* of local *)
+
+local
+   open P
+in
+   val folded_pervasives_onearg = 
+      Set.list_to_set [INTPLUS, INTMINUS, INTSTAR, DIV, MOD,
+		       INTLESS, INTGREATER, INTEQ, INTNE, AT, HAT,
+		       REV, INTABS, INTUMINUS, CHR, ORD, IMPLODE,
+		       EXPLODE, SIZE,
+		       EQ, STRINGEQ, REALEQ,
+		       NE, STRINGNE, REALNE]
+
+   val folded_pervasives_twoarg = Set.list_to_set [MAP]
+end
+
+
+
+
+  
+end;  (* of functor *)
+
+
+
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a5 3
+Revision 1.13  1992/10/26  14:46:14  daveb
+Minor changes to support the new type of SWITCHes.
+
+@
+
+
+1.12
+log
+@Got rid of handles involving hash tables
+@
+text
+@d6 3
+d218 3
+a220 1
+                | h (bvs, SWITCH(e,_,_,_)) = ug (19 * h (bvs,e))
+@
+
+
+1.11
+log
+@Modified to use the new hashtables
+@
+text
+@d6 3
+d260 18
+a277 17
+            (let
+              val var = LambdaHashTable.lookup full_expr
+              val (expr,count) = Table.lookup(var,!subs_table)
+              val _ = subs_table := 
+                Table.overwrite((var,(expr,count+1)),!subs_table)
+            in
+              LT.VAR var
+            end)
+               handle LambdaHashTable.Lookup _ => 
+                 (let
+                   val newvar = LT.new_LVar()
+                   val _ = LambdaHashTable.update (full_expr,newvar)
+                   val _ = subs_table :=
+                     Table.add_new((newvar,(key,0)),!subs_table)
+                 in
+                   LT.VAR newvar
+                 end)
+@
+
+
+1.10
+log
+@LambdaExp is no longer an equality type, so replaced calls to = with LS.lambda_equality
+@
+text
+@d6 3
+d174 32
+a205 30
+  structure HashSpec : HASHSPEC = 
+   struct
+    local
+       open LT 
+    in
+       type Key    = LambdaExp
+       type Value  = LVar
+       val size    = 2000
+       val modval  = 32768
+
+       (*  Hash function - must hash alpha-convertible terms to  *)
+       (*  the same place, yet we'd like free variables to be    *)
+       (*  distinguished...  unless of course they represent     *)
+       (*  replaced expressions.				 *)
+   
+       fun hash x = 
+	let
+	   infix isin
+	   fun a isin [] = false
+	     | a isin (b::bs) = (a=b) orelse (a isin bs)
+ 
+	   fun ug a = a mod modval + 1
+
+	   fun h (bvs, SCON _) = 2
+	     | h (bvs, INT _)  = 3
+	     | h (bvs, BUILTIN _) = 5
+	     | h (bvs, VAR v)  = if (v isin bvs) then 7
+				 else 
+				    if represents_cse v
+				       then 
+d208 25
+a232 26
+				    else (11 + (int_of_LVar v))
+	     | h (bvs, FN (bv,e)) = 13 + (h (bv::bvs, e))
+	     | h (bvs, APP (e1,e2)) = ug (15 * h(bvs,e1) + 
+					  17 * h(bvs,e2)) 
+	     | h (bvs, SWITCH(e,_,_,_)) = ug (19 * h (bvs,e))
+	     | h (bvs, STRUCT [e]) = 23 + h (bvs,e)
+	     | h (bvs, STRUCT (e1::e2::_)) = ug(29 * h (bvs,e1)+
+						31 * h (bvs,e2))
+	     | h (bvs, SELECT (f,e)) = ug(37 + 41 * fromField(f)
+					  + 43 * h(bvs,e))
+	     | h (bvs, RAISE e) = ug(47 * h(bvs,e))
+	     | h (bvs, HANDLE (e1,_)) = ug(53 * h(bvs,e1))
+	     | h (bvs, LETREC ([bv],[e],_)) = ug(59 * h(bv::bvs,e))
+	     | h (bvs, LETREC (bvs',e1::e2::_,_)) = ug(61 * 
+						       h(bvs' @@bvs,e1) +
+						       67 *
+						       h(bvs' @@bvs,e1))
+	     | h _ = 1
+	in
+	    h ([],x)
+	end
+		     
+       fun eq(x,y) = LS.alpha_convertible (expand_subexprs x,
+					   expand_subexprs y);
+    end
+   end;
+d234 5
+a238 1
+  structure LambdaHashTable = HashTable(HashSpec);
+d240 1
+a240 14
+  fun print_stats () =
+     let val {size,count,smallest,largest,used} = LambdaHashTable.stats()
+     in if count>0
+	   then print ("Lambda Hashtable statistics: "^
+		       "size = "^(makestring size)^
+		       " count = "^(makestring count)^
+		       "\n                              smallest = "^
+		       (makestring smallest)^
+		       " largest = "^(makestring largest)^
+		       " used = "^(makestring used))
+	else ()
+     end
+   
+      
+d242 4
+a245 2
+   fun clear_tables () = (LambdaHashTable.clear(); 
+			  subs_table := empty_table;
+d247 4
+a250 2
+      
+   fun get_var key = 
+d252 52
+a303 55
+	 val full_expr = expand_subexprs key
+      in
+	 (let
+	     val var = LambdaHashTable.lookup full_expr
+	     val (expr,count) = Table.lookup(var,!subs_table)
+	     val _ = subs_table := 
+		Table.overwrite((var,(expr,count+1)),!subs_table)
+	  in
+	     LT.VAR var
+	  end)
+	     handle LambdaHashTable.Lookup _ => 
+		(let
+		    val newvar = LT.new_LVar()
+		    val _ = LambdaHashTable.update (full_expr,newvar)
+		    val _ = subs_table :=
+		       Table.add_new((newvar,(key,0)),!subs_table)
+		 in
+		    LT.VAR newvar
+		 end)
+      end
+
+   val is_shiftable = LS.is_shiftable nullset
+	
+  in
+      
+   fun common_subexpr_elim initial_expression =
+    let
+       fun elim_subexprs expression =
+	  let
+	     val _ = clear_tables()
+
+	     (*  sub-expressions to ignore  *)
+
+	     fun atomic (e as LT.VAR _) = true
+	       | atomic (e as LT.SCON _) = true
+	       | atomic (e as LT.INT _) = true
+	       | atomic (e as LT.BUILTIN _) = true
+	       | atomic _ = false
+
+	     fun dontdoit (LT.STRUCT []) = true
+	       | dontdoit _ = false
+
+
+	     (*  Convert all sub-expressions into lambda-variables. *)
+
+	     fun varify expr =
+		 if (atomic expr) orelse (dontdoit expr)
+		    then expr
+		 else
+		    get_var expr
+
+   
+	     (*  Common expressions are put into a LET enclosing the      *)
+ 	     (*  smallest possible lambda-expression.  An alternative     *)
+	     (*  would be to put them as far out as possible, cf selects  *)
+@
+
+
+1.9
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@d5 4
+a8 1
+$Log:	_optimisesub.sml,v $
+d338 2
+a339 1
+				   (LT.VAR var) mem (LS.evaluation_set inexpr)
+@
+
+
+1.8
+log
+@asdasdasdasd
+@
+text
+@d6 3
+a103 3
+  exception impossible of string;
+  fun imposs s = raise impossible s;
+	 
+@
+
+
+1.7
+log
+@Added more constant folding: map, and various
+equality checks.
+@
+text
+@d6 4
+d64 1
+a64 1
+		     val primitive_true : LT.LambdaExp
+a81 2
+  structure P = Pervasives;
+  structure Symbol = Ident.Symbol;
+a87 1
+  val max_map_fold_length = ref 30;   (*  max list length to constant fold *)
+d614 1
+a614 1
+	and wob_fold_ne (x,y) = recon_bool (not (x=y))
+a678 1
+(*		 | P.MAP       => K (fold_map original l)*)
+a698 1
+(*		   | P.MAP        => fold_map original     (* ditto        *)*)
+d724 3
+a726 1
+		       MAP, EXPLODE, SIZE]
+@
+
+
+1.6
+log
+@Removed select_lift
+@
+text
+@d6 3
+d10 1
+a10 1
+Lot's of changes: 
+d81 9
+d427 2
+a428 2
+  fun is_list l = (extract_primitive_list l;
+		   true) handle cant_find_list => false;
+d435 15
+d486 1
+d502 3
+d506 1
+d534 1
+d542 1
+d579 1
+a579 1
+  fun neq_ident (test, (x,y)) = if x=y
+d598 1
+a598 1
+	  | is_const l = is_list l
+d612 3
+d619 1
+a619 1
+	fun foldc (original as LT.APP(LT.BUILTIN p, l as LT.STRUCT[x,y])) =
+d621 8
+d643 8
+a650 2
+		  | P.INTEQ 	   => big_boolwob BigNum.eq
+		  | P.INTNE        => big_boolwob BigNum.<>
+d672 4
+a675 4
+		 | P.NE        => neq_ident
+		 | P.INTNE     => neq_ident
+		 | P.REALNE    => neq_ident
+		 | P.STRINGNE  => neq_ident
+d678 1
+d697 5
+a701 3
+		   | P.IMPLODE    => fold_implode original
+		   | P.REV        => fold_rev original
+		   | P.EXPLODE    => fold_explode original
+d717 14
+@
+
+
+1.5
+log
+@Lot's of changes: 
+ - Added identities to constant folding
+ - Changed for new form of Primitives ("pervasive" datatype)
+ - Altered debug flag form
+ - CSE expands subexpressions in order to detect
+   alpha-convertible fn's
+ - Parameterised functor for builtin con.tag's & ord/chr fn's
+@
+text
+@d6 9
+a122 125
+  (*  Count how many times each field is selected on a given lambda   *)
+  (*  variable that corresponds to a record.				*)
+	
+  fun count_selects_on_var (expression, record_variable) = 
+     let 
+	fun build (expr, field_counts) = 
+	   let
+	      fun inc_map i = 
+		 let 
+		    fun inc (acc,[]) = (i,1)::acc
+		      | inc (acc,(item as (field,count))::fs) = 
+			if i=field 
+			   then acc @@ ((i,count+1) :: fs)
+			else inc(item::acc,fs)
+		 in
+		    inc([],field_counts)
+		 end
+	   in
+	      case expr of
+		 LT.SELECT (field,LT.VAR var) => 
+		    if var = record_variable
+		       then inc_map field
+		    else field_counts
+	       | _ => field_counts
+	   end
+     in 
+	LS.reduce_innermost build (expression,[])
+     end;
+      
+      
+    (*  A quick and nasty implementation:  *)
+  
+  fun surrounded_by_fn (expr,subexpr) =   (* should this ignore LET's? *)
+     let                                 (* most def. yes: eval'd 1ce *)
+	val (newvar,expr') = LS.beta_abstract (expr,subexpr)
+	  
+	fun find_in_fn (flag, LT.FN(var,body)) = 
+	   (flag orelse (var<>newvar 
+			 andalso (LS.occurrences (newvar,body))>0))
+	  | find_in_fn (flag, _) = flag
+     in
+	LS.reduce_outermost find_in_fn (false,expr')
+     end;
+      
+      
+      
+      
+    (*  SELECT-lifting.  A special case of common-subexpression  *)
+    (*  elimination which is particularly prevalent and is done  *)
+    (*  before doing CSE.  Selects on lambda-variables are       *)
+    (*  abstracted over if they appear more than once in the     *)
+    (*  function body, or if they appear inside a nested fn,     *)
+    (*  when there is a possibility of it being multiply applied *)
+  
+    (*  Currently not quite perfect, in that successive abstraction  *)
+    (*  can lead to superfluous lambda-variables that need to be     *)
+    (*  beta-reduced again.  Argghhh!				     *)
+  
+  fun select_lift expression = 
+     let
+	fun lift_out(var,body) =
+	   let 
+	      val sels = count_selects_on_var (body,var)
+	      
+	      fun abstract_apply(expr, (field,count)) =
+		 let
+		    val remove = LT.SELECT(field,LT.VAR var)
+		 in
+		    if (count>1) orelse surrounded_by_fn(expr,remove)
+		       then LT.APP(snd(LS.beta_abstract (expr,remove)),
+				   remove)
+		    else expr
+		 end
+	   in
+	      (var,LS.reduce_left abstract_apply (body,sels))
+	   end
+	
+	
+	fun lift (LT.FN vb) = LT.FN (lift_out vb)
+	  | lift (LT.APP(LT.FN vb,a)) = LT.APP(LT.FN (lift_out vb),a)
+	  | lift expr = expr
+	    
+	fun reduce (expr as LT.APP(LT.FN _,_)) =
+	   let
+	      fun occns_in lets =  
+		 let 
+		    val letas = map snd lets
+		 in 
+		    fn v => LS.reduce_left (op +) 
+		    (0, map (curry LS.occurrences v) letas)
+		 end
+	    
+	      fun subst (vv,vas) = map (apsnd (LS.substitute [vv])) vas
+	      
+	      
+	    (* bit worried about shiftable expressions moving here *)
+	      
+	      fun remove_sillies ((vv as (var,value))::vas, expr) =
+		 if LS.occurrences(var,expr) = 0
+		    andalso occns_in vas var = 1
+		    then remove_sillies (subst (vv,vas), expr)
+		 else LT.APP(LT.FN(var,remove_sillies(vas, expr)),value)
+		| remove_sillies ([], expr) = expr
+		
+	      val lets_expr = LS.unwrap_lets expr
+	   in
+	      remove_sillies lets_expr
+	   end
+	  | reduce expr = expr
+	    
+     in
+	let
+	   val expr1 = LS.apply_outermost lift expression
+	   val expr2 = LS.apply_outermost reduce expr1
+	   val _ = if expr1<>expr2 then print "removed sillies!" else ()
+	in
+	   expr2
+	end
+      
+     end;
+    
+    
+
+
+    
+d276 1
+a276 2
+	     fun dontdoit (LT.SELECT(_,LT.VAR _)) = true
+	       | dontdoit (LT.STRUCT []) = true
+@
+
+
+1.4
+log
+@Early attempts at constant folding
+@
+text
+@d6 3
+d28 1
+d33 2
+d40 1
+d45 13
+d64 4
+a67 3
+   struct
+      structure LT = LT;
+      structure Symbol = Ident.Symbol;
+d69 12
+a80 3
+      (**************)
+      (* Miscellany *)
+      (**************)
+d82 2
+a83 5
+      exception impossible of string;
+      fun imposs s = raise impossible s;
+	 
+      (* aliases for Set functions *)
+      val mem = Set.is_member;
+d111 3
+d236 2
+d239 3
+a241 4
+    
+    (**************************************)
+    (*  Common-Subexpression Elimination  *)
+    (**************************************)
+d243 27
+a269 1
+  (* construct a hashtable *)
+d298 1
+a298 1
+			(*	 else 
+d302 1
+a302 1
+					     fst(Table.lookup(v,!subs_table))) *)
+d322 1
+a322 2
+	   (print ((makestring:int->string) (h ([],x)));
+	    h ([],x))
+d325 2
+a326 1
+       val eq = LS.alpha_convertible;
+a346 8
+   type varcount_table = (LT.LVar, LT.LambdaExp * int) Table.table
+	
+   val empty_table : varcount_table = 
+      Table.empty_table (Table.TableSpec{eq = (op =),
+					   order = LT.LVar_order})
+	
+   val subs_table = ref empty_table
+      
+d348 2
+a349 1
+			  subs_table := empty_table)
+a351 11
+      (let
+	  val var = LambdaHashTable.lookup key
+	  val (expr,count) = Table.lookup(var,!subs_table)
+	  val _ = subs_table := 
+	     Table.overwrite((var,(expr,count+1)),!subs_table)
+       in
+	  LT.PRESENT var
+       end
+    handle LambdaHashTable.Lookup _ => LT.ABSENT)
+	   
+   fun new_var key =
+d353 1
+a353 4
+	 val newvar = LT.new_LVar()
+	 val _ = LambdaHashTable.update (key,newvar)
+	 val _ = subs_table :=
+	    Table.add_new((newvar,(key,0)),!subs_table)
+d355 17
+a371 1
+	 newvar
+d373 1
+a373 1
+   
+d397 1
+a397 4
+	     (*  Convert sub-expressions into lambda-variables -   *)
+	     (*  this is done bottom up so that hashing and alpha  *)
+	     (*  convertibility don't need to know about the new   *)
+	     (*  variables.					   *)
+d403 1
+a403 6
+		    if (is_shiftable expr)
+		       then (case get_var expr of
+				LT.PRESENT var => LT.VAR var
+			      | LT.ABSENT => LT.VAR (new_var expr))
+		      else expr
+	      
+d405 1
+d411 9
+a419 14
+		let
+		   fun abs_smallest (expr2, (var,subexpr)) =
+		      let
+			 val occns = LS.occurrences (var,expr2)
+		      in
+			 if occns=0 then (print "erk!! 0 occns!!!";
+					       expr2) else
+			 if occns>1 andalso (LS.whnf subexpr orelse
+					     (LT.VAR var)
+					        mem (LS.evaluation_set expr2))
+			 then 
+			    let
+			       val done = ref false  (* need new rec scheme *)
+			       			     (* really - app/red.   *)
+d421 2
+a422 11
+			       fun locate expr = 
+				  if (!done) then expr  
+				  else 
+				     if (LS.occurrences (var,expr) = occns)
+					then (done:=true;
+					      LT.APP(LT.FN(var,expr),subexpr))
+				     else expr
+			    in
+			       LS.apply_innermost locate expr2
+			    end
+			 else LS.substitute [(var,subexpr)] expr2
+d424 32
+a455 1
+		      end
+a502 3
+ (**********************)
+ (*  CONSTANT FOLDING  *)
+ (**********************)
+a505 16
+  val int_arithmetic = [("_int+",   BigNum.+),
+			("_int-",   BigNum.-),
+			("_int*",   BigNum.*),
+			("div", BigNum.div),
+			("mod", BigNum.mod)];
+     
+  val int_relations = [("_int<",  BigNum.>),
+		       ("_int>",  BigNum.>),
+		       ("_int<=", BigNum.<=),
+		       ("_int>=", BigNum.>=),
+		       ("_int=",  BigNum.eq),
+		       ("_int<>", BigNum.<>)];
+     
+  val int_unarys = [("abs",   BigNum.abs),
+		    ("_int~", BigNum.~)];
+  
+d507 3
+a509 5
+  fun findv s = 
+     case (Environ.lookup_valid(Ident.VAR(Symbol.find_symbol s),
+				Primitives.initial_env)) of
+	Environ.EnvironTypes.PRIM p => p
+      | _ => imposs ("Expected primitive in environment for "^s)
+d511 2
+a512 5
+  and finde s = 
+     case (Environ.lookup_exn(Ident.EXCON(Symbol.find_symbol s),
+			      Primitives.initial_env)) of
+	   Environ.EnvironTypes.PRIM p => p
+	 | _ => imposs ("Expected primitive in environment for "^s)
+d514 7
+d522 9
+a530 8
+  val primitive_true_value  = LT.INT 1
+  and primitive_false_value = LT.INT 0;   (*   SHOULD BE ELSEWHERE!!! *)
+     
+  fun descon_int (LT.SCON (Ident.INT s)) = BigNum.string_to_bignum s
+    | descon_int _ = imposs "descon_int: bad arg"
+  and rescon_int bn = LT.SCON (Ident.INT (BigNum.bignum_to_string bn))
+  and rescon_bool b = if b then primitive_true_value
+		      else primitive_false_value
+d532 2
+a533 3
+  fun mkbgp f (LT.STRUCT[x,y]) = rescon_int (f (descon_int x,
+						descon_int y))
+    | mkbgp _ _ = imposs "mkbgp: bad arg";
+d535 40
+a574 3
+  fun mkbpbg f (LT.STRUCT[x,y]) = rescon_bool (f (descon_int x,
+						  descon_int y))
+    | mkbpbg _ _ = imposs "mkbpbg: bad arg";
+d576 9
+d586 3
+a588 9
+  fun mkbg f scon = rescon_int (f (descon_int scon));
+     
+  val int_arithmetic_ps = map ((apfst findv) o (apsnd mkbgp)) int_arithmetic
+  and int_relations_ps  = map ((apfst findv) o (apsnd mkbpbg)) int_relations
+  and int_unarys_ps     = map ((apfst findv) o (apsnd mkbg)) int_unarys;
+     
+  fun is_const (LT.SCON _) = true
+    | is_const (LT.INT _) = true
+    | is_const _ = false
+a589 2
+  fun is_const_pair (LT.STRUCT [x,y]) = (is_const x) andalso (is_const y)
+    | is_const_pair _ = false
+a590 2
+  and is_const_single (LT.STRUCT [x]) = (is_const x)
+    | is_const_single _ = false
+d592 3
+a594 1
+  fun mkexn s = LT.RAISE (LT.STRUCT [LT.BUILTIN (finde s),LT.STRUCT[]]);
+d596 36
+a631 4
+  val primitive_list_cons = LT.INT 0    (* GET THIS SOMEWHERE ELSE!! *)
+  and primitive_list_nil = LT.INT 1;    (* ------------------------- *)
+     
+  fun fold_append (original, LT.STRUCT [list1,list2]) =
+d645 1
+a645 1
+	       then list2
+d648 4
+a651 10
+	(replace_end list1) handle cant_find_nil => original
+     end
+    | fold_append (original, _) = original;
+      
+  fun fold_concat (original, arg) = 
+   case arg of
+    (LT.STRUCT [LT.SCON (Ident.STRING s1),
+		LT.SCON (Ident.STRING s2)]) => LT.SCON (Ident.STRING (s1^s2))
+   | _ => original;
+		   
+d653 3
+a655 22
+  val ord_function = ord     (*  GET THESE FROM SOMEWHERE ELSE!!  *)
+  and chr_function = chr;
+    
+  fun fold_ord (_, LT.SCON (Ident.STRING s)) =
+     (case (explode s) of
+	 [] => mkexn "Ord"
+       | (x::_) => LT.SCON (Ident.INT (makestring (ord_function x))))
+    | fold_ord (original, _) = original;
+      
+  fun fold_chr (_, LT.SCON (Ident.INT i)) =
+     let
+	fun makeint(acc, x::xs) = makeint(acc*10 + ord x-ord "0", xs)
+	  | makeint(acc, []) = acc
+     in
+	LT.SCON (Ident.STRING (chr_function (makeint(0,explode i))))
+     end
+   | fold_chr (original, _) = original;
+  
+  val misc_prims = [(findv "@@",    fold_append),
+		    (findv "^",    fold_concat),
+		    (findv "ord",  fold_ord),
+		    (findv "chr",  fold_chr)];
+d658 13
+d673 9
+a681 5
+	fun foldc (e as LT.APP(LT.BUILTIN p, arg)) =
+	   let
+	      
+	      fun foldint1 f = (if is_const_single arg then f arg
+			       else e) handle BigNum.Runtime s => mkexn s
+d683 92
+a774 17
+	      and foldint2 f = (if is_const_pair arg then f arg
+			       else e) handle BigNum.Runtime s => mkexn s
+	   in
+	      case assoc p int_arithmetic_ps of
+		 (LT.PRESENT f) => foldint2 f
+	       | LT.ABSENT => 
+	     (case assoc p int_relations_ps of
+		 (LT.PRESENT f) => foldint2 f
+	       | LT.ABSENT => 
+	     (case assoc p int_unarys_ps of
+		 (LT.PRESENT f) => foldint1 f
+	       | LT.ABSENT => 
+	     (case assoc p misc_prims of
+		 (LT.PRESENT f) => f (e,arg)
+	       | LT.ABSENT => e)))
+	   end
+	  | foldc expr = expr
+d779 1
+d784 1
+@
+
+
+1.3
+log
+@Improved structure of CSE loop.
+@
+text
+@d5 3
+a7 3
+ $Log:	_optimisesub.sml,v $
+ Revision 1.2  91/08/09  18:43:05  davida
+ Early attempts at common sub-expression elimination.
+d9 2
+a10 2
+ Revision 1.1  91/08/06  16:00:06  davida
+ Initial revision
+d12 2
+d15 1
+d21 1
+d23 2
+d27 1
+d30 8
+a37 4
+functor OptimiseSub (structure LT    : LAMBDATYPES 
+		     and LS    : LAMBDASUB
+		     and Set   : SET 
+		     and Table : TABLE
+d39 18
+a56 11
+		     sharing LS.LambdaTypes = LT
+		     sharing LT = LambdaPrint_.LambdaTypes) : OPTIMISESUB = 
+struct
+  structure LT = LT;
+      
+  (**************)
+  (* Miscellany *)
+  (**************)
+      
+  (* aliases for Set functions *)
+  val mem = Set.is_member;
+d64 1
+d69 1
+d212 1
+a213 3
+  
+    (* construct a hashtable *)
+  
+d215 49
+a263 3
+     struct
+	local
+	   open LT 
+d265 3
+a267 27
+	   type Key    = LambdaExp
+	   type Value  = LVar
+	   val size    = 2000
+	   val modval  = 32768
+	      
+	   fun hash x = 
+	      let
+		 fun hash (VAR _)  = 1
+		   | hash (SCON _) = 2
+		   | hash (INT _)  = 3
+		   | hash (BUILTIN _) = 4
+		   | hash (FN (_,e)) = 5 + hash e
+		   | hash (APP (e1,e2)) = (5*(hash e1)+7*(hash e2)) mod modval + 1
+		   | hash (SWITCH(e,_,_,_)) = (9 * (hash e)) mod modval + 1
+		   | hash (STRUCT [e]) = 17 + hash e
+		   | hash (STRUCT (e1::e2::_)) = (15*(hash e1)+17*(hash e2)) mod modval+1
+		   | hash (SELECT (f,e)) = (9+13*(fromField f)+19*(hash e)) mod modval+1
+		   | hash (RAISE e) = (21 * (hash e)) mod modval + 1
+		   | hash (HANDLE (e1,_)) = (23 * (hash e1)) mod modval + 1
+		   | hash (LETREC (_,[e],_)) = (29 * (hash e)) mod modval + 1
+		   | hash (LETREC (_,e1::e2::_,_)) = (31*(hash e1) + 37*(hash e2))  
+		     mod modval + 1
+		   | hash _ = 1
+	      in
+		 (print (makestring (hash x));
+		  hash x)
+	      end
+d269 3
+a271 3
+	   val eq = LS.alpha_convertible;
+	end
+     end;
+d274 14
+d298 1
+a298 15
+   fun print_stats () =
+      let val {size,count,smallest,largest,used} = LambdaHashTable.stats()
+      in if count>0
+	    then print ("Lambda Hashtable statistics: "^
+			"size = "^(makestring size)^
+			" count = "^(makestring count)^
+			"\n                              smallest = "^
+			(makestring smallest)^
+			" largest = "^(makestring largest)^
+			" used = "^(makestring used))
+	 else ()
+      end
+   
+   fun clear_tables () = (print_stats();
+			  LambdaHashTable.clear(); 
+a323 2
+   val smallest_subexpr = 2
+    
+d328 1
+a328 1
+       fun elim_subexprs (expression,(min_size,max_size)) =
+d331 28
+a358 22
+		
+	     fun varify expr = 
+		let
+		   val this_size = LS.size_of_expr expr
+		   val varifyrest = LS.apply_one_level varify
+		in
+		   if this_size > max_size 
+		      then varifyrest expr
+		   else if this_size < min_size
+			   then expr
+			else
+			   if (is_shiftable expr)
+			      then (case get_var expr of
+				       LT.PRESENT var => LT.VAR var
+				     | LT.ABSENT => 
+					  let
+					     val expr' = varifyrest expr
+					  in
+					     LT.VAR (new_var expr')
+					  end)
+			   else varifyrest expr
+		end
+d360 5
+a369 9
+			 val done = ref false  (* need new rec scheme *)
+			 		       (* really - app/red.   *)
+			 fun locate expr = 
+			    if (!done) then expr  
+			    else 
+			       if (LS.occurrences (var,expr) = occns)
+				  then (done:=true;
+					LT.APP(LT.FN(var,expr),subexpr))
+			       else expr
+d371 22
+a392 1
+			 LS.apply_innermost locate expr2
+d398 1
+a398 1
+		   val abslist = map (fn(v,(e,_))=>(v,e)) removed
+d401 1
+a401 1
+		   val _ = clear_tables();  (* #### to see stats *)
+d420 1
+a420 1
+			       (makestring c)^"\n") subexprs)))
+d424 3
+a426 2
+	
+	val absd_exp = LS.reduce_left abs_smallest (expr1,abslist)
+d432 1
+a432 1
+	     unvarify (varify expression)
+d436 1
+a436 3
+       elim_subexprs (initial_expression,
+		      (smallest_subexpr,
+		       (LS.size_of_expr initial_expression) div 4))
+d439 23
+d463 136
+@
+
+
+1.2
+log
+@Early attempts at common sub-expression elimination.
+@
+text
+@d5 10
+a14 3
+$Log:	_optimisesub.sml,v $
+Revision 1.1  91/08/06  16:00:06  davida
+Initial revision
+a15 4
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+d24 3
+a26 3
+		           and LS    : LAMBDASUB
+		           and Set   : SET 
+		           and Table : TABLE
+d29 1
+a29 1
+			 sharing LT = LambdaPrint_.LambdaTypes) : OPTIMISESUB = 
+d31 32
+a62 35
+    structure LT = LT;
+
+    (**************)
+    (* Miscellany *)
+    (**************)
+
+    (* aliases for Set functions *)
+    val mem = Set.is_member;
+    val == = Set.seteq;
+    val ++ = Set.add_member;
+    val nullset = Set.empty_set;
+    infix mem;
+    infix ==;
+    infix ++;
+
+    fun swap f (x,y) = f (y,x);
+    fun fst (x,y) = x;
+    fun snd (x,y) = y;
+    fun curry f x y = f (x,y);
+    fun apsnd f (x,y) = (x, f y);
+    fun partition pred list =
+	let
+	    fun part(ys,ns,[]) = (rev ys, rev ns)
+	      | part(ys,ns,x::xs) = if pred x 
+					then part(x::ys,ns,xs)
+				    else part(ys,x::ns,xs)
+	in 
+	    part ([],[],list)
+	end
+    fun zip ([],[]) = []
+      | zip (x::xs,y::ys) = (x,y)::(zip(xs,ys))
+      | zip _ = []
+
+    (*  Count how many times each field is selected on a given lambda   *)
+    (*  variable that corresponds to a record.				*)
+d64 30
+a93 27
+    fun count_selects_on_var (expression, record_variable) = 
+	let 
+	    fun build (expr, field_counts) = 
+		let
+		    fun inc_map i = 
+			let 
+			    fun inc (acc,[]) = (i,1)::acc
+			      | inc (acc,(item as (field,count))::fs) = 
+				if i=field 
+				    then acc @@ ((i,count+1) :: fs)
+				else inc(item::acc,fs)
+			in
+			    inc([],field_counts)
+			end
+		in
+		    case expr of
+			LT.SELECT (field,LT.VAR var) => 
+			    if var = record_variable
+				then inc_map field
+			    else field_counts
+		      | _ => field_counts
+		end
+	in 
+	    LS.reduce_innermost build (expression,[])
+	end;
+
+
+d95 16
+a110 16
+ 
+    fun surrounded_by_fn (expr,subexpr) =   (* should this ignore LET's? *)
+	let                                 (* most def. yes: eval'd 1ce *)
+	    val (newvar,expr') = LS.beta_abstract (expr,subexpr)
+		
+	    fun find_in_fn (flag, LT.FN(var,body)) = 
+		(flag orelse (var<>newvar 
+			      andalso (LS.occurrences (newvar,body))>0))
+	      | find_in_fn (flag, _) = flag
+	in
+	    LS.reduce_outermost find_in_fn (false,expr')
+	end;
+		
+
+
+
+d117 1
+a117 1
+    
+d121 21
+a141 21
+
+    fun select_lift expression = 
+      let
+	  fun lift_out(var,body) =
+	      let 
+		  val sels = count_selects_on_var (body,var)
+
+		  fun abstract_apply(expr, (field,count)) =
+		      let
+			  val remove = LT.SELECT(field,LT.VAR var)
+		      in
+			  if (count>1) orelse surrounded_by_fn(expr,remove)
+			      then LT.APP(snd(LS.beta_abstract (expr,remove)),
+					  remove)
+			  else expr
+		      end
+	      in
+		  (var,LS.reduce_left abstract_apply (body,sels))
+	      end
+
+
+d145 1
+a145 1
+
+d147 25
+a171 25
+	    let
+		fun occns_in lets =  
+		    let 
+			val letas = map snd lets
+		    in 
+			fn v => LS.reduce_left (op +) 
+			(0, map (curry LS.occurrences v) letas)
+		    end
+
+		fun subst (vv,vas) = map (apsnd (LS.substitute [vv])) vas
+
+
+   (* bit worried about shiftable expressions moving here *)
+
+		fun remove_sillies ((vv as (var,value))::vas, expr) =
+		    if LS.occurrences(var,expr) = 0
+		      andalso occns_in vas var = 1
+			then remove_sillies (subst (vv,vas), expr)
+		    else LT.APP(LT.FN(var,remove_sillies(vas, expr)),value)
+		  | remove_sillies ([], expr) = expr
+
+ 		val lets_expr = LS.unwrap_lets expr
+	    in
+		remove_sillies lets_expr
+	    end
+d173 9
+d183 5
+a187 14
+      in
+	  let
+	      val expr1 = LS.apply_outermost lift expression
+	      val expr2 = LS.apply_outermost reduce expr1
+	      val _ = if expr1<>expr2 then print "removed sillies!" else ()
+	  in
+	      expr2
+	  end
+
+      end;
+
+
+
+
+d191 3
+a193 3
+
+
+
+d195 40
+a234 39
+
+ structure HashSpec : HASHSPEC = 
+  struct
+    local
+	open LT 
+    in
+	type Key    = LambdaExp
+	type Value  = LVar
+	val size    = 2000
+	val modval  = 32768
+		      
+fun hash x = let
+       fun hash (VAR _)  = 1
+	 | hash (SCON _) = 2
+	 | hash (INT _)  = 3
+	 | hash (BUILTIN _) = 4
+	 | hash (FN (_,e)) = 5 + hash e
+	 | hash (APP (e1,e2)) = (5*(hash e1)+7*(hash e2)) mod modval + 1
+	 | hash (SWITCH(e,_,_,_)) = (9 * (hash e)) mod modval + 1
+	 | hash (STRUCT [e]) = 17 + hash e
+	 | hash (STRUCT (e1::e2::_)) = (15*(hash e1)+17*(hash e2)) mod modval+1
+	 | hash (SELECT (f,e)) = (9+13*(fromField f)+19*(hash e)) mod modval+1
+	 | hash (RAISE e) = (21 * (hash e)) mod modval + 1
+	 | hash (HANDLE (e1,_)) = (23 * (hash e1)) mod modval + 1
+	 | hash (LETREC (_,[e],_)) = (29 * (hash e)) mod modval + 1
+	 | hash (LETREC (_,e1::e2::_,_)) = (31*(hash e1) + 37*(hash e2))  
+					   mod modval + 1
+	 | hash _ = 1
+in
+    (print (makestring (hash x));
+     hash x)
+end
+
+		val eq = LS.alpha_convertible;
+	    end
+	end;
+
+    structure LambdaHashTable = HashTable(HashSpec);
+
+d236 1
+a236 5
+      type varcount_table = (LT.LVar, LT.LambdaExp * int) Table.table
+
+      val empty_table : varcount_table = 
+	   Table.empty_table (Table.TableSpec{eq = (op =),
+					      order = LT.LVar_order})
+d238 48
+a285 40
+      val subs_table = ref empty_table
+
+      fun print_stats () =
+	  let val {size,count,smallest,largest,used} =
+	              LambdaHashTable.stats()
+	  in if count>0
+		 then print ("Lambda Hashtable statistics: "^
+			     "size = "^(makestring size)^
+			     " count = "^(makestring count)^
+			     "\n                              smallest = "^
+			     (makestring smallest)^
+			     " largest = "^(makestring largest)^
+			     " used = "^(makestring used))
+	     else ()
+	  end
+
+      fun clear_tables () = (print_stats();
+			     LambdaHashTable.clear(); 
+			     subs_table := empty_table)
+
+      fun get_var key = 
+	  (let
+	       val var = LambdaHashTable.lookup key
+	       val (expr,count) = Table.lookup(var,!subs_table)
+	       val _ = subs_table := 
+			 Table.overwrite((var,(expr,count+1)),!subs_table)
+	   in
+	       var
+	   end
+               handle LambdaHashTable.Lookup _ => 
+		   let
+		       val newvar = LT.new_LVar()
+		       val _ = LambdaHashTable.update (key,newvar)
+		       val _ = subs_table :=
+			         Table.add_new((newvar,(key,0)),!subs_table)
+		   in
+		       newvar
+		   end)
+
+	val is_shiftable = LS.is_shiftable nullset
+d287 8
+a294 20
+
+      fun common_subexpr_elim initial_expression =
+       let
+	 fun elim_subexprs (expression,(min_size,max_size)) =
+	    let
+	      val _ = clear_tables()
+
+	      fun varify expr =
+		 let
+		     val this_size = LS.size_of_expr expr
+		 in
+		     if this_size > max_size orelse this_size < min_size
+			 then expr
+		     else
+			 if (is_shiftable expr)
+			     then LT.VAR (get_var expr)
+			 else expr
+		 end
+
+	      fun unvarify expr1 =
+d296 43
+a338 15
+		    fun abs_smallest (expr2, (var,subexpr)) =
+			let
+			    val occns = LS.occurrences (var,expr2)
+			    val done = ref false  (* need new rec scheme *)
+ 						  (* really - app/red.   *)
+			    fun locate expr = 
+				if (!done) then expr  
+				else 
+				    if (LS.occurrences (var,expr) = occns)
+					then (done:=true;
+					      LT.APP(LT.FN(var,expr),subexpr))
+				    else expr
+			in
+			    LS.apply_innermost locate expr2
+			end
+d340 23
+a362 23
+		    val subexprs = Table.alist_of_table (!subs_table)
+		    val (left,removed) = partition (fn(_,(_,c))=>c=0) subexprs
+		    val subslist = map (fn(v,(e,_))=>(v,e)) left
+		    val abslist = map (fn(v,(e,_))=>(v,e)) removed
+
+	val _ = if (length(subexprs))>0 then let
+		    val _ = print ("Abstracting "^(makestring(length abslist))^
+			" shiftable subexpressions.  Leaving "^
+			(makestring(length subslist))^" alone.")
+		val _ =	if (length(abslist))>0 then let
+
+	    val _ = print ("Varified expression: ")
+		    val _ = LambdaPrint_.print_lambda expr1
+
+		    val _ = print ("Sub-expressions :\n"^(implode 
+				   (map (fn (v,(e,c))=>
+					 (LambdaPrint_.string_of_lambda 
+					  (LT.VAR v))^" =====> "^
+					 (LambdaPrint_.string_of_lambda e)^
+					 " occurrences: "^
+					 (makestring c)^"\n") subexprs)))
+			in () end else ()
+				   
+d364 2
+a365 5
+		in () end else ()
+
+		 
+		    val absd_exp = LS.reduce_left abs_smallest (expr1,abslist)
+		    val subd_exp = LS.rec_substitute subslist absd_exp
+d367 1
+a367 1
+		    subd_exp
+d369 9
+a377 13
+	    in
+		unvarify (LS.apply_innermost varify expression)
+	    end
+
+	 val size_sequence = [(4,5000)] (*50,100), (30,50), (10,30), (4,10)]*)
+
+       in
+           (* apply outermost is probably a bit excessive! *)
+
+	   LS.apply_outermost (fn e => 
+			       LS.reduce_left elim_subexprs (e,size_sequence))
+	   initial_expression
+       end
+d380 2
+a382 1
+end;  (* of functor *)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 3
+a7 1
+$Log$
+d9 1
+d14 2
+d18 1
+d20 4
+a23 4
+
+functor OptimiseSub (structure LT  : LAMBDATYPES 
+		           and LS  : LAMBDASUB
+		           and Set : SET 
+d25 2
+a26 1
+		     sharing LS.LambdaTypes = LT) : OPTIMISESUB = 
+d44 19
+d64 25
+a89 1
+(*    fun recpartitioneq *)
+d91 14
+d106 2
+d110 8
+a117 5
+    (*  before doing CSE.  All selects on lambda-variables are   *)
+    (*  abstracted over, no-matter how many times they occur in  *)
+    (*  sub-expressions.  More smart would be to decide whether  *)
+    (*  a saving could actually be achieved in the case of lvar  *)
+    (*  appearing in body only once.  (Number of times exec'd)   *)
+d121 3
+d125 12
+a136 5
+	fun lift (expr as LT.FN(var,body)) =
+	 if LS.occurrences(var,body) > 1
+	     then 
+		 let val sels = Set.set_to_list (LS.selects_on_var (body,var))
+		     (*		    val partd_sels = recpartitioneq sels   *)
+d138 3
+a140 12
+		     fun abstract_apply(expr, fieldseq) =
+			 let 
+			     val remove = LS.reduce_left (swap LT.SELECT) 
+						(LT.VAR var,fieldseq)
+			     val (_, expr') = LS.beta_abstract (expr,remove)
+			 in
+			     LT.APP(expr', remove)
+			 end
+		 in
+		     LT.FN(var,LS.reduce_left abstract_apply (body,sels))
+		 end
+	 else expr
+d142 29
+d172 8
+a179 1
+	  LS.apply_innermost lift expression
+a180 1
+			
+d184 2
+d187 1
+d189 48
+a236 1
+    fun common_subexpr_elim x = x;
+d238 1
+d240 125
+a364 1
+end;
+@

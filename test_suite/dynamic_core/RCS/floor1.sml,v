@@ -1,0 +1,66 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.02.12.15.06.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Test for 70022
+@
+
+
+1.1
+log
+@new unit
+Test for 70022
+@
+text
+@(*
+ *
+ * Result: OK
+ *
+ * $Log$
+ * Copyright (c) 1997 Harlequin Group plc
+ *
+ * Test for bug 70022
+ *
+ *)
+
+val a = 16807.0;
+val m = 2147483647.0;
+fun nextrand seed =
+  let
+    val t = a*seed
+    val res = t - m * real(floor(t/m))
+  in
+    res
+  end;
+fun myfloor x =
+  floor x handle OverFlow => myfloor(x/2.0)
+fun randlist(n, seed, tail) =
+  if n = 0 then
+    tail
+  else
+    let
+      val x = myfloor seed
+    in
+      randlist(n-1, nextrand seed, x :: tail)
+    end
+val sort_list = randlist(100,1.0, [])
+@

@@ -1,0 +1,464 @@
+head	1.12;
+access;
+symbols
+	ML_beta_release_12/08/94:1.12
+	ML_beta_release_03/08/94:1.12
+	ML_revised_beta_release_25/05/94:1.12
+	ML_final_beta_release_02/03/94:1.12
+	mlworks-28-01-1994:1.12
+	Release:1.12
+	mlworks-beta-01-09-1993:1.12
+	MLWorks-1-0-4-29/01/1993:1.12
+	MLWorks-1-0-3-21/12/1992:1.11
+	MLWorks-1-0-2-15/12/1992:1.11
+	MLWorks-1-0-1-04/12/1992:1.11
+	checkpoint_17_08_92:1.6
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.12
+date	92.12.21.20.58.47;	author jont;	state Exp;
+branches
+	1.12.1.1;
+next	1.11;
+
+1.11
+date	92.11.26.16.30.21;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.10.12.11.06.18;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.09.08.13.34.03;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.27.20.04.39;	author davidt;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.27.15.08.37;	author davidt;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.11.17.56.28;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.30.16.19.20;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.16.18.51.12;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.20.16.12;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.48.30;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.39.16;	author colin;	state Exp;
+branches;
+next	;
+
+1.12.1.1
+date	92.12.21.20.58.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Type Structures (type function + constructor environment)
+@
+
+
+1.12
+log
+@Anel's last changes
+@
+text
+@(* _tystr.sml the functor *)
+(*
+$Log: _tystr.sml,v $
+Revision 1.11  1992/11/26  16:30:21  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.10  1992/10/12  11:06:18  clive
+Tynames now have a slot recording their definition point
+
+Revision 1.9  1992/09/08  13:34:03  jont
+Removed old version of tystr_enriches
+
+Revision 1.8  1992/08/27  20:04:39  davidt
+Yet more changes to get structure copying working better.
+
+Revision 1.7  1992/08/27  15:08:37  davidt
+Added Anel's changes, and changed some stuff to do better
+equality checking of valenvs etc.
+
+Revision 1.6  1992/08/11  17:56:28  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.5  1992/07/30  16:19:20  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.4  1992/07/16  18:51:12  jont
+Changed to use btrees for renaming of tynames and strnames
+
+Revision 1.3  1992/01/27  20:16:12  jont
+Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+
+Revision 1.2  1991/11/21  16:48:30  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:39:16  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/print";
+require "../typechecker/ty_debug";
+require "../typechecker/valenv";
+require "../typechecker/types";
+require "../typechecker/tystr";
+
+functor Tystr(
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+  structure Conenv : VALENV
+  structure Types : TYPES
+  structure Debug :
+	      sig
+		val set_debug_level : int -> unit
+		val debug_level : unit -> int
+	      end
+  sharing Types.Datatypes = Conenv.Datatypes
+) : TYSTR =
+  
+struct
+
+  (****
+   This structure contains the functions for manipulating type structures.
+   ****)
+
+  structure Datatypes = Types.Datatypes
+
+  val do_debug = Ty_Debug.do_debug
+
+  open Datatypes
+
+  exception TyfunError
+  exception TypeDiffer
+
+  fun string_tystr (start,TYSTR (tyfun,conenv)) =
+    let 
+      val tyfun_string = Types.string_tyfun tyfun
+      val conenv_string = Conenv.string_valenv (start + 
+						(size tyfun_string) + 8,
+						conenv)
+    in
+      "(" ^ tyfun_string ^ "," ^ conenv_string ^ ")\n"
+    end
+  
+  (****
+   Enrichment test for type structures.  See p. 34 of The Definition.
+   ****)
+
+  fun tystr_enriches (TYSTR (tyfun,conenv),TYSTR (tyfun',conenv')) = 
+    (if (do_debug andalso Debug.debug_level () > 10) 
+       then (Print.print ("in tystr_enriches");
+	     Print.print "\n";
+	     Print.print (Types.string_tyfun tyfun);
+	     Print.print "\n";
+	     Print.print (Types.string_tyfun tyfun');
+	     Print.print ("\n"))
+     else ();
+       if Types.tyfun_eq (tyfun,tyfun') then
+	 (if (do_debug andalso Debug.debug_level () > 10) 
+	    then (Print.print ("tyfuns are equal in tystr_enriches");
+	          Print.print ("\n"))
+	  else ();
+	    if Conenv.empty_valenvp conenv orelse Conenv.valenv_eq(conenv,conenv') then true
+            else raise TypeDiffer)
+	else raise TyfunError)
+
+  fun tystr_copy (TYSTR (tyfun,conenv), tyname_copies) = 
+    TYSTR(Types.tyfun_copy (tyfun,tyname_copies), Conenv.ve_copy(conenv,tyname_copies))
+  
+  fun tystr_union (TYSTR (tyfun,conenv),TYSTR (tyfun',conenv')) = 
+    if Conenv.empty_valenvp conenv then TYSTR (tyfun',conenv')
+    else TYSTR (tyfun,conenv)
+
+  fun get_ce (TYSTR (tyfun,conenv)) = conenv
+
+end
+@
+
+
+1.12.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.12  1992/12/21  20:58:47  jont
+Anel's last changes
+
+@
+
+
+1.11
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d76 1
+a76 1
+  exception Inconsistent
+d107 1
+a107 1
+            else raise Inconsistent)
+a109 22
+(*
+  fun tystr_enriches (TYSTR (tyfun,conenv),TYSTR (tyfun',conenv')) = 
+    (if (do_debug andalso Debug.debug_level () > 10) 
+       then (Print.print ("in tystr_enriches");
+	     Print.print "\n";
+	     Print.print (Types.string_tyfun_using_default (tyfun));
+	     Print.print "\n";
+	     Print.print (Types.string_tyfun_using_default (tyfun'));
+	     Print.print ("\n"))
+     else ();
+       (if Types.tyfun_eq (tyfun,tyfun') then
+	  (if (do_debug andalso Debug.debug_level () > 10) 
+	     then (Print.print ("tyfuns are equal in tystr_enriches");
+		   Print.print ("\n"))
+	   else ();
+	     true)
+	else false)
+	  andalso 
+	  (Conenv.empty_valenvp conenv orelse 
+	   Conenv.valenv_eq (conenv,conenv')))
+*)
+       
+@
+
+
+1.10
+log
+@Tynames now have a slot recording their definition point
+@
+text
+@d4 3
+d76 1
+a76 1
+      val tyfun_string = Types.string_tyfun_using_default tyfun
+d92 1
+a92 1
+	     Print.print (Types.string_tyfun_using_default (tyfun));
+d94 1
+a94 1
+	     Print.print (Types.string_tyfun_using_default (tyfun'));
+@
+
+
+1.9
+log
+@Removed old version of tystr_enriches
+@
+text
+@d4 3
+d73 1
+a73 1
+      val tyfun_string = Types.string_tyfun tyfun
+d89 1
+a89 1
+	     Print.print (Types.string_tyfun (tyfun));
+d91 1
+a91 1
+	     Print.print (Types.string_tyfun (tyfun'));
+d108 1
+a108 1
+	     Print.print (Types.string_tyfun (tyfun));
+d110 1
+a110 1
+	     Print.print (Types.string_tyfun (tyfun'));
+@
+
+
+1.8
+log
+@Yet more changes to get structure copying working better.
+@
+text
+@d4 3
+d100 1
+d120 1
+@
+
+
+1.7
+log
+@Added Anel's changes, and changed some stuff to do better
+equality checking of valenvs etc.
+@
+text
+@d4 4
+d117 2
+a118 9
+  fun tystr_copy (TYSTR (tyfun,conenv),tyname_copies,tynamecopy_fun) = 
+    let 
+      val (tyfun',tyname_copies') = Types.tyfun_copy (tyfun,tyname_copies,
+						      tynamecopy_fun)
+      val (conenv',tyname_copies'') = Conenv.ve_copy (conenv,tyname_copies',
+						      tynamecopy_fun)
+    in
+      (TYSTR (tyfun',conenv'),tyname_copies'')
+    end
+@
+
+
+1.6
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d58 3
+d84 18
+d110 2
+a111 3
+	  (Conenv.valenv_eq (conenv,conenv') 
+	   orelse 
+	   Conenv.valenv_eq (conenv,empty_valenv)))
+d124 1
+a124 2
+    if Conenv.empty_valenvp conenv 
+      then TYSTR (tyfun',conenv')
+@
+
+
+1.5
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+a23 1
+require "../utils/newmap";
+a24 1
+require "../typechecker/datatypes";
+a29 1
+  structure NewMap : NEWMAP
+a31 1
+  structure Datatypes : DATATYPES
+d39 1
+a39 2
+  sharing Conenv.NewMap = Types.NewMap = NewMap
+  sharing Datatypes = Types.Datatypes = Conenv.Datatypes
+d48 1
+a48 2
+  structure NewMap = NewMap
+  structure Datatypes = Datatypes
+d50 2
+a51 1
+    val do_debug = Ty_Debug.do_debug
+@
+
+
+1.4
+log
+@Changed to use btrees for renaming of tynames and strnames
+@
+text
+@d4 3
+d89 1
+a89 1
+	   Conenv.valenv_eq (conenv,Conenv.empty_valenv)))
+@
+
+
+1.3
+log
+@Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+@
+text
+@d4 4
+d18 1
+d26 1
+d37 3
+a39 1
+  sharing Datatypes = Types.Datatypes = Conenv.Datatypes) : TYSTR =
+d47 1
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_tystr.sml,v $
+d12 3
+a18 1
+require "../utils/print";
+d20 12
+a31 8
+functor Tystr(structure Datatypes : DATATYPES
+	      structure Conenv : VALENV
+	      structure Types : TYPES
+	      structure Debug :  sig val set_debug_level : int -> unit
+				     val debug_level : unit -> int
+				 end
+	      structure Print : PRINT
+	      sharing Datatypes = Types.Datatypes = Conenv.Datatypes) : TYSTR =
+d41 1
+d59 1
+a59 1
+    (if (Debug.debug_level () > 10) 
+d68 1
+a68 1
+	  (if (Debug.debug_level () > 10) 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

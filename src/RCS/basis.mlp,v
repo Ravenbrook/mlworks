@@ -1,0 +1,880 @@
+head	1.10;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.8.1
+	MLWorks_21c0_1999_03_25:1.8
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.10
+date	99.04.22.17.25.28;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	99.04.12.15.54.52;	author johnh;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	99.03.18.16.48.59;	author daveb;	state Exp;
+branches
+	1.8.1.1;
+next	1.7;
+
+1.7
+date	99.03.11.15.30.55;	author mitchell;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	99.03.08.11.02.05;	author mitchell;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	99.02.15.14.18.26;	author mitchell;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.10.29.13.01.19;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.06.08.12.20.08;	author mitchell;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.06.01.16.18.48;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.03.16.09.45.02;	author johnh;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	99.04.01.17.51.21;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30365]
+Projects can now include other projects as sub-projects.
+@
+
+
+1.10
+log
+@[Bug #190553]
+Added os_exit.
+@
+text
+@MLWorks 2.0
+basis.mlp 306 7
+  AboutInfo 2 2
+    Version 0 0
+    Description 0 0
+  Files 143 0
+    basis/bit_flags.sml
+    basis/__bit_flags.sml
+    basis/__array.sml
+    basis/__array2.sml
+    basis/__bin_io.sml
+    basis/__bin_prim_io.sml
+    basis/__bin_stream_io.sml
+    basis/__bool.sml
+    basis/__byte.sml
+    basis/__char.sml
+    basis/__char_array.sml
+    basis/__char_vector.sml
+    basis/__command_line.sml
+    basis/__date.sml
+    basis/__exit.sml
+    basis/__general.sml
+    basis/__ieee_real.sml
+    basis/__int.sml
+    basis/__int16.sml
+    basis/__int32.sml
+    basis/__int8.sml
+    basis/__io.sml
+    basis/__large_int.sml
+    basis/__large_real.sml
+    basis/__large_word.sml
+    basis/__list.sml
+    basis/__list_pair.sml
+    basis/__math.sml
+    basis/__option.sml
+    basis/__os_process.sml
+    basis/__pack16_big.sml
+    basis/__pack16_little.sml
+    basis/__pack32_big.sml
+    basis/__pack32_little.sml
+    basis/__pack8_big.sml
+    basis/__pack8_little.sml
+    basis/__position.sml
+    basis/__pre_basis.sml
+    basis/__pre_char.sml
+    basis/__pre_ieee_real.sml
+    basis/__pre_int.sml
+    basis/__pre_int32.sml
+    basis/__pre_real.sml
+    basis/__pre_string_cvt.sml
+    basis/__pre_word.sml
+    basis/__pre_word32.sml
+    basis/__real.sml
+    basis/__real_array.sml
+    basis/__real_array2.sml
+    basis/__real_vector.sml
+    basis/__sml90.sml
+    basis/__string.sml
+    basis/__string_cvt.sml
+    basis/__substring.sml
+    basis/__sys_word.sml
+    basis/__text_io.sml
+    basis/__text_prim_io.sml
+    basis/__text_stream_io.sml
+    basis/__timer.sml
+    basis/__vector.sml
+    basis/__word.sml
+    basis/__word16.sml
+    basis/__word16_array.sml
+    basis/__word16_array2.sml
+    basis/__word16_vector.sml
+    basis/__word32.sml
+    basis/__word32_array.sml
+    basis/__word32_array2.sml
+    basis/__word32_vector.sml
+    basis/__word8.sml
+    basis/__word8_array.sml
+    basis/__word8_array2.sml
+    basis/__word8_vector.sml
+    basis/_bin_io.sml
+    basis/_imperative_io.sml
+    basis/_mono_array.sml
+    basis/_mono_array2.sml
+    basis/_mono_vector.sml
+    basis/_os_process.sml
+    basis/_pack_words_big.sml
+    basis/_pack_words_little.sml
+    basis/_prim_io.sml
+    basis/_stream_io.sml
+    basis/_text_io.sml
+    basis/array.sml
+    basis/array2.sml
+    basis/bin_io.sml
+    basis/bool.sml
+    basis/byte.sml
+    basis/char.sml
+    basis/command_line.sml
+    basis/date.sml
+    basis/exit.sml
+    basis/general.sml
+    basis/ieee_real.sml
+    basis/imperative_io.sml
+    basis/integer.sml
+    basis/io.sml
+    basis/list.sml
+    basis/list_pair.sml
+    basis/math.sml
+    basis/mono_array.sml
+    basis/mono_array2.sml
+    basis/mono_vector.sml
+    basis/option.sml
+    basis/os.sml
+    basis/os_file_sys.sml
+    basis/os_io.sml
+    basis/os_path.sml
+    basis/os_prim_io.sml
+    basis/os_process.sml
+    basis/pack_word.sml
+    basis/prim_io.sml
+    basis/real.sml
+    basis/require_all.sml
+    basis/sml90.sml
+    basis/stream_io.sml
+    basis/string.sml
+    basis/string_cvt.sml
+    basis/substring.sml
+    basis/text_io.sml
+    basis/text_stream_io.sml
+    basis/time.sml
+    basis/timer.sml
+    basis/vector.sml
+    basis/word.sml
+    basis/__generic_sock.sml
+    basis/__host_db.sml
+    basis/__inet_sock.sml
+    basis/__net_db.sml
+    basis/__pre_sock.sml
+    basis/__prot_db.sml
+    basis/__serv_db.sml
+    basis/__socket.sml
+    basis/__unix_sock.sml
+    basis/generic_sock.sml
+    basis/host_db.sml
+    basis/inet_sock.sml
+    basis/net_db.sml
+    basis/prot_db.sml
+    basis/serv_db.sml
+    basis/socket.sml
+    basis/unix_sock.sml
+  Subprojects 0 0
+  Targets 5 1
+    Details 2 0
+      require_all.sml LIBRARY
+      platform_specific_exports.sml OBJECT_FILE
+    require_all.sml
+    platform_specific_exports.sml
+  Modes 19 2
+    Debug 8 2
+      Location 1 0
+        Debug
+      Flags 5 0
+        generate_interruptable_code true
+        generate_interceptable_code true
+        generate_debug_info true
+        generate_variable_debug_info true
+        mips_r4000 true
+    Release 8 2
+      Location 1 0
+        Release
+      Flags 5 0
+        generate_interruptable_code true
+        optimize_leaf_fns true
+        optimize_tail_calls true
+        optimize_self_tail_calls true
+        mips_r4000 true
+    Release
+  Configurations 125 6
+    SPARC/Solaris 18 1
+      Library 0 0
+      unix/os_exit.sml
+      unix/__os_exit.sml
+      unix/platform_specific_exports.sml
+      unix/__os.sml
+      unix/__os_file_sys.sml
+      unix/__os_io.sml
+      unix/__os_path.sml
+      unix/__os_prim_io.sml
+      unix/__time.sml
+      unix/__unixos.sml
+      unix/_os.sml
+      unix/_os_file_sys.sml
+      unix/_os_io.sml
+      unix/_unixos.sml
+      unix/unixos.sml
+      unix/unix.sml
+      unix/__unix.sml
+    SPARC/SunOS 18 1
+      Library 0 0
+      unix/__os_exit.sml
+      unix/os_exit.sml
+      unix/platform_specific_exports.sml
+      unix/__os.sml
+      unix/__os_file_sys.sml
+      unix/__os_io.sml
+      unix/__os_path.sml
+      unix/__os_prim_io.sml
+      unix/__time.sml
+      unix/__unixos.sml
+      unix/_os.sml
+      unix/_os_file_sys.sml
+      unix/_os_io.sml
+      unix/_unixos.sml
+      unix/unixos.sml
+      unix/unix.sml
+      unix/__unix.sml
+    MIPS/Irix 18 1
+      Library 0 0
+      unix/__os_exit.sml
+      unix/os_exit.sml
+      unix/platform_specific_exports.sml
+      unix/__os.sml
+      unix/__os_file_sys.sml
+      unix/__os_io.sml
+      unix/__os_path.sml
+      unix/__os_prim_io.sml
+      unix/__time.sml
+      unix/__unixos.sml
+      unix/_os.sml
+      unix/_os_file_sys.sml
+      unix/_os_io.sml
+      unix/_unixos.sml
+      unix/unixos.sml
+      unix/unix.sml
+      unix/__unix.sml
+    I386/Win95 23 1
+      Library 0 0
+      win_nt/__os_exit.sml
+      win_nt/os_exit.sml
+      rts/gen/i386/win95/statuses.sml
+      rts/gen/I386/Win95/keys.sml
+      win_nt/platform_specific_exports.sml
+      win_nt/__os.sml
+      win_nt/__os_file_sys.sml
+      win_nt/__os_io.sml
+      win_nt/__os_path.sml
+      win_nt/__os_prim_io.sml
+      win_nt/__time.sml
+      win_nt/__win32.sml
+      win_nt/__win32os.sml
+      win_nt/__windows.sml
+      win_nt/_os.sml
+      win_nt/_os_file_sys.sml
+      win_nt/_os_io.sml
+      win_nt/_win32.sml
+      win_nt/_win32os.sml
+      win_nt/win32.sml
+      win_nt/win32os.sml
+      win_nt/windows.sml
+    I386/NT 23 1
+      Library 0 0
+      win_nt/__os_exit.sml
+      win_nt/os_exit.sml
+      rts/gen/i386/nt/statuses.sml
+      rts/gen/I386/NT/keys.sml
+      win_nt/platform_specific_exports.sml
+      win_nt/__os.sml
+      win_nt/__os_file_sys.sml
+      win_nt/__os_io.sml
+      win_nt/__os_path.sml
+      win_nt/__os_prim_io.sml
+      win_nt/__time.sml
+      win_nt/__win32.sml
+      win_nt/__win32os.sml
+      win_nt/__windows.sml
+      win_nt/_os.sml
+      win_nt/_os_file_sys.sml
+      win_nt/_os_io.sml
+      win_nt/_win32.sml
+      win_nt/_win32os.sml
+      win_nt/win32.sml
+      win_nt/win32os.sml
+      win_nt/windows.sml
+    I386/Linux 18 1
+      Library 0 0
+      win_nt/__os_exit.sml
+      win_nt/os_exit.sml
+      unix/platform_specific_exports.sml
+      unix/__os.sml
+      unix/__os_file_sys.sml
+      unix/__os_io.sml
+      unix/__os_path.sml
+      unix/__os_prim_io.sml
+      unix/__time.sml
+      unix/__unixos.sml
+      unix/_os.sml
+      unix/_os_file_sys.sml
+      unix/_os_io.sml
+      unix/_unixos.sml
+      unix/unixos.sml
+      unix/unix.sml
+      unix/__unix.sml
+    SPARC/Solaris
+  Locations 5 3
+    LibraryPath 0 0
+    Objects 1 0
+      ../objects
+    Binaries 1 0
+      
+@
+
+
+1.9
+log
+@Setting default configuration to SPARC/Solaris
+@
+text
+@d2 1
+a2 1
+basis.mlp 294 7
+d177 2
+a178 2
+  Configurations 113 6
+    SPARC/Solaris 16 1
+d180 2
+d197 1
+a197 1
+    SPARC/SunOS 16 1
+d199 2
+d216 1
+a216 1
+    MIPS/Irix 16 1
+d218 2
+d235 1
+a235 1
+    I386/Win95 21 1
+d237 2
+d259 1
+a259 1
+    I386/NT 21 1
+d261 2
+d283 1
+a283 1
+    I386/Linux 16 1
+d285 2
+@
+
+
+1.8
+log
+@[Bug #190523]
+Moved basis/*flags to basis/*bit_flags.
+Added generated statuses files.
+@
+text
+@d290 1
+a290 1
+    I386/NT
+@
+
+
+1.8.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@
+
+
+1.7
+log
+@[Bug #190526]
+Remove obsolete files
+@
+text
+@d2 1
+a2 1
+basis.mlp 292 7
+d7 2
+a21 1
+    basis/__flags.sml
+a99 1
+    basis/flags.sml
+d177 1
+a177 1
+  Configurations 111 6
+d229 1
+a229 1
+    I386/Win95 20 1
+d231 1
+d251 1
+a251 1
+    I386/NT 20 1
+d253 1
+d290 1
+a290 1
+    SPARC/Solaris
+@
+
+
+1.6
+log
+@[Bug #30286]
+Export Unix and Windows structures
+@
+text
+@d2 1
+a2 1
+basis.mlp 293 7
+d6 1
+a6 1
+  Files 144 0
+a126 1
+    basis/t.sml
+@
+
+
+1.5
+log
+@[Bug #190508]
+Add sockets files to project
+@
+text
+@d2 1
+a2 1
+basis.mlp 277 7
+d135 15
+a149 15
+    basis/__host_db.sml 
+    basis/__inet_sock.sml 
+    basis/__net_db.sml 
+    basis/__pre_sock.sml 
+    basis/__prot_db.sml 
+    basis/__serv_db.sml 
+    basis/__socket.sml 
+    basis/__unix_sock.sml 
+    basis/generic_sock.sml 
+    basis/host_db.sml 
+    basis/inet_sock.sml 
+    basis/net_db.sml 
+    basis/prot_db.sml 
+    basis/serv_db.sml 
+    basis/socket.sml 
+d152 2
+a153 2
+  Targets 3 1
+    Details 1 0
+d155 1
+d157 1
+d178 2
+a179 2
+  Configurations 97 6
+    SPARC/Solaris 13 1
+d181 1
+d194 3
+a196 1
+    SPARC/SunOS 13 1
+d198 1
+d211 3
+a213 1
+    MIPS/Irix 13 1
+d215 1
+d228 3
+a230 1
+    I386/Win95 19 1
+d233 1
+d251 1
+a251 1
+    I386/NT 19 1
+d254 1
+d272 1
+a272 1
+    I386/Linux 13 1
+d274 1
+d287 2
+@
+
+
+1.4
+log
+@[Bug #70204]
+Add keys.sml to Win95 and NT configurations
+@
+text
+@d2 1
+a2 1
+basis.mlp 260 7
+d6 1
+a6 1
+  Files 127 0
+d134 17
+@
+
+
+1.3
+log
+@[Bug #30418]
+New project file format
+@
+text
+@d2 1
+a2 1
+c:\ml\mlw\src\basis.mlp.new 258 7
+d159 1
+a159 1
+  Configurations 95 6
+d202 1
+a202 1
+    I386/Win95 18 1
+d204 1
+d222 1
+a222 1
+    I386/NT 18 1
+d224 1
+@
+
+
+1.2
+log
+@[Bug #30369]
+Replace source path with a list of files.
+@
+text
+@d1 260
+a260 238
+!!! 
+!!! 
+Description 
+Version 
+File basis/__array.sml
+File basis/__array2.sml
+File basis/__bin_io.sml
+File basis/__bin_prim_io.sml
+File basis/__bin_stream_io.sml
+File basis/__bool.sml
+File basis/__byte.sml
+File basis/__char.sml
+File basis/__char_array.sml
+File basis/__char_vector.sml
+File basis/__command_line.sml
+File basis/__date.sml
+File basis/__exit.sml
+File basis/__flags.sml
+File basis/__general.sml
+File basis/__ieee_real.sml
+File basis/__int.sml
+File basis/__int16.sml
+File basis/__int32.sml
+File basis/__int8.sml
+File basis/__io.sml
+File basis/__large_int.sml
+File basis/__large_real.sml
+File basis/__large_word.sml
+File basis/__list.sml
+File basis/__list_pair.sml
+File basis/__math.sml
+File basis/__option.sml
+File basis/__os_process.sml
+File basis/__pack16_big.sml
+File basis/__pack16_little.sml
+File basis/__pack32_big.sml
+File basis/__pack32_little.sml
+File basis/__pack8_big.sml
+File basis/__pack8_little.sml
+File basis/__position.sml
+File basis/__pre_basis.sml
+File basis/__pre_char.sml
+File basis/__pre_ieee_real.sml
+File basis/__pre_int.sml
+File basis/__pre_int32.sml
+File basis/__pre_real.sml
+File basis/__pre_string_cvt.sml
+File basis/__pre_word.sml
+File basis/__pre_word32.sml
+File basis/__real.sml
+File basis/__real_array.sml
+File basis/__real_array2.sml
+File basis/__real_vector.sml
+File basis/__sml90.sml
+File basis/__string.sml
+File basis/__string_cvt.sml
+File basis/__substring.sml
+File basis/__sys_word.sml
+File basis/__text_io.sml
+File basis/__text_prim_io.sml
+File basis/__text_stream_io.sml
+File basis/__timer.sml
+File basis/__vector.sml
+File basis/__word.sml
+File basis/__word16.sml
+File basis/__word16_array.sml
+File basis/__word16_array2.sml
+File basis/__word16_vector.sml
+File basis/__word32.sml
+File basis/__word32_array.sml
+File basis/__word32_array2.sml
+File basis/__word32_vector.sml
+File basis/__word8.sml
+File basis/__word8_array.sml
+File basis/__word8_array2.sml
+File basis/__word8_vector.sml
+File basis/_bin_io.sml
+File basis/_imperative_io.sml
+File basis/_mono_array.sml
+File basis/_mono_array2.sml
+File basis/_mono_vector.sml
+File basis/_os_process.sml
+File basis/_pack_words_big.sml
+File basis/_pack_words_little.sml
+File basis/_prim_io.sml
+File basis/_stream_io.sml
+File basis/_text_io.sml
+File basis/array.sml
+File basis/array2.sml
+File basis/bin_io.sml
+File basis/bool.sml
+File basis/byte.sml
+File basis/char.sml
+File basis/command_line.sml
+File basis/date.sml
+File basis/exit.sml
+File basis/flags.sml
+File basis/general.sml
+File basis/ieee_real.sml
+File basis/imperative_io.sml
+File basis/integer.sml
+File basis/io.sml
+File basis/list.sml
+File basis/list_pair.sml
+File basis/math.sml
+File basis/mono_array.sml
+File basis/mono_array2.sml
+File basis/mono_vector.sml
+File basis/option.sml
+File basis/os.sml
+File basis/os_file_sys.sml
+File basis/os_io.sml
+File basis/os_path.sml
+File basis/os_prim_io.sml
+File basis/os_process.sml
+File basis/pack_word.sml
+File basis/prim_io.sml
+File basis/real.sml
+File basis/require_all.sml
+File basis/sml90.sml
+File basis/stream_io.sml
+File basis/string.sml
+File basis/string_cvt.sml
+File basis/substring.sml
+File basis/t.sml
+File basis/text_io.sml
+File basis/text_stream_io.sml
+File basis/time.sml
+File basis/timer.sml
+File basis/vector.sml
+File basis/word.sml
+Target require_all.sml LIBRARY
+Mode Debug
+ModeLocation Debug Debug
+ModeDetails Debug GenInterruptableCode true
+ModeDetails Debug GenInterceptableCode true
+ModeDetails Debug GenDebugInfo true
+ModeDetails Debug GenVarDebugInfo true
+ModeDetails Debug MipsR4000 true
+Mode Release
+ModeLocation Release Release
+ModeDetails Release GenInterruptableCode true
+ModeDetails Release OptLeafFns true
+ModeDetails Release OptTailCalls true
+ModeDetails Release OptSelfTailCalls true
+ModeDetails Release MipsR4000 true
+CurrentMode Release
+Configuration SPARC/Solaris
+ConfigFile SPARC/Solaris unix/__os.sml
+ConfigFile SPARC/Solaris unix/__os_file_sys.sml
+ConfigFile SPARC/Solaris unix/__os_io.sml
+ConfigFile SPARC/Solaris unix/__os_path.sml
+ConfigFile SPARC/Solaris unix/__os_prim_io.sml
+ConfigFile SPARC/Solaris unix/__time.sml
+ConfigFile SPARC/Solaris unix/__unixos.sml
+ConfigFile SPARC/Solaris unix/_os.sml
+ConfigFile SPARC/Solaris unix/_os_file_sys.sml
+ConfigFile SPARC/Solaris unix/_os_io.sml
+ConfigFile SPARC/Solaris unix/_unixos.sml
+ConfigFile SPARC/Solaris unix/unixos.sml
+Configuration SPARC/SunOS
+ConfigFile SPARC/SunOS unix/__os.sml
+ConfigFile SPARC/SunOS unix/__os_file_sys.sml
+ConfigFile SPARC/SunOS unix/__os_io.sml
+ConfigFile SPARC/SunOS unix/__os_path.sml
+ConfigFile SPARC/SunOS unix/__os_prim_io.sml
+ConfigFile SPARC/SunOS unix/__time.sml
+ConfigFile SPARC/SunOS unix/__unixos.sml
+ConfigFile SPARC/SunOS unix/_os.sml
+ConfigFile SPARC/SunOS unix/_os_file_sys.sml
+ConfigFile SPARC/SunOS unix/_os_io.sml
+ConfigFile SPARC/SunOS unix/_unixos.sml
+ConfigFile SPARC/SunOS unix/unixos.sml
+Configuration MIPS/Irix
+ConfigFile MIPS/Irix unix/__os.sml
+ConfigFile MIPS/Irix unix/__os_file_sys.sml
+ConfigFile MIPS/Irix unix/__os_io.sml
+ConfigFile MIPS/Irix unix/__os_path.sml
+ConfigFile MIPS/Irix unix/__os_prim_io.sml
+ConfigFile MIPS/Irix unix/__time.sml
+ConfigFile MIPS/Irix unix/__unixos.sml
+ConfigFile MIPS/Irix unix/_os.sml
+ConfigFile MIPS/Irix unix/_os_file_sys.sml
+ConfigFile MIPS/Irix unix/_os_io.sml
+ConfigFile MIPS/Irix unix/_unixos.sml
+ConfigFile MIPS/Irix unix/unixos.sml
+Configuration I386/Win95
+ConfigFile I386/Win95 win_nt/__os.sml
+ConfigFile I386/Win95 win_nt/__os_file_sys.sml
+ConfigFile I386/Win95 win_nt/__os_io.sml
+ConfigFile I386/Win95 win_nt/__os_path.sml
+ConfigFile I386/Win95 win_nt/__os_prim_io.sml
+ConfigFile I386/Win95 win_nt/__time.sml
+ConfigFile I386/Win95 win_nt/__win32.sml
+ConfigFile I386/Win95 win_nt/__win32os.sml
+ConfigFile I386/Win95 win_nt/__windows.sml
+ConfigFile I386/Win95 win_nt/_os.sml
+ConfigFile I386/Win95 win_nt/_os_file_sys.sml
+ConfigFile I386/Win95 win_nt/_os_io.sml
+ConfigFile I386/Win95 win_nt/_win32.sml
+ConfigFile I386/Win95 win_nt/_win32os.sml
+ConfigFile I386/Win95 win_nt/win32.sml
+ConfigFile I386/Win95 win_nt/win32os.sml
+ConfigFile I386/Win95 win_nt/windows.sml
+Configuration I386/NT
+ConfigFile I386/NT win_nt/__os.sml
+ConfigFile I386/NT win_nt/__os_file_sys.sml
+ConfigFile I386/NT win_nt/__os_io.sml
+ConfigFile I386/NT win_nt/__os_path.sml
+ConfigFile I386/NT win_nt/__os_prim_io.sml
+ConfigFile I386/NT win_nt/__time.sml
+ConfigFile I386/NT win_nt/__win32.sml
+ConfigFile I386/NT win_nt/__win32os.sml
+ConfigFile I386/NT win_nt/__windows.sml
+ConfigFile I386/NT win_nt/_os.sml
+ConfigFile I386/NT win_nt/_os_file_sys.sml
+ConfigFile I386/NT win_nt/_os_io.sml
+ConfigFile I386/NT win_nt/_win32.sml
+ConfigFile I386/NT win_nt/_win32os.sml
+ConfigFile I386/NT win_nt/win32.sml
+ConfigFile I386/NT win_nt/win32os.sml
+ConfigFile I386/NT win_nt/windows.sml
+Configuration I386/Linux
+ConfigFile I386/Linux unix/__os.sml
+ConfigFile I386/Linux unix/__os_file_sys.sml
+ConfigFile I386/Linux unix/__os_io.sml
+ConfigFile I386/Linux unix/__os_path.sml
+ConfigFile I386/Linux unix/__os_prim_io.sml
+ConfigFile I386/Linux unix/__time.sml
+ConfigFile I386/Linux unix/__unixos.sml
+ConfigFile I386/Linux unix/_os.sml
+ConfigFile I386/Linux unix/_os_file_sys.sml
+ConfigFile I386/Linux unix/_os_io.sml
+ConfigFile I386/Linux unix/_unixos.sml
+ConfigFile I386/Linux unix/unixos.sml
+CurrentConfig SPARC/Solaris
+LocationsObj ../objects
+LocationsBin ___
+@
+
+
+1.1
+log
+@new unit
+[Bug #30365]
+Projects can now include other projects as sub-projects.
+@
+text
+@d5 127
+a131 1
+SourceDir basis
+d149 12
+a160 1
+ConfigSource SPARC/Solaris unix
+d162 12
+a173 1
+ConfigSource SPARC/SunOS unix
+d175 12
+a186 1
+ConfigSource MIPS/Irix unix
+d188 17
+a204 1
+ConfigSource I386/Win95 win_nt
+d206 17
+a222 1
+ConfigSource I386/NT win_nt
+d224 12
+a235 1
+ConfigSource I386/Linux unix
+@

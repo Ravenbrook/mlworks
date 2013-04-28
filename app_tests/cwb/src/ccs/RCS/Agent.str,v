@@ -1,0 +1,216 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.38.20;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.37;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Agent.str,v 1.4 1994/12/03 14:23:55 pxs Exp $";
+functor Agent ( structure A   : ACT;
+                structure V   : VAR ) : AGENT =
+struct
+   structure A = A
+   structure V = V
+
+   datatype actlist = Actlist    of A.act list
+                    | Actlistvar of V.var
+
+   datatype relabelling = Relabellist of (A.act * A.act) list
+                        | Relabelvar  of V.var
+
+   datatype param = Actparam   of A.act
+   | Actlistparam of actlist		(* experimental *)
+   | Timeparam  of int
+   | Agentparam of agent
+
+   and      agent = Nil
+                  | DNil
+                  | Bottom
+                  | Var      of V.var * param list
+                  | Prefix   of A.act list * agent
+                  | Delta    of A.act * agent
+                  | Time     of int * agent
+                  | WSum     of agent list
+                  | SSum     of agent list
+                  | Parallel of agent list
+                  | SMerge   of (agent * actlist) list
+                  | Restrict of agent * actlist
+                  | Relabel  of agent * relabelling
+
+(* hashing functions basically nicked from the Mobility		       *)
+(* Workbench. Caution -- I really don't know anything about how to     *)
+(* write hash functions, and need to find out! Even this is a win, though.*)
+
+fun hashval (Nil) = 0
+  | hashval (DNil) = 1
+  | hashval (Bottom) = 2
+  | hashval (Var(v,pl)) 
+    = sxmash (V.hashval v, fold Bits.andb (map phashval pl) 31)	
+  | hashval (Prefix(actionlist,P))
+    = sxmash (fold Bits.xorb (map A.hashval actionlist) 37,hashval P)
+  | hashval (Delta(a,P)) = sxmash (A.hashval(a), hashval P)
+  | hashval (Time(t,P)) = sxmash(5,hashval P)
+  | hashval (WSum(PP)) = fold sxmash (map hashval PP) 7
+  | hashval (SSum(PP)) = fold sxmash (map hashval PP) 11
+  | hashval (Parallel(PP)) = fold sxmash (map hashval PP) 13
+  | hashval (SMerge(PP)) = fold sxmash (map (hashval o fst) PP) 17 (* hmm *)
+  | hashval (Restrict(P,actionlist)) = sxmash(19,hashval P)
+  (* restrictions are usually all the same*)
+  | hashval (Relabel(P,relabelling)) = sxmash (hashval P,rhashval
+					       relabelling)
+and phashval (Actparam(action)) = A.hashval action
+  | phashval (Actlistparam(Actlistvar(v))) = V.hashval v
+  | phashval (Actlistparam(Actlist(al))) = 7 (* well, I dunno *)
+  | phashval (Timeparam(n)) = n
+  | phashval (Agentparam(agent)) = hashval agent
+and rhashval (Relabellist(l)) = fold sxmash (map
+  (fn (a,b) => Bits.xorb (A.hashval a, A.hashval b)) l) 29
+  | rhashval (Relabelvar(v)) = V.hashval v
+    
+   (* from cmulisp *)
+and sxmash(place,wth) =
+  let val total = 26
+    val rotate = 7
+  in
+    Bits.xorb(Bits.xorb(Bits.rshift(wth,total-rotate),place),
+	      Bits.lshift(Bits.andb(wth,
+				    Bits.lshift(1,total-rotate)-1),
+			  rotate))
+  end
+
+   fun actlisteq (Actlist l1,Actlist l2) = Lib.eq A.eq (l1,l2)
+     | actlisteq (Actlistvar x,Actlistvar y) = V.eq(x,y)
+     | actlisteq _ = false
+
+   fun relabeleq (Relabellist l1,Relabellist l2) =
+       Lib.eq (fn ((a,x),(b,y)) => A.eq(a,b) andalso A.eq(x,y)) (l1,l2)
+     | relabeleq (Relabelvar x,Relabelvar y) = V.eq(x,y)
+     | relabeleq _ = false
+
+   fun parameq (Actparam a,Actparam b) = A.eq(a,b)
+     | parameq (Actlistparam s,Actlistparam t) = actlisteq(s,t)
+     | parameq (Timeparam s,Timeparam t) = s=t
+     | parameq (Agentparam x,Agentparam y) = eq(x,y)
+     | parameq _ = false
+
+   and eq (Nil,Nil) = true
+     | eq (DNil,DNil) = true
+     | eq (Bottom,Bottom) = true
+     | eq (Var(x,xl),Var(y,yl)) =
+       V.eq(x,y) andalso Lib.eq parameq (xl,yl)
+     | eq (Prefix(Al,A),Prefix(Bl,B)) = Lib.eq A.eq (Al,Bl) andalso eq(A,B)
+     | eq (Delta(a,A),Delta(b,B)) = A.eq(a,b) andalso eq(A,B)
+     | eq (Time(s,A),Time(t,B)) = s=t andalso eq(A,B)
+     | eq (WSum L1,WSum L2) = Lib.eq eq (L1,L2)
+     | eq (SSum L1,SSum L2) = Lib.eq eq (L1,L2)
+     | eq (Parallel L1,Parallel L2) = Lib.eq eq (L1,L2)
+     | eq (SMerge l1,SMerge l2) =
+       Lib.eq (fn ((A,Alist),(B,Blist)) =>
+                  eq(A,B) andalso actlisteq(Alist,Blist)) (l1,l2)
+     | eq (Restrict(A,resA),Restrict(B,resB)) =
+       eq(A,B) andalso actlisteq(resA,resB)
+     | eq (Relabel(A,relA),Relabel(B,relB)) =
+       eq(A,B) andalso relabeleq(relA,relB)
+     | eq _ = false
+
+   fun place Nil           =  0
+     | place DNil          =  1
+     | place Bottom        =  2
+     | place (Var _)       =  3
+     | place (Prefix _)    =  4
+     | place (Delta _)     =  5
+     | place (Time _)      =  6
+     | place (WSum _)      =  7
+     | place (SSum _)      =  8
+     | place (Parallel _)  =  9
+     | place (SMerge _)    =  10
+     | place (Restrict _)  =  11
+     | place (Relabel _)   =  12
+
+   fun actlistle (Actlist l1,Actlist l2) = Lib.le A.le (l1,l2)
+     | actlistle (Actlistvar x,Actlistvar y) = V.le(x,y)
+     | actlistle (Actlist _,Actlistvar _) = true
+     | actlistle (Actlistvar _,Actlist _) = false
+
+   fun relabelle (Relabellist l1,Relabellist l2) =
+       Lib.le (fn ((a,x),(b,y)) =>
+               A.le(a,b) andalso (not(A.le(b,a)) orelse A.le(x,y))) (l1,l2)
+     | relabelle (Relabelvar x,Relabelvar y) = V.le(x,y)
+     | relabelle (Relabellist _,Relabelvar _) = true
+     | relabelle (Relabelvar _,Relabellist _) = false
+
+   fun paramle (Actparam a,Actparam b) = A.le(a,b)
+     | paramle (Actlistparam a,Actlistparam b) = actlistle (a,b)
+     | paramle (Timeparam s,Timeparam t) = s <= t
+     | paramle (Agentparam x,Agentparam y) = le(x,y)
+     | paramle (Actparam _,_) = true
+     | paramle (_,Agentparam _) = true
+     | paramle _ = false
+
+   and le (Nil,Nil) = true
+     | le (DNil,DNil) = true
+     | le (Bottom,Bottom) = true
+     | le (Var(x,xl),Var(y,yl)) =
+       V.le(x,y) andalso (not(V.le(y,x)) orelse Lib.le paramle (xl,yl))
+     | le (Prefix(Al,A),Prefix(Bl,B)) =
+       Lib.le A.le (Al,Bl) andalso (not(Lib.le A.le (Bl,Al)) orelse le(A,B))
+     | le (Delta(a,A),Delta(b,B)) =
+       A.le(a,b) andalso (not(A.le(b,a)) orelse le(A,B))
+     | le (Time(a,A),Time(b,B)) = a<b orelse (a=b andalso le(A,B))
+     | le (WSum L1,WSum L2) = Lib.le le (L1,L2)
+     | le (SSum L1,SSum L2) = Lib.le le (L1,L2)
+     | le (Parallel L1,Parallel L2) = Lib.le le (L1,L2)
+     | le (SMerge l1,SMerge l2) =
+       Lib.le (fn ((A,Alist),(B,Blist)) =>
+                  le(A,B) andalso (not(le(B,A)) orelse actlistle(Alist,Blist)))
+              (l1,l2)
+     | le (Restrict(A,resA),Restrict(B,resB)) =
+       le(A,B) andalso (not(le(B,A)) orelse actlistle(resA,resB))
+     | le (Relabel(A,relA),Relabel(B,relB)) =
+       le(A,B) andalso (not(le(B,A)) orelse relabelle(relA,relB))
+     | le (A,B) = place A < place B
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

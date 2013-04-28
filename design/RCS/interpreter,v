@@ -1,0 +1,382 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.7.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.1.7.1.1.1
+	MLWorks_10r3:1.1.7.1.3
+	MLWorks_10r2_551:1.1.7.1.2
+	MLWorks_11:1.1.7.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.7.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.7.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.7.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.7
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.6.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.1.6
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.1.4.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.1.4.1
+	MLWorks_1_0_Irix_1996_11_28:1.1.4.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.1.5
+	MLWorks_1_0_Unix_1996_11_14:1.1.4
+	MLWorks_Open_Beta2_1996_10_11:1.1.3
+	MLWorks_License_dev:1.1.2
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1
+	ML_beta_release_12/08/94:1.1
+	ML_beta_release_03/08/94:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	94.01.28.16.26.25;	author johnk;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1
+	1.1.5.1
+	1.1.6.1
+	1.1.7.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.07.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.10.07.15.59.08;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.10.17.11.17.31;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	96.11.14.12.41.01;	author hope;	state Exp;
+branches
+	1.1.4.1.1.1;
+next	;
+
+1.1.4.1.1.1
+date	96.11.28.14.52.56;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.5.1
+date	96.11.22.18.01.29;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.6.1
+date	96.12.17.17.40.24;	author hope;	state Exp;
+branches
+	1.1.6.1.1.1;
+next	;
+
+1.1.6.1.1.1
+date	97.02.24.11.27.44;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.7.1
+date	97.05.12.10.25.25;	author hope;	state Exp;
+branches
+	1.1.7.1.1.1
+	1.1.7.1.2.1
+	1.1.7.1.3.1;
+next	;
+
+1.1.7.1.1.1
+date	97.07.28.18.11.22;	author daveb;	state Exp;
+branches
+	1.1.7.1.1.1.1.1;
+next	;
+
+1.1.7.1.1.1.1.1
+date	97.10.07.11.36.11;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.7.1.2.1
+date	97.09.08.17.04.41;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.7.1.3.1
+date	97.09.09.13.59.47;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.1
+log
+@new file
+@
+text
+@Discussion of alternative loading formats in order to facilitate the
+production of an interpretive system, and also hopefully as a side
+effect to alleviate the problems of very large live register sets
+which cause problems to the register allocator.
+
+The register allocator problems are caused by trying to build tuples
+of a large number of values. This requires all the values to be live
+at the same time. Particularly bad cases of this occur for instance in
+the case of a source file containing a large number of top level
+declarations, even if they actually only constitute one topdec.
+
+The problems under consideration for an interpretive system concern
+obtaining the values from the running of a compilation unit in order
+to update the environment. It would be nice to do this entirely in ML,
+without any extra special additions for this phase (obviously there
+will be some additions to this system, simply to allow the system to
+call some code it has compiled for instance). The trick therefore
+seems to be for the run of a compilation unit to return a normal ML
+value.
+
+There seem to be two possibilities for the type of this value. Firstly
+it could be an array. This looks attractive, as it is very close to
+what we already do, and imposes little garbage collection overhead.
+The way of producing it would be ALLOCATE, (compute value, update)
+loop. Unpicking it would be by means of Array.sub instead of lambda
+calculus SELECT. However, this method has a number of drawbacks.
+Firstly the lambda optimiser does not deal well with mutable values,
+in general it can't. This is not a disaster, but there is a second
+problem, in that Array.sub requires a pervasive exception Subscript,
+which we can't guarantee to be present, as we may not yet have loaded
+it. This is an unbreakable chicken and egg situation, unbreakable that
+is without inventing more special mechanisms such as for example an
+unsafe array access which didn't check the bounds. Since we're trying
+to avoid producing more special features, this method should be
+shelved for the moment.
+
+The second approach involves no further mechanism, but probably a bit
+more code in the creation and use of compilation units. The suggestion
+is to use lists instead of tuples to hold the result of the
+compilation unit. Creation would be simply by tupling up all the
+required values. Use would be by extracting the elements from the
+list. In order to make it safe against match failures (although these
+would indicate system or bad user errors) any compilation unit wishing
+to obtain the values from another compilation unit could declare an
+exception which it could raise if it arrived unexpectedly at the end
+of the list. This has the advantages that the lambda optimiser can
+deal well creating values as required for them to go into the list,
+and thus the register allocator will have an easy time, and it
+involves no extra mechanisms being created. A slight disadvantage is
+that somewhat more code will be required in order to access values a
+long way into a compilation unit. But since most compilation units
+only produce one value this should not be a problem, particuarly as
+once the code has been executed it will then be discarded.
+
+The second method is therefore proposed as a replacement for the
+current method. In most cases it will make no discernable difference,
+in the case of files with many topdecs it will make a considerable
+improvement to their compilation time.
+
+We now consider the other outstanding problems of an interpreted
+system, viz maintaining a current environment and calling code
+compiled by the compiler from within the compiler. For this to occur,
+the compiler must have a toplevel function, eg:-
+basis. Thus:-
+
+fun toplevel basis =
+  (let
+     val (new_cb, code) = compile basis (* Compile what he types *)
+     val fixed_up_code = fix_up code (* Generate runnable code *)
+     val result = run fixed_up_code (* And run it *)
+     val new_lambda_basis = unpick(new_cb, result) (* Decode the
+result *)
+   in
+     augment_cb(basis, add_lambda(new_cb, new_lambda_basis))
+   end) handle any_exception => (Print diagnostics; basis)
+
+fun loop basis =
+  let
+    val basis = toplevel basis
+  in
+    loop basis
+  end
+
+val _ = loop initial_basis (* The toplevel *)
+
+Comments on the above.
+
+The function compile is expected to take the current environment and
+compile within it the contents of the line he types. We may want to
+try something like NJ's prompt for more input on a parse failure, but
+it probably isn't necessary for a first pass. The result of compile is
+an incremental of the parse, typecheck and lambda environments, and
+some code structure, where the lambda environment refers to positions
+of the items it requires in the result of running the code produced.
+
+The code produced is not runnable as such, it requires back pointers
+to be fixed up, pointers into the middles of strings to be produced
+(for closures of mutually recursive structures), external values to be
+resolved etc.
+
+Having produced some runnable code, it is run (using a System hook) to
+produce a list of store_values, in one to one correspondence with the
+domain of the compilation environment. This list is unpicked in order
+to produce a new compilation environment which overrides the existing
+one in new_cb. This then augments the existing compilation
+environment.
+
+Areas requiring System assistance.
+1) Producing the top level closure. This requires a function
+store_value list -> store_value tuple (or maybe store_value)
+2) Converting the produced code strings to store_values. This requires
+a function string -> store_value which is just the identity.
+3) Producing code pointers into the middles of strings, for closures
+of mutually recursive functions. This requires a function string * int
+-> store_value, of which item 2 above is a special case.
+4) Calling the code. This requires a function store_value ->
+store_value list, taking the top level closure to the result of
+running it.
+
+Other compiler modifications.
+
+The load_string primitive is unnecessary for the incremental system,
+but some analogue is. A possibility is to add a lambda calculus
+constructor EXT : store_value -> LambdaExp. Mir_Cg would translate
+this to EXT_REF store_value, or something similar, and eventually the
+store_value concerned would pop out of Mach_Cg as a (position,
+store_value) pair to be placed in the top level closure. The
+modifications to Mir_Cg and Mach_Cg to achieve this would be minimal,
+however the effect on the lambda calculus transforming sections would
+be major. It would be nice to find a better way of passing these
+values through without causing such disruption.
+@
+
+
+1.1.7.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.7.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.7.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.7.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.7.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1.6.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.6.1.1.1
+log
+@branched from 1.1.6.1
+@
+text
+@@
+
+
+1.1.5.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.4.1.1.1
+log
+@branched from 1.1.4.1
+@
+text
+@@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@

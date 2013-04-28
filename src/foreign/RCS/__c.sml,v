@@ -1,0 +1,311 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	97.05.07.08.31.56;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30030]
+@
+
+
+1.1
+log
+@new unit
+[Bug #30030]
+@
+text
+@(* Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * A partial implementation of the C structure.
+ *
+ * In the following the only enough has been implemented in order to
+ * show that the general approach works, the rest is a SMOP.
+ *
+ *.todo.malloc: if C.Memory.malloc and C.Memory.realloc don't raise an 
+ * exception then need to ensure that any calls to them correctly test
+ * for C.WordAddr.null.
+ *
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+require "$.basis.__word32";  (* SysWord *)
+require "$.basis.__word";    (* Word *)
+require "$.basis.__word32";  (* Word *)
+require "$.basis.__int";     (* Int *)
+require "$.basis.__int32";   (* Int *)
+require "$.basis.__real";    (* Real *)
+require "$.basis.__char";    (* Char *)
+require "$.foreign.c";
+
+structure C : C =
+  struct
+
+    val env = MLWorks.Internal.Runtime.environment
+
+    val wTs = SysWord.fromLargeWord o Word.toLargeWord
+
+    val sTw = Word.fromLargeWord o SysWord.toLargeWord
+
+
+    (*
+     * All pointers are built from VoidPtr which is represented
+     * as a full 32-bit value in ML.  
+     *
+     *.no-alloc: In a previous version I implemented char and short
+     * pointers as full 32-bit values but any pointer that was at least
+     * word aligned as a word.  This had the benefit of avoiding
+     * heap allocation in the common case.  Unfortunately, this approach
+     * doesn't work for the I386 which can have word values on a byte
+     * boundary and so I changed to the current approach rather than
+     * try and have different versions for different platforms.
+     *)
+    structure VoidPtr =
+      struct
+        datatype ptr = PTR of Word32.word
+        fun op- (PTR a, PTR b) = Word32.toInt (Word32.-(a, b))
+        fun next (PTR addr, d) = PTR (Word32.+ (addr, wTs d))
+        fun prev (PTR addr, d) = PTR (Word32.- (addr, wTs d))
+        val null = PTR 0w0
+        val deRef8 : ptr -> Word.word = env "C.VoidPtr.deRef8"
+        val deRef16 : ptr -> Word.word = env "C.VoidPtr.deRef16"
+        val deRef32 : ptr -> Word32.word = env "C.VoidPtr.deRef32"
+        val update8 : ptr * Word.word -> unit = env "C.VoidPtr.update8"
+        val update16 : ptr * Word.word -> unit = env "C.VoidPtr.update16"
+        val update32 : ptr * Word32.word -> unit = env "C.VoidPtr.update32"
+       end
+
+
+    structure FunPtr =
+      struct
+        datatype ('d, 'r) ptr = FUN_PTR of VoidPtr.ptr
+        val fromVoidPtr = FUN_PTR
+        fun toVoidPtr (FUN_PTR addr) = addr
+      end
+
+
+    structure Memory =
+      struct
+        val malloc  : Word.word -> VoidPtr.ptr = env "C.Memory.malloc"
+        val realloc : VoidPtr.ptr * Word.word -> VoidPtr.ptr = env "C.Memory.realloc"
+        val free    : VoidPtr.ptr -> unit = env "C.Memory.free"
+        val copy    : {from: VoidPtr.ptr, to: VoidPtr.ptr, size:Word.word} -> unit = env "C.Memory.copy"
+      end
+
+
+    
+
+    type 'a ptr = VoidPtr.ptr
+
+    datatype 'a c_char  = C_CHAR  of Word.word
+    datatype 'a c_short = C_SHORT of Word.word
+    datatype 'a c_int   = C_INT   of Word32.word
+    datatype 'a c_long  = C_LONG  of Word32.word
+    datatype     void   = C_VOID
+
+    datatype signed = SIGNED
+    datatype unsigned = UNSIGNED
+
+    (* ARCH specific *)
+    val charSize = 0w1
+    val charPadding = 0w3
+    val shortSize = 0w2
+    val shortPadding = 0w2
+    val intSize = 0w4
+    val intPadding = 0w0
+    val longSize = 0w4
+    val longPadding = 0w0
+    val ptrSize = 0w4
+    val ptrPadding = 0w0
+
+    fun makeUnsignedChar c = C_CHAR (Word.fromInt (Char.ord c))
+    fun makeSignedChar c = C_CHAR (Word.fromInt (Char.ord c))
+    fun unsignedCharToChar (C_CHAR c) = Char.chr (Word.toInt c)
+    fun makeUnsignedShort w = C_SHORT w
+    fun makeSignedShort i = C_SHORT (Word.fromInt i)
+    fun makeUnsignedInt w = C_INT (Word32.fromLargeWord (Word.toLargeWord w))
+    fun makeSignedInt i = C_INT (Word32.fromInt i)
+    fun makeUnsignedIntFromWord32 w = C_INT w
+    fun makeSignedIntFromInt32 i = C_INT (Word32.fromLargeInt (Int32.toLarge i))
+
+    fun signedIntToInt (C_INT w) = Word32.toIntX w
+    fun signedIntToInt32 (C_INT w) = Int32.fromLarge (Word32.toLargeIntX w)
+    fun signedLongToInt (C_LONG w) = Word32.toIntX w
+    fun signedLongToInt32 (C_LONG w) = Int32.fromLarge (Word32.toLargeIntX w)
+
+    fun unsignedIntToWord (C_INT w) = Word.fromLargeWord (Word32.toLargeWord w)
+    fun unsignedIntToWord32 (C_INT w) = w
+    fun unsignedLongToWord (C_LONG w) = Word.fromLargeWord (Word32.toLargeWord w)
+    fun unsignedLongToWord32 (C_LONG w) = w
+
+    val null : 'a ptr = VoidPtr.null
+    fun free (addr : 'a ptr) : unit = Memory.free addr
+
+    fun makeCharPtr ((C_CHAR c):'s c_char): 's c_char ptr = 
+      let
+        val space = Memory.malloc charSize
+      in
+        VoidPtr.update8 (space, c);
+        space
+      end
+
+    fun makeShortPtr ((C_SHORT w):'s c_short): 's c_short ptr = 
+      let
+        val space = Memory.malloc shortSize
+      in
+        VoidPtr.update16 (space, w);
+        space
+      end
+
+    fun makeLongPtr ((C_LONG w):'s c_long): 's c_long ptr = 
+      let
+        val space = Memory.malloc longSize
+      in
+        VoidPtr.update32 (space, w);
+        space
+      end
+
+
+    fun fromVoidPtr (addr:VoidPtr.ptr): 'a ptr =
+     MLWorks.Internal.Value.cast addr
+
+
+    fun deRefCharPtr (addr : 's c_char ptr) : 's c_char =
+       C_CHAR (VoidPtr.deRef8 addr)
+
+    fun deRefShortPtr (addr : 's c_short ptr) : 's c_short = 
+      C_SHORT (VoidPtr.deRef16 addr)
+
+    fun deRefIntPtr (addr : 's c_int ptr) :'s c_int =
+      C_INT (VoidPtr.deRef32 addr)
+
+    fun deRefLongPtr (addr : 's c_long ptr) : 's c_long =
+      C_LONG (VoidPtr.deRef32 addr)
+
+    fun deRefPtrPtr (addr : 'a ptr ptr) : 'a ptr =
+        VoidPtr.PTR (VoidPtr.deRef32 addr)
+
+    fun updateShortPtr (addr : 's c_short ptr, (C_SHORT v): 's c_short) : unit =
+      VoidPtr.update16 (addr, v)
+
+    fun updateIntPtr (addr : 's c_int ptr, (C_INT v): 's c_int) : unit =
+      VoidPtr.update32 (addr, v)
+
+    fun updateLongPtr (addr : 's c_long ptr, (C_LONG v): 's c_long) : unit =
+      VoidPtr.update32 (addr, v)
+
+    fun updatePtrPtr (addr : 'a ptr ptr, (VoidPtr.PTR w) : 'a ptr) : unit =
+      VoidPtr.update32 (addr, w)
+
+    val fromString : string -> signed c_char ptr = env "C.CharPtr.fromString"
+    val toString : 's c_char ptr -> string = env "C.CharPtr.toString"
+    val toStringN : 's c_char ptr * Word.word -> string = env "C.CharPtr.toStringN"
+
+    structure Long =
+      struct
+        type 's long = 's c_long
+        val size = 0w4
+        val padding = 0w0
+        fun fromWord w = C_LONG (Word32.fromLargeWord (Word.toLargeWord w))
+        fun fromWord32 w = C_LONG w
+        fun fromInt i = C_LONG (Word32.fromInt i)
+        fun fromInt32 i = C_LONG (Word32.fromLargeInt (Int32.toLarge i))
+        val toInt = signedLongToInt
+        val toInt32 = signedLongToInt32
+        val toWord = unsignedLongToWord
+        val toWord32 = unsignedLongToWord32
+      end
+
+    structure Int =
+      struct
+        type 's int = 's c_int
+        val size = 0w4
+        val padding = 0w0
+        val fromWord = makeUnsignedInt
+        val fromWord32 = makeUnsignedIntFromWord32
+        val fromInt = makeSignedInt
+        val fromInt32 = makeSignedIntFromInt32
+        val toInt = signedIntToInt
+        val toInt32 = signedIntToInt32
+        val toWord = unsignedIntToWord
+        val toWord32 = unsignedIntToWord32
+      end
+
+    structure IntPtr =
+      struct
+        val op:= = updateIntPtr
+        val ! = deRefIntPtr
+
+        fun make (w): 's c_int ptr = 
+          let
+            val space = Memory.malloc (Word.* (Int.size, w))
+          in
+            space
+          end
+
+        fun makeWith ((C_INT w):'s c_int): 's c_int ptr = 
+          let
+            val space = Memory.malloc intSize
+          in
+            VoidPtr.update32 (space, w);
+            space
+          end
+
+        val free = free
+        val fromVoidPtr = fromVoidPtr
+        fun toVoidPtr (addr:'s c_int ptr):void ptr = addr
+      end
+
+    structure LongPtr =
+      struct
+        val op:= = updateLongPtr
+        val ! = deRefLongPtr
+        val make = makeLongPtr
+        val fromVoidPtr = fromVoidPtr
+        fun toVoidPtr (addr:'s c_long ptr):void ptr = addr
+      end
+
+
+
+    structure File =
+      struct
+        type file_name = string
+
+        type function_name = string
+
+        datatype file = FILE of VoidPtr.ptr
+        (*
+         * The file could perhaps be represented (more efficiently) by
+         * a WordAddr, but a file is not used in any time critical code
+         * and there are unlikely to be a large number of them, so boxing
+         * is a conservative thing to do.
+         *)
+
+
+        val openFile : file_name * function_name -> file =
+          env "C.File.openFile"
+
+(*
+        val lookup : file option -> ('d, 'r) FunPtr.ptr = env "C.File.lookup"
+*)
+        val closeFile : file * function_name option -> unit =
+          env "C.File.closeFile"
+
+
+      end
+
+    val call = MLWorks.Internal.Runtime.environment
+
+  end
+@

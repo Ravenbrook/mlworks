@@ -1,0 +1,85 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.11.09.17.09.15;	author nickb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.1
+log
+@new file
+@
+text
+@/*  ==== CACHE CONTROL ====
+ *
+ *  Copyright (C) 1994 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  cache_flush(start,length) flushes the instruction cache from start
+ *  to start+length. This is required whenever creating or moving
+ *  executable code.
+ *
+ *  $Id$
+ */
+
+#include "cache.h"
+
+extern void cache_flush(void *where, size_t how_much)
+{
+/*
+ We do nothing under Solaris, although we probably should. So far, we've
+ never had a problem.
+
+ For future reference, this is what SML/NJ do:
+
+> FlushICache:
+> 	and	%o1,0x1F,%o2   ; m <- (nbytes % (32-1)) >> 2 ( use %o2 for m )
+> 	srl	%o2,2,%o2
+> 	srl	%o1,5,%o1      ; i <- (nbytes >> 5)
+> ;;; FLUSH4 implements:
+> ;;;	if (m > 0) { FLUSH addr; addr += 4; m--;} else goto L_test
+> #define FLUSH4					\
+> 		tst	%o2;			\
+> 		ble	L_test;			\
+> 		nop;				\
+> 		iflush	%o0;			\
+> 		inc	4,%o0;			\
+> 		dec	1,%o2
+> 	FLUSH4
+> 	FLUSH4
+> 	FLUSH4
+> 	FLUSH4
+> 	FLUSH4
+> 	FLUSH4
+> 	FLUSH4
+> 				; addr is 32-byte aligned here
+> L_test:
+> 	tst	%o1
+> 	be	L_exit
+> 	nop
+> L_loop:				; flush 32 bytes per iteration
+> 	iflush	%o0
+> 	iflush	%o0+8
+> 	iflush	%o0+16
+> 	iflush	%o0+24
+> 	deccc	1,%o1		; if (--i > 0) goto L_loop
+> 	bg	L_loop
+> 	inc	32,%o0		; addr += 32 (delay slot)
+> L_exit:
+> 	retl
+> 	nop */
+
+}
+@

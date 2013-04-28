@@ -1,0 +1,855 @@
+head	1.13;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.13
+	mlworks-28-01-1994:1.13
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.13
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.10;
+locks; strict;
+comment	@ *  @;
+
+
+1.13
+date	92.10.28.17.36.45;	author jont;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	92.10.02.14.40.58;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.09.15.18.20.17;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.11.11.22.44;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.04.17.51.52;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.07.13.10.35.30;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.06.17.10.24.32;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.06.11.14.42.45;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.10.12.04.18;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.01.09.48.12;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.05.19.10.44.14;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.11.15.24.43;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.05.14.40.15;	author richard;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	92.10.28.17.36.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@An implementation of the general purpose map signature.  This is a functor.
+@
+
+
+1.13
+log
+@Some minor modifications to do with order of tests, relation types
+@
+text
+@(*  ====   GENERAL PURPOSE MAP    ====
+ *   === ORDERED ASSOCIATION LIST ===
+ *              FUNCTOR
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  This implementation of the MAP signature uses an ordered association
+ *  list (a list of pairs) to represent the mappings.
+ *
+ *  When to use it
+ *  --------------
+ *  An ordered list does not have good performance for building, lookup, or
+ *  deletion, but it does have low overheads and can therefore be used for
+ *  small maps.
+ *
+ *  Further work
+ *  ------------
+ *  The `from_list' function could sort the list rather than just inserting
+ *  all the elements using `define', as this creates garbage in the form of
+ *  {order, mapping} records.  A fast sorting algorithm such as quicksort
+ *  might profitably be used.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _orderedassociationlist.sml,v $
+ *  Revision 1.12  1992/10/02  14:40:58  clive
+ *  Change to NewMap.empty which now takes < and = functions instead of the single-function
+ *
+ *  Revision 1.11  1992/09/15  18:20:17  jont
+ *  Added empty'' for strict less than functions which do the less than test
+ *  first. this should be more efficient for large maps
+ *
+ *  Revision 1.10  1992/08/11  11:22:44  jont
+ *  Removed some redundant structure arguments and sharing
+ *  Converted where relevant to use NewMap.{forall,exists,iterate}
+ *
+ *  Revision 1.9  1992/08/04  17:51:52  jont
+ *  Added fold, fold_in_order and union on maps
+ *
+ *  Revision 1.8  1992/07/13  10:35:30  jont
+ *  Added is_empty predicate
+ *
+ *  Revision 1.7  1992/06/17  10:24:32  jont
+ *  Added range_ordered for signature matching requirements of lambda translator
+ *
+ *  Revision 1.6  1992/06/11  14:42:45  jont
+ *  Added domain_ordered function (required by lambda translator)
+ *
+ *  Revision 1.5  1992/06/10  12:04:18  richard
+ *  Added to_list_ordered.
+ *
+ *  Revision 1.4  1992/06/01  09:48:12  richard
+ *  Added empty' and from_list'.
+ *
+ *  Revision 1.3  1992/05/19  10:44:14  richard
+ *  Added efficient variants of `apply' for different situations.
+ *
+ *  Revision 1.2  1991/12/11  15:24:43  richard
+ *  Added extra documentation.
+ *
+ *  Revision 1.1  91/12/05  14:40:15  richard
+ *  Initial revision
+ *)
+
+require "newmap_datatypes";
+require "newmap";
+
+
+functor OrderedAssociationList (
+                                structure NewMapDataTypes : NEWMAP_DATATYPES
+                                ) : NEWMAP =
+
+  struct
+
+    open NewMapDataTypes;
+
+
+    (*  === THE MAP TYPE ===  *)
+
+
+    datatype ('object, 'image) T =
+      MAP of {size : int,
+              order   : 'object * 'object -> bool,
+              eq      : 'object * 'object -> bool,
+              mapping : ('object * 'image) list}
+
+
+    (*  === CONSTRUCT AN EMPTY MAP ===  *)
+
+    fun empty (order,eq) =
+      MAP {size = 0,
+           order = order,
+           eq = eq,
+           mapping = []}
+
+    fun empty' (op<) =
+      MAP {size = 0,
+           order = (op <),
+           eq = (op=),
+           mapping = []}
+
+
+    fun is_empty(MAP{mapping=[], ...}) = true
+      | is_empty _ = false
+
+    (*  === DEFINE THE MAP AT A POINT ===  *)
+
+    val sz = ref(0)
+
+    fun define (MAP {size,order,eq,mapping = list}, object, image) =
+      let
+        val _ = sz := size + 1
+	fun insert [] = [(object, image)]
+	  | insert (list as (pair as (object', _))::pairs) =
+            if order(object, object') then
+	      (object, image)::list
+	    else
+(*
+	      if eq(object,object') then
+		(sz := !sz - 1 ; (object, image)::pairs)
+	      else
+		pair::(insert pairs)
+*)
+	      if order(object', object) then
+		pair::(insert pairs)
+	      else
+		(sz := !sz - 1 ; (object, image)::pairs)
+        val list' = insert list
+      in
+	MAP {size = !sz, eq=eq, order = order, mapping = list'}
+      end
+
+    fun define' (MAP {size,order,eq,mapping = list}, elem as (object, image)) =
+      let
+        val _ = sz := size + 1
+	fun insert [] = [(object, image)]
+	  | insert (list as (pair as (object', _))::pairs) =
+	    if order(object, object') then
+	      (object, image)::list
+	    else
+	      if eq(object, object') then
+		(sz := !sz - 1 ; (object, image)::pairs)
+	      else
+		pair::(insert pairs)
+        val list' = insert list
+      in
+	MAP {size = !sz, eq=eq, order = order, mapping = list'}
+      end
+
+    fun combine f (MAP {size,order,eq,mapping = list}, object, image) =
+      let
+        val _ = sz := size
+	fun insert [] = (sz := !sz + 1; [(object, image)])
+	  | insert (list as (pair as (object', image'))::pairs) =
+            if order(object, object') then
+	      (sz := !sz + 1; (object, image)::list)
+	    else
+	      if eq(object, object') then
+		(object, f(object,image',image))::pairs
+	      else
+		pair::(insert pairs)
+        val list' = insert list
+      in
+	MAP {size = !sz, eq=eq, order = order, mapping = list'}
+      end
+
+
+    (*  === UNDEFINE THE MAP AT A POINT ===  *)
+
+    fun undefine (MAP {size,order,eq,mapping = list}, object) =
+      let
+        val _ = sz := size - 1
+	fun delete [] = (sz := !sz + 1; [])
+	  | delete (list as (pair as (object', _))::pairs) =
+	    if order(object, object') then
+	      (sz := !sz + 1; list)
+	    else
+	      if eq(object, object') then
+		pairs
+	      else
+		pair::(delete pairs)
+        val list' = delete list
+      in
+	MAP {size = !sz, eq=eq, order = order, mapping = list'}
+      end
+
+
+    (*  === APPLY THE MAP TO AN OBJECT === *)
+
+    fun apply' (MAP {size,order,eq,mapping = list}, object) =
+      let
+	fun find [] = raise Undefined
+	  | find ((object', image')::pairs) =
+(*
+	    if order(object, object') then
+	      raise Undefined
+	    else
+*)
+	      if eq(object, object') then
+		image'
+	      else
+		find pairs
+      in
+	find list
+      end
+
+    fun apply map object = apply' (map, object)
+
+    fun tryApply' (MAP {size,order,eq,mapping = list}, object) =
+      let
+	fun find [] = NO
+	  | find ((object', image')::pairs) =
+(*
+	    if order(object, object') then
+	      NO
+	    else
+*)
+	      if eq(object, object') then
+		YES image'
+	      else
+		find pairs
+      in
+	find list
+      end
+
+    fun tryApply map arg = tryApply'(map,arg)
+
+    fun apply_default' (MAP {size,order, eq, mapping = list}, default, object) =
+      let
+	fun find [] = default
+	  | find ((object', image')::pairs) =
+(*
+	    if order(object, object') then
+	      default
+	    else
+*)
+	      if eq(object, object') then
+		image'
+	      else
+		find pairs
+      in
+	find list
+      end
+
+    fun apply_default (map, default) object = apply_default' (map, default, object)
+
+
+    (*  === EXTRACT THE DOMAIN OF A MAP ===  *)
+
+    fun domain (MAP {mapping = list, ...}) = map #1 list
+    val domain_ordered = domain
+
+    (*  === EXTRACT THE RANGE OF A MAP ===
+     *
+     *  Notes:  Perhaps this ought to filter out duplicates?  On the other
+     *  hand, does it matter in most cases?  It is not necessarily more
+     *  space efficient to remove them.
+     *)
+
+    fun range (MAP {mapping = list, ...}) = map #2 list
+    val range_ordered = range
+
+    (*  === CONVERT MAP TO LIST === *)
+
+    fun to_list (MAP {size, mapping = list, order,eq}) = list
+    val to_list_ordered = to_list
+
+
+    (*  === CONVERT LIST TO MAP ===
+     *
+     *  Notes:  This is written naively at the moment.  It could apply a
+     *  better sort to the list or even just use a better insertion function
+     *  to avoid building lots of {order, mapping} records.
+     *)
+
+    fun from_list (order,eq) list =
+      let
+	fun build (result, []) = result
+	  | build (result, x::pairs) =
+	    build (define' (result, x), pairs)
+      in
+	build (empty (order,eq), list)
+      end
+
+    fun from_list' order list =
+      let
+	fun build (result, []) = result
+	  | build (result, x::pairs) =
+	    build (define' (result, x), pairs)
+      in
+	build (empty' order, list)
+      end
+
+    fun fold f =
+      let
+	fun red(x, []) = x
+	  | red(x, (dom, ran) :: ys) = red(f(x, dom, ran), ys)
+      in
+	fn (x, MAP{mapping=mapping, ...}) => red(x, mapping)
+      end
+
+    val fold_in_order = fold
+
+    val union = fold define
+
+    fun exists f =
+      let
+	fun red [] = false
+	  | red (el :: xs) = f el orelse red xs
+      in
+	fn MAP{mapping=mapping, ...} => red mapping
+      end	
+
+    fun forall f =
+      let
+	fun red [] = true
+	  | red (el :: xs) = f el andalso red xs
+      in
+	fn MAP{mapping=mapping, ...} => red mapping
+      end	
+
+    fun iterate f =
+      let
+	fun red [] = ()
+	  | red (x :: xs) = (f x; red xs)
+      in
+	fn MAP{mapping=mapping, ...} => red mapping
+      end	
+
+    val iterate_ordered = iterate
+
+    fun size (MAP {size,...}) = size
+
+  (* Find something in the map *)
+    fun rank' (MAP {mapping = list, order, eq, ...},ob) =
+      let
+        fun search (n,[]) = raise Undefined
+          | search (n,(h,_)::t) =
+            if order(h,ob) then
+	      search(n+1,t)
+	    else
+	      if eq(h,ob) then
+		n
+	      else
+		raise Undefined
+      in
+        search(0,list)
+      end
+
+    fun rank map ob = rank'(map,ob)
+
+    val map =
+      fn f =>
+      fn (MAP{mapping=list, order, size,eq}) =>
+      MAP{size = size,order = order, eq=eq, mapping = map (fn (arg as (x,_)) => (x,f arg)) list}
+
+    fun eq f (m1,m2) =
+      size m1 = size m2 andalso
+      ((forall (fn (ob, im) => f (apply'(m1, ob), im)) m2)
+       handle Undefined => false)
+
+      fun fold_in_rev_order f (el,MAP{mapping=list,...}) =
+        let
+          fun fold(a,[]) = a
+            | fold(a,(ob,im)::rest) = fold(f(a,ob,im),rest)
+        in
+          fold(el,rev list)
+        end
+
+    fun string obP imP {start, domSep, itemSep, finish} m =
+      let
+	fun make ((doSep, res), ob, im) =
+	  (true, obP ob :: domSep :: imP im :: (if doSep then itemSep :: res else res))
+      in
+	implode(start :: #2 (fold_in_rev_order make ((false, [finish]), m)))
+      end
+
+    fun merge f = fold (combine (fn (ob, im, im') => f(im, im')))
+
+    fun get_ordering(MAP{order,...}) = order
+    fun get_equality(MAP{eq,...}) = eq
+
+  end
+
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a27 3
+ *  Revision 1.13  1992/10/28  17:36:45  jont
+ *  Some minor modifications to do with order of tests, relation types
+ *
+@
+
+
+1.12
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d28 3
+d98 1
+a98 1
+    fun empty' (op<=) =
+d100 1
+a100 1
+           order = (op <=),
+d117 13
+a129 9
+            if eq(object,object')
+              then
+                (sz := !sz - 1 ; (object, image)::pairs)
+            else
+              if order (object, object') 
+                then
+                  (object, image)::list
+              else
+                pair::(insert pairs)
+d140 7
+a146 9
+	    if eq(object, object') 
+              then
+                (sz := !sz - 1 ; (object, image)::pairs)
+            else 
+              if order (object, object') 
+                then
+                  (object, image)::list
+              else
+                pair::(insert pairs)
+d154 1
+a154 1
+        val _ = sz := size 
+d157 7
+a163 9
+            if eq(object, object') 
+              then
+                (object, f(object,image',image))::pairs
+            else
+              if order (object, object') 
+                then
+                  (sz := !sz + 1; (object, image)::list)
+              else
+                pair::(insert pairs)
+d177 7
+a183 9
+	    if eq(object, object') 
+              then
+                pairs
+            else
+              if order (object, object') 
+                then
+                  (sz := !sz + 1; list)
+              else
+                pair::(delete pairs)
+d196 9
+a204 8
+	    if eq(object, object') 
+              then
+                image'
+            else
+              if order (object, object') 
+                then
+                  raise Undefined
+              else find pairs
+d215 9
+a223 9
+	    if eq(object, object') 
+              then
+                YES image'
+            else
+              if order (object, object') 
+                then
+                  NO
+              else
+                find pairs
+d234 9
+a242 9
+	    if eq(object, object') 
+              then
+                image'
+            else
+              if order (object, object') 
+                then
+                  default
+              else 
+                find pairs
+d339 1
+a339 1
+        fun search (n,[]) = raise Undefined 
+d341 7
+a347 8
+            if eq(h,ob)  
+              then
+                n
+            else
+              if order(h,ob)  
+                then
+                  search(n+1,t)
+              else  raise Undefined
+d355 1
+a355 1
+      fn f => 
+@
+
+
+1.11
+log
+@Added empty'' for strict less than functions which do the less than test
+first. this should be more efficient for large maps
+@
+text
+@d28 4
+d64 1
+a64 1
+
+d68 3
+a70 1
+functor OrderedAssociationList () : NEWMAP =
+d74 1
+d76 1
+a78 1
+    datatype relation = LESS | EQUAL | GREATER
+d81 3
+a83 1
+      MAP of {order   : 'object * 'object -> relation,
+d89 4
+a92 2
+    fun empty order =
+      MAP {order = order,
+d96 4
+a99 8
+      let
+        fun order (object, object') =
+          if object = object' then EQUAL
+          else if object <= object' then LESS
+               else GREATER
+      in
+        empty order
+      end
+a100 10
+    fun empty'' (op<) =
+      let
+        fun order (object, object') =
+	  if object < object' then LESS
+	  else
+	    if object = object' then EQUAL
+	    else GREATER
+      in
+        empty order
+      end
+d107 3
+a109 1
+    fun define (MAP {order, mapping = list}, object, image) =
+d111 1
+d114 10
+a123 4
+	    case order (object, object')
+	      of LESS => (object, image)::list
+	       | EQUAL => (object, image)::pairs
+	       | GREATER => pair::(insert pairs)
+d125 1
+a125 1
+	MAP {order = order, mapping = insert list}
+d128 18
+d147 20
+d169 1
+a169 1
+    fun undefine (MAP {order, mapping = list}, object) =
+d171 2
+a172 1
+	fun delete [] = []
+d174 10
+a183 4
+	    case order (object, object')
+	      of LESS => list
+	       | EQUAL => pairs
+	       | GREATER => pair::(delete pairs)
+d185 1
+a185 1
+	MAP {order = order, mapping = delete list}
+d191 1
+a191 3
+    exception Undefined
+
+    fun apply' (MAP {order, mapping = list}, object) =
+d195 8
+a202 4
+	    case order (object, object')
+	      of LESS => raise Undefined
+	       | EQUAL => image'
+	       | GREATER => find pairs
+d209 1
+a209 1
+    fun apply_default' (MAP {order, mapping = list}, default, object) =
+d211 19
+d232 9
+a240 4
+	    case order (object, object')
+	      of LESS => default
+	       | EQUAL => image'
+	       | GREATER => find pairs
+d265 1
+a265 1
+    fun to_list (MAP {mapping = list, order}) = list
+d276 1
+a276 1
+    fun from_list order list =
+d279 2
+a280 2
+	  | build (result, (object, image)::pairs) =
+	    build (define (result, object, image), pairs)
+d282 1
+a282 1
+	build (empty order, list)
+d288 2
+a289 2
+	  | build (result, (object, image)::pairs) =
+	    build (define (result, object, image), pairs)
+d309 1
+a309 1
+	  | red ((_, x) :: xs) = f x orelse red xs
+d317 1
+a317 1
+	  | red ((_, x) :: xs) = f x andalso red xs
+d332 52
+d385 1
+@
+
+
+1.10
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d28 4
+d84 1
+a84 1
+    fun empty' (op<) =
+d88 1
+a88 1
+          else if object < object' then LESS
+d94 10
+@
+
+
+1.9
+log
+@Added fold, fold_in_order and union on maps
+@
+text
+@d28 3
+d214 27
+@
+
+
+1.8
+log
+@Added is_empty predicate
+@
+text
+@d28 3
+d200 7
+d208 3
+@
+
+
+1.7
+log
+@Added range_ordered for signature matching requirements of lambda translator
+@
+text
+@d28 3
+d84 3
+@
+
+
+1.6
+log
+@Added domain_ordered function (required by lambda translator)
+@
+text
+@d28 3
+d158 1
+a158 1
+
+@
+
+
+1.5
+log
+@Added to_list_ordered.
+@
+text
+@d28 3
+d145 1
+a145 1
+
+@
+
+
+1.4
+log
+@Added empty' and from_list'.
+@
+text
+@d28 3
+d157 1
+@
+
+
+1.3
+log
+@Added efficient variants of `apply' for different situations.
+@
+text
+@d28 3
+d62 10
+d170 9
+@
+
+
+1.2
+log
+@Added extra documentation.
+@
+text
+@d27 4
+a30 1
+ *  $Log:	_orderedassociationlist.sml,v $
+d94 1
+a94 1
+    fun apply (MAP {order, mapping = list}) object =
+d105 16
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 2
+a10 2
+ *  This implementation of the MAP signature is an ordered association list,
+ *  i.e. a list of pairs representing the mappings.
+d12 13
+d27 3
+a29 1
+ *  $Log$
+@

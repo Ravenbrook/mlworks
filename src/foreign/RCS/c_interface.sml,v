@@ -1,0 +1,401 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	95.04.23.01.21.06;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.27.15.52.31;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.2
+log
+@General updating to reach prototype level for ML FI.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C INTERFACE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This provides a FI interface in terms of a data/storage model similar
+ *  to that used in C.  All exported items are contributed by other signatures. 
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "../initbasis/__general";
+require "../initbasis/__word32";
+require "../initbasis/__word8";
+
+require "c_data";
+require "c_sig";
+require "c_hostel";
+require "c_struct";
+require "c_function";
+
+
+signature C_INTERFACE =
+  sig
+
+     type 'a option
+       sharing type option = General.option
+
+     type 'a deferred
+     type address
+     type bytearray
+     type name
+     type filename
+
+     type hostel
+
+     type c_structure
+     type c_pod
+     type c_signature
+     type c_function
+
+
+  (* DEFERRED ELEMENTS *)
+
+     datatype 'a deferred = DF of ('a option ref)
+
+
+     (* primitive operations for deferred values *)
+
+     val someDF    : 'a deferred -> bool
+
+     val getDF     : 'a deferred -> 'a option
+     val extractDF : 'a deferred -> 'a
+
+     val setDF     : 'a deferred -> 'a -> unit
+     val resetDF   : 'a deferred -> unit
+     val updateDF  : 'a deferred -> 'a option -> unit
+
+     val newDF     : '_a deferred -> '_a deferred
+     val makeDF    : '_a -> '_a deferred
+     val voidDF    : unit -> '_a deferred
+
+
+  (* C HOSTEL *)
+
+     exception ReadOnly
+     exception WriteOnly
+
+     datatype hostel_status = LOCKED_H | RD_H | WR_H | RDWR_H 
+
+     val hostel_status     : hostel -> hostel_status
+     val set_hostel_status : (hostel * hostel_status) -> unit
+
+     datatype alloc_policy = ORIGIN_AP | FLOAT_AP | ALIGNED_4_AP | ALIGNED_8_AP
+
+     datatype overflow_policy = BREAK_OV       | EXTEND_OV
+                              | EPHEM_BREAK_OV | EPHEM_EXTEND_OV
+                              | EPHEM_RECYCLE_OV
+
+     val hostel : { alloc    : alloc_policy,
+                    overflow : overflow_policy,
+                    status   : hostel_status,
+                    size     : int } -> hostel
+
+     val hostel_size     : hostel -> int
+     val hostel_alloc    : hostel -> alloc_policy
+     val hostel_overflow : hostel -> overflow_policy
+
+     exception ExpandHostel
+
+     val is_standard_hostel  : hostel -> bool
+     val is_ephemeral_hostel : hostel -> bool
+
+     val expand  : (hostel * int) -> unit
+
+
+  (* C STRUCT *)
+
+     datatype load_mode = IMMEADIATE_LM | DEFERRED_LM
+
+     val load_structure : filename * load_mode -> c_structure
+     val file_info : c_structure -> (filename * load_mode)
+
+     val files_loaded : unit -> filename list
+     val symbols      : c_structure -> name list
+
+     datatype value_type = CODE_VT | VAR_VT | NONE_VT
+
+     val symbol_info : c_structure * name -> value_type
+  
+
+  (* C TYPE *)
+
+     type field
+     type member
+     type enum_value
+     type tag
+
+     sharing type name = field = member = enum_value = string
+         and type tag = int
+
+  (* C TYPE INFORMATION *)
+
+     datatype 'a nameitem =
+         NI of { name   : name,
+                 item   : 'a,
+                 offset : int deferred }
+ 
+     datatype 'a itemlist = NL of 'a nameitem list
+
+     (* Pointer information may be interpreted in the following ways:
+        - LOCAL_PTR     = Machine address pointing within the associated hostel
+        - REMOTE_PTR    = Machine address pointing outside associated hostel
+        - RELATIVE_PTR  = Index value accessing location within associated hostel
+      *)
+     datatype pointer_mode = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+
+     (* The ML type c_type provides a representation of a C type descriptor
+        as an ML value.
+      *)
+     datatype c_type =
+        SIZE_OF of { size : int deferred, ctype : c_type }
+     |
+        VOID_T
+     |
+        CHAR_T           | UNSIGNED_CHAR_T | SIGNED_CHAR_T
+     |
+        SHORT_T          | INT_T           | LONG_T
+     |
+        UNSIGNED_SHORT_T | UNSIGNED_INT_T  | UNSIGNED_LONG_T
+     |
+        FLOAT_T          | DOUBLE_T        | LONG_DOUBLE_T
+     |
+        STRING_T   of { length : int }
+     |
+        TYPENAME_T of { name : name,
+                        defn : c_type deferred,
+                        size : int deferred }
+     |
+        STAR_T     of { ctype : c_type, mode : pointer_mode ref }
+     |
+        STRUCT_T   of { tag    : tag option,
+                        fields : c_type itemlist,
+                        size   : int deferred }
+     |
+        UNION_T    of { tag      : tag option,
+                        variants : c_type itemlist,
+                        size     : int deferred,
+                        current  : c_type nameitem deferred }
+     |
+        ARRAY_T    of { length : int, ctype : c_type }
+     |
+        ENUM_T     of { tag   : tag option,
+                        elems : enum_value list,
+                        card  : int deferred
+                      }
+
+     val size_of : c_type -> int
+
+     val equal_type : c_type * c_type -> bool
+
+
+  (* C VALUE STRUCTURE *)
+
+     type c_char
+
+     type c_short_int
+     type c_int
+     type c_long_int
+
+     type c_real
+     type c_double
+     type c_long_double
+
+     exception ForeignType
+     exception StoreAccess
+
+     val pod : { ctype    : c_type,
+                 currency : bool,
+                 hostel   : hostel } -> c_pod
+
+     val set_char           : c_pod * c_char -> unit
+     val set_unsigned_char  : c_pod * c_char -> unit
+     val set_signed_char    : c_pod * c_char -> unit
+
+     val set_short          : c_pod * c_short_int -> unit
+     val set_int            : c_pod * c_int -> unit
+     val set_long           : c_pod * c_long_int -> unit
+
+     val set_unsigned_short : c_pod * c_short_int -> unit
+     val set_unsigned       : c_pod * c_int -> unit
+     val set_unsigned_long  : c_pod * c_long_int -> unit
+
+     val set_float          : c_pod * c_real -> unit
+     val set_double         : c_pod * c_double -> unit
+     val set_long_double    : c_pod * c_long_double -> unit
+
+     val set_string         : c_pod * string -> unit
+
+     val set_star           : { ptr:c_pod, value: c_pod } -> unit
+
+     val set_local_ptr      : c_pod -> unit
+     val set_relative_ptr   : c_pod -> unit
+     val set_remote_ptr     : c_pod -> unit
+
+     val set_struct         : c_pod * (c_pod list) -> unit
+     val set_member         : { pod:c_pod, member:member } -> unit
+     val set_union          : { pod:c_pod, datum:c_pod } -> unit
+
+     val set_array          : c_pod * (c_pod list) * int -> unit
+     val set_enum           : c_pod * int -> unit
+
+
+     (* Selectors ... *)
+
+     val index_pod   : { src:c_pod, tgt:c_pod, index:int } -> unit
+     val deref_pod   : { src:c_pod, tgt:c_pod } -> unit
+     val select_pod  : { src:c_pod, tgt:c_pod, field:field } -> unit
+     val coerce_pod  : { src:c_pod, tgt:c_pod } -> unit
+
+     val copy_index_pod     : c_pod * int -> c_pod
+     val copy_deref_pod     : c_pod -> c_pod
+     val copy_select_pod    : c_pod * field -> c_pod
+     val copy_coerce_pod    : c_pod -> c_pod
+
+     val index_pod_location   : c_pod * int -> int 
+     val deref_pod_location   : c_pod -> int 
+     val select_pod_location  : c_pod * field -> int 
+     val coerce_pod_location  : c_pod -> int 
+
+     val index_pod_type     : c_pod -> c_type
+     val deref_pod_type     : c_pod -> c_type
+     val select_pod_type    : c_pod * field -> c_type
+     val coerce_pod_type    : c_pod -> c_type 
+
+     val index_pod_size     : c_pod -> int
+     val deref_pod_size     : c_pod -> int
+     val select_pod_size    : c_pod * field -> int
+     val coerce_pod_size    : c_pod -> int
+
+     val advance_pod        : c_pod -> unit
+     val retard_pod         : c_pod -> unit
+
+     (* Getters ... *)
+
+     val get_char           : c_pod -> c_char
+     val get_unsigned_char  : c_pod -> c_char
+     val get_signed_char    : c_pod -> c_char
+
+     val get_short          : c_pod -> c_short_int
+     val get_int            : c_pod -> c_int
+     val get_long           : c_pod -> c_long_int
+
+     val get_unsigned_short : c_pod -> c_short_int
+     val get_unsigned       : c_pod -> c_int
+     val get_unsigned_long  : c_pod -> c_long_int
+
+     val get_float          : c_pod -> c_real
+     val get_double         : c_pod -> c_double
+     val get_long_double    : c_pod -> c_long_double
+
+     val get_string         : c_pod -> string
+
+     val get_star           : c_pod -> c_pod
+         (* dereference pointer *)
+
+     val get_struct         : c_pod -> c_pod list
+         (* field components of a structure *)
+
+     val get_field          : c_pod * field -> c_pod
+         (* field of a structure *)
+
+     val get_union          : c_pod -> c_pod
+     val get_array          : c_pod -> c_pod list
+
+     val get_enum           : c_pod -> int
+
+     val pod_type       : c_pod -> c_type
+     val cast_pod_type  : c_pod * c_type -> unit
+
+     val dup_pod : c_pod -> c_pod
+
+
+
+  (* C SIGNATURE *)
+
+    datatype c_sig_entry =
+        UNDEF_SE
+    |
+        VAR_SE of { name : name, ctype : c_type deferred }
+    |
+        CODE_SE of { name   : name,
+                     source : c_type list deferred,
+                     target : c_type deferred }
+    |
+        TYPE_SE of { name : name,
+                     defn : c_type deferred,
+                     size : int deferred }
+    |
+        CONST_SE of { name : name, ctype : c_type deferred }
+
+
+    val new_sig      : unit -> c_signature
+
+    val lookup_entry : c_signature -> name -> c_sig_entry
+    val def_entry    : c_signature * c_sig_entry -> unit
+    val hide_entry   : c_signature * name -> unit
+
+    val show_entries : c_signature -> c_sig_entry list
+
+    val load_header : filename -> c_signature
+
+  (* C FUNCTION *)
+
+    val elaborate_type : c_signature -> (c_type -> c_type)
+
+    val attach : (c_structure * c_signature) -> (name -> c_function)
+
+    val call  : c_function -> (c_pod list * c_pod) -> unit
+
+  end; (* signature C_INTERFACE *)
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d1 1
+a1 1
+(*  ==== FOREIGN INTERFACE : C_INTERFACE ====
+d7 2
+a8 1
+ *  This specifies the instantiation of the FI for C.
+d10 1
+d17 11
+d31 314
+a344 3
+    structure CData    : C_DATA
+    structure CHeader  : C_HEADER
+    structure CFunCall : C_FUNCALL
+d346 1
+a346 1
+  end;
+@

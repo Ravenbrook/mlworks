@@ -1,0 +1,92 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.37.07;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_SIGNATURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_header.sml,v $
+# Revision 1.1  1995/03/27  15:48:27  brianm
+# new unit
+# New file.
+#
+ *
+ *)
+
+require "../utils/newmap";
+require "../initbasis/__general";
+require "fi_sig";
+
+functor ForeignSignature(
+
+    structure Map : NEWMAP
+
+) : FOREIGN_SIGNATURE =
+   struct
+
+   (* Mapping *)
+
+     open General
+
+     type ('a,'b)Map = ('a,'b)Map.T
+
+     val empty_map         =  Map.empty'(String.<)
+     val apply'            =  Map.apply'
+     val define'           =  Map.define'
+     val undefine          =  Map.undefine
+     val to_list_ordered   =  Map.to_list_ordered 
+
+
+   (* Exported Definitions *)
+
+     abstype ('entry) foreign_signature =
+             FSIG of ((string,'entry)Map)ref
+     with
+
+     (* foreign signature operations *)
+
+        fun new_sig () =
+            FSIG(ref(empty_map))
+
+        fun lookup_entry (FSIG(ref(map)),nm) =
+            SOME(apply'(map,nm)) handle Undefined => NONE
+
+        fun def_entry (FSIG(map_r),itm) =
+            map_r := define'(!map_r,itm)
+
+        fun hide_entry(FSIG(map_r),nm) =
+            map_r := undefine(!map_r,nm)
+
+        fun show_entries (FSIG(ref(map))) =
+            to_list_ordered(map)
+     end 
+   end;
+@

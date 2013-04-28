@@ -1,0 +1,338 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.1.1.2.1.1.1
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1
+	MLWorks_11c0_1997_09_09:1.1.1.2.1.1
+	MLWorks_10r3:1.1.1.2.3
+	MLWorks_10r2_551:1.1.1.2.2
+	MLWorks_11:1.1.1.2.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.2
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.2
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.2
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.06.16.10.55.59;	author jkbrook;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.03.18.13.03.34;	author brianm;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.10.30.50;	author hope;	state Exp;
+branches;
+next	1.1.1.2;
+
+1.1.1.2
+date	97.05.15.13.15.12;	author daveb;	state Exp;
+branches
+	1.1.1.2.1.1
+	1.1.1.2.2.1
+	1.1.1.2.3.1;
+next	;
+
+1.1.1.2.1.1
+date	97.07.28.18.16.39;	author daveb;	state Exp;
+branches
+	1.1.1.2.1.1.1.1;
+next	;
+
+1.1.1.2.1.1.1.1
+date	97.10.07.11.41.32;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.2.2.1
+date	97.09.08.17.10.15;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.2.3.1
+date	97.09.09.14.05.44;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.20.09;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.51.22;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.55.05;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.2
+log
+@[Bug #30127]
+Merging changes from 1.0r2c1 into 2.0m0
+@
+text
+@
+(* Test example ML FI interface code (with delivery).
+ *
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *)
+
+
+require "$.basis.__int";
+require "$.foreign.__interface";
+
+(* ML FI structure mapping *)
+
+local
+   structure Aliens      = Interface.Aliens
+
+   structure Store       = Interface.Store
+   structure Structure   = Interface.C.Structure
+   structure Signature   = Interface.C.Signature
+   structure Function    = Interface.C.Function
+   structure Type        = Interface.C.Type
+   structure Value       = Interface.C.Value
+in
+   val ALIGNED_4     = Store.ALIGNED_4
+   val BREAK         = Store.BREAK
+   val RDWR_STATUS   = Store.RDWR_STATUS
+   val store         = Store.store
+
+   val loadObjectFile   = Structure.loadObjectFile
+   val IMMEDIATE_LOAD   = Structure.IMMEDIATE_LOAD
+
+   val refreshAliens    = Aliens.refreshAliens
+
+   val newSignature = Signature.newSignature
+   val defEntry = Signature.defEntry
+   val FUN_DECL = Signature.FUN_DECL
+     
+   val defineForeignFun = Function.defineForeignFun
+   val call             = Function.call
+
+   type c_type = Type.c_type
+
+   val INT_TYPE      = Type.INT_TYPE
+
+   val object          = Value.object
+   val setInt          = Value.setInt
+   val getInt          = Value.getInt
+end
+
+
+(* Loading a Structure *)
+
+   val test_struct = loadObjectFile("foreign/samples/sum.dll",IMMEDIATE_LOAD);
+   (* the filename is relative to the current directory that MLWorks is using *)
+
+
+(* Building a store *)
+
+    val test_store =
+          store{ alloc    = ALIGNED_4,
+                 overflow = BREAK,
+                 size     = 60,
+                 status   = RDWR_STATUS   };
+
+
+(* Creating objects *)
+
+   val int_object1 =
+         object { ctype  = INT_TYPE,
+                  store  = test_store };
+
+   val int_object2 =
+         object { ctype  = INT_TYPE,
+                  store  = test_store };
+
+   val int_object3 =
+         object { ctype  = INT_TYPE,
+                  store  = test_store };
+
+
+(* Defining a c_signature object *)
+
+   val test_sig = newSignature ();
+
+
+(* Adding a new Signature entry *)
+
+     defEntry(test_sig,
+	      FUN_DECL { name = "sum",
+                        source = [INT_TYPE, INT_TYPE] : c_type list,
+                        target = INT_TYPE }
+            );
+
+
+(* Make a `callable object' lookup function for our foreign code *)
+
+   val def_test = defineForeignFun( test_struct, test_sig );
+
+
+(* Extract a foreign function object as an ML value *) 
+
+   val sum = def_test "sum";;
+
+
+(* Define a function using a foreign function *)
+
+fun testWrapper (i, j) =
+    (
+
+      (* Pack the arguments *)
+      setInt (int_object1, i);
+      setInt (int_object2, j);
+
+      (* Call the foreign function *)
+      call sum ( [int_object1, int_object2], int_object3 );
+
+      (* Extracting the result data *)
+      getInt(int_object3)
+    );
+
+(* Define the top level function *)
+
+fun topLevel () =
+    (
+      (* reestablish the foreign code *)
+      refreshAliens ();
+
+      (* call foreign function *)
+      print (Int.toString (testWrapper (23, 19)));
+      ()
+    );
+
+(* Now deliver an executable that just runs the topLevel function and exits *)
+
+MLWorks.Deliver.deliver ("deliverTest", topLevel, true);
+
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d2 4
+a5 3
+(* ================================================= *)
+(* Test example ML FI interface code (with delivery) *)
+(* ================================================= *)
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.2
+log
+@[Bug #30127]
+Added copyright strings.
+@
+text
+@d2 3
+a4 4
+(* Test example ML FI interface code (with delivery).
+ *
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *)
+@
+
+
+1.1.1.2.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.1.2.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.1.2.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.1.2.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@

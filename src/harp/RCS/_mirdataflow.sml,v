@@ -1,0 +1,2587 @@
+head	1.11;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.11
+	MLWorks-1-0-3-21/12/1992:1.11
+	MLWorks-1-0-2-15/12/1992:1.11
+	MLWorks-1-0-1-04/12/1992:1.11
+	checkpoint_17_08_92:1.11;
+locks; strict;
+
+
+1.11
+date	91.10.10.13.07.08;	author richard;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	91.09.18.18.41.32;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.09.17.15.18.59;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.09.16.14.30.44;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.09.13.13.55.08;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.09.12.16.04.31;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.09.11.14.59.43;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.09.10.16.12.39;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.09.16.25.53;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.06.16.23.33;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.05.16.51.23;	author richard;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	91.10.10.13.07.08;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Data flow analysis module for MIR code. This is the functor.
+@
+
+
+1.11
+log
+@Fixed debugging output to use Print module.
+@
+text
+@(* _mirdataflow.sml the functor *)
+(*
+$Log:	_mirdataflow.sml,v $
+Revision 1.10  91/09/18  18:41:32  richard
+Added call to MirVariable module, and removed redundant modules from
+parameters to the functor.
+
+Revision 1.10  91/09/18  18:41:32  richard
+Fixed the squish function, which didn't cope with single-block
+procedures.
+
+Revision 1.9  91/09/17  15:18:59  richard
+Module split up. Expression analysis moved to _mirexpression.sml.
+
+Revision 1.8  91/09/16  14:30:44  richard
+REFS are no longer optimised as available expressions, because they
+could be volatile storage. Self-referential available expressions can
+no longer be generated. Symmetric operators such as ADD now match
+available expressions which are either way around. Tagged binary
+expressions now have copy propagation applied. Various minor bugs
+fixed.
+
+Revision 1.7  91/09/13  13:55:08  richard
+Copy propagation made more distinct from available expression
+substitution.
+Consolidation and documentation of code.
+
+Revision 1.6  91/09/12  16:04:31  richard
+Copy propagation and available expression propagation partially
+implemented.
+
+Revision 1.5  91/09/11  14:59:43  richard
+Forward dataflow analysis (available expressions) of complete
+procedures, including memory references.
+
+Revision 1.4  91/09/10  16:12:39  richard
+Available expression analysis of a single block implemented.
+Lists module added to functor.
+
+Revision 1.3  91/09/09  16:25:53  richard
+Implemented function to find live variables, with large table.
+Altered the way in which available expressions are matched.
+Partial implementation of function to perform analysis of an entire
+procedure.
+
+Revision 1.2  91/09/06  16:23:33  richard
+Data structures modified. Started matching for available
+expressions and live variables.
+
+Revision 1.1  91/09/05  16:51:23  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/print";
+require "miropttypes";
+require "mirexpression";
+require "mirvariable";
+require "mirdataflow";
+
+functor MirDataFlow(
+
+  structure MirOptTypes		: MIROPTTYPES
+  structure MirExpression	: MIREXPRESSION
+  structure MirVariable		: MIRVARIABLE
+  structure Print       	: PRINT
+
+  sharing MirOptTypes = MirExpression.MirOptTypes = MirVariable.MirOptTypes
+
+) : MIRDATAFLOW =
+
+struct
+
+
+  structure MirOptTypes = MirOptTypes
+ 
+
+
+  (* == Debugging information output == *)
+
+  val show_info = true;		(* false to disable debugging output *)
+  val show_code = true;		(* false to disable listings *)
+
+  fun info message =
+    if show_info then
+      Print.print ("MIR Optimiser (DataFlow): " ^ message ^ "\n")
+    else ();
+
+  fun code_info message =
+    if show_code then
+      Print.print (message ^ "\n")
+    else ();
+
+
+
+  (*  === PERFORM DATA FLOW ANALYSIS ===
+   *
+   *  This just runs MirVariable.analyse and MirExpression.analyse at present.
+   *)
+
+  val analyse = MirVariable.analyse o MirExpression.analyse;
+
+
+
+end; (* of functor *)
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: _mirdataflow.sml,v $
+Revision 1.11  1991/10/10  13:07:08  richard
+Fixed debugging output to use Print module.
+
+@
+
+
+1.10
+log
+@Added call to MirVariable module, and removed redundant modules from
+parameters to the functor.
+@
+text
+@d5 4
+d86 3
+a88 1
+    if show_info then print ("MIR Optimiser (DataFlow): "^message) else ();
+d91 3
+a93 1
+    if show_code then print message else ();
+@
+
+
+1.9
+log
+@Module split up. Expression analysis moved to _mirexpression.sml.
+@
+text
+@d4 7
+a51 1
+require "../utils/crash";
+a52 4
+require "../utils/set";
+require "../utils/lists";
+require "../lambda/pretty";
+require "mirtypes";
+a53 2
+require "mirprint";
+require "mir_cg";
+d55 1
+d61 2
+a62 6
+  structure Exp			: MIREXPRESSION
+  structure MirTypes		: MIRTYPES
+  structure MirPrint		: MIRPRINT
+  structure Mir_Cg		: MIR_CG
+  structure Lists		: LISTS
+  structure Crash       	: CRASH
+a63 2
+  structure Set			: SET
+  structure P			: PRETTY
+d65 1
+a65 2
+  sharing MirTypes = MirOptTypes.MirTypes = MirPrint.MirTypes = Mir_Cg.MirTypes
+  sharing MirOptTypes = Exp.MirOptTypes
+d91 1
+a91 1
+   *  This just runs Exp.analyse at present.
+d94 1
+a94 1
+  val analyse = Exp.analyse;
+@
+
+
+1.8
+log
+@REFS are no longer optimised as available expressions, because they
+could be volatile storage. Self-referential available expressions can
+no longer be generated. Symmetric operators such as ADD now match
+available expressions which are either way around. Tagged binary
+expressions now have copy propagation applied. Various minor bugs
+fixed.
+@
+text
+@d4 8
+d51 1
+d54 1
+d59 10
+a68 8
+  structure MirTypes     : MIRTYPES
+  structure MirPrint 	 : MIRPRINT
+  structure Mir_Cg	 : MIR_CG
+  structure Lists	 : LISTS
+  structure Crash        : CRASH
+  structure Print        : PRINT
+  structure Set		 : SET
+  structure P		 : PRETTY
+d70 2
+a71 1
+  sharing MirTypes = MirPrint.MirTypes = Mir_Cg.MirTypes
+d78 1
+a78 2
+  structure MirTypes = MirTypes
+  structure Set = Set
+a94 982
+  (*  === MISCELLANEOUS UTILITY FUNCTIONS ===  *)
+
+
+  (*  Convert tagged binary operation to its untagged equivelent  *)
+
+  local
+    open MirTypes
+  in
+    fun untag ADDV = ADD
+      | untag SUBV = SUB
+      | untag MULV = MULS
+      | untag DIVV = DIVS
+  end;
+
+
+
+  (*  === DATA TYPES ===  *)
+
+  (*  == Data structure for Available Expression analysis ==
+   *
+   *  BINARYEXP and UNARYEXP denote the use of binary or unary
+   *  operators. COPY shows that a register contains the same value as
+   *  another. MEMALIAS denotes the equality of a register and a
+   *  memory location, which is more useful in ML than in imperative
+   *  languages.
+   *)
+
+  datatype expression =
+    COPY of MirTypes.gp_operand |
+    BINARYEXP of MirTypes.binary_op *
+                 MirTypes.gp_operand *
+		 MirTypes.gp_operand |
+    UNARYEXP of MirTypes.unary_op * MirTypes.gp_operand |
+    MEMALIAS of MirTypes.reg_operand *
+	        MirTypes.gp_operand
+
+  datatype exp_set = EXPSET of (MirTypes.any_register * expression) list
+
+
+  (*  == Data structure for Live Variable Analysis ==
+   *
+   *  Three sets of registers are used. The births are the registers
+   *  defined by an operation, marriages are those referenced, and
+   *  deaths are those which are not used again and are therefore dead
+   *  after the operation.
+   *)
+
+  datatype reg_set =
+    REGSET of
+      MirTypes.any_register Set.Set *	(* Births *)
+      MirTypes.any_register Set.Set *   (* Marriages *)
+      MirTypes.any_register Set.Set;    (* Deaths *)
+
+
+  (*  == Annotated code ==
+   *
+   *  This is the analog of MirTypes.block, except that each opcode
+   *  has available expressions and live variables attached. The block
+   *  also has the set of expressions available on entry attached. The
+   *  procedure type also records the tag of the entry block, because
+   *  the ordering of the blocks may be changed during optimisation.
+   *)
+
+  datatype block = BLOCK of
+    MirTypes.tag *		(* Label for the block *)
+    exp_set *			(* Available expressions on entry *)
+    (MirTypes.opcode * exp_set * reg_set) list
+				(* Opcodes with dataflow information *)
+
+  datatype procedure = PROC of MirTypes.tag * block list
+
+
+
+  (*  === MISCELLANEOUS DATA ===  *)
+
+  (*  == Fixed registers ==
+   *
+   *  These registers are used for special purposes by the code.
+   *)
+
+  local
+    val (fn_arg,_) = Mir_Cg.fn_arg;
+    val (cl_arg,_) = Mir_Cg.cl_arg;
+    val (cl_arg',_) = Mir_Cg.cl_arg'
+  in
+    val fn_arg_reg = MirTypes.GC fn_arg;  (* function argument *)
+    val cl_arg_reg = MirTypes.GC cl_arg;  (* closure pointer argument *)
+    val cl_arg'_reg = MirTypes.GC cl_arg' (* own copy of closure pointer *)
+  end;
+
+
+
+  (*  === DEBUGGING OUTPUT FUNCTIONS ===
+   *
+   *  These are tedious, messy and have nothing to do with any
+   *  algorithm, so just ignore them.
+   *)
+
+  local
+
+    fun print_exp (COPY(operand)) =
+          MirPrint.gp_operand operand
+
+      | print_exp (UNARYEXP(unary_op,operand)) =
+          (MirPrint.unary_op unary_op) ^ MirPrint.gp_operand operand
+
+      | print_exp (BINARYEXP(binary_op,operand1,operand2)) =
+	  (MirPrint.gp_operand operand1) ^
+	  (MirPrint.binary_op binary_op) ^
+	  (MirPrint.gp_operand operand2)
+      | print_exp (MEMALIAS(operand1,operand2)) =
+	  "[ " ^
+	  (MirPrint.reg_operand operand1) ^
+	  "+ " ^
+	  (MirPrint.gp_operand operand2) ^
+	  "] "
+
+      | print_exp _ = "???";
+
+
+    fun print_boundexp (reg, exp) =
+          (MirPrint.any_reg reg) ^ "= " ^ (print_exp exp);
+
+
+    fun pretty_exp_set (EXPSET(exps)) =
+      P.lst("{", [P.str(", ")], "}")
+        (map (fn binding => P.str(print_boundexp binding)) exps);
+
+
+    fun pretty_reg_set (REGSET(births,marriages,deaths)) =
+    let
+
+      fun p regs =
+	P.lst("{", [], "}")
+          (map (fn reg => P.str(MirPrint.any_reg reg)) regs)
+
+    in
+
+      P.blk(0, [P.str("Births ")] @@ (p (Set.set_to_list births)) @@
+	       [P.nl,P.str("Marriages ")] @@ (p (Set.set_to_list marriages)) @@
+	       [P.nl,P.str("Deaths ")] @@ (p (Set.set_to_list deaths)))
+
+    end
+
+
+(*    fun pretty_opcode_and_sets (opcode, availables, alives) =
+      P.blk(4, [P.str("  "), P.str(MirPrint.opcode opcode), P.nl] @@
+	       (pretty_exp_set availables) @@ [P.nl] @@
+               [(pretty_reg_set alives)]); *)
+
+    fun pretty_opcode_and_sets (opcode, availables, alives) =
+      P.blk(4, [P.str("  "), P.str(MirPrint.opcode opcode), P.nl] @@
+	       (pretty_exp_set availables));
+
+    fun pretty_block (BLOCK(tag, expressions, op_list)) =
+      P.blk(0, P.lst("", [P.nl], "")
+	(P.blk(2, [P.str("Tag "), P.str(MirTypes.print_tag tag)]) ::
+	 P.blk(2, P.str("Entry expressions ") ::
+		   pretty_exp_set expressions) ::
+	 (map pretty_opcode_and_sets
+	  (Lists.filterp
+	   (fn ((MirTypes.COMMENT _),_,_) => false
+	     | _ => true) op_list))));
+
+
+    fun pretty_proc (PROC(_, blocks)) =
+      P.blk(0, P.lst("", [P.nl], "")
+	    (map pretty_block blocks))
+
+  in
+
+    val code_info_block_and_sets =
+      code_info o P.string_of_T o pretty_block;
+
+
+    val code_info_proc =
+      code_info o P.string_of_T o pretty_proc;
+
+
+    fun print_exp_set e =
+      P.string_of_T (P.blk(0, pretty_exp_set e))
+
+  end;
+
+
+
+  (*  === CONVERT UNANNOTATED CODE BLOCKS TO ANNOTATED ===
+   *
+   *  This function takes a list of blocks of type MirTypes.block and
+   *  converts them to type block list. The sets of live variables and
+   *  available expressions are empty.
+   *)
+
+  local
+
+    fun annotate_block [] = []
+      | annotate_block (opcode::opcodes) =
+	(opcode,
+	 EXPSET [],
+	 REGSET(Set.empty_set, Set.empty_set, Set.empty_set)) ::
+	   (annotate_block opcodes);
+
+  in
+
+    fun annotate [] = []
+      | annotate ((MirTypes.BLOCK(tag,opcodes))::blocks) =
+	let
+	  val new_block = BLOCK(tag, EXPSET [], annotate_block opcodes)
+	in
+	  new_block::(annotate blocks)
+	end
+
+  end;
+
+
+  (*  === GENERATE AVAILABLE EXPRESSIONS FROM AN OPCODE ===
+   *
+   *  This function analyses an opcode to find out what possible
+   *  expressions it makes available. For example ADD a b c makes the
+   *  expression a=b+c available (until a, b or c is changed, see
+   *  cancel). The result is an exp_set. Care is taken not to generate
+   *  self-referential available expressions.
+   *)
+
+  local
+    open MirTypes;
+
+    fun gp_reference (GP_GC_REG(reg,_), reg') = reg=reg'
+      | gp_reference _ = false;
+
+    fun reg_reference (GC_REG(reg,_), reg') = reg=reg'
+      | reg_reference _ = false
+  in
+
+	  (* N.B. MOVE is not a genuine available expression, it is *)
+	  (* actually used in reverse to do copy propagation. See *)
+	  (* use_expressions. *)
+
+    fun generate_expressions (UNARY(MOVE,GC_REG(reg,_),value)) =
+        if gp_reference (value,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, COPY value)]
+
+      | generate_expressions (UNARY(unary_op,GC_REG(reg,_),value)) =
+        if gp_reference (value,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, UNARYEXP(unary_op, value))]
+
+      | generate_expressions (BINARY(binary_op,GC_REG(reg,_),value1,value2)) =
+	if gp_reference (value1,reg) orelse gp_reference (value2,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, BINARYEXP(binary_op, value1, value2))]
+
+	  (* N.B. It is safe to convert tagged binary operations into *)
+	  (* untagged available expressions because, if an overflow *)
+	  (* does not occur then it can not occur if the same *)
+	  (* expression is evaluated again. *)
+
+      | generate_expressions (TBINARY(t_op,_,GC_REG(reg,_),value1,value2)) =
+	if gp_reference (value1,reg) orelse gp_reference (value2,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, BINARYEXP(untag t_op, value1, value2))]
+
+	  (* N.B. LD and ST make a register into an alias of a memory *)
+	  (* cell. In ML, a normal cell is only stored once, so this *)
+	  (* is a valid assumption. It is different for REFs, which *)
+	  (* may be volatile. *)
+
+      | generate_expressions (STOREOP(LD,GC_REG(reg,_),value1,value2)) =
+	if reg_reference (value1,reg) orelse gp_reference (value2,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, MEMALIAS(value1, value2))]
+
+      | generate_expressions (STOREOP(ST,GC_REG(reg,_),value1,value2)) =
+	if reg_reference (value1,reg) orelse gp_reference (value2,reg)
+	then EXPSET []
+	else EXPSET [(GC reg, MEMALIAS(value1, value2))]
+
+      | generate_expressions _ = EXPSET []
+
+  end;
+
+
+
+  (*  === GENERATE VARIABLE SETS FROM AN OPCODE ===
+   *
+   *  This function analyses a single opcode to see what registers it
+   *  defines, references, or invalidates (births, marriages, an
+   *  deaths respectively).
+   *)
+
+  local
+    open MirTypes
+  in
+
+    fun generate_registers (UNARY(_,GC_REG(reg1,_),GP_GC_REG(reg2,_))) =
+          REGSET(Set.singleton(GC reg1),Set.singleton(GC reg2),Set.empty_set)
+
+      | generate_registers (UNARY(_,GC_REG(reg1,_),_)) =
+	  REGSET(Set.singleton(GC reg1),Set.empty_set,Set.empty_set)
+
+      | generate_registers (BINARY(_,
+				   GC_REG(reg1,_),
+				   GP_GC_REG(reg2,_),
+				   GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.list_to_set [GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (BINARY(_,
+				   GC_REG(reg1,_),
+				   GP_GC_REG(reg2,_),
+				   _)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (BINARY(_,
+				   GC_REG(reg1,_),
+				   _,
+				   GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg3),
+		 Set.empty_set)
+
+      | generate_registers (TBINARY(_,_,
+				    GC_REG(reg1,_),
+				    GP_GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.list_to_set [GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (TBINARY(_,_,
+				    GC_REG(reg1,_),
+				    GP_GC_REG(reg2,_),
+				    _)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (TBINARY(_,_,
+				    GC_REG(reg1,_),
+				    _,
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg3),
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LD,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.list_to_set [GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LD,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(ST,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(ST,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LDREF,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.list_to_set [GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LDREF,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(STREF,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(STREF,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LDB,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.list_to_set [GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(LDB,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(STB,
+				    GC_REG(reg1,_),
+				    GC_REG(reg2,_),
+				    GP_GC_REG(reg3,_))) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2, GC reg3],
+		 Set.empty_set)
+
+      | generate_registers (STOREOP(STB,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2],
+		 Set.empty_set)
+
+      | generate_registers (TEST(_,_,GP_GC_REG(reg1,_),GP_GC_REG(reg2,_))) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, GC reg2],
+		 Set.empty_set)
+
+      | generate_registers (TEST(_,_,GP_GC_REG(reg1,_),_)) =
+	  REGSET(Set.empty_set,
+		 Set.singleton(GC reg1),
+		 Set.empty_set)
+
+      | generate_registers (TEST(_,_,_,GP_GC_REG(reg2,_))) =
+	  REGSET(Set.empty_set,
+		 Set.singleton(GC reg2),
+		 Set.empty_set)
+
+      | generate_registers (SWITCH(_,GC_REG(reg1,_),_)) =
+	  REGSET(Set.empty_set,
+		 Set.singleton(GC reg1),
+		 Set.empty_set)
+
+      | generate_registers (ALLOCATE(_,GC_REG(reg1,_),_)) =
+	  REGSET(Set.singleton(GC reg1),
+		 Set.empty_set,
+		 Set.empty_set)
+
+      | generate_registers (BRANCH_AND_LINK(_,REG(GC_REG(reg1,_)))) =
+	  REGSET(Set.empty_set,
+		 Set.list_to_set [GC reg1, fn_arg_reg, cl_arg_reg],
+		 Set.singleton(cl_arg'_reg))
+
+      | generate_registers _ =
+	  REGSET(Set.empty_set,Set.empty_set,Set.empty_set)
+
+  end;
+
+
+
+  (*  === USE AVAILABLE EXPRESSIONS IN OPCODE ===
+   *
+   *  Given an opcode and expressions, this function attempts to use
+   *  any available expressions to optimise it.
+   *)
+
+  local
+
+    open MirTypes
+
+
+    (*  == Search expression set for an expression ==
+     *
+     *  Given an exp_set and an expression, this function returns the
+     *  register in which the expression is to be found, or raises
+     *  NoExpression. Some expressions are symmetric, so they will
+     *  match either way around (e.g., BINARYEXP(ADD,a,b) and
+     *  BINARYEXP(ADD,b,a)).
+     *)
+
+    exception NoExpression;
+
+    fun reg_of_exp exp (EXPSET bindings) =
+    let
+
+      fun same (BINARYEXP(ADD,op1,op2),BINARYEXP(ADD,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(MULU,op1,op2),BINARYEXP(MULU,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(MULS,op1,op2),BINARYEXP(MULS,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(AND,op1,op2),BINARYEXP(AND,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(OR,op1,op2),BINARYEXP(OR,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (BINARYEXP(EOR,op1,op2),BINARYEXP(EOR,op1',op2')) =
+	  (op1=op1' andalso op2=op2') orelse (op1=op2' andalso op2=op1')
+
+	| same (exp,exp') = exp=exp';
+
+
+      fun f [] = raise NoExpression
+	| f ((reg,bound_exp)::bindings) =
+	  if same (exp,bound_exp) then reg else f bindings
+
+    in
+      f bindings
+    end;
+
+
+    (*  == Search expression set for a copy of a register ==
+     *
+     *  There are two versions of this, one for gp_operands and one
+     *  for reg_operands. They search the expressions to see if the
+     *  register is a straight copy of an earlier register. If it is,
+     *  then that register is returned. Otherwise the original operand
+     *  is returned.
+     *)
+
+    fun copy_of_gp_operand (operand as GP_GC_REG(reg,_)) (EXPSET bindings) =
+        let
+	  fun f [] = operand
+	    | f ((GC reg',COPY operand')::bindings) =
+	      if reg=reg' then operand' else f bindings
+	    | f (_::bindings) = f bindings
+	in
+	  f bindings
+	end
+
+      | copy_of_gp_operand operand _ = operand;
+
+
+    fun copy_of_reg_operand (operand as GC_REG(reg,_)) (EXPSET bindings) =
+	let
+	  fun f [] = operand
+	    | f ((GC reg',COPY(GP_GC_REG operand'))::bindings) =
+	      if reg=reg' then GC_REG operand' else f bindings
+	    | f (_::bindings) = f bindings
+	in
+	  f bindings
+	end
+
+      | copy_of_reg_operand operand _ = operand;
+
+
+  in
+
+    (* See comment before local *)
+
+    fun use_expressions expressions opcode =
+    let
+
+      (*  == Copy propagation ==
+       *
+       *  This replaces the (register) operands of an opcode with the
+       *  register from which they were copied earlier, if any. This
+       *  eliminates needless duplication of registers. The dead
+       *  registers this creates will hopefully be eliminated later by
+       *  live variable analysis.
+       *)
+
+      fun propagate (UNARY(operation,reg,operand)) =
+	  UNARY(operation, reg, copy_of_gp_operand operand expressions)
+
+	| propagate (BINARY(operation,reg,operand1,operand2)) =
+	  BINARY(operation, reg,
+		 copy_of_gp_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+
+	| propagate (TBINARY(operation,tag,reg,operand1,operand2)) =
+	  TBINARY(operation, tag, reg,
+		  copy_of_gp_operand operand1 expressions,
+		  copy_of_gp_operand operand2 expressions)
+
+	| propagate (STOREOP(operation,reg,operand1,operand2)) =
+	  STOREOP(operation, reg,
+		 copy_of_reg_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+
+	| propagate (TEST(operation,tag,operand1,operand2)) =
+	  TEST(operation, tag,
+		 copy_of_gp_operand operand1 expressions,
+		 copy_of_gp_operand operand2 expressions)
+
+	| propagate (BRANCH_AND_LINK(operation,REG operand)) =
+	  BRANCH_AND_LINK(operation,
+			  REG (copy_of_reg_operand operand expressions))
+
+	| propagate (SWITCH(operation,operand,tags)) =
+	  SWITCH(operation, copy_of_reg_operand operand expressions, tags)
+
+	| propagate anything_else = anything_else;
+
+
+      (*  == Available expression substitution ==
+       *
+       *  The opcode is examined to see if it is duplicating an
+       *  earlier operation, the result of which is still in a
+       *  register somewhere. If it is, then the opcode is replaced by
+       *  a MOVE from that register. This avoids duplicated effort,
+       *  but may create redundant MOVE instructions. These will
+       *  hopefully be picked up later by live variable analysis.
+       *)
+
+      fun subst (UNARY(unaryop,reg1,operand)) =
+	  (case reg_of_exp (UNARYEXP(unaryop,operand)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+
+	| subst (BINARY(binaryop,reg1,operand1,operand2)) =
+	  (case reg_of_exp (BINARYEXP(binaryop,operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+
+	| subst (TBINARY(taggedop,tag,reg1,operand1,operand2)) =
+	  (case reg_of_exp
+	        (BINARYEXP(untag taggedop,operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+
+	     (* LD and ST are treated slightly specially. If a LD of a *)
+	     (* memory cell which is available in a register takes *)
+	     (* place, it is replaced by a MOVE from that register (as *)
+	     (* for other expressions). An ST is not optimised. *)
+
+	| subst (STOREOP(LD,reg1,operand1,operand2)) =
+	  (case reg_of_exp (MEMALIAS(operand1,operand2)) expressions
+	     of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	      | _ => opcode)
+
+        | subst anything_else = anything_else
+
+
+    in
+
+      (* Copy propagation is applied first, then available expression *)
+      (* substitution. This ensures that available expressions *)
+      (* generated by the optimised opcode will use the earliest *)
+      (* avaiable copy of a datum, and therefore are in a canonical *)
+      (* form. *)
+
+      let
+	fun display s op1 op2 =
+	  if op1=op2 then () else
+	    info(s^" "^(MirPrint.opcode op1)^" -> "^(MirPrint.opcode op2));
+	val p = propagate opcode;
+	val _ = display "Copy propagation " opcode p;
+	val t = (subst p) handle NoExpression => p;
+	val _ = display "Expression substitution " p t
+      in
+	t
+      end
+    end
+
+  end;
+
+
+
+  (*  === ANALYSE EXPRESSIONS IN A SINGLE BLOCK ===
+   *
+   *  Takes a block and returns one, tupled with a list of other block
+   *  tags reachable, and the dataflow information at the point of
+   *  branching. It will also attempt to substitute available
+   *  expressions in opcodes by calling use_expressions.
+   *)
+
+  local
+
+    (*  == Add new available expressions to existing ones ==
+     *
+     *  Given a set of expressions and an opcode this function returns
+     *  the set of expressions available _after_ its execution. This
+     *  involves analysing the opcode (see generate_expressions) and
+     *  also cancelling earlier expressions which are overwritten by
+     *  it. (e.g., if a register that they depend on is changed).
+     *)
+
+    fun add_available (EXPSET expressions, opcode) =
+    let
+
+      (* Determine which registers are changed by the opcode, i.e. the *)
+      (* set of register births. Determine the expressions generated *)
+      (* by the opcode. *)
+
+      val REGSET(updated_regs,_,_) = generate_registers opcode;
+      val EXPSET(new_bindings) = generate_expressions opcode;
+
+
+      (*  == Cancel expressions made unavailable ==
+       *
+       *  Expressions which depend on changed data are removed
+       *  from the exp_set.
+       *)
+
+      local
+	open MirTypes
+      in
+
+	fun cancel [] = []
+
+	  | cancel ((bind as (_,BINARYEXP(_,_,GP_GC_REG(reg,_)))) ::
+		    bindings) =
+	      if Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (_,BINARYEXP(_,GP_GC_REG(reg,_),_))) ::
+		    bindings) =
+	      if Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (_,UNARYEXP(_,GP_GC_REG(reg,_)))) ::
+		    bindings) =
+	      if Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (_,MEMALIAS(_,GP_GC_REG(reg,_)))) ::
+		    bindings) =
+	      if Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (_,MEMALIAS(GC_REG(reg,_),_))) :: bindings) =
+	      if Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (reg,_))::bindings) =
+	      if Set.is_member(reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+      end
+
+    in
+      EXPSET (new_bindings @@ (cancel expressions))
+    end;
+
+
+    (*  == Process the opcodes in the block ==
+     *
+     *  This does the main work of analysing the block. It is written
+     *  iteratively. done accumulates the processed opcodes in reverse
+     *  order. others accumulates a list of other blocks referenced,
+     *  tupled with the expressions available when referenced.
+     *
+     *  NOTE: At some future point it is possible that the `rev done'
+     *  will be replaced by live variable analysis.
+     *)
+
+    fun process _ ([], done, others) = (rev done, others)
+
+        (* N.B. Don't process anything after an unconditional branch *)
+	(* or a procedure exit. Any code after such an instruction can *)
+	(* never be reached. *)
+
+      | process expressions
+	        (((opcode as MirTypes.BRANCH(_,tag),_,v))::_, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available (expressions, new_opcode)
+	  in
+	    process new ([], (new_opcode, new, v)::done, (tag,new)::others)
+	  end
+
+      | process expressions
+	        (((opcode as MirTypes.EXIT,_,v))::_, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode)
+	  in
+	    process new ([], (new_opcode, new, v)::done, others)
+	  end
+
+      | process expressions
+	        (((opcode as MirTypes.SWITCH(_,_,tags),_,v))::_,
+		 done,
+		 others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available (expressions, new_opcode);
+	    val reachable_blocks =
+	      map (fn tag => (tag,new)) tags
+	  in
+	    process new ([], (new_opcode, new, v)::done,
+			 reachable_blocks @@ others)
+	  end
+
+      | process expressions
+	        (((opcode as MirTypes.TEST(_,tag,_,_),_,v))::opcodes,
+		 done,
+		 others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode)
+	  in
+	    process new
+	            (opcodes, (new_opcode, new, v)::done, (tag,new)::others)
+	  end
+
+      | process expressions
+	        ((opcode,_,v)::opcodes, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode);
+	  in
+	    process new (opcodes, (new_opcode, new, v)::done, others)
+	  end
+
+  in
+
+    (* See comment above local *)
+
+    fun exp_analyse_block expressions (BLOCK(tag, _, opcodes)) =
+    let
+      val (new_opcodes, reachable_blocks) =
+	process expressions (opcodes, [], [])
+    in
+      (BLOCK(tag, expressions, new_opcodes), reachable_blocks)
+    end;
+
+  end;
+
+
+
+  (*  === ANALYSE EXPRESSIONS IN A PROCEDURE ===
+   *
+   *  This one's complicated. When a block is analysed, it generates a
+   *  list of other blocks that could be reached, and the sets of
+   *  expressions available on their entry (see analyse_block).
+   *  However, in a procedure there may be more that one jump to a
+   *  block, and the expressions available in this case are the
+   *  _intersection_ of those from the blocks it came from. But, you
+   *  can't tell which blocks go where until you analyse them, so...
+   *  This starts with the first block and analyses it. Then it
+   *  analyses the reachable blocks, BUT, if any have been analysed
+   *  before it checks to see whether they were done with more
+   *  stringent sets of expressions (i.e. a subset of the current
+   *  expressions) --- in which case it doesn't try again. If the
+   *  expressions weren't more stringent, it takes the intersection of
+   *  the previous expressions and the current ones and re-analyses
+   *  that block (which in turn generates more references, and so on).
+   *  Eventually this terminates, because the sets must get smaller in
+   *  order to cause re-analysis.
+   *)
+
+  fun exp_analyse_proc (PROC(start_tag, original_blocks)) =
+  let
+
+    (* Find the intersection of two sets of available expressions. *)
+
+    fun intersect_expressions (EXPSET e1, EXPSET e2) =
+    let
+      fun i ([],_,passed) = passed
+	| i (x::xs,ys,passed) =
+	  if Lists.member(x,ys)
+	  then i (xs,ys,x::passed)
+	  else i (xs,ys,passed)
+    in
+      EXPSET( i(e1,e2,[]) )
+    end;
+
+
+    (* Are two sets of available expressions the same? *)
+
+    fun same (EXPSET e1, EXPSET e2) =
+    let
+      fun subset [] = true
+	| subset (x::xs) =
+	  Lists.member(x,e2) andalso subset xs;
+
+      fun length (n,[]) = n
+	| length (n,_::rest) = length(n+1,rest)
+    in
+      subset e1 andalso length(0,e1)=length(0,e2)
+    end;
+
+
+    (* Find a block by its tag in a list of blocks. *)
+
+    exception NotFound;
+
+    fun find_block _ [] = raise NotFound
+      | find_block tag ((block as BLOCK(tag', _, _))::blocks) =
+	if tag = tag' then block else find_block tag blocks;
+
+
+    (* Filter out duplicate blocks in a list. *)
+
+    fun remove_duplicates blocks =
+    let
+      fun r ([],done) = rev done
+	| r ((block as BLOCK(tag,_,_))::blocks, done) =
+	  if (find_block tag done; true) handle NotFound => false
+	  then r (blocks, done)
+	  else r (blocks, block::done)
+    in
+      r (blocks, [])
+    end;
+
+
+    (*  == Decide which set of expressions to use ==
+     *
+     *  If it's already been analysed with a subset then raise
+     *  ItsBeenDone. If it's never been analysed, then expressions is
+     *  returned. Otherwise the intersection of the previous try and
+     *  expressions is returned.
+     *)
+
+    exception ItsBeenDone;
+
+    fun choose_expressions (tag, expressions, blocks_done) =
+      let
+	val BLOCK(_, previous_expressions, _) = find_block tag blocks_done;
+	val least_expressions =
+	  intersect_expressions(previous_expressions, expressions)
+      in
+  	if same (previous_expressions, least_expressions)
+	then raise ItsBeenDone
+	else least_expressions
+      end
+      handle NotFound => expressions;
+
+
+    (*  == Process the block list ==
+     *
+     *  This does most of the work of analysing the procedure. At the
+     *  end of processing duplicate analyses of blocks are removed
+     *  from blocks_done. The ordering of block will, by this time, be
+     *  totally whacko.
+     *)
+
+    fun process (blocks_done, []) = remove_duplicates(blocks_done)
+
+      | process (blocks_done, (tag, expressions)::rest) =
+	let
+
+	  val expressions_to_try =
+	    choose_expressions (tag, expressions, blocks_done);
+
+	  val block_to_try_them_on =
+	    find_block tag original_blocks;
+
+	  val _ = let val BLOCK(b,_,_) = block_to_try_them_on in
+	    info ("Trying block "^(MirTypes.print_tag b)^" with "^
+		  (print_exp_set expressions_to_try )) end;
+
+	  val (block, reachable_blocks) =
+	    exp_analyse_block expressions_to_try block_to_try_them_on
+
+	in
+
+	  process (block::blocks_done, rest @@ reachable_blocks)
+
+	end
+      handle ItsBeenDone => process (blocks_done, rest)
+	   | NotFound =>
+	Crash.impossible("MirOptimiser (dataflow): There's a branch to "^
+			 "a block tagged "^(MirTypes.print_tag tag)^
+			 " which I can't find in the current "^
+			 "procedure.")
+
+  in
+
+    (* Start the ball rolling with an empty expression set. *)
+    PROC(start_tag, process ([], [(start_tag, EXPSET [])]))
+
+  end;
+
+
+
+d97 1
+a97 2
+   *  This just converts the data structure then runs exp_analyse_proc on
+   *  it.
+d100 1
+a100 8
+  fun analyse (stuff as (MirTypes.BLOCK(tag, MirTypes.ENTER::_) :: _)) =
+      let
+	val new_blocks = annotate stuff;
+	val new_proc = exp_analyse_proc (PROC(tag, new_blocks));
+	val _ = code_info_proc new_proc
+      in
+	new_proc
+      end
+a101 3
+    | analyse _ =
+        Crash.impossible("MirOptimiser: Dataflow analyser " ^
+			 "was passed a malformed or empty procedure")
+@
+
+
+1.7
+log
+@Copy propagation made more distinct from available expression
+substitution.
+Consolidation and documentation of code.
+@
+text
+@d4 5
+d104 2
+a105 1
+   *  operators. LOADEXP denotes the equality of a register and a
+d116 2
+a117 3
+    LOADEXP of MirTypes.store_op *
+               MirTypes.reg_operand *
+	       MirTypes.gp_operand
+d193 1
+a193 1
+      | print_exp (LOADEXP(MirTypes.LD,operand1,operand2)) =
+d198 1
+a198 1
+	  "]"
+a199 7
+      | print_exp (LOADEXP(MirTypes.LDREF,operand1,operand2)) =
+	  "[REF " ^
+	  (MirPrint.reg_operand operand1) ^
+	  "+ " ^
+	  (MirPrint.gp_operand operand2) ^
+	  "]"
+
+d228 1
+a228 1
+    fun pretty_opcode_and_sets (opcode, availables, alives) =
+d231 1
+a231 1
+               [(pretty_reg_set alives)]);
+d233 3
+d242 4
+a245 1
+	 (map pretty_opcode_and_sets op_list)));
+d303 2
+a304 1
+   *  cancel). The result is an exp_set.
+d308 7
+a314 1
+    open MirTypes
+d322 3
+a324 1
+	  EXPSET [(GC reg, COPY value)]
+d327 3
+a329 1
+	  EXPSET [(GC reg, UNARYEXP(unary_op, value))]
+d332 3
+a334 1
+	  EXPSET [(GC reg, BINARYEXP(binary_op, value1, value2))]
+d342 3
+a344 1
+	  EXPSET [(GC reg, BINARYEXP(untag t_op, value1, value2))]
+d348 2
+a349 2
+	  (* is a valid assumption. It is different for REFs, see *)
+	  (* below. *)
+d352 3
+a354 1
+	  EXPSET [(GC reg, LOADEXP(LD, value1, value2))]
+d357 3
+a359 1
+	  EXPSET [(GC reg, LOADEXP(LD, value1, value2))]
+a360 10
+	  (* N.B. LDREF and STREF make a register into an alias of a *)
+	  (* memory cell, but any STREF cancels any LDREF aliases (see *)
+	  (* cancel), as does any function call. *)
+
+      | generate_expressions (STOREOP(LDREF,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, LOADEXP(LDREF, value1, value2))]
+
+      | generate_expressions (STOREOP(STREF,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, LOADEXP(LDREF, value1, value2))]
+
+d562 3
+a564 1
+     *  NoExpression.
+d571 22
+d595 2
+a596 1
+	  if exp = bound_exp then reg else f bindings
+d661 5
+d712 7
+a718 2
+	| subst (STOREOP(loadop,reg1,operand1,operand2)) =
+	  (case reg_of_exp (LOADEXP(loadop,operand1,operand2)) expressions
+d739 1
+a739 1
+	val t = subst p;
+a743 1
+      handle NoExpression => opcode
+d750 1
+a750 1
+  (*  === ANALYSE A SINGLE BLOCK ===
+a778 3
+      (* A STREF instruction always invalidates any LOADEXP *)
+      (* expressions which came from LDREFs. Also, an unknowable *)
+      (* operation such as BRANCH_AND_LINK must invalidate them too. *)
+a779 7
+      val invalidate_refs =
+	case opcode
+	  of MirTypes.STOREOP(MirTypes.STREF,_,_,_) => true
+	   | MirTypes.BRANCH_AND_LINK(_,_) => true
+	   | _ => false;
+
+
+d792 2
+a793 2
+	  | cancel ((bind as (_,BINARYEXP(_,GP_GC_REG(reg,_),_))) ::
+	       bindings) =
+d798 2
+a799 2
+	  | cancel ((bind as (_,BINARYEXP(_,_,GP_GC_REG(reg,_)))) ::
+	       bindings) =
+d805 1
+a805 1
+	       bindings) =
+d810 2
+a811 1
+	  | cancel ((bind as (_,LOADEXP(LD,GC_REG(reg,_),_))) :: bindings) =
+d816 1
+a816 1
+	  | cancel ((bind as (_,LOADEXP(LD,_,GP_GC_REG(reg,_)))) :: bindings) =
+a820 13
+	  | cancel ((bind as (_,LOADEXP(LDREF,GC_REG(reg,_),_))) :: bindings) =
+	      if invalidate_refs orelse
+		 Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+	  | cancel ((bind as (_,LOADEXP(LDREF,_,GP_GC_REG(reg,_)))) ::
+		    bindings) =
+	      if invalidate_refs orelse
+		 Set.is_member(GC reg, updated_regs)
+	      then cancel bindings
+	      else bind::(cancel bindings)
+
+d898 1
+a898 1
+	    val new = add_available(expressions, opcode);
+d907 1
+a907 1
+    fun analyse_block expressions (BLOCK(tag, _, opcodes)) =
+d919 1
+a919 1
+  (*  === ANALYSE A PROCEDURE ===
+d940 1
+a940 1
+  fun analyse_proc (PROC(start_tag, original_blocks)) =
+d1042 1
+a1042 1
+	    analyse_block expressions_to_try block_to_try_them_on
+d1067 1
+a1067 1
+   *  This just converts the data structure then runs analyse_proc on
+d1074 2
+a1075 1
+	val new_proc = analyse_proc (PROC(tag, new_blocks))
+a1076 1
+	code_info_proc new_proc;
+@
+
+
+1.6
+log
+@Copy propagation and available expression propagation partially
+implemented.
+@
+text
+@d4 4
+d59 1
+d62 1
+d64 3
+a69 3
+
+  (* Debugging information output *)
+
+d77 20
+a96 1
+  (*  Data structure for Available Expression analysis
+d98 4
+a101 3
+   *  A set of available expressions is attached to each opcode. The
+   *  structure used is bound_exp of a register and an expression.
+   *  NOTE: Very few expressions implemented yet.
+d105 1
+d117 1
+a117 1
+  (*  Data structure for Live Variable Analysis
+d119 4
+a122 4
+   *  A set of live variables is attached to each opcode. The final
+   *  arrangement is undecided. At the moment it's a set of
+   *  MirTypes.any_register, but will probably need annotating with
+   *  other information.
+d132 1
+a132 1
+  (*  Annotated code block
+d135 4
+a138 1
+   *  has available expressions and live variables attached.
+a149 1
+  (*  Miscellaneous utility functions  *)
+d151 1
+a151 2
+  fun gather f i [] = i
+    | gather f i (x::xs) = gather f (f (i,x)) xs;
+d153 4
+a157 2
+  (* Fixed registers *)
+
+d163 3
+a165 3
+    val fn_arg_reg = MirTypes.GC fn_arg;
+    val cl_arg_reg = MirTypes.GC cl_arg;
+    val cl_arg'_reg = MirTypes.GC cl_arg'
+d169 2
+a170 1
+  (*  == Annotated code printing functions ==
+d178 4
+a181 1
+    fun print_exp (UNARYEXP(unary_op,operand)) =
+d183 1
+d194 1
+d201 1
+d204 1
+d208 1
+d213 1
+d216 1
+d220 1
+d222 1
+d226 1
+d229 1
+d235 1
+d243 1
+d250 2
+a251 2
+    val print_block_and_sets =
+      P.string_of_T o pretty_block;
+a252 2
+    val print_proc =
+      P.string_of_T o pretty_proc;
+d254 4
+d264 2
+a265 1
+  (*  == Analyse opcode for available expression ==
+d267 3
+a269 1
+   *  Returns an EXPSET if an expression can be bound to a register.
+d273 30
+d306 8
+a313 1
+    fun generate_expressions (UNARY(unary_op,GC_REG(reg,_),value)) =
+d319 5
+d325 1
+a325 7
+	let
+	  val untagged =
+	    case t_op
+	      of ADDV => ADD | SUBV => SUB | MULV => MULS | DIVV => DIVS
+	in 
+	  EXPSET [(GC reg, BINARYEXP(untagged, value1, value2))]
+	end
+d327 5
+d335 7
+a344 3
+      | generate_expressions (STOREOP(ST,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, LOADEXP(LD, value1, value2))]
+
+d353 2
+a354 1
+  (*  Analyse opcode for variable births, marriages, and deaths
+d356 3
+a358 1
+   *  Returns a reg_set. THIS TABLE IS NOT COMPLETE.
+d367 1
+d370 1
+d378 1
+d386 1
+d394 1
+d402 1
+d410 1
+d418 1
+d426 1
+d431 1
+d439 1
+d444 1
+d452 1
+d457 1
+d465 1
+d470 1
+d478 1
+d483 1
+d491 1
+d496 1
+d501 1
+d506 1
+d511 1
+d516 1
+d521 1
+d526 1
+d533 2
+a534 1
+  (*  Attempt to use available expression in opcode
+d541 1
+a542 1
+  in
+d544 2
+a545 1
+    (*  Search expression set for an expression
+a562 1
+    (*  Search expression set for a copy of a register.  *)
+d564 14
+a577 5
+    fun copy_of_gp_operand (GP_GC_REG(reg,_)) (EXPSET bindings) =
+	let
+	  fun f [] = raise NoExpression
+	    | f ((GC reg',UNARYEXP(MOVE,operand))::bindings) =
+	      if reg=reg' then operand else f bindings
+a581 1
+      | copy_of_gp_operand _ _ = raise NoExpression;
+d583 4
+a586 1
+    fun copy_of_reg_operand (GC_REG(reg,_)) (EXPSET bindings) =
+d588 3
+a590 3
+	  fun f [] = raise NoExpression
+	    | f ((GC reg',UNARYEXP(MOVE,GP_GC_REG operand))::bindings) =
+	      if reg=reg' then GC_REG operand else f bindings
+a594 1
+      | copy_of_reg_operand _ _ = raise NoExpression;
+d596 1
+d598 5
+a604 2
+        (* First, we have transformations where a copy of a register *)
+	(* is replaced by the original. *)
+d606 8
+a613 58
+      fun pro (UNARY(unaryop,reg1,operand)) =
+	  let
+	    val co =
+	      (copy_of_gp_operand operand expressions)
+	      handle NoExpression => operand
+	  in
+	    UNARY(unaryop,reg1,co)
+	  end
+	| pro (BINARY(binaryop,reg1,operand1,operand2)) =
+	  let
+	    val co1 =
+	      (copy_of_gp_operand operand1 expressions)
+	      handle NoExpression => operand1
+	    val co2 =
+	      (copy_of_gp_operand operand2 expressions)
+	      handle NoExpression => operand2
+	  in
+	    BINARY(binaryop,reg1,co1,co2)
+	  end
+	| pro (STOREOP(storeop,reg1,operand1,operand2)) =
+	  let
+	    val co1 =
+	      (copy_of_reg_operand operand1 expressions)
+	      handle NoExpression => operand1
+	    val co2 =
+	      (copy_of_gp_operand operand2 expressions)
+	      handle NoExpression => operand2
+	  in
+	    STOREOP(storeop,reg1,co1,co2)
+	  end
+	| pro (TEST(condop,tag,operand1,operand2)) =
+	  let
+	    val co1 =
+	      (copy_of_gp_operand operand1 expressions)
+	      handle NoExpression => operand1
+	    val co2 =
+	      (copy_of_gp_operand operand2 expressions)
+	      handle NoExpression => operand2
+	  in
+	    TEST(condop,tag,co1,co2)
+	  end
+	| pro (BRANCH_AND_LINK(blop,REG operand)) =
+	  let
+	    val co =
+	      (copy_of_reg_operand operand expressions)
+	      handle NoExpression => operand
+	  in
+	    BRANCH_AND_LINK(blop,REG co)
+	  end
+	| pro (SWITCH(switchop,operand,tags)) =
+	  let
+	    val co =
+	      (copy_of_reg_operand operand expressions)
+	      handle NoExpression => operand
+	  in
+	    SWITCH(switchop,co,tags)
+	  end
+	| pro anything_else = anything_else;
+d615 2
+a616 2
+	(* These are direct transformations which turn recalculation *)
+	(* of an available expression into a MOVE operation. *)
+d618 36
+a653 1
+      fun try (UNARY(unaryop,reg1,operand)) =
+d657 2
+a658 1
+	| try (BINARY(binaryop,reg1,operand1,operand2)) =
+d662 8
+a669 15
+	| try (TBINARY(taggedop,tag,reg1,operand1,operand2)) =
+	  let
+	    (* N.B. It is safe to turn a tagged operation into an *)
+	    (* untagged one if it is available, since the overflow *)
+	    (* check will already have been done and cannot occur *)
+	    (* again. *)
+	    val untagged =
+	      case taggedop
+		of ADDV => ADD | SUBV => SUB | MULV => MULS | DIVV => DIVS
+	  in
+	    case reg_of_exp (BINARYEXP(untagged,operand1,operand2)) expressions
+	      of GC reg2 => UNARY(MOVE,reg1,GP_GC_REG(reg2,ABSENT))
+	       | _ => opcode
+	  end
+	| try (STOREOP(loadop,reg1,operand1,operand2)) =
+d673 4
+a676 1
+        | try anything_else = anything_else
+d678 7
+d689 1
+a689 1
+	val p = pro opcode;
+d691 2
+a692 2
+	val t = try p;
+	val _ = display "Available analysis " p t
+a701 6
+  (*  Convert unannotated code blocks to annotated
+   *
+   *  This function takes a list of blocks of type MirTypes.block and
+   *  converts them to type block list. The sets of live variables and
+   *  available expressions are empty.
+   *)
+d703 1
+a703 23
+  local
+
+    fun annotate_block [] = []
+      | annotate_block (opcode::opcodes) =
+	(opcode,
+	 EXPSET [],
+	 REGSET(Set.empty_set, Set.empty_set, Set.empty_set)) ::
+	   (annotate_block opcodes);
+
+  in
+
+    fun annotate [] = []
+      | annotate ((MirTypes.BLOCK(tag,opcodes))::blocks) =
+	let
+	  val new_block = BLOCK(tag, EXPSET [], annotate_block opcodes)
+	in
+	  new_block::(annotate blocks)
+	end
+
+  end;
+
+
+  (*  Analyse a single block
+d713 1
+a713 1
+    (*  Add new available expressions to existing ones.
+d716 4
+a719 1
+     *  the set of expressions available _after_ its execution.
+d724 5
+a728 2
+      (* Determine which registers are changed by the opcode, i.e.
+       * the set of register births. *)
+d732 3
+a734 2
+      (* This function strips out bindings affected by the updated *)
+      (* registers. *)
+d736 13
+a751 8
+	(* A STREF instruction always invalidates any LOADEXP *)
+	(* expressions which came from LDREFs. Also, an unknowable *)
+	(* operation such as BRANCH_AND_LINK must invalidate them too. *)
+	val invalidate_refs =
+	  case opcode
+	    of STOREOP(STREF,_,_,_) => true
+	     | BRANCH_AND_LINK(_,_) => true
+	     | _ => false;
+d753 3
+a755 2
+	fun f [] = []
+	  | f ((bind as (_,BINARYEXP(_,GP_GC_REG(reg,_),_))) ::
+d758 4
+a761 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,BINARYEXP(_,_,GP_GC_REG(reg,_)))) ::
+d764 4
+a767 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,UNARYEXP(_,GP_GC_REG(reg,_)))) ::
+d770 4
+a773 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,LOADEXP(LD,GC_REG(reg,_),_))) :: bindings) =
+d775 4
+a778 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,LOADEXP(LD,_,GP_GC_REG(reg,_)))) :: bindings) =
+d780 4
+a783 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,LOADEXP(LDREF,GC_REG(reg,_),_))) :: bindings) =
+d786 5
+a790 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (_,LOADEXP(LDREF,_,GP_GC_REG(reg,_)))) :: bindings) =
+d793 4
+a796 3
+	      then f bindings
+	      else bind::(f bindings)
+	  | f ((bind as (reg,_))::bindings) =
+d798 3
+a800 2
+	      then f bindings
+	      else bind::(f bindings)
+d804 1
+a804 1
+      EXPSET (new_bindings @@ (f expressions))
+d807 12
+d821 4
+a824 1
+        (* Don't process anything after an unconditional branch *)
+d835 9
+a856 1
+	(* Don't process anything after a procedure exit *)
+a857 9
+	        (((opcode as MirTypes.EXIT,_,v))::_, done, others) =
+	  let
+	    val new_opcode = use_expressions expressions opcode;
+	    val new = add_available(expressions, new_opcode)
+	  in
+	    process new ([], (new_opcode, new, v)::done, others)
+	  end
+
+      | process expressions
+d880 2
+d893 2
+a894 1
+  (*  Analyse a complete procedure
+d896 17
+a912 1
+   *  Under development.
+d915 2
+a916 1
+  local
+d931 1
+d936 6
+a941 3
+      fun subset ([], ys) = true
+	| subset (x::xs, ys) =
+	  Lists.member(x,ys) andalso subset (xs, ys)
+d943 1
+a943 1
+      subset(e1,e2) andalso subset(e2,e1)
+d946 1
+d955 1
+a968 5
+    (* Decide which set of expressions to analyse a block with. If *)
+    (* it's already been analysed with a lesser set then raise *)
+    (* ItsBeenDone. If it's never been analysed, then expressions is *)
+    (* returned. Otherwise the intersection of the previous try and *)
+    (* expressions is returned. *)
+d970 8
+d993 11
+a1003 2
+    fun process (_, blocks_done, []) = remove_duplicates(blocks_done)
+      | process (blocks_pending, blocks_done, (tag, expressions)::rest) =
+d1005 1
+d1010 1
+a1010 1
+	    find_block tag blocks_pending;
+d1018 1
+d1020 3
+a1022 3
+	  process (blocks_pending,
+		   block::blocks_done,
+		   rest @@ reachable_blocks)
+d1024 6
+a1029 7
+        handle NotFound =>
+	  Crash.impossible("MirOptimiser (dataflow): There's a branch to "^
+			   "a block tagged "^(MirTypes.print_tag tag)^
+			   " which I can't find in the current "^
+			   "procedure.")
+	     | ItsBeenDone =>
+	  process (blocks_pending, blocks_done, rest)
+d1033 2
+a1034 2
+    fun analyse_proc (PROC(start_tag, blocks)) =
+      PROC(start_tag, process (blocks, [], [(start_tag, EXPSET [])]))
+d1039 2
+a1040 1
+  (*  === Perform Data Flow Analysis ===
+d1042 2
+a1043 1
+   *  Doesn't do much yet. It's a test harness only.
+d1051 1
+a1051 1
+	code_info (print_proc new_proc);
+d1058 1
+@
+
+
+1.5
+log
+@Forward dataflow analysis (available expressions) of complete
+procedures, including memory references.
+@
+text
+@d4 4
+a89 19
+  (*  Miscellaneous utility functions  *)
+
+  fun gather f i [] = i
+    | gather f i (x::xs) = gather f (f (i,x)) xs;
+
+
+  (* Fixed registers *)
+
+  local
+    val (fn_arg,_) = Mir_Cg.fn_arg;
+    val (cl_arg,_) = Mir_Cg.cl_arg;
+    val (cl_arg',_) = Mir_Cg.cl_arg'
+  in
+    val fn_arg_reg = MirTypes.GC fn_arg;
+    val cl_arg_reg = MirTypes.GC cl_arg;
+    val cl_arg'_reg = MirTypes.GC cl_arg'
+  end;
+
+
+d120 19
+d224 1
+a224 1
+    fun available (UNARY(unary_op,GC_REG(reg,_),value)) =
+d227 1
+a227 1
+      | available (BINARY(binary_op,GC_REG(reg,_),value1,value2)) =
+d230 8
+a237 2
+      | available (TBINARY(ADDV,_,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, BINARYEXP(ADD, value1, value2))]
+d239 2
+a240 2
+      | available (TBINARY(SUBV,_,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, BINARYEXP(SUB, value1, value2))]
+d242 2
+a243 2
+      | available (TBINARY(MULV,_,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, BINARYEXP(MULS, value1, value2))]
+d245 1
+a245 4
+      | available (TBINARY(DIVV,_,GC_REG(reg,_),value1,value2)) =
+	  EXPSET [(GC reg, BINARYEXP(DIVS, value1, value2))]
+
+      | available (STOREOP(LD,GC_REG(reg,_),value1,value2)) =
+d248 1
+a248 1
+      | available (STOREOP(LDREF,GC_REG(reg,_),value1,value2)) =
+d251 1
+a251 1
+      | available _ = EXPSET []
+d265 1
+a265 1
+    fun variables (UNARY(_,GC_REG(reg1,_),GP_GC_REG(reg2,_))) =
+d267 1
+a267 1
+      | variables (UNARY(_,GC_REG(reg1,_),_)) =
+d269 4
+a272 4
+      | variables (BINARY(_,
+			  GC_REG(reg1,_),
+			  GP_GC_REG(reg2,_),
+			  GP_GC_REG(reg3,_))) =
+d276 4
+a279 4
+      | variables (BINARY(_,
+			  GC_REG(reg1,_),
+			  GP_GC_REG(reg2,_),
+			  _)) =
+d283 4
+a286 4
+      | variables (BINARY(_,
+			  GC_REG(reg1,_),
+			  _,
+			  GP_GC_REG(reg3,_))) =
+d290 4
+a293 4
+      | variables (TBINARY(_,_,
+			  GC_REG(reg1,_),
+			  GP_GC_REG(reg2,_),
+			  GP_GC_REG(reg3,_))) =
+d297 4
+a300 4
+      | variables (TBINARY(_,_,
+			  GC_REG(reg1,_),
+			  GP_GC_REG(reg2,_),
+			  _)) =
+d304 4
+a307 4
+      | variables (TBINARY(_,_,
+			  GC_REG(reg1,_),
+			  _,
+			  GP_GC_REG(reg3,_))) =
+d311 4
+a314 4
+      | variables (STOREOP(LD,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d318 1
+a318 1
+      | variables (STOREOP(LD,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d322 4
+a325 4
+      | variables (STOREOP(ST,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d329 1
+a329 1
+      | variables (STOREOP(ST,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d333 4
+a336 4
+      | variables (STOREOP(LDREF,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d340 1
+a340 1
+      | variables (STOREOP(LDREF,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d344 4
+a347 4
+      | variables (STOREOP(STREF,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d351 1
+a351 1
+      | variables (STOREOP(STREF,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d355 4
+a358 4
+      | variables (STOREOP(LDB,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d362 1
+a362 1
+      | variables (STOREOP(LDB,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d366 4
+a369 4
+      | variables (STOREOP(STB,
+			   GC_REG(reg1,_),
+			   GC_REG(reg2,_),
+			   GP_GC_REG(reg3,_))) =
+d373 1
+a373 1
+      | variables (STOREOP(STB,GC_REG(reg1,_),GC_REG(reg2,_),_)) =
+d377 1
+a377 1
+      | variables (TEST(_,_,GP_GC_REG(reg1,_),GP_GC_REG(reg2,_))) =
+d381 1
+a381 1
+      | variables (TEST(_,_,GP_GC_REG(reg1,_),_)) =
+d385 1
+a385 1
+      | variables (TEST(_,_,_,GP_GC_REG(reg2,_))) =
+d389 1
+a389 1
+      | variables (SWITCH(_,GC_REG(reg1,_),_)) =
+d393 1
+a393 1
+      | variables (ALLOCATE(_,GC_REG(reg1,_),_)) =
+d397 1
+a397 1
+      | variables (BRANCH_AND_LINK(_,REG(GC_REG(reg1,_)))) =
+d401 1
+a401 1
+      | variables _ =
+d407 165
+d605 2
+a606 1
+   *  branching.
+d621 2
+a622 2
+      val REGSET(updated_regs,_,_) = variables opcode;
+      val EXPSET(new_bindings) = available opcode;
+d631 3
+a633 2
+	(* expressions which came from LDREFs. *)
+	val store_ref_instruction =
+d636 1
+d664 1
+a664 1
+	      if store_ref_instruction orelse
+d669 1
+a669 1
+	      if store_ref_instruction orelse
+d689 2
+a690 1
+	    val new = add_available (expressions, opcode)
+d692 1
+a692 1
+	    process new ([], (opcode, new, v)::done, (tag,new)::others)
+d695 14
+d713 2
+a714 1
+	    val new = add_available(expressions, opcode)
+d716 1
+a716 1
+	    process new ([], (opcode, new, v)::done, others)
+d724 2
+a725 1
+	    val new = add_available(expressions, opcode)
+d728 1
+a728 1
+	            (opcodes, (opcode, new, v)::done, (tag,new)::others)
+d734 1
+d737 1
+a737 1
+	    process new (opcodes, (opcode, new, v)::done, others)
+d849 1
+a849 1
+			   "which I can't find in the current"^
+@
+
+
+1.4
+log
+@Available expression analysis of a single block implemented.
+Lists module added to functor.
+@
+text
+@d4 4
+d31 1
+d38 1
+d45 1
+a45 1
+  sharing MirTypes = MirPrint.MirTypes
+d78 4
+a81 1
+    UNARYEXP of MirTypes.unary_op * MirTypes.gp_operand
+d86 19
+d127 2
+a128 1
+    MirTypes.tag *
+d130 1
+a145 1
+	  "(" ^
+d148 5
+d154 7
+a160 1
+	  ")"
+d167 1
+a167 1
+      P.lst("{", [], "}")
+d186 1
+a186 1
+    fun pretty_block (BLOCK(tag, op_list)) =
+d189 3
+a191 1
+	  (map pretty_opcode_and_sets op_list)))
+d193 4
+d199 2
+a200 2
+    fun print_block_and_sets block =
+      P.string_of_T (pretty_block block);
+d202 3
+d238 6
+d392 2
+a393 2
+		 Set.singleton(GC reg1),
+		 Set.empty_set)
+d421 1
+a421 1
+	  val new_block = BLOCK(tag,annotate_block opcodes)
+a428 7
+  (*  Perform one pass of dataflow analysis
+   *
+   *  The blocks reachable from the first block in the block list are
+   *  analysed. Any unreachable blocks will be discarded.
+   *)
+
+
+d444 1
+a444 1
+    fun add_available (EXPSET current, opcode) =
+a449 1
+      val _ = map (code_info o MirPrint.any_reg) (Set.set_to_list updated_regs)
+d451 2
+a452 17
+      fun f [] = []
+	| f ((bind as (_,BINARYEXP(_,MirTypes.GP_GC_REG(reg,_),_)))::bindings) =
+	    if Set.is_member(MirTypes.GC reg, updated_regs)
+	    then f bindings
+	    else bind::(f bindings)
+	| f ((bind as (_,BINARYEXP(_,_,MirTypes.GP_GC_REG(reg,_))))::bindings) =
+	    if Set.is_member(MirTypes.GC reg, updated_regs)
+	    then f bindings
+	    else bind::(f bindings)
+	| f ((bind as (_,UNARYEXP(_,MirTypes.GP_GC_REG(reg,_))))::bindings) =
+	    if Set.is_member(MirTypes.GC reg, updated_regs)
+	    then f bindings
+	    else bind::(f bindings)
+	| f ((bind as (reg,_))::bindings) =
+	    if Set.is_member(reg, updated_regs)
+	    then f bindings
+	    else bind::(f bindings)
+d454 50
+d505 1
+a505 1
+      EXPSET (new_bindings @@ (f current))
+a507 1
+
+d511 1
+a511 1
+      | process current
+d514 1
+a514 1
+	    val new = add_available (current, opcode)
+d520 1
+a520 1
+      | process current
+d523 1
+a523 1
+	    val new = add_available(current, opcode)
+d528 1
+a528 1
+      | process current
+d533 1
+a533 1
+	    val new = add_available(current, opcode)
+d539 1
+a539 1
+      | process current
+d542 1
+a542 1
+	    val new = add_available(current, opcode);
+d549 1
+a549 1
+    fun analyse_block current (BLOCK(tag, opcodes)) =
+d551 2
+a552 1
+      val (new_opcodes, reachable_blocks) = process current (opcodes, [], [])
+d554 1
+a554 1
+      (BLOCK(tag, new_opcodes), reachable_blocks)
+d560 109
+d676 2
+a677 3
+	val new_stuff as block::_ = annotate stuff;
+	val (new_block, reachable_blocks) =
+	      analyse_block (EXPSET []) block
+d679 2
+a680 6
+	code_info (print_block_and_sets new_block);
+	map (fn (tag,av) =>
+	     code_info ((MirTypes.print_tag tag) ^
+			" " ^
+			(print_exp_set av))) reachable_blocks;
+	PROC(tag, new_stuff)
+@
+
+
+1.3
+log
+@Implemented function to find live variables, with large table.
+Altered the way in which available expressions are matched.
+Partial implementation of function to perform analysis of an entire
+procedure.
+@
+text
+@d4 6
+d23 1
+d33 1
+d74 1
+a74 2
+  datatype bound_exp =
+    BOUNDEXP of MirTypes.any_register * expression
+a75 1
+  datatype exp_set = EXPSET of bound_exp Set.Set
+a76 1
+
+d123 1
+a123 1
+    fun print_boundexp (BOUNDEXP(reg, exp)) =
+d128 1
+a128 2
+        (map (fn binding => P.str(print_boundexp binding))
+          (Set.set_to_list exps));
+d142 1
+a142 1
+      P.blk(2, [P.str(MirPrint.opcode opcode), P.nl] @@
+d156 3
+d172 2
+a173 1
+	  EXPSET(Set.singleton(BOUNDEXP(GC reg, UNARYEXP(unary_op, value))))
+d175 2
+a176 2
+	  EXPSET(Set.singleton(
+            BOUNDEXP(GC reg, BINARYEXP(binary_op, value1, value2))))
+d178 2
+a179 2
+	  EXPSET(Set.singleton(
+	    BOUNDEXP(GC reg, BINARYEXP(ADD, value1, value2))))
+d181 2
+a182 2
+	  EXPSET(Set.singleton(
+            BOUNDEXP(GC reg, BINARYEXP(SUB, value1, value2))))
+d184 2
+a185 2
+	  EXPSET(Set.singleton(
+            BOUNDEXP(GC reg, BINARYEXP(MULS, value1, value2))))
+d187 1
+a187 3
+	  EXPSET(Set.singleton(
+            BOUNDEXP(GC reg, BINARYEXP(DIVS, value1, value2))))
+      | available _ = EXPSET(Set.empty_set)
+d189 2
+d357 1
+a357 1
+	 EXPSET(Set.empty_set),
+a367 1
+	  code_info (print_block_and_sets new_block);
+a379 1
+  local
+d381 6
+a386 1
+    (*  Locate a block by tag. Must always succeed.  *)
+d388 1
+a388 6
+    fun find_block tag [] =
+          Crash.impossible ("MirOptimiser (dataflow): " ^
+			    "Branch to unknown block, tagged " ^
+			    (MirTypes.print_tag tag))
+      | find_block tag (BLOCK(tag',opcodes) :: blocks) =
+	  if tag = tag' then opcodes else find_block tag blocks
+d390 1
+a390 2
+
+    (*  Analyse a block, identified by its tag, in a block list.
+d392 2
+a393 3
+     *  This function is passed a tag, list of blocks, and a set of
+     *  blocks which are to be ignored if branched to. It returns a
+     *  list of analysed blocks.
+d396 1
+a396 1
+    fun do_block (tag, blocks, passed) =
+d398 24
+a421 1
+      val opcodes = find_block tag blocks
+d423 2
+a424 2
+      do_opcodes (tag, opcodes, blocks, Set.add_member(tag, passed), [], [])
+    end
+a425 5
+    (*  Analyse an opcode list.
+     *
+     *  Any blocks which can be reached by branching are also analysed
+     *  and returned as part of the block list.
+     *)
+d427 1
+a427 2
+    and do_opcodes (tag, [], _, _, done, reached) =
+          BLOCK(tag, rev done)::reached
+d429 8
+a436 17
+      | do_opcodes (tag, (opcode as MirTypes.BRANCH(_,tag'),_,_)::opcodes,
+		    blocks, passed, done, reached) =
+	let
+	  val annotated_opcode =
+	    (opcode,
+	     available opcode,
+	     variables opcode)
+	in
+	  if Set.is_member(tag', passed)
+	  then
+	    do_opcodes (tag, opcodes, blocks, passed,
+			annotated_opcode :: done, reached)
+	  else
+	    do_opcodes (tag, opcodes, blocks, passed,
+			annotated_opcode :: done,
+			(do_block (tag', blocks, passed)) @@ reached)
+        end
+d438 8
+a445 12
+      | do_opcodes (tag,
+		    (opcode,_,_)::opcodes,
+		    blocks, passed, done, reached) =
+	let
+	  val annotated_opcode =
+	    (opcode,
+	     available opcode,
+	     variables opcode)
+	in
+	  do_opcodes (tag, opcodes, blocks, passed,
+		      annotated_opcode :: done, reached)
+	end
+d447 19
+d468 6
+a473 2
+    fun scan tag blocks =
+      PROC(tag, do_block(tag, blocks, Set.singleton(tag)))
+d478 3
+a480 2
+  (* === Perform Data Flow Analysis ===
+   * Doesn't do much yet, it just converts the data structure.
+d483 14
+a496 2
+  fun analyse (block as ((MirTypes.BLOCK(tag,MirTypes.ENTER::_)) :: _)) =
+        scan tag (annotate block)
+d499 1
+a499 1
+			 "was passed a malformed empty procedure")
+@
+
+
+1.2
+log
+@Data structures modified. Started matching for available
+expressions and live variables.
+@
+text
+@d4 4
+d61 4
+a64 1
+    COPY of MirTypes.gp_operand
+d97 1
+a97 1
+  datatype procedure = PROC of block list
+d108 9
+a116 2
+    fun print_exp (COPY operand) =
+          MirPrint.print_gp_operand operand;
+d119 1
+a119 1
+          (MirPrint.print_any_reg reg) ^ " = " ^ (print_exp exp);
+d122 1
+a122 1
+      P.lst("{", [P.str(", ")], "}")
+d129 2
+a130 2
+	P.lst("{", [P.str(", ")], "}")
+          (map (fn reg => P.str(MirPrint.print_any_reg reg)) regs)
+d133 2
+a134 2
+	       [P.str("Marriages ")] @@ (p (Set.set_to_list marriages)) @@
+	       [P.str("Deaths ")] @@ (p (Set.set_to_list deaths)))
+d138 2
+a139 2
+      P.blk(2, [P.str(MirPrint.print_opcode opcode), P.nl] @@
+	       (pretty_exp_set availables) @@
+d150 1
+a150 1
+      P.string_of_T (pretty_block block)
+d157 1
+a157 2
+   *  Returns a bound_exp if an expression can be bound to a register,
+   *  otherwise it raises Match.
+d164 18
+a181 5
+    fun available (UNARY(MOVE,GC_REG(reg,_),value)) =
+	  BOUNDEXP(GC reg, COPY value)
+      | available (UNARY(MOVE,NON_GC_REG(reg,_),value)) =
+	  BOUNDEXP(NON_GC reg, COPY value)
+      | available _ = raise Match
+d186 4
+d191 151
+a341 2
+  (* === Perform Data Flow Analysis ===
+   * Doesn't do much yet, it just converts the data structure.
+d349 2
+a350 3
+	 EXPSET(Set.singleton(available opcode))
+	   handle Match => EXPSET(Set.empty_set),
+	 REGSET(Set.empty_set,Set.empty_set,Set.empty_set))::
+d353 4
+a356 2
+    fun annotate_all [] = []
+      | annotate_all ((MirTypes.BLOCK(tag,opcodes))::blocks) =
+d361 1
+a361 1
+	  new_block::(annotate_all blocks)
+d364 75
+d441 2
+a442 1
+    fun analyse blocks = PROC(annotate_all blocks)
+d444 1
+a444 1
+  end
+d446 10
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log:$
+d49 6
+a54 1
+  datatype reg_set = REGSET of MirTypes.any_register Set.Set
+d56 30
+d88 1
+a88 1
+    (MirTypes.opcode * reg_set) list
+d90 1
+a91 1
+  (*  Print block with dataflow information  *)
+d93 6
+d101 2
+a102 5
+    fun print_any_reg (MirTypes.GC(r)) = MirTypes.print_gc_register r
+      | print_any_reg (MirTypes.NON_GC(r)) = MirTypes.print_non_gc_register r
+      | print_any_reg (MirTypes.FLOAT(r)) = MirTypes.print_fp_register r
+      | print_any_reg (MirTypes.DOUBLE(r)) =
+	MirTypes.print_fp_double_register r;
+d104 2
+a105 5
+    fun annotated_opcode (opcode, REGSET reg_set) =
+      P.blk(2, [P.str(MirPrint.print_opcode opcode), P.nl]@@
+	       (P.lst("{", [P.str(", ")], "}")
+		  (map (fn reg => P.str(print_any_reg reg))
+		    (Set.set_to_list reg_set))));
+d107 22
+a128 1
+    fun decode_block (BLOCK(tag, op_list)) =
+d131 1
+a131 1
+	  (map annotated_opcode op_list)))
+d135 2
+a136 2
+    fun print_block block =
+      P.string_of_T (decode_block block)
+d140 2
+a141 1
+  (*  === Perform Data Flow Analysis ===
+d143 2
+a144 1
+   *  Doesn't do much yet, it just converts the data structure.
+d147 3
+a149 3
+  fun analyse [] = []
+    | analyse ((MirTypes.BLOCK(tag,opcodes))::blocks) =
+      let
+d151 5
+a155 3
+	fun annotate [] = []
+	  | annotate (opcode::opcodes) =
+	    (opcode,REGSET Set.empty_set)::(annotate opcodes);
+d157 1
+a157 1
+	val new_block = BLOCK(tag,annotate opcodes)
+d159 31
+a189 4
+      in
+	code_info (print_block new_block);
+	new_block::(analyse blocks)
+      end
+@

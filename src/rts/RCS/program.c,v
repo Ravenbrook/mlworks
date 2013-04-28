@@ -1,0 +1,236 @@
+head	1.2;
+access;
+symbols
+	Final_version_of_old_runtime:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	91.05.17.17.32.46;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.05.15.15.32.19;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.05.17.17.32.46;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Main program for run time system
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@/*
+ * program.c
+ * Deal with an entire program, built of modules
+ * $Log:	program.c,v $
+ * Revision 1.1  91/05/15  15:32:19  jont
+ * Initial revision
+ * 
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include "program.h"
+#include "values.h"
+#include "allocator.h"
+#include "loader.h"
+#include "ml.out.h"
+#include "endian.h"
+
+extern void *malloc(u_int32);
+extern void free(void *);
+/* These should be in stdlib, but we don't have a proper stdlib */
+extern fclose();
+extern fread();
+extern fwrite();
+extern fseek();
+extern fflush();
+extern fgetc();
+extern sprintf();
+/* These should be in stdio.h, but we don't have an ansi version of this either */
+extern memcpy();
+extern memcmp();
+/* These should be in string.h, but we don't have an ansi version of this either */
+
+extern void call_out();
+extern void make_args();
+/* Fake ML functions written in assembler to interface to the library */
+
+typedef struct module *module_entry;
+
+struct module {
+  module_entry next;
+  char *module_name;
+  tuple_pointer module_value;
+};
+
+/*
+register void *global asm("%g1");
+*/
+
+void *built_in_functions[] = {
+  (void *)fopen,
+  (void *)fclose,
+  (void *)fread,
+  (void *)fwrite,
+  (void *)fseek,
+  (void *)ftell,
+  (void *)fflush,
+  (void *)fgetc,   /* For optimisation for single character interaction */
+  (void *)sprintf, /* The most general form, can be combined with fwrite */
+  (void *)memcpy,
+  (void *)memcmp
+};
+
+static module_entry module_name_table;
+
+static ml_header header;
+
+#define SEEK_SET 0
+#define SEEK_CUR 1
+#define SEEK_END 2
+
+static void read_code_header(FILE *input, char *module)
+{
+fseek(input, 0L, SEEK_SET);
+/* Ensure at start of file */
+if (fread(&header, sizeof(header), 1, input) != 1) {
+  fprintf(stderr, "Unable to read header for module '%s'\n", module);
+  exit(1);
+}
+find_endian(header.magic);
+header.version = handle_endian(header.version);
+header.code_size = handle_endian(header.code_size);
+header.env_size = handle_endian(header.env_size);
+header.debug_size = handle_endian(header.debug_size);
+}
+
+static void find_code_posn(FILE *input)
+{
+fseek(input, OFFSET_CODE, SEEK_SET);
+}
+
+int main(int argc, char *argv[])
+/*
+ * The arguments are a list of files to be loaded.
+ */
+{
+int i = 0;
+tuple_pointer where = allocate_record(2);
+module_name_table = NULL;
+if (where == NULL) {
+  fprintf(stderr, "Not enough store for 'library'\n");
+  exit(1);
+}
+where[0].tuple = (tuple_pointer)call_out;
+where[1].tuple = (tuple_pointer)make_args;
+add_module("library", where);
+while (i++ < argc) {
+  char *arg = *++argv; /* Next argument */
+  FILE *input = fopen(arg);
+  int32 size;
+  if (input == NULL) {
+    fprintf(stderr, "File '%s' not found during loading, ignored\n", arg);
+    continue;
+  }
+  read_code_header(input, arg);
+  find_code_posn(input);
+  if (load_module(arg, input, header.code_size)) {
+    fprintf(stderr, "Problem loading '%s'\nLoading aborted\n", arg);
+    exit(1);
+  }
+};
+return 0; /* Done (may never happens) */
+}
+
+void add_module(char *module_name, tuple_pointer where)
+/* Add this name and value to the list of all known modules */
+{
+module_entry entry = malloc(sizeof(*entry));
+if (entry == NULL) {
+  fprintf(stderr, "Run time system run out of heap while loading '%s'\n",
+    module_name);
+  exit(1);
+}
+entry->next = module_name_table;
+entry->module_name = malloc(strlen(module_name)+1);
+if (entry->module_name == NULL) {
+  fprintf(stderr, "Run time system run out of heap while loading '%s'\n",
+    module_name);
+  exit(1);
+}
+strcpy(entry->module_name, module_name);
+entry->module_value = where;
+declare_root(where); /* Tell the heap system about this module's root */
+module_name_table = entry;
+}
+
+tuple_pointer lookup_module_name(char *module_name)
+{
+tuple_pointer return_value;
+module_entry entry;
+for (entry = module_name_table; entry != NULL; entry = entry->next)
+  if (strcmp(module_name, entry->module_name) == 0) return entry->module_value;
+return NULL;
+}
+/* Return the pointer to the value representing the given module */
+
+/* End program.c */
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d4 1
+a4 4
+ * $Log: program.c,v $
+ * Revision 1.2  1991/05/17  17:32:46  jont
+ * *** empty log message ***
+ *
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d12 1
+d22 11
+d34 4
+d40 1
+a40 1
+typedef struct module {
+d46 18
+d98 1
+d100 7
+@

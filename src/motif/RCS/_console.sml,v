@@ -1,0 +1,603 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.07.04.17.18.31;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.04.15.09.39;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.07.04.13.12.34;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Std_in and std_out.
+@
+
+
+1.3
+log
+@Replaced ad-hoc handling of CTRL-D (which has stopped working)
+with an explicit function.
+@
+text
+@(* IO Console - imitates user's TTY *)
+(*
+ *  $Log: _console.sml,v $
+ *  Revision 1.2  1995/07/04  15:09:39  matthew
+ *  Further capification
+ *
+ *  Revision 1.1  1995/07/04  13:12:34  daveb
+ *  new unit
+ *  Std_in and std_out.
+ *
+ *
+ *  Copyright (c) 1995 Harlequin Ltd.
+ *  
+*)
+
+require "../utils/lists";
+require "../interpreter/shell_utils";
+require "../library/capi";
+require "motif_utils";
+require "menus";
+
+require "console";
+
+(* WARNING: Don't use std_out for error tracing when debugging this file.
+   Usually you should use MLWorks.IO.terminal_out instead. *)
+
+functor Console (
+  structure Capi: CAPI
+  structure Lists: LISTS
+  structure ShellUtils : SHELL_UTILS
+  structure MotifUtils : MOTIF_UTILS
+  structure Menus : MENUS
+
+  sharing type MotifUtils.user_tool_options = ShellUtils.UserOptions 
+
+  sharing type Menus.Widget = MotifUtils.Widget = Capi.Widget
+
+  sharing type Menus.ButtonSpec = MotifUtils.ButtonSpec
+
+  sharing type ShellUtils.user_preferences = MotifUtils.user_preferences
+): CONSOLE =
+struct
+  structure Integer = MLWorks.Integer
+  structure IO = MLWorks.IO
+
+  type Widget = Capi.Widget
+  type user_preferences = MotifUtils.user_preferences
+
+  val do_debug = false
+  fun debug s = if do_debug then output(IO.terminal_out,s ^ "\n") else ()
+  fun fdebug f = if do_debug then output(IO.terminal_out,f() ^ "\n") else ()
+  fun ddebug s = output(IO.terminal_out,s ^ "\n")
+
+  fun create (parent, title, user_preferences) =
+    let
+      (*** Make the windows ***)
+      val (shell, mainWindow, menuBar, _) =
+	Capi.make_main_window ("console", title ^ " Console", parent, false);
+
+      val (textscroll, text) =
+	Capi.make_scrolled_text ("textIO", mainWindow, [])
+
+      val _ =
+        Capi.Layout.lay_out
+	  [Capi.Layout.MENUBAR menuBar,
+	   Capi.Layout.SPACE,
+	   Capi.Layout.TEXT textscroll,
+	   Capi.Layout.SPACE]
+
+      (*** IO functions ***)
+
+      fun beep _ = Capi.beep shell
+
+      (* write_pos is the position new input should go in the buffer, usually
+	 the end.  Also used as the position from which input is read. 
+         Output from the program should go before this position.  Input is read
+         from after it. *)
+      val write_pos = ref 0
+
+      fun insert_text str =
+	( Capi.Text.insert(text, !write_pos, str);
+          write_pos := size str + !write_pos;
+	  Capi.Text.set_insertion_position (text, !write_pos)
+	)
+
+      val outstream = MotifUtils.make_outstream insert_text
+
+      val console_visible_ref = ref false
+        
+      fun console_visible () = !console_visible_ref
+
+      fun show_console b =
+        (console_visible_ref := b;
+         if b then
+           (Capi.manage shell;
+            Capi.to_front shell)
+         else
+            Capi.unmanage shell)
+
+      val (input_string, input_flag) = (ref "", ref false)
+
+      fun input_fun () =
+        (input_flag := true;
+	 Capi.event_loop (input_flag);
+         fdebug(fn _ => "Input line is:" ^ (!input_string)^":");
+         !input_string)
+
+      local 
+        val inbuff as (posref, strref) = (ref 0, ref "")
+            
+        fun refill_buff () =
+          let
+            val _ = show_console true;
+            val new_string = input_fun ()
+          in
+            posref := 0;
+            strref := new_string
+          end
+
+	val eof_flag = ref false
+      in
+        fun get_input n =
+          let
+            val string = !strref
+            val pointer = !posref
+            val len = size string
+          in
+            if !eof_flag then
+              ""
+            else if pointer + n > len then
+              (refill_buff ();
+               String.substring (string,pointer,len-pointer) ^
+               get_input (n - len + pointer))
+                 else
+                   let val result = String.substring (string,pointer,n)
+                   in
+                     posref := (!posref + n);
+                     result
+                   end
+          end
+
+        fun clear_input () =
+	  (debug "Clearing input";
+           posref := 0;
+	   strref := "";
+	   eof_flag := false)
+	  
+        fun do_lookahead () =
+          (if !eof_flag then
+             ""
+          else if !posref >= size (!strref) then
+             (refill_buff ();
+              do_lookahead ())
+               else 
+                 String.substring (!strref, !posref, 1))
+	       
+	fun close_in () = eof_flag := true
+	  
+	fun closed_in () = !eof_flag
+	  
+	fun clear_eof () = eof_flag := false
+      end;
+	  
+      val instream = 
+        IO.instream {input = get_input,
+                     lookahead = do_lookahead,
+                     end_of_stream = fn () => do_lookahead () = "",
+                     clear_eof = clear_eof,
+                     close_in = close_in,
+		     closed_in = closed_in}
+
+      (* The history is a list of topdecs, combined with an index number.
+	 The index is used to set the current_index ref when a topdec is
+	 selected from the menu. *)
+      val history = ref []: (string * int) list ref;
+      val history_size = ref 0;
+      val initial_index = ~1;
+      val history_index = ref initial_index;
+
+      fun whitespacep x =
+        case x of
+          " " => true
+        | "\n" => true
+        | "\t" => true
+        | "\012" => true
+        | "\013" => true
+        | _ => false
+          
+      fun strip_whitespace s =
+        let
+          fun strip [] = []
+            | strip (l as (a::b)) =
+              if whitespacep a then strip b else l
+        in
+          implode (rev (strip (rev (strip (explode s))))) (* Yuk Yuk *)
+        end
+
+      fun add_history_entry new_entry =
+        (history_size := !history_size + 1;
+         ShellUtils.add_history_item
+	   ((new_entry, !history_size),
+            history,
+            (fn ((s,_),(s',_))=>s=s'),
+            user_preferences))
+        
+      fun replace_current_input line =
+	let
+          val last_pos = Capi.Text.get_last_position text
+	in 
+	  (* Motif Text.replace doesn't always work properly.  But setting the
+	     whole string causes ridiculous amounts of flicker. *)
+          Capi.Text.replace (text, !write_pos, last_pos, line);
+	  Capi.Text.set_insertion_position (text, !write_pos + size line)
+	end
+
+      fun delete_current_line () =
+        replace_current_input ""
+
+      fun pop_history () = 
+	let val _ = history_index := !history_index + 1
+	    val line = #1 (Lists.nth (!history_index, !history))
+	in 
+	  replace_current_input line
+	end
+	handle
+	  Lists.Nth =>
+	    history_index := !history_index - 1;
+
+      fun push_history () = 
+	let val _ = history_index := !history_index - 1;
+	    val line = #1 (Lists.nth (!history_index, !history))
+	               handle
+	  		 Lists.Nth =>
+			   (history_index := initial_index;
+			    ""	(* empty input *))
+	in 
+	  replace_current_input line
+	end
+
+
+      fun yank_current_line () =
+	let
+          val pos = Capi.Text.get_insertion_position text
+          val last_pos = Capi.Text.get_last_position text
+        in
+          if pos < !write_pos then
+            let val line = Capi.Text.get_line (text, pos)
+            in
+              Capi.Text.insert(text, last_pos, line);
+              Capi.Text.set_insertion_position (text, last_pos+size line)
+            end
+          else
+            ()
+        end
+
+      fun start_of_line () =
+        let
+          val ppos = !write_pos
+          val pos = Capi.Text.get_insertion_position text
+	  val new_pos =
+            if pos < ppos
+              then Capi.Text.current_line (text,pos)
+            else ppos
+        in
+          Capi.Text.set_insertion_position (text,new_pos)
+        end
+          
+      fun end_of_line () =
+        let
+          val ppos = !write_pos
+          val pos = Capi.Text.get_insertion_position text
+          val new_pos =
+            if pos < ppos
+              then Capi.Text.end_line (text,pos)
+            else Capi.Text.get_last_position text
+        in
+          Capi.Text.set_insertion_position (text,new_pos)
+        end
+          
+      fun eof_or_delete () =
+        let
+          val pos = Capi.Text.get_insertion_position text
+          val last_pos = Capi.Text.get_last_position text
+        in
+          if pos = last_pos andalso pos = !write_pos then
+            (debug "eof";
+             close_in ();
+             input_flag := false)
+          else
+            (debug "delete";
+             Capi.Text.replace (text, pos, pos + 1, ""))
+        end
+
+      fun do_return () =
+	let
+          val pos = Capi.Text.get_insertion_position text
+          val lines =
+            if pos < !write_pos then
+              let
+                val line = Capi.Text.get_line (text, pos) ^ "\n"
+                val last_pos = Capi.Text.get_last_position text
+              in
+                Capi.Text.insert(text, last_pos, line);
+                write_pos := last_pos + size line;
+                Capi.Text.set_insertion_position (text, last_pos + size line);
+                [line]
+              end
+            else
+              let
+                val str = Capi.Text.get_string text
+                val length = size str
+
+                fun get_lines ([], current, acc, _) =
+		  map (implode o rev) (current :: acc)
+                |   get_lines ("\n"::rest, current, acc, column) =
+		  get_lines (rest, [], ("\n"::current)::acc, 1)
+                |   get_lines (c::rest, current, acc, column) =
+		  get_lines (rest, c::current, acc, column+1)
+
+                val line = String.substring (str, !write_pos,
+                                             length - !write_pos)
+                val lines = get_lines (explode line,[],[],0)
+              in
+                case lines of
+                  last :: rest =>
+                    (Capi.Text.insert(text, length, "\n");
+                     write_pos := length + 1;
+                     Capi.Text.set_insertion_position
+		     (text, length+1); last ^ "\n" :: rest)
+                | _ => lines
+              end
+        in
+	  input_flag := false;
+          input_string := implode (rev lines);
+          add_history_entry (strip_whitespace (!input_string));
+      	  history_index := initial_index
+        end
+
+      (* A flag to indicate whether escape has just been pressed *)
+      val escape_pressed = ref false
+
+      fun do_escape () = escape_pressed := true
+
+      val meta_bindings =
+        [("p", pop_history),
+         ("n", push_history),
+         ("w", fn _ => MotifUtils.copySelection text)]
+
+      val normal_bindings =
+        [("\^A", start_of_line),
+         ("\^D", eof_or_delete),
+         ("\^E", end_of_line),
+         ("\^W", fn _ => MotifUtils.cutSelection text),
+         ("\^Y", fn _ => MotifUtils.pasteSelection text),
+         ("\^U", delete_current_line),
+         ("\^J", yank_current_line),
+         ("\013",do_return),
+         ("\027",do_escape)]
+
+      fun despatch_key bindings key =
+        let
+          fun loop [] = beep ()
+            | loop ((key',action)::rest) =
+              if key = key' then action ()
+              else loop rest
+        in
+          loop bindings
+        end
+
+      val despatch_meta = despatch_key meta_bindings
+      val despatch_normal = despatch_key normal_bindings
+
+      fun activate callback_data =
+	let 
+	  val event = Capi.Callback.get_event callback_data
+        in
+	  case Capi.Event.get_key_data event
+	  of MLWorks.Option.SOME (key, modifiers) =>
+	    if modifiers = [Capi.Event.meta_modifier] then
+	      despatch_meta key
+	    else
+              despatch_normal key
+	  |  MLWorks.Option.NONE => beep ()
+        end
+
+      fun modifyVerify callback_data =
+        let
+          val (event, start_pos, end_pos, str, doit) =
+            Capi.Callback.convert_verify_data callback_data
+        in
+          if !escape_pressed andalso size str = 1 
+            then 
+              (escape_pressed := false;
+	       doit false;
+               despatch_meta str)
+          else
+            (fdebug (fn _ =>
+                     "Verify: start_pos is " ^ Integer.makestring start_pos ^
+                     ", end_pos is " ^ Integer.makestring end_pos ^
+                     ", write_pos is " ^ Integer.makestring (!write_pos) ^
+                     ", string is '" ^ str ^ "'");
+             if end_pos < !write_pos then
+	       write_pos := (!write_pos) - end_pos + start_pos + size str
+             else if start_pos < !write_pos then
+	       write_pos := start_pos + size str
+	     else ();
+             if end_pos < !write_pos then
+	       write_pos := (!write_pos) - end_pos + start_pos + size str
+             else if start_pos < !write_pos then
+	       write_pos := start_pos + size str
+             else ();
+             doit true)
+        end
+
+      fun warp_history string =
+        ShellUtils.trim_history_string (string, user_preferences)
+
+      val menuspec =
+        [Menus.CASCADE ("window",
+                        [Menus.PUSH ("close",
+                                     fn _ => show_console false,
+                                     fn _ => true)],
+                        fn _ => true),
+         Menus.DYNAMIC ("history",
+			fn () =>
+			map (fn (s,i) =>
+                             Menus.PUSH (warp_history s,
+                                         fn _ => (replace_current_input s;
+                                                  history_index :=
+                                                  !history_size - i),
+                                         fn _ => true))
+                        (!history),
+                        fn _ => !history <> [])]
+    in
+      Menus.make_submenus (menuBar,menuspec);
+      Capi.Callback.add (text, Capi.Callback.Activate, activate);
+      Capi.Callback.add (text, Capi.Callback.ModifyVerify, modifyVerify);
+      Capi.manage menuBar;
+      Capi.manage text;
+      {instream = instream,
+       outstream = outstream,
+       console_widget = shell,
+       show_console = show_console,
+       console_visible = console_visible,
+       clear_input = clear_input}
+    end
+end;
+
+@
+
+
+1.2
+log
+@Further capification
+@
+text
+@d4 3
+d207 2
+a208 3
+	let val str = Capi.Text.get_string text
+	    val length = size str
+	    val const_str = String.substring (str, 0, !write_pos);
+d212 1
+a212 1
+          Capi.Text.replace (text,!write_pos,length,line);
+a214 1
+	  
+d280 14
+d351 1
+a405 8
+             else if str = "" andalso start_pos = end_pos andalso
+		     start_pos = !write_pos then
+	       (* str = "" => deletion,
+	          start_pos = end_pos => at end or beginning of text
+		  start_pos = !write_pos => at beginning of input line *)
+	       case Capi.Event.get_key_data event
+	       of MLWorks.Option.SOME ("\^D", []) => close_in ()
+	       | _ => ()
+@
+
+
+1.1
+log
+@new unit
+Std_in and std_out.
+@
+text
+@d3 4
+a6 1
+ *  $Log$
+d8 1
+a12 1
+require "../library/xm";
+a24 1
+  structure Xm: XM
+d33 1
+a33 1
+  sharing type Menus.Widget = Xm.Widget = MotifUtils.Widget = Capi.Widget
+d58 1
+a58 1
+	Capi.make_scrolled_text (mainWindow, "textIO", [])
+d69 1
+a69 1
+      fun beep _ = MotifUtils.beep shell
+a84 47
+
+      (* some command functions *)
+
+      fun lastline str ~1 = 0
+        | lastline str n =
+          if String.ordof (str, n) = ord "\n"
+            then n+1
+          else lastline str (n-1)
+
+      fun get_line_and_index (text,pos) =
+	let
+          val str = Capi.Text.get_string text
+          val length = size str
+
+          fun nextline n =
+            if n = length orelse String.ordof (str, n) = ord "\n" then
+              n
+            else
+              nextline (n+1)
+          val start = lastline str (pos-1)
+          val finish = nextline pos
+          val result = String.substring (str, start, finish - start)
+	in
+          fdebug (fn _ => "Getline returns:" ^ result ^ ":");
+          (result,pos - start)
+	end
+
+      fun current_line (text,pos) =
+        lastline (Capi.Text.get_string text) (pos-1)
+
+      fun end_line (text,pos) =
+        let
+          val str = Capi.Text.get_string text
+          val length = size str
+          fun aux n = 
+            if n = length orelse String.ordof (str, n) = ord "\n" then
+              n
+            else
+              aux (n+1)
+        in
+          if pos = length 
+            then pos 
+          else aux (pos + 1)
+        end
+
+      val getline = #1 o get_line_and_index
+
+d93 1
+a93 1
+            Xm.Widget.toFront shell)
+d246 1
+a246 1
+            let val line = getline (text, pos)
+d261 1
+a261 1
+              then current_line (text,pos)
+d273 1
+a273 1
+              then end_line (text,pos)
+d285 1
+a285 1
+                val line = getline (text, pos) ^ "\n"
+@

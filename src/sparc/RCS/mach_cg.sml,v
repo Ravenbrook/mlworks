@@ -1,0 +1,687 @@
+head	1.25;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.25
+	mlworks-28-01-1994:1.25
+	Release:1.24
+	mlworks-beta-01-09-1993:1.24
+	MLWorks-1-0-4-29/01/1993:1.22
+	MLWorks-1-0-3-21/12/1992:1.21
+	MLWorks-1-0-2-15/12/1992:1.21
+	MLWorks-1-0-1-04/12/1992:1.20
+	checkpoint_17_08_92:1.13;
+locks; strict;
+
+
+1.25
+date	93.12.17.17.07.58;	author io;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	93.03.12.11.51.26;	author matthew;	state Exp;
+branches
+	1.24.1.1;
+next	1.23;
+
+1.23
+date	93.03.04.14.48.42;	author matthew;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	93.01.04.15.36.59;	author jont;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.12.08.19.50.10;	author jont;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.12.01.14.53.01;	author daveb;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.11.17.14.30.24;	author matthew;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.11.12.17.40.34;	author clive;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.11.03.10.34.48;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.09.10.09.39.31;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.08.26.15.49.15;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.08.24.13.26.10;	author clive;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.07.14.16.16.45;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.07.07.10.42.01;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.05.11.15.00.07;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.05.08.11.41.05;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.02.27.16.03.43;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.02.07.11.01.34;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.02.03.11.06.48;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.01.09.15.03.38;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.11.14.10.56.28;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.11.08.17.46.59;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.15.42.56;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.07.12.03.53;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.04.16.14.08;	author jont;	state Exp;
+branches;
+next	;
+
+1.24.1.1
+date	93.03.12.11.51.26;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The machine dependent code generator for Sparc
+@
+
+
+1.25
+log
+@Moved this file from machine/ to main/
+@
+text
+@(* mach_cg.sml the signature *)
+(*
+$Log: mach_cg.sml,v $
+Revision 1.24  1993/03/12  11:51:26  matthew
+Signature revisions
+
+Revision 1.23  1993/03/04  14:48:42  matthew
+Options & Info changes
+
+Revision 1.22  1993/01/04  15:36:59  jont
+Modified to return final machine code in an easily printed form
+,
+
+Revision 1.21  1992/12/08  19:50:10  jont
+Removed a number of duplicated signatures and structures
+
+Revision 1.20  1992/12/01  14:53:01  daveb
+Changes to propagate compiler options as parameters instead of references.
+
+Revision 1.19  1992/11/17  14:30:24  matthew
+Changed Error structure to Info
+
+Revision 1.18  1992/11/12  17:40:34  clive
+Made the generate_tracing flag available
+
+Revision 1.17  1992/11/03  10:34:48  jont
+Reworked in terms of mononewmap
+
+Revision 1.16  1992/09/10  09:39:31  richard
+Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+
+Revision 1.15  1992/08/26  15:49:15  jont
+Removed some redundant structures and sharing
+
+Revision 1.14  1992/08/24  13:26:10  clive
+Added details about leafness to the debug information
+
+Revision 1.13  1992/07/14  16:16:45  richard
+Removed obsolete memory profiling code.
+
+Revision 1.12  1992/07/07  10:42:01  clive
+Added call point information recording
+
+Revision 1.11  1992/05/11  15:00:07  clive
+Added memory profiling
+
+Revision 1.10  1992/05/08  11:41:05  jont
+Added bool ref do_timings to control printing of timings for various stages
+
+Revision 1.9  1992/02/27  16:03:43  richard
+Changed the way virtual registers are handled.  See MirTypes.
+
+Revision 1.8  1992/02/07  11:01:34  richard
+Changed Table to Map to reflect changes in MirRegisters.
+
+Revision 1.7  1992/02/03  11:06:48  clive
+added the printing of the size of the resultant code
+
+Revision 1.6  1992/01/09  15:03:38  clive
+Added diagnostic structure
+
+Revision 1.5  1991/11/14  10:56:28  richard
+Removed references to fp_double registers.
+
+Revision 1.4  91/11/08  17:46:59  jont
+Added show_mach for controlling opcode lsiting
+
+Revision 1.3  91/10/22  15:42:56  jont
+Added do_fall_through bool ref to control whether branch elimination was
+done for debugging and measuring
+
+Revision 1.2  91/10/07  12:03:53  richard
+Changed dependencies on MachRegisters to MachSpec.
+
+Revision 1.1  91/10/04  16:14:08  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+This File has been moved from machine/ to main/
+This should fail!
+
+
+require "../utils/diagnostic";
+require "../main/info";
+require "../main/options";
+require "../mir/mirtypes";
+require "machspec";
+
+signature MACH_CG = sig
+  structure MachSpec		: MACHSPEC
+  structure Diagnostic          : DIAGNOSTIC
+  structure Info                : INFO
+  structure Options             : OPTIONS
+  structure MirTypes            : MIRTYPES
+
+  type Module
+  type Opcode
+
+  val mach_cg :
+    Info.options ->
+    Options.options *
+    MirTypes.mir_code *
+    ((MachSpec.register) MirTypes.GC.Map.T *
+     (MachSpec.register) MirTypes.NonGC.Map.T *
+     (MachSpec.register) MirTypes.FP.Map.T) *
+    MirTypes.Debugger_Types.information ->
+    (Module *
+     MirTypes.Debugger_Types.information) *
+    (((MirTypes.tag * (Opcode * string) list) * string) list list)
+
+  val print_code_size : bool ref
+  val do_timings : bool ref
+end
+@
+
+
+1.24
+log
+@Signature revisions
+@
+text
+@d4 3
+d81 4
+@
+
+
+1.24.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.24  1993/03/12  11:51:26  matthew
+Signature revisions
+
+@
+
+
+1.23
+log
+@Options & Info changes
+@
+text
+@d4 3
+d81 2
+a82 1
+require "sparc_assembly";
+a86 1
+  structure Sparc_Assembly	: SPARC_ASSEMBLY
+d89 6
+d97 9
+a105 9
+    Sparc_Assembly.MirTypes.Debugger_Types.Options.compiler_options *
+    Sparc_Assembly.MirTypes.mir_code *
+    ((MachSpec.register) Sparc_Assembly.MirTypes.GC.Map.T *
+     (MachSpec.register) Sparc_Assembly.MirTypes.NonGC.Map.T *
+     (MachSpec.register) Sparc_Assembly.MirTypes.FP.Map.T) *
+    Sparc_Assembly.MirTypes.Debugger_Types.information ->
+    (Sparc_Assembly.Sparc_Opcodes.MachTypes.module *
+     Sparc_Assembly.MirTypes.Debugger_Types.information) *
+    (((Sparc_Assembly.MirTypes.tag * (Sparc_Assembly.opcode * string) list) * string) list list)
+@
+
+
+1.22
+log
+@Modified to return final machine code in an easily printed form
+,
+@
+text
+@d4 4
+d77 1
+d85 1
+d87 10
+a96 11
+    Sparc_Assembly.MirTypes.Debugger_Types.Info.options ->
+      Sparc_Assembly.MirTypes.options *
+        Sparc_Assembly.MirTypes.mir_code *
+        ((MachSpec.register) Sparc_Assembly.MirTypes.GC.Map.T *
+         (MachSpec.register) Sparc_Assembly.MirTypes.NonGC.Map.T *
+         (MachSpec.register) Sparc_Assembly.MirTypes.FP.Map.T) *
+        Sparc_Assembly.MirTypes.Debugger_Types.information ->
+      (Sparc_Assembly.Sparc_Opcodes.MachTypes.module *
+       Sparc_Assembly.MirTypes.Debugger_Types.information) *
+      (((Sparc_Assembly.MirTypes.tag * (Sparc_Assembly.opcode * string) list) *
+	string) list list)
+@
+
+
+1.21
+log
+@Removed a number of duplicated signatures and structures
+@
+text
+@d4 3
+d73 1
+a73 1
+require "../mir/mirtypes";
+a74 1
+require "machtypes";
+a76 2
+  structure MirTypes		: MIRTYPES
+  structure MachTypes		: MACHTYPES
+d78 1
+d81 11
+a91 9
+    MirTypes.Debugger_Types.Info.options ->
+      MirTypes.options *
+        MirTypes.mir_code *
+        ((MachSpec.register) MirTypes.GC.Map.T *
+         (MachSpec.register) MirTypes.NonGC.Map.T *
+         (MachSpec.register) MirTypes.FP.Map.T) *
+        MirTypes.Debugger_Types.information ->
+      MachTypes.module * 
+        MirTypes.Debugger_Types.information
+@
+
+
+1.20
+log
+@Changes to propagate compiler options as parameters instead of references.
+@
+text
+@d4 3
+a70 2
+require "../main/info";
+
+d80 1
+a80 1
+    MirTypes.Info.options ->
+@
+
+
+1.19
+log
+@Changed Error structure to Info
+@
+text
+@d4 3
+a77 1
+  structure Info                : INFO
+d79 9
+a87 8
+    Info.options ->
+    MirTypes.mir_code *
+    ((MachSpec.register) MirTypes.GC.Map.T *
+     (MachSpec.register) MirTypes.NonGC.Map.T *
+     (MachSpec.register) MirTypes.FP.Map.T) *
+    bool * MirTypes.Debugger_Types.information ->
+    MachTypes.module * 
+    MirTypes.Debugger_Types.information
+a88 2
+  val do_fall_through : bool ref
+  val show_mach : bool ref
+a90 2
+  val force_non_leaf : bool ref
+  val generate_tracing : bool ref
+@
+
+
+1.18
+log
+@Made the generate_tracing flag available
+@
+text
+@d4 3
+d65 2
+d75 1
+a75 1
+
+d77 1
+@
+
+
+1.17
+log
+@Reworked in terms of mononewmap
+@
+text
+@d4 3
+d85 1
+@
+
+
+1.16
+log
+@Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+@
+text
+@d4 4
+d70 3
+a72 3
+    ((MirTypes.GC.T, MachSpec.register) MirTypes.Debugger_Types.Datatypes.NewMap.T *
+     (MirTypes.NonGC.T, MachSpec.register) MirTypes.Debugger_Types.Datatypes.NewMap.T *
+     (MirTypes.FP.T, MachSpec.register) MirTypes.Debugger_Types.Datatypes.NewMap.T) *
+@
+
+
+1.15
+log
+@Removed some redundant structures and sharing
+@
+text
+@d4 3
+d69 1
+a69 3
+    bool *
+    (string, MirTypes.Debugger_Types.Datatypes.Type * bool * (int * MirTypes.Debugger_Types.Backend_Annotation) list) MirTypes.Debugger_Types.Datatypes.NewMap.T 
+    -> 
+d71 1
+a71 1
+    (string, MirTypes.Debugger_Types.Datatypes.Type * bool * (int * MirTypes.Debugger_Types.Backend_Annotation) list) MirTypes.Debugger_Types.Datatypes.NewMap.T
+a72 1
+  (* The final code generator *)
+@
+
+
+1.14
+log
+@Added details about leafness to the debug information
+@
+text
+@d4 3
+a49 1
+require "../utils/newmap";
+a51 2
+require "../typechecker/datatypes";
+require "../debugger/debugger_types";
+a55 1
+  structure Map                 : NEWMAP
+a59 2
+  structure Debugger_Types      : DEBUGGER_TYPES
+  structure Datatypes           : DATATYPES
+d63 3
+a65 3
+    ((MirTypes.GC.T, MachSpec.register) Map.T *
+     (MirTypes.NonGC.T, MachSpec.register) Map.T *
+     (MirTypes.FP.T, MachSpec.register) Map.T) *
+d67 1
+a67 1
+    (string, Datatypes.Type * bool * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T 
+d70 1
+a70 1
+    (string, Datatypes.Type * bool * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T
+@
+
+
+1.13
+log
+@Removed obsolete memory profiling code.
+@
+text
+@d4 3
+d70 1
+a70 1
+    (string, Datatypes.Type * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T
+d73 1
+a73 1
+    (string, Datatypes.Type * (int * Debugger_Types.Backend_Annotation) list) Debugger_Types.Map.T
+d80 1
+@
+
+
+1.12
+log
+@Added call point information recording
+@
+text
+@d4 3
+a76 1
+  val generate_memory_profiling : bool ref
+@
+
+
+1.11
+log
+@Added memory profiling
+@
+text
+@d4 3
+d44 2
+d55 2
+d59 10
+a68 5
+    (MirTypes.mir_code *
+     ((MirTypes.GC.T, MachSpec.register) Map.T *
+      (MirTypes.NonGC.T, MachSpec.register) Map.T *
+      (MirTypes.FP.T, MachSpec.register) Map.T))
+    -> MachTypes.module
+@
+
+
+1.10
+log
+@Added bool ref do_timings to control printing of timings for various stages
+@
+text
+@d4 3
+d62 1
+@
+
+
+1.9
+log
+@Changed the way virtual registers are handled.  See MirTypes.
+@
+text
+@d4 3
+d58 1
+@
+
+
+1.8
+log
+@Changed Table to Map to reflect changes in MirRegisters.
+@
+text
+@d4 3
+d47 3
+a49 3
+     ((MirTypes.gc_register, MachSpec.register) Map.T *
+      (MirTypes.non_gc_register, MachSpec.register) Map.T *
+      (MirTypes.fp_register, MachSpec.register) Map.T))
+@
+
+
+1.7
+log
+@added the printing of the size of the resultant code
+@
+text
+@d4 3
+d29 1
+a29 1
+require "../utils/table";
+d36 1
+a36 1
+  structure Table               : TABLE
+d44 3
+a46 3
+     ((MirTypes.gc_register, MachSpec.register) Table.table *
+      (MirTypes.non_gc_register, MachSpec.register) Table.table *
+      (MirTypes.fp_register, MachSpec.register) Table.table))
+@
+
+
+1.6
+log
+@Added diagnostic structure
+@
+text
+@d4 3
+d48 1
+@
+
+
+1.5
+log
+@Removed references to fp_double registers.
+@
+text
+@d3 4
+a6 1
+$Log:	mach_cg.sml,v $
+d24 1
+d34 1
+@
+
+
+1.4
+log
+@Added show_mach for controlling opcode lsiting
+@
+text
+@d4 3
+d35 1
+a35 2
+      (MirTypes.fp_register, MachSpec.register) Table.table *
+      (MirTypes.fp_double_register, MachSpec.register) Table.table))
+@
+
+
+1.3
+log
+@Added do_fall_through bool ref to control whether branch elimination was
+done for debugging and measuring
+@
+text
+@d4 4
+d37 1
+@
+
+
+1.2
+log
+@Changed dependencies on MachRegisters to MachSpec.
+@
+text
+@d4 3
+d32 1
+a32 1
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d12 1
+a12 1
+require "machregisters";
+d19 1
+a19 1
+  structure MachRegisters	: MACHREGISTERS
+d23 4
+a26 4
+     ((MirTypes.gc_register, MachRegisters.T) Table.table *
+      (MirTypes.non_gc_register, MachRegisters.T) Table.table *
+      (MirTypes.fp_register, MachRegisters.T) Table.table *
+      (MirTypes.fp_double_register, MachRegisters.T) Table.table))
+@

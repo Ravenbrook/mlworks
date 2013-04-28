@@ -1,0 +1,217 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_MM_adapt:1.1.3
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.2
+	MLWorks_10r3:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.02.05.13.46.47;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.10.09.14.51.35;	author jont;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1;
+next	;
+
+1.1.1.1
+date	97.10.10.15.53.34;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	97.10.10.17.23.45;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	97.10.31.13.44.11;	author nickb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.18.01.01;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Extra code to make up for the fact that pow does not work properly
+@
+
+
+1.2
+log
+@[Bug #70039]
+Add dummy check_neg_zero function
+@
+text
+@/* Copyright (C) 1997 Harlequin Ltd
+ *
+ * Linux specific power function
+ * This is to make up for certain deficiencies in the linux implementation
+ * of pow which don't exist under Solaris, SunOS, Irix, Win95 or WinNT.
+ * See the basis/maths.sml test suite entry, tests 12b - 12s for the exact
+ * tests failed. Hopefully one day it can be removed.
+ *
+ * $Log: src:OS:Linux:localreals.c,v $
+ * Revision 1.1  1997/10/09  14:51:35  jont
+ * new unit
+ * Extra code to make up for the fact that pow does not work properly
+ *
+ *
+ */
+
+#include <stdio.h>
+#include "localreals.h"
+#include <math.h>
+
+static double posinf = 1.0/0.0;
+
+/* It appears that abs doesn't work properly under Linux either */
+static double abs(double a)
+{
+  return ((a >= 0.0) ? a : -a);
+}
+
+extern int localpower(double a, double b, double *result)
+{
+  if (isnan(a) || isnan(b) || abs(a) == 1.0 || abs(b) == 1.0 || abs(a) == 0.0 || abs(b) == 0.0) {
+    return 0; /* Don't touch nans  or +/- 1.0 or 0.0 */
+  } else {
+    double neginf = -posinf;
+    int a_is_inf = (a == posinf || a == neginf);
+    int b_is_inf = (b == posinf || b == neginf);
+    if (a_is_inf || b_is_inf) {
+      if (a_is_inf && b_is_inf) {
+	return 0;
+      } else {
+	if (a_is_inf) {
+	  /* inf ** x */
+	  if (a == posinf) {
+	    if (b > 0.0) {
+	      *result = a;
+	    } else {
+	      *result = 0.0;
+	    }
+	  } else {
+	    /* a = neginf */
+	    double floor_b = floor(b);
+	    double b_by_2 = b/2.0;
+	    double floor_b_by_2 = floor(b_by_2);
+	    if (b > 0.0) {
+	      if (floor_b == b && b_by_2 != floor_b_by_2) {
+		*result = a;
+	      } else {
+		*result = posinf;
+	      }
+	    } else {
+	      if (floor_b == b && b_by_2 != floor_b_by_2) {
+		*result = -0.0;
+	      } else {
+		*result = 0.0;
+	      }
+	    }
+	  }
+	} else {
+	  /* x ** inf */
+	  int b_pos = (b == posinf);
+	  int a_large = abs(a) > 1.0;
+	  *result = (b_pos == a_large) ? posinf : 0.0;
+	}
+	return 1;
+      } 
+    } else {
+      return 0;
+    }
+  }
+}
+
+extern int check_neg_zero(double *x)
+{
+  return 0;
+}
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a9 4
+ * Revision 1.2  1998/02/05  13:46:47  jont
+ * [Bug #70039]
+ * Add dummy check_neg_zero function
+ *
+@
+
+
+1.1
+log
+@new unit
+Extra code to make up for the fact that pow does not work properly
+@
+text
+@d9 5
+a13 1
+ * $Log$
+d80 5
+@
+
+
+1.1.3.1
+log
+@branched from trunk for label MLWorks_MM_adapt
+@
+text
+@d9 1
+a9 5
+ * $Log: src:OS:Linux:localreals.c,v $
+ * Revision 1.1  1997/10/09  14:51:35  jont
+ * new unit
+ * Extra code to make up for the fact that pow does not work properly
+ *
+@
+
+
+1.1.2.1
+log
+@branched from *NoSuchBranch* for label MLWorks_11r1
+@
+text
+@d9 1
+a9 1
+ * $Log: $
+@
+
+
+1.1.1.1
+log
+@branched from *NoSuchBranch* for label MLWorks_10r3
+@
+text
+@d9 1
+a9 1
+ * $Log: $
+@

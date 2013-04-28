@@ -1,0 +1,340 @@
+head	1.11;
+access;
+symbols
+	ML_beta_release_12/08/94:1.11
+	ML_beta_release_03/08/94:1.11
+	ML_revised_beta_release_25/05/94:1.11
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.9
+	MLWorks-1-0-3-21/12/1992:1.9
+	MLWorks-1-0-2-15/12/1992:1.9
+	MLWorks-1-0-1-04/12/1992:1.9
+	checkpoint_17_08_92:1.9;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	93.11.01.16.38.35;	author nickh;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.05.18.15.56.40;	author jont;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	92.08.07.16.29.24;	author davidt;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.05.18.05.39;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.06.11.08.45.24;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.04.27.09.47.41;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.16.17.40.01;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.02.11.19.00.32;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.29.18.20.49;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.22.18.20.13;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.06.12.44.49;	author davida;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.05.18.15.56.40;	author jont;	state Exp;
+branches;
+next	1.10.1.2;
+
+1.10.1.2
+date	93.11.01.16.36.15;	author nickh;	state Exp;
+branches;
+next	;
+
+
+desc
+@Common-subexpression Elimination
+@
+
+
+1.11
+log
+@Merge removal of Table structure.
+@
+text
+@(* __optimise_cse.sml the structure *)
+(*
+ * Lambda-Calculus Optimisation: __optimise_cse
+ * Common-subexpression Elimination
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/__lists";
+require "../utils/__crash";
+require "../utils/__print";
+require "../utils/__timer";
+require "__lambdaprint";
+require "__optimise_lib";
+require "__lambdasub";
+require "_optimise_cse";
+
+structure OptimiseCSE_ = OptimiseCSE(
+  val hash_function_depth = 20
+  val maximum_bucket_size = 25
+  structure Timer = Timer_
+  structure Print = Print_
+  structure Lists = Lists_
+  structure Crash = Crash_
+  structure Lib = OptimiseLib_
+  structure LS = LambdaSub_
+  structure LambdaPrint = LambdaPrint_
+);
+
+(* $Log: __optimise_cse.sml,v $
+Revision 1.10.1.2  1993/11/01  16:36:15  nickh
+Removed Table structure.
+
+Revision 1.10.1.1  1993/05/18  15:56:40  jont
+Fork for bug fixing
+
+Revision 1.10  1993/05/18  15:56:40  jont
+Removed integer parameter
+
+Revision 1.9  1992/08/07  16:29:24  davidt
+String structure is now pervasive.
+
+Revision 1.8  1992/08/05  18:05:39  jont
+Removed some structures and sharing
+
+Revision 1.7  1992/06/11  08:45:24  clive
+A few speed improvements including specialising the hash equality function
+
+Revision 1.6  1992/04/27  09:47:41  clive
+General speed improvements
+
+Revision 1.5  1992/03/16  17:40:01  jont
+Added Integer parameter to functor
+
+Revision 1.4  1992/02/11  19:00:32  jont
+Added print parameter
+
+Revision 1.3  1992/01/29  18:20:49  clive
+Speed improvements
+
+Revision 1.2  1991/10/22  18:20:13  davidt
+Now builds using Lists structure.
+
+Revision 1.1  91/09/06  12:44:49  davida
+Initial revision
+ *)
+
+
+@
+
+
+1.10
+log
+@Removed integer parameter
+@
+text
+@a8 1
+require "../utils/__table";
+a21 1
+  structure Table = Table_
+d31 9
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a32 3
+Revision 1.10  1993/05/18  15:56:40  jont
+Removed integer parameter
+
+@
+
+
+1.10.1.2
+log
+@Removed Table structure.
+@
+text
+@d9 1
+d23 1
+a32 3
+Revision 1.10.1.1  1993/05/18  15:56:40  jont
+Fork for bug fixing
+
+@
+
+
+1.9
+log
+@String structure is now pervasive.
+@
+text
+@a12 1
+require "../utils/__integer";
+a26 1
+  structure Integer = Integer_
+d33 3
+@
+
+
+1.8
+log
+@Removed some structures and sharing
+@
+text
+@a13 1
+require "../utils/__string";
+a31 1
+  structure String = String_
+d35 3
+@
+
+
+1.7
+log
+@A few speed improvements including specialising the hash equality function
+@
+text
+@d18 1
+d31 1
+d37 3
+@
+
+
+1.6
+log
+@General speed improvements
+@
+text
+@d22 1
+a22 1
+  val maximum_bucket_size = 20
+d35 3
+@
+
+
+1.5
+log
+@Added Integer parameter to functor
+@
+text
+@d14 2
+d21 3
+d31 1
+d35 3
+@
+
+
+1.4
+log
+@Added print parameter
+@
+text
+@d13 1
+d23 1
+d29 3
+@
+
+
+1.3
+log
+@Speed improvements
+@
+text
+@d1 1
+a1 1
+
+d12 1
+d17 8
+a24 6
+structure OptimiseCSE_ =
+  OptimiseCSE(structure Crash = Crash_
+              structure Lib = OptimiseLib_
+	      structure Table = Table_
+	      structure LambdaPrint = LambdaPrint_
+	      structure Lists = Lists_);
+d27 3
+@
+
+
+1.2
+log
+@Now builds using Lists structure.
+@
+text
+@d11 1
+d17 2
+a18 1
+  OptimiseCSE(structure Lib = OptimiseLib_
+d23 4
+a26 1
+(* $Log:	__optimise_cse.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 6
+a7 1
+ (*  Lambda-Calculus Optimisation: __optimise_cse  *)
+a8 6
+      (*  Common-subexpression Elimination  *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+d10 1
+d15 5
+d21 4
+a24 6
+structure OptimiseCSE_ = OptimiseCSE(structure Lib = OptimiseLib_
+				     structure Table = Table_
+				     structure LambdaPrint = LambdaPrint_);
+
+
+(* $Log$ *)
+@

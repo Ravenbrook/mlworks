@@ -1,0 +1,353 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.8
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.5.1.1.1.1
+	MLWorks_workspace_97:1.1.7
+	MLWorks_dt_wizard:1.1.6
+	MLWorks_11c0_1997_09_09:1.1.5.1.1.1
+	MLWorks_10r3:1.1.5.1.3
+	MLWorks_10r2_551:1.1.5.1.2
+	MLWorks_11:1.1.5.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.5.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.5.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.5.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.5
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.3.1.1
+	MLWorks_gui_1996_12_18:1.1.4
+	MLWorks_1_0_Win32_1996_12_17:1.1.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.1.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.1.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.1.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.1.2
+	MLWorks_1_0_Unix_1996_11_14:1.1.1;
+locks; strict;
+comment	@; @;
+
+
+1.1
+date	96.11.04.16.15.45;	author matthew;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1
+	1.1.5.1
+	1.1.6.1
+	1.1.7.1
+	1.1.8.1;
+next	;
+
+1.1.1.1
+date	96.11.14.13.05.16;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1
+date	96.11.28.15.14.47;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.11.22.18.22.43;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.12.17.18.00.46;	author hope;	state Exp;
+branches
+	1.1.3.1.1.1;
+next	;
+
+1.1.3.1.1.1
+date	97.02.24.11.52.26;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	96.12.18.09.56.07;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.5.1
+date	97.05.12.10.50.49;	author hope;	state Exp;
+branches
+	1.1.5.1.1.1
+	1.1.5.1.2.1
+	1.1.5.1.3.1;
+next	;
+
+1.1.5.1.1.1
+date	97.07.28.18.32.47;	author daveb;	state Exp;
+branches
+	1.1.5.1.1.1.1.1;
+next	;
+
+1.1.5.1.1.1.1.1
+date	97.10.07.11.58.50;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.5.1.2.1
+date	97.09.08.17.25.58;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.5.1.3.1
+date	97.09.09.14.22.44;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.6.1
+date	97.09.10.19.41.44;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.7.1
+date	97.09.11.21.09.16;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.8.1
+date	99.04.01.18.08.06;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New unit
+@
+
+
+1.1
+log
+@new unit
+New unit
+@
+text
+@;; sml-mouse.el -- experimental!
+
+;; A specialisation of the Emacs' mouse-drag-region.
+
+;; This won't work in XEmacs at all.
+
+;; Set up a mouse key like this:
+
+;;(global-set-key [S-down-mouse-1] 'sml-mouse-drag-region)
+
+;; and load this file into Emacs somehow. Eg:
+
+;;(setq sml-load-hook 
+;;      (function (lambda () "Get Mouse Feature..."
+;;                     (load-library "sml-mouse")))
+
+
+;; It *has* to be easier than this!
+(defun sml-mouse-drag-region (start-event)
+  "Set the region to the text that the mouse is dragged over, & send to ML.
+Highlight the drag area as you move the mouse.
+This must be bound to a button-down mouse event.
+In Transient Mark mode, the highlighting remains once you
+release the mouse button.  Otherwise, it does not."
+  (interactive "e")
+  (mouse-minibuffer-check start-event)
+  (let* ((start-posn (event-start start-event))
+	 (start-point (posn-point start-posn))
+	 (start-window (posn-window start-posn))
+	 (start-frame (window-frame start-window))
+	 (bounds (window-edges start-window))
+	 (top (nth 1 bounds))
+	 (bottom (if (window-minibuffer-p start-window)
+		     (nth 3 bounds)
+		   ;; Don't count the mode line.
+		   (1- (nth 3 bounds))))
+	 (click-count (1- (event-click-count start-event))))
+    (setq mouse-selection-click-count click-count)
+    (mouse-set-point start-event)
+    (let ((range (mouse-start-end start-point start-point click-count)))
+      (move-overlay mouse-drag-overlay (car range) (nth 1 range)
+		    (window-buffer start-window)))
+    (deactivate-mark)
+    (let (event end end-point)
+      (track-mouse
+	(while (progn
+		 (setq event (read-event))
+		 (or (mouse-movement-p event)
+		     (eq (car-safe event) 'switch-frame)))
+	  (if (eq (car-safe event) 'switch-frame)
+	      nil
+	    (setq end (event-end event)
+		  end-point (posn-point end))
+
+	    (cond
+	     ;; Are we moving within the original window?
+	     ((and (eq (posn-window end) start-window)
+		   (integer-or-marker-p end-point))
+	      (goto-char end-point)
+	      (let ((range (mouse-start-end start-point (point) click-count)))
+		(move-overlay mouse-drag-overlay (car range) (nth 1 range))))
+
+	     (t
+	      (let ((mouse-row (cdr (cdr (mouse-position)))))
+		(cond
+		 ((null mouse-row))
+		 ((< mouse-row top)
+		  (mouse-scroll-subr start-window (- mouse-row top)
+				     mouse-drag-overlay start-point))
+		 ((>= mouse-row bottom)
+		  (mouse-scroll-subr start-window (1+ (- mouse-row bottom))
+				     mouse-drag-overlay start-point)))))))))
+      (if (consp event)
+	  (let ((fun (key-binding (vector (car event)))))
+	    ;; Run the binding of the terminating up-event, if possible.
+	    ;; In the case of a multiple click, it gives the wrong results,
+	    ;; because it would fail to set up a region.
+	    (if (and (= (mod mouse-selection-click-count 3) 0) (fboundp fun))
+		(progn
+		  (setq this-command fun)
+		  ;; Delete the overlay before calling the function,
+		  ;; because delete-overlay increases buffer-modified-tick.
+		  (delete-overlay mouse-drag-overlay)
+		  (funcall fun event))
+	      (if (not (= (overlay-start mouse-drag-overlay)
+			  (overlay-end mouse-drag-overlay)))
+		  (let (last-command this-command)
+		    (push-mark (overlay-start mouse-drag-overlay) t t)
+		    (goto-char (overlay-end mouse-drag-overlay))
+		    (delete-overlay mouse-drag-overlay)
+		    (copy-region-as-kill (point) (mark t))
+		    (mouse-set-region-1))
+		(goto-char (overlay-end mouse-drag-overlay))
+		(setq this-command 'mouse-set-point)
+		(delete-overlay mouse-drag-overlay))))
+	(delete-overlay mouse-drag-overlay))))
+  (sml-send-region (point) (mark)))
+@
+
+
+1.1.8.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@
+
+
+1.1.7.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.1.6.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@@
+
+
+1.1.5.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.5.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.5.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.5.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.5.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.3.1.1.1
+log
+@branched from 1.1.3.1
+@
+text
+@@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1.1.1
+log
+@branched from 1.1.1.1
+@
+text
+@@

@@ -1,0 +1,80 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.04.17.16.03.02;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.10.28.16.45.51;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+request #30059: implement interface to resource dialogs.
+@
+
+
+1.2
+log
+@[Bug #30318]
+create_dialog now available to users so they can create resource dialogs.
+@
+text
+@Request #30059: Implement interface to Win32 resource dialogs.
+
+All dialogs under the menu Usage->GeneralPreferences, with the
+exception of the Editor Preferences are now stored as resources, but
+should still work as exactly as before.  The difference this change
+makes is to allow more flexibility in the layout of controls on the
+dialogs created as resources.  All dialogs will eventually be stored
+as resources, but this is a separate task.
+
+-----
+
+Request #30318: Add createDialog to WindowsGui structure
+
+The following functions have been added to the WindowsGui structure:
+
+    val findResource : hinst * string * res_type -> word
+    val lockResource : word -> unit
+    val loadResource : hinst * word -> word
+
+    val getModuleHandle : string -> hinst
+    val loadLibrary : string -> hinst
+    val freeLibrary : hinst -> bool
+
+including the addition of the res_type and hinst.
+
+Test that users can get a handle to resource dialogs from any 
+executable or library by calling LoadLibrary to get the handle to 
+the library followed by a call to WindowsGui.createDialog (new for 
+this request) specifying the library handle, parent window of the
+dialog, and the resource name of the dialog.@
+
+
+1.1
+log
+@new unit
+request #30059: implement interface to resource dialogs.
+@
+text
+@d8 23
+a30 1
+as resources, but this is a separate task.@

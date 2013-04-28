@@ -1,0 +1,773 @@
+head	1.6;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.6
+	MLWorks_20c1_1998_08_20:1.6
+	MLWorks_20c0_1998_08_04:1.6
+	MLWorks_20b2c2_1998_06_19:1.6
+	MLWorks_20b2_Windows_1998_06_12:1.6
+	MLWorks_20b1c1_1998_05_07:1.6
+	MLWorks_20b0_1998_04_07:1.6
+	MLWorks_20b0_1998_03_20:1.6
+	MLWorks_20m2_1998_02_16:1.5
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_11r1:1.2.1.1.1.2.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.2
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.6
+date	98.02.18.11.56.00;	author mitchell;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	97.11.21.10.42.40;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.08.07.13.57.10;	author brucem;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.05.28.11.00.16;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.03.03.10.44.25;	author matthew;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.02.28.16.52.46;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.11.08.14;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.49.45;	author daveb;	state Exp;
+branches;
+next	1.2.1.1.1.2;
+
+1.2.1.1.1.2
+date	97.08.13.15.49.56;	author johnh;	state Exp;
+branches
+	1.2.1.1.1.2.1.1;
+next	;
+
+1.2.1.1.1.2.1.1
+date	97.10.07.12.15.05;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.41.30;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.14.40.58;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.6
+log
+@[Bug #30349]
+Fix test to avoid non-unit sequence warning
+@
+text
+@(*  ==== Testing ====
+ *
+    Result: OK
+ *
+ *  Copyright (C) 1997 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: array2.sml,v $
+ *  Revision 1.5  1997/11/21  10:42:40  daveb
+ *  [Bug #30323]
+ *  Removed use of Shell.Build.
+ *
+ *  Revision 1.4  1997/08/07  13:57:10  brucem
+ *  [Bug #30245]
+ *  ARRAY2 has changed, fix the test so it works with the new sig and struct.
+ *
+ *  Revision 1.3  1997/05/28  11:00:16  jont
+ *  [Bug #30090]
+ *  Remove uses of MLWorks.IO
+ *
+ *  Revision 1.2  1997/03/03  10:44:25  matthew
+ *  Adding flush to print
+ *
+ *  Revision 1.1  1997/02/28  16:52:46  matthew
+ *  new unit
+ *
+*)
+
+  fun maken (n,m) = Array2.tabulate Array2.RowMajor (n,m,fn (i,j) =>i*m+j)
+
+  fun allreg a = {base = a, row = 0, col = 0, nrows = NONE, ncols = NONE}
+
+  fun mkreg (a, r, c, h, w) =
+                {base = a, row = r, col = c, nrows = SOME h, ncols = SOME w}
+
+  fun iprint a =
+    let
+      fun pad s = if size s < 3 then pad (" " ^ s) else s
+      fun one (i,j,n) =
+        print ((if j = 0 then "\n" else "") ^ pad (Int.toString n) ^ " ")
+    in
+      Array2.appi Array2.RowMajor one (allreg a);
+      print "\n"
+    end;
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = Array2.tabulate Array2.RowMajor
+                 (4, 6, (fn _ => (i:= !i+1; !i)))
+      val b = Array2.tabulate Array2.RowMajor 
+                 (4, 6, (fn (a,_) => (a)))
+      val c = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (_,a) => (a)))
+    in
+      print "tabulate RowMajor\n";
+      iprint a ; iprint b ; iprint c
+    end
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn _ => (i:= !i+1; !i)))
+      val b = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (a,_) => (a)))
+      val c = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (_,a) => (a)))
+    in
+      print "tabulate ColMajor \n";
+      iprint a ; iprint b ; iprint c
+    end
+  
+
+  fun copytest (a,b,c,d,e,f) =
+    let val arr = maken (6,8)
+    in
+      Array2.copy {src=mkreg (arr, a,b,c,d), dst=arr, dst_row=e, dst_col=f};
+      iprint arr
+    end;
+
+  val _ = print "copy test\n";
+  val _ = copytest (0,0,3,2,2,4);
+  val _ = copytest (0,0,3,2,2,0);
+  val _ = copytest (2,2,3,2,0,0);
+  val _ = copytest (0,0,3,3,1,1);
+  val _ = copytest (1,1,3,3,0,0);
+  (copytest (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,~2,1,2,1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,2,~1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,10,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  fun copytest2 (a,b,c,d,e,f) =
+    let 
+      val arr = maken (6,8)
+      val dst = Array2.array (10,10,0)
+    in
+      Array2.copy {src=mkreg (arr, a,b,c,d), dst_row=e, dst_col = f, dst=dst};
+      iprint dst
+    end;
+
+  val _ = print "copy test2\n";
+  val _ = copytest2 (0,0,3,2,2,4);
+  val _ = copytest2 (0,0,3,2,2,0);
+  val _ = copytest2 (2,2,3,2,0,0);
+  val _ = copytest2 (0,0,3,3,1,1);
+  val _ = copytest2 (1,1,3,3,0,0);
+  (copytest2 (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  val _ = print "app test\n";
+  val _ = 
+    (Array2.app Array2.RowMajor (fn x => print (Int.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (Array2.app Array2.ColMajor (fn x => print (Int.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (Array2.appi Array2.RowMajor 
+       (fn (i,j,x) => if i <> j then () else print (Int.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = 
+    (Array2.appi Array2.ColMajor 
+       (fn (i,j,x) => if i <> j then () else print (Int.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = (Array2.appi Array2.RowMajor
+            (fn (i,j,x) => if i = j then () else print (Int.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+  val _ = (Array2.appi Array2.ColMajor
+            (fn (i,j,x) => if i = j then () else print (Int.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+
+  print "modify test\n";
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      Array2.modifyi Array2.RowMajor 
+        (fn (i,j,x) => if i = j then 0 else x + x) (allreg a);
+      iprint a
+    end;
+
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      Array2.modifyi Array2.RowMajor 
+        (fn (i,j,x) => if i = j then 0 else x + x) (mkreg(a, 1,1,3,4));
+      iprint a
+    end;
+
+  val _ = 
+    let 
+      val a = Array2.array (4, 6, 0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); !i)
+    in
+      print "modify RowMajor\n";
+      Array2.modify Array2.RowMajor m a;
+      iprint a
+    end ;
+
+  val _ = 
+    let 
+      val a = Array2.array (4, 6, 0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); !i)
+    in
+      print "modify ColMajor\n";
+      Array2.modify Array2.ColMajor m a;
+      iprint a
+    end ;
+
+
+  val _ = print "fold test\n";
+  val fold1 = rev (Array2.fold Array2.RowMajor op:: [] (maken (4,4)));
+  val fold2 = rev (Array2.fold Array2.ColMajor op:: [] (maken (4,4)));
+  val fold3 = (ignore(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), ~1,1,2,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold4 = (ignore(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 100,1,2,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold5 = (ignore(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 1,1,200,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold6 = rev (Array2.fold Array2.ColMajor op:: [] (maken (4,4)));
+
+@
+
+
+1.5
+log
+@[Bug #30323]
+Removed use of Shell.Build.
+@
+text
+@d10 4
+d190 2
+a191 2
+  val fold3 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), ~1,1,2,2))); "FAIL")
+d193 2
+a194 2
+  val fold4 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 100,1,2,2))); "FAIL")
+d196 2
+a197 2
+  val fold5 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 1,1,200,2))); "FAIL")
+@
+
+
+1.4
+log
+@[Bug #30245]
+ARRAY2 has changed, fix the test so it works with the new sig and struct.
+@
+text
+@d10 4
+a24 9
+
+local
+  val _ =  Shell.Options.set(Shell.Options.ValuePrinter.maximumStrDepth, 0);
+in
+  val _ =
+    (Shell.Build.loadSource "basis.__array";
+     Shell.Build.loadSource "basis.__array2";
+     Shell.Build.loadSource "basis.__int")
+end ;
+@
+
+
+1.3
+log
+@[Bug #30090]
+Remove uses of MLWorks.IO
+@
+text
+@d10 4
+d22 2
+a23 72
+Shell.Build.loadSource "basis.__array";
+Shell.Build.loadSource "basis.__array2";
+Shell.Build.loadSource "basis.__int";
+
+fun maken (n,m) = Array2.tabulate (n,m,fn (i,j) =>i*m+j)
+val allreg = {row=0,col=0,ht=NONE,wd=NONE}
+fun mkreg (r,c,h,w) = {row=r,col=c,ht=SOME h,wd=SOME w}
+fun iprint a =
+  let
+    fun pad s = if size s < 3 then pad (" " ^ s) else s
+    fun one (i,j,n) =
+      print ((if j = 0 then "\n" else "") ^ pad (Int.toString n) ^ " ")
+  in
+    Array2.appi one (a,allreg);
+    print "\n"
+  end;
+
+fun copytest (a,b,c,d,e,f) =
+  let val arr = maken (6,8)
+  in
+    Array2.copy {dst=arr,dst_row=e,dst_col = f,src=arr,src_reg=mkreg (a,b,c,d)};
+    iprint arr
+  end;
+
+print "copy test\n";
+copytest (0,0,3,2,2,4);
+copytest (0,0,3,2,2,0);
+copytest (2,2,3,2,0,0);
+copytest (0,0,3,3,1,1);
+copytest (1,1,3,3,0,0);
+(copytest (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+(copytest (0,0,~2,1,2,1) ; "FAIL") handle Subscript => "OK";
+(copytest (0,0,2,~1,2,~1) ; "FAIL") handle Subscript => "OK";
+(copytest (0,10,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+fun copytest2 (a,b,c,d,e,f) =
+  let 
+    val arr = maken (6,8)
+    val dst = Array2.array (10,10,0)
+  in
+    Array2.copy {dst=dst,dst_row=e,dst_col = f,src=arr,src_reg=mkreg (a,b,c,d)};
+    iprint dst
+  end;
+
+print "copy test2\n";
+copytest2 (0,0,3,2,2,4);
+copytest2 (0,0,3,2,2,0);
+copytest2 (2,2,3,2,0,0);
+copytest2 (0,0,3,3,1,1);
+copytest2 (1,1,3,3,0,0);
+(copytest2 (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+print "app test\n";
+Array2.app (fn x => print (Int.toString x ^ " ")) (maken (4,6));
+print "\n";
+
+Array2.appi (fn (i,j,x) => if i <> j then () else print (Int.toString x ^ " ")) (maken (4,6),allreg);
+print "\n";
+
+Array2.appi (fn (i,j,x) => if i = j then () else print (Int.toString x ^ " ")) (maken (4,6),{row=1,col=1,ht=SOME 3,wd=SOME 3});
+print "\n";
+
+print "modify test\n";
+let
+  val a = maken (4,6)
+in
+  Array2.modifyi (fn (i,j,x) => if i = j then 0 else x + x) (a,allreg);
+  iprint a
+end;
+
+let
+  val a = maken (4,6)
+d25 176
+a200 53
+  Array2.modifyi (fn (i,j,x) => if i = j then 0 else x + x) 
+  (a,mkreg(1,1,3,4));
+  iprint a
+end;
+
+print "fold test\n";
+rev (Array2.fold Array2.RowMajor op:: [] (maken (4,4)));
+rev (Array2.fold Array2.ColMajor op:: [] (maken (4,4)));
+(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) [] (maken (4,4),mkreg (~1,1,2,2))); "FAIL") handle Subscript => "OK";
+(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) [] (maken (4,4),mkreg (100,1,2,2))); "FAIL") handle Subscript => "OK";
+(rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) [] (maken (4,4),mkreg (1,1,200,2))); "FAIL") handle Subscript => "OK";
+
+val a = maken (4,6);
+iprint a;
+print "shift test\n";
+iprint (Array2.shift (a,1,1,~1));
+iprint (Array2.shift (a,1,~1,~1));
+iprint (Array2.shift (a,~1,~1,~1));
+iprint (Array2.shift (a,~1,1,~1));
+iprint (Array2.shift (a,10,10,~1));
+print "rotate test\n";
+iprint (Array2.rotate (a,1,1));
+iprint (Array2.rotate (a,1,~1));
+iprint (Array2.rotate (a,~1,~1));
+iprint (Array2.rotate (a,~1,1));
+iprint (Array2.rotate (a,10,10));
+print "transpose test\n";
+iprint (Array2.transpose a);
+print "map test\n";
+iprint (Array2.map (fn x => x+1) a);
+iprint (Array2.map2(fn (x,y) => x +y) (a,a));
+
+print "dot test\n";
+
+fun dp (a,b) =
+  let
+    fun loop (0,acc) = acc
+      | loop (i,acc) =
+      loop (i-1,Array.sub(a,i-1) * Array.sub (b,i-1) + acc)
+  in
+    loop (Array.length a,0)
+  end;
+
+fun mult (a,b) = Array2.dot (dp,a,b);
+
+fun unit n = Array2.tabulate (n,n,fn (i,j) => if i = j then 1 else 0);
+
+fun rot a =
+  let
+    val (n,m) = Array2.dimensions a
+  in
+    Array2.tabulate (m,n,fn (j,i) => Array2.sub (a,n-i-1,j))
+  end;
+a201 1
+iprint (mult (maken (3,3),maken (3,3)));
+@
+
+
+1.2
+log
+@Adding flush to print
+@
+text
+@d10 3
+a20 3
+
+val print = fn s => (MLWorks.IO.output (MLWorks.IO.std_out, s);
+                     MLWorks.IO.flush_out MLWorks.IO.std_out); 
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a9 3
+ *  Revision 1.2  1997/03/03  10:44:25  matthew
+ *  Adding flush to print
+ *
+@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:14  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:14  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a9 3
+ *  Revision 1.2.1.1  1997/05/12  11:08:14  hope
+ *  branched from 1.2
+ *
+@
+
+
+1.2.1.1.1.2
+log
+@[Bug #30245]
+Merging - ARRAY2 has changed, fix the test so it works with the new sig and struct.
+@
+text
+@a9 3
+ *  Revision 1.2.1.1.1.1  1997/07/28  18:49:45  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+d21 75
+a95 2
+local
+  val _ =  Shell.Options.set(Shell.Options.ValuePrinter.maximumStrDepth, 0);
+d97 53
+a149 176
+  val _ =
+    (Shell.Build.loadSource "basis.__array";
+     Shell.Build.loadSource "basis.__array2";
+     Shell.Build.loadSource "basis.__int")
+end ;
+
+  fun maken (n,m) = Array2.tabulate Array2.RowMajor (n,m,fn (i,j) =>i*m+j)
+
+  fun allreg a = {base = a, row = 0, col = 0, nrows = NONE, ncols = NONE}
+
+  fun mkreg (a, r, c, h, w) =
+                {base = a, row = r, col = c, nrows = SOME h, ncols = SOME w}
+
+  fun iprint a =
+    let
+      fun pad s = if size s < 3 then pad (" " ^ s) else s
+      fun one (i,j,n) =
+        print ((if j = 0 then "\n" else "") ^ pad (Int.toString n) ^ " ")
+    in
+      Array2.appi Array2.RowMajor one (allreg a);
+      print "\n"
+    end;
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = Array2.tabulate Array2.RowMajor
+                 (4, 6, (fn _ => (i:= !i+1; !i)))
+      val b = Array2.tabulate Array2.RowMajor 
+                 (4, 6, (fn (a,_) => (a)))
+      val c = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (_,a) => (a)))
+    in
+      print "tabulate RowMajor\n";
+      iprint a ; iprint b ; iprint c
+    end
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn _ => (i:= !i+1; !i)))
+      val b = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (a,_) => (a)))
+      val c = Array2.tabulate Array2.ColMajor 
+                 (4, 6, (fn (_,a) => (a)))
+    in
+      print "tabulate ColMajor \n";
+      iprint a ; iprint b ; iprint c
+    end
+  
+
+  fun copytest (a,b,c,d,e,f) =
+    let val arr = maken (6,8)
+    in
+      Array2.copy {src=mkreg (arr, a,b,c,d), dst=arr, dst_row=e, dst_col=f};
+      iprint arr
+    end;
+
+  val _ = print "copy test\n";
+  val _ = copytest (0,0,3,2,2,4);
+  val _ = copytest (0,0,3,2,2,0);
+  val _ = copytest (2,2,3,2,0,0);
+  val _ = copytest (0,0,3,3,1,1);
+  val _ = copytest (1,1,3,3,0,0);
+  (copytest (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,~2,1,2,1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,2,~1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,10,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  fun copytest2 (a,b,c,d,e,f) =
+    let 
+      val arr = maken (6,8)
+      val dst = Array2.array (10,10,0)
+    in
+      Array2.copy {src=mkreg (arr, a,b,c,d), dst_row=e, dst_col = f, dst=dst};
+      iprint dst
+    end;
+
+  val _ = print "copy test2\n";
+  val _ = copytest2 (0,0,3,2,2,4);
+  val _ = copytest2 (0,0,3,2,2,0);
+  val _ = copytest2 (2,2,3,2,0,0);
+  val _ = copytest2 (0,0,3,3,1,1);
+  val _ = copytest2 (1,1,3,3,0,0);
+  (copytest2 (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  val _ = print "app test\n";
+  val _ = 
+    (Array2.app Array2.RowMajor (fn x => print (Int.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (Array2.app Array2.ColMajor (fn x => print (Int.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (Array2.appi Array2.RowMajor 
+       (fn (i,j,x) => if i <> j then () else print (Int.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = 
+    (Array2.appi Array2.ColMajor 
+       (fn (i,j,x) => if i <> j then () else print (Int.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = (Array2.appi Array2.RowMajor
+            (fn (i,j,x) => if i = j then () else print (Int.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+  val _ = (Array2.appi Array2.ColMajor
+            (fn (i,j,x) => if i = j then () else print (Int.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+
+  print "modify test\n";
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      Array2.modifyi Array2.RowMajor 
+        (fn (i,j,x) => if i = j then 0 else x + x) (allreg a);
+      iprint a
+    end;
+
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      Array2.modifyi Array2.RowMajor 
+        (fn (i,j,x) => if i = j then 0 else x + x) (mkreg(a, 1,1,3,4));
+      iprint a
+    end;
+
+  val _ = 
+    let 
+      val a = Array2.array (4, 6, 0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); !i)
+    in
+      print "modify RowMajor\n";
+      Array2.modify Array2.RowMajor m a;
+      iprint a
+    end ;
+
+  val _ = 
+    let 
+      val a = Array2.array (4, 6, 0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); !i)
+    in
+      print "modify ColMajor\n";
+      Array2.modify Array2.ColMajor m a;
+      iprint a
+    end ;
+
+
+  val _ = print "fold test\n";
+  val fold1 = rev (Array2.fold Array2.RowMajor op:: [] (maken (4,4)));
+  val fold2 = rev (Array2.fold Array2.ColMajor op:: [] (maken (4,4)));
+  val fold3 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), ~1,1,2,2))); "FAIL")
+               handle Subscript => "OK";
+  val fold4 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 100,1,2,2))); "FAIL")
+               handle Subscript => "OK";
+  val fold5 = (rev (Array2.foldi Array2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 1,1,200,2))); "FAIL")
+               handle Subscript => "OK";
+  val fold6 = rev (Array2.fold Array2.ColMajor op:: [] (maken (4,4)));
+d151 1
+@
+
+
+1.2.1.1.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a9 4
+ *  Revision 1.2.1.1.1.2  1997/08/13  15:49:56  johnh
+ *  [Bug #30245]
+ *  Merging - ARRAY2 has changed, fix the test so it works with the new sig and struct.
+ *
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log: arrays.sml,v $
+d18 3
+@

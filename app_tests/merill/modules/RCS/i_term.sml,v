@@ -1,0 +1,91 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.08.18.09.20;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.08.17.17.02;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* 
+
+MERILL  -  Equational Reasoning System in Standard ML.
+Brian Matthews				     23/04/90
+Glasgow University and Rutherford Appleton Laboratory.
+
+i_term.sml 
+
+This module provides the top level interface for the formal entering and display 
+of terms
+
+*)
+
+functor I_TermFUN (structure T : TERM 
+		   sharing T.Pretty = T.Sig.O.Pretty) : I_TERM = 
+struct
+
+structure Pretty = T.Pretty
+
+type Signature = T.Sig.Signature
+type Term = T.Term
+
+open T
+
+   fun enter_term Al TS env = 
+         let val ss = Lex.lex_input ()
+         in if null ss orelse ss = ["\n"] then NoMatch else
+	(case parse_term Al TS env ss of
+	  OK ((t,s),e) => let val ss = strip s in
+	  		  if null ss orelse ss = ["\n"] then Match (t,e)
+	  		  else (error_message "Ill-formed Term.  Try again" ;
+	  		  	enter_term Al TS env) 
+	  		  end
+	| Error s      => (error_message (s ^ " Try again") ; 
+	                   enter_term Al TS env) )
+	end 
+
+   fun display_term Al = C (curry Pretty.pr) (snd(get_window_size ())) o show_pretty_term Al 
+
+end (* of functor I_TermFUN *)
+;
+@
+
+
+1.1
+log
+@new unit
+Putting applications into hope and daily
+@
+text
+@@

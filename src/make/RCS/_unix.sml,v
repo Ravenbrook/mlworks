@@ -1,0 +1,587 @@
+head	1.16;
+access;
+symbols
+	ML_beta_release_12/08/94:1.16
+	ML_beta_release_03/08/94:1.16
+	ML_revised_beta_release_25/05/94:1.16
+	ML_final_beta_release_02/03/94:1.15
+	mlworks-28-01-1994:1.15
+	Release:1.14
+	mlworks-beta-01-09-1993:1.14
+	MLWorks-1-0-4-29/01/1993:1.14
+	MLWorks-1-0-3-21/12/1992:1.14
+	MLWorks-1-0-2-15/12/1992:1.14
+	MLWorks-1-0-1-04/12/1992:1.14
+	checkpoint_17_08_92:1.11
+	Ten15_release_21-08-91:1.3
+	Ten15_release_19-08-91:1.3
+	ten15_release:1.3;
+locks; strict;
+
+
+1.16
+date	94.04.19.09.23.14;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.11.15.14.28.15;	author nickh;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.10.28.10.10.33;	author richard;	state Exp;
+branches
+	1.14.1.1;
+next	1.13;
+
+1.13
+date	92.08.28.08.23.48;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.08.26.14.53.04;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.08.10.15.27.37;	author davidt;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.07.15.00.52;	author davidt;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.05.18.15.46.21;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.05.18.12.59.49;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.05.13.10.40.29;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.11.21.16.30.45;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.11.21.15.34.38;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.07.14.51.21;	author nickh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.24.11.25.04;	author colin;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.10.17.31.26;	author colin;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.10.59.19;	author colin;	state Exp;
+branches;
+next	;
+
+1.14.1.1
+date	92.10.28.10.10.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Interface to some UNIX functions in NJML
+@
+
+
+1.16
+log
+@Fixing problem with parse_environ
+@
+text
+@(* _unix.sml the functor *)
+(*
+$Log: _unix.sml,v $
+Revision 1.15  1993/11/15  14:28:15  nickh
+Change to pervasive time structure.
+
+Revision 1.14  1992/10/28  10:10:33  richard
+Changes to pervasives and representation of time.
+
+Revision 1.13  1992/08/28  08:23:48  richard
+Changed call to environment so that environment is not
+preserved across images.
+
+Revision 1.12  1992/08/26  14:53:04  richard
+Rationalisation of the MLWorks structure.
+
+Revision 1.11  1992/08/10  15:27:37  davidt
+Changed MLworks structure to MLWorks
+
+Revision 1.10  1992/08/07  15:00:52  davidt
+String structure is now pervasive, now use MLworks
+structure instead of NewJersey structure.
+
+Revision 1.9  1992/05/18  15:46:21  clive
+Changed to work with our compiler
+
+Revision 1.8  1992/05/18  12:59:49  clive
+Adjusted to allow our compiler to compile
+
+Revision 1.7  1992/05/13  10:40:29  jont
+Modified for two integer time stamps
+
+Revision 1.6  1991/11/21  16:30:45  jont
+Added copyright message
+
+Revision 1.5  91/11/21  15:34:38  jont
+Changed implementation of system to be compatible with both 0.66 and 0.75
+
+Revision 1.4  91/10/07  14:51:21  nickh
+Modified System.system calls (shell commands) to use fully-qualified
+command names (for instance, /bin/rm instead of rm).
+
+Revision 1.3  91/06/24  11:25:04  colin
+Added date function
+
+Revision 1.2  91/06/10  17:31:26  colin
+added unix system call
+
+Revision 1.1  91/06/07  10:59:19  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "unix";
+
+functor Unix () : UNIX =
+struct
+  fun get_terminated_line file =
+    let
+      fun extend_line line =
+	if end_of_stream file then
+	  implode(rev line)
+	else
+	  let
+	    val char = input(file, 1)
+	  in
+	    if char = "\n" then implode(rev("\n" :: line))
+	    else
+	      extend_line(char :: line)
+	  end
+    in
+      extend_line []
+    end
+    
+  val input_line = get_terminated_line
+
+  exception ParseEnviron
+
+  fun parse_environ (key) =
+    let 
+      val key = key ^ "="
+      val keysize = (size key)
+      fun searchkey nil = raise ParseEnviron
+	| searchkey (x::rest) =
+	  let val xsize = size x
+	  in
+	    if xsize >= keysize andalso String.substring(x,0,keysize) = key then
+	      String.substring (x,keysize,xsize-keysize)
+	  else
+	    searchkey rest
+	  end
+    in
+      searchkey (MLWorks.OS.Unix.environment ())
+    end	    
+
+  fun username () = parse_environ "USER"
+
+  exception Home
+
+  local
+
+    fun nthoccur (string,char,n) =
+      let
+	val charord = ord char
+	fun count (position,n) =
+	  if String.ordof (string,position) = charord then
+	  if n = 0 then 
+	    position
+	  else
+	    count(position+1,n-1)
+	  else
+	    count(position+1,n)
+      in
+	count(0,n)
+      end
+  in
+
+    fun home "" = parse_environ "HOME"
+      | home x =
+	let
+	val fd = open_in "/etc/passwd"
+	val xsize = size x
+	fun parse_passwd () =
+	  if end_of_stream fd then
+	    raise Home
+	  else
+	    let val line = input_line fd
+	    in
+	      if String.substring(line,0,xsize) = x then
+		let
+		  val fourth = nthoccur(line,":",4)
+		  val rest = String.substring 
+		    (line,fourth+1,(size line) - (fourth+1))
+		  val fifth = nthoccur(rest,":",0)
+		in
+		  String.substring(rest,0,fifth)
+		end
+	      else
+		parse_passwd ()
+	    end
+	in
+	  let val home = parse_passwd ()
+	  in
+	    (close_in fd ; home)
+	  end
+	end      
+  end
+
+  datatype mtime_res =
+    EXISTS of MLWorks.Time.time |
+    NOT_EXIST
+
+  fun mtime filename =
+    EXISTS (MLWorks.IO.file_modified filename)
+    handle Io _ => NOT_EXIST
+    
+  exception unix_ctime
+
+  fun ctime () =
+    let
+      val _ = MLWorks.OS.system "/usr/bin/touch /usr/tmp/mlstamp"
+    in
+      case (mtime "/usr/tmp/mlstamp") of
+	EXISTS sec => sec
+      | NOT_EXISTS => raise unix_ctime
+    end
+
+  fun date () = 
+    let
+      val _ = MLWorks.OS.system "/bin/rm -rf /usr/tmp/mldate; /usr/bin/date > /usr/tmp/mldate"
+      val i = open_in "/usr/tmp/mldate"
+      val s = input_line i
+      val _ = close_in i
+    in
+      String.substring (s,0,size s - 1)
+    end
+end
+@
+
+
+1.15
+log
+@Change to pervasive time structure.
+@
+text
+@d4 3
+d82 1
+d88 2
+a89 2
+	    if xsize > keysize andalso String.substring(x,0,keysize) = key then
+	      String.substring (x,keysize+1,xsize-(keysize+1))
+@
+
+
+1.14
+log
+@Changes to pervasives and representation of time.
+@
+text
+@d4 3
+d147 1
+a147 1
+    EXISTS of MLWorks.Time.Real.T |
+@
+
+
+1.14.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.14  1992/10/28  10:10:33  richard
+Changes to pervasives and representation of time.
+
+@
+
+
+1.13
+log
+@Changed call to environment so that environment is not
+preserved across images.
+@
+text
+@d4 4
+d143 3
+a145 1
+  datatype mtime_res = EXISTS of {hi:int, lo:int} | NOT_EXIST
+d147 3
+a149 8
+  fun mtime filename = 
+    let 
+      val MLWorks.Internal.Timer.TIME (hisec,losec, usec) =
+	MLWorks.Internal.FileIO.mtime(MLWorks.Internal.FileIO.PATH filename)
+    in
+      EXISTS { hi = hisec, lo = losec }
+    end
+  handle _ => NOT_EXIST
+@
+
+
+1.12
+log
+@Rationalisation of the MLWorks structure.
+@
+text
+@d4 3
+d83 1
+a83 1
+      searchkey MLWorks.OS.Unix.environment
+@
+
+
+1.11
+log
+@Changed MLworks structure to MLWorks
+@
+text
+@d4 3
+d80 1
+a80 1
+      searchkey (MLWorks.System.environ ())
+d140 2
+a141 2
+      val MLWorks.Timer.TIME (hisec,losec, usec) =
+	MLWorks.FileIO.mtime(MLWorks.FileIO.PATH filename)
+d151 1
+a151 1
+      val _ = MLWorks.System.system "/usr/bin/touch /usr/tmp/mlstamp"
+d160 1
+a160 1
+      val _ = MLWorks.System.system "/bin/rm -rf /usr/tmp/mldate; /usr/bin/date > /usr/tmp/mldate"
+@
+
+
+1.10
+log
+@String structure is now pervasive, now use MLworks
+structure instead of NewJersey structure.
+@
+text
+@d4 4
+d77 1
+a77 1
+      searchkey (MLworks.System.environ ())
+d137 2
+a138 2
+      val MLworks.Timer.TIME (hisec,losec, usec) =
+	MLworks.FileIO.mtime(MLworks.FileIO.PATH filename)
+d148 1
+a148 1
+      val _ = MLworks.System.system "/usr/bin/touch /usr/tmp/mlstamp"
+d157 1
+a157 1
+      val _ = MLworks.System.system "/bin/rm -rf /usr/tmp/mldate; /usr/bin/date > /usr/tmp/mldate"
+@
+
+
+1.9
+log
+@Changed to work with our compiler
+@
+text
+@d4 3
+d34 1
+a34 1
+require "../utils/string";
+d37 1
+a37 2
+functor Unix (structure String : STRING) : UNIX =
+  
+a38 1
+
+d73 1
+a73 1
+      searchkey (NewJersey.System.environ ())
+d133 2
+a134 3
+      val NewJersey.System.Timer.TIME (hisec,losec, usec) =
+	NewJersey.System.Unsafe.SysIO.mtime
+	(NewJersey.System.Unsafe.SysIO.PATH filename)
+d136 1
+a136 1
+      EXISTS{hi=hisec, lo=losec}
+d144 1
+a144 1
+      val _ = NewJersey.System.system "/usr/bin/touch /usr/tmp/mlstamp"
+a150 1
+
+d153 1
+a153 1
+      val _ = NewJersey.System.system "/bin/rm -rf /usr/tmp/mldate; /usr/bin/date > /usr/tmp/mldate"
+d158 1
+a158 9
+      String.substring (s,0,String.length s - 1)
+    end
+ 
+
+  fun system x =
+    let
+      val _ = NewJersey.System.system x
+    in
+      ()
+a159 1
+
+@
+
+
+1.8
+log
+@Adjusted to allow our compiler to compile
+@
+text
+@d4 3
+d132 1
+a132 1
+      val NewJersey.System.Timer.TIME {sec, usec} =
+d136 1
+a136 1
+      EXISTS{hi=sec div (256*256), lo=sec mod (256*256)}
+@
+
+
+1.7
+log
+@Modified for two integer time stamps
+@
+text
+@d4 3
+d28 4
+a31 1
+functor Unix () : UNIX =
+d34 20
+d69 1
+a69 1
+      searchkey (System.environ ())
+d141 1
+a141 1
+      val _ = System.system "/usr/bin/touch /usr/tmp/mlstamp"
+d151 1
+a151 1
+      val _ = System.system "/bin/rm -rf /usr/tmp/mldate; /usr/bin/date > /usr/tmp/mldate"
+d162 1
+a162 1
+      val _ = System.system x
+@
+
+
+1.6
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_unix.sml,v $
+d99 1
+a99 1
+  datatype mtime_res = EXISTS of int | NOT_EXIST
+d107 1
+a107 1
+      EXISTS sec
+@
+
+
+1.5
+log
+@Changed implementation of system to be compatible with both 0.66 and 0.75
+@
+text
+@d1 1
+d4 3
+@
+
+
+1.4
+log
+@Modified System.system calls (shell commands) to use fully-qualified
+command names (for instance, /bin/rm instead of rm).
+@
+text
+@d3 4
+d16 1
+d127 6
+a132 1
+  val system = System.system
+a134 3
+
+
+
+@
+
+
+1.3
+log
+@Added date function
+@
+text
+@d3 3
+d103 1
+a103 1
+      val _ = System.system "touch /usr/tmp/mlstamp"
+d113 1
+a113 1
+      val _ = System.system "rm -rf /usr/tmp/mldate; date > /usr/tmp/mldate"
+@
+
+
+1.2
+log
+@added unix system call
+@
+text
+@d3 3
+d106 12
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log$
+d103 3
+@

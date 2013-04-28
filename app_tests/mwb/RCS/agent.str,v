@@ -1,0 +1,805 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.13.42.46;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.11.10.03.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+functor BruinAgent(structure SL : SORTEDLIST;
+		   structure T : TEST;
+		   structure Act : ACTION;
+		   sharing Act.N = T.N;
+		   structure E : ENV;
+		   structure V : VAR;
+		   sharing E.V = V) : AGENT =
+struct
+	
+   structure T = T
+   structure N = T.N
+   structure E = E
+   structure Act = Act
+
+   datatype agent = Nil
+     		  | Prefix of Act.action * agent
+		  | Abs of N.name * agent
+		  | Conc of N.name * agent
+(* 		  | Test of T.test * agent    *) (* replaced by cond *)
+		  | Cond of T.test * agent * agent (* if-then-else *)
+                  | Sum of agent list
+                  | Parallel of agent list
+		  | Nu of N.name * agent
+                  | AgentRef of string
+		  | Applic of agent * N.name
+
+   type env = agent E.env
+
+   exception WrongArgs of string
+
+   (* see also makstr below *)
+   fun mkstr(Nil) = "0"
+     | mkstr(Prefix(a,P)) = (Act.mkstr a) ^ "." ^ (mkstr P)
+     | mkstr(A as Abs(n,P)) =
+       let fun abs(Abs(n,P)) =
+	   let val (m,q) = abs(P)
+	   in (n::m,q) end
+	     | abs(P) = ([],P)
+	   val (nv,P') = abs(A)
+       in
+	   (* "(\\"^(Lib.mapconcat N.mkstr nv ",")^")" *)
+	   "("^(Lib.mapconcat (if Flags.trace() then
+				 (fn n=>"\\("^(N.pretty_name(n))^")")
+			       else (fn n=>"\\")) nv ",")^")"
+	   ^(mkstr P')
+       end
+     | mkstr(A as Conc(n,P)) =
+       let fun con(Conc(n,P)) =
+	   let val (m,q) = con(P)
+	   in (n::m,q) end
+	     | con (P) = ([],P)
+	   val (nn,P') = con(A)
+       in
+	   "["^(Lib.mapconcat N.mkstr nn ",")^"]"^(mkstr P')
+       end
+(*      | mkstr(Test(t,P)) = (T.mkstr t) ^ (mkstr P) *)
+     | mkstr(Cond(t,P,Nil)) = (T.mkstr t) ^ (mkstr P)
+     | mkstr(Cond(t,P,Q)) = (T.mkstr t)^(mkstr P)^","^(mkstr Q)
+     | mkstr(Sum(P)) = "(" ^ (Lib.mapconcat mkstr P " + ") ^ ")"
+     | mkstr(Parallel(P)) = "(" ^ (Lib.mapconcat mkstr P " | ") ^ ")"
+     | mkstr(A as Nu(n,P)) =
+       let fun nu(Nu(n,P)) =
+	   let val (m,q) = nu(P)
+	   in (n::m,q) end
+	     | nu (P) = ([],P)
+	   val (nv,P') = nu(A)
+       in
+	   (* "(^"^(Lib.mapconcat N.mkstr nv ",")^")" *)
+	   "("^(Lib.mapconcat (if Flags.trace() then
+				 (fn n=>"^("^(N.pretty_name(n))^")")
+			       else (fn n=>"^")) nv ",")^")"
+	   ^(mkstr P')
+       end
+     | mkstr(AgentRef(I)) = I
+     | mkstr(A as Applic(P,arg)) =
+       let fun appl(Applic(P,a)) =
+	   let val (q,b) = appl(P)
+	   in (q,a::b) end
+	     | appl (P) = (P,[])
+	   val (P',args) = appl(A)
+       in
+	   (case P' of
+		AgentRef(I) => (mkstr P')
+	      | _ => "("^(mkstr P')^")")
+	   ^ "<" ^ (Lib.mapconcat N.mkstr (rev args) ",") ^ ">"
+       end
+
+
+
+   fun eq (Nil,Nil) = true
+     | eq (Prefix(a,P),Prefix(b,Q)) =
+       Act.eq(a,b) andalso eq(P,Q)
+     | eq (Abs(a,P),Abs(b,Q)) =
+       N.eq (a,b) andalso eq(P,Q)
+     | eq (Conc(a,P),Conc(b,Q)) =
+       N.eq (a,b) andalso eq(P,Q)
+(*      | eq (Test(t1,P),Test(t2,Q)) = *)
+(*        T.eq(t1,t2) andalso eq(P,Q)  *)
+     | eq (Cond(t1,p1,q1),Cond(t2,p2,q2)) =
+       T.eq(t1,t2) andalso eq(p1,p2) andalso eq(q1,q2)
+     | eq (Sum(P),Sum(Q)) =
+       Lib.eq eq (P,Q)
+     | eq (Parallel(P),Parallel(Q)) =
+       Lib.eq eq (P,Q)
+     | eq (Nu(n1,P1),Nu(n2,P2)) =
+       N.eq (n1,n2) andalso eq(P1,P2)
+     | eq (AgentRef(I1),AgentRef(I2)) = I1 = I2 
+     | eq (Applic(P1,N1),Applic(P2,N2)) =
+       eq (P1,P2) andalso N.eq (N1,N2)
+     | eq (_,_) = false
+
+
+   fun hashval (Nil) = 0
+     | hashval (Prefix(a,P)) =
+       sxmash(Act.hashval(a),hashval P)
+     | hashval (Abs(n,P)) = 1+(hashval P)
+     | hashval (Conc(n,P)) = (N.code n)+(hashval P)
+(*      | hashval (Test(t,P)) = sxmash(5,hashval P) *)
+     | hashval (Cond(t,P,Q)) = sxmash(sxmash(5,hashval P),sxmash(5,hashval Q))
+     | hashval (Sum(PP)) = fold sxmash (map hashval PP) 7
+     | hashval (Parallel(PP)) = fold sxmash (map hashval PP) 11
+     | hashval (Nu(n,P)) = sxmash(13,hashval P)
+     | hashval (AgentRef(I)) = fold (fn (c,v)=>sxmash(v,(ord c)-(ord "@@"))) (explode I) 17
+     | hashval (Applic(P,n)) = sxmash(hashval P,19)
+   (* from cmulisp *)
+   and sxmash(place,wth) =
+       let val total = 26 (* This should probably change, since SML ints are larger than CMULisp's *)
+	   val rotate = 7
+       in
+	   Bits.xorb(Bits.xorb(Bits.rshift(wth,total-rotate),place),
+		     Bits.lshift(Bits.andb(wth,
+					   Bits.lshift(1,total-rotate)-1),
+				 rotate))
+(* **** cmulisp 17e has this code which it claims is an improvement,
+        but it's much worse at least in MWB. /bv 941012
+	   Bits.xorb(Bits.xorb(Bits.rshift(place,total-rotate),wth),
+		     Bits.lshift(Bits.andb(place,
+					   Bits.lshift(1,total-rotate)-1),
+				 rotate))
+**** *)
+       end
+
+
+   fun mk_sum(pp) =
+       let fun flatten_sum([]) = []
+	     | flatten_sum (Sum(P)::R) =
+	       (flatten_sum P)@@(flatten_sum R)
+	     | flatten_sum (Nil::R) = flatten_sum(R)
+	     | flatten_sum (A::R) = A::flatten_sum(R)
+	   val pq = flatten_sum(pp)
+       in
+	   case pq of
+	       [] => Nil
+	     | [h] => h
+	     | _ =>
+		   if !Flags.space_over_speed andalso Lib.eq eq (pp,pq)
+		       then Sum(pp)
+		   else
+		       Sum(pq)
+       end
+   and mk_parallel(pp) =
+       let fun flatten_parallel([]) = []
+	     | flatten_parallel(Parallel(P)::R) =
+	       (flatten_parallel P)@@(flatten_parallel R)
+	     | flatten_parallel(Nil::R) =
+	       flatten_parallel(R)
+	     | flatten_parallel(A::R) =
+	       A::(flatten_parallel R)
+	   val pq = flatten_parallel(pp)
+       in
+	   case pq of
+	       [] => Nil
+	     | [h] => h
+	     | _ =>
+		   if !Flags.space_over_speed andalso Lib.eq eq (pp,pq)
+		       then Parallel(pp)
+		   else Parallel(pq)
+       end
+
+   fun arity (Abs(a,P),e) =
+       let fun parity(Abs(_,P),e) = 1+parity(P,e)
+	     | parity(AgentRef I,e) = parity(E.lookup(V.mkvar I,e),e)
+	     | parity(Applic(P,n),e) = (parity(P,e))-1
+	     | parity _ = 0
+       in 1+(parity(P,e)) end
+     | arity (Conc(a,P),e) =
+       let fun narity(Conc(_,P),e) = 1+(narity(P,e))
+	     | narity(Nu(_,P),e) = narity(P,e)
+	     | narity(AgentRef I,e) = narity(E.lookup(V.mkvar I,e),e)
+	     | narity(Applic(P,n),e) = (narity(P,e))-1
+	     | narity _ = 0
+       in ~(1+narity(P,e)) end
+     | arity (Nu(_,P),Env) = arity (P,Env)
+     | arity (AgentRef(I),Env) = arity (E.lookup (V.mkvar I, Env), Env)
+     | arity (Applic(A,n),e) = (arity(A,e))-1
+     | arity _ = 0
+
+   (* returns a list of the free names in an agent *)
+   fun free_names(P) =
+       let fun freen(Nil,_) = nil
+	     | freen (Prefix(a,P),lvl) = (Act.free_names(a,lvl))@@(freen(P,lvl))
+	     | freen (Abs(n,P),lvl) = freen(P,lvl+1)
+	     | freen (Conc(n,P),lvl) =
+	       if N.is_free(n,lvl) then
+		   (N.free(n,lvl))::(freen(P,lvl))
+	       else freen(P,lvl)		(* n not free *)
+(* 	     | freen (Test(t,P),lvl) = (T.free_names(t,lvl))@@(freen(P,lvl))    *)
+	     | freen (Cond(t,P,Q),lvl) =
+	       (T.free_names(t,lvl))@@(freen(P,lvl))@@(freen(Q,lvl))
+	     | freen (Sum(pp),lvl) = Lib.mapcan (fn p=>freen(p,lvl)) pp
+	     | freen (Parallel(pp),lvl)= Lib.mapcan (fn p=>freen(p,lvl)) pp
+	     | freen (Nu(n,P),lvl) = freen(P,lvl+1)
+	     | freen (AgentRef I,lvl) = nil
+	     | freen (Applic(P,n),lvl) =
+	       if N.is_free(n,lvl) then
+		   (N.free(n,lvl))::(freen(P,lvl))
+	       else freen(P,lvl)		(* n not free *)
+       in
+	   freen(P,0)
+       end
+
+   and names(P,env) =
+       let fun names(Nil,E,_) = []
+	     | names(Prefix(A,P),E,L) = SL.sort N.le true ((Act.names A)@@(names(P,E,L)))
+	     | names(Abs(n,P),E,L) = SL.add N.le true (n,names(P,E,L))
+	     | names(Conc(n,P),E,L) = SL.add N.le true (n,names(P,E,L))
+(* 	     | names(Test(T,P),E,L) = SL.sort N.le true ((T.names(T))@@(names(P,E,L)))    *)
+	     | names(Cond(T,P,Q),E,L) = SL.sort N.le true ((T.names(T))@@(names(P,E,L))@@(names(Q,E,L)))
+	     | names(Sum([]),_,_) = []
+	     | names(Sum(h::t),E,L) = SL.sort N.le true ((names(h,E,L))@@(names(Sum(t),E,L)))
+	     | names(Parallel([]),_,_) = []
+	     | names(Parallel(h::t),E,L) = SL.sort N.le true ((names(h,E,L))@@(names(Parallel(t),E,L)))
+	     | names(Nu(n,P),E,L) = SL.add N.le true (n,names(P,E,L))
+	     | names(AgentRef(I),E,IL) =
+	       let fun member(_,[]) = false
+		     | member(x,h::t) = x = h orelse member(x,t)
+	       in				(* foo yuck. *)
+		   SL.sort N.le true 
+		   (if member(I,IL) then []
+		    else let val bod = E.lookup(V.mkvar I, E)
+			 in
+			     names(bod,E,I::IL)
+			 end)
+	       end
+	     | names(Applic(P,arg),E,IL) =
+	       SL.add N.le true (arg,names (P,E,IL))
+       in
+	   names(P,env,[])
+       end
+
+   (* val apply: abstraction * args * env -> agent *)
+   and apply (P, args,env) =
+       let val F = std_form(P,env)
+	   val Q = abs_body(F,length args,env)
+       in
+	   beta_reduce Q (args,0)
+       end
+
+   (* val beta_reduce : agent -> (name list * lambdacount) -> agent  *)
+   and beta_reduce P (E as (args,lc))  =
+       (* #### look at args to see if we're going to do nothing; *)
+       (* e.g. (3,2,1,0) where max(fn(P))<=3 *)
+       (* this is cheap if we have fn(P), but we don't. *)
+       let val P' = zbeta_reduce P E
+       in
+	   (if !Flags.tracelevel > 5 then
+		print("beta "^(mkstr P)^" (["^(Lib.mapconcat N.mkstr args ",")^
+		      "],"^(makestring lc)^") => "^(mkstr P')^"\n")
+	    else ();
+		if !Flags.space_over_speed andalso eq(P,P')
+		    then (if !Flags.tracelevel > 3 then print("*beta to same: "^(mkstr P)^" (["^(Lib.mapconcat N.mkstr args ",")^"],"^(makestring lc)^")\n") else ();P)
+		else P')
+       end
+   and zbeta_reduce P ([],_) = P
+     | zbeta_reduce Nil E = Nil
+     | zbeta_reduce (P as (AgentRef I)) E = P
+     | zbeta_reduce (Abs(n,P)) (arg,lc) =
+       Abs(n,beta_reduce P (arg,lc+1))
+     | zbeta_reduce (Nu(n,P)) (arg,lc) =
+       Nu(n,beta_reduce P (arg,lc+1))
+     | zbeta_reduce (Prefix(act,P)) E =
+       Prefix(Act.beta_reduce act E,beta_reduce P E)
+     | zbeta_reduce (Conc(n,P)) E =
+       Conc(N.beta_reduce n E,beta_reduce P E)
+(*      | zbeta_reduce (Test(t,P)) E =             *)
+(*        Test(T.beta_reduce t E,zbeta_reduce P E) *)
+     | zbeta_reduce (Cond(t,P,Q)) E =
+       Cond(T.beta_reduce t E,beta_reduce P E,beta_reduce Q E)
+     | zbeta_reduce (Sum(PP)) E =
+       Sum(map (fn P => beta_reduce P E) PP)
+     | zbeta_reduce (Parallel(PP)) E =
+       Parallel(map (fn P => beta_reduce P E) PP)
+     | zbeta_reduce (Applic(P,n)) E =
+       Applic(beta_reduce P E,N.beta_reduce n E)
+
+   (* abs_body(P,n,e): unfold n abstractions from P in env e *)
+   and abs_body (P,0,e) = P
+     | abs_body (Abs(_,P),n,e) = abs_body(P,n-1,e)
+     | abs_body (AgentRef(I),n,e) =
+       abs_body(E.lookup(V.mkvar I,e),n,e)
+     | abs_body (Applic(P,a),n,e) =
+       let val P' = abs_body(P,1,e)	(* unfold abstr for a *)
+       in abs_body(P',n,e)
+       end
+     | abs_body (P,n,e) =
+       raise WrongArgs("Error: asking for "^(makestring n)^" args for "^(mkstr P)^"\n(You are probably applying a non-abstraction to some argument)")
+
+   and abs_all (Abs(n,P),e) =
+       let val (apn,app) = abs_all(P,e)
+       in (apn+1,app) end
+     | abs_all (AgentRef(I),e) =
+       abs_all (E.lookup(V.mkvar I,e),e)
+     | abs_all (Applic(P,n),e) =
+       let val P' = abs_body(P,1,e)
+       in abs_all(P',e)
+       end
+     | abs_all (P,e) = (0,P)
+
+   and conc_all(P,e) =
+       let
+(*
+	   fun konc_all (Conc(n,P),e) =
+	       let val (conc,q) = konc_all(P,e)
+	       in (n::conc,q) end
+	     | konc_all (AgentRef I,e) =
+	       konc_all (E.lookup(V.mkvar I,e),e)
+	     | konc_all (P,e) = ([],P)
+	   and nonc_all (Nu(n,P),e) =
+	       let val (nu,conc,q) = nonc_all(P,e)
+	       in (nu+1,conc,q) end
+	     | nonc_all (Q as Conc(n,P),e) =
+	       let val (c,q) = konc_all(Q,e)
+	       in (0,c,q) end
+	     | nonc_all (AgentRef(I),e) =
+	       nonc_all (E.lookup(V.mkvar I,e),e)
+	     | nonc_all (P,e) = (0,[],P)
+*)
+	   fun nonc_all(A as Nu(n,P),e) =
+	       let val (nu,conc,q) = nonc_all(P,e)
+	       in if not(null conc) then (nu+1,conc,q)
+		  else (0,[],A)
+	       end
+	     | nonc_all (Conc(n,P),e) =
+	       let val (nu,conc,q) = nonc_all(P,e)
+	       in (nu,(N.increment(n,nu))::conc,q) end
+	     | nonc_all (AgentRef I,e) = nonc_all(E.lookup(V.mkvar I,e),e)
+	     | nonc_all (Applic(P,n),e) =
+	       nonc_all(abs_body(P,1,e),e)
+	     | nonc_all (P,e) = (0,[],P)
+       in
+	   nonc_all(std_form(P,e),e)
+       end
+
+   and std_form(P,e) =
+       (if !Flags.tracelevel > 5 then print("* std_form("^(mkstr P)^")\n") else ();
+	let val s = ztd_form(P,e)
+	in
+	    if !Flags.tracelevel > 5 then print("=> "^(mkstr s)^"\n") else ();
+		if !Flags.space_over_speed andalso eq(s,P)
+		    then P
+		else
+		    s
+	end)
+
+   and ztd_form (Nil,_) = Nil
+     | ztd_form (Abs(n,P),env) =
+       Abs(n,std_form(P,env))
+     | ztd_form (Conc(n,P),env) =
+       Conc(n,std_form(P,env))
+
+     | ztd_form (Nu(n,P),env) =
+       let val Q = std_form(P,env)
+	   fun beta_swap(R) =
+	       substitute([(N.mkname("",0),N.mkname("",1)),
+			   (N.mkname("",1),N.mkname("",0))],R)
+       in
+	   case Q of
+	       Abs(m,R) =>
+		   (* (^n)(\m)R => (\m)(^n)R{dec(n),inc(m)} *)
+		   let val RR = beta_swap R
+		   in
+		       Abs(m,std_form(Nu(n,RR),env))
+		   end
+	     | Conc(m,R) =>
+		   (* (^n)[n]R => (^n)[n]R *)
+		   if N.zerop(m) then Nu(n,Q)
+		   (* (^n)[m]R => [m](^n)R *)
+		   else Conc(N.pred(m),std_form(Nu(n,R),env))
+	     | Nu(m,R as Conc(oo,S)) =>
+		   if N.zerop(oo) then
+		       (* (^n)(^m)[m]R => (^m)[m](^n)R{dec(n),inc(m)} *)
+		       (* #### does this handle (^n)(^m)(^o)[o]R ? Yes! *)
+		       let val RR = beta_swap S
+		       in
+			   Nu(m,std_form(Conc(oo,Nu(n,RR)),env))
+		       end
+		   else Nu(n,Q)
+	     | Nil => Nil
+	     | _ =>
+		   Nu(n,Q)
+       end
+     | ztd_form (AgentRef I,env) =
+       let val P = E.lookup(V.mkvar I,env)
+       in
+	   std_form(P,env)
+       end
+     | ztd_form (A as Applic(P,n),env) =
+       let val args = application_args(A,env)
+	   val P' = application_abstrs(A,env)
+       in
+	   apply(P',args,env)
+       end
+
+     | ztd_form (Parallel(PP),env) =
+       (fn () =>
+       let val QQ = map (fn P => std_form(P,env)) PP
+	   fun is_process x = arity(x,env) = 0
+	   fun is_abstraction x = arity(x,env) >= 0
+	   fun is_concretion x = arity(x,env) <= 0
+	   fun maknames (from,downto) =
+	       if from < downto then []
+	       else if from = downto then [N.mkname("", from)]
+	       else (N.mkname("",from))::(maknames (from-1,downto))
+	   fun mknames (base,n) =
+	       maknames (base+n,base)
+	   fun id(x,y) =
+	       (if !Flags.tracelevel > 5 then print("**mknames("^(makestring x)^","^(makestring y)^")\n") else ();
+		let val nl = mknames(x,y)
+		in
+		    if !Flags.tracelevel > 5 then print (" => ["^(Lib.mapconcat N.mkstr nl ",")^"]\n") else ();
+		       nl
+	       end)
+       in
+	   if Lib.forall is_process QQ then mk_parallel(QQ)
+
+ 	   else if Lib.forall is_abstraction QQ then
+	       (* (\P | \Q) = (\\)(P f+|\q|,b+|\q| | Q f+|\p| *)
+	       (* meaning that in P you have to increment all free idx, *)
+	       (* including the ones bound in the \p abstraction, *)
+	       (* while in Q, you only increment the ones free in \Q *)
+	       let val (nvars,b) =
+		   fold (fn (q,(v,b)) =>
+			 let val (v',q') = abs_all(q,env)
+			     val f = free_names q
+			     val _ = if !Flags.tracelevel > 5 then print("fold ("^(mkstr q)^",("^(makestring v)^",["^(Lib.mapconcat mkstr b ",")^"]))\n v'="^(makestring v')^", free_names(q) = ["^(Lib.mapconcat N.mkstr f ",")^"]\n") else ()
+			     val bf = Lib.mapcan free_names b
+			     val bnames =
+				 (if null bf then []
+				  else
+				      id(v'+v,1+(N.code(Lib.max N.le bf))-v))
+				 @@(maknames(v-1,0))
+			 in (v'+v,
+			     (* inc all names by |v| *)
+			     (beta_reduce q' (id (v, v'+(if null f then 0
+							 else 1+(N.code(Lib.max N.le f)))),
+					      0))
+			     ::(if null bf orelse v' = 0 then b
+				else
+				    (* inc free names by v' *)
+				    map (fn bb=> beta_reduce bb (bnames,0)) b)
+			     )
+			 end) QQ (0,[])
+		   fun absify(n,p) =
+		       if n = 0 then p
+		       else absify(n-1,Abs(N.Zero,p))
+	       in
+		   absify(nvars,mk_parallel(b))
+	       end
+
+	   else if Lib.forall is_concretion QQ then
+	       let val (nnu,vars,b) =
+		   fold (fn (q,(n,v,b)) =>
+			 let val (n',v',q') = conc_all(q,env)
+			     val f = free_names q
+			     val _ = if !Flags.tracelevel > 5 then print("fold ("^(mkstr q)^",("^(makestring n)^",["^(Lib.mapconcat N.mkstr v ",")^"],["^(Lib.mapconcat mkstr b ",")^"]))\n n'="^(makestring n')^", v'= ["^(Lib.mapconcat N.mkstr v' ",")^"], free_names(q) = ["^(Lib.mapconcat N.mkstr f ",")^"]\n") else ()
+			     val qnames =
+				 id (n, n'+(if null f then 0
+					    else 1+(N.code(Lib.max N.le f))))
+			     val bf = (Lib.mapcan free_names b)@@(Lib.filter (fn x=> N.is_free(x,n)) v)
+			     val bnames =
+				 (if null bf then []
+				  else
+				      id(n'+n,1+(N.code(Lib.max N.le bf))-n))
+				 @@(maknames(n-1,0))
+			 in (n'+n,((map (fn n=>N.beta_reduce n (qnames,0)) v')
+				   @@(map (fn n=>N.beta_reduce n (bnames,0)) v)),
+			     (beta_reduce q' (qnames,0))
+			     ::(if null bf orelse n' = 0 then b
+				else
+				    map (fn bb=>beta_reduce bb (bnames,0)) b)
+			     )
+			 end) QQ (0,[],[])
+		   fun nuify (n,p) =
+		       if n = 0 then p
+		       else nuify(n-1,Nu(N.Zero,p))
+	       in
+		   nuify(nnu,fold (fn (v,p) => Conc(v,p)) vars (mk_parallel(b)))
+	       end
+	   else mk_parallel(QQ)
+       end)()
+     | ztd_form (P,_) = P
+
+   and substitute([],p) = p
+     | substitute(eXvList, p) =
+       let val f = free_names p
+	   val dense = if null f then [] else N.fill (Lib.del_dups N.eq f) (* [Lib.max N.le f] *)
+	   val sted = Lib.sort (fn ((_,a),(_,b)) => N.le(b,a)) eXvList
+	   fun idify ([],[]) = []
+	     | idify ([],x) = [] 
+	     (* Rest of names to be substituted for are not free, skip them *)
+(* raise Lib.disaster("idify([],["^(Lib.mapconcat (fn (a,b)=>"("^(N.mkstr a)^","^(N.mkstr b)^")") x ",")^"]) when eXv=["^(Lib.mapconcat (fn (a,b)=>"("^(N.mkstr a)^","^(N.mkstr b)^")") eXvList ",")^" in p="^(mkstr p)) *)
+	     | idify (n::r,l as (p as (e,v))::s) =
+	       if N.eq(n,v) then p::(idify (r,s))
+	       else (n,n)::(idify (r,l))
+	     | idify (n::r,[]) =
+	       map (fn x=>(x,x)) (n::r)
+	   val fied = idify (dense,sted)
+	   val tituted = beta_reduce p ((map #1 fied),0)
+       in
+	   (if !Flags.tracelevel > 5 then
+		print("** substitute ["^(Lib.mapconcat (fn (a,b) => (N.mkstr a)^"/"^(N.mkstr b)) eXvList ",")^"] in "^(mkstr p)^"\n idified: "^(Lib.mapconcat (fn (a,b) => (N.mkstr a)^"/"^(N.mkstr b)) fied ",")^"\n"^"-> "^(mkstr tituted)^"\n")
+	    else ();
+	    tituted)
+       end
+	   
+   (* don't like using std_form here, *)
+   (* maybe hack arity to handle this instead *)
+   and is_abstraction (P,Env) = arity(std_form(P,Env),Env) >= 0
+   and is_concretion (P,Env) = arity(std_form(P,Env),Env) <= 0
+   and is_process (P,Env) = arity(std_form(P,Env),Env) = 0
+
+   and pseudo_apply (F,C,env) =
+       let fun papp(F,C,env,revp) =
+	   if is_abstraction(F,env) andalso is_concretion(C,env) then
+	       let val (xs,F') = abs_all(std_form(F,env),env)
+		   val (ns,ys,C') = conc_all(std_form(C,env),env)
+		   val f = Lib.del_dups N.eq (free_names F')
+		   val zs = if ns > 0 then if null f then ys
+					   else ((map (fn n=>N.increment(n,ns-xs))
+						  (rev(nthtail(rev(N.fill f),xs)))
+						  handle NthTail => [])
+						 @@ys)
+			    else ys
+		   fun mk_nu(n,p) =
+		       if n = 0 then p
+		       else mk_nu(n-1,Nu(N.Zero,p))
+	       in
+		   if xs = length ys then
+		       let val v =
+			   mk_nu(ns,
+				 if revp then
+				     mk_parallel([C',beta_reduce F' (zs,0)])
+				 else
+				     mk_parallel([beta_reduce F' (zs,0),C']))
+			   val _ = if !Flags.tracelevel > 3 then print("*papply "^(mkstr F)^"\n        "^(mkstr C)^"\n = beta "^(mkstr F')^"\n        ["^(Lib.mapconcat N.mkstr zs ",")^"] (* ["^(Lib.mapconcat N.mkstr ys ",")^"], ns="^(makestring ns)^", xs="^(makestring xs)^", f=["^(Lib.mapconcat N.mkstr f ",")^"] *)\n      | "^(mkstr C')^"\n =>    "^(mkstr v)^"\n") else ()
+		       in
+			   v
+		       end
+		   else
+		       raise Lib.disaster
+			   ("pseudo_apply("^(mkstr F)^","^(mkstr C)^") -- arities don't match")
+	       end
+		   else if is_concretion(F,env) andalso is_abstraction(C,env)
+			    then papp(C,F,env,not revp)
+			else raise Lib.disaster ("pseudo_apply("^(mkstr F)^","^(mkstr C)^") -- not abstraction/concretion pair")
+       in
+	   papp(F,C,env,false)
+       end
+
+       and makstr(Nil,_) = "0"
+	 | makstr(Prefix(a,P),nl) =
+	   (Act.makstr (a,nl)) ^ "." ^ (makstr (P,nl))
+	 | makstr(A as Abs(n,P),nl) =
+	   let fun abs(Abs(n,P),l,ns) =
+		   let val l = nl_add(n,l)
+		     val (h,t) = case l of (h::t) => (h,t) | _ => raise Bind
+		   in abs(P,l,h::ns) end
+		 | abs(P,l,ns) = (l,P,ns)
+	       val (nnl,P',nv) = abs(A,nl,[])
+	       in
+		   "(\\"^(Lib.mapconcat (fn n=>n) (rev nv) ",")
+		   ^")"^(makstr (P',nnl))
+	       end
+	 | makstr(A as Conc(n,P),nl) =
+	   let fun con(Conc(n,P)) =
+		   let val (m,q) = con(P)
+		   in (n::m,q) end
+		 | con (P) = ([],P)
+	       val (nn,P') = con(A)
+	   in
+	       "["^(Lib.mapconcat (fn n=>N.makstr(n,nl)) nn ",")
+	       ^"]"^(makstr (P',nl))
+	   end
+(* 	 | makstr(Test(t,P),nl) =                *)
+(* 	   (T.makstr (t,nl)) ^ (makstr(P,nl))    *)
+	 | makstr(Cond(t,P,Nil),nl) =
+	   (T.makstr (t,nl))^(makstr (P,nl))
+	 | makstr(Cond(t,P,Q),nl) =
+	   (T.makstr (t,nl))^(makstr (P,nl))^","^(makstr (Q,nl))
+	 | makstr(Sum(PP),nl) =
+	   "(" ^ (Lib.mapconcat (fn p=>makstr(p,nl)) PP " + ") ^ ")"
+	 | makstr(Parallel(PP),nl) =
+	   "(" ^ (Lib.mapconcat (fn p=>makstr(p,nl)) PP " | ") ^ ")"
+	 | makstr(A as Nu(n,P),nl) =
+	   let fun nu(Nu(n,P),l,ns) =
+		   let val l = nl_add(n,l)
+		     val (h,t) = case l of (h::t) => (h,t) | _ => raise Bind
+		   in nu(P,l,h::ns) end
+		 | nu (P,l,ns) = (l,P,ns)
+	       val (nnl,P',nv) = nu(A,nl,[])
+	   in
+	       "(^"^(Lib.mapconcat (fn x=>x) (rev nv) ",")
+	       ^")"^(makstr (P',nnl))
+	   end
+	 | makstr(AgentRef(I),_) = I
+	 | makstr(A as Applic(P,arg),nl) =
+	   let fun appl(Applic(P,a),l) = appl(P,a::l)
+		 | appl (P,l) = (P,l)
+	       val (P',args) = appl(A,[])
+	   in
+	       (case P' of
+		    AgentRef(I) => (makstr (P',nl))
+		  | _ => "("^(makstr (P',nl))^")")
+	       ^"<"^(Lib.mapconcat (fn n=>N.makstr(n,nl)) args ",")
+		    ^">"
+	   end
+
+   and nl_add (n,l) =
+       let val s = N.pretty_name(n)
+	   val member = Lib.member (op =)
+	   val i = length l
+	   fun checked s 0 =
+	       if not(member(s,l)) then s else checked s (i+1)
+	     | checked s i =
+	       if not(member(s^(makestring i),l)) then s^(makestring i)
+	       else
+		   checked s (i+1)
+       in
+	   if size s > 0 then
+	       (checked s 0)::l
+	   else (checked "~v" 0)::l
+       end
+	   
+
+   and mk_nil () = Nil
+   and mk_prefix(a,p) = Prefix(a,p)
+   and mk_match(t,p) = Cond(t,p,Nil)
+   and mk_conditional(t,p,q) = Cond(t,p,q)
+   and mk_abstraction(n,p) = Abs(n,p)
+   and mk_concretion(n,p) = Conc(n,p)
+   and mk_restriction(n,p) = Nu(n,p)
+   and mk_identifier(s) = AgentRef(s)
+   and mk_application(p,n) = Applic(p,n)
+
+   and is_nil(Nil,_) = true
+     | is_nil(AgentRef I,e) = is_nil(E.lookup(V.mkvar I,e),e)
+     | is_nil _ = false
+   and is_prefix(Prefix _,_) = true
+     | is_prefix(AgentRef I,e) = is_prefix(E.lookup(V.mkvar I,e),e)
+     | is_prefix _ = false
+   and is_match (p,e) = is_conditional(p,e) andalso is_nil(conditional_negative(p,e),e)
+(*    and is_match(Test _,_) = true                                  *)
+(*      | is_match(AgentRef I,e) = is_match(E.lookup(V.mkvar I,e),e) *)
+(*      | is_match _ = false                                         *)
+   and is_conditional(Cond _,_) = true
+     | is_conditional(AgentRef I,e) = is_conditional(E.lookup(V.mkvar I,e),e)
+     | is_conditional _ = false
+   and is_sum(Sum _,_) = true
+     | is_sum(AgentRef I,e) = is_sum(E.lookup(V.mkvar I,e),e)
+     | is_sum _ = false
+   and is_parallel(Parallel _,_) = true
+     | is_parallel(AgentRef I,e) = is_parallel(E.lookup(V.mkvar I,e),e)
+     | is_parallel _ = false
+   and is_restriction(Nu _,_) = true
+     | is_restriction(AgentRef I,e) = is_restriction(E.lookup(V.mkvar I,e),e)
+     | is_restriction _ = false
+   and is_identifier(AgentRef _,_) = true
+     | is_identifier _ = false
+   and is_application(Applic _,_) = true
+     | is_application(AgentRef I,e) = is_application(E.lookup(V.mkvar I,e),e)
+     | is_application _ = false
+
+   and prefix_act(Prefix(a,p),_) = a
+     | prefix_act(AgentRef I,e) = prefix_act(E.lookup(V.mkvar I,e),e)
+     | prefix_act _ = raise Lib.disaster("prefix_act")
+   and prefix_agent(Prefix(a,p),_) = p
+     | prefix_agent(AgentRef I,e) = prefix_agent(E.lookup(V.mkvar I,e),e)
+     | prefix_agent _ = raise Lib.disaster("prefix_agent")
+   and match_test(p,e) = conditional_test(p,e)
+(*    and match_test(Test(t,p),_) = t                                    *)
+(*      | match_test(AgentRef I,e) = match_test(E.lookup(V.mkvar I,e),e) *)
+(*      | match_test _ = raise Lib.disaster("match_test")                *)
+   and match_positive(p,e) = conditional_positive(p,e)
+(*    and match_positive(Test(t,p),_) = p                         *)
+(*      | match_positive(AgentRef I,e) =                          *)
+(*        match_positive(E.lookup(V.mkvar I,e),e)                 *)
+(*      | match_positive _ = raise Lib.disaster("match_positive") *)
+   and conditional_test(Cond(t,p,q),_) = t
+     | conditional_test(AgentRef I,e) = conditional_test(E.lookup(V.mkvar I,e),e)
+     | conditional_test _ = raise Lib.disaster("conditional_test")
+   and conditional_positive(Cond(t,p,q),_) = p
+     | conditional_positive(AgentRef I,e) = conditional_positive(E.lookup(V.mkvar I,e),e)
+     | conditional_positive _ = raise Lib.disaster("conditional_positive")
+   and conditional_negative(Cond(t,p,q),_) = q
+     | conditional_negative(AgentRef I,e) = conditional_negative(E.lookup(V.mkvar I,e),e)
+     | conditional_negative _ = raise Lib.disaster("conditional_negative")
+   and sum_summands(Sum(pp),_) = pp
+     | sum_summands(AgentRef I,e) = sum_summands(E.lookup(V.mkvar I,e),e)
+     | sum_summands _ = raise Lib.disaster("sum_summands")
+   and parallel_pars(Parallel(pp),_) = pp
+     | parallel_pars(AgentRef I,e) = parallel_pars(E.lookup(V.mkvar I,e),e)
+     | parallel_pars _ = raise Lib.disaster("parallel_pars")
+   and application_arg(Applic(p,n),_) = n
+     | application_arg(AgentRef I,e) = application_arg(E.lookup(V.mkvar I,e),e)
+     | application_arg _ = raise Lib.disaster("application_arg")
+   and application_abstr(Applic(p,n),_) = p
+     | application_abstr(AgentRef I,e) = application_abstr(E.lookup(V.mkvar I,e),e)
+     | application_abstr _ = raise Lib.disaster("application_abstr")
+   and restriction_right(Nu(n,A),m,e) = beta_reduce A ([m],0)
+     | restriction_right(AgentRef I,m,e) =
+       restriction_right(E.lookup(V.mkvar I,e),m,e)
+     | restriction_right _ = raise Lib.disaster("restriction_right")
+   and restriction_agent(Nu(_,A),_) = A
+     | restriction_agent(AgentRef I,e) =
+       restriction_agent(E.lookup(V.mkvar I,e),e)
+     | restriction_agent _ = raise Lib.disaster("restriction_agent")
+   and abstraction_right(Abs(n,F),m,e) = beta_reduce F ([m],0)
+     | abstraction_right(AgentRef I,m,e) =
+       abstraction_right(E.lookup(V.mkvar I,e),m,e)
+     | abstraction_right _ = raise Lib.disaster("abstraction_right")
+   and abstraction_agent(Abs(n,F),e) = F
+     | abstraction_agent(AgentRef I,e) =
+       abstraction_agent(E.lookup(V.mkvar I,e),e)
+     | abstraction_agent _ = raise Lib.disaster("abstraction_agent")
+   and concretion_name(Conc(n,p),_) = n
+     | concretion_name(AgentRef I,e) =
+       concretion_name(E.lookup(V.mkvar I,e),e)
+     | concretion_name _ = raise Lib.disaster("concretion_name")
+   and concretion_agent(Conc(n,p),_) = p
+     | concretion_agent(AgentRef I,e) =
+       concretion_agent(E.lookup(V.mkvar I,e),e)
+     | concretion_agent _ = raise Lib.disaster("concretion_agent")
+
+   and application_abstrs(P,env) =
+       if is_application(application_abstr(P,env),env) then
+	   application_abstrs(application_abstr(P,env),env)
+       else application_abstr(P,env)
+   and application_args(P,env) =
+       if is_application(P,env) then
+	   (application_args(application_abstr(P,env),env))@@[(application_arg(P,env))]
+       else nil
+
+   and identifier_def(AgentRef I,env) = E.lookup(V.mkvar I,env)
+     | identifier_def _ = raise Match
+end
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

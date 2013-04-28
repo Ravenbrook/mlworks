@@ -1,0 +1,154 @@
+head	1.5;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.5
+	MLWorks_Beta_1996_06_06:1.5
+	MLWorks_Beta_1996_06_05:1.5
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.04.30.15.03.35;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.04.18.16.54.49;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.09.07.22.43.36;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.15.14.56.06;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.09.13;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.5
+log
+@Removing utils/*integer
+@
+text
+@(*  ==== FOREIGN INTERFACE : C DATA/TYPE STRUCTURES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __c_data.sml,v $
+ * Revision 1.4  1996/04/18  16:54:49  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.3  1995/09/07  22:43:36  brianm
+ * Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.2  1995/06/15  14:56:06  brianm
+ *  Adding FI diagnostics, more facilities including remote access.
+ *
+ *  Revision 1.1  1995/04/25  11:09:13  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__general";
+require "../utils/__lists";
+
+require "__fi_codeset";
+require "__fi_data";
+require "__fi_utils";
+
+require "__fi_hostel";
+require "_c_data";
+
+structure CData_  =  CData(
+
+   structure FICodeSet = ForeignCodeSet_
+   structure FIData   = ForeignData_
+   structure FIUtils  = ForeignUtils_
+
+   structure CHostel  = ForeignHostel_
+
+   structure Lists    = Lists_
+
+);
+@
+
+
+1.4
+log
+@initbasis becomes basis
+@
+text
+@d8 3
+a25 1
+require "../utils/__integer";
+a43 1
+   structure Integer  = Integer_
+@
+
+
+1.3
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d8 3
+d21 1
+a21 1
+require "../initbasis/__general";
+@
+
+
+1.2
+log
+@Adding FI diagnostics, more facilities including remote access.
+@
+text
+@d8 3
+d22 1
+a22 1
+require "__fi_struct";
+d31 1
+a31 1
+   structure FIStruct = ForeignStruct_
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d7 4
+a10 1
+ *  $Log$
+d12 1
+d23 1
+a23 1
+require "__c_hostel";
+d32 1
+a32 1
+   structure CHostel  = CHostel_
+@

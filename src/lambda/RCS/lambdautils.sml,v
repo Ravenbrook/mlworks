@@ -1,0 +1,504 @@
+head	1.16;
+access;
+symbols
+	ML_beta_release_12/08/94:1.15
+	ML_beta_release_03/08/94:1.15
+	ML_revised_beta_release_25/05/94:1.15
+	ML_final_beta_release_02/03/94:1.15
+	mlworks-28-01-1994:1.14
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.9
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.5
+	Ten15_release_21-08-91:1.3
+	Ten15_release_19-08-91:1.3
+	ten15_release:1.3;
+locks; strict;
+
+
+1.16
+date	94.09.19.13.02.31;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.11.19.14.32.02;	author nosa;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.08.16.11.26.04;	author nosa;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.07.22.11.04.21;	author nosa;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	93.03.10.15.38.01;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.03.09.13.41.39;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.02.01.16.38.57;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.12.18.13.00.02;	author nosa;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.04.15.32.02;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.26.12.42.37;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.26.12.42.37;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.05.16.54.49;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.06.10.19.04.27;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.06.25.12.19.33;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.24.16.30.02;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.24.13.32.25;	author jont;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	93.07.22.11.04.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Utilities for match translation within _lambda
+@
+
+
+1.16
+log
+@Abstraction of debug information
+@
+text
+@(* lambdautils.sml the signature *)
+(*
+$Log: lambdautils.sml,v $
+Revision 1.15  1993/11/19  14:32:02  nosa
+Type function spills for Modules Debugger.
+
+Revision 1.14  1993/08/16  11:26:04  nosa
+Debugger info now includes compilation-instance and
+runtime-instance for polymorphic debugger.
+
+Revision 1.13  1993/07/22  11:04:21  nosa
+More information in Match Environments for local and closure variable
+inspection in the debugger.
+
+Revision 1.12  1993/03/10  15:38:01  matthew
+Signature revisions
+
+Revision 1.11  1993/03/09  13:41:39  matthew
+Absyn changes
+
+Revision 1.10  1993/02/01  16:38:57  matthew
+Added sharing constraints.
+
+Revision 1.9  1992/12/18  13:00:02  nosa
+Deleted label handling in lambda translator.
+
+Revision 1.8  1992/11/04  15:32:02  jont
+Changes to allow IntNewMap to be used on MatchVar
+
+Revision 1.7  1992/08/26  12:42:37  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.6  1992/08/26  12:42:37  jont
+Removed some redundant structures and sharing
+
+Revision 1.5  1992/08/05  16:54:49  jont
+Removed some structures and sharing
+
+Revision 1.4  1992/06/10  19:04:27  jont
+changed to use newmap
+
+Revision 1.3  1991/06/25  12:19:33  jont
+Removed superfluous functions from signature
+
+Revision 1.2  91/06/24  16:30:02  jont
+Added label env augment function
+
+Revision 1.1  91/06/24  13:32:25  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "lambdatypes";
+require "../utils/mononewmap";
+require "../match/match";
+
+signature LAMBDAUTILS =
+  sig
+    structure LambdaTypes: LAMBDATYPES
+    structure MatchMap : MONONEWMAP
+    structure Match: MATCH
+
+    sharing type Match.Absyn.Type = LambdaTypes.Type
+
+    datatype MatchEnv = 
+      ME of (LambdaTypes.LVar * LambdaTypes.VarInfo ref LambdaTypes.Option.opt) MatchMap.T
+
+    val empty_match_env: MatchEnv
+
+    val add_match_env: 
+      (Match.Matchvar * (LambdaTypes.LVar * LambdaTypes.VarInfo ref LambdaTypes.Option.opt)) * MatchEnv -> 
+      MatchEnv
+
+    (* Bind LVar to MV *)
+    val lookup_match: 
+      Match.Matchvar * MatchEnv -> 
+      (LambdaTypes.LVar * LambdaTypes.VarInfo ref LambdaTypes.Option.opt)
+    (* Lookup LVar from MV *)
+end
+@
+
+
+1.15
+log
+@Type function spills for Modules Debugger.
+@
+text
+@d4 3
+d67 1
+a67 6
+      ME of ((LambdaTypes.LVar,(LambdaTypes.LVar * 
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt
+                   * (LambdaTypes.Tyfun ref * (int,int) LambdaTypes.Option.option ref) list) ref 
+              * (int,int) LambdaTypes.Option.option ref LambdaTypes.Option.opt) 
+                                LambdaTypes.Option.opt) ref) 
+              LambdaTypes.Option.option) MatchMap.T
+d71 4
+a74 6
+    val add_match_env: (Match.Matchvar * (LambdaTypes.LVar,(LambdaTypes.LVar * 
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt
+                   * (LambdaTypes.Tyfun ref * (int,int) LambdaTypes.Option.option ref) list) ref 
+              * (int,int) LambdaTypes.Option.option ref LambdaTypes.Option.opt) LambdaTypes.Option.opt) ref) 
+                        LambdaTypes.Option.option) 
+      * MatchEnv -> MatchEnv
+d76 3
+a78 5
+    val lookup_match: Match.Matchvar * MatchEnv -> (LambdaTypes.LVar,(LambdaTypes.LVar * 
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt
+                   * (LambdaTypes.Tyfun ref * (int,int) LambdaTypes.Option.option ref) list) ref 
+              * (int,int) LambdaTypes.Option.option ref LambdaTypes.Option.opt) LambdaTypes.Option.opt) ref) 
+                                                    LambdaTypes.Option.option
+@
+
+
+1.14
+log
+@Debugger info now includes compilation-instance and
+runtime-instance for polymorphic debugger.
+@
+text
+@d4 4
+d65 2
+a66 1
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt) ref 
+d74 2
+a75 1
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt) ref 
+d81 2
+a82 1
+            (string * (LambdaTypes.Type * LambdaTypes.Instance ref LambdaTypes.Option.opt) ref 
+@
+
+
+1.13
+log
+@More information in Match Environments for local and closure variable
+inspection in the debugger.
+@
+text
+@d4 4
+d61 2
+a62 1
+            (string * LambdaTypes.Type ref) 
+d69 2
+a70 1
+            (string * LambdaTypes.Type ref) LambdaTypes.Option.opt) ref) 
+d75 2
+a76 1
+            (string * LambdaTypes.Type ref) LambdaTypes.Option.opt) ref) 
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 4
+Revision 1.13  1993/07/22  11:04:21  nosa
+More information in Match Environments for local and closure variable
+inspection in the debugger.
+
+@
+
+
+1.12
+log
+@Signature revisions
+@
+text
+@d4 3
+d55 5
+a59 1
+    datatype MatchEnv = ME of (LambdaTypes.LVar) MatchMap.T
+d63 4
+a66 1
+    val add_match_env: (Match.Matchvar * LambdaTypes.LVar) * MatchEnv -> MatchEnv
+d68 3
+a70 1
+    val lookup_match: Match.Matchvar * MatchEnv -> LambdaTypes.LVar
+@
+
+
+1.11
+log
+@Absyn changes
+@
+text
+@d4 3
+d50 1
+a50 2
+    sharing type Match.Absyn.Type = LambdaTypes.Datatypes.Type
+    sharing type Match.Absyn.Structure = LambdaTypes.Datatypes.Structure
+@
+
+
+1.10
+log
+@Added sharing constraints.
+@
+text
+@d4 3
+d47 2
+a48 1
+    sharing Match.Absyn.Datatypes = LambdaTypes.Datatypes
+@
+
+
+1.9
+log
+@Deleted label handling in lambda translator.
+@
+text
+@d4 3
+d43 2
+@
+
+
+1.8
+log
+@Changes to allow IntNewMap to be used on MatchVar
+@
+text
+@d4 3
+d32 1
+d38 1
+d41 1
+a41 4
+    datatype MatchEnv = ME of (LambdaTypes.LVar) Match.MatchMap.T
+    datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) LambdaTypes.Datatypes.NewMap.T
+    datatype LabelNode = LABEL of Match.Label | GOTO of Match.Label
+    datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) LambdaTypes.Datatypes.NewMap.T
+a43 2
+    val empty_label_env: LabelEnv
+    val empty_labels: Labels
+a48 10
+    val augment_label_env: LabelEnv * LabelEnv -> LabelEnv
+    val add_label_env: (Match.Label * LambdaTypes.LVar) * LabelEnv -> LabelEnv
+    (* Bind LVar to Label *)
+    val lookup_label: Match.Label * LabelEnv -> LambdaTypes.LVar
+    (* Lookup LVar from Label *)
+    val scan_tree: Match.Tree * LabelEnv -> Labels
+    (* Scan an entire tree producing a map of all occurrences and uses of all
+       labels within it *)
+    val find_repeats: Labels list ->
+      (Match.Label * Match.Tree LambdaTypes.Opt) list
+@
+
+
+1.7
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d29 1
+d31 4
+a34 3
+signature LAMBDAUTILS = sig
+  structure LambdaTypes: LAMBDATYPES
+  structure Match: sig type Matchvar and Label and Tree end
+d36 4
+a39 4
+  datatype MatchEnv = ME of (Match.Matchvar, LambdaTypes.LVar) LambdaTypes.Datatypes.NewMap.T
+  datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) LambdaTypes.Datatypes.NewMap.T
+  datatype LabelNode = LABEL of Match.Label | GOTO of Match.Label
+  datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) LambdaTypes.Datatypes.NewMap.T
+d41 3
+a43 3
+  val empty_match_env: MatchEnv
+  val empty_label_env: LabelEnv
+  val empty_labels: Labels
+d45 1
+a45 1
+  val add_match_env: (Match.Matchvar * LambdaTypes.LVar) * MatchEnv -> MatchEnv
+d47 1
+a47 1
+  val lookup_match: Match.Matchvar * MatchEnv -> LambdaTypes.LVar
+d49 2
+a50 2
+  val augment_label_env: LabelEnv * LabelEnv -> LabelEnv
+  val add_label_env: (Match.Label * LambdaTypes.LVar) * LabelEnv -> LabelEnv
+d52 1
+a52 1
+  val lookup_label: Match.Label * LabelEnv -> LambdaTypes.LVar
+d54 1
+a54 1
+  val scan_tree: Match.Tree * LabelEnv -> Labels
+d57 2
+a58 2
+  val find_repeats: Labels list ->
+    (Match.Label * Match.Tree LambdaTypes.Opt) list
+@
+
+
+1.6
+log
+@Removed some redundant structures and sharing
+@
+text
+@d4 3
+@
+
+
+1.5
+log
+@Removed some structures and sharing
+@
+text
+@d4 3
+a22 1
+require "../utils/newmap";
+a25 1
+  structure NewMap: NEWMAP
+d28 2
+a29 2
+  datatype MatchEnv = ME of (Match.Matchvar, LambdaTypes.LVar) NewMap.T
+  datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) NewMap.T
+d31 1
+a31 1
+  datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) NewMap.T
+@
+
+
+1.4
+log
+@changed to use newmap
+@
+text
+@d4 3
+a20 1
+require "../utils/set";
+@
+
+
+1.3
+log
+@Removed superfluous functions from signature
+@
+text
+@d3 4
+a6 1
+$Log:	lambdautils.sml,v $
+d17 1
+a17 1
+require "../utils/map";
+d22 1
+a22 1
+  structure Map: MAP
+d25 2
+a26 2
+  datatype MatchEnv = ME of (Match.Matchvar, LambdaTypes.LVar) Map.Map
+  datatype LabelEnv = LE of (Match.Label, LambdaTypes.LVar) Map.Map
+d28 1
+a28 1
+  datatype Labels = LABELS of (LabelNode, Match.Tree LambdaTypes.Opt) Map.Map
+@
+
+
+1.2
+log
+@Added label env augment function
+@
+text
+@d4 3
+a39 3
+  val add_label_occ: (LabelNode * Match.Tree LambdaTypes.Opt) * Labels
+     -> Labels
+    (* Add either a goto or a label to those found so far *)
+a44 2
+  val label_occurs: LabelNode * Labels -> bool
+    (* Look for a usage occurrence of the label in Labels *)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d32 1
+@

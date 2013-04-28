@@ -1,0 +1,152 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.11.25.18.50.41;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30329]
+Check that the IO functors are included.
+@
+
+
+1.1
+log
+@new unit
+[Bug #30329]
+Check that the IO functors are included.
+@
+text
+@structure P =
+  struct
+    eqtype array = array
+    eqtype elem = char
+    eqtype pos = int
+    datatype reader =
+      RD of {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, readArr: ({buf: array, i: int, sz: int option} -> int) option, readArrNB: ({buf: array, i: int, sz: int option} -> int option) option, readVec: (int -> vector) option, readVecNB: (int -> vector option) option, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option}
+    eqtype vector = string
+    datatype writer =
+      WR of {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> pos) option, getPos: (unit -> pos) option, ioDesc: iodesc option, name: string, setPos: (pos -> unit) option, verifyPos: (unit -> pos) option, writeArr: ({buf: array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: array, i: int, sz: int option} -> int option) option, writeVec: ({buf: vector, i: int, sz: int option} -> int) option, writeVecNB: ({buf: vector, i: int, sz: int option} -> int option) option}
+    val RD : {avail: unit -> int option, block: (unit -> unit) option, canInput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: OS.IO.iodesc option, name: string, readArr: ({buf: CharArray.array, i: int, sz: int option} -> int) option, readArrNB: ({buf: CharArray.array, i: int, sz: int option} -> int option) option, readVec: (int -> string) option, readVecNB: (int -> string option) option, setPos: (int -> unit) option, verifyPos: (unit -> int) option} -> P.reader
+    val WR : {block: (unit -> unit) option, canOutput: (unit -> bool) option, chunkSize: int, close: unit -> unit, endPos: (unit -> int) option, getPos: (unit -> int) option, ioDesc: OS.IO.iodesc option, name: string, setPos: (int -> unit) option, verifyPos: (unit -> int) option, writeArr: ({buf: CharArray.array, i: int, sz: int option} -> int) option, writeArrNB: ({buf: CharArray.array, i: int, sz: int option} -> int option) option, writeVec: ({buf: string, i: int, sz: int option} -> int) option, writeVecNB: ({buf: string, i: int, sz: int option} -> int option) option} -> P.writer
+    val augmentReader : P.reader -> P.reader = fn
+    val augmentWriter : P.writer -> P.writer = fn
+    val compare : (int * int) -> order = fn
+  end
+structure S =
+  struct
+    eqtype elem = char
+    type in_pos = in_pos
+    type instream = instream
+    type out_pos = out_pos
+    eqtype outstream = outstream
+    eqtype pos = int
+    type reader = reader
+    eqtype vector = string
+    type writer = writer
+    val canInput : (S.instream * int) -> int option = fn
+    val closeIn : S.instream -> unit = fn
+    val closeOut : S.outstream -> unit = fn
+    val endOfStream : S.instream -> bool = fn
+    val filePosIn : S.in_pos -> int = fn
+    val filePosOut : S.out_pos -> int = fn
+    val flushOut : S.outstream -> unit = fn
+    val getBufferMode : S.outstream -> IO.buffer_mode = fn
+    val getPosIn : S.instream -> S.in_pos = fn
+    val getPosOut : S.outstream -> S.out_pos = fn
+    val getReader : S.instream -> (P.reader * string) = fn
+    val getWriter : S.outstream -> (P.writer * IO.buffer_mode) = fn
+    val input : S.instream -> (string * S.instream) = fn
+    val input1 : S.instream -> (char * S.instream) option = fn
+    val inputAll : S.instream -> string = fn
+    val inputN : (S.instream * int) -> (string * S.instream) = fn
+    val mkInstream : (P.reader * string) -> S.instream = fn
+    val mkOutstream : (P.writer * IO.buffer_mode) -> S.outstream = fn
+    val output : (S.outstream * string) -> unit = fn
+    val output1 : (S.outstream * char) -> unit = fn
+    val setBufferMode : (S.outstream * IO.buffer_mode) -> unit = fn
+    val setPosIn : S.in_pos -> S.instream = fn
+    val setPosOut : S.out_pos -> S.outstream = fn
+  end
+structure I =
+  struct
+    structure StreamIO =
+      struct
+        eqtype elem = char
+        type in_pos = in_pos
+        type instream = instream
+        type out_pos = out_pos
+        eqtype outstream = outstream
+        eqtype pos = int
+        type reader = reader
+        eqtype vector = string
+        type writer = writer
+        val canInput : (S.instream * int) -> int option = fn
+        val closeIn : S.instream -> unit = fn
+        val closeOut : S.outstream -> unit = fn
+        val endOfStream : S.instream -> bool = fn
+        val filePosIn : S.in_pos -> int = fn
+        val filePosOut : S.out_pos -> int = fn
+        val flushOut : S.outstream -> unit = fn
+        val getBufferMode : S.outstream -> IO.buffer_mode = fn
+        val getPosIn : S.instream -> S.in_pos = fn
+        val getPosOut : S.outstream -> S.out_pos = fn
+        val getReader : S.instream -> (P.reader * string) = fn
+        val getWriter : S.outstream -> (P.writer * IO.buffer_mode) = fn
+        val input : S.instream -> (string * S.instream) = fn
+        val input1 : S.instream -> (char * S.instream) option = fn
+        val inputAll : S.instream -> string = fn
+        val inputN : (S.instream * int) -> (string * S.instream) = fn
+        val mkInstream : (P.reader * string) -> S.instream = fn
+        val mkOutstream : (P.writer * IO.buffer_mode) -> S.outstream = fn
+        val output : (S.outstream * string) -> unit = fn
+        val output1 : (S.outstream * char) -> unit = fn
+        val setBufferMode : (S.outstream * IO.buffer_mode) -> unit = fn
+        val setPosIn : S.in_pos -> S.instream = fn
+        val setPosOut : S.out_pos -> S.outstream = fn
+      end
+    eqtype elem = char
+    eqtype instream = instream ref
+    eqtype outstream = outstream ref
+    eqtype vector = string
+    val canInput : (S.instream ref * int) -> bool = fn
+    val closeIn : S.instream ref -> unit = fn
+    val closeOut : S.outstream ref -> unit = fn
+    val endOfStream : S.instream ref -> bool = fn
+    val flushOut : S.outstream ref -> unit = fn
+    val getInstream : S.instream ref -> S.instream = fn
+    val getOutstream : S.outstream ref -> S.outstream = fn
+    val getPosIn : S.instream ref -> S.in_pos = fn
+    val getPosOut : S.outstream ref -> S.out_pos = fn
+    val input : S.instream ref -> string = fn
+    val input1 : S.instream ref -> char option = fn
+    val inputAll : S.instream ref -> string = fn
+    val inputN : (S.instream ref * int) -> string = fn
+    val lookahead : S.instream ref -> char option = fn
+    val mkInstream : S.instream -> S.instream ref = fn
+    val mkOutstream : S.outstream -> S.outstream ref = fn
+    val output : (S.outstream ref * string) -> unit = fn
+    val output1 : (S.outstream ref * char) -> unit = fn
+    val setInstream : (S.instream ref * S.instream) -> unit = fn
+    val setOutstream : (S.outstream ref * S.outstream) -> unit = fn
+    val setPosIn : (S.instream ref * S.in_pos) -> unit = fn
+    val setPosOut : (S.outstream ref * S.out_pos) -> unit = fn
+  end
+@

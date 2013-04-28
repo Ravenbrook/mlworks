@@ -1,0 +1,84 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	96.06.14.11.15.18;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.24.15.44.28;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.24.14.18.30;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.3
+log
+@Change to be a stub to remove_src_hdr.sh
+@
+text
+@#!/bin/sh
+#
+# $Log$
+#
+# (Copyright) Harlequin Ltd 1996 (All rights reserved)
+remove_src_hdr.sh $1
+@
+
+
+1.2
+log
+@Minor modifications ...
+@
+text
+@d2 3
+d6 1
+a6 16
+
+awk 'BEGIN {comment = "first"}
+     $1 ~ /\(\*/  {
+	if (comment == "first") {
+	    comment = "yes"
+	    next
+	}
+     }
+     $1 ~ /\*\)/  {
+	if (comment == "yes") {
+	   comment = "no"
+	   next
+	}
+     }
+     comment == "first" { comment = "no" }
+     comment != "yes" { print $0 }'
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d17 1
+@

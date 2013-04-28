@@ -1,0 +1,120 @@
+head	1.5;
+access;
+symbols
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	98.05.07.10.54.04;	author mitchell;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.05.06.12.34.52;	author mitchell;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.05.04.17.21.10;	author mitchell;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.01.22.16.18.27;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.07.17.15.47.53;	author brucem;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Answerfile.
+@
+
+
+1.5
+log
+@[Bug #50071]
+Modify answer file as we now need to load in more structures from the basis
+@
+text
+@val it : unit = ()
+structure TextPrimIO = struct ... end
+structure BinStreamIO = struct ... end
+structure TextStreamIO = struct ... end
+structure TextIO = struct ... end
+structure OSPrimIO = struct ... end
+structure BinPrimIO = struct ... end
+structure IO = struct ... end
+val it : unit = ()
+datatype Result =
+  CORRECT_EX |
+  NO_EX |
+  WRONG_EX of exn
+val CORRECT_EX : Result
+val NO_EX : Result
+val WRONG_EX : exn -> Result
+val test : unit -> {repeatTest: Result list, testGetPosStdErr: Result, testGetPosStdIn: Result, testGetPosStdOut: Result, testSetPosStdErr: Result, testSetPosStdIn: Result, testSetPosStdOut: Result, testStreamIO: {getPosStdIn: Result, getPosStdOut: Result}} = fn
+val it : {repeatTest: Result list, testGetPosStdErr: Result, testGetPosStdIn: Result, testGetPosStdOut: Result, testSetPosStdErr: Result, testSetPosStdIn: Result, testSetPosStdOut: Result, testStreamIO: {getPosStdIn: Result, getPosStdOut: Result}} = {repeatTest=[CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX, CORRECT_EX], testGetPosStdErr=CORRECT_EX, testGetPosStdIn=CORRECT_EX, testGetPosStdOut=CORRECT_EX, testSetPosStdErr=CORRECT_EX, testSetPosStdIn=CORRECT_EX, testSetPosStdOut=CORRECT_EX, testStreamIO={getPosStdIn=CORRECT_EX, getPosStdOut=CORRECT_EX}}
+@
+
+
+1.4
+log
+@[Bug #30409]
+Update answer file to reflect what we expect, rather than what the test currently produces.
+@
+text
+@d2 4
+d7 2
+@
+
+
+1.3
+log
+@[Bug #50071]
+Replace uses of Shell.Build.loadSource by Shell.Project
+@
+text
+@d12 1
+a12 1
+val it : {repeatTest: Result list, testGetPosStdErr: Result, testGetPosStdIn: Result, testGetPosStdOut: Result, testSetPosStdErr: Result, testSetPosStdIn: Result, testSetPosStdOut: Result, testStreamIO: {getPosStdIn: Result, getPosStdOut: Result}} = {repeatTest=[WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream), WRONG_EX(Io: getPosIn failed on file <stdIn> with TerminatedStream)], testGetPosStdErr=CORRECT_EX, testGetPosStdIn=CORRECT_EX, testGetPosStdOut=CORRECT_EX, testSetPosStdErr=CORRECT_EX, testSetPosStdIn=CORRECT_EX, testSetPosStdOut=CORRECT_EX, testStreamIO={getPosStdIn=NO_EX, getPosStdOut=CORRECT_EX}}
+@
+
+
+1.2
+log
+@[Bug #30323]
+Remove unnecessary uses of Shell.Build.loadSource
+@
+text
+@d2 1
+a3 1
+structure OSPrimIO = struct ... end
+@
+
+
+1.1
+log
+@new unit
+Answerfile.
+@
+text
+@a3 6
+val it : unit = ()
+structure BinPrimIO = struct ... end
+val it : unit = ()
+structure TextIO = struct ... end
+val it : unit = ()
+structure IO = struct ... end
+@

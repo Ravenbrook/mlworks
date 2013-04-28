@@ -1,0 +1,687 @@
+head	1.21;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.21
+	mlworks-28-01-1994:1.21
+	Release:1.21
+	mlworks-beta-01-09-1993:1.21
+	MLWorks-1-0-4-29/01/1993:1.20
+	MLWorks-1-0-3-21/12/1992:1.20
+	MLWorks-1-0-2-15/12/1992:1.20
+	MLWorks-1-0-1-04/12/1992:1.20
+	checkpoint_17_08_92:1.18;
+locks; strict;
+comment	@ *  @;
+
+
+1.21
+date	93.05.28.14.42.01;	author nosa;	state Exp;
+branches
+	1.21.1.1;
+next	1.20;
+
+1.20
+date	92.11.21.19.33.07;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.10.02.17.02.08;	author clive;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.06.08.15.21.17;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.06.03.16.27.49;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.04.07.10.11.10;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.02.06.10.55.52;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.01.07.09.17.03;	author clive;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.01.03.15.44.00;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	91.12.04.13.08.29;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.11.29.11.47.12;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.11.25.15.33.05;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.11.14.10.56.54;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.11.12.16.54.28;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.10.29.14.16.08;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.10.24.15.29.01;	author davidt;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.15.15.14.58;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.14.14.31.33;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.10.14.28.50;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.09.14.27.05;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.07.11.22.56;	author richard;	state Exp;
+branches;
+next	;
+
+1.21.1.1
+date	93.05.28.14.42.01;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Machine independent parameters. This is the signature.
+@
+
+
+1.21
+log
+@Changed Option.T to Option.opt.
+@
+text
+@(*   ==== MACHINE SPECIFICATION ====
+ *              SIGNATURE
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This module contains all the information necessary to generate MIR code
+ *  suitable for the machine code generator.  For example, it specifies the
+ *  register model and which pervasives can be generated as in-line code.
+ *  Inlining of pervasives now moved to machperv
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: machspec.sml,v $
+ *  Revision 1.20  1992/11/21  19:33:07  jont
+ *  Removed is_inline to machperv in order to remove dependence of entire
+ *  mir stage on pervasives
+ *
+ *  Revision 1.19  1992/10/02  17:02:08  clive
+ *  Change to NewMap.empty which now takes < and = functions instead of the single-function
+ *
+ *  Revision 1.18  1992/06/08  15:21:17  richard
+ *  Added allocation_order.
+ *
+ *  Revision 1.17  1992/06/03  16:27:49  richard
+ *  The reserved registers are now complete sets rather than a list
+ *  of preferences.
+ *
+ *  Revision 1.16  1992/04/07  10:11:10  richard
+ *  Partitioned corrupted_by_callee according to register type to
+ *  avoid naming clashes.
+ *
+ *  Revision 1.15  1992/02/06  10:55:52  richard
+ *  Added `temporary'.
+ *
+ *  Revision 1.14  1992/01/07  09:17:03  clive
+ *  Added stack limit register definitions
+ *
+ *  Revision 1.13  1992/01/03  15:44:00  richard
+ *  Added the zero register.
+ *
+ *  Revision 1.12  1991/12/04  13:08:29  richard
+ *  Tidied up the documentation.
+ *
+ *  Revision 1.11  91/11/29  11:47:12  richard
+ *  Added `reserved' to prevent register allocation from very special
+ *  registers.
+ *  
+ *  Revision 1.10  91/11/25  15:33:05  jont
+ *  Added fp_global as a temporary for conversions from fp to int
+ *  
+ *  Revision 1.9  91/11/14  10:56:54  richard
+ *  Removed references to fp_double registers.
+ *  
+ *  Revision 1.8  91/11/12  16:54:28  jont
+ *  Added is_inline function to the signature
+ *  
+ *  Revision 1.7  91/10/29  14:16:08  jont
+ *  Added values indicating existence on machin level multiply, divide
+ *  and modulus
+ *  
+ *  Revision 1.6  91/10/24  15:29:01  davidt
+ *  Now knows about the `implicit' register.
+ *  
+ *  Revision 1.5  91/10/15  15:14:58  richard
+ *  Changed corrupted_by_callee to a set rather than a list.
+ *  
+ *  Revision 1.4  91/10/14  14:31:33  richard
+ *  Added corrupted_by_callee.
+ *  
+ *  Revision 1.3  91/10/10  14:28:50  richard
+ *  indicates allocation preferences. after_preserve and after_restore
+ *  discarded.
+ *  
+ *  Revision 1.2  91/10/09  14:27:05  richard
+ *  Added some new register definitions
+ *  
+ *  Revision 1.1  91/10/07  11:22:56  richard
+ *  Initial revision
+ *)
+
+
+require "../utils/set";
+require "../utils/option";
+
+signature MACHSPEC =
+
+  sig
+
+    structure Set	 : SET
+    structure Option	 : OPTION
+
+    (*  === MACHINE REGISTERS ===  *)
+
+    eqtype register
+
+
+    (*  == General registers ==
+     *
+     *  These are the general purpose allocatable registers for the
+     *  different types of virtual register.  The order is significant:
+     *  earlier registers should be used in preference to later ones.
+     *
+     *  gcs:		int/ptr visible to garbage collector
+     *  non_gcs:	int/ptr not visible to garbage collector
+     *  fps:		floating point registers
+     *)
+
+    val gcs		: register list
+    val non_gcs		: register list
+    val fps		: register list
+
+
+    (*  == Special purpose reserved registers ==  *)
+
+    val caller_arg 	: register	(* function argument from caller *)
+    val callee_arg	: register 	(* ditto to callees (may be same) *)
+    val caller_closure	: register	(* closure pointer from caller *)
+    val callee_closure	: register	(* ditto to callees (may be same) *)
+    val fp		: register	(* frame pointer *)
+    val sp		: register	(* stack pointer *)
+    val lr		: register	(* link register *)
+    val handler		: register	(* pointer to exception handler code *)
+    val global		: register	(* not affected by PRESERVE/RESTORE *)
+    val fp_global	: register	(* spare for fp temporaries *)
+    val gc1		: register	(* reserved for garbage collector *)
+    val gc2		: register	(* reserved for garbage collector *)
+    val implicit	: register	(* Always holds the implicit vector *)
+    val stack_limit     : register      
+                                   (* Holds the limit of the current stack *)
+    val zero		: register Option.opt
+    					(* Register which is always zero *)
+
+    (*  == Calling conventions ==  *)
+
+    val corrupted_by_callee : {gc     : register Set.Set,
+                               non_gc : register Set.Set,
+                               fp     : register Set.Set}
+
+
+    (*  == Reserved registers ==
+     *
+     *  These can never be used for anything except their special purpose,
+     *  they can't even be temporarily spilled.
+     *)
+
+    val reserved : {gc : register Set.Set, non_gc : register Set.Set, fp : register Set.Set}
+
+
+    (*  == Temporary registers ==
+     *
+     *  These are the recommended registers to use for temporaries when
+     *  spilling.  They are in order of preference.
+     *)
+
+    val temporary : {gc     : register list,
+                     non_gc : register list,
+                     fp     : register list}
+
+
+    (*  == Allocation order ==
+     *
+     *  Given two registers this determines the order in which they should
+     *  be allocated.  If LESS the first should be allocated in preference
+     *  to the second, the other way if GREATER.  If EQUAL they should be
+     *  allocated equally and will be selected at random.
+     *)
+
+    val allocation_order :
+      {gc     : register * register -> bool,
+       non_gc : register * register -> bool,
+       fp     : register * register -> bool}
+
+    val allocation_equal :
+      {gc     : register * register -> bool,
+       non_gc : register * register -> bool,
+       fp     : register * register -> bool}
+
+
+    (*  == Register printing ==  *)
+
+    val print_register	: register -> string
+
+
+
+    (*  === MACHINE LIMITS ===  *)
+
+    val largest_int	: string
+    val smallest_int	: string
+  end
+@
+
+
+1.21.1.1
+log
+@Fork for bug fixing
+@
+text
+@a15 3
+ *  Revision 1.21  1993/05/28  14:42:01  nosa
+ *  Changed Option.T to Option.opt.
+ *
+@
+
+
+1.20
+log
+@Removed is_inline to machperv in order to remove dependence of entire
+mir stage on pervasives
+@
+text
+@d16 4
+d132 1
+a132 1
+    val zero		: register Option.T
+@
+
+
+1.19
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d11 1
+d16 3
+a81 1
+require "../main/pervasives";
+a82 1
+
+a88 1
+    structure Pervasives : PERVASIVES
+a89 1
+
+a186 4
+
+    (*  === MACHINE CAPABILITIES ===  *)
+
+    val is_inline : Pervasives.pervasive -> bool
+@
+
+
+1.18
+log
+@Added allocation_order.
+@
+text
+@d15 3
+a165 1
+    datatype relation = LESS | EQUAL | GREATER
+d167 8
+a174 3
+      {gc     : register * register -> relation,
+       non_gc : register * register -> relation,
+       fp     : register * register -> relation}
+@
+
+
+1.17
+log
+@The reserved registers are now complete sets rather than a list
+of preferences.
+@
+text
+@d15 4
+d153 15
+@
+
+
+1.16
+log
+@Partitioned corrupted_by_callee according to register type to
+avoid naming clashes.
+@
+text
+@d15 4
+d137 1
+a137 1
+    val reserved : register Set.Set
+@
+
+
+1.15
+log
+@Added `temporary'.
+@
+text
+@d15 3
+d122 3
+a124 1
+    val corrupted_by_callee : register Set.Set
+@
+
+
+1.14
+log
+@Added stack limit register definitions
+@
+text
+@d15 3
+d129 11
+@
+
+
+1.13
+log
+@Added the zero register.
+@
+text
+@d15 3
+d109 2
+@
+
+
+1.12
+log
+@Tidied up the documentation.
+@
+text
+@d14 4
+a17 1
+ *  $Log:	machspec.sml,v $
+d57 1
+d66 1
+d106 2
+@
+
+
+1.11
+log
+@Added `reserved' to prevent register allocation from very special
+registers.
+
+@
+text
+@d1 50
+a50 1
+(* machspec.sml the signature *)
+a51 3
+(* $Log:	machspec.sml,v $
+Revision 1.10  91/11/25  15:33:05  jont
+Added fp_global as a temporary for conversions from fp to int
+a52 32
+Revision 1.9  91/11/14  10:56:54  richard
+Removed references to fp_double registers.
+
+Revision 1.8  91/11/12  16:54:28  jont
+Added is_inline function to the signature
+
+Revision 1.7  91/10/29  14:16:08  jont
+Added values indicating existence on machin level multiply, divide
+and modulus
+
+Revision 1.6  91/10/24  15:29:01  davidt
+Now knows about the `implicit' register.
+
+Revision 1.5  91/10/15  15:14:58  richard
+Changed corrupted_by_callee to a set rather than a list.
+
+Revision 1.4  91/10/14  14:31:33  richard
+Added corrupted_by_callee.
+
+Revision 1.3  91/10/10  14:28:50  richard
+indicates allocation preferences. after_preserve and after_restore
+discarded.
+
+Revision 1.2  91/10/09  14:27:05  richard
+Added some new register definitions
+
+Revision 1.1  91/10/07  11:22:56  richard
+Initial revision
+
+Copyright (C) 1991 Harlequin Ltd
+*)
+
+d56 1
+d61 1
+a61 1
+    structure Set	: SET
+d64 1
+a66 1
+
+d73 1
+a73 1
+     *  different types of virtual register. The order is significant:
+@
+
+
+1.10
+log
+@Added fp_global as a temporary for conversions from fp to int
+@
+text
+@d4 3
+d90 9
+@
+
+
+1.9
+log
+@Removed references to fp_double registers.
+@
+text
+@d4 3
+d79 1
+@
+
+
+1.8
+log
+@Added is_inline function to the signature
+@
+text
+@d4 3
+a57 1
+     *  fp_doubles:	double floating point registers
+a62 1
+    val fp_doubles	: register list
+@
+
+
+1.7
+log
+@Added values indicating existence on machin level multiply, divide
+and modulus
+@
+text
+@d4 4
+d31 1
+a32 1
+
+d38 1
+a39 1
+
+d97 1
+a97 4
+    val has_mul	: bool
+    val has_div	: bool
+    val has_mod	: bool
+
+@
+
+
+1.6
+log
+@Now knows about the `implicit' register.
+@
+text
+@d4 3
+d91 5
+@
+
+
+1.5
+log
+@Changed corrupted_by_callee to a set rather than a list.
+@
+text
+@d4 3
+d70 1
+a70 1
+
+@
+
+
+1.4
+log
+@Added corrupted_by_callee.
+@
+text
+@d4 3
+d20 1
+d22 1
+d27 1
+d29 1
+d71 1
+a71 1
+    val corrupted_by_callee : register list
+@
+
+
+1.3
+log
+@indicates allocation preferences. after_preserve and after_restore
+discarded.
+@
+text
+@d4 4
+d60 5
+@
+
+
+1.2
+log
+@Added some new register definitions
+@
+text
+@d4 3
+a12 1
+require "../utils/set";
+a13 1
+
+a17 1
+    structure Set	: SET
+a18 1
+
+d27 4
+d37 4
+a40 4
+    val gcs		: register Set.Set
+    val non_gcs		: register Set.Set
+    val fps		: register Set.Set
+    val fp_doubles	: register Set.Set
+a55 12
+
+
+    (*  == Support for register windows ==
+     *
+     *  The SPARC in particular uses register windows which change the
+     *  effective names of the registers when PRESERVE and RESTORE are
+     *  used.
+     *)
+
+    exception OutOfScope of register
+    val after_preserve	: register -> register
+    val after_restore	: register -> register
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+(* $Log$
+d42 11
+a52 9
+    val fn_arg	: register	(* function argument and return *)
+    val cl_arg	: register	(* closure pointer *)
+    val fp	: register	(* frame pointer *)
+    val sp	: register	(* stack pointer *)
+    val lr	: register	(* link register *)
+    val handler	: register	(* pointer to exception handler code *)
+    val global	: register	(* not affected by PRESERVE or RESTORE *)
+    val gc1	: register	(* reserved for garbage collector *)
+    val gc2	: register	(* reserved for garbage collector *)
+@

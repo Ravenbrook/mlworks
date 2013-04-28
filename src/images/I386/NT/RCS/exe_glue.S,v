@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.09.28.10.08.30;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.08.24;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Initial code for building executable
+@
+
+
+1.1
+log
+@new unit
+Initial code for building executable
+@
+text
+@/*
+ * Copyright (c) 1998, Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log$
+ */
+	.text
+	.align 4
+	.globl	_main
+	.globl	_trampoline
+	.globl	SETUP
+	.globl	DECLARE
+_main:
+	pushl	%ebp
+	movl	%esp,%ebp
+	lea	DECLARE,%edx	/* Get all the global declarations done first */
+	lea	SETUP+5,%eax
+	push	%edx
+	push	%eax
+	call	_trampoline
+	add	$8,%esp
+	mov	%ebx,%eax
+	leave
+	ret
+	.align	8
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d5 1
+a5 5
+ * $Log: I386:NT:exe_glue.S,v $
+# Revision 1.1  1998/09/28  10:08:30  jont
+# new unit
+# Initial code for building executable
+#
+@

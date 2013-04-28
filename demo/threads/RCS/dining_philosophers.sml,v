@@ -1,0 +1,512 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.4
+	MLWorks_20b2_Windows_1998_06_12:1.4
+	MLWorks_20b1c1_1998_05_07:1.4
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.4
+	MLWorks_workspace_97:1.4.1
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_11r1:1.3.1.2.1.1.1
+	MLWorks_11c0_1997_09_09:1.3.1.2.1.1
+	MLWorks_10r3:1.3.1.2.3
+	MLWorks_10r2_551:1.3.1.2.2
+	MLWorks_11:1.3.1.2.1
+	MLWorks_1_0_r2c2_1997_07_28:1.3.1.2
+	MLWorks_20m0_1997_06_20:1.4
+	MLWorks_1_0_r2c2_1997_06_14:1.3.1.2
+	MLWorks_1_0_r2c1_released_1997_05_23:1.3.1.2
+	MLWorks_1_0_r2c1_1997_05_12:1.3.1
+	MLWorks_BugFix_1997_04_24:1.3
+	MLWorks_1_0_r2_Win32_1997_04_11:1.3
+	MLWorks_1_0_r2_Unix_1997_04_04:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	99.03.18.13.21.23;	author johnh;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.05.16.15.15.13;	author andreww;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	97.04.03.14.28.05;	author andreww;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	97.04.03.11.24.53;	author andreww;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.02.06.17.33.38;	author andreww;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	97.05.12.10.24.03;	author hope;	state Exp;
+branches;
+next	1.3.1.2;
+
+1.3.1.2
+date	97.05.16.16.42.09;	author daveb;	state Exp;
+branches
+	1.3.1.2.1.1
+	1.3.1.2.2.1
+	1.3.1.2.3.1;
+next	;
+
+1.3.1.2.1.1
+date	97.07.28.18.10.47;	author daveb;	state Exp;
+branches
+	1.3.1.2.1.1.1.1;
+next	;
+
+1.3.1.2.1.1.1.1
+date	97.10.07.11.35.08;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.3.1.2.2.1
+date	97.09.08.17.04.05;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.1.2.3.1
+date	97.09.09.13.59.07;	author daveb;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	97.11.30.16.47.46;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+example demo for the mutual exclusion primitives.
+@
+
+
+1.5
+log
+@[Bug #190530]
+fix compilation problem.
+@
+text
+@(* ==== THREADS SYNCHRONIZATION EXAMPLES : the dining philosophers problem ====
+ *
+ * Copyright (C) 1997 Harlequin Ltd.
+ *
+ * Description
+ * -----------
+ * An implementation of the classic dining philosophers synchronization
+ * problem.  It illustrates the use of threads and mutexes.
+ *
+ * Revision Log:
+ * -------------
+ * $Log: threads:dining_philosophers.sml,v $
+ *  Revision 1.4  1997/05/16  15:15:13  andreww
+ *  [Bug #50000]
+ *  Must set max_stack_blocks explicitly so won't overflow default stack.
+ *
+ *  Revision 1.3  1997/04/03  14:28:05  andreww
+ *  [Bug #2017]
+ *  Adjusting the copyright messages in the demo files.
+ *
+ *  Revision 1.2  1997/04/03  11:24:53  andreww
+ *  [Bug #2017]
+ *  renaming run functions.
+ *
+ *  Revision 1.1  1997/02/06  17:33:38  andreww
+ *  new unit
+ *  example demo for the mutual exclusion primitives.
+ *
+ *
+ *
+ *)
+
+require "$.system.__time";
+require "$.basis.__timer";
+require "$.basis.__string";
+require "$.basis.__int32";
+require "$.basis.__text_io";
+require "$.utils.__mutex";
+
+
+local
+  structure T = MLWorks.Threads;
+  structure I = T.Internal;
+  structure P = I.Preemption;
+    
+
+  (* the shared data: five chopsticks *)
+
+  val chopstick1 = Mutex.newBinaryMutex false;
+  val chopstick2 = Mutex.newBinaryMutex false;
+  val chopstick3 = Mutex.newBinaryMutex false;
+  val chopstick4 = Mutex.newBinaryMutex false;
+  val chopstick5 = Mutex.newBinaryMutex false;
+    
+  (* plus a mutex for the output device *)
+    
+  val output = Mutex.newBinaryMutex false;
+  val outputString = ref "";
+    
+  fun safePrint message = Mutex.critical([output], fn()=>
+                                         outputString:=(!outputString^message))()
+    
+    
+  fun unsafePrint message = outputString := (!outputString)^message
+    
+    
+  fun flushOutput () = while (Mutex.query output <>[]) do ()
+    
+    
+    
+  fun random() =
+    let
+      val timeString = Time.fmt 4 (Time.now())
+      val number = case (rev(String.tokens (fn c => c= #".") timeString))
+                     of [] => 0
+                      | (h::_) => valOf(Int32.fromString h)
+    in
+      number mod 1971
+    end;
+    
+    
+    
+    
+  fun occupySomeTime message =
+    let
+      val timeToPass = Time.fromMilliseconds (random())
+      val _ = safePrint message
+      val timer = Timer.startRealTimer()
+      fun passTime() = if Time.<(Timer.checkRealTimer timer,timeToPass)
+                         then passTime()
+                       else ()
+    in
+      passTime()
+    end;
+    
+    
+
+
+
+
+
+  (* the philosophers *)
+
+  fun philosopher (name,chopsticks,chopstickNames) =
+    let
+      fun sillyMessage() = 
+        case (random() mod 5)
+          of 0 => ""
+           | 1 => name^" has burped.\n"
+           | 2 => ""
+           | 3 => name^" is throwing up.\n"
+           | 4 => name^" has just proved a difficult theorem.\n"
+           | _ => ""
+            
+      fun philosophize ():unit =
+        while true do
+          (
+           occupySomeTime (name^" is thinking.\n");
+           safePrint (name^" is hungry.\n");
+           Mutex.wait ([output]@@chopsticks);
+           unsafePrint (name^" has picked up chopsticks "
+                        ^chopstickNames^" and is eating heartily.\n");
+           Mutex.signal [output];
+           occupySomeTime (sillyMessage());
+           Mutex.critical
+            ([output],
+             fn () => (Mutex.signal chopsticks;
+                       unsafePrint (name^" has put down chopsticks "
+                                    ^chopstickNames^".\n")))()
+            )
+    in
+      philosophize
+    end;
+    
+    
+    
+  val deadlockFlag = ref false;
+  
+in
+  
+  (*  set up the threads mechanism *)
+  
+  (* 1. set up enough stack blocks to give one to each thread.
+   * The environment already runs 2 threads, and we fork a further
+   * 6.
+   *)
+
+  val _ = MLWorks.Internal.Runtime.Memory.max_stack_blocks:=8;
+
+
+
+  fun runPhilosophers intervals timeLimit =
+    let
+      (* open output file *)
+      
+      val _ = outputString := ""
+        
+      val p1 = philosopher("Russell",[chopstick1,chopstick2],"1 and 2");
+      val p2 = philosopher("  Godel",[chopstick2,chopstick3],"2 and 3");
+      val p3 = philosopher(" Kleene",[chopstick3,chopstick4],"3 and 4");
+      val p4 = philosopher("  Frege",[chopstick4,chopstick5],"4 and 5");
+      val p5 = philosopher(" Church",[chopstick5,chopstick1],"5 and 1");
+        
+        
+      (*  set up the threads mechanism *)
+      val _ = P.set_interval intervals;
+      val _ = P.start();
+        
+      (* start the philosophers philosophizing *)
+        
+      val id1 = T.fork p1 ()
+      val id2 = T.fork p2 ()
+      val id3 = T.fork p3 ()
+      val id4 = T.fork p4 ()
+      val id5 = T.fork p5 ()
+        
+        
+      fun detectDeadlock() =
+        if Mutex.allSleeping [id1,id2,id3,id4,id5]
+          then deadlockFlag:=true
+        else detectDeadlock()
+          
+      val _ = deadlockFlag:=false
+      val dd = T.fork detectDeadlock ()
+        
+        
+        
+        
+        
+      fun checkTime timer =
+        if Time.toSeconds(Timer.checkRealTimer timer)<timeLimit
+          andalso not (!deadlockFlag)
+          then checkTime timer
+             else (I.kill id1;
+                   I.kill id2;
+                   I.kill id3;
+                   I.kill id4;
+                   I.kill id5;
+                   if !deadlockFlag then () else I.kill dd)
+               
+               
+               
+               
+      (* set up a timer *)
+      val timer = Timer.startRealTimer()
+      val _ = checkTime timer
+        
+      (* reset all mutexes *)
+
+      val _ = if Mutex.test [chopstick1] then () 
+              else Mutex.signal [chopstick1];
+      val _ = if Mutex.test [chopstick2] then () 
+              else Mutex.signal [chopstick2];
+      val _ = if Mutex.test [chopstick3] then () 
+              else Mutex.signal [chopstick3];
+      val _ = if Mutex.test [chopstick4] then () 
+              else Mutex.signal [chopstick4];
+      val _ = if Mutex.test [chopstick5] then () 
+              else Mutex.signal [chopstick5];
+
+      (* finish *)
+
+      val _ = if !deadlockFlag then print "Deadlock.\n" 
+              else print "Finished.\n"
+                
+      val _ = print "See file philosophers.out for log.\n"
+
+      (* open output file *)
+                
+      val out = TextIO.openOut "philosophers.out";
+        
+    in
+      TextIO.output(out,!outputString);
+      TextIO.closeOut out
+    end
+end
+@
+
+
+1.4
+log
+@[Bug #50000]
+Must set max_stack_blocks explicitly so won't overflow default stack.
+@
+text
+@d13 4
+d36 1
+a36 1
+require "$.basis.__int";
+d76 1
+a76 1
+                      | (h::_) => valOf(Int.fromString h)
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a12 4
+ *  Revision 1.4  1997/05/16  15:15:13  andreww
+ *  [Bug #50000]
+ *  Must set max_stack_blocks explicitly so won't overflow default stack.
+ *
+@
+
+
+1.3
+log
+@[Bug #2017]
+Adjusting the copyright messages in the demo files.
+@
+text
+@d13 4
+d36 1
+d139 8
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a12 4
+ *  Revision 1.3  1997/04/03  14:28:05  andreww
+ *  [Bug #2017]
+ *  Adjusting the copyright messages in the demo files.
+ *
+@
+
+
+1.3.1.2
+log
+@[Bug #50000]
+Ensure we have enough stack blocks to give one to each thread.
+@
+text
+@a12 7
+ *  Revision 1.3.1.1  1997/05/12  10:24:03  hope
+ *  branched from 1.3
+ *
+ *  Revision 1.4  1997/05/16  15:15:13  andreww
+ *  [Bug #50000]
+ *  Must set max_stack_blocks explicitly so won't overflow default stack.
+ *
+a35 1
+
+a137 8
+  (* 1. set up enough stack blocks to give one to each thread.
+   * The environment already runs 2 threads, and we fork a further
+   * 6.
+   *)
+
+  val _ = MLWorks.Internal.Runtime.Memory.max_stack_blocks:=8;
+
+
+@
+
+
+1.3.1.2.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a12 4
+ *  Revision 1.3.1.2  1997/05/16  16:42:09  daveb
+ *  [Bug #50000]
+ *  Ensure we have enough stack blocks to give one to each thread.
+ *
+@
+
+
+1.3.1.2.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a12 4
+ *  Revision 1.3.1.2  1997/05/16  16:42:09  daveb
+ *  [Bug #50000]
+ *  Ensure we have enough stack blocks to give one to each thread.
+ *
+@
+
+
+1.3.1.2.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a12 4
+ *  Revision 1.3.1.2  1997/05/16  16:42:09  daveb
+ *  [Bug #50000]
+ *  Ensure we have enough stack blocks to give one to each thread.
+ *
+@
+
+
+1.3.1.2.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a12 3
+ *  Revision 1.3.1.2.1.1  1997/07/28  18:10:47  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@
+
+
+1.2
+log
+@[Bug #2017]
+renaming run functions.
+@
+text
+@d1 8
+a8 2
+(*
+ * Dining philosophers.  Test for new MLWorks Threads mutexes.
+d13 4
+a21 2
+ *
+ * Copyright (C) 1997 Harlequin Ltd.
+@
+
+
+1.1
+log
+@new unit
+example demo for the mutual exclusion primitives.
+@
+text
+@d6 5
+a10 1
+ * $Log:,v$
+d127 1
+a127 1
+  fun run intervals timeLimit =
+@

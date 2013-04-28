@@ -1,0 +1,746 @@
+head	1.19;
+access;
+symbols
+	ML_beta_release_12/08/94:1.19
+	ML_beta_release_03/08/94:1.19
+	ML_revised_beta_release_25/05/94:1.19
+	ML_final_beta_release_02/03/94:1.18
+	mlworks-28-01-1994:1.18
+	Release:1.18
+	mlworks-beta-01-09-1993:1.18
+	MLWorks-1-0-4-29/01/1993:1.12
+	MLWorks-1-0-3-21/12/1992:1.12
+	MLWorks-1-0-2-15/12/1992:1.12
+	MLWorks-1-0-1-04/12/1992:1.12
+	checkpoint_17_08_92:1.7
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.19
+date	94.04.13.13.38.45;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.03.17.18.44.35;	author matthew;	state Exp;
+branches
+	1.18.1.1;
+next	1.17;
+
+1.17
+date	93.03.04.10.46.30;	author matthew;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.02.19.15.36.59;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.02.10.17.57.49;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.02.08.18.08.14;	author matthew;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.01.27.14.29.20;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.11.26.17.02.37;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.10.27.19.10.55;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.10.02.16.11.07;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.26.13.14.24;	author davidt;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.18.15.48.27;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.12.13.03.12;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.03.13.30.32;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.24.17.19.48;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.05.05.10.25.55;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.20.01.06;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.45.47;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.36.33;	author colin;	state Exp;
+branches;
+next	;
+
+1.18.1.1
+date	93.03.17.18.44.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor Environment
+@
+
+
+1.19
+log
+@Fix inexhaustive bindings
+@
+text
+@(* _funenv.sml the functor *)
+(*
+$Log: _funenv.sml,v $
+Revision 1.18  1993/03/17  18:44:35  matthew
+Removed Nameset parameter
+
+Revision 1.17  1993/03/04  10:46:30  matthew
+Options & Info changes
+
+Revision 1.16  1993/02/19  15:36:59  matthew
+removed names_of_funenv function
+
+Revision 1.15  1993/02/10  17:57:49  jont
+Removed second Nameset specification in functor parameter
+
+Revision 1.14  1993/02/08  18:08:14  matthew
+Changes for BASISTYPES signature
+
+Revision 1.13  1993/01/27  14:29:20  matthew
+Changes for new structure representation
+
+Revision 1.12  1992/11/26  17:02:37  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.11  1992/10/27  19:10:55  jont
+Modified to use less than functions for maps
+
+Revision 1.10  1992/10/02  16:11:07  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.9  1992/08/26  13:14:24  davidt
+Made some changes to the NewMap signature.
+
+Revision 1.8  1992/08/18  15:48:27  jont
+Removed irrelevant handlers and new exceptions
+
+Revision 1.7  1992/08/12  13:03:12  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.6  1992/08/03  13:30:32  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.5  1992/06/24  17:19:48  jont
+Changed to imperative implementation of namesets with hashing
+
+Revision 1.4  1992/05/05  10:25:55  jont
+Anel's fixes
+
+Revision 1.3  1992/01/27  20:01:06  jont
+Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+
+Revision 1.2  1991/11/21  16:45:47  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:36:33  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/lists";
+require "../utils/print";
+require "../utils/crash";
+require "../basics/identprint";
+require "ty_debug";
+require "environment";
+require "phi";
+require "funenv";
+
+functor Funenv (
+  structure IdentPrint : IDENTPRINT
+  structure Lists     : LISTS
+  structure Print     : PRINT
+  structure Crash     : CRASH
+  structure Ty_Debug  : TY_DEBUG
+  structure Env       : ENVIRONMENT
+  structure Phi       : PHI
+  structure Debug :
+    sig
+      val set_debug_level : int -> unit
+      val debug_level : unit -> int
+    end
+
+  sharing Phi.Options = IdentPrint.Options
+  sharing Phi.BasisTypes.Datatypes = Env.Datatypes
+  sharing IdentPrint.Ident = Env.Datatypes.Ident
+) : FUNENV =
+  struct
+    
+    structure Datatypes = Env.Datatypes
+    structure BasisTypes = Phi.BasisTypes
+    structure Options = Phi.Options
+
+    val do_debug = Ty_Debug.do_debug
+
+    open Datatypes
+      
+    exception Lookup_FunId = NewMap.Undefined
+
+    fun funid_order x =
+      Ident.funid_eq x 
+      orelse Ident.funid_order x 
+
+    val funid_equal = Ident.funid_eq
+
+    val empty_funenv = BasisTypes.FUNENV (NewMap.empty (Ident.funid_lt, Ident.funid_eq))
+      
+    fun add_to_funenv (funid,phi,BasisTypes.FUNENV amap) = 
+      BasisTypes.FUNENV (NewMap.define (amap,funid,phi))
+	      
+    fun lookup (funid,BasisTypes.FUNENV amap) =
+      (if (do_debug andalso Debug.debug_level () > 10) 
+	 then (Print.print ("funid lookup \n");
+	       Print.print (IdentPrint.printFunId funid);
+	       Print.print ("\n"))
+       else ();
+	 NewMap.apply'(amap, funid))
+
+    fun no_imptyvars (BasisTypes.FUNENV amap) = 
+      let 
+	fun look_at_phis (_, BasisTypes.PHI(_,(str, BasisTypes.SIGMA (_,str')))) = 
+          let
+            val env = case Env.expand_str str of
+	      STR (_,_,env) => env
+	    | _ => Crash.impossible"expand_str returns COPYSTR"
+            val env' = case Env.expand_str str' of
+	      STR (_,_,env) => env
+	    | _ => Crash.impossible"expand_str returns COPYSTR"
+          in
+            Env.no_imptyvars (env) andalso Env.no_imptyvars (env')
+          end
+      in
+	NewMap.forall look_at_phis amap
+      end
+
+    fun funenv_plus_funenv (BasisTypes.FUNENV amap,BasisTypes.FUNENV amap') = 
+      BasisTypes.FUNENV (NewMap.union(amap, amap'))
+
+    fun string_funenv options (BasisTypes.FUNENV amap) = 
+      let
+        val funid_funsig_list = NewMap.to_list_ordered amap
+        fun print_pair ((object,image),print_object,print_image,connector) = 
+          print_object object ^ connector ^ print_image image
+      in
+        Lists.to_string
+        (fn (x,y) => print_pair ((x,y),IdentPrint.printFunId,
+                                 fn phi => (Phi.string_phi options phi) ^ "\n",
+                                 " |--> "))
+        funid_funsig_list
+      end
+
+  end
+
+
+
+
+@
+
+
+1.18
+log
+@Removed Nameset parameter
+@
+text
+@d4 3
+d66 1
+d77 1
+d126 6
+a131 2
+            val STR (_,_,env) = Env.expand_str str
+            val STR (_,_,env') = Env.expand_str str'
+@
+
+
+1.18.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.18  1993/03/17  18:44:35  matthew
+Removed Nameset parameter
+
+@
+
+
+1.17
+log
+@Options & Info changes
+@
+text
+@d4 3
+a66 1
+require "nameset";
+a74 1
+  structure Nameset   : NAMESET
+d82 1
+a82 2
+  sharing Phi.Options = Nameset.Options = IdentPrint.Options
+  sharing Phi.BasisTypes = Nameset.BasisTypes
+@
+
+
+1.16
+log
+@removed names_of_funenv function
+@
+text
+@d4 3
+d81 1
+d90 1
+@
+
+
+1.15
+log
+@Removed second Nameset specification in functor parameter
+@
+text
+@d4 3
+a138 8
+      end
+
+    fun names_of_funenv (BasisTypes.FUNENV amap) =
+      let 
+	fun gather_names (names, _, phi) = 
+	  Nameset.union (Phi.names_of_phi phi,names)
+      in 
+	NewMap.fold gather_names (Nameset.empty_nameset (), amap)
+@
+
+
+1.14
+log
+@Changes for BASISTYPES signature
+@
+text
+@d4 3
+a68 1
+  structure Nameset   : NAMESET
+@
+
+
+1.13
+log
+@Changes for new structure representation
+@
+text
+@d4 3
+d55 1
+d64 1
+d66 1
+d73 2
+a74 1
+  sharing Phi.Sigma.Nameset.Datatypes = Env.Datatypes
+d80 1
+a80 3
+    structure Phi = Phi
+    structure Sigma = Phi.Sigma
+    structure Nameset = Sigma.Nameset
+a85 2
+    datatype Funenv = FUNENV of (Ident.FunId,Phi.Phi) NewMap.T
+      
+d94 1
+a94 1
+    val empty_funenv = FUNENV (NewMap.empty (Ident.funid_lt, Ident.funid_eq))
+d96 2
+a97 2
+    fun add_to_funenv (funid,phi,FUNENV amap) = 
+      FUNENV (NewMap.define (amap,funid,phi))
+d99 1
+a99 1
+    fun lookup (funid,FUNENV amap) =
+d107 1
+a107 1
+    fun no_imptyvars (FUNENV amap) = 
+d109 1
+a109 1
+	fun look_at_phis (_, Phi.PHI(_,(str, Sigma.SIGMA (_,str')))) = 
+d120 2
+a121 2
+    fun funenv_plus_funenv (FUNENV amap,FUNENV amap') = 
+      FUNENV (NewMap.union(amap, amap'))
+d123 1
+a123 1
+    fun string_funenv options (FUNENV amap) = 
+d136 1
+a136 1
+    fun names_of_funenv (FUNENV amap) =
+@
+
+
+1.12
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d106 7
+a112 2
+	fun look_at_phis (_, Phi.PHI(_,(STR (_,env), Sigma.SIGMA (_,STR (_, env'))))) = 
+	  Env.no_imptyvars (env) andalso Env.no_imptyvars (env') 
+@
+
+
+1.11
+log
+@Modified to use less than functions for maps
+@
+text
+@d4 3
+d64 2
+a65 1
+  sharing IdentPrint.Ident = Env.Datatypes.Ident) : FUNENV =
+d111 1
+a111 1
+    fun string_funenv (FUNENV amap) = 
+d119 1
+a119 1
+                                 fn phi => (Phi.string_phi phi) ^ "\n",
+@
+
+
+1.10
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d83 1
+a83 1
+    val empty_funenv = FUNENV (NewMap.empty (funid_order,funid_equal))
+@
+
+
+1.9
+log
+@Made some changes to the NewMap signature.
+@
+text
+@d4 3
+d75 2
+a76 6
+      if Ident.funid_eq x 
+        then NewMap.EQUAL
+      else
+        if Ident.funid_order x 
+          then NewMap.LESS
+        else NewMap.GREATER
+d78 3
+a80 1
+    val empty_funenv = FUNENV (NewMap.empty funid_order)
+@
+
+
+1.8
+log
+@Removed irrelevant handlers and new exceptions
+@
+text
+@d4 3
+d94 2
+a95 5
+	fun look_at_phis (Phi.PHI(_,(STR (_,env), 
+				     Sigma.SIGMA (_,STR (_, env'))))) = 
+	  Env.no_imptyvars (env) 
+	  andalso
+	  Env.no_imptyvars (env') 
+@
+
+
+1.7
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d66 1
+a66 1
+    exception Lookup_FunId
+d87 1
+a87 2
+	 NewMap.apply'(amap, funid)
+	 handle NewMap.Undefined => raise Lookup_FunId)
+@
+
+
+1.6
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+d28 1
+a29 2
+require "nameset";
+require "datatypes";
+a30 1
+require "sigma";
+d35 1
+a38 2
+  structure Nameset   : NAMESET
+  structure Datatypes : DATATYPES
+a39 1
+  structure Sigma     : SIGMA
+d47 2
+a48 5
+  sharing Nameset = Sigma.Nameset = Phi.Nameset
+  sharing Sigma = Phi.Sigma
+
+  sharing Datatypes = Phi.Datatypes = Nameset.Datatypes
+    = Sigma.Datatypes = Env.Datatypes) : FUNENV =
+d51 1
+a51 1
+    structure Datatypes = Datatypes
+d53 2
+a54 1
+    structure Nameset = Nameset
+d83 1
+a83 1
+	 NewMap.apply amap funid
+d88 5
+a92 10
+	val funid_funsig_list = NewMap.to_list amap
+	fun look_at_phis [] = true
+	  | look_at_phis ((funid,Phi.PHI (_,(STR (_,env), 
+                                             Sigma.SIGMA (_,STR (_, env')))))
+                          ::funid_funsigs) = 
+	    Env.no_imptyvars (env) 
+	    andalso
+	    Env.no_imptyvars (env') 
+	    andalso
+	    look_at_phis funid_funsigs
+d94 1
+a94 1
+	look_at_phis funid_funsig_list
+d98 1
+a98 7
+      let 
+        val funid_funsig_list' = NewMap.to_list amap'
+      in
+        FUNENV (Lists.reducel
+                (fn (tree,(funid,funsig)) => NewMap.define (tree,funid,funsig))
+                (amap,funid_funsig_list'))
+      end
+d115 2
+a116 5
+	val phi_list = NewMap.range amap
+	fun gather_names ([],names) = names
+	  | gather_names (phi::phis,names) = 
+	    gather_names (phis,
+			  Nameset.union (Phi.names_of_phi phi,names))
+d118 1
+a118 1
+	gather_names (phi_list,Nameset.empty_nameset ())
+@
+
+
+1.5
+log
+@Changed to imperative implementation of namesets with hashing
+@
+text
+@d4 3
+d23 1
+d26 1
+d28 3
+a31 4
+require "phi";
+require "nameset";
+require "sigma";
+require "environment";
+d33 5
+a37 3
+functor Funenv(
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+d39 3
+a41 4
+  structure Phi : PHI
+  structure Nameset : NAMESET
+  structure Sigma : SIGMA
+  structure Env : ENVIRONMENT
+d60 1
+d63 1
+a63 1
+    datatype Funenv = FUNENV of (Ident.FunId,Phi.Phi) Mapping.Map
+d67 9
+a75 1
+    val empty_funenv = FUNENV Mapping.empty_map
+d78 1
+a78 1
+      FUNENV (Mapping.add ((funid,phi),amap,Ident.funid_order))
+d86 2
+a87 2
+	 Mapping.lookup (funid,amap) 
+	 handle Mapping.Lookup => raise Lookup_FunId)
+d91 1
+a91 1
+	val funid_funsig_list = Mapping.assoc amap
+d106 7
+a112 1
+      FUNENV (Mapping.plus (amap,amap',Ident.funid_order))
+d115 11
+a125 4
+      Mapping.print_map (amap,
+			 IdentPrint.printFunId,
+			 Phi.string_phi,
+			 " |--> ")	
+d129 1
+a133 1
+	val phi_list = Mapping.range amap
+@
+
+
+1.4
+log
+@Anel's fixes
+@
+text
+@d4 3
+d108 1
+a108 1
+	gather_names (phi_list,Nameset.empty_nameset)
+@
+
+
+1.3
+log
+@Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+@
+text
+@d4 4
+d72 1
+a72 1
+    fun no_imptyvars (fe as FUNENV amap) = 
+d74 10
+a83 13
+	val funidlist = Mapping.domain amap
+	fun look_at_phis ([],_) = true
+	  | look_at_phis (funid::funidlist,fe) = 
+	    let 
+	      val Phi.PHI (_,(STR (_,env), Sigma.SIGMA (_,STR (_, env')))) =
+		lookup (funid,fe)
+	    in
+	      Env.no_imptyvars (env) 
+	      andalso
+	      Env.no_imptyvars (env') 
+	      andalso
+	      look_at_phis (funidlist,fe)
+	    end
+d85 1
+a85 1
+	look_at_phis (funidlist,fe)
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_funenv.sml,v $
+d12 4
+a16 1
+require "datatypes";
+a20 1
+require "../utils/print";
+d22 13
+a34 9
+functor Funenv (structure Datatypes : DATATYPES
+		structure Phi : PHI
+		structure Nameset : NAMESET
+		structure Sigma : SIGMA
+		structure Env : ENVIRONMENT
+		structure Debug : sig val set_debug_level : int -> unit
+				      val debug_level : unit -> int
+				  end
+		structure Print : PRINT
+d36 2
+a37 2
+		sharing Nameset = Sigma.Nameset = Phi.Nameset
+		sharing Sigma = Phi.Sigma
+d39 2
+a40 2
+		sharing Datatypes = Phi.Datatypes = Nameset.Datatypes
+		  = Sigma.Datatypes = Env.Datatypes) : FUNENV =
+d47 1
+d60 1
+a60 1
+      (if (Debug.debug_level () > 10) 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

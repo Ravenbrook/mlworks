@@ -1,0 +1,142 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.02.16.09.31.33;	author mitchell;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	99.02.15.14.08.03;	author mitchell;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.52.29;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+
+
+1.2
+log
+@[Bug #190508]
+Improve layout
+@
+text
+@(* generic-sock.sml
+ *
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell 
+ * Laboratories. All rights reserved.  
+ *
+ * $Log: generic_sock.sml,v $
+ *  Revision 1.1  1999/02/15  14:08:03  mitchell
+ *  new unit
+ *  [Bug #190508]
+ *  Add socket support to the basis library
+ *
+ *)
+
+require "__socket.sml";
+
+signature GENERIC_SOCK =
+  sig
+    val addressFamilies : unit -> Socket.AF.addr_family list
+    (* returns a list of the supported address families; this should include
+     * at least:  Socket.AF.inet. *)
+
+    val socketTypes : unit -> Socket.SOCK.sock_type
+    (* returns a list of the supported socket types; this should include at
+     * least:  Socket.SOCK.stream and Socket.SOCK.dgram.  *)
+
+    (* create sockets using default protocol *)
+    val socket : (Socket.AF.addr_family * Socket.SOCK.sock_type)
+          -> ('a, 'b) Socket.sock
+    val socketPair : (Socket.AF.addr_family * Socket.SOCK.sock_type)
+          -> (('a, 'b) Socket.sock * ('a, 'b) Socket.sock)
+
+    (* create sockets using the specified protocol *)
+    val socket' : (Socket.AF.addr_family * Socket.SOCK.sock_type * int)
+          -> ('a, 'b) Socket.sock
+    val socketPair' : (Socket.AF.addr_family * Socket.SOCK.sock_type * int)
+          -> (('a, 'b) Socket.sock * ('a, 'b) Socket.sock)
+  end
+
+
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a6 4
+ *  Revision 1.2  1999/02/16  09:31:33  mitchell
+ *  [Bug #190508]
+ *  Improve layout
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+text
+@d6 5
+a10 1
+ * $Log$
+d19 2
+a20 3
+	(* returns a list of the supported address families; this should include
+	 * at least:  Socket.AF.inet.
+	 *)
+d23 2
+a24 3
+	(* returns a list of the supported socket types; this should include at
+	 * least:  Socket.SOCK.stream and Socket.SOCK.dgram.
+	 *)
+d26 1
+a26 1
+  (* create sockets using default protocol *)
+d28 1
+a28 1
+	  -> ('a, 'b) Socket.sock
+d30 1
+a30 1
+	  -> (('a, 'b) Socket.sock * ('a, 'b) Socket.sock)
+d32 1
+a32 1
+  (* create sockets using the specified protocol *)
+d34 1
+a34 1
+	  -> ('a, 'b) Socket.sock
+d36 2
+a37 1
+	  -> (('a, 'b) Socket.sock * ('a, 'b) Socket.sock)
+a38 1
+  end
+a39 6
+(*
+ * $Log: generic-sock-sig.sml,v $
+ * Revision 1.1.1.1  1997/01/14 01:38:23  george
+ *   Version 109.24
+ *
+ *)
+@

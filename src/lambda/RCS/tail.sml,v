@@ -1,0 +1,347 @@
+head	1.5;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.5.6.1.1
+	MLWorks_gui_1996_12_18:1.5.7
+	MLWorks_1_0_Win32_1996_12_17:1.5.6
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.5.4.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.5.4.1
+	MLWorks_1_0_Irix_1996_11_28:1.5.4.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.5.5
+	MLWorks_1_0_Unix_1996_11_14:1.5.4
+	MLWorks_Open_Beta2_1996_10_11:1.5.3
+	MLWorks_License_dev:1.5.2
+	MLWorks_1_open_beta_1996_09_13:1.5.1
+	MLWorks_Open_Beta_1996_08_22:1.5
+	MLWorks_Beta_1996_07_02:1.5
+	MLWorks_Beta_1996_06_07:1.5
+	MLWorks_Beta_1996_06_06:1.5
+	MLWorks_Beta_1996_06_05:1.5
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5
+	ML_beta_release_12/08/94:1.5
+	ML_beta_release_03/08/94:1.5
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	94.07.22.09.10.06;	author matthew;	state Exp;
+branches
+	1.5.1.1
+	1.5.2.1
+	1.5.3.1
+	1.5.4.1
+	1.5.5.1
+	1.5.6.1
+	1.5.7.1;
+next	1.4;
+
+1.4
+date	92.08.05.16.48.39;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.05.05.13.19.12;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.03.17.31.09;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.28.14.09.25;	author jont;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.08.05.16.48.39;	author jont;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	96.09.13.11.17.16;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.2.1
+date	96.10.07.16.07.03;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.3.1
+date	96.10.17.11.25.19;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.4.1
+date	96.11.14.12.50.19;	author hope;	state Exp;
+branches
+	1.5.4.1.1.1;
+next	;
+
+1.5.4.1.1.1
+date	96.11.28.15.01.27;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.5.1
+date	96.11.22.18.09.45;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.6.1
+date	96.12.17.17.48.24;	author hope;	state Exp;
+branches
+	1.5.6.1.1.1;
+next	;
+
+1.5.6.1.1.1
+date	97.02.24.11.38.20;	author hope;	state Exp;
+branches;
+next	;
+
+1.5.7.1
+date	96.12.18.09.42.25;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@Elementary tail continuation spotting
+@
+
+
+1.5
+log
+@Added multiple arguments for functions
+@
+text
+@(* tail.sml the signature *)
+(*
+$Log: tail.sml,v $
+Revision 1.4  1992/08/05  16:48:39  jont
+Removed some structures and sharing
+
+Revision 1.3  1992/05/05  13:19:12  jont
+Modified to use augmented lambda calculus
+
+Revision 1.2  1991/12/03  17:31:09  jont
+Added function to remove simple select bindings
+
+Revision 1.1  91/11/28  14:09:25  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../lambda/auglambda";
+
+signature TAIL = sig
+  structure AugLambda : AUGLAMBDA
+
+  val get_simple_selects:
+    AugLambda.LambdaTypes.LVar list * {lexp:AugLambda.AugLambdaExp, size:int} ->
+    (AugLambda.LambdaTypes.LVar * {lexp:AugLambda.AugLambdaExp, size:int}) list *
+    AugLambda.AugLambdaExp
+end
+@
+
+
+1.5.7.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.6.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.6.1.1.1
+log
+@branched from 1.5.6.1
+@
+text
+@a3 3
+ * Revision 1.5.6.1  1996/12/17  17:48:24  hope
+ * branched from 1.5
+ *
+@
+
+
+1.5.5.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.4.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.4.1.1.1
+log
+@branched from 1.5.4.1
+@
+text
+@a3 3
+ * Revision 1.5.4.1  1996/11/14  12:50:19  hope
+ * branched from 1.5
+ *
+@
+
+
+1.5.3.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.2.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.5.1.1
+log
+@branched from 1.5
+@
+text
+@a3 3
+ * Revision 1.5  1994/07/22  09:10:06  matthew
+ * Added multiple arguments for functions
+ *
+@
+
+
+1.4
+log
+@Removed some structures and sharing
+@
+text
+@d4 3
+d25 1
+a25 1
+    AugLambda.LambdaTypes.LVar * {lexp:AugLambda.AugLambdaExp, size:int} ->
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.4  1992/08/05  16:48:39  jont
+Removed some structures and sharing
+
+@
+
+
+1.3
+log
+@Modified to use augmented lambda calculus
+@
+text
+@d4 3
+a16 1
+require "lambdatypes";
+a19 2
+  structure LambdaTypes : LAMBDATYPES
+  sharing AugLambda.LambdaTypes = LambdaTypes
+d22 2
+a23 2
+    LambdaTypes.LVar * {lexp:AugLambda.AugLambdaExp, size:int} ->
+    (LambdaTypes.LVar * {lexp:AugLambda.AugLambdaExp, size:int}) list *
+@
+
+
+1.2
+log
+@Added function to remove simple select bindings
+@
+text
+@d3 4
+a6 1
+$Log:	tail.sml,v $
+d13 1
+d17 3
+a19 1
+  structure LambdaTypes: LAMBDATYPES
+d21 4
+a24 5
+  val is_tail : LambdaTypes.LVar * LambdaTypes.LambdaExp -> bool
+  (* Determine if the expression tail recurses with respect to the variable *)
+
+  val get_simple_selects : LambdaTypes.LVar * LambdaTypes.LambdaExp ->
+    (LambdaTypes.LVar * LambdaTypes.LambdaExp) list * LambdaTypes.LambdaExp
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d17 3
+@

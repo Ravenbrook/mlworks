@@ -1,0 +1,852 @@
+head	1.12;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.12
+	mlworks-28-01-1994:1.12
+	Release:1.12
+	mlworks-beta-01-09-1993:1.12
+	MLWorks-1-0-4-29/01/1993:1.12
+	MLWorks-1-0-3-21/12/1992:1.12
+	MLWorks-1-0-2-15/12/1992:1.12
+	MLWorks-1-0-1-04/12/1992:1.12
+	checkpoint_17_08_92:1.11;
+locks; strict;
+
+
+1.12
+date	92.10.26.12.54.46;	author daveb;	state Exp;
+branches
+	1.12.1.1;
+next	1.11;
+
+1.11
+date	92.07.17.14.43.13;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.07.01.12.34.24;	author davida;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.06.23.10.15.25;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.06.11.11.07.17;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.13.13.45.40;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.31.14.56.03;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.02.12.20.29.26;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.02.07.20.02.15;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.02.07.19.20.32;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.08.14.39.38;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.01.08.12.23.42;	author jont;	state Exp;
+branches;
+next	;
+
+1.12.1.1
+date	92.10.26.12.54.46;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Handle optimisation of curried function definition and application
+@
+
+
+1.12
+log
+@Minor changes to support the new type of SWITCHes.
+@
+text
+@(* _curry.sml the functor *)
+(*
+$Log: _curry.sml,v $
+Revision 1.11  1992/07/17  14:43:13  clive
+null_type_annotation is no longer a function
+
+Revision 1.10  1992/07/01  12:34:24  davida
+Added LET constructor and new slot to APP.
+
+Revision 1.9  1992/06/23  10:15:25  clive
+Added an annotation slot to HANDLE
+
+Revision 1.8  1992/06/11  11:07:17  clive
+Needed to add NullTypes in the FNexps that are generated
+
+Revision 1.7  1992/04/13  13:45:40  clive
+First version of the profiler
+
+Revision 1.6  1992/03/31  14:56:03  jont
+Changed length for Lists.length
+
+Revision 1.5  1992/02/12  20:29:26  jont
+Removed uncurrying for the present, it doesn't work properly
+
+Revision 1.4  1992/02/07  20:02:15  jont
+A bit more bug fixing in the same area
+
+Revision 1.3  1992/02/07  19:20:32  jont
+Fixed problem in uncurrying whereby out of date bindings were being
+referenced during recursive uncurried definition substitution
+
+Revision 1.2  1992/01/08  14:39:38  jont
+Fixed bug causing Lists.Assoc
+
+Revision 1.1  1992/01/08  12:23:42  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/lists";
+require "../utils/print";
+require "../utils/crash";
+require "../utils/integer";
+require "lambdatypes";
+require "lambdasub";
+require "lambdaprint";
+require "interproc";
+require "curry";
+
+functor Curry(
+  structure Lists : LISTS
+  structure Print : PRINT
+  structure Crash : CRASH
+  structure Integer : INTEGER
+  structure LambdaTypes : LAMBDATYPES
+  structure LambdaSub : LAMBDASUB
+  structure LambdaPrint : LAMBDAPRINT
+  structure InterProc : INTERPROC
+  sharing LambdaTypes = LambdaSub.LT = InterProc.LambdaTypes =
+    LambdaPrint.LambdaTypes
+) : CURRY =
+struct
+  structure LambdaTypes = LambdaTypes
+
+  fun count_and_transform_def(lvar_list, LambdaTypes.FN(lv, le,_,_)) =
+    count_and_transform_def(lv :: lvar_list, le)
+  | count_and_transform_def([], not_fn) = (false, 0, [], not_fn)
+  | count_and_transform_def(lv_list, not_fn) = 
+    let
+      val var_list = map (fn lv => (lv, LambdaTypes.new_LVar())) lv_list
+      val new_exp = LambdaSub.substitute_list(var_list, not_fn)
+      val new_bound_var = LambdaTypes.new_LVar()
+      val new_ref = LambdaTypes.VAR new_bound_var
+      val arg_size = Lists.length lv_list
+      val selects =
+	map
+	(fn (lv, i) =>
+	 (lv, LambdaTypes.SELECT({index=i, size=arg_size}, new_ref)))
+	(#1 (Lists.number_from(map #2 var_list, arg_size-1, ~1, fn x => x)))
+      val result = LambdaSub.wrap_lets(new_exp, selects)
+(*
+      val fcn = LambdaTypes.FN(new_bound_var, result)
+      val _ = Print.print("count_and_transform_def transformed\n" ^
+			  LambdaPrint.string_of_lambda not_fn ^ "\ninto\n" ^
+			  LambdaPrint.string_of_lambda fcn ^ "\n")
+*)
+    in
+      (true, arg_size, var_list, LambdaTypes.FN(new_bound_var, result,"in _curry",
+                                                LambdaTypes.null_type_annotation))
+    end
+
+  fun is_curry_def lexp = count_and_transform_def([], lexp)
+  (* Determine if an expression is a curried definition, and *)
+  (* return the uncurried form if so, with the number of arguments *)
+
+  fun count_and_transform_app(le_list, LambdaTypes.APP(le, le',_)) =
+    count_and_transform_app(le' :: le_list, le)
+  | count_and_transform_app([], not_app) = (false, 0, not_app, not_app)
+  | count_and_transform_app(le_list, not_app) =
+    (true, Lists.length le_list, LambdaTypes.STRUCT le_list, not_app)
+
+  fun is_curry_app lexp = count_and_transform_app([], lexp)
+  (* Determine if an expression is a curried application, and *)
+  (* return the number of arguments if so. The first expression is *)
+  (* code necessary to evaluate the argument as is. The second *)
+  (* expression is the innermost function, which is not itself a *)
+  (* function application *)
+
+  fun is_fn_binding(_, LambdaTypes.FN _) = true
+    | is_fn_binding _ = false
+
+  fun find_lvar_apps_list(apps, []) = apps
+    | find_lvar_apps_list(apps, le :: rest) =
+      find_lvar_apps_list(find_lvar_apps(apps, le), rest)
+
+  and find_lvar_apps(apps, le as LambdaTypes.APP(le1, le2,_)) =
+    let
+      val (is, count, args_list, inner_le) = is_curry_app le
+    in
+      if is andalso count > 1 then
+	find_lvar_apps
+	(find_lvar_apps((case inner_le of
+			   LambdaTypes.VAR lv =>
+			     (lv, count) :: apps
+			 | _ => apps), inner_le),
+	 args_list)
+      else
+	find_lvar_apps(find_lvar_apps(apps, le1), le2)
+    end
+  | find_lvar_apps(apps, LambdaTypes.VAR _) = apps
+  | find_lvar_apps(apps, LambdaTypes.FN(lv, le,_,_)) = find_lvar_apps(apps, le)
+  | find_lvar_apps(apps, LambdaTypes.LET(lv,lb,le)) = 
+    find_lvar_apps(find_lvar_apps(apps,lb),le)
+  | find_lvar_apps(apps, LambdaTypes.LETREC(lv_list, le_list, le)) =
+    find_lvar_apps_list(apps, le :: le_list)
+  | find_lvar_apps(apps, LambdaTypes.SCON _) = apps
+  | find_lvar_apps(apps, LambdaTypes.INT _) = apps
+  | find_lvar_apps(apps, LambdaTypes.SWITCH(le, _, tag_le_list, def)) =
+    let
+      fun do_opt(apps, LambdaTypes.ABSENT) = apps
+      |   do_opt(apps, LambdaTypes.PRESENT le) = find_lvar_apps(apps, le)
+
+      fun do_tag_le(apps, []) = apps
+      |   do_tag_le(apps, (LambdaTypes.EXP_TAG le, le') :: rest) =
+	do_tag_le(find_lvar_apps_list(apps, [le, le']), rest)
+      |   do_tag_le(apps, (_, le) :: rest) =
+	do_tag_le(find_lvar_apps(apps, le), rest)
+    in
+      do_opt(do_tag_le(find_lvar_apps(apps, le), tag_le_list), def1)
+    end
+  | find_lvar_apps(apps, LambdaTypes.STRUCT le_list) =
+    find_lvar_apps_list(apps, le_list)
+  | find_lvar_apps(apps, LambdaTypes.SELECT(_, le)) = find_lvar_apps(apps, le)
+  | find_lvar_apps(apps, LambdaTypes.RAISE le) = find_lvar_apps(apps, le)
+  | find_lvar_apps(apps, LambdaTypes.HANDLE(le1, le2,_)) = 
+    find_lvar_apps(find_lvar_apps(apps, le1), le2)
+  | find_lvar_apps(apps, LambdaTypes.BUILTIN _) = apps
+
+  fun uncurry_exp lambdaexp = lambdaexp
+(*
+    let
+      val the_bindings = InterProc.fn_and_var_binding_list lambdaexp
+      val lvars_bound = map #1 the_bindings
+(*
+      val _ = Print.print"Bindings found:-\n"
+      val _ =
+	Lists.iterate
+	(fn x => Print.print("Lambda " ^ LambdaTypes.printLVar x ^ "\n"))
+	lvars_bound
+*)
+      val lvar_apps = find_lvar_apps([], lambdaexp)
+(*
+      val _ = Print.print"lvars applied:-\n"
+      val _ =
+	Lists.iterate
+	(fn (x, _) => Print.print("Lambda " ^ LambdaTypes.printLVar x ^ "\n"))
+	lvar_apps
+*)
+      fun extend_lvars_used(done, []) = done
+      | extend_lvars_used(done, (used as (lv, count)) :: rest) =
+	if Lists.member(lv, lvars_bound) then
+	  (case Lists.assoc(lv, the_bindings) of
+	    LambdaTypes.VAR lv' =>
+	      extend_lvars_used(used :: done, (lv', count) :: rest)
+	  | _ => extend_lvars_used(used :: done, rest))
+	  handle Lists.Assoc => Crash.impossible("extend_lvars_used of " ^ LambdaTypes.printLVar lv)
+	else
+	  extend_lvars_used(used :: done, rest)
+      val lvars_used = extend_lvars_used([], lvar_apps)
+      val lvars = map #1 lvars_used
+(*
+      val _ = Print.print"extended lvars applied:-\n"
+      val _ =
+	Lists.iterate
+	(fn (x, i) => Print.print("Lambda " ^ LambdaTypes.printLVar x ^ ", depth " ^ Integer.makestring i ^ "\n"))
+	lvars_used
+*)
+      val the_fn_bindings =
+	Lists.filterp
+	(fn x as (lv, _) => is_fn_binding x andalso Lists.member(lv, lvars))
+	the_bindings
+(*
+      val _ = Print.print"fn binding names and values:-\n"
+      val _ =
+	Lists.iterate
+	(fn (x, y) => Print.print("Lambda " ^ LambdaTypes.printLVar x ^ "\nLambdaExp " ^ LambdaPrint.string_of_lambda y ^"\n"))
+	the_fn_bindings
+*)
+      val the_uncurried_bindings =
+	map
+	(fn (lv, le) => (lv, (LambdaTypes.new_LVar(), is_curry_def le)))
+	the_fn_bindings
+(*
+      val _ = Print.print"New uncurried bindings:-\n"
+      val _ =
+	Lists.iterate
+	(fn (x, (y, (b, i, _, _))) =>
+	 Print.print("Lambda " ^ LambdaTypes.printLVar x ^ " -> Lambda " ^ LambdaTypes.printLVar y ^ "\n" ^ (if b then "Real, of depth " ^ Integer.makestring i ^ "\n" else "Non-real\n")))
+	the_uncurried_bindings
+*)
+      fun has_full_curried_app(lv, (_, (_, i, _, _))) =
+	(i = Lists.assoc(lv, lvars_used)) handle Lists.Assoc =>
+	  Crash.impossible"has_full_curried_form"
+      val the_real_uncurried_bindings =
+	Lists.filterp
+	(fn (arg as (_, (_, {1=x, ...}))) =>
+	 x andalso has_full_curried_app arg)
+	the_uncurried_bindings
+(*
+      val _ = Print.print"Real uncurried bindings:-\n"
+      val _ =
+	Lists.iterate
+	(fn (_, (x, _)) =>
+	 Print.print("Lambda " ^ LambdaTypes.printLVar x ^ "\n"))
+	the_real_uncurried_bindings
+*)
+      val the_uncurried_lambdas = map #1 the_real_uncurried_bindings
+(*
+      val _ = Print.print"Real uncurried lambdas:-\n"
+      val _ =
+	Lists.iterate
+	(fn x =>
+	 Print.print("Lambda " ^ LambdaTypes.printLVar x ^ "\n"))
+	the_uncurried_lambdas
+*)
+      fun insert_curried_defs
+	bindings
+	(exp as LambdaTypes.APP(LambdaTypes.FN(lv, le,name,ty),
+				le')) =
+	 if Lists.member(lv, the_uncurried_lambdas) then
+	  let
+	    val (lv', (_, _, v_list, le'')) =
+	      Lists.assoc(lv, the_real_uncurried_bindings)
+	      handle Lists.Assoc =>
+		Crash.impossible("insert_curried_defs of " ^
+				 LambdaTypes.printLVar lv)
+	    val bindings' = v_list @@ bindings
+	  in
+	    LambdaTypes.LET
+	     (lv',insert_curried_defs bindings'
+	           (LambdaSub.substitute_list(bindings,le'')),
+	      LambdaTypes.LET(lv,insert_curried_defs bindings le',
+			      insert_curried_defs bindings le))
+	  end
+	  (* Ensure that the new code doesn't refer to old externals *)
+	  end
+	else
+	  LambdaSub.apply_one_level (insert_curried_defs bindings) exp
+      | insert_curried_defs bindings
+	(exp as LambdaTypes.LETREC(lv_list, le_list, le)) =
+	let
+	  fun do_lists(lv_list, le_list, [], [], new_bindings) =
+	    LambdaTypes.LETREC(lv_list,
+			       map
+			       (fn (x, y) =>
+				insert_curried_defs x y)
+			       (Lists.zip(new_bindings, le_list)),
+			       insert_curried_defs bindings le)
+	  | do_lists(lv_list, le_list, lv :: lv_rest, le :: le_rest,
+		     new_bindings) =
+	    if Lists.member(lv, the_uncurried_lambdas) then
+	      let
+		val (lv', (_, _, v_list, le')) =
+		  Lists.assoc(lv, the_real_uncurried_bindings)
+		  handle Lists.Assoc => Crash.impossible("do_lists of " ^ LambdaTypes.printLVar lv)
+		val le' = LambdaSub.substitute_list(bindings, le')
+	      (* Ensure that the new code doesn't refer to old externals *)
+	      in
+		do_lists(lv :: lv' :: lv_list, le :: le' :: le_list, lv_rest,
+			 le_rest, bindings :: (v_list @@ bindings) :: new_bindings)
+	      end
+	    else
+	      do_lists(lv :: lv_list, le :: le_list, lv_rest, le_rest,
+		       bindings :: new_bindings)
+	  | do_lists _ = Crash.impossible"List length mismatch in LETREC"
+	  val result = do_lists([], [], lv_list, le_list, [])
+	in
+	  result
+	end
+      | insert_curried_defs bindings exp =
+	LambdaSub.apply_one_level (insert_curried_defs bindings) exp
+      val uncurried = insert_curried_defs [] lambdaexp
+(*
+	val _ = Print.print("Uncurried result\n" ^ LambdaPrint.string_of_lambda uncurried)
+*)
+      fun find_uncurried_lambda lv =
+(**)
+	(Print.print("find_uncurried_lambda of v" ^
+		     LambdaTypes.printLVar lv ^ "\n");
+(**)
+	if Lists.member(lv, lvars_bound) then
+	  (case Lists.assoc(lv, the_bindings) of
+	    LambdaTypes.VAR lv' => find_uncurried_lambda lv'
+	  | _ =>
+	      if Lists.member(lv, the_uncurried_lambdas) then
+		let
+		  val (lv', (_, i, _, _)) = Lists.assoc(lv, the_real_uncurried_bindings)
+		in
+		  (true, lv', i)
+		end
+	      else
+		(false, lv, 0))
+	     handle Lists.Assoc => Crash.impossible("find_uncurried_lambda of " ^ LambdaTypes.printLVar lv)
+	else
+	  (false, lv, 0)
+(**)
+	  )
+(**)
+
+      fun insert_curried_apps(exp as LambdaTypes.APP _) =
+	let
+	  val (is, i, arg, not_app) = case is_curry_app exp of
+	    result as {1=true,...} => result
+	  | _ => Crash.impossible"App is not at least one curried"
+	in
+	  case not_app of
+	    LambdaTypes.VAR lv =>
+	      let
+(*
+		val _ = Print.print("Handling uncurrying of v" ^
+				    LambdaTypes.printLVar lv ^ "\n")
+*)
+		val (is, uncurry_lv, args) = find_uncurried_lambda lv
+	      in
+		if is andalso args = i then
+		  LambdaTypes.APP(LambdaTypes.VAR uncurry_lv,
+				  insert_curried_apps arg,
+				  LambdaTypes.null_type_annotation)
+		else
+		  LambdaSub.apply_one_level insert_curried_apps exp
+	      end
+	  | _ => LambdaSub.apply_one_level insert_curried_apps exp
+	end
+      | insert_curried_apps exp =
+	LambdaSub.apply_one_level insert_curried_apps exp
+      val uncurried = insert_curried_apps uncurried
+(*
+	val _ = Print.print("After inserting uncurried apps\n" ^ LambdaPrint.string_of_lambda uncurried)
+*)
+      fun remove_unnecessary_bindings(exp as
+				      LambdaTypes.APP(LambdaTypes.FN(lv, le,name,_),
+						      LambdaTypes.FN _,
+						      _) =
+	if LambdaSub.occurrences(lv, le) = 0 then
+	  remove_unnecessary_bindings le
+	else
+	  LambdaSub.apply_one_level remove_unnecessary_bindings exp
+      | remove_unnecessary_bindings(exp as
+				    LambdaTypes.LETREC(lv_list, le_list, le)) =
+	let
+	  fun do_list([], [], [], []) = remove_unnecessary_bindings le
+	    (* Just in case the whole thing was unnecessary *)
+	  | do_list(lv_list, le_list, [], []) =
+	    LambdaTypes.LETREC(lv_list,
+			       map remove_unnecessary_bindings le_list,
+			       remove_unnecessary_bindings le)
+	  | do_list(lv_list, le_list, lv' :: lv_rest, exps as le' :: le_rest) =
+	    if LambdaSub.occurrences
+	      (lv', LambdaTypes.STRUCT([LambdaTypes.STRUCT(le :: le_list),
+					LambdaTypes.STRUCT exps])) = 0 then
+	      do_list(lv_list, le_list, lv_rest, le_rest)
+	    else
+	      do_list(lv' :: lv_list, le' :: le_list, lv_rest, le_rest)
+	  | do_list _ = Crash.impossible"List length mismatch in LETREC"
+	in
+	  do_list([], [], lv_list, le_list)
+	end
+      | remove_unnecessary_bindings exp =
+	LambdaSub.apply_one_level remove_unnecessary_bindings exp
+      val uncurried = remove_unnecessary_bindings uncurried
+(*
+	val _ = Print.print("After removing unnecessary bindings\n" ^ LambdaPrint.string_of_lambda uncurried)
+*)
+    in
+      uncurried
+    end
+*)
+end
+@
+
+
+1.12.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.12  1992/10/26  12:54:46  daveb
+Minor changes to support the new type of SWITCHes.
+
+@
+
+
+1.11
+log
+@null_type_annotation is no longer a function
+@
+text
+@d4 3
+d139 1
+a139 1
+  | find_lvar_apps(apps, LambdaTypes.SWITCH(le, tag_le_list, def1, def2)) =
+d142 2
+a143 1
+      | do_opt(apps, LambdaTypes.PRESENT le) = find_lvar_apps(apps, le)
+d145 1
+a145 1
+      | do_tag_le(apps, (LambdaTypes.EXP_TAG le, le') :: rest) =
+d147 1
+a147 1
+      | do_tag_le(apps, (_, le) :: rest) =
+d150 1
+a150 2
+      do_opt(do_opt(do_tag_le(find_lvar_apps(apps, le), tag_le_list), def1),
+	     def2)
+@
+
+
+1.10
+log
+@Added LET constructor and new slot to APP.
+@
+text
+@d4 3
+d87 1
+a87 1
+                                                LambdaTypes.null_type_annotation()))
+d346 1
+a346 1
+				  LambdaTypes.null_type_annotation())
+d361 1
+a361 1
+						      LambdaTypes.null_type_annotation()) =
+@
+
+
+1.9
+log
+@Added an annotation slot to HANDLE
+@
+text
+@d4 3
+d73 1
+a73 2
+	 (lv, LambdaTypes.SELECT({index=i, size=arg_size}, new_ref),
+          "count and transform in _curry",LambdaTypes.null_type_annotation()))
+d91 1
+a91 1
+  fun count_and_transform_app(le_list, LambdaTypes.APP(le, le')) =
+d105 1
+a105 1
+  | is_fn_binding _ = false
+d108 2
+a109 2
+  | find_lvar_apps_list(apps, le :: rest) =
+    find_lvar_apps_list(find_lvar_apps(apps, le), rest)
+d111 1
+a111 1
+  and find_lvar_apps(apps, le as LambdaTypes.APP(le1, le2)) =
+d127 2
+d254 6
+a259 8
+	    LambdaTypes.APP
+	    (LambdaTypes.FN
+	     (lv',
+	      LambdaTypes.APP(LambdaTypes.FN(lv,
+					     insert_curried_defs bindings le),
+			      insert_curried_defs bindings le'),name,
+              LambdaTypes.null_type_annotation()),
+	      insert_curried_defs bindings' (LambdaSub.substitute_list(bindings, le'')))
+d342 2
+a343 1
+				  insert_curried_apps arg)
+d357 2
+a358 1
+						      LambdaTypes.FN _)) =
+@
+
+
+1.8
+log
+@Needed to add NullTypes in the FNexps that are generated
+@
+text
+@d4 3
+d146 1
+a146 1
+  | find_lvar_apps(apps, LambdaTypes.HANDLE(le1, le2)) = 
+@
+
+
+1.7
+log
+@First version of the profiler
+@
+text
+@d4 3
+d54 1
+a54 1
+  fun count_and_transform_def(lvar_list, LambdaTypes.FN(lv, le,_)) =
+d67 2
+a68 1
+	 (lv, LambdaTypes.SELECT({index=i, size=arg_size}, new_ref),"count and transform in _curry"))
+d78 2
+a79 1
+      (true, arg_size, var_list, LambdaTypes.FN(new_bound_var, result,"in _curry"))
+d121 1
+a121 1
+  | find_lvar_apps(apps, LambdaTypes.FN(lv, le,_)) = find_lvar_apps(apps, le)
+d236 1
+a236 1
+	(exp as LambdaTypes.APP(LambdaTypes.FN(lv, le,name),
+d252 2
+a253 1
+			      insert_curried_defs bindings le'),name),
+d350 1
+a350 1
+				      LambdaTypes.APP(LambdaTypes.FN(lv, le,name),
+@
+
+
+1.6
+log
+@Changed length for Lists.length
+@
+text
+@d4 3
+d51 1
+a51 1
+  fun count_and_transform_def(lvar_list, LambdaTypes.FN(lv, le)) =
+d64 1
+a64 1
+	 (lv, LambdaTypes.SELECT({index=i, size=arg_size}, new_ref)))
+d74 1
+a74 1
+      (true, arg_size, var_list, LambdaTypes.FN(new_bound_var, result))
+d116 1
+a116 1
+  | find_lvar_apps(apps, LambdaTypes.FN(lv, le)) = find_lvar_apps(apps, le)
+d231 1
+a231 1
+	(exp as LambdaTypes.APP(LambdaTypes.FN(lv, le),
+d247 1
+a247 1
+			      insert_curried_defs bindings le')),
+d344 1
+a344 1
+				      LambdaTypes.APP(LambdaTypes.FN(lv, le),
+@
+
+
+1.5
+log
+@Removed uncurrying for the present, it doesn't work properly
+@
+text
+@d4 3
+d57 1
+a57 1
+      val arg_size = length lv_list
+d82 1
+a82 1
+    (true, length le_list, LambdaTypes.STRUCT le_list, not_app)
+@
+
+
+1.4
+log
+@A bit more bug fixing in the same area
+@
+text
+@d4 3
+a44 13
+  fun substitute_list(var_list, expr) =
+    let
+      val var_domain = map #1 var_list
+      fun subs (v as LambdaTypes.VAR lvar) =
+	if Lists.member(lvar, var_domain) then
+	  LambdaTypes.VAR(Lists.assoc(lvar, var_list))
+	  handle Lists.Assoc => Crash.impossible("substitute_list of " ^ LambdaTypes.printLVar lvar)
+	else v
+      | subs expr = expr
+    in
+      LambdaSub.apply_outermost subs expr
+    end
+
+d51 1
+a51 1
+      val new_exp = substitute_list(var_list, not_fn)
+d136 2
+a137 1
+  fun uncurry_exp lambdaexp =
+d242 1
+a242 1
+	      insert_curried_defs bindings' (substitute_list(bindings, le'')))
+d264 1
+a264 1
+		val le' = substitute_list(bindings, le')
+d285 4
+d304 3
+d317 4
+d334 3
+d366 4
+d371 1
+a371 1
+      remove_unnecessary_bindings uncurried
+d373 1
+a373 1
+
+@
+
+
+1.3
+log
+@Fixed problem in uncurrying whereby out of date bindings were being
+referenced during recursive uncurried definition substitution
+@
+text
+@d4 4
+d249 2
+a250 2
+					     insert_curried_defs bindings' le),
+			      insert_curried_defs bindings' le')),
+d277 1
+a277 1
+			 le_rest, [] :: v_list :: new_bindings)
+d281 1
+a281 1
+		       [] :: new_bindings)
+@
+
+
+1.2
+log
+@Fixed bug causing Lists.Assoc
+@
+text
+@d4 3
+d53 1
+a53 1
+  | count_and_transform_def([], not_fn) = (false, 0, not_fn)
+d67 6
+d74 1
+a74 1
+      (true, arg_size, LambdaTypes.FN(new_bound_var, result))
+d199 1
+a199 1
+	(fn (x, (y, (b, i, _))) =>
+d203 1
+a203 1
+      fun has_full_curried_app(lv, (_, (_, i, _))) =
+d208 2
+a209 1
+	(fn (arg as (_, (_, (x, _, _)))) => x andalso has_full_curried_app arg)
+d228 4
+a231 2
+      fun insert_curried_defs(exp as LambdaTypes.APP(LambdaTypes.FN(lv, le),
+						    le')) =
+d234 1
+a234 1
+	    val (lv', (_, _, le'')) =
+d236 4
+a239 1
+	      handle Lists.Assoc => Crash.impossible("insert_curried_defs of " ^ LambdaTypes.printLVar lv)
+d243 6
+a248 3
+	     (lv', LambdaTypes.APP(LambdaTypes.FN(lv, insert_curried_defs le),
+				   insert_curried_defs le')),
+	      insert_curried_defs le'')
+d251 3
+a253 2
+	  LambdaSub.apply_one_level insert_curried_defs exp
+      | insert_curried_defs(exp as LambdaTypes.LETREC(lv_list, le_list, le)) =
+d255 9
+a263 4
+	  fun do_lists(lv_list, le_list, [], []) =
+	    LambdaTypes.LETREC(lv_list, map insert_curried_defs le_list,
+			       insert_curried_defs le)
+	  | do_lists(lv_list, le_list, lv :: lv_rest, le :: le_rest) =
+d266 1
+a266 1
+		val (lv', (_, _, le')) =
+d269 2
+d273 1
+a273 1
+			 le_rest)
+d276 2
+a277 1
+	      do_lists(lv :: lv_list, le :: le_list, lv_rest, le_rest)
+d279 1
+a279 1
+	  val result = do_lists([], [], lv_list, le_list)
+d283 3
+a285 3
+      | insert_curried_defs exp =
+	LambdaSub.apply_one_level insert_curried_defs exp
+      val uncurried = insert_curried_defs lambdaexp
+d296 1
+a296 1
+		  val (lv', (_, i, _)) = Lists.assoc(lv, the_real_uncurried_bindings)
+d338 3
+a340 1
+	  fun do_list(lv_list, le_list, [], []) =
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d35 1
+a35 1
+  fun substitute_list (var_list, expr) =
+d40 3
+a42 1
+	  LambdaTypes.VAR(Lists.assoc(lvar, var_list)) else v
+d155 1
+a155 1
+	  case Lists.assoc(lv, the_bindings) of
+d158 2
+a159 1
+	  | _ => extend_lvars_used(used :: done, rest)
+d224 1
+d244 1
+d264 1
+a264 1
+	  case Lists.assoc(lv, the_bindings) of
+d267 9
+a275 5
+	      let
+		val (lv', (_, i, _)) = Lists.assoc(lv, the_real_uncurried_bindings)
+	      in
+		(true, lv', i)
+	      end
+@

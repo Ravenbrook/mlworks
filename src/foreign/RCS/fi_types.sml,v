@@ -1,0 +1,249 @@
+head	1.5;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.5
+	MLWorks_Beta_1996_06_06:1.5
+	MLWorks_Beta_1996_06_05:1.5
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.04.18.16.59.50;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.28.12.55.09;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.09.07.22.43.44;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.18.12.41.05;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.50.05;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.5
+log
+@initbasis becomes basis
+@
+text
+@(*  ==== FOREIGN INTERFACE : COMMON TYPES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This contains various common type declarations used thoughout the
+ *  common layers of the FI and other interfaces.  Use of this was
+ *  forced since sharing constraints can only refer to typenames.  The
+ *  names provided here enable the sharing constraints to be required
+ *  early in signatures, so simplifying later constraints.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_types.sml,v $
+ * Revision 1.4  1996/03/28  12:55:09  matthew
+ * New sharing syntax etc.
+ *
+ * Revision 1.3  1995/09/07  22:43:44  brianm
+ * Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.2  1995/07/18  12:41:05  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.1  1995/04/25  11:50:05  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__general";
+require "../basis/__word32";  
+require "../basis/__word8";
+
+signature FOREIGN_TYPES =
+   sig
+
+      type 'a option = 'a General.option
+
+      type word8 = Word8.word
+
+      type word32 = Word32.word
+
+      type address = word32
+
+      type bytearray = MLWorks.ByteArray.bytearray
+
+      type name = string
+
+      type filename = string
+
+
+      datatype 'a box = BOX of ('a option ref)
+
+      (* Operations for box values *)
+
+      val someBOX    :  'a box -> bool
+
+      val getBOX     :  'a box -> 'a
+      val setBOX     :  'a box -> 'a -> unit
+
+      val extractBOX :  'a box -> 'a option
+      val updateBOX  :  'a box -> 'a option -> unit
+
+      val resetBOX   :  'a box -> unit
+
+      val makeBOX    :  '_a -> '_a box
+      val newBOX     :  '_a box -> '_a box
+
+      val voidBOX    :  unit -> '_a box
+
+   (* some debugging tools *)
+
+      val debugP : string -> 'a -> 'a
+
+   end (* signature FOREIGN_TYPES *)
+@
+
+
+1.4
+log
+@New sharing syntax etc.
+@
+text
+@d16 3
+d32 3
+a34 3
+require "../initbasis/__general";
+require "../initbasis/__word32";  
+require "../initbasis/__word8";
+@
+
+
+1.3
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d16 3
+d36 1
+a36 2
+      type 'a option
+        sharing type option = General.option
+d38 1
+a38 2
+      type word8
+        sharing type word8 = Word8.word
+d40 1
+a40 2
+      type word32
+        sharing type word32 = Word32.word
+d42 1
+a42 2
+      type address
+        sharing type address = word32
+d44 1
+a44 2
+      type bytearray
+        sharing type bytearray = MLWorks.ByteArray.bytearray
+d46 1
+a46 2
+      type name
+        sharing type name = string
+d48 1
+a48 2
+      type filename
+        sharing type filename = string
+@
+
+
+1.2
+log
+@Changing names of deferred data-type operators (stream-edit)
+@
+text
+@d16 3
+d55 1
+a55 1
+      datatype 'a deferred = DF of ('a option ref)
+d57 1
+a57 1
+      (* Operations for deferred values *)
+d59 1
+a59 1
+      val someDF    :  'a deferred -> bool
+d61 2
+a62 2
+      val getDF     :  'a deferred -> 'a
+      val setDF     :  'a deferred -> 'a -> unit
+d64 2
+a65 2
+      val extractDF :  'a deferred -> 'a option
+      val updateDF  :  'a deferred -> 'a option -> unit
+d67 1
+a67 1
+      val resetDF   :  'a deferred -> unit
+d69 2
+a70 2
+      val makeDF    :  '_a -> '_a deferred
+      val newDF     :  '_a deferred -> '_a deferred
+d72 1
+a72 1
+      val voidDF    :  unit -> '_a deferred
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d15 4
+a18 1
+ *  $Log$
+d20 1
+d51 1
+d54 6
+a59 1
+   (* primitive operations for deferred values *)
+d61 2
+a62 1
+      val someDF    : 'a deferred -> bool
+d64 1
+a64 2
+      val getDF     : 'a deferred -> 'a option
+      val extractDF : 'a deferred -> 'a
+d66 2
+a67 3
+      val setDF     : 'a deferred -> 'a -> unit
+      val resetDF   : 'a deferred -> unit
+      val updateDF  : 'a deferred -> 'a option -> unit
+d69 1
+a69 3
+      val newDF     : '_a deferred -> '_a deferred
+      val makeDF    : '_a -> '_a deferred
+      val voidDF    : unit -> '_a deferred
+@

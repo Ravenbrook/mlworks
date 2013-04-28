@@ -1,0 +1,98 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.45.46;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.39;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Agent.sig,v 1.4 1994/12/05 17:05:50 pxs Exp $";
+(*********************************** Agent ***********************************)
+(*                                                                           *)
+(*  This is the definitions of "Agents".                                     *)
+(*                                                                           *)
+(*****************************************************************************)
+
+signature AGENT =
+sig
+   structure A  : ACT
+   structure V  : VAR
+
+   datatype relabelling = Relabellist of (A.act * A.P.part) list
+                        | Relabelvar  of V.var
+
+   datatype permission = Permlist of A.P.part list
+                       | Actlistvar of V.var
+
+   datatype param = Actparam   of A.act
+   | Actlistparam of permission		(* experimental *)
+   | Timeparam  of int
+   | Agentparam of agent
+
+        and agent = Nil
+                  | Bottom
+                  | Var      of V.var * param list
+                  | Prefix   of A.act * agent
+                  | Delta    of agent
+                  | Time     of int * agent
+                  | Sum      of agent list
+                  | Parallel of agent list
+                  | Permit   of agent * permission
+                  | Relabel  of agent * relabelling
+
+   val hashval  : agent -> int
+     
+   val parameq : param * param -> bool
+   val paramle : param * param -> bool
+
+   val eq : agent * agent -> bool
+   val le : agent * agent -> bool
+
+   val permlisteq : permission * permission -> bool
+   val permlistle : permission * permission -> bool
+
+
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

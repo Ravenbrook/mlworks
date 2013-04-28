@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.09.42.18;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.base.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "basis.toplevel";
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = base "" = "";
+
+val b = base ".login" = ".login";
+
+val c = base "/.login" = "/.login";
+
+val d = base "a" = "a";
+
+val e = base "a." = "a.";
+
+val f = base "a.b" = "a";
+
+val g = base "a.b.c" = "a.b";
+
+val h = base "/a.b" = "/a";
+
+val i = base "/c/a.b" = "/c/a";
+
+val j = base "/c/a/b/.d" = "/c/a/b/.d";
+
+val k = base "/c.a/b.d" = "/c.a/b";
+
+val l = base "/c.a/bd" = "/c.a/bd";
+
+val m = base "/c/a/b.foo.bar" = "/c/a/b.foo";
+
+val n = base "/c/a/b.foo" = "/c/a/b";
+
+val p = base ".news/comp" = ".news/comp";
+@

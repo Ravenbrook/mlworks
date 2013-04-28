@@ -1,0 +1,152 @@
+head	1.4;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.4
+	MLWorks_Beta_1996_05_31:1.4
+	MLWorks_Beta_1996_05_30:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.03.28.12.56.04;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.04.19.21.57.45;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.30.14.00.51;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.27.15.30.09;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Core Foreign interface (was foreign_interface.sml).
+@
+
+
+1.4
+log
+@New sharing syntax etc.
+@
+text
+@(*  ==== FOREIGN INTERFACE : CORE INTERFACE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is the low-level foreign interface.
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_core.sml,v $
+ * Revision 1.3  1995/04/19  21:57:45  brianm
+ * General updating to reach prototype level for ML FI.
+ *
+# Revision 1.2  1995/03/30  14:00:51  brianm
+# Added extra comment to list_content.
+#
+# Revision 1.1  1995/03/27  15:30:09  brianm
+# new unit
+# Core Foreign interface (was foreign_interface.sml).
+#
+ *  Revision 1.2  1995/03/24  19:22:29  brianm
+ *  Updated to use Word32.word values (instead of int * int) to
+ *  encode addresses.
+ * 
+ *  Revision 1.1  1995/03/01  11:01:24  brianm
+ *  new unit
+ *  Foreign Interface signature
+ * 
+ *
+ *)
+
+require "fi_types";
+
+signature FOREIGN_CORE =
+  sig
+
+     structure FITypes : FOREIGN_TYPES
+
+     type address = FITypes.address
+
+     type foreign_object
+     type foreign_value
+
+     exception Unavailable
+
+     datatype load_mode = LOAD_LATER | LOAD_NOW
+
+     val load_object   : (string * load_mode) -> foreign_object
+     val find_value    : (foreign_object * string) -> foreign_value
+
+     val list_content  : foreign_object -> string list
+         (* each string is space seperated - the first part is name of item *)
+
+     val call_unit_fun : foreign_value -> unit
+     val call_foreign_fun : (foreign_value * address * int * address) -> unit 
+
+  end
+@
+
+
+1.3
+log
+@General updating to reach prototype level for ML FI.
+@
+text
+@d13 3
+d41 1
+a41 2
+     type address
+       sharing type address    = FITypes.address
+@
+
+
+1.2
+log
+@Added extra comment to list_content.
+@
+text
+@d13 3
+d31 2
+d36 5
+d43 4
+a46 1
+     eqtype memory
+d48 1
+a48 1
+     val load_object   : string -> foreign_object
+d55 1
+a55 1
+     val call_foreign_fun : (foreign_object * memory * int * memory) -> unit 
+@
+
+
+1.1
+log
+@new unit
+Core Foreign interface (was foreign_interface.sml).
+@
+text
+@d12 5
+a16 1
+ *  $Log$
+d37 1
+d39 2
+@

@@ -1,0 +1,192 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.04.04.11.52.21;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	96.12.11.12.32.49;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.10.23.21;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.09.32;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.11.33.20;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.02.51;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.13.57.28;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@[Bug #2025]
+Use new version of Real.equal, called Real.==
+@
+text
+@(*****************************************************************************)
+(*      "The Ghost" SML CSG Raytracer        (C) Chris Walton 26/5/94        *)
+(*      Version 2.07                         (chrisw@@epcc.ed.ac.uk)          *)
+(*****************************************************************************)
+
+(* val use = PolyML.use (required for Poly/ML) *)
+ 
+use "ray/toolkit.sml";
+
+use "ray/rayvector.sml";
+use "ray/csg.sml";
+
+use "ray/primsig.sml";
+use "ray/planar.sml";
+use "ray/sphere.sml";
+use "ray/quadric.sml";
+use "ray/cone.sml";
+use "ray/primitives.sml";
+
+use "ray/main.sml";
+
+use "ray/ENFFIn.sml";
+use "ray/PPMBinOut.sml";
+
+(* Vector, Ray and Csg functions. *)
+structure Csg = Csg(structure Ray=Ray(structure Vector=Vector));
+    
+(* The Main Ray-Tracing engine. *)
+structure Main = 
+  RayFunctions(structure Csg=Csg
+               and AllPrimFns=AllPrimFns(structure Csg=Csg)
+               and In=ENFFIn(structure Csg=Csg)
+               and Out=PPMBinOut);
+
+
+
+
+
+
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+@
+text
+@d8 1
+a8 1
+use "toolkit.sml";
+d10 2
+a11 2
+use "rayvector.sml";
+use "csg.sml";
+d13 6
+a18 6
+use "primsig.sml";
+use "planar.sml";
+use "sphere.sml";
+use "quadric.sml";
+use "cone.sml";
+use "primitives.sml";
+d20 1
+a20 1
+use "main.sml";
+d22 2
+a23 2
+use "ENFFIn.sml";
+use "PPMBinOut.sml";
+@

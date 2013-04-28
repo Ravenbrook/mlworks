@@ -1,0 +1,334 @@
+head	1.6;
+access;
+symbols
+	Final_version_of_old_runtime:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.6
+date	94.01.26.17.03.41;	author nickh;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.06.02.13.06.37;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	93.06.01.15.39.36;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.04.30.12.36.40;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.09.01.11.19.01;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.03.18.14.07.38;	author richard;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	93.06.02.13.06.37;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Command line option parser.
+@
+
+
+1.6
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== COMMAND LINE OPTIONS PARSER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: options.c,v $
+ *  Revision 1.5  1993/06/02  13:06:37  richard
+ *  Improved the use of const on the argv parameter type.
+ *
+ *  Revision 1.4  1993/06/01  15:39:36  richard
+ *  Removed unused variable.
+ *
+ *  Revision 1.3  1993/04/30  12:36:40  richard
+ *  Multiple arguments can now be passed to the storage manager in a general
+ *  way.
+ *
+ *  Revision 1.2  1992/09/01  11:19:01  richard
+ *  Implemented delimited options.
+ *
+ *  Revision 1.1  1992/03/18  14:07:38  richard
+ *  Initial revision
+ *
+ */
+
+
+#include "ansi.h"
+#include "options.h"
+#include "utils.h"
+
+#include <string.h>
+#include <errno.h>
+
+
+int option_parse(int *argcp,
+		 argv_t *argvp,
+		 struct option *options[])
+{
+  /* While there are strings left in the command line array... */
+  while(*argcp != 0)
+  {
+    const char *arg = (*argvp)[0];
+    int argc = *argcp;
+    argv_t argv = *argvp;
+    size_t i;
+
+    /* If the argument isn't an option then we're finished. */
+    if(arg[0] != OPTION_CHAR)
+      return(1);
+
+    *argcp -= 1;
+    *argvp += 1;
+
+    /* If the argument is the special double-option character then we're */
+    /* finished, and argv points to the next argument. */
+    if(arg[1] == OPTION_CHAR && arg[2] == '\0')
+      return(1);
+
+    for(i=0; options[i]->name != NULL; ++i)
+      if(strcmp(options[i]->name, arg+1) == 0)
+      {
+	size_t n = options[i]->nr_arguments;
+
+	/* If the option count is negative then it's a variable length */
+	/* argument list delimited by the next argument. */
+
+	if(n == -1)
+	{
+	  const char *delimiter;
+
+	  if(*argcp < 2)
+	  {
+	    errno = EOPTIONARGS;
+	    *argcp = argc;
+	    *argvp = argv;
+	    return(0);
+	  }
+
+	  options[i]->arguments = *argvp+1;
+
+	  delimiter = (*argvp)[0];
+	  do
+	  {
+	    ++options[i]->nr_arguments;
+	    *argcp -= 1;
+	    *argvp += 1;
+
+	    if(*argcp == 0)
+	    {
+	      errno = EOPTIONDELIM;
+	      *argcp = argc;
+	      *argvp = argv;
+	      return(0);
+	    }
+	  }
+	  while(strcmp((*argvp)[0], delimiter) != 0);
+
+	  *argcp -= 1;
+	  *argvp += 1;
+	  options[i]->specified = 1;
+	}
+	else
+	{
+	  /* It's an ordinary argument list of length n. */
+
+	  if(*argcp < n)
+	  {
+	    errno = EOPTIONARGS;
+	    *argcp = argc;
+	    *argvp = argv;
+	    return(0);
+	  }
+
+	  options[i]->specified = 1;
+	  options[i]->arguments = *argvp;
+
+	  *argcp -= n;
+	  *argvp += n;
+	}
+
+	goto found;
+      }
+
+    errno = EOPTIONUNKNOWN;
+    *argcp += 1;
+    *argvp -= 1;
+    return(0);
+
+    found: continue;
+  }
+
+  return(1);
+}
+
+
+int to_int(const char *s)
+{
+  int n;
+  char dummy;
+
+  if(sscanf(s, " %d%c", &n, &dummy) != 1)
+    error("`%s' is not a number.", s);
+
+  return(n);
+}
+
+
+unsigned int to_unsigned(const char *s)
+{
+  unsigned int n;
+  char dummy;
+
+  if(sscanf(s, " %u%c", &n, &dummy) != 1)
+    error("`%s' is not an unsigned number.", s);
+
+  return(n);
+}
+
+@
+
+
+1.5
+log
+@Improved the use of const on the argv parameter type.
+@
+text
+@d11 3
+d30 1
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a10 3
+ *  Revision 1.5  1993/06/02  13:06:37  richard
+ *  Improved the use of const on the argv parameter type.
+ *
+@
+
+
+1.4
+log
+@Removed unused variable.
+@
+text
+@d11 3
+d28 1
+d35 1
+a35 1
+		 const char ***argvp,
+d43 1
+a43 1
+    const char **argv = *argvp;
+@
+
+
+1.3
+log
+@Multiple arguments can now be passed to the storage manager in a general
+way.
+@
+text
+@d11 4
+a40 1
+    int found = 0;
+@
+
+
+1.2
+log
+@Implemented delimited options.
+@
+text
+@d11 3
+a29 4
+  /* Skip the command name argument. */
+  *argcp -= 1;
+  *argvp += 1;
+
+d126 25
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 4
+a13 1
+ *  $Log$
+d35 2
+d57 4
+a60 1
+	if(*argcp < n)
+d62 32
+a93 4
+	  errno = EOPTIONARGS;
+	  *argcp += 1;
+	  *argvp -= 1;
+	  return(0);
+d95 3
+d99 7
+a105 2
+	options[i]->specified = 1;
+	options[i]->arguments = *argvp;
+d107 2
+a108 2
+	*argcp -= n;
+	*argvp += n;
+d110 5
+a114 2
+	found = 1;
+	break;
+d117 6
+a122 7
+    if(!found)
+    {
+      errno = EOPTIONUNKNOWN;
+      *argcp += 1;
+      *argvp -= 1;
+      return(0);
+    }
+@

@@ -1,0 +1,84 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	93.04.21.12.59.45;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.04.21.12.59.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Runtime value printer
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*  ==== RUNTIME VALUE PRINTER ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The value printer uses runtime tagging information to print ML objects.
+ *  This is a crucial tool for debugging.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ */
+
+#ifndef print_h
+#define print_h
+
+
+#include "mltypes.h"
+
+struct print_options
+{
+  size_t depth_max;		/* zero for no limit */
+  size_t string_length_max;	/* zero for no limit */
+  int indent;			/* indented layout */
+  int tags;			/* show tagging information */
+};
+
+struct print_options print_defaults;
+
+void print(struct print_options *options, FILE *stream, mlval value);
+
+
+#endif
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d12 1
+a12 4
+ *  $Log: print.h,v $
+ *  Revision 1.1  1993/04/21  12:59:45  richard
+ *  Initial revision
+ *
+@

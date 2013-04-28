@@ -1,0 +1,571 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.4.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.4.1.1.1
+	MLWorks_10r3:1.2.4.1.3
+	MLWorks_10r2_551:1.2.4.1.2
+	MLWorks_11:1.2.4.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.4.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.4.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.4.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.4
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.2.3.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.2.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.2.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.2.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.2.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.2.2
+	MLWorks_1_0_Unix_1996_11_14:1.2.1
+	MLWorks_Open_Beta2_1996_10_11:1.1.2
+	MLWorks_License_dev:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	96.10.30.11.21.43;	author andreww;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1
+	1.2.4.1;
+next	1.1;
+
+1.1
+date	96.09.20.15.57.39;	author andreww;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1;
+next	;
+
+1.1.1.1
+date	96.10.07.15.59.11;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.10.17.11.17.33;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.11.14.12.41.03;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1;
+next	;
+
+1.2.1.1.1.1
+date	96.11.28.14.52.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.11.22.18.01.31;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.12.17.17.40.26;	author hope;	state Exp;
+branches
+	1.2.3.1.1.1;
+next	;
+
+1.2.3.1.1.1
+date	97.02.24.11.27.49;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.4.1
+date	97.05.12.10.25.29;	author hope;	state Exp;
+branches
+	1.2.4.1.1.1
+	1.2.4.1.2.1
+	1.2.4.1.3.1;
+next	;
+
+1.2.4.1.1.1
+date	97.07.28.18.11.25;	author daveb;	state Exp;
+branches
+	1.2.4.1.1.1.1.1;
+next	;
+
+1.2.4.1.1.1.1.1
+date	97.10.07.11.36.15;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.4.1.2.1
+date	97.09.08.17.04.43;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.4.1.3.1
+date	97.09.09.13.59.51;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Documentation explaining the addition of datatype replication.
+@
+
+
+1.2
+log
+@[Bug #1708]
+altered syntax of datatype replication.
+@
+text
+@%
+% DATATYPE REPLICATION IMPLEMENTATION DOCUMENTATION
+%
+%  Copyright (C) 1996 Harlequin Ltd
+%
+%   Revision Log
+%   -------------
+%   $Log: datatype_replication.doc,v $
+# Revision 1.1  1996/09/20  15:57:39  andreww
+# new unit
+# Documentation explaining the addition of datatype replication.
+#
+#
+# Internal documentation for my implementation of datatype replication
+#
+
+
+Related files:
+
+	parser/ml-tables/new-grammar.lisp         *
+	parser/ml-tables/_actionfunctions-start
+	parser/ml-tables/_LRbasics-start
+	parser/ml-tables/_LRbasics-end
+
+	basics/absyn.sml
+	basics/_absyn.sml			  *
+	basics/absynprint.sml
+	basics/_absynprint.sml
+
+	typechecker/_core_rules.sml		  *
+	typechecker/_mod_rules.sml		  *
+	typechecker/_type_debugger.sml
+
+	lambda/_lambda.sml			  *
+	lambda/_interprint.sml
+	lambda/_topdecprint.sml
+	
+	interpreter/_inter_envtypes.sml
+	
+	images/GNUmake
+
+Files annotated with an asterisk denote the really important files:
+all the others were changed as a result of these.
+
+
+
+WHAT IS DATATYPE REPLICATION?
+-----------------------------
+
+See section G.6 of the revised definition of SML.  We include a
+new form of declaration (specification):
+
+	datatype tycon = datatype longtycon
+
+When elaborated, this binds tycon to the entire type structure (value
+constructors included) to which longtycon is bound inthe context.
+Datatype replication does *not* generate a new datatype: the original
+and the replicated datatype share.
+
+It implicitly introduces the value constructors of longtycon into
+the current scope.
+
+CHANGES TO ABSTRACT SYNTAX
+--------------------------
+
+important files: basics/absyn.sml basics/_absyn.sml
+
+We add two new constructors:
+
+*to the Dec datatype:
+
+	DATATYPErepl of Ident.Location.T *
+                        (Ident.TyCon * Ident.LongTyCon) *
+                         Datatypes.Valenv option ref
+
+The first specifies where the datatype replication was declared
+(in which file/window, which structure/function etc. as standard.
+It's used in error messages.
+
+The second is a pair specifying the 
+
+	tycon
+	longtycon
+
+components of the replication, and the last is a hook onto which we
+will hang the replicated value environment (i.e., the values which
+belong to the original typeconstructor longtycon.  At parsing time,
+this is set to ref NONE, and is set to (ref SOME ...) by the
+typechecker.  See the section on Lambda translation for its
+motivation.  (See typechecker/_core_rules.sml, "rule 18 of the SML'96
+definition".)
+
+CHANGES TO THE PARSER
+=====================
+
+Important files: parser/ml-tables/new-grammar.lisp
+
+(note that this file has to be generated from parser/_actionfunctions.sml
+using the function parser/ml-tables/back-convert.  It does not exist
+in the ml distribution proper.)
+
+In this section, I'll only document the changes rquired to add the
+datatype replication declaration.  Those required for the replication
+specification are similar.
+
+To add the new production, one can't simple add a production of the form
+
+     <DEC1> -> 
+	datatype <TYCON> = datatype <LONGTYCON>
+
+to the grammar, as suggested by the definition.  Doing this will
+conflict with the rule for normal datatype declaration:
+
+     <DEC1> -> datatype <DATBIND>
+
+The problem being that whichever comes first in the list of rules
+will override the other.  This is due to the fact that single
+datatype bindings (<DATBIND1>) were specified by
+
+     <DATBIND1> -> <TYVARSEQ><TYCON> = <CONBIND>
+
+which shares the first three items of the datatype replication
+production (when the tyvarseq is empty).  To help the parser this, I
+introduce a new nonterminal <DATAHEADER> with rule
+
+     <DATAHEADER> -> <TYVARSEQ><TYCON>=
+
+from which the relevant rules become:
+
+     <DEC1> -> datatype <DATREPL>
+     <DEC1> -> datatype <DATBIND>
+     ...
+
+     <DATREPL> -> <DATHEADER> datatype <LONGTYCON>
+
+     <DATBIND1> -> <DATHEADER> <CONBIND>
+      ...
+
+Note that the first rule contains a check that we are currently
+in SML'96 mode: it will fail if trying to parse replication in
+SML'90 mode.  Note also that in the replication, we have to check
+that the tyvarseq of the datheader is empty.
+
+
+CHANGES TO THE TYPECHECKER
+==========================
+
+important files: typechecker/_core_rules.sml
+		 typechecker/_mod_rules.sml
+
+Again, I'll only describe the changes to the core rules
+("rule 18 of SML'96 definition").  The changes to the module rules
+("rule 72 of SML'96 definition") are mostly similar.
+
+This new clause to check_dec mirrors the rule given in the definition
+almost exactly. The type checking stage consists of:
+
+	1. lookup longtycon (error if it doesn't exist),
+	2. attach the value environment associated with the
+	   longtycon's type structure to the hook on the
+	   abstract syntax (used in the lambda generation
+	   stage)
+	3. return the environment consisting of the type
+	   environment assigning the type structure to tycon
+	   and the value environment of the type structure.
+
+which apart from step 2 exactly matches rule 18 of the revised definition.
+
+
+CHANGES TO THE LAMBDA TRANSLATOR
+================================
+
+important file: lambda/_lambda.sml
+
+This only concerns the replication declaration: the replication
+specification seems to be ignored after typechecking.
+
+We add a new case to the trans_dec function. (Search for
+Absyn.DATATYPErepl to find the new code.)  This new code simply takes
+the value environment attached to the hook on the abstract syntax and
+translates it into a series of constructor bindings, suitable to be
+passed to the pre-existing datatype processing functions.
+
+Why did I choose to attach the replicated value environment to the
+abstract syntax?  After all, the argument to the lambda translation
+function Lambda.trans_topdec carries around a typechecker basis
+argument.  Surely one could look up the longtycon in that?  I tried
+this, but didn't succeed.  The reason is that the basis passed to the
+lambda translator is the basis obtained at the end of the typechecking
+phase.  At that stage, there is no guarantee that longtycon actually
+does exist in the environment (it may have been a temporary
+declaration).
+
+Note that I can't seem to relabel the type constructors associated with
+the replicated datatypes.  Thus if a constructor has type int -> 'a foo
+then replicating 'a foo will not change the type: the replicated
+constructor will also have type int -> 'a foo, even if the new datatype
+is called "'a bar" (unless the replicated datatype belongs to a different
+structure).  I've tried the following code:
+
+
+            fun renameTypeName 
+              (Datatypes.TYNAME(stamp,_,arity,equalityAttribute,
+                                valEnvRef,_,boolRef, valEnvRef')) =
+              Datatypes.TYNAME(stamp,IdentPrint.printTyCon tycon,
+                               arity,equalityAttribute,valEnvRef,
+                               SOME (Location.to_string location),
+                               boolRef, valEnvRef')
+              
+              | renameTypeName 
+                (Datatypes.METATYNAME(tfr,_,arity,eqAt,valEnvRef,boolRef)) =
+                (Datatypes.METATYNAME(tfr,IdentPrint.printTyCon tycon,
+                                      arity,eqAt,valEnvRef,boolRef))
+                
+                
+           fun renameType (Datatypes.FUNTYPE(ty1,ty2)) =
+                           Datatypes.FUNTYPE(renameType ty1,renameType ty2)
+             | renameType (Datatypes.CONSTYPE(tl,tyname)) =
+                           Datatypes.CONSTYPE(tl,renameTypeName tyname)
+             | renameType t = t
+               
+
+to no avail.  Therefore, I propose we call this renaming a "feature" and be
+done with it.
+                
+
+@
+
+
+1.2.4.1
+log
+@branched from 1.2
+@
+text
+@a8 4
+# Revision 1.2  1996/10/30  11:21:43  andreww
+# [Bug #1708]
+# altered syntax of datatype replication.
+#
+@
+
+
+1.2.4.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a8 3
+# Revision 1.2.4.1  1997/05/12  10:25:29  hope
+# branched from 1.2
+#
+@
+
+
+1.2.4.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a8 3
+# Revision 1.2.4.1  1997/05/12  10:25:29  hope
+# branched from 1.2
+#
+@
+
+
+1.2.4.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a8 3
+# Revision 1.2.4.1  1997/05/12  10:25:29  hope
+# branched from 1.2
+#
+@
+
+
+1.2.4.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a8 3
+# Revision 1.2.4.1.1.1  1997/07/28  18:11:25  daveb
+# branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+#
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a8 4
+# Revision 1.2  1996/10/30  11:21:43  andreww
+# [Bug #1708]
+# altered syntax of datatype replication.
+#
+@
+
+
+1.2.3.1.1.1
+log
+@branched from 1.2.3.1
+@
+text
+@a8 3
+# Revision 1.2.3.1  1996/12/17  17:40:26  hope
+# branched from 1.2
+#
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a8 4
+# Revision 1.2  1996/10/30  11:21:43  andreww
+# [Bug #1708]
+# altered syntax of datatype replication.
+#
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a8 4
+# Revision 1.2  1996/10/30  11:21:43  andreww
+# [Bug #1708]
+# altered syntax of datatype replication.
+#
+@
+
+
+1.2.1.1.1.1
+log
+@branched from 1.2.1.1
+@
+text
+@a8 3
+# Revision 1.2.1.1  1996/11/14  12:41:03  hope
+# branched from 1.2
+#
+@
+
+
+1.1
+log
+@new unit
+Documentation explaining the addition of datatype replication.
+@
+text
+@d8 5
+a12 1
+%   $Log:,v $
+d53 1
+a53 1
+	datatype tyvarseq tycon = datatype tyvarseq longtycon
+d55 4
+a58 5
+(Where of course the two tyvarseqs are identical).  when elaborated,
+this binds tycon to the entire type structure (value constructors
+included) to which longtycon is bound inthe context.  Datatype
+replication does *not* generate a new datatype: the original and
+the replicated datatype share.
+d73 1
+a73 2
+                        (Ident.TyVar list * Ident.TyCon *
+                         Ident.LongTyCon) *
+d80 1
+a80 1
+The second is a triple specifying the 
+a81 1
+	tyvarseq
+d109 1
+a109 1
+	datatype <TYVARSEQ> <TYCON> = datatype <TYVARSEQ> <LONGTYCON>
+d123 2
+a124 2
+production.  To help the parser this, I introduce a new nonterminal
+<DATAHEADER> with rule
+d134 1
+a134 1
+     <DATREPL> -> <DATHEADER> datatype <TYVARSEQ><LONGTYCON>
+d141 2
+a142 1
+SML'90 mode.
+d159 1
+a159 4
+	2. compare the arity of the returned type structure
+	   with the number of type variables in the tyvarseq
+	   (error if the two don't match),
+	3. attach the value environment associated with the
+d163 1
+a163 1
+	4. return the environment consisting of the type
+d167 1
+a167 1
+which apart from step 3 exactly matches rule 18 of the revised definition.
+@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+%   $Log: datatype_replication.doc,v $
+# Revision 1.1  1996/09/20  15:57:39  andreww
+# new unit
+# Documentation explaining the addition of datatype replication.
+#
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+%   $Log: datatype_replication.doc,v $
+# Revision 1.1  1996/09/20  15:57:39  andreww
+# new unit
+# Documentation explaining the addition of datatype replication.
+#
+@

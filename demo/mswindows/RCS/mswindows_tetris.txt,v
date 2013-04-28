@@ -1,0 +1,373 @@
+head	1.4;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.4
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.2.1
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.1.4.1.1.2.1
+	MLWorks_11c0_1997_09_09:1.1.4.1.1.2
+	MLWorks_10r3:1.1.4.1.3
+	MLWorks_10r2_551:1.1.4.1.2
+	MLWorks_11:1.1.4.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.4.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.4.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.4.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.4
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.3.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.1.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.1.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.1.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.1.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.1.2
+	MLWorks_1_0_Unix_1996_11_14:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	98.11.09.11.34.45;	author johnh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.05.21.16.15.45;	author jkbrook;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.08.06.13.31.37;	author johnh;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	96.11.08.13.22.47;	author jkbrook;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1;
+next	;
+
+1.1.1.1
+date	96.11.14.12.40.51;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1
+date	96.11.28.14.52.44;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.11.22.18.01.20;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.12.17.17.40.15;	author hope;	state Exp;
+branches
+	1.1.3.1.1.1;
+next	;
+
+1.1.3.1.1.1
+date	97.02.24.11.27.28;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	97.05.12.10.25.16;	author hope;	state Exp;
+branches
+	1.1.4.1.1.1
+	1.1.4.1.2.1
+	1.1.4.1.3.1;
+next	;
+
+1.1.4.1.1.1
+date	97.07.28.18.11.08;	author daveb;	state Exp;
+branches;
+next	1.1.4.1.1.2;
+
+1.1.4.1.1.2
+date	97.08.07.08.56.04;	author johnh;	state Exp;
+branches
+	1.1.4.1.1.2.1.1;
+next	;
+
+1.1.4.1.1.2.1.1
+date	97.10.07.11.35.45;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.4.1.2.1
+date	97.09.08.17.04.27;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.4.1.3.1
+date	97.09.09.13.59.29;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.11.30.16.48.07;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Provide user information (.txt file) for mswindows version of tetris.sml
+@
+
+
+1.4
+log
+@[Bug #50105]
+Make toplevel functions unique across demos to avoid conflicts when loading demo project.
+@
+text
+@  Load File: tetris.sml
+  
+  To play from inside MLWorks, at the listener prompt type 
+
+    tetris_test ();
+
+  or 
+  	
+    tetris ("Your Name", <level number>);
+  
+  where <level number> is an integer from 1 to 5 inclusive, and "Your
+  Name" is your name as you want it to appear in the high-score table.
+  The high-score table is written to a file `highscores.tet' which is 
+  re-loaded when the game is run again, or, if the file cannot be
+  found a new file is created.
+  
+  Controls for the game are:
+  
+        S   start / restart
+
+  	l   move piece right
+  	h   move piece left
+  	i   rotate piece anticlockwise
+  	o   rotate piece clockwise
+  
+  	<space> (hold down)  move piece down more quickly
+  
+  	X   quit
+  	
+
+  To run as a standalone executable first compile and load the
+  module as usual using the project workspace.  Then create an
+  executable file, for instance by doing
+
+    MLWorks.Deliver.deliver ("tetris",tetris_appl("Me",4),MLWorks.Deliver.WINDOWS);
+
+  (tetris_appl("Me",4) is a function of type unit -> unit which allows
+  the demo to be run without invoking MLWorks).  After delivery,
+  the MLWorks session will exit.  The file `tetris.exe' can then be 
+  run from the command-line.  
+  
+  Note that MLWorks executables depend on the MLWorks runtime shared
+  library (DLL).  If the DLL cannot be found, either add the bin
+  subdirectory of the current directory to your path environment
+  variable, or run the executable from either the bin directory or the
+  directory in which it is located.
+
+@
+
+
+1.3
+log
+@[Bug #50050]
+Update for new delivery syntax, removal of image-saving
+and projects
+@
+text
+@d5 1
+a5 1
+    test ();
+d35 1
+a35 1
+    MLWorks.Deliver.deliver ("tetris",appl("Me",4),MLWorks.Deliver.WINDOWS);
+d37 1
+a37 1
+  (appl("Me",4) is a function of type unit -> unit which allows
+@
+
+
+1.2
+log
+@[Bug #20087]
+Make tetris text doc consistent with tetris demo.
+@
+text
+@d31 2
+a32 1
+  To run as a standalone executable after compiling, create an
+d35 1
+a35 1
+      MLWorks.Deliver.deliver ("tetris",appl("Me",4),true);
+d37 10
+a46 6
+  (appl("Me",4) is a function of type unit -> unit which starts X and
+  then runs the demo.)  The file `tetris' can then be run from the
+  command-line without invoking MLWorks.  Alternatively an image can
+  be created by doing
+
+      MLWorks.Deliver.deliver ("tetris.img",appl("Me",4),false);
+a47 6
+  and run using
+   
+      mlrun -load tetris.img
+
+  at the command line.
+  
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+Provide user information (.txt file) for mswindows version of tetris.sml
+@
+text
+@d4 4
+d9 1
+a9 1
+    make_toplevel "Your Name" <level number>
+d11 5
+a15 5
+  where <level number> is an integer from 1 to 5 inclusive, and "Your Name"
+  is your name as you want it to appear in the high-score table.  The 
+  high-score table is written to a file `highscores.tet' which is 
+  re-loaded when the game is run again, or, if the file cannot be found
+  a new file is created.
+d30 18
+@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.4.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.4.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.4.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.4.1.1.2
+log
+@[Bug #20087]
+Merging - make text files consistent with demos.
+@
+text
+@a3 4
+
+    test ();
+
+  or 
+d5 1
+a5 1
+    tetris ("Your Name", <level number>);
+d7 5
+a11 5
+  where <level number> is an integer from 1 to 5 inclusive, and "Your
+  Name" is your name as you want it to appear in the high-score table.
+  The high-score table is written to a file `highscores.tet' which is 
+  re-loaded when the game is run again, or, if the file cannot be
+  found a new file is created.
+d26 1
+@
+
+
+1.1.4.1.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.3.1.1.1
+log
+@branched from 1.1.3.1
+@
+text
+@@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1.1.1
+log
+@branched from 1.1.1.1
+@
+text
+@@

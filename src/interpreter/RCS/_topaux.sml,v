@@ -1,0 +1,1702 @@
+head	1.25;
+access;
+symbols
+	mlworks-28-01-1994:1.25
+	Release:1.25
+	mlworks-beta-01-09-1993:1.25
+	MLWorks-1-0-4-29/01/1993:1.25
+	MLWorks-1-0-3-21/12/1992:1.25
+	MLWorks-1-0-2-15/12/1992:1.25
+	MLWorks-1-0-1-04/12/1992:1.25;
+locks; strict;
+
+
+1.25
+date	92.11.26.16.20.22;	author daveb;	state Exp;
+branches
+	1.25.1.1;
+next	1.24;
+
+1.24
+date	92.10.13.15.47.34;	author clive;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.10.12.16.05.18;	author clive;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.10.08.12.55.24;	author clive;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.09.16.08.49.54;	author daveb;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.09.12.20.26.48;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.09.11.08.41.18;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.09.09.16.05.35;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.09.09.08.55.07;	author clive;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.09.07.15.50.20;	author clive;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.09.04.11.05.17;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.09.02.16.22.46;	author clive;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.08.28.15.49.52;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.08.27.18.02.45;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.08.27.09.53.36;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.27.08.40.22;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.26.19.19.28;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.26.16.55.27;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.26.06.58.43;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.25.16.13.37;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.24.15.53.47;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.21.15.24.46;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.20.15.41.31;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.08.20.15.04.26;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.08.20.14.50.55;	author matthew;	state Exp;
+branches;
+next	;
+
+1.25.1.1
+date	92.11.26.16.20.22;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Nasty low level bits used by the top loop.
+@
+
+
+1.25
+log
+@THIS FILE IS NO LONGER USED!!!
+@
+text
+@(* Topaux functor *)
+(*
+$Log: _topaux.sml,v $
+Revision 1.24  1992/10/13  15:47:34  clive
+Changes for windowing listener
+
+Revision 1.23  1992/10/12  16:05:18  clive
+Tynames now have a slot recording their definition point
+
+Revision 1.22  1992/10/08  12:55:24  clive
+Made compatible with the new shell
+
+Revision 1.21  1992/09/16  08:49:54  daveb
+eg_info_{on,off}() controls printing of equality attribute of tycons.
+id_class_{on,off}() controls printing of id classes (VAR, CON or EXCON).
+
+Revision 1.20  1992/09/12  20:26:48  jont
+Removed Lexer from toplevel signature
+
+Revision 1.19  1992/09/11  08:41:18  richard
+Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+THIS FILE WILL SHORTLY BE SUPERCEEDED.
+
+Revision 1.18  1992/09/09  16:05:35  richard
+Added error wrappers around code generation stages.
+
+Revision 1.17  1992/09/09  08:55:07  clive
+Needed to set give debug_information flag to mir_cg and mach_cg
+
+Revision 1.16  1992/09/07  15:50:20  clive
+Added the function to do completion
+
+Revision 1.15  1992/09/04  11:05:17  richard
+Installed central error reporting mechanism.
+
+Revision 1.14  1992/09/02  16:22:46  clive
+Added array print function as well as function to set the compile-with-profiling-on flag
+
+Revision 1.13  1992/08/28  15:49:52  richard
+Corrected some references to the old MLWorks structure.
+(In strings!)
+
+Revision 1.12  1992/08/27  18:02:45  clive
+In add_a_definition_of_a_value need to add to the basis passes to the print function
+
+Revision 1.11  1992/08/27  09:53:36  richard
+Rationalisation of the MLWorks structure.
+
+Revision 1.10  1992/08/27  08:40:22  clive
+Changed MLWorks.Io.instream to MLWorks.IO.instream
+
+Revision 1.9  1992/08/26  19:19:28  jont
+Removed some redundant structures and sharing
+
+Revision 1.8  1992/08/26  16:55:27  clive
+Fixed a few bugs and added binding of frame arguments to it
+
+Revision 1.7  1992/08/26  06:58:43  richard
+Corrected the use of ml_require and modules_discard.
+
+Revision 1.6  1992/08/25  16:13:37  richard
+The built-in library is only required once from the runtime system
+so that the module table can be discarded.
+
+Revision 1.5  1992/08/24  15:53:47  clive
+Added details about leafness to the debug information
+
+Revision 1.4  1992/08/21  15:24:46  clive
+> Added a loop inside the debugger
+
+Revision 1.3  1992/08/20  15:41:31  clive
+Fixed a bug whence debug_information was lost if making or useing
+
+Revision 1.2  1992/08/20  15:04:26  matthew
+Added log & copyright message
+
+
+Copyright (c) 1992 Harlequin Ltd.
+
+*)
+
+THIS FILE IS NO LONGER USED!!!
+
+
+require "../utils/crash";
+require "../utils/print";
+require "../utils/lists";
+require "../utils/integer";
+require "../basics/identprint";
+require "../parser/parser";
+require "../typechecker/basis";
+require "../typechecker/valenv";
+require "../typechecker/scheme";
+require "../typechecker/types";
+require "../typechecker/mod_rules";
+require "../lambda/lambdaprint";
+require "../lambda/environtypes";
+require "../lambda/environ";
+require "../lambda/environprint";
+require "../lambda/lambdaoptimiser";
+require "../lambda/topdecprint";
+require "../mir/mir_cg";
+require "../mir/mirprint";
+require "../mir/miroptimiser";
+require "../machine/mach_cg";
+require "../debugger/value_printer";
+require "../debugger/get_type_information";
+require "../debugger/ml_debugger";
+require "../main/pervasives";
+require "../main/toplevel";
+require "../main/io";
+require "inter_envtypes";
+require "str_print";
+require "topaux";
+
+functor TopAux(
+  structure Crash : CRASH
+  structure Print : PRINT
+  structure Lists : LISTS
+  structure Integer : INTEGER
+  structure Parser : PARSER
+  structure Basis : BASIS
+  structure Valenv : VALENV
+  structure Scheme : SCHEME
+  structure Types : TYPES
+  structure Mod_Rules : MODULE_RULES
+  structure LambdaPrint : LAMBDAPRINT
+  structure EnvironTypes : ENVIRONTYPES
+  structure Environ : ENVIRON
+  structure EnvironPrint : ENVIRONPRINT
+  structure Inter_EnvTypes : INTER_ENVTYPES
+  structure LambdaOptimiser : LAMBDAOPTIMISER
+  structure TopdecPrint : TOPDECPRINT
+  structure Mir_Cg : MIR_CG
+  structure MirPrint : MIRPRINT
+  structure MirOptimiser : MIROPTIMISER
+  structure Mach_Cg : MACH_CG
+  structure Value_Printer : VALUE_PRINTER
+  structure GetTypeInformation : GETTYPEINFORMATION
+  structure Pervasives : PERVASIVES
+  structure TopLevel : TOPLEVEL
+  structure Io : IO
+  structure Str_Print : STR_PRINT
+  structure Ml_Debugger : ML_DEBUGGER
+  structure IdentPrint : IDENTPRINT
+
+  sharing Parser.Absyn = TopdecPrint.Absyn
+  sharing TopLevel.Parser = GetTypeInformation.Parser = Ml_Debugger.Parser
+  sharing Basis = TopLevel.Basis = GetTypeInformation.Basis = Str_Print.Basis = Ml_Debugger.Basis
+  sharing Environ.EnvironTypes = TopLevel.EnvironTypes = EnvironTypes
+    = GetTypeInformation.EnvironTypes = Mir_Cg.EnvironTypes
+  sharing Parser = GetTypeInformation.Parser
+  sharing Inter_EnvTypes.NewMap = EnvironTypes.LambdaTypes.Datatypes.NewMap =
+    TopLevel.Debugger_Types.Datatypes.NewMap
+  sharing Inter_EnvTypes.Ident = LambdaPrint.LambdaTypes.Datatypes.Ident = IdentPrint.Ident 
+    (*= Ml_Debugger.Datatypes.Ident*) = Str_Print.Ident
+  sharing Ml_Debugger.Debugger_Types = GetTypeInformation.Debugger_Types =
+    Mir_Cg.MirTypes.Debugger_Types = TopLevel.Debugger_Types = Value_Printer.Debugger_Types
+(*
+  sharing Mir_Cg.Debugger_Types = Ml_Debugger.Debugger_Types = Mach_Cg.Debugger_Types
+    = TopLevel.Debugger_Types = GetTypeInformation.Debugger_Types
+*)
+  sharing Basis.Tyvarenv.Datatypes = Valenv.Datatypes = Types.Datatypes(* = Mach_Cg.Datatypes*)
+    = Str_Print.Datatypes(* = Ml_Debugger.Datatypes*) = LambdaPrint.LambdaTypes.Datatypes
+    = GetTypeInformation.Debugger_Types.Datatypes =
+    Ml_Debugger.Debugger_Types.Datatypes =
+    EnvironTypes.LambdaTypes.Datatypes
+  sharing type LambdaPrint.LambdaTypes.Primitive = Pervasives.pervasive
+  sharing MirPrint.MirTypes = MirOptimiser.MirTypes = Mir_Cg.MirTypes = Mach_Cg.MirTypes
+  sharing (*Mir_Cg.LambdaTypes = *)LambdaOptimiser.LambdaTypes = LambdaPrint.LambdaTypes  = EnvironTypes.LambdaTypes
+(*    = TopLevel.LambdaTypes*)
+  sharing Mach_Cg.MachSpec = MirOptimiser.MachSpec
+  sharing MirOptimiser.Map = Ml_Debugger.Debugger_Types.Datatypes.NewMap
+
+) : TOPAUX =
+
+  struct
+    structure LambdaTypes = LambdaPrint.LambdaTypes
+    structure Datatypes = Ml_Debugger.Debugger_Types.Datatypes
+    structure Debugger_Types = Ml_Debugger.Debugger_Types
+    structure MachTypes = Mach_Cg.MachTypes
+    structure Lexer = TopLevel.Parser.Lexer
+    structure NewMap = Datatypes.NewMap
+    structure Ident = Datatypes.Ident
+    structure Symbol = Ident.Symbol
+    structure Error = TopLevel.Error
+
+    exception not_yet_implemented of string
+
+    exception StopLoop
+
+    val error_wrap = Error.wrap (Error.FATAL, Error.RECOVERABLE, !TopLevel.error_output_level)
+
+    val (pb, tb, pervasive_library_debugger_information, cb) =
+      GetTypeInformation.get_type_information Io.pervasive_library_name
+
+    val (_, _, builtin_library_debugger_information, _) =
+      GetTypeInformation.get_type_information Io.builtin_library_name
+
+    val total_initial_debugger_information = 
+      Debugger_Types.augment_information
+      (builtin_library_debugger_information,pervasive_library_debugger_information)
+
+    val perv_env = TopLevel.CB(pb, tb, cb)
+
+    local
+      fun find s = Lists.assoc (s, !MLWorks.Internal.Runtime.modules)
+        handle Lists.Assoc => Crash.impossible ("Couldn't find internal module " ^ s)
+    in
+      val builtin_library = find Io.builtin_library_name
+      val pervasive_library = find Io.pervasive_library_name
+    end
+
+    val show_lambda = ref false
+    val show_mir = ref false
+    val debug_level = ref(1)
+    val _ = TopLevel.set_debug_level 1
+
+    fun get_debug_level () = ! debug_level
+    fun set_debug_level n = debug_level := n
+
+    fun augment_cb(TopLevel.CB(p, t, c), TopLevel.CB(p', t', c')) =
+      TopLevel.CB(Parser.augment_pB(p, p'),
+		   Basis.basis_circle_plus_basis(t, t'),
+		   Environ.augment_top_env(c, c'))
+
+    val the_env =
+      ref(TopLevel.initial_compiler_basis, 
+          Inter_EnvTypes.empty_env,
+          total_initial_debugger_information)
+
+    fun current_parser_basis_fn () =
+      let
+        val (basis as TopLevel.CB(p,t,_), _,_) = !the_env
+      in
+        p
+      end
+
+    fun current_type_basis_fn() =
+      let
+        val (basis as TopLevel.CB(p,t,_), _,_) = !the_env
+      in
+        t
+      end
+
+    fun current_debug_information_fn () = 
+      let
+        val (basis as TopLevel.CB(p,t,_), _, info) = !the_env
+      in
+        info
+      end
+
+    fun internal_clear_debug_information() =
+      let
+        val (a,b,_) = !the_env
+      in
+        the_env := (a,b,total_initial_debugger_information)
+      end
+
+    val _ = 
+      let
+        val Debugger_Types.INFO info = total_initial_debugger_information
+      in
+        if NewMap.exists (fn _ => true) info then
+          ()
+        else 
+          Error.report
+          (Error.ERROR (Error.WARNING, Error.Location.UNKNOWN,
+                        "There was no debugging information in either the builtin_library or the pervasive_library"))
+      end
+
+    (* The linker code for the interpreter *)
+
+    fun unpick(result, [], acc) = (result, acc)
+      | unpick([], _, _) = Crash.impossible"Result has too few values"
+      | unpick(r :: rest, l :: list, acc) = unpick(rest, list, (l, r) :: acc)
+  
+    fun element_order((i:int, _), (j, _)) = i < j
+
+    fun make_list(done, bytes, value) =
+      if bytes <= 0 then done
+      else
+	make_list(chr(value mod 256) :: done, bytes-1, value div 256)
+
+    fun encode_int i =
+      if i < 0 then
+	Crash.impossible"Negative size of code object"
+      else
+	implode(make_list([], 4, i))
+
+    fun add_spills(spills, string) = [encode_int spills, string]
+
+    fun add_back(_, []) = []
+      | add_back(prev_size, (_, spills, code) :: rest) =
+	let
+	  val full_string =
+	    implode(encode_int prev_size :: add_spills(spills, code))
+	in
+	  full_string :: add_back(size full_string * 64 + 42, rest)
+	end
+
+    fun fix_up(code_env as Inter_EnvTypes.INTER_ENV(val_map, exn_map, str_map,
+						     fun_map),
+	       MachTypes.MODULE module_element_list) =
+      let
+	val app_v_map = NewMap.apply val_map
+	val app_e_map = NewMap.apply exn_map
+	val app_s_map = NewMap.apply str_map
+	val app_f_map = NewMap.apply fun_map
+	fun fix_up_elements(acc, []) = acc
+	  | fix_up_elements(acc, MachTypes.REAL(i, s) :: rest) =
+            let
+              val r = MLWorks.Internal.Value.string_to_real s
+            in
+              fix_up_elements((i, MLWorks.Internal.Value.cast r) :: acc, rest)
+	    end
+	  | fix_up_elements(acc, MachTypes.STRING(i, s) :: rest) =
+	    fix_up_elements((i, MLWorks.Internal.Value.cast s) :: acc, rest)
+	  | fix_up_elements(acc, MachTypes.VAR(i, s) :: rest) =
+	    fix_up_elements((i, app_v_map(Ident.VAR(Symbol.find_symbol s))) ::
+			    acc, rest)
+	  | fix_up_elements(acc, MachTypes.EXN(i, s) :: rest) =
+	    fix_up_elements((i, app_e_map(Ident.EXCON(Symbol.find_symbol s))) ::
+			    acc, rest)
+	  | fix_up_elements(acc, MachTypes.STRUCT(i, s) :: rest) =
+	    fix_up_elements((i, app_s_map(Ident.STRID(Symbol.find_symbol s))) ::
+			    acc, rest)
+	  | fix_up_elements(acc, MachTypes.FUNCT(i, s) :: rest) =
+	    fix_up_elements((i, app_f_map(Ident.FUNID(Symbol.find_symbol s))) ::
+			    acc, rest)
+	  | fix_up_elements(acc,
+			    MachTypes.WORDSET(MachTypes.WORD_SET i_j_s_list) ::
+			    rest) =
+            fix_up_elements(MLWorks.Internal.Runtime.Loader.load_wordset i_j_s_list @@ acc, rest)
+	  | fix_up_elements(acc, MachTypes.EXTERNAL(i, name) :: rest) =
+            if name = Io.builtin_library_name then
+              fix_up_elements((i, builtin_library) :: acc, rest)
+            else if name = Io.pervasive_library_name then
+              fix_up_elements((i, pervasive_library) :: acc, rest)
+            else
+              Crash.impossible ("Cannot fix up extenal reference to " ^ name ^ ".")
+      in
+	Lists.qsort element_order (fix_up_elements([], module_element_list))
+      end
+
+    fun print_val options (ml_value, valid,
+		  basis as Basis.BASIS(_, _, _, Datatypes.ENV(_, _, venv, _)),
+                  debug_info) =
+      let
+	val the_type = case Valenv.lookup(valid, venv) of
+	  scheme as Datatypes.SCHEME(i, ty) =>
+	    let
+	      val bound_tyvars = Str_Print.make_bound_tyvars i
+	    in
+	      Types.apply(Datatypes.TYFUN(ty, i), bound_tyvars)
+	    end
+	| Datatypes.UNBOUND_SCHEME ty => ty
+	| _ => Crash.impossible"no scheme found for valid"
+      in
+	(Print.print("val " ^ IdentPrint.printValId options valid ^ " = ");
+	 Print.print(Value_Printer.stringify_value
+                     (Value_Printer.toplevel_default_print_descriptor,ml_value, the_type,debug_info));
+	 Print.print(" : " ^ Types.print_type options the_type ^ "\n"))
+      end
+
+
+
+    fun print_str x = Print.print(Str_Print.print_str x)
+
+
+    fun lambda_topdec options (_, _, LambdaTypes.STRUCT [], _, _, _,_) = ()
+      | lambda_topdec options (absyn, TopLevel.CB(p, t, top_env), lambda_exp, code_env,
+		      filename, do_print, debug_info) =
+	let
+	  val new_cb = TopLevel.CB(p, t, Environ.make_external top_env)
+	  (* Compile what he types *)
+	  val opt_lambda_exp = LambdaOptimiser.optimise lambda_exp
+	  val _ =
+	    if !show_lambda then
+	      (Print.print"The optimised lambda code\n";
+	       LambdaPrint.print_lambda opt_lambda_exp)
+	    else
+	      ()
+	  val (the_mir_code,debug_info') =
+            error_wrap Mir_Cg.mir_cg
+            (opt_lambda_exp, top_env, filename,
+             debug_info, ! TopLevel.generate_debug_information)
+	  val the_optimised_code = MirOptimiser.optimise the_mir_code
+	  val _ =
+	    if !show_mir then
+	      (Print.print"The optimised intermediate code\n";
+	       Print.print(MirPrint.print_mir_code the_optimised_code))
+	    else
+	      ()
+	  val (the_machine_code,debugger_information) =
+	    let
+	      val assign = MirOptimiser.machine_register_assignments
+	    in
+	      error_wrap Mach_Cg.mach_cg
+              (the_optimised_code,
+               (#gc assign, #non_gc assign, #fp assign),
+               ! TopLevel.generate_debug_information,
+               debug_info')
+	    end
+
+	  val fixed_up_code = fix_up(code_env, the_machine_code)
+
+          (* Add debug *)
+	  val (p,q,_) = !the_env 
+          val _ = the_env := (p,q,debugger_information)
+
+	  (* Generate a runnable closure and call it by applying it to itself *)
+	  val ml_value = MLWorks.Internal.Value.list_to_tuple (map #2 fixed_up_code)
+	  val result   =
+            (MLWorks.Internal.Value.cast ml_value : MLWorks.Internal.Value.T -> MLWorks.Internal.Value.T list) ml_value
+
+	  val EnvironTypes.TOP_ENV(EnvironTypes.ENV(v_map, e_map, s_map),
+				   EnvironTypes.FUN_ENV f_map) = top_env
+	  val v_list = NewMap.domain_ordered v_map
+	  val e_list = NewMap.domain_ordered e_map
+	  val s_list = NewMap.domain_ordered s_map
+	  val f_list = NewMap.domain_ordered f_map
+
+	  val (result, new_v_list) = unpick(result, v_list, [])
+	  val (result, new_e_list) = unpick(result, e_list, [])
+	  val (result, new_s_list) = unpick(result, s_list, [])
+	  val (result, new_f_list) = unpick(result, f_list, [])
+	  val _ = case result of
+	    [] => ()
+	  | _ => Crash.impossible"Result has too many values"
+
+	  val (basis, code_env,_) = !the_env
+	  val Basis.BASIS(_, Basis.Funenv.FUNENV funenv, _,
+			  Datatypes.ENV(se, te, ve, ee)) = t
+	  val code_env =
+	    Inter_EnvTypes.add_fun_list
+	    (Inter_EnvTypes.add_str_list
+	     (Inter_EnvTypes.add_exn_list
+	      (Inter_EnvTypes.add_val_list(code_env, new_v_list),
+	       new_e_list),
+	      new_s_list),
+	     new_f_list)
+	  (* Decode the result *)
+	  val _ =
+	    if do_print then
+	      let
+		val Datatypes.VE(_, valenv_map) = ve
+		val _ =
+		  Lists.iterate
+		  (fn (v as Ident.VAR _, _) =>
+		   print_val options (Inter_EnvTypes.lookup_val(v, code_env), v, t,debugger_information)
+		| _ => ())
+		  (NewMap.to_list valenv_map)
+		val _ = Print.print(Str_Print.print_exnenv ee)
+		val _ = Print.print(Str_Print.print_tyenv te)
+		val _ =
+		  Lists.iterate (fn (s, _) => print_str(s, t)) new_s_list
+		val _ =
+		  Lists.iterate
+		  (fn (funid, _) =>
+		   Print.print(implode
+			       ["Functor ",
+				IdentPrint.printFunId funid,
+				" : <sig>\n"]))
+		  (NewMap.to_list funenv)
+		val _ =
+		  case absyn of
+		    Parser.Absyn.SIGNATUREtopdec _ =>
+		      (Print.print(TopdecPrint.topdec_to_string absyn);
+                       Print.print "\n")
+(*
+		  | Parser.Absyn.FUNCTORtopdec _ =>
+		      Print.print(TopdecPrint.topdec_to_string absyn)
+*)
+		  | _ => ()
+	      in
+		()
+	      end
+	    else
+	      ()
+	in
+	  the_env := (augment_cb(basis, new_cb), code_env, current_debug_information_fn())
+	end
+      
+    datatype syntax_result =
+      REQUIRE of string |
+      CODE
+
+    fun topdec options (ts, filename) =
+      let
+        val (basis as TopLevel.CB(p,t,_), code_env, debug_info) = !the_env
+        val (absyn,
+             new_cb as TopLevel.CB(p,
+                                   t as Basis.BASIS(_, _, _, Datatypes.ENV(_, _, venv, _)),
+                                   top_env),
+             lambda_exp,debug_info') =
+          TopLevel.compile_ts(ts, basis, true, debug_info)
+      in
+        (lambda_topdec options (absyn, new_cb, lambda_exp, code_env, filename, true, debug_info');
+         case absyn of
+           Parser.Absyn.REQUIREtopdec s => REQUIRE s
+         | _ => CODE)
+      end
+        handle exn as Interrupt => raise exn
+             | exn as StopLoop => raise exn
+             | exn as Error.Stop (TopLevel.Error.ERROR (_, _, m)) =>
+                 (Print.print ("Compilation stopped on error `" ^ m ^ "'.\n");
+                  raise exn)
+             | exn =>
+                 let
+                   val string =
+                     MLWorks.Internal.Value.exn_name_string
+                     (MLWorks.Internal.Value.exn_name exn)
+                 in
+                   Print.print("Uncaught exception " ^ string ^ "\n");
+                   MLWorks.Internal.Debugger.call_debugger 
+                   ((Ml_Debugger.ml_debugger Ml_Debugger.TERMINAL)
+                    Ml_Debugger.Incremental.sml_initial
+                    (fn () => output(std_out,"Afraid this doesn't work\n")),exn);
+                   raise exn
+                 end
+
+    fun do_line options text =
+      let
+	val done = ref false
+	fun input_fn () =
+	  if !done then ""
+	  else
+	    (done := true; text)
+	val ts = Lexer.mkTokenStream(input_fn, "")
+      in
+	(topdec options (ts, "");())
+        handle 
+        exn as Interrupt => 
+          let
+            val _ = output(std_out,"\nPress return to return to top level loop, anything else to enter debugger\n")
+            val result = MLWorks.IO.input_line std_in
+          in
+            if result = "\n"
+              then ()
+            else raise exn
+          end
+      | exn => ()
+      end
+  
+    fun initialize_for_loop options =
+      (MLWorks.Internal.Runtime.modules := [];
+       TopLevel.Diagnostic.set 0;
+       TopLevel.print_timings := false;
+       TopLevel.print_minor_timings := false;
+       Mod_Rules.print_times := false;
+       Mach_Cg.print_code_size := false;
+       lambda_topdec options (Parser.Absyn.STRDECtopdec(Parser.Absyn.SEQUENCEstrdec [],
+                                               Parser.Absyn.Location.UNKNOWN),
+                     perv_env,
+                     LambdaTypes.APP(LambdaTypes.BUILTIN Pervasives.LOAD_STRING,
+                                     LambdaTypes.SCON(Ident.STRING Io.pervasive_library_name),
+                                     LambdaTypes.Datatypes.NULLTYPE),
+                     Inter_EnvTypes.empty_env, "", false,
+                     current_debug_information_fn());
+       do_line"open FullPervasiveLibrary_";
+       (* This needs to be defined for the debugger *)
+       do_line "val it = ()";
+       
+       let 
+         val (TopLevel.CB(_,basis,_),_,_) = !the_env
+         fun array_print_function (elems,[pf],_,_) =
+           let
+             fun add_commas ([],acc) = rev acc
+               | add_commas ([x],acc) = rev(x :: acc)
+               | add_commas (h::t,acc) = add_commas(t,","::(h::acc))
+             fun select(_,acc,[]) = (rev acc,true)
+               | select(0,acc,h::t) = (rev acc,false)
+               | select(n,acc,h::t) = select(n-1,h::acc,t)
+             val (elems',all) = select(20,[],elems)
+             val printed_elems = implode(add_commas(map pf elems',[]))
+           in
+             "<" ^ (if all then printed_elems else (printed_elems ^ ",...")) ^ ">"
+           end
+           | array_print_function _ = "array"
+          
+       in
+         ()
+       end)
+
+    fun add_to_the_defined_functions(dummy_definition,name,function) =
+      let
+        val _ = do_line dummy_definition
+        val (cb, rb, debug_info) = !the_env
+        val rb =
+          Inter_EnvTypes.add_val(rb, (Ident.VAR(Symbol.find_symbol name),
+                                      MLWorks.Internal.Value.cast function))
+        in
+          the_env := (cb, rb, debug_info)
+      end
+
+    fun add_aux_functions options =
+      let
+        fun internal_print_generated_debug() =
+          let
+            val Debugger_Types.INFO debugger_information = current_debug_information_fn()
+            val names =  map #1 (NewMap.to_list debugger_information)
+          in
+            (output(std_out,"Generated debug information\n");
+             Lists.reducer
+             (fn(name,_) =>
+              let
+                val (ty,is_leaf,annotations) = NewMap.apply debugger_information name
+              in
+                (output(std_out,name ^ " : " ^ Types.print_type options ty );
+                 (if is_leaf 
+                    then output(std_out," leaf\n")
+                  else output(std_out," non-leaf\n"));
+                 Lists.reducer (fn ((x,y),_) =>
+                                output(std_out,"  " ^ Integer.makestring x ^ "  " ^ 
+                                       Debugger_Types.print_backend_annotation y ^ "\n")) 
+                 (annotations,()))
+              end)
+             (names,()))
+          end
+        fun internal_do_completion x =
+          let
+            fun completion (st,basis) =
+              let
+                val s = size st
+                fun parse(from,index,current) =
+                  if index = s
+                    then String.substring(st,from,index - from) :: current
+                  else if String.substring(st,index,1) = "."
+                         then parse(index+1,index+1,String.substring(st,from,index - from) :: current)
+                       else parse(from,index+1,current)
+                val parts = rev(parse(0,0,[]))
+                  
+                fun complete ([],_) = []
+                  | complete ([x],Datatypes.ENV(Datatypes.SE(s_map),_,Datatypes.VE(v_map),Datatypes.VE(e_map))) =
+                    let
+                      val s_list = 
+                        map (fn (Ident.STRID x,_) => Ident.Symbol.symbol_name x) 
+                        (Datatypes.NewMap.to_list (s_map))
+                      val v_list = 
+                        map 
+                        (fn (Ident.VAR x,_) => Ident.Symbol.symbol_name x 
+                      | (Ident.EXCON x,_) => Ident.Symbol.symbol_name x 
+                      | (Ident.CON x,_) => Ident.Symbol.symbol_name x)
+                        (Datatypes.NewMap.to_list (#2 v_map))
+                      val e_list = 
+                        map 
+                        (fn (Ident.VAR x,_) => Ident.Symbol.symbol_name x 
+                      | (Ident.EXCON x,_) => Ident.Symbol.symbol_name x 
+                      | (Ident.CON x,_) => Ident.Symbol.symbol_name x)
+                        (Datatypes.NewMap.to_list (#2 e_map))
+                        
+                      val x_size = size x
+                        
+                      fun select ([],acc) = acc
+                        | select (h::t,acc) = 
+                          if x_size <= size h andalso String.substring(h,0,x_size) = x
+                            then select(t,(st ^ String.substring(h,x_size,size h - x_size))::acc)
+                          else select (t,acc)
+                    in
+                      select
+                      (s_list @@ v_list @@ e_list,[])
+                    end
+                  | complete(h::t,Datatypes.ENV(Datatypes.SE(s_map),_,Datatypes.VE(v_map),Datatypes.VE(e_map))) =
+                    let
+                      val Datatypes.STR(_,env) = 
+                        Datatypes.NewMap.apply 
+                        s_map 
+                        (Ident.STRID(Ident.Symbol.find_symbol h))
+                    in
+                      complete(t,env)
+                    end
+                  fun remove_duplicates ([],acc) =acc
+                    | remove_duplicates(h::t,acc) =
+                      if Lists.member(h,t)
+                        then remove_duplicates(t,acc)
+                      else remove_duplicates(t,h::acc)
+              in
+                remove_duplicates
+                (complete(parts,Basis.env_of_context(Basis.basis_to_context basis)),[])
+                   handle Datatypes.NewMap.Undefined => []
+              end
+          in
+            (output(std_out,"\n");
+             map (fn x => output(std_out,x ^ "\n")) (completion (x,current_type_basis_fn())) ; 
+             ())
+          end
+        fun internal_show_compiler_frames_on () = Ml_Debugger.show_compiler_frames := true
+        fun internal_show_compiler_frames_off () = Ml_Debugger.show_compiler_frames := false
+        fun internal_diag_on() = TopLevel.Diagnostic.set 2
+        fun internal_diag_off() = TopLevel.Diagnostic.set 0
+        fun internal_opt_lambda_on() = TopLevel.show_opt_lambda := true
+        fun internal_opt_lambda_off() = TopLevel.show_opt_lambda := false
+        fun internal_lambda_on() = show_lambda := true
+        fun internal_lambda_off() = show_lambda := false
+        fun internal_opt_mir_on() = show_mir := true
+        fun internal_opt_mir_off() = show_mir := false
+        fun internal_id_class_on() = TopLevel.show_id_class := true
+        fun internal_id_class_off() = TopLevel.show_id_class := false
+        fun internal_set_debug_level x = (debug_level := x ;
+                                          TopLevel.set_debug_level x)
+        fun internal_set_profile x =
+          TopLevel.generate_profiling := x
+
+      in          
+        add_to_the_defined_functions("val do_completion = fn (x:string) => ()",
+                                     "do_completion",
+                                     internal_do_completion);
+        add_to_the_defined_functions("val opt_lambda_on = fn (x : unit) => ()",
+                                     "opt_lambda_on",
+					 internal_opt_lambda_on);
+        add_to_the_defined_functions("val lambda_on = fn (x : unit) => ()",
+                                     "lambda_on",
+					 internal_lambda_on);
+        add_to_the_defined_functions("val set_profile = fn (x : bool) => ()",
+                                     "set_profile",
+                                     internal_set_profile);
+        add_to_the_defined_functions("val clear_debug_information = fn () => ()",
+                                     "clear_debug_information",
+                                     internal_clear_debug_information);
+        add_to_the_defined_functions("val opt_lambda_off = fn (x : unit) => ()",
+                                     "opt_lambda_off",
+                                     internal_opt_lambda_off);
+        add_to_the_defined_functions("val lambda_off = fn (x : unit) => ()",
+                                     "lambda_off",
+                                     internal_lambda_off);
+        add_to_the_defined_functions("val opt_mir_on = fn (x : unit) => ()",
+                                     "opt_mir_on",
+                                     internal_opt_mir_on);
+        add_to_the_defined_functions("val opt_mir_off = fn (x : unit) => ()",
+                                     "opt_mir_off",
+                                     internal_opt_mir_off);
+        add_to_the_defined_functions("val diag_on = fn (x : unit) => ()",
+                                     "diag_on",
+                                     internal_diag_on);
+        add_to_the_defined_functions("val diag_off = fn (x : unit) => ()",
+                                     "diag_off",
+                                     internal_diag_off);
+        add_to_the_defined_functions("val id_class_on = fn (x : unit) => ()",
+                                     "id_class_on",
+                                     internal_id_class_on);
+        add_to_the_defined_functions("val id_class_off = fn (x : unit) => ()",
+                                     "id_class_off",
+                                     internal_id_class_off);
+        add_to_the_defined_functions("val set_debug_level = fn (x : int) => ()",
+                                     "set_debug_level",
+                                     internal_set_debug_level);
+        add_to_the_defined_functions("val show_compiler_frames_arguments_on = fn () => ()",
+                                     "show_compiler_frames_arguments_on",
+                                     internal_show_compiler_frames_on);
+        add_to_the_defined_functions("val show_compiler_frames_arguments_off = fn () => ()",
+					 "show_compiler_frames_arguments_off",
+					 internal_show_compiler_frames_off);
+        add_to_the_defined_functions("val print_generated_debug = fn () => ()",
+                                     "print_generated_debug",
+                                     internal_print_generated_debug)
+      end
+
+    (* Add a value to the environment *)
+    fun define_value options (name,ty,value) =
+      let
+        val (TopLevel.CB(p, basis as Basis.BASIS(a,b,c,
+                                        Datatypes.ENV(d,e,venv,f)),
+                         top_env), 
+             rb, debug_info) = !the_env
+        val ident = Ident.VAR(Symbol.find_symbol name)
+        val rb' =
+          Inter_EnvTypes.add_val(rb, (ident,value))
+        val venv' =
+          Valenv.add_to_ve(ident,Datatypes.UNBOUND_SCHEME ty,venv)
+        val basis' =
+          Basis.BASIS(a,b,c,Datatypes.ENV(d,e,venv',f))
+        val _ = 
+          the_env := (TopLevel.CB(p,basis',top_env), 
+                      rb', debug_info)
+      in
+        print_val options (value,ident,basis',debug_info)
+      end
+
+    (*
+       Install the debugger for the first time 
+       Note that the entire state is contained in the_env reference - we may start other
+       versions of the interpreter by saving this away, and restarting later with the
+       same state 
+    *)
+
+    fun initialize_debugger execute = ()
+
+  end
+@
+
+
+1.25.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.25  1992/11/26  16:20:22  daveb
+THIS FILE IS NO LONGER USED!!!
+
+@
+
+
+1.24
+log
+@Changes for windowing listener
+@
+text
+@d4 3
+d83 2
+d347 1
+a347 1
+    fun print_val(ml_value, valid,
+d361 1
+a361 1
+	(Print.print("val " ^ IdentPrint.printValId valid ^ " = ");
+d364 1
+a364 1
+	 Print.print(" : " ^ Types.print_type the_type ^ "\n"))
+d372 2
+a373 2
+    fun lambda_topdec(_, _, LambdaTypes.STRUCT [], _, _, _,_) = ()
+      | lambda_topdec(absyn, TopLevel.CB(p, t, top_env), lambda_exp, code_env,
+d452 1
+a452 1
+		   print_val(Inter_EnvTypes.lookup_val(v, code_env), v, t,debugger_information)
+d490 1
+a490 1
+    fun topdec(ts, filename) =
+d500 1
+a500 1
+        (lambda_topdec(absyn, new_cb, lambda_exp, code_env, filename, true, debug_info');
+d524 1
+a524 1
+    fun do_line text =
+d533 1
+a533 1
+	(topdec(ts, "");())
+d547 1
+a547 1
+    fun initialize_for_loop () =
+d554 1
+a554 1
+       lambda_topdec(Parser.Absyn.STRDECtopdec(Parser.Absyn.SEQUENCEstrdec [],
+d598 1
+a598 1
+    fun add_aux_functions () =
+d611 1
+a611 1
+                (output(std_out,name ^ " : " ^ Types.print_type ty );
+d761 1
+a761 1
+    fun define_value(name,ty,value) =
+d778 1
+a778 1
+        print_val(value,ident,basis',debug_info)
+@
+
+
+1.23
+log
+@Tynames now have a slot recording their definition point
+@
+text
+@d4 3
+d513 1
+a513 1
+                   (Ml_Debugger.ml_debugger 
+@
+
+
+1.22
+log
+@Made compatible with the new shell
+@
+text
+@d4 3
+a690 2
+        fun internal_eq_info_on() = TopLevel.show_eq_info := true
+        fun internal_eq_info_off() = TopLevel.show_eq_info := false
+a731 6
+        add_to_the_defined_functions("val eq_info_on = fn (x : unit) => ()",
+                                     "eq_info_on",
+                                     internal_eq_info_on);
+        add_to_the_defined_functions("val eq_info_off = fn (x : unit) => ()",
+                                     "eq_info_off",
+                                     internal_eq_info_off);
+@
+
+
+1.21
+log
+@eg_info_{on,off}() controls printing of equality attribute of tycons.
+id_class_{on,off}() controls printing of id classes (VAR, CON or EXCON).
+@
+text
+@d4 4
+d148 1
+a148 1
+    Mir_Cg.MirTypes.Debugger_Types = TopLevel.Debugger_Types
+d337 2
+a338 1
+		  basis as Basis.BASIS(_, _, _, Datatypes.ENV(_, _, venv, _))) =
+d351 2
+a352 4
+	 Print.print(Ml_Debugger.toplevel_value_printer
+                     (current_parser_basis_fn,current_type_basis_fn,
+		      current_debug_information_fn)
+                     (ml_value, the_type));
+d441 1
+a441 1
+		   print_val(Inter_EnvTypes.lookup_val(v, code_env), v, t)
+d506 4
+a509 1
+                   MLWorks.Internal.Debugger.call_debugger exn;
+a572 4
+(*         Ml_Debugger.define_a_print_method(basis,"MLWorks.Array.array", array_print_function);*)
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Internal.Debugger.Stackframe", fn _ => "stackframe");
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.IO.instream", fn _ => "instream");
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.IO.outstream", fn _ => "outstream");
+a693 2
+        fun internal_define_print_method(name,function) = 
+          Ml_Debugger.define_a_print_method(current_type_basis_fn(),name,function)
+d696 1
+a696 6
+        val internal_trace = Ml_Debugger.trace current_debug_information_fn
+        val internal_untrace = Ml_Debugger.untrace
+        val internal_untrace_all = Ml_Debugger.untrace_all
+        val internal_breakpoint = Ml_Debugger.breakpoint current_debug_information_fn
+        val internal_unbreakpoint = Ml_Debugger.unbreakpoint
+        val internal_unbreakpoint_all = Ml_Debugger.unbreakpoint_all
+a745 18
+        add_to_the_defined_functions("val trace = fn (x : 'a -> 'b) => true",
+                                     "trace",
+                                     internal_trace);
+        add_to_the_defined_functions("val untrace = fn (x : 'a -> 'b) => true",
+                                     "untrace",
+                                     internal_untrace);
+        add_to_the_defined_functions("val untrace_all = fn () => ()",
+                                     "untrace_all",
+                                     internal_untrace_all);
+        add_to_the_defined_functions("val breakpoint = fn (x : 'a -> 'b) => true",
+                                     "breakpoint",
+                                     internal_breakpoint);
+        add_to_the_defined_functions("val unbreakpoint = fn (x : 'a -> 'b) => true",
+                                     "unbreakpoint",
+                                     internal_unbreakpoint);
+        add_to_the_defined_functions("val unbreakpoint_all = fn () => ()",
+                                     "unbreakpoint_all",
+                                     internal_unbreakpoint_all);
+d754 1
+a754 9
+                                     internal_print_generated_debug);
+        add_to_the_defined_functions("val define_print_method = \
+                                     \fn _ : string * (MLWorks.Internal.Value.T list * \
+                 	             \(MLWorks.Internal.Value.T -> string) list * \
+                                     \(MLWorks.Internal.Value.T -> MLWorks.Internal.Value.T list) *\
+                                     \(MLWorks.Internal.Value.T -> bool * int) \
+                                     \  -> string) => true",
+                                     "define_print_method",
+                                     internal_define_print_method)
+d775 1
+a775 1
+        print_val(value,ident,basis')
+d785 1
+a785 7
+    fun initialize_debugger execute = 
+      MLWorks.Internal.Debugger.install_debugger 
+      (Ml_Debugger.ml_debugger 
+       define_value
+       current_debug_information_fn
+       (current_parser_basis_fn,current_type_basis_fn)
+       execute)
+@
+
+
+1.20
+log
+@Removed Lexer from toplevel signature
+@
+text
+@d4 3
+d686 4
+d736 12
+@
+
+
+1.19
+log
+@Created a type `information' which wraps up the debugger information
+needed in so many parts of the compiler.
+THIS FILE WILL SHORTLY BE SUPERCEEDED.
+@
+text
+@d4 5
+d165 1
+a165 1
+    structure Lexer = TopLevel.Lexer
+@
+
+
+1.18
+log
+@Added error wrappers around code generation stages.
+@
+text
+@d4 3
+d179 1
+a179 2
+      NewMap.merge
+      (fn (x,y) => y)
+d207 1
+a207 1
+          Inter_EnvTypes.initial_env,
+d239 4
+a242 4
+      if NewMap.exists
+        (fn _ => true)
+        total_initial_debugger_information
+        then 
+d244 5
+a248 2
+      else 
+        output(std_out,"There was no debugging information in either the builtin_library or the pervasive_library\n")
+a249 1
+
+d535 1
+a535 1
+                     Inter_EnvTypes.initial_env, "", false,
+d581 1
+a581 1
+            val debugger_information = current_debug_information_fn()
+d765 1
+a765 1
+    fun add_a_definition_of_a_value(name,ty,value) =
+d795 1
+a795 1
+       add_a_definition_of_a_value
+@
+
+
+1.17
+log
+@Needed to set give debug_information flag to mir_cg and mach_cg
+@
+text
+@d4 3
+d167 2
+d360 3
+a362 2
+	    Mir_Cg.mir_cg(opt_lambda_exp, top_env, filename,
+			  debug_info, ! TopLevel.generate_debug_information)
+d374 5
+a378 6
+	      Mach_Cg.mach_cg(the_optimised_code,
+			      (#gc assign,
+			       #non_gc assign,
+			       #fp assign),
+                              ! TopLevel.generate_debug_information,
+                              debug_info')
+d668 4
+a671 2
+        fun internal_opt_lambda_on() = show_lambda := true
+        fun internal_opt_lambda_off() = show_lambda := false
+d693 3
+d705 3
+@
+
+
+1.16
+log
+@Added the function to do completion
+@
+text
+@d4 3
+d356 1
+a356 1
+			  debug_info, true)
+d372 1
+a372 1
+                              true,
+@
+
+
+1.15
+log
+@Installed central error reporting mechanism.
+@
+text
+@d4 3
+d589 67
+d677 3
+@
+
+
+1.14
+log
+@Added array print function as well as function to set the compile-with-profiling-on flag
+@
+text
+@d4 3
+a61 1
+require "../typechecker/errors";
+d77 1
+a92 1
+  structure Errors : ERRORS
+d108 1
+d152 1
+d159 1
+a159 1
+      GetTypeInformation.get_type_information"__pervasive_library"
+d162 1
+a162 1
+      GetTypeInformation.get_type_information"__builtin_library"
+d175 2
+a176 2
+      val builtin_library = find "__builtin_library"
+      val pervasive_library = find "__pervasive_library"
+d298 7
+a304 6
+	  | fix_up_elements(acc, MachTypes.EXTERNAL(i, "__builtin_library") :: rest) =
+            fix_up_elements((i, builtin_library) :: acc, rest)
+	  | fix_up_elements(acc, MachTypes.EXTERNAL(i, "__pervasive_library") :: rest) =
+            fix_up_elements((i, pervasive_library) :: acc, rest)
+          | fix_up_elements(_, MachTypes.EXTERNAL(_, name) :: _) =
+            Crash.impossible ("Cannot fix up extenal reference to " ^ name ^ ".")
+d454 29
+a482 30
+      (let
+	 val (basis as TopLevel.CB(p,t,_), code_env, debug_info) = !the_env
+	 val (absyn, new_cb as
+	      TopLevel.CB(p, t as Basis.BASIS(_, _, _,
+					      Datatypes.ENV(_, _, venv, _)),
+			  top_env), lambda_exp,debug_info') =
+	   TopLevel.compile_ts(ts, basis, true, debug_info)
+       in
+	 (lambda_topdec(absyn, new_cb, lambda_exp, code_env, filename, true, debug_info');
+	  case absyn of
+	    Parser.Absyn.REQUIREtopdec s => REQUIRE s
+	  | _ => CODE)
+       end) handle (* Don't call the debugger for internal error messages *)
+         exn as Interrupt => raise exn
+       | exn as Errors.Stop_compilation => raise exn
+       | exn as TopLevel.STOP => raise exn
+       | exn as Mod_Rules.Check_topdec _ => raise exn
+       | exn as Parser.ParseError _ => raise exn
+       | exn as Lexer.LexError _ => raise exn
+       | exn as StopLoop => raise exn
+       | exn =>
+           let
+             val string =
+               MLWorks.Internal.Value.exn_name_string
+               (MLWorks.Internal.Value.exn_name exn)
+           in
+             Print.print("Uncaught exception " ^ string ^ "\n");
+             MLWorks.Internal.Debugger.call_debugger exn;
+             raise exn
+           end
+d515 1
+a515 1
+                                               Parser.Absyn.dummy_marks),
+d518 1
+a518 2
+                                     LambdaTypes.SCON(Ident.STRING
+                                                      "__pervasive_library"),
+d528 1
+a528 1
+         fun array_print_function (elems,[pf]) =
+d544 1
+a544 1
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Array.array", array_print_function);
+d663 4
+a666 1
+                                     \(MLWorks.Internal.Value.T -> string) list  -> string) => true",
+@
+
+
+1.13
+log
+@Corrected some references to the old MLWorks structure.
+(In strings!)
+@
+text
+@d4 4
+d214 6
+d523 17
+a539 1
+       let val (TopLevel.CB(_,basis,_),_,_) = !the_env
+d541 1
+a541 1
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Array.array", fn _ => "array");
+d595 2
+a596 1
+
+d607 6
+@
+
+
+1.12
+log
+@In add_a_definition_of_a_value need to add to the basis passes to the print function
+@
+text
+@d4 3
+d625 3
+a627 1
+        add_to_the_defined_functions("val define_print_method = fn _ : string * (MLWorks.System.Unsafe.Value.T list * (MLWorks.System.Unsafe.Value.T -> string) list  -> string) => true",
+@
+
+
+1.11
+log
+@Rationalisation of the MLWorks structure.
+@
+text
+@d4 3
+d639 5
+a643 1
+        val _ = print_val(value,ident,basis)
+d645 1
+a645 4
+        the_env := (TopLevel.CB(p, Basis.BASIS(a,b,c,
+                                               Datatypes.ENV(d,e,venv',f)),
+                                top_env), 
+                    rb', debug_info)
+@
+
+
+1.10
+log
+@Changed MLWorks.Io.instream to MLWorks.IO.instream
+@
+text
+@d4 3
+d157 7
+a163 2
+    val builtin_library   = MLWorks.System.Unsafe.Int.ml_require "__builtin_library"
+    val pervasive_library = MLWorks.System.Unsafe.Int.ml_require "__pervasive_library"
+d256 1
+a256 1
+              val r = MLWorks.System.Unsafe.Value.string_to_real s
+d258 1
+a258 1
+              fix_up_elements((i, MLWorks.System.Unsafe.Value.cast r) :: acc, rest)
+d261 1
+a261 1
+	    fix_up_elements((i, MLWorks.System.Unsafe.Value.cast s) :: acc, rest)
+d277 1
+a277 1
+            fix_up_elements(MLWorks.System.Unsafe.Int.load_wordset i_j_s_list @@ acc, rest)
+d355 5
+a359 5
+	  (* Generate runnable code *)
+	  val ml_value =
+	    MLWorks.System.Unsafe.Value.list_to_tuple (map #2 fixed_up_code)
+	  val result = MLWorks.System.Unsafe.Int.call_ml_value ml_value
+	  (* And run it *)
+d456 2
+a457 2
+               MLWorks.System.Unsafe.Value.exn_name_string
+               (MLWorks.System.Unsafe.Value.exn_name exn)
+d460 1
+a460 1
+             MLWorks.Debugger.call_debugger exn;
+d488 1
+a488 1
+      (MLWorks.System.Unsafe.Int.discard_modules ();
+d510 1
+a510 1
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Debugger.Stackframe", fn _ => "stackframe");
+d522 1
+a522 1
+                                      MLWorks.System.Unsafe.Value.cast function))
+d652 1
+a652 1
+      MLWorks.Debugger.install_debugger 
+@
+
+
+1.9
+log
+@Removed some redundant structures and sharing
+@
+text
+@d4 3
+d503 2
+a504 2
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Io.instream", fn _ => "instream");
+         Ml_Debugger.define_a_print_method(basis,"MLWorks.Io.outstream", fn _ => "outstream");
+@
+
+
+1.8
+log
+@Fixed a few bugs and added binding of frame arguments to it
+@
+text
+@d4 3
+a35 1
+require "../basics/ident";
+a67 1
+  structure Ident : IDENT
+d100 7
+a106 3
+  sharing Inter_EnvTypes.NewMap = EnvironTypes.NewMap
+  sharing Ident = Inter_EnvTypes.Ident = LambdaPrint.LambdaTypes.Ident = IdentPrint.Ident 
+    = Ml_Debugger.Datatypes.Ident = Str_Print.Ident
+d109 6
+a114 3
+  sharing Basis.Tyvarenv.Datatypes = Valenv.Datatypes = Types.Datatypes = Mach_Cg.Datatypes
+    = Str_Print.Datatypes = Ml_Debugger.Datatypes = LambdaPrint.LambdaTypes.Datatypes
+    = GetTypeInformation.Debugger_Types.Datatypes
+d117 2
+a118 2
+  sharing Mir_Cg.LambdaTypes = LambdaOptimiser.LambdaTypes = LambdaPrint.LambdaTypes 
+    = TopLevel.LambdaTypes
+d120 1
+a120 1
+  sharing MirOptimiser.Map = Mach_Cg.Map
+d126 2
+a127 1
+    structure Datatypes = Ml_Debugger.Datatypes
+d130 2
+d133 1
+a133 1
+    structure NewMap = EnvironTypes.NewMap
+d145 1
+a145 1
+      GetTypeInformation.Debugger_Types.Map.merge
+d195 1
+a195 1
+      if GetTypeInformation.Debugger_Types.Map.exists
+d385 1
+a385 1
+		  (Datatypes.NewMap.to_list valenv_map)
+d397 1
+a397 1
+		  (Datatypes.NewMap.to_list funenv)
+d521 1
+a521 1
+            val names =  map #1 (Mir_Cg.Debugger_Types.Map.to_list debugger_information)
+d527 1
+a527 1
+                val (ty,is_leaf,annotations) = Mir_Cg.Debugger_Types.Map.apply debugger_information name
+d535 1
+a535 1
+                                       Mir_Cg.Debugger_Types.print_backend_annotation y ^ "\n")) 
+@
+
+
+1.7
+log
+@Corrected the use of ml_require and modules_discard.
+@
+text
+@d4 3
+d103 1
+a112 1
+  sharing Mir_Cg.Debugger_Types = GetTypeInformation.Debugger_Types
+d267 1
+a267 2
+		  basis as Basis.BASIS(_, _, _, Datatypes.ENV(_, _, venv, _)),
+                  ee) =
+d372 1
+a372 1
+		   print_val(Inter_EnvTypes.lookup_val(v, code_env), v, t,ee)
+d416 2
+a417 2
+			  top_env), lambda_exp) =
+	   TopLevel.compile_ts(ts, basis)
+d419 1
+a419 1
+	 (lambda_topdec(absyn, new_cb, lambda_exp, code_env, filename, true, debug_info);
+d482 2
+d518 1
+a518 1
+                (output(std_out,name ^ " : " ^ Types.print_type ty ^ "\n");
+d539 2
+d542 1
+a542 1
+        val internal_trace = Ml_Debugger.trace
+d545 1
+a545 1
+        val internal_breakpoint = Ml_Debugger.breakpoint
+d596 4
+a599 1
+                                     internal_print_generated_debug)
+d602 20
+d632 1
+@
+
+
+1.6
+log
+@The built-in library is only required once from the runtime system
+so that the module table can be discarded.
+@
+text
+@d4 4
+d137 2
+a138 1
+    val builtin_library = MLWorks.System.Unsafe.Int.ml_require "__builtin_library"
+d255 2
+d464 2
+a465 1
+      (TopLevel.Diagnostic.set 0;
+a479 1
+       MLWorks.System.Unsafe.Int.discard_modules ();
+@
+
+
+1.5
+log
+@Added details about leafness to the debug information
+@
+text
+@d4 3
+d133 2
+d248 4
+a251 6
+	  | fix_up_elements(acc, MachTypes.EXTERNAL(i, name) :: rest) =
+	    let
+	      val ml_value = MLWorks.System.Unsafe.Int.ml_require name
+	    in
+	      fix_up_elements((i, ml_value) :: acc, rest)
+	    end
+d472 1
+@
+
+
+1.4
+log
+@> Added a loop inside the debugger
+@
+text
+@d4 3
+a127 7
+    val _ = 
+      if GetTypeInformation.Debugger_Types.Map.exists
+        (fn _ => true)
+        total_initial_debugger_information
+        then ()
+      else output(std_out,"There was no debugging information in either the builtin_library or the pervasive_library\n")
+
+d133 1
+a142 8
+    val empty_debug_info =
+      (Mir_Cg.Debugger_Types.Map.empty(fn (x,y) => 
+                                       if x=y
+                                         then Mir_Cg.Debugger_Types.Map.EQUAL
+                                       else if String.< (x,y) 
+                                              then Mir_Cg.Debugger_Types.Map.LESS
+                                            else Mir_Cg.Debugger_Types.Map.GREATER))
+
+d169 11
+d454 1
+a454 2
+      (TopLevel.set_debug_level 1;
+       TopLevel.Diagnostic.set 0;
+d467 1
+a467 1
+                     empty_debug_info);
+a491 10
+        fun internal_show_compiler_frames_on () = Ml_Debugger.show_compiler_frames := true
+        fun internal_show_compiler_frames_off () = Ml_Debugger.show_compiler_frames := false
+        fun internal_diag_on() = TopLevel.Diagnostic.set 2
+        fun internal_diag_off() = TopLevel.Diagnostic.set 0
+        fun internal_opt_lambda_on() = show_lambda := true
+        fun internal_opt_lambda_off() = show_lambda := false
+        fun internal_opt_mir_on() = show_mir := true
+        fun internal_opt_mir_off() = show_mir := false
+        fun internal_set_debug_level x = (debug_level := x ;
+                                          TopLevel.set_debug_level x)
+d494 1
+a494 1
+            val debugger_information = #3 (! the_env)
+d501 1
+a501 1
+                val (ty,annotations) = Mir_Cg.Debugger_Types.Map.apply debugger_information name
+d504 3
+d514 10
+d568 1
+a568 1
+        add_to_the_defined_functions("val unbreakpoint_all = fn (x : 'a -> 'b) => true",
+@
+
+
+1.3
+log
+@Fixed a bug whence debug_information was lost if making or useing
+@
+text
+@d4 3
+d92 1
+d99 1
+d114 1
+a114 1
+    val (pb, tb, _, cb) =
+d117 15
+d157 1
+a157 3
+          empty_debug_info :
+          (string,Ml_Debugger.Datatypes.Type * 
+           (int * Mir_Cg.Debugger_Types.Backend_Annotation) list) Mir_Cg.Debugger_Types.Map.T)
+d569 2
+a570 2
+        add_to_the_defined_functions("val show_compiler_frames_on = fn () => ()",
+                                     "show_compiler_frames_on",
+d572 2
+a573 2
+        add_to_the_defined_functions("val show_compiler_frames_off = fn () => ()",
+					 "show_compiler_frames_off",
+d587 1
+a587 1
+    fun initialize_debugger () = 
+d591 3
+a593 1
+       (current_parser_basis_fn,current_type_basis_fn))
+@
+
+
+1.2
+log
+@Added log & copyright message
+@
+text
+@d4 2
+d7 1
+d373 1
+a373 1
+	  the_env := (augment_cb(basis, new_cb), code_env, debugger_information)
+d507 1
+d510 1
+d539 3
+d548 3
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 9
+@

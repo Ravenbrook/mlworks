@@ -1,0 +1,84 @@
+head	1.1;
+access;
+symbols
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	91.06.20.13.01.01;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.06.20.13.01.01;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Accurate reading of timestamps of files
+for RCS
+@
+
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+ * readtime.c
+ * Read the time stamp of a file
+ * $Log$
+ * Copyright (c) 1991 Harlequin Ltd.
+ * 
+ */
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <stdio.h>
+#include <errno.h>
+
+int main(argc, argv)
+int argc;
+char *argv[];
+{
+struct stat buf;
+int retc;
+if (argc != 2) {
+  fprintf(stderr, "Wrong number of parameters, usage readtime <file>\n");
+  exit(1);
+}
+retc = stat(argv[1], &buf);
+if (retc == 0) {
+  printf("%s", asctime(gmtime(&buf.st_mtime)));
+  exit(0);
+} else {
+  perror(argv[0]);
+  exit(1);
+};
+}
+
+/* End readtime.c */
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d4 1
+a4 4
+ * $Log: readtime.c,v $
+ * Revision 1.1  1991/06/20  13:01:01  jont
+ * Initial revision
+ *
+@

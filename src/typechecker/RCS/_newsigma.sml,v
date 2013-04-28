@@ -1,0 +1,232 @@
+head	1.1;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.1
+date	92.04.21.17.27.06;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.04.21.17.27.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@New version of sigma using hashed sets as the underlying implementation
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@(* _newsigma.sml the functor *)
+(*
+$Log$
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/print";
+require "../typechecker/ty_debug";
+require "../typechecker/datatypes";
+require "../typechecker/newsigma";
+require "../typechecker/strnames";
+require "../typechecker/types";
+require "../typechecker/nameset";
+require "../typechecker/environment";
+require "../typechecker/scheme";
+
+functor NewSigma(
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+  structure Datatypes : DATATYPES
+  structure Strnames : STRNAMES
+  structure Types : TYPES
+  structure Nameset : NAMESET
+  structure Env : ENVIRONMENT
+  structure Scheme : TYPESCHEME
+  structure Debug :
+    sig
+      val set_debug_level : int -> unit
+      val debug_level : unit -> int
+    end
+  sharing Datatypes = Nameset.Datatypes = Env.Datatypes 
+    = Scheme.Datatypes = Strnames.Datatypes = Types.Datatypes)
+  : NEWSIGMA =
+  struct
+
+    structure Datatypes = Datatypes
+    structure Nameset = Nameset
+
+    val do_debug = Ty_Debug.do_debug
+    open Datatypes
+
+    (****
+     Datatype declaration for the compound semantic object Sig and 
+     the operations on it.
+     ***)
+
+    (****
+     new_names_of returns all flexible names in a structure.  nameset
+     is the accumalator.
+     ****)
+
+    fun new_names_of (STR (name,env),nameset) = 
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Sigma.new_names_of " ^ 
+		       Strnames.string_strname name);
+	  Print.print ("\n"))
+       else ();
+	 if (Env.empty_envp env) then
+	   if (Strnames.uninstantiated name) then
+	     Nameset.add_strname (name,nameset)
+	   else nameset
+	 else
+	   if (Strnames.uninstantiated name) then
+	     Nameset.add_strname (name,new_names_of_env (env,nameset))
+	   else
+	     new_names_of_env (env,nameset))
+	   
+    and new_names_of_env (ENV (SE amap',TE amap,
+			       VE (_,amap''),_),nameset) =
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Sigma.gather_names");
+	  Print.print ("\n"))
+       else ();
+      let 
+	val str_list = Mapping.range amap'
+	val tystr_list = Mapping.range amap
+	val scheme_list = Mapping.range amap''
+	fun gather_tynames ([],nameset) = nameset
+	  | gather_tynames ((TYSTR (tyfun,VE (_,amap)))::tystrs,
+			    nameset) = 
+	    let
+	      val schemelist = Mapping.range amap
+	      val nameset' = gather_ve_tynames (schemelist,nameset)
+	    in
+		if Types.has_a_new_name (tyfun) 
+		    then
+			let val nameset'' = 
+			    Nameset.add_tyname (Types.name (tyfun),nameset')
+			in
+			    gather_tynames (tystrs,nameset'')
+			end
+		else
+		    gather_tynames (tystrs,nameset')
+	    end
+	and gather_strnames ([],nameset) = nameset
+	  | gather_strnames (str::strs,nameset) =
+	    let
+(*
+	      val nameset' = Nameset.union (nameset,new_names_of (str,nameset))
+*)
+	      val nameset' = new_names_of (str,nameset)
+	    in
+	      gather_strnames (strs,nameset')
+	    end
+	and gather_ve_tynames ([],nameset) = nameset
+	  | gather_ve_tynames (scheme::schemes,nameset) = 
+	    let
+	      val nameset' =
+		Nameset.tynames_in_nameset (Scheme.gather_tynames (scheme),
+					    nameset)
+	    in
+	      gather_ve_tynames (schemes,nameset')
+	    end
+	val new_nameset = gather_tynames (tystr_list,nameset)
+	val new_nameset' = gather_strnames (str_list,new_nameset)
+      in
+	gather_ve_tynames (scheme_list,new_nameset')
+      end)
+
+    (****
+     names_of returns both flexible and rigid names of a structure. 
+     nameset is the accumulator.
+     ****)
+
+    fun names_of (STR (name,env),nameset) = 
+      (if do_debug andalso Debug.debug_level ()> 10 then 
+	 (Print.print ("Sigma.names_of");
+	  Print.print ("\n"))
+       else ();
+	 if (Env.empty_envp env) then
+	   Nameset.add_strname (name,nameset)
+	 else
+	   Nameset.add_strname (name,names_of_env (env,nameset)))
+	   
+    and names_of_env (ENV (SE amap',TE amap,
+			       VE (_,amap''),_),nameset) =
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Sigma.gather_old_names");
+	  Print.print ("\n"))
+       else ();
+      let 
+	val str_list = Mapping.range amap'
+	val tystr_list = Mapping.range amap
+	val scheme_list = Mapping.range amap''
+	fun gather_tynames ([],nameset) = nameset
+	  | gather_tynames ((TYSTR (tyfun,_))::tystrs,
+			    nameset) = 
+	    if Types.has_a_name (tyfun) 
+	      then
+		let 
+		  val nameset' = 
+		    Nameset.add_tyname (Types.name (tyfun),nameset)
+		in
+		  gather_tynames (tystrs,nameset')
+		end
+	    else
+	      gather_tynames (tystrs,nameset)
+	fun gather_strnames ([],nameset) = nameset
+	  | gather_strnames (str::strs,nameset) =
+	    let 
+	      val nameset' = Nameset.union (nameset,names_of (str,nameset))
+	    in
+	      gather_strnames (strs,nameset')
+	    end
+	fun gather_ve_tynames ([],nameset) = nameset
+	  | gather_ve_tynames (scheme::schemes,nameset) = 
+	    let
+	      val nameset' = 
+		Nameset.tynames_in_nameset (Scheme.gather_tynames (scheme),
+					    nameset)
+	    in
+	      gather_ve_tynames (schemes,nameset')
+	    end
+	val new_nameset = gather_tynames (tystr_list,nameset)
+	val new_nameset' = gather_strnames (str_list,new_nameset)
+      in
+	gather_ve_tynames (scheme_list,new_nameset')
+      end)
+	
+  end;
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: _newsigma.sml,v $
+Revision 1.1  1992/04/21  17:27:06  jont
+Initial revision
+
+@

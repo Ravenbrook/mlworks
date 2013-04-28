@@ -1,0 +1,186 @@
+head	1.1;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.10.26.17.25.00;	author matthew;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.07.19;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New demo
+@
+
+
+1.1
+log
+@new unit
+New demo
+@
+text
+@fun conv sl =
+  let
+    fun scan1 (s,i,acc) =
+      let
+        val ss = size s
+        fun aux (j,acc) =
+          if j = ss then acc
+          else 
+            if String.substring (s,j,1) = "*"
+              then aux (j+1,(j,i)::acc)
+            else aux (j+1,acc)
+      in
+        aux (0,acc)
+      end
+    fun scan2 ([],i,acc) = rev acc
+      | scan2 (s::rest,i,acc) =
+        scan2 (rest,i+1,scan1 (s,i,acc))
+  in
+    scan2 (sl,0,[])
+  end
+
+val crash =
+conv
+["                                  *       ",
+ "                                  * *     ",
+ "*                     * *         **      ",
+ "* *                   **                  ",
+ "**      * *            *            ***   ",
+ "        **                          *     ",
+ "  ***    *             **            *    ",
+ "  *                    * *   *            ",
+ "   *     **            *    **            ",
+ "         * *   *            * *           ",
+ "         *    **    **                    ",
+ "              * *   * *                   ",
+ "                    *                     ",
+ "                                       ** ",
+ "                                       * *",
+ "                                       *  ",
+ "                                          ",
+ "                                          ",
+ "                            ***           ",
+ "                            *             ",
+ "                             *            "]
+
+
+val small_spaceship =
+conv
+["**** ",
+ "*   *",
+ "*    ",
+ " *   "]
+
+val medium_spaceship=
+
+conv
+["***** ",
+ "*    *",
+ "*     ",
+ " *    "]
+
+val wide_ship =
+conv
+["        *       ",
+ " ** *** ***     ",
+ " **    *  ** ** ",
+ "*  * **   *  ** ",
+ "            *  *"]
+
+val stuff = 
+conv
+[" ****        ",
+ "*   *        ",
+ "    *        ",
+ "   *         ",
+ "         ****",
+ "        *   *",
+ "            *",
+ "    **  *  * ",
+ "    ***      ",
+ "    **  *  * ",
+ "            *",
+ "        *   *",
+ "         ****",
+ "   *         ",
+ "    *        ",
+ "*   *        ",
+ " ****        "]
+
+val rabbit =
+conv
+["*   ***",
+ "***  * ",
+ " *     "]
+
+val big_glider =
+conv
+["    *  *          ",
+"    *** *         ",
+"   **             ",
+"  * **   *        ",
+"****   ** *       ",
+" * *   ****       ",
+" *       *        ",
+"*   **    * **    ",
+" *  **      * *   ",
+"   * **         * ",
+"    ** *     *  * ",
+"               ** ",
+"       **        *",
+"       *  *    * *",
+"        *       **",
+"           * *    ",
+"         ***  *   ",
+"            ***   "]
+
+val slow_ship =
+conv
+["                                 **      * * ",
+"                 *               **     *** *",
+"       **       ******           *     **    ",
+"       *  *** *       **      *  *  *   *    ",
+"      *          *  * **   *    *   *  *     ",
+"     **** * *    *   ***   ** *** * *   *    ",
+"     **      ***       ***      **   ***     ",
+"    *                                  **    ",
+" *** *                                       ",
+"*  *                                         ",
+" *** *                                       ",
+"    *                                        ",
+"     **      ***       ***      **           ",
+"     **** * *    *   ***   ** *** *          ",
+"      *          *  * **   *    *            ",
+"       *  *** *       **      *  *           ",
+"       **       ******           *           ",
+"                 *               **          ",
+"                                 **          "]
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@

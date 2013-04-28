@@ -1,0 +1,165 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.02.16.09.31.24;	author mitchell;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	99.02.15.14.07.49;	author mitchell;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.52.07;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+
+
+1.2
+log
+@[Bug #190508]
+Improve layout
+@
+text
+@(* generic-sock.sml
+ *
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell
+ * Laboratories. All rights reserved.  
+ *
+ * $Log: __generic_sock.sml,v $
+ *  Revision 1.1  1999/02/15  14:07:49  mitchell
+ *  new unit
+ *  [Bug #190508]
+ *  Add socket support to the basis library
+ *
+ *
+ *)
+
+require "generic_sock.sml";
+require "__pre_sock.sml";
+
+structure GenericSock : GENERIC_SOCK =
+  struct
+    structure PS = PreSock
+
+    val sockFn = MLWorks.Internal.Runtime.environment
+
+    (* returns a list of the supported address families; this should include
+     * at least:  Socket.AF.inet. *)
+    fun addressFamilies () = raise Fail "GenericSock.addressFamilies"
+
+    (* returns a list of the supported socket types; this should include at
+     * least:  Socket.SOCK.stream and Socket.SOCK.dgram. *)
+    fun socketTypes () = raise Fail "GenericSock.socketTypes"
+
+    val c_socket        : (int * int * int) -> PS.socket
+          = sockFn "system os socket"
+    val c_socketPair    : (int * int * int) -> (PS.socket * PS.socket)
+          = sockFn "system os socketPair"
+
+    (* create sockets using default protocol *)
+    fun socket (PS.AF(af, _), PS.SOCKTY(ty, _)) =
+          PS.SOCK(c_socket (af, ty, 0))
+    fun socketPair (PS.AF(af, _), PS.SOCKTY(ty, _)) = 
+          let val (s1, s2) = c_socketPair (af, ty, 0)
+           in (PS.SOCK s1, PS.SOCK s2)
+          end
+
+    (* create sockets using the specified protocol *)
+    fun socket' (PS.AF(af, _), PS.SOCKTY(ty, _), prot) =
+          PS.SOCK(c_socket (af, ty, prot))
+    fun socketPair' (PS.AF(af, _), PS.SOCKTY(ty, _), prot) = 
+          let val (s1, s2) = c_socketPair (af, ty, prot)
+           in (PS.SOCK s1, PS.SOCK s2)
+          end
+  end
+
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a6 4
+ *  Revision 1.2  1999/02/16  09:31:24  mitchell
+ *  [Bug #190508]
+ *  Improve layout
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+text
+@d6 6
+a11 1
+ * $Log$
+d24 2
+a25 3
+  (* returns a list of the supported address families; this should include
+   * at least:  Socket.AF.inet.
+   *)
+d28 2
+a29 3
+  (* returns a list of the supported socket types; this should include at
+   * least:  Socket.SOCK.stream and Socket.SOCK.dgram.
+   *)
+d32 4
+a35 4
+    val c_socket	: (int * int * int) -> PS.socket
+	  = sockFn "system os socket"
+    val c_socketPair	: (int * int * int) -> (PS.socket * PS.socket)
+	  = sockFn "system os socketPair"
+d37 1
+a37 1
+  (* create sockets using default protocol *)
+d39 5
+a43 6
+	  PS.SOCK(c_socket (af, ty, 0))
+    fun socketPair (PS.AF(af, _), PS.SOCKTY(ty, _)) = let
+	  val (s1, s2) = c_socketPair (af, ty, 0)
+	  in
+	    (PS.SOCK s1, PS.SOCK s2)
+	  end
+d45 1
+a45 1
+  (* create sockets using the specified protocol *)
+d47 5
+a51 7
+	  PS.SOCK(c_socket (af, ty, prot))
+    fun socketPair' (PS.AF(af, _), PS.SOCKTY(ty, _), prot) = let
+	  val (s1, s2) = c_socketPair (af, ty, prot)
+	  in
+	    (PS.SOCK s1, PS.SOCK s2)
+	  end
+
+a53 6
+(*
+ * $Log: generic-sock.sml,v $
+ * Revision 1.1.1.1  1997/01/14 01:38:23  george
+ *   Version 109.24
+ *
+ *)
+@

@@ -1,0 +1,403 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.07.14.16.45.18;	author io;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+move context_browser bits over.
+@
+
+
+1.1
+log
+@new unit
+move context_browser bits over.
+@
+text
+@require "../main/user_options";
+require "../utils/crash";
+require "../basics/identprint";
+require "../typechecker/basis";
+require "../typechecker/types";
+require "../typechecker/valenv";
+require "../typechecker/scheme";
+require "../utils/lists";
+
+require "entry";
+
+
+functor Entry(
+  structure IdentPrint : IDENTPRINT
+  structure Basis : BASIS
+  structure Types : TYPES
+  structure Valenv : VALENV
+  structure Scheme : SCHEME
+  structure Crash : CRASH
+  structure UserOptions : USER_OPTIONS
+
+  sharing IdentPrint.Ident = Basis.BasisTypes.Datatypes.Ident = Types.Datatypes.Ident
+  sharing IdentPrint.Options = UserOptions.Options = Types.Options
+  sharing Valenv.Datatypes = Types.Datatypes = Basis.BasisTypes.Datatypes
+) : ENTRY =
+struct
+
+  structure Basis = Basis
+  structure Types = Types
+  structure Ident = Basis.BasisTypes.Datatypes.Ident
+  structure Options = UserOptions.Options
+
+  datatype Entry =
+    VAR    of (Ident.ValId * Types.Datatypes.Typescheme)
+  | CONVAR of (Ident.ValId * Types.Datatypes.Typescheme)
+    (* Constructor in a structure or at top-level *)
+  | CONENV of (Ident.ValId * Types.Datatypes.Typescheme)
+    (* Constructor in a constructor environment *)
+  | EXN    of (Ident.ValId * Types.Datatypes.Typescheme)
+  | TYPE   of Ident.TyCon * Types.Datatypes.Tystr
+  (* unconverted *)
+  | STR    of Ident.StrId * Types.Datatypes.Structure
+  | SIG    of Ident.SigId * Basis.BasisTypes.Sigma
+  | FUN    of Ident.FunId * Basis.BasisTypes.Phi
+  (* converted for search munging purposes   *)
+  | NSIG   of Ident.SigId * (Entry list)
+  | NSTR   of Ident.StrId * (Entry list)
+  | NFUN   of Ident.FunId * (Entry list)
+
+  fun fst (x,_) = x
+    
+  type SearchOptions =
+    {showSig : bool,        (* search inside signatures *)
+     showStr : bool,        (* search inside structures *)
+     showFun : bool,        (* search inside functors   *)
+     searchInitial : bool,  (* search initial context, used in listener *)
+     showType : bool        (* show types of search results *)
+     }
+
+  fun update (s, value, x:SearchOptions) =
+    case s of
+      "showSig" =>
+	{showSig = value,
+	 showStr = #showStr x,
+	 showFun = #showFun x,
+	 searchInitial = #searchInitial x,
+	 showType = #showType x}
+    | "showStr" =>
+	{showSig = #showSig x,
+	 showStr = value,
+	 showFun = #showFun x,
+	 searchInitial = #searchInitial x,
+	 showType = #showType x}
+    | "showFun" =>
+	{showSig = #showSig x,
+	 showStr = #showStr x,
+	 showFun = value,
+	 searchInitial = #searchInitial x,
+	 showType = #showType x}
+    | "searchInitial" =>
+	{showSig = #showSig x,
+	 showStr = #showStr x,
+	 showFun = #showFun x,
+	 searchInitial = value,
+	 showType = #showType x}
+    | "showType" =>
+      {showSig = #showSig x,
+       showStr = #showStr x,
+       showFun = #showFun x,
+       searchInitial = #searchInitial x,
+       showType = value}
+    | s => Crash.impossible ("Entry.update failed on " ^ s)
+
+  val new = {showSig = true,
+	     showStr = true,
+	     showFun = true,
+	     searchInitial = true,
+	     showType = true}
+	
+  (* Miscellaneous Utilities that should be separated out *)
+  fun debug_output s = output(MLWorks.IO.terminal_out, s ^"\n")
+
+  (* get_id returns the string to print, and a boolean that indicates
+     whether this is the last component of a name. *)
+  local
+    val printValId = fn id => IdentPrint.printValId Options.default_print_options id
+  in
+    fun get_id e = case e of
+      VAR (id,_)    => (printValId id, true)
+    | CONVAR (id,_) => (printValId id, true)
+    | CONENV (id,_) => (printValId id, true)
+    | EXN (id,_)    => (printValId id, true)
+    | TYPE (id,_)   => (IdentPrint.printTyCon id ^ "<type>", true)
+    | STR (id,_)    => (IdentPrint.printStrId id, false)
+    | SIG (id,_)    => (IdentPrint.printSigId id ^ "<signature>", false)
+    | FUN (id,_)    => (IdentPrint.printFunId id ^ "<functor>", true)
+    | NSIG _ => Crash.impossible "NSIG uncaught"
+    | NSTR _ => Crash.impossible "NSTR uncaught"
+    | NFUN _ => Crash.impossible "NFUN uncaught"
+  end (* local *)
+
+  (* splits up variable and exception names *)
+  fun split_vallist e = let
+    fun split_vallist ([], vars, exns) = (rev vars, rev exns)
+      |   split_vallist ((pair as (Ident.VAR _, _)) :: l, vars, exns) =
+	  split_vallist (l, VAR pair :: vars, exns)
+      |   split_vallist ((pair as (Ident.CON _, _)) :: l, vars, exns) =
+	  split_vallist (l, CONVAR pair :: vars, exns)
+      |   split_vallist ((pair as (Ident.EXCON _, _)) :: l, vars, exns) =
+	  split_vallist (l, vars, EXN pair :: exns)
+      |   split_vallist _ = Crash.impossible "TYCON':split_vallist:browser_tool"
+  in
+    split_vallist (e,[],[])
+  end (* let *)
+
+  fun browse_env
+    (Types.Datatypes.ENV
+     (Types.Datatypes.SE se,
+      Types.Datatypes.TE te,
+      Types.Datatypes.VE (_, ve))) = let
+
+	val strlist = Types.Datatypes.NewMap.to_list_ordered se
+        val tylist = Types.Datatypes.NewMap.to_list_ordered te
+        val vallist = Types.Datatypes.NewMap.to_list_ordered ve
+
+        val strlist' = map STR strlist
+        val tylist' = map TYPE tylist
+        val (varlist, exnlist) = split_vallist vallist
+      in
+        strlist' @@ tylist' @@ exnlist @@ varlist
+      end
+
+  fun printOverloaded (Types.Datatypes.UNARY (_, tyvar)) =
+    let val olvar = IdentPrint.printTyVar tyvar
+    in
+      implode [olvar, " -> ", olvar]
+    end
+    | printOverloaded (Types.Datatypes.BINARY (_, tyvar)) =
+      let val olvar = IdentPrint.printTyVar tyvar
+      in
+	implode [olvar, " * ", olvar, " -> ", olvar]
+      end
+    | printOverloaded (Types.Datatypes.PREDICATE (_, tyvar)) =
+      let val olvar = IdentPrint.printTyVar tyvar
+      in
+	implode [olvar, " * ", olvar, " -> bool"]
+      end
+
+  fun printValScheme print_options (Types.Datatypes.SCHEME (arity, (ty,_))) =
+    Types.print_type print_options ty
+    |   printValScheme print_options (Types.Datatypes.UNBOUND_SCHEME (ty,_)) =
+	Types.print_type print_options ty
+    |   printValScheme _ (Types.Datatypes.OVERLOADED_SCHEME overloaded) =
+	printOverloaded overloaded
+	
+  fun print_tyvars n = Types.print_tyvars (Types.make_tyvars n)
+    
+  fun printTyFun (tycon, Types.Datatypes.TYFUN (ty, arity)) =
+    print_tyvars arity ^ " " ^ IdentPrint.printTyCon tycon
+    |   printTyFun (tycon, Types.Datatypes.ETA_TYFUN tyname) =
+	print_tyvars (case tyname of
+			Types.Datatypes.TYNAME (_, _, n, _, _,_,_,_) => n
+		      | Types.Datatypes.METATYNAME (_, _, n, _, _, _) => n) ^
+	" " ^ IdentPrint.printTyCon tycon
+    |   printTyFun (tycon, Types.Datatypes.NULL_TYFUN (id,_)) =
+        MLWorks.Integer.makestring (Types.stamp_num id)
+	
+  fun printConScheme print_options (Types.Datatypes.SCHEME (arity, (ty,_))) =
+    (case Types.apply (Types.Datatypes.TYFUN (ty, arity),
+		       Types.make_tyvars arity) of
+       Types.Datatypes.FUNTYPE (arg, _) =>
+	 " of " ^ Types.print_type print_options arg
+     | _ => "")
+    |   printConScheme print_options (Types.Datatypes.UNBOUND_SCHEME
+				      (Types.Datatypes.FUNTYPE (arg, _),_)) =
+	" of " ^ Types.print_type print_options arg
+    |   printConScheme _ (Types.Datatypes.UNBOUND_SCHEME _) =
+	""
+    |   printConScheme _ (Types.Datatypes.OVERLOADED_SCHEME _) =
+	" <strange overloaded scheme>"
+	
+  fun printValenv print_options (Types.Datatypes.VE (_,amap)) =
+    let fun printMember ((first, str), valid, typescheme) =
+      (false,
+       implode
+       [str,
+	if first then "" else " | ",
+	  IdentPrint.printValId print_options valid,
+	  printConScheme print_options typescheme])
+    in
+      Types.Datatypes.NewMap.fold printMember ((true, ""), amap)
+    end
+
+  (* val printEntry : string Options.print_options -> Entry -> string *)
+  fun printEntry print_options e = let
+    val printValId = fn id => IdentPrint.printValId print_options id
+    val printValScheme = fn ts => printValScheme print_options ts
+    val printStrId = fn id => IdentPrint.printStrId id
+  in 
+    case e of
+      VAR (id,ts) =>    "val " ^ (printValId id) ^ " : " ^ (printValScheme ts)
+    | CONVAR (id,ts) => "val " ^ (printValId id) ^ " : " ^ (printValScheme ts)
+    | CONENV (id,ts) => "val " ^ (printValId id) ^ " : " ^ (printValScheme ts)
+    | EXN    (id,ts) => "exception " ^ (printValId id) ^ (printConScheme print_options ts)
+    | TYPE   (id,Types.Datatypes.TYSTR (tyfun, valenv)) =>
+	if Valenv.empty_valenvp valenv then
+	  if Types.equalityp tyfun then
+	    "eqtype " ^ (printTyFun (id, tyfun))
+	  else
+	    "type " ^ (printTyFun (id, tyfun))
+	else
+	  "datatype " ^ (printTyFun (id, tyfun)) ^ " = " ^
+	  #2(printValenv print_options valenv)
+    | STR (id, str) => "structure " ^ (IdentPrint.printStrId id) 
+    | SIG (id, ts)  => "signature " ^ (IdentPrint.printSigId id)
+    | FUN (id, ts)  => "functor "   ^ (IdentPrint.printFunId id)
+    | NSIG _ => Crash.impossible "printEntry NSIG unhandled"
+    | NSTR _ => Crash.impossible "printEntry NSTR unhandled"
+    | NFUN _ => Crash.impossible "printEntry NFUN unhandled"
+  end
+
+  (* This is my stupid fn to do a search, pick up the module qualifiers
+     and do it for only sig, funct or structure and allow the matched
+     entries to have their type be displayed
+   *)
+  fun printEntry1 (searchOptions:SearchOptions) printOptions entry = let
+    val printValId = fn id => IdentPrint.printValId printOptions id
+    val printValScheme = fn ts =>printValScheme printOptions ts
+    val printValenv = fn id => printValenv printOptions id
+    val printConScheme = fn ts =>printConScheme printOptions ts
+    val printStrId = fn id => IdentPrint.printStrId id
+
+    fun printEntry1 (acc, prefix, []) = acc
+      | printEntry1 (acc, prefix, e::es) =
+	if (#showType searchOptions) then let in
+	  case e of
+	    VAR (id, ts) => printEntry1
+	      (["val "^ prefix^(printValId id)^" : "^(printValScheme ts)]::acc,
+	       prefix, es)
+	  | CONVAR (id, ts) => printEntry1
+	      (["val "^prefix^(printValId id)^(printValScheme ts)]::acc,
+	       prefix, es)
+	  | CONENV (id, ts) => printEntry1
+	      (["val " ^ prefix ^ (printValId id) ^ " : " ^ (printValScheme ts) ] :: acc,
+	      prefix, es)
+	  | EXN (id,ts) => printEntry1
+	      (["exception " ^ prefix ^ (printValId id) ^ (printConScheme ts)]::acc,
+	       prefix, es)
+	  | TYPE (id, Types.Datatypes.TYSTR (tyfun, valenv)) => printEntry1
+	      ([if Valenv.empty_valenvp valenv then
+		  if Types.equalityp tyfun then
+		    "eqtype " ^ prefix ^ (printTyFun (id, tyfun))
+		  else
+		    "type " ^ prefix ^ (printTyFun (id, tyfun))
+		else
+		  "datatype " ^ prefix ^ (printTyFun (id, tyfun)) ^ " = " ^
+		  #2(printValenv valenv) ] :: acc,
+	      prefix, es)
+	  | NSIG (id,si) =>
+	      if (#showSig searchOptions) then let
+		val entrys = printEntry1 ([], prefix^IdentPrint.printSigId id^".", si)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc,prefix, es)
+	  | NSTR (id,str) =>
+	      if (#showStr searchOptions) then let
+		val entrys = printEntry1 ([], prefix^IdentPrint.printStrId id^".", str)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc, prefix, es)
+	  | NFUN (id, ts) =>
+	      if (#showFun searchOptions) then let
+		val entrys = printEntry1
+		  ([], prefix^IdentPrint.printFunId id^".", ts)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc, prefix, es)
+	  | e => Crash.impossible "unconverted SIG STR FUN unhandled"
+	end (* if *)
+	else case e of
+	  NSIG (id,si) =>
+	      if (#showSig searchOptions) then let
+		val entrys = printEntry1 ([], prefix^IdentPrint.printSigId id^".", si)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc,prefix, es)
+	  | NSTR (id,str) =>
+	      if (#showStr searchOptions) then let
+		val entrys = printEntry1 ([], prefix^IdentPrint.printStrId id^".", str)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc, prefix, es)
+	  | NFUN (id, ts) =>
+	      if (#showFun searchOptions) then let
+		val entrys = printEntry1
+		  ([], prefix^IdentPrint.printFunId id^".", ts)
+	      in printEntry1 (entrys@@acc, prefix, es) end
+	      else printEntry1 (acc, prefix, es)
+      | _ => printEntry1
+	  ([prefix^(fst o get_id) e]::acc, prefix, es)
+
+  in 
+    printEntry1 ([], "", entry)
+  end (* printEntry1 *)
+      
+  fun browse_str (Types.Datatypes.STR(_,_,env))   = browse_env env
+    | browse_str (Types.Datatypes.COPYSTR(_,str)) = browse_str str
+
+  fun browse_conenv (Types.Datatypes.VE (_, ve)) =
+    map CONENV (Types.Datatypes.NewMap.to_list_ordered ve)
+  fun browse_sigma (Basis.BasisTypes.SIGMA (_,str)) = browse_str str
+
+  local
+    fun showConEnv printOptions = printOptions
+  in (* local *)
+    fun browse_entry printOptions (VAR _) = []
+      | browse_entry printOptions (CONVAR _) = []
+      | browse_entry printOptions (CONENV _) = []
+      | browse_entry printOptions (EXN _) = []
+      | browse_entry printOptions (TYPE (id, Types.Datatypes.TYSTR (_, conenv))) =
+	if not (showConEnv printOptions) (* Valenv.empty_valenvp conenv *) then
+	  [] else browse_conenv conenv
+      | browse_entry printOptions (STR (_, str)) = browse_str str
+      | browse_entry printOptions (SIG (_, sigma)) = browse_sigma sigma
+      | browse_entry printOptions (FUN (_, Basis.BasisTypes.PHI (_, (str, sigma)))) = browse_sigma sigma
+      | browse_entry printOptions x = Crash.impossible "browse_entry barfed"
+  end (* local *)
+
+  fun massage (SIG (id, sigma)) = NSIG (id, map massage (browse_sigma sigma))
+    | massage (STR (id, str)) = NSTR (id, map massage (browse_str str))
+    | massage (FUN (id, Basis.BasisTypes.PHI (_, (str, sigma)))) = NFUN (id, browse_sigma sigma)
+    | massage e = e
+
+  fun env2entry
+    (Types.Datatypes.ENV
+     (Types.Datatypes.SE se,
+      Types.Datatypes.TE te,
+      Types.Datatypes.VE (_, ve))) = let
+
+	val strl = map STR (Types.Datatypes.NewMap.to_list_ordered se)
+	val tyl = map TYPE (Types.Datatypes.NewMap.to_list_ordered te)
+	val (exnl, vall) = split_vallist (Types.Datatypes.NewMap.to_list_ordered ve)
+      in
+	strl @@ tyl @@ exnl @@ vall
+      end (* env2entry *)
+
+  fun basis2entry
+    (Basis.BasisTypes.BASIS
+     (_,_, Basis.BasisTypes.FUNENV fune,
+      Basis.BasisTypes.SIGENV sige, env)) = let
+    (*
+    val sigl = Types.Datatypes.NewMap.to_list_ordered se
+    val funl = Types.Datatypes.NewMap.to_list_ordered fe
+    *)
+    val sigl = map SIG (Types.Datatypes.NewMap.to_list_ordered sige)
+    val funl = map FUN (Types.Datatypes.NewMap.to_list_ordered fune)
+    val envl = env2entry env
+  in
+    sigl @@ funl @@ envl
+  end (* basis2entry *)
+
+end (* functor *)	
+@

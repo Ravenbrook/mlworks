@@ -1,0 +1,73 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.13.20.04;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.10.17.12.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+functor Sequent(structure Formula: FORMULA
+                structure Condition: CONDITION
+                structure DefList: DEF_LIST
+                structure Agent: McAGENT
+                sharing Formula = DefList.F
+                sharing Formula = Condition.F
+                sharing Formula.ACT = Agent.ACT) : SEQUENT =
+struct
+
+  structure F = Formula
+  structure C = Condition
+  structure D = DefList
+  structure A = Agent
+
+  datatype sequent = mk_sequent of
+       C.cond * D.def_list * A.agent * F.formula
+
+  (* Should possibly check that all names free in c are also free in *)
+  (* either A or F                                                   *)
+  fun new_name (mk_sequent(c,dl,A,F)) =
+        F.ACT.N.next ((A.free_names A)@@(F.free_names F))
+
+end
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

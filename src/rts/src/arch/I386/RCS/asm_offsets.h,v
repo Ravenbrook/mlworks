@@ -1,0 +1,139 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	95.05.03.09.53.16;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.30.13.53.51;	author nickb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Offsets in the thread state structure, for use in asm.
+@
+
+
+1.2
+log
+@Removing debugger implicit vector entries
+@
+text
+@/* 
+ * rts/src/arch/$ARCH/asm_offsets.h
+ *
+ * Copyright (c) 1995 Harlequin Ltd.
+ *
+ * This file defines offsets within the thread_state and global_state
+ * structs for use from asm files. It was originally generated
+ * automatically, but is now maintained by hand.
+ *
+ * $Log: src:arch:I386:asm_offsets.h,v $
+ * Revision 1.1  1995/03/30  13:53:51  nickb
+ * new unit
+ * Offsets in the thread state structure, for use in asm.
+ *
+ * 
+ */
+
+/* many of these offsets are not needed, or are the same as those in
+ * rts/gen/offsets.h, but are included here in comments for
+ * completeness:
+
+ * in offsets.h:
+
+#define THREAD_implicit_gc_modified_list	  0
+#define THREAD_implicit_gc			  4
+#define THREAD_implicit_gc_leaf			  8
+#define THREAD_implicit_external		 12
+#define THREAD_implicit_extend			 16
+#define THREAD_implicit_raise			 20
+#define THREAD_implicit_ml_raise_leaf		 24
+#define THREAD_implicit_replace			 28
+#define THREAD_implicit_replace_leaf		 32
+#define THREAD_implicit_intercept		 36
+#define THREAD_implicit_intercept_leaf		 40
+#define THREAD_implicit_interrupt		 44
+#define THREAD_implicit_event_check		 48
+#define THREAD_implicit_event_check_leaf	 52
+#define THREAD_implicit_gc_base			 56
+#define THREAD_implicit_gc_limit		 60
+#define THREAD_implicit_handler			 64
+#define THREAD_implicit_stack_limit		 68
+
+ * Then some which are only used in C:
+
+#define THREAD_roots				112
+#define THREAD_declared				128
+#define THREAD_locals				144
+
+ * The rest are going to be used from asm:
+
+*/
+
+#define THREAD_c_stack				 72
+#define THREAD_c_esp				 76
+#define THREAD_c_ebp				 80
+#define THREAD_c_esi				 84
+#define THREAD_c_edi				 88
+#define THREAD_c_ebx				 92
+#define THREAD_c_eip				 96
+
+#define THREAD_ml_global			100
+#define THREAD_ml_sp				104
+#define THREAD_ml_stack_top			108
+
+#define THREAD_global				176
+
+/* Global state offsets : */
+
+#define GLOBAL_in_ML				  0
+#define GLOBAL_current_thread			  4
+#define GLOBAL_toplevel_thread			  8
+@
+
+
+1.1
+log
+@new unit
+Offsets in the thread state structure, for use in asm.
+@
+text
+@d10 5
+a14 1
+ * $Log$
+a41 4
+#define THREAD_implicit_breakpoint_fn		 72
+#define THREAD_implicit_stepper_fn		 76
+#define THREAD_implicit_exit_breakpoint_fn	 80
+#define THREAD_implicit_stepper_handler_fn	 84
+d45 3
+a47 3
+#define THREAD_roots				128
+#define THREAD_declared				144
+#define THREAD_locals				160
+d53 11
+a63 11
+#define THREAD_c_stack				 88
+#define THREAD_c_esp				 92
+#define THREAD_c_ebp				 96
+#define THREAD_c_esi				100
+#define THREAD_c_edi				104
+#define THREAD_c_ebx				108
+#define THREAD_c_eip				112
+
+#define THREAD_ml_global			116
+#define THREAD_ml_sp				120
+#define THREAD_ml_stack_top			124
+d65 1
+a65 1
+#define THREAD_global				192
+@

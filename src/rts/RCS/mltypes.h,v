@@ -1,0 +1,382 @@
+head	1.11;
+access;
+symbols
+	Final_version_of_old_runtime:1.11
+	ML_revised_beta_release_25/05/94:1.11
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-3-21/12/1992:1.9
+	MLWorks-1-0-2-15/12/1992:1.9
+	MLWorks-1-0-1-04/12/1992:1.9
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	93.03.12.13.26.13;	author richard;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.02.04.15.47.39;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.27.16.35.29;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.19.15.50.32;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.22.15.45.23;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.17.14.10.28;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.16.15.11.27;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.15.15.31.18;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.14.15.43.11;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.06.30.13.37.28;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.16.16.09.32;	author davidt;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.03.12.13.26.13;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Types for ML values.
+@
+
+
+1.11
+log
+@Changed code vector header types.
+@
+text
+@/*  ==== ML TYPES ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  $Id: mltypes.h,v 1.10 1993/02/04 15:47:39 jont Exp richard $
+ */
+
+
+#ifndef mltypes_h
+#define mltypes_h
+
+#include "types.h"
+
+#include <stddef.h>
+
+
+/*  == ML value type ==
+ *
+ *  ML values are tagged 32-bit words.
+ */
+
+typedef word mlval;
+
+
+/*  == Sparc stack frame ==
+ *
+ *  It's hard to say which of these fields will be preserved between
+ *  architectures.  I suggest you bracket any code which uses them with
+ *  `#ifdef architecture'.
+ */
+
+#ifdef sparc
+struct stack_frame
+{
+  word l0, l1, l2, l3, l4, l5, l6, l7;
+  word i0, closure, i2, i3, i4, i5;
+  struct stack_frame *fp;
+  word lr;
+};
+#else
+#error Unknown architecture -- cannot declare memory management structures
+#endif
+
+
+/*  == Stack area header ==
+ *
+ *  The stack structure appears immediately before the memory which makes up
+ *  the stack.
+ */
+
+struct stack
+{
+  struct stack *parent;		/* link to previous stack */
+  struct stack_frame *top;	/* the top of the stack area */
+  unsigned int tag;		/* available for use by storage manager */
+};
+
+
+/*  == C heap area header ==
+ *
+ *  The heap structure appears immediately before the memory which makes up
+ *  the C heap area.
+ */
+
+struct heap
+{
+  struct heap *parent;		/* link to previous heap */
+  size_t size;			/* total size of area, including this struct */
+};
+
+
+/*  == ML array header ==
+ *
+ *  Since ML arrays are updatable they must be chained together so that
+ *  pointers to information younger than the array itself can be fixed if
+ *  that data is moved.  The first three words of each ML array object
+ *  correspond to the ml_array_header union below.
+ */
+
+union ml_array_header
+{
+  double align;
+  struct
+  {
+    word header;
+    union ml_array_header *forward;
+    union ml_array_header *back;
+    mlval element[1];		/* the elements of the array */
+  } the;
+};
+
+
+/*  == Code vector headers ==
+ *
+ *  A code vector begins with a garbage-collectible field pointing the the
+ *  ancillary.  Code items within a code vector have some extra fields
+ *  immediately before the actual code.
+ */
+
+struct code_vector_header
+{
+  mlval header;
+  mlval ancillary;
+  word contents[1];
+};
+
+struct code_item_header
+{
+  mlval header;
+  unsigned int number;     	/* The number of this code chunk within the set */
+  word instruction[1];		/* the instructions */
+};
+
+
+#endif
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@d5 1
+a5 1
+ *  $Id: mltypes.h,v 1.11 1993/03/12 13:26:13 richard Exp jont $
+@
+
+
+1.10
+log
+@Changes for code vector reform
+@
+text
+@d5 1
+a5 1
+ *  $Id: mltypes.h,v 1.9 1992/08/27 16:35:29 richard Exp jont $
+d93 1
+a93 1
+/*  == Code vector header ==
+d95 3
+a97 1
+ *  Code vectors have some extra fields immediately before the actual code.
+d103 8
+a110 7
+#if 0
+  size_t non_gc_area;		/* non gc stack area size */
+  unsigned int *call_count;	/* pointer to call counter */
+  unsigned int name_offset;	/* offset to name string from code start */
+#else
+  unsigned int code_number;     /* The number of this code chunk within the set */
+#endif
+@
+
+
+1.9
+log
+@Added tag field to stack header structure.
+@
+text
+@d5 1
+a5 1
+ *  $Id: mltypes.h,v 1.8 1992/08/19 15:50:32 richard Exp richard $
+d101 1
+d105 3
+@
+
+
+1.8
+log
+@Corrected the code vector header structure.
+@
+text
+@d5 1
+a5 1
+ *  $Id: mltypes.h,v 1.7 1992/07/22 15:45:23 richard Exp richard $
+d55 1
+@
+
+
+1.7
+log
+@Moved the stack_frame structure here from storeman.h.
+@
+text
+@d5 1
+a5 1
+ *  $Id: mltypes.h,v 1.6 1992/07/17 14:10:28 richard Exp richard $
+d99 1
+@
+
+
+1.6
+log
+@Removed the revision log, as we're going to distrubute this one.
+@
+text
+@d5 1
+a5 1
+ *  $Id$
+d23 20
+@
+
+
+1.5
+log
+@Removed the base field from the stack descriptor.
+@
+text
+@d5 1
+a5 15
+ *  Revision Log
+ *  ------------
+ *  $Log: mltypes.h,v $
+ * Revision 1.4  1992/07/15  15:31:18  richard
+ * Added element and instruction fields to ml_array_header and
+ * code structures.
+ *
+ * Revision 1.3  1992/07/14  15:43:11  richard
+ * Added base field to stack structure.  Added code_vector_header.
+ *
+ * Revision 1.2  1992/06/30  13:37:28  richard
+ * *** empty log message ***
+ *
+ *  Revision 1.1  1991/10/16  16:09:32  davidt
+ *  Initial revision
+@
+
+
+1.4
+log
+@Added element and instruction fields to ml_array_header and
+code structures.
+@
+text
+@d8 4
+d48 1
+a48 2
+  struct stack_frame *top;	/* the top of this particular stack */
+  struct stack_frame *base;	/* the lowest stack frame */
+@
+
+
+1.3
+log
+@Added base field to stack structure.  Added code_vector_header.
+@
+text
+@d8 3
+d78 1
+d93 1
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@d8 3
+d41 2
+a42 1
+  void *top;			/* the top of this particular stack */
+d76 13
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 4
+/*
+ * mltypes.h
+ * ML value types.
+ * $Log$
+d3 7
+a9 1
+ * Copyright (c) 1991 Harlequin Ltd.
+d12 1
+a12 1
+/* Avoid multiple inclusion */
+a15 2
+/* For efficiency */
+#ifndef types_h
+d17 56
+a72 1
+#endif
+a73 1
+typedef word	mlval;		/* ML values */
+@

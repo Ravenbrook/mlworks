@@ -1,0 +1,85 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.05.12.15.37.34;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.02.26.14.17.33;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30362]
+Setting current mode has a bearing on where object files go.
+@
+
+
+1.2
+log
+@[Bug #30385]
+Changing mode should force compiler to look elsewhere for object files.
+@
+text
+@Request #30362:  Setting mode has no effect.
+
+You can now set modes from within the Project Workspace to be applied
+to the project.  Within the Project Properties dialog for modes
+(select Project->Properties->Modes from the menu) you can now define
+your own mode by adding the new mode and setting the options for it,
+or you can choose an existing mode and make it current.  Note that the
+list of modes is only a list of available modes and the only mode
+which has any effect is the current mode.  The current mode also
+affects where object files go, and changing the current mode should
+update the object file location displayed in the Project Workspace.
+Object files are now placed in the following hierarchy:
+
+<basic_object_location>/<configuration>/<mode>
+
+so that for a configuration set to I386/NT and mode set to Release, 
+the object files go to:
+
+objects/I386/NT/Release/
+
+Within the project file there should be a setting to specify the
+current mode which should always be Release.  
+
+
+---------------
+
+Request #30385: Changing mode should force compiler to look elsewhere 
+for object files.
+
+Changing the mode in the Project Workspace should result in the object
+file information displayed in the Project Workspace to be updated when 
+the dependencies are read.  This also means issuing a compile command
+after changing the mode should compile the object files to the new
+objects directory (changing the mode changes where the objects go/are
+found).@
+
+
+1.1
+log
+@new unit
+[Bug #30362]
+Setting current mode has a bearing on where object files go.
+@
+text
+@d24 12
+@

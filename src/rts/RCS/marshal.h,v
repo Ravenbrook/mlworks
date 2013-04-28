@@ -1,0 +1,122 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	92.10.29.12.57.57;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.10.29.12.57.57;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Marshalling
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*  ==== MARSHALLING ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  Marshalling is a name for the process of packing objects into an array
+ *  of bytes.  This module provides general functions for marshalling and
+ *  unmarshalling.
+ *
+ *  marshal - v. 1. tr. arrange (soldiers, facts, one's thoughts, etc.) in
+ *  due order. 							     [COED]
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ */
+
+#ifndef marshal_h
+#define marshal_h
+
+
+/*  == Marshalled sizes ==
+ *
+ *  These macros define the maximum number of bytes required to marshal
+ *  objects of various types.
+ */
+
+#define MARSHAL_SIZE_INT	((sizeof(int)*8+6)/7)
+#define MARSHAL_SIZE_UINT	((sizeof(int)*8+6)/7)
+#define MARSHAL_SIZE_LONG	((sizeof(long)*8+6)/7)
+#define MARSHAL_SIZE_ULONG	((sizeof(long)*8+6)/7)
+#define MARSHAL_SIZE_CHAR	1
+
+
+/*  === MARSHAL OBJECTS ===
+ *
+ *  `marshal' takes an output buffer, a marshalling description, and a list
+ *  of objects, and encodes the objects into the buffer according to the
+ *  description.  It returns a pointer to the first unused byte in the
+ *  buffer.
+ *
+ *  `unmarshal' reverses the operation of `marshal'.  It takes an input
+ *  buffer containing marshalled objects, a marshalling description (which
+ *  must be the same as that used to create the contents of the buffer), and
+ *  a list of _pointers_to_ objects.  It returns a pointer to the first
+ *  unused byte in the buffer.
+ *
+ *  A marshalling description is a string consisting of the following
+ *  characters, each of which corresponds to an object of the indicated type
+ *  in the argument list:
+ *	c  [signed/unsigned] char
+ *      s  [signed/unsigned] short
+ *	i  [signed/unsigned] int
+ *	l  [signed/unsigned] long int
+ *
+ *  Error conditions are indicated by returning NULL and setting errno.
+ */
+
+enum /* errno */
+{
+  EMARSHALDESC = 1	/* illegal description string */
+};
+
+extern char *marshal(char *out, const char *desc, ...);
+extern char *unmarshal(char *in, const char *desc, ...);
+
+
+#endif
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d16 1
+a16 4
+ *  $Log: marshal.h,v $
+ *  Revision 1.1  1992/10/29  12:57:57  richard
+ *  Initial revision
+ *
+@

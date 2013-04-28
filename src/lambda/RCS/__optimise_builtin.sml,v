@@ -1,0 +1,380 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.9
+	ML_beta_release_03/08/94:1.9
+	ML_revised_beta_release_25/05/94:1.9
+	ML_final_beta_release_02/03/94:1.9
+	mlworks-28-01-1994:1.9
+	Release:1.9
+	mlworks-beta-01-09-1993:1.9
+	MLWorks-1-0-4-29/01/1993:1.9
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	94.09.15.17.51.23;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.01.06.12.34.27;	author daveb;	state Exp;
+branches
+	1.9.1.1;
+next	1.8;
+
+1.8
+date	92.11.26.19.27.34;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.17.10.17.48;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.10.11.11.59;	author davida;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.09.09.44.23;	author davida;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.04.16.11.08.24;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.03.27.12.57.38;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.22.14.03.43;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.05.15.27.54;	author davida;	state Exp;
+branches;
+next	;
+
+1.9.1.1
+date	93.01.06.12.34.27;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Optimisation of builtin-function expressions:
+constant folding, identity re-writes, etc.
+@
+
+
+1.10
+log
+@Replace use of __machtypes with __machspec
+@
+text
+@
+(* 
+ * Lambda-Calculus Optimisation: _optimise_builtin
+ * Constant Folding, Identity Re-writes,
+ * Algebraic Transformations.
+ *
+$Log: __optimise_builtin.sml,v $
+Revision 1.9  1993/01/06  12:34:27  daveb
+Removed primitive_list_cons argument (not needed with new representation).
+
+Revision 1.8  1992/11/26  19:27:34  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.7  1992/07/17  10:17:48  clive
+Needed to preserve type information
+
+Revision 1.6  1992/07/10  11:11:59  davida
+Added OptimiseBeta_ as a parameter.
+
+Revision 1.5  1992/07/09  09:44:23  davida
+Removed Lib parameter.
+
+Revision 1.4  1992/04/16  11:08:24  clive
+General speed improvements
+
+Revision 1.3  1992/03/27  12:57:38  jont
+Added requires for Lists, Print, Integer, MachTypes
+
+Revision 1.3  1992/03/27  12:19:37  jont
+Added Print, Lists and Integer parameters to functor application
+
+Revision 1.2  1991/10/22  14:03:43  davidt
+Now builds using the Crash_ structure.
+
+Revision 1.1  91/09/05  15:27:54  davida
+Initial revision
+ *  Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/__crash";
+require "../utils/__lists";
+require "../utils/__print";
+require "../utils/__integer";
+require "../utils/__bignum";
+require "../basics/__ident";
+require "../typechecker/__types";
+require "../main/__primitives";
+require "../main/__pervasives";
+require "__environ";
+require "../machine/__machspec";
+require "../debugger/__debugger_types";
+require "_optimise_builtin";
+require "__optimise_beta";
+require "__lambdasub";
+require "__lambdaprint";
+
+structure OptimiseBuiltin_ = OptimiseBuiltin(
+  structure Crash = Crash_
+  structure Lists = Lists_
+  structure Print = Print_
+  structure Integer = Integer_
+  structure Types = Types_
+
+  structure OptimiseBeta = OptimiseBeta_
+
+  structure LambdaSub = LambdaSub_
+  structure LambdaPrint = LambdaPrint_
+  val primitive_true  = LambdaSub.LT.INT 1     (* for now! *)
+  and primitive_false = LambdaSub.LT.INT 0     (* for now! *)   
+  val primitive_list_nil  = LambdaSub.LT.INT 1 (* for now! *)
+
+  val ord_fold_function = MachSpec_.ord
+  and chr_fold_function = MachSpec_.chr
+
+  exception Ord = MachSpec_.Ord
+  and Chr = MachSpec_.Chr
+
+  structure Debugger_Types = Debugger_Types_
+  structure Environ = Environ_
+  structure Primitives = Primitives_
+  structure Pervasives = Pervasives_
+  structure Ident = Ident_
+  structure BigNum = BigNum_);
+@
+
+
+1.9
+log
+@Removed primitive_list_cons argument (not needed with new representation).
+@
+text
+@d7 31
+d51 1
+a51 1
+require "../machine/__machtypes";
+d73 2
+a74 2
+  val ord_fold_function = MachTypes_.ord
+  and chr_fold_function = MachTypes_.chr
+d76 2
+a77 2
+  exception Ord = MachTypes_.Ord
+  and Chr = MachTypes_.Chr
+a84 31
+    
+
+(* $Log: __optimise_builtin.sml,v $
+Revision 1.8  1992/11/26  19:27:34  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.7  1992/07/17  10:17:48  clive
+Needed to preserve type information
+
+Revision 1.6  1992/07/10  11:11:59  davida
+Added OptimiseBeta_ as a parameter.
+
+Revision 1.5  1992/07/09  09:44:23  davida
+Removed Lib parameter.
+
+Revision 1.4  1992/04/16  11:08:24  clive
+General speed improvements
+
+Revision 1.3  1992/03/27  12:57:38  jont
+Added requires for Lists, Print, Integer, MachTypes
+
+Revision 1.3  1992/03/27  12:19:37  jont
+Added Print, Lists and Integer parameters to functor application
+
+Revision 1.2  1991/10/22  14:03:43  davidt
+Now builds using the Crash_ structure.
+
+Revision 1.1  91/09/05  15:27:54  davida
+Initial revision
+ *)
+@
+
+
+1.9.1.1
+log
+@Fork for bug fixing
+@
+text
+@a56 3
+Revision 1.9  1993/01/06  12:34:27  daveb
+Removed primitive_list_cons argument (not needed with new representation).
+
+@
+
+
+1.8
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d40 1
+a40 2
+  val primitive_list_cons = LambdaSub.LT.INT 0 (* for now! *)
+  and primitive_list_nil  = LambdaSub.LT.INT 1 (* for now! *)
+d57 4
+@
+
+
+1.7
+log
+@Needed to preserve type information
+@
+text
+@d16 1
+d32 1
+d58 3
+@
+
+
+1.6
+log
+@Added OptimiseBeta_ as a parameter.
+@
+text
+@d20 1
+d47 1
+d56 3
+@
+
+
+1.5
+log
+@Removed Lib parameter.
+@
+text
+@d21 1
+d30 3
+d54 3
+@
+
+
+1.4
+log
+@General speed improvements
+@
+text
+@a18 1
+require "__optimise_lib";
+d21 1
+d29 1
+a29 1
+  structure Lib = OptimiseLib_
+d31 4
+a34 4
+  val primitive_true  = Lib.LT.INT 1     (* for now! *)
+  and primitive_false = Lib.LT.INT 0     (* for now! *)   
+  val primitive_list_cons = Lib.LT.INT 0 (* for now! *)
+  and primitive_list_nil  = Lib.LT.INT 1 (* for now! *)
+d50 3
+@
+
+
+1.3
+log
+@Added requires for Lists, Print, Integer, MachTypes
+@
+text
+@d22 1
+a23 1
+
+d30 1
+d50 3
+@
+
+
+1.2
+log
+@Now builds using the Crash_ structure.
+@
+text
+@d11 3
+d20 1
+d24 10
+a33 7
+structure OptimiseBuiltin_ = 
+   OptimiseBuiltin(structure Crash = Crash_
+		   structure Lib = OptimiseLib_
+		   val primitive_true  = Lib.LT.INT 1     (* for now! *)
+		   and primitive_false = Lib.LT.INT 0     (* for now! *)   
+		   val primitive_list_cons = Lib.LT.INT 0 (* for now! *)
+		   and primitive_list_nil  = Lib.LT.INT 1 (* for now! *)
+d35 2
+a36 2
+		   val ord_fold_function = MachTypes_.ord
+		   and chr_fold_function = MachTypes_.chr
+d38 2
+a39 2
+		   exception Ord = MachTypes_.Ord
+		   	 and Chr = MachTypes_.Chr
+d41 5
+a45 5
+		   structure Environ = Environ_
+		   structure Primitives = Primitives_
+		   structure Pervasives = Pervasives_
+		   structure Ident = Ident_
+		   structure BigNum = BigNum_);
+d48 7
+a54 1
+(* $Log:	__optimise_builtin.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+ (*  Lambda-Calculus Optimisation: _optimise_builtin  *)
+d10 1
+a10 7
+     (*  Constant Folding, Identity Re-writes,  *)
+     (*       Algebraic Transformations.        *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+d21 2
+a22 1
+   OptimiseBuiltin(structure Lib = OptimiseLib_
+d41 4
+a44 1
+(* $Log$ *)
+@

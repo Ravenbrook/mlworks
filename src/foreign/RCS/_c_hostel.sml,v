@@ -1,0 +1,58 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.30.04;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C_HOSTEL ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "fi_types";
+require "fi_hostel";
+require "c_hostel";
+
+functor CHostel(
+
+     structure FITypes : FOREIGN_TYPES
+   structure FIHostel : FOREIGN_HOSTEL
+
+) : C_HOSTEL =
+   struct
+
+     structure FITypes = FITypes
+     open FITypes
+
+     open FIHostel
+
+   end;
+@

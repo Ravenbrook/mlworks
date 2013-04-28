@@ -1,0 +1,174 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.07.03.09.40.16;	author stephenb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.07.01.15.44.54;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.19.36;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.50.49;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.54.30;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * The MLWorksCPointer functor provides a mechanism for creating type specific
+ * pointers to a given value type.  The functor requires the type of the
+ * value to be pointed at, its size in bytes and a function which can
+ * determine the address of a value.
+ * 
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+require "$.basis.__word";
+require "$.foreign.__mlworks_c_interface";
+require "$.foreign.mlworks_c_pointer";
+
+functor MLWorksCPointer
+  ( type value
+    val size : Word.word
+    val addr : value -> value MLWorksCInterface.ptr
+  ) : MLWORKS_C_POINTER =
+  struct
+
+    structure C = MLWorksCInterface
+
+    type 'a ptr = 'a C.ptr
+
+    type value = value
+
+
+    val ! = MLWorks.Internal.Value.cast
+
+    fun op := (p: value C.ptr, v: value): unit = 
+      C.memcpy {dest = C.toVoidPtr p, source = C.toVoidPtr (addr v), size = size}
+
+    fun make () = C.fromVoidPtr (C.malloc size)
+
+    fun makeArray n = 
+      if n < 0 then
+        C.null
+      else
+        C.fromVoidPtr (C.malloc ((Word.fromInt n)*size))
+
+    val free : value C.ptr -> unit = C.free o C.toVoidPtr
+
+    fun applyPair (g, h) (x, y) = (g x, h y)
+
+    fun scale x = size * x
+
+    val next : value C.ptr * Word.word -> value C.ptr =
+      C.fromVoidPtr o C.next o applyPair (C.toVoidPtr, scale)
+
+    val prev : value C.ptr * Word.word -> value C.ptr =
+      C.fromVoidPtr o C.prev o applyPair (C.toVoidPtr, scale)
+
+    val size = C.ptrSize
+
+  end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d10 1
+a10 5
+ * $Log: _mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:16  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d10 1
+a10 5
+ * $Log: _mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:16  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d10 1
+a10 5
+ * $Log: _mlworks_c_pointer.sml,v $
+ *  Revision 1.2  1997/07/03  09:40:16  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

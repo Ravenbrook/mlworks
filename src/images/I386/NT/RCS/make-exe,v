@@ -1,0 +1,82 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.09.28.10.08.58;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.08.22;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Shell script for building executables
+@
+
+
+1.1
+log
+@new unit
+Shell script for building executables
+@
+text
+@#!/bin/sh
+#
+# Copyright (c) 1998, Harlequin Group plc
+# All rights reserved
+#
+# $Log$
+#
+# make-exe [-g] <exe-name> [<libraries>]
+#
+usage="make-exe: usage: make-exe [-g] <exe-name> [<libs>]"
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+if [ "$1" = "-g" ]; then
+  debug=-g
+  shift
+else
+  debug=
+fi
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+exe=$1
+echo "make ${exe}${debug}.exe"
+sed -e "s/SETUP/${exe}\$closure\$setup/g;s/DECLARE/${exe}\$closure\$declare/g" exe_glue.S > poo.S
+gcc -c ${exe}_text.S
+gcc -c ${exe}_data.S
+gcc -c poo.S
+extend poo.o
+shift
+cl /Fe${exe}${debug}.exe poo.o ${exe}_text.o ${exe}_data.o  $* /nologo -link /MAP:${exe}${debug}.map /ENTRY:main
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d6 1
+a6 5
+# $Log: I386:NT:make-exe,v $
+# Revision 1.1  1998/09/28  10:08:58  jont
+# new unit
+# Shell script for building executables
+#
+@

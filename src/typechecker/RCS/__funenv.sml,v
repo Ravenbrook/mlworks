@@ -1,0 +1,264 @@
+head	1.8;
+access;
+symbols
+	ML_beta_release_12/08/94:1.8
+	ML_beta_release_03/08/94:1.8
+	ML_revised_beta_release_25/05/94:1.8
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.8
+date	94.04.13.13.39.56;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.03.17.18.45.00;	author matthew;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	93.02.08.18.06.17;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.11.18.23.37;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.03.13.32.24;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.17.47.42;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.39.34;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.16.13;	author colin;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	93.03.17.18.45.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor Environment
+@
+
+
+1.8
+log
+@Add Crash to functor parameters
+@
+text
+@(* __funenv.sml the structure *)
+(*
+$Log: __funenv.sml,v $
+Revision 1.7  1993/03/17  18:45:00  matthew
+Removed nameset structure
+
+Revision 1.6  1993/02/08  18:06:17  matthew
+Added Nameset structure
+
+Revision 1.5  1992/08/11  18:23:37  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.4  1992/08/03  13:32:24  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.3  1992/01/27  17:47:42  jont
+Added ty_debug parameter
+
+Revision 1.2  1991/11/21  16:39:34  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:16:13  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/__debug";
+require "../utils/__lists";
+require "../utils/__print";
+require "../utils/__crash";
+require "../basics/__identprint";
+require "__ty_debug";
+require "__environment";
+require "__phi";
+require "_funenv";
+  
+structure Funenv_ = Funenv (
+  structure Debug     = Funenv_Debug_
+  structure Lists     = Lists_
+  structure Print     = Print_
+  structure Crash     = Crash_
+  structure IdentPrint  = IdentPrint_
+  structure Ty_Debug  = Ty_Debug_
+  structure Env       = Environment_
+  structure Phi       = Phi_
+);
+@
+
+
+1.7
+log
+@Removed nameset structure
+@
+text
+@d4 3
+d32 1
+d43 1
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.7  1993/03/17  18:45:00  matthew
+Removed nameset structure
+
+@
+
+
+1.6
+log
+@Added Nameset structure
+@
+text
+@d4 3
+a31 1
+require "__nameset";
+a41 1
+  structure Nameset   = Nameset_
+@
+
+
+1.5
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d29 1
+d40 1
+@
+
+
+1.4
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+d22 1
+a23 2
+require "__nameset";
+require "__datatypes";
+a24 1
+require "__sigma";
+d32 1
+a33 2
+  structure Nameset   = Nameset_
+  structure Datatypes = Datatypes_
+a34 1
+  structure Sigma     = Sigma_
+@
+
+
+1.3
+log
+@Added ty_debug parameter
+@
+text
+@d4 3
+d17 1
+d20 1
+d22 2
+a24 3
+require "__nameset";
+require "__sigma";
+require "__environment";
+d27 3
+a29 1
+structure Funenv_ = Funenv(
+d31 2
+a32 1
+  structure Ty_Debug = Ty_Debug_
+d34 2
+a36 4
+  structure Nameset   = Nameset_
+  structure Sigma     = Sigma_
+  structure Env       = Environment_
+  structure Debug     = Funenv_Debug_
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	__funenv.sml,v $
+d14 2
+a15 1
+require "_funenv";
+d21 1
+a21 1
+require "../utils/__print";
+d23 10
+a32 8
+structure Funenv_ =
+  Funenv (structure Datatypes = Datatypes_
+	  structure Phi       = Phi_
+	  structure Nameset   = Nameset_
+	  structure Sigma     = Sigma_
+	  structure Env       = Environment_
+	  structure Debug     = Funenv_Debug_
+	  structure Print     = Print_);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

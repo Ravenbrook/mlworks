@@ -1,0 +1,65 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	98.04.22.10.35.34;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.04.22.09.43.26;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(*  ==== Testing ====
+ *
+ *  Result: OK
+ *
+ *  Copyright (C) 1998. Harlequin Group plc
+ *  All rights reserved.
+ *
+ *  $Log: fd.sml,v $
+ * Revision 1.2  1998/04/21  12:58:10  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+
+local
+  structure s = Shell.Project;
+in
+  val _ = s.openProject"../src/mlworks.mlp";
+  val _ = s.setConfiguration"SPARC/Solaris";
+  val _ = s.setMode"Debug";
+  val _ = s.setTargets["__batch.sml"];
+  val _ = s.compileAll();
+  val _ = s.loadAll();
+end
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

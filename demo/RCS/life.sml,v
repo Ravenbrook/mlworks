@@ -1,0 +1,901 @@
+head	1.4;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.4.1
+	MLWorks_Open_Beta_1996_08_22:1.4
+	MLWorks_Beta_1996_07_02:1.3
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	96.07.30.11.16.47;	author io;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	96.02.26.15.31.31;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.10.27.10.27.57;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.10.26.17.25.26;	author matthew;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	96.09.13.11.07.16;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New demo
+@
+
+
+1.4
+log
+@[Bug #1499]
+update wrt to toplevel changes
+@
+text
+@require "forms";
+
+require "motif/__xm.sml";
+
+local
+  structure Xm = Xm_
+  fun env s = MLWorks.Internal.Value.cast (MLWorks.Internal.Runtime.environment s)
+  val sync_graphics_exposures : unit -> unit = env "x sync graphics exposures"
+  structure Array = MLWorks.Internal.Array
+  structure ExtendedArray = MLWorks.Internal.ExtendedArray
+  structure Bits = MLWorks.Internal.Bits
+  open MLWorks.IO
+in    
+  fun P s = output (std_out, s ^ "\n")
+    
+  val size_exp = 3
+  val block_size = Bits.lshift (1,size_exp)
+    
+  fun max (x:int,y) = if x > y then x else y
+  fun min (x:int,y) = if x < y then x else y
+    
+  fun make_gen (n,m) =
+    (Array.tabulate (n, fn _ => Array.array (m,0)),
+     n,
+     m)
+    
+  fun sub ((array,n,m),i,j) =
+    if i < 0 then 0
+    else if j < 0 then 0
+    else if i >= n then 0
+    else if j >= m then 0
+	 else Array.sub (Array.sub (array,i),j)
+	   
+  fun mymod (i,n) =
+    if i < 0 then mymod (i+n,n)
+    else if i >= n then mymod (i-n,n)
+	 else i
+	   
+  fun update ((array,n,m),i,j,x:int) =
+    Array.update (Array.sub (array,mymod (i,n)),mymod (j,m),x)
+    
+  fun calc_val (array,i,j) =
+    sub (array,i-1,j-1) +
+    sub (array,i-1,j) +
+    sub (array,i-1,j+1) +
+    sub (array,i,j-1) +
+    sub (array,i,j+1) +
+    sub (array,i+1,j-1) +
+    sub (array,i+1,j) +
+    sub (array,i+1,j+1)
+    
+  fun calc_val ((a,n,m),i,j) : int =
+    let
+      val lix = if j = 0 then m-1 else j-1
+      val mix = j
+      val rix = if j = m-1 then 0 else j+1
+      val top_row = Array.sub (a,if i=0 then n-1 else i-1)
+      val mid_row = Array.sub (a,i)
+      val bottom_row = Array.sub (a,if i = n-1 then 0 else i+1)
+    in
+      Array.sub (top_row,lix) +
+      Array.sub (top_row,mix) +
+      Array.sub (top_row,rix) +
+      Array.sub (mid_row,lix) +
+      Array.sub (mid_row,rix) +
+      Array.sub (bottom_row,lix) +
+      Array.sub (bottom_row,mix) +
+      Array.sub (bottom_row,rix)
+    end
+  
+  fun new (ina,i,j,outa) =
+    let
+      val newval =
+	case calc_val (ina,i,j) of
+	  2 => sub (ina,i,j)
+	| 3 => 1
+	| _ => 0
+    in
+      update (outa,i,j,newval)
+    end
+  
+  fun clean (a,n,m) =
+    let
+      fun loop1 i =
+	if i = n
+	  then ()
+	else
+	  let
+	    val suba = Array.sub (a,i)
+	    fun loop2 j =
+	      if j = m then ()
+	      else 
+		(Array.update (suba,j,0);
+		 loop2 (j+1))
+	  in
+	    loop2 0;
+	    loop1 (i+1)
+	  end
+    in
+      loop1 0
+    end
+  
+  fun gen (ina as (_,n,m),outa) =
+    let
+      fun loop1 i =
+	if i = n
+	  then ()
+	else
+	  let
+	    fun loop2 j =
+	      if j = m then ()
+	      else 
+		(new (ina,i,j,outa);
+		 loop2 (j+1))
+	  in
+	    loop2 0;
+	    loop1 (i+1)
+	  end
+    in
+      clean outa;
+      loop1 0;
+      (outa,ina)
+    end
+  
+  fun set (a,[]) = ()
+    | set (a,(i,j)::rest) =
+      (update (a,i,j,1);
+       set (a,rest))
+      
+  val gunvals =
+    [(2,20),(3,19),(3,21),(4,18),
+     (4,22),(4,23),(4,32),(5,7),
+     (5,8),(5,18),(5,22),(5,23),
+     (5,29),(5,30),(5,31),(5,32),
+     (5,36),(6,7),(6,8),(6,18),
+     (6,22),(6,23),(6,28),(6,29),
+     (6,30),(6,31),(6,36),(7,19),
+     (7,21),(7,28),(7,31),(7,42),
+     (7,41),(8,20),(8,28),(8,29),
+     (8,30),(8,31),(8,42),(8,41),
+     (9,29),(9,30),(9,31),(9,32)
+     ]
+    
+  fun move (a:int,b:int) l = map (fn (x,y) => (x+a,y+b)) l
+    
+  val initvals = move (10,10) crash
+    
+  fun init_gen (initvals,world_x,world_y) = 
+    let
+      val (a1,a2) = (make_gen (world_x,world_y),make_gen (world_x,world_y))
+      val _ = set (a1,initvals)
+    in
+      (a1,a2)
+    end
+  
+  val state = ref (make_gen (0,0),make_gen (0,0))
+    
+  (* Motif stuff *)
+    
+  fun make_toplevel (world_x,world_y) =
+    let
+      val name = "mlworks"
+      val class = "MLWorks"
+	
+      val title = "test"
+	
+      (*  The extent of the drawing area *)
+      val xextent = world_x * block_size
+      val yextent = world_y * block_size
+	
+      val applicationShell =
+	Xm.initialize
+	(name, class,
+	 [(Xm.TITLE, Xm.STRING title), (Xm.ICON_NAME, Xm.STRING title)]);
+	
+      val main =
+	Xm.Widget.createManaged
+	("drawPane", Xm.Widget.DRAWING_AREA,applicationShell,
+	 [(Xm.WIDTH,Xm.INT xextent),(Xm.HEIGHT,Xm.INT yextent)])
+	
+      val _ = Xm.Widget.realize applicationShell
+	
+      val window= Xm.Widget.window main
+      val display = Xm.Widget.display main
+      val screen = Xm.Widget.screen main
+	
+      exception Size
+      fun size widget =
+	case Xm.Widget.valuesGet (widget,[Xm.WIDTH,Xm.HEIGHT]) of
+	  [Xm.INT width,Xm.INT height] => (width,height) 
+	| _ => raise Size
+	    
+      exception Crash
+      
+      val bg  = case Xm.Widget.valuesGet (main,[Xm.BACKGROUND]) of 
+	[(Xm.PIXEL bg)] => bg
+      | _ => raise Crash
+	  
+      val on_gc = Xm.GC.create (display,window,[Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+						Xm.GC.BACKGROUND bg])
+      val off_gc = Xm.GC.create (display,window,[Xm.GC.FOREGROUND bg,
+						 Xm.GC.BACKGROUND bg])
+	
+      fun draw_image (x,y) =
+	Xm.Draw.fillRectangle (display,window,on_gc,x+1,y+1,block_size -2 ,block_size -2)
+	
+      fun clear_image (x,y) =
+	Xm.Draw.fillRectangle (display,window,off_gc,x+1,y+1,block_size -2,block_size -2)
+	
+      fun make_rect (x,y) =
+	(Bits.lshift (x,size_exp)+1 ,Bits.lshift (y,size_exp)+1,block_size-2,block_size-2)
+	
+      fun draw_picture _ =
+	let
+	  val ((gen1,_,_),(gen2,_,_)) = !state
+	  val on_rects = ref []
+	  val off_rects = ref []
+	in
+	  ExtendedArray.iterate_index
+	  (fn (i,a) =>
+	   let
+	     val max = Array.length a
+	     val a2 = Array.sub (gen2,i)
+	     fun loop j = 
+	       if j = max then ()
+	       else
+		 let
+		   val n = Array.sub (a,j)
+		 in
+		   if n = 1 then 
+		     on_rects := make_rect (i,j) :: !on_rects
+		   else
+		     if n = Array.sub (a2,j)
+		       then ()
+		     else
+		       off_rects := make_rect (i,j) :: !off_rects;
+		       loop (j+1)
+		 end
+	   in
+	     loop 0
+	   end)
+	  gen1;
+	  Xm.Draw.fillRectangles (display,window,off_gc,!off_rects);
+	  Xm.Draw.fillRectangles (display,window,on_gc,!on_rects);
+	  Xm.sync (display,false)
+	end
+      
+      val goforit = ref false
+	
+      fun drawit _ =
+	(draw_picture ();
+	 if !goforit
+	   then
+	     (state := gen (!state);
+	      draw_picture ();
+	      Xm.Draw.clearArea (display,window,0,0,1,1,true))
+	 else ())
+	
+      val draw_picture = drawit 
+	
+      fun expose_callback data =
+	let
+	  val (reason,event,window) = Xm.Callback.convertDrawingArea data
+	  val (w,h) = size main
+	in
+	  draw_picture (0,0,w,h)
+	end
+      
+      fun do_expose (Xm.Event.EXPOSE_EVENT {common,x,y,width,height,count}) =
+	draw_picture (x,y,width,height)
+	
+      fun expose_handler data =
+	let
+	  val event = Xm.Event.convertEvent data
+	in
+	  case event of
+	    Xm.Event.EXPOSE expose_event => do_expose expose_event
+	  | Xm.Event.GRAPHICS_EXPOSE expose_event => do_expose expose_event
+	  (* Could be a NoExpose event *)
+	  | _ => ()
+	end
+      
+      fun clearit _ =
+	if Xm.Widget.isRealized main
+	  then Xm.Draw.clearArea (display,Xm.Widget.window main,0,0,0,0,true)
+	else ()
+	  
+      fun resize_callback data = 
+	clearit ()
+	
+      fun new_gen () =
+	(state := gen (!state);
+	 drawit ())
+	
+      fun input_callback data =
+	let
+	  val (reason,event) = Xm.Callback.convertAny data
+	in
+	  case event of
+	    Xm.Event.BUTTON_PRESS 
+	    (Xm.Event.BUTTON_EVENT {x,y,...}) => 
+	      let
+		val i = x div block_size
+		val j = y div block_size
+	      in
+		if i >= 0 andalso i < world_x
+		  andalso j >= 0 andalso j < world_y
+		  then
+		    let 
+		      val ((a,_,_),_) = !state
+		      val current = Array.sub (Array.sub (a,i),j)
+		      val new = 1 - current
+		    in
+		      Array.update (Array.sub (a,i),j,new);
+		      if new = 1 
+			then draw_image (i*block_size,j*block_size)
+		      else clear_image (i*block_size,j*block_size)
+		    end
+		else ()
+	      end
+	  | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "x",...})) =>
+	      Xm.Widget.destroy applicationShell
+	  | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "r",...})) =>
+	      (state :=init_gen (initvals,world_x,world_y);
+	       clearit ())
+	  | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "s",...})) =>
+	      (goforit := not (!goforit);
+	       if !goforit then new_gen() else ())
+	  | (Xm.Event.KEY_PRESS _) =>
+	      new_gen ()
+	  | _ => ()
+	end
+    in
+      Xm.Event.addHandler (main,[Xm.Event.EXPOSURE_MASK],true,expose_handler);
+      Xm.Callback.add (main,Xm.Callback.INPUT,input_callback);
+      Xm.Callback.add (main,Xm.Callback.RESIZE,resize_callback)
+    end;
+    
+  fun create (init,x,y) = 
+    (state := init;
+     make_toplevel (x,y))
+    
+  fun runx () = Xm.mainLoop ()
+
+  val world_x = 121
+  val world_y = 37
+  
+  fun test () =  create (init_gen (initvals,world_x,world_y), world_x,world_y)
+  fun life (vals,x,y) = create (init_gen (vals,x,y),x,y)
+  fun appl () = (test (); runx ())
+end
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@@
+
+
+1.3
+log
+@Changes for new version of Xm structure
+@
+text
+@a3 145
+fun P s = output (std_out, s ^ "\n")
+
+val size_exp = 3
+val block_size = Bits.lshift (1,size_exp)
+
+fun max (x:int,y) = if x > y then x else y
+fun min (x:int,y) = if x < y then x else y
+
+fun make_gen (n,m) =
+  (Array.tabulate (n, fn _ => Array.array (m,0)),
+   n,
+   m)
+
+fun sub ((array,n,m),i,j) =
+  if i < 0 then 0
+  else if j < 0 then 0
+  else if i >= n then 0
+  else if j >= m then 0
+  else Array.sub (Array.sub (array,i),j)
+
+fun mymod (i,n) =
+  if i < 0 then mymod (i+n,n)
+  else if i >= n then mymod (i-n,n)
+  else i
+
+fun update ((array,n,m),i,j,x:int) =
+  Array.update (Array.sub (array,mymod (i,n)),mymod (j,m),x)
+
+fun calc_val (array,i,j) =
+  sub (array,i-1,j-1) +
+  sub (array,i-1,j) +
+  sub (array,i-1,j+1) +
+  sub (array,i,j-1) +
+  sub (array,i,j+1) +
+  sub (array,i+1,j-1) +
+  sub (array,i+1,j) +
+  sub (array,i+1,j+1)
+
+fun calc_val ((a,n,m),i,j) : int =
+  let
+    val lix = if j = 0 then m-1 else j-1
+    val mix = j
+    val rix = if j = m-1 then 0 else j+1
+    val top_row = Array.sub (a,if i=0 then n-1 else i-1)
+    val mid_row = Array.sub (a,i)
+    val bottom_row = Array.sub (a,if i = n-1 then 0 else i+1)
+  in
+    Array.sub (top_row,lix) +
+    Array.sub (top_row,mix) +
+    Array.sub (top_row,rix) +
+    Array.sub (mid_row,lix) +
+    Array.sub (mid_row,rix) +
+    Array.sub (bottom_row,lix) +
+    Array.sub (bottom_row,mix) +
+    Array.sub (bottom_row,rix)
+  end
+
+fun new (ina,i,j,outa) =
+  let
+    val newval =
+      case calc_val (ina,i,j) of
+        2 => sub (ina,i,j)
+      | 3 => 1
+      | _ => 0
+  in
+    update (outa,i,j,newval)
+  end
+
+fun clean (a,n,m) =
+  let
+    fun loop1 i =
+      if i = n
+        then ()
+      else
+        let
+          val suba = Array.sub (a,i)
+          fun loop2 j =
+            if j = m then ()
+            else 
+              (Array.update (suba,j,0);
+               loop2 (j+1))
+        in
+          loop2 0;
+          loop1 (i+1)
+        end
+  in
+    loop1 0
+  end
+
+fun gen (ina as (_,n,m),outa) =
+  let
+    fun loop1 i =
+      if i = n
+        then ()
+      else
+        let
+          fun loop2 j =
+            if j = m then ()
+            else 
+              (new (ina,i,j,outa);
+               loop2 (j+1))
+        in
+          loop2 0;
+          loop1 (i+1)
+        end
+  in
+    clean outa;
+    loop1 0;
+    (outa,ina)
+  end
+
+fun set (a,[]) = ()
+  | set (a,(i,j)::rest) =
+    (update (a,i,j,1);
+     set (a,rest))
+
+val gunvals =
+  [(2,20),(3,19),(3,21),(4,18),
+  (4,22),(4,23),(4,32),(5,7),
+  (5,8),(5,18),(5,22),(5,23),
+  (5,29),(5,30),(5,31),(5,32),
+  (5,36),(6,7),(6,8),(6,18),
+  (6,22),(6,23),(6,28),(6,29),
+  (6,30),(6,31),(6,36),(7,19),
+  (7,21),(7,28),(7,31),(7,42),
+  (7,41),(8,20),(8,28),(8,29),
+  (8,30),(8,31),(8,42),(8,41),
+  (9,29),(9,30),(9,31),(9,32)
+  ]
+
+fun move (a:int,b:int) l = map (fn (x,y) => (x+a,y+b)) l
+
+val initvals = move (10,10) crash
+
+fun init_gen (initvals,world_x,world_y) = 
+  let
+    val (a1,a2) = (make_gen (world_x,world_y),make_gen (world_x,world_y))
+    val _ = set (a1,initvals)
+  in
+    (a1,a2)
+  end
+
+val state = ref (make_gen (0,0),make_gen (0,0))
+
+(* Motif stuff *)
+d6 1
+a6 1
+  structure Xm = Xm_;
+d9 188
+a196 39
+in
+
+fun make_toplevel (world_x,world_y) =
+  let
+    val name = "mlworks"
+    val class = "MLWorks"
+        
+    val title = "test"
+
+    (*  The extent of the drawing area *)
+    val xextent = world_x * block_size
+    val yextent = world_y * block_size
+
+    val applicationShell =
+      Xm.initialize
+      (name, class,
+       [(Xm.TITLE, Xm.STRING title), (Xm.ICON_NAME, Xm.STRING title)]);
+
+    val main =
+      Xm.Widget.createManaged
+      ("drawPane", Xm.Widget.DRAWING_AREA,applicationShell,
+       [(Xm.WIDTH,Xm.INT xextent),(Xm.HEIGHT,Xm.INT yextent)])
+
+    val _ = Xm.Widget.realize applicationShell
+
+    val window= Xm.Widget.window main
+    val display = Xm.Widget.display main
+    val screen = Xm.Widget.screen main
+
+    exception Size
+    fun size widget =
+      case Xm.Widget.valuesGet (widget,[Xm.WIDTH,Xm.HEIGHT]) of
+        [Xm.INT width,Xm.INT height] => (width,height) 
+      | _ => raise Size
+
+    exception Crash
+
+    val bg  = case Xm.Widget.valuesGet (main,[Xm.BACKGROUND]) of 
+      [(Xm.PIXEL bg)] => bg
+d198 84
+a281 74
+
+    val on_gc = Xm.GC.create (display,window,[Xm.GC.FOREGROUND (Xm.Pixel.screenBlack screen),
+                                                 Xm.GC.BACKGROUND bg])
+    val off_gc = Xm.GC.create (display,window,[Xm.GC.FOREGROUND bg,
+                                               Xm.GC.BACKGROUND bg])
+
+    fun draw_image (x,y) =
+      Xm.Draw.fillRectangle (display,window,on_gc,x+1,y+1,block_size -2 ,block_size -2)
+
+    fun clear_image (x,y) =
+      Xm.Draw.fillRectangle (display,window,off_gc,x+1,y+1,block_size -2,block_size -2)
+
+    fun make_rect (x,y) =
+      (Bits.lshift (x,size_exp)+1 ,Bits.lshift (y,size_exp)+1,block_size-2,block_size-2)
+
+    fun draw_picture _ =
+      let
+        val ((gen1,_,_),(gen2,_,_)) = !state
+        val on_rects = ref []
+        val off_rects = ref []
+      in
+        ExtendedArray.iterate_index
+        (fn (i,a) =>
+         let
+           val max = Array.length a
+           val a2 = Array.sub (gen2,i)
+           fun loop j = 
+             if j = max then ()
+             else
+               let
+                 val n = Array.sub (a,j)
+               in
+                 if n = 1 then 
+                   on_rects := make_rect (i,j) :: !on_rects
+                 else
+                   if n = Array.sub (a2,j)
+                     then ()
+                   else
+                     off_rects := make_rect (i,j) :: !off_rects;
+                 loop (j+1)
+               end
+         in
+           loop 0
+         end)
+        gen1;
+        Xm.Draw.fillRectangles (display,window,off_gc,!off_rects);
+        Xm.Draw.fillRectangles (display,window,on_gc,!on_rects);
+        Xm.sync (display,false)
+      end
+
+    val goforit = ref false
+
+    fun drawit _ =
+      (draw_picture ();
+       if !goforit
+         then
+           (state := gen (!state);
+            draw_picture ();
+            Xm.Draw.clearArea (display,window,0,0,1,1,true))
+       else ())
+
+    val draw_picture = drawit 
+
+    val N = MLWorks.Integer.makestring
+    fun expose_callback data =
+      let
+        val (reason,event,window) = Xm.Callback.convertDrawingArea data
+        val (w,h) = size main
+      in
+        draw_picture (0,0,w,h)
+      end
+
+    fun do_expose (Xm.Event.EXPOSE_EVENT {common,x,y,width,height,count}) =
+      draw_picture (x,y,width,height)
+d283 56
+a338 67
+    fun expose_handler data =
+      let
+        val event = Xm.Event.convertEvent data
+      in
+        case event of
+          Xm.Event.EXPOSE expose_event => do_expose expose_event
+        | Xm.Event.GRAPHICS_EXPOSE expose_event => do_expose expose_event
+        (* Could be a NoExpose event *)
+        | _ => ()
+      end
+
+    fun clearit _ =
+      if Xm.Widget.isRealized main
+        then Xm.Draw.clearArea (display,Xm.Widget.window main,0,0,0,0,true)
+      else ()
+
+    fun resize_callback data = 
+        clearit ()
+
+    fun new_gen () =
+      (state := gen (!state);
+       drawit ())
+
+    fun input_callback data =
+      let
+        val (reason,event) = Xm.Callback.convertAny data
+      in
+        case event of
+          Xm.Event.BUTTON_PRESS 
+          (Xm.Event.BUTTON_EVENT {x,y,...}) => 
+            let
+              val i = x div block_size
+              val j = y div block_size
+            in
+              if i >= 0 andalso i < world_x
+                andalso j >= 0 andalso j < world_y
+                then
+                  let 
+                    val ((a,_,_),_) = !state
+                    val current = Array.sub (Array.sub (a,i),j)
+                    val new = 1 - current
+                  in
+                    Array.update (Array.sub (a,i),j,new);
+                    if new = 1 
+                      then draw_image (i*block_size,j*block_size)
+                    else clear_image (i*block_size,j*block_size)
+                  end
+              else ()
+            end
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "x",...})) =>
+            Xm.Widget.destroy applicationShell
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "r",...})) =>
+            (state :=init_gen (initvals,world_x,world_y);
+             clearit ())
+        | (Xm.Event.KEY_PRESS (Xm.Event.KEY_EVENT {key = "s",...})) =>
+            (goforit := not (!goforit);
+             if !goforit then new_gen() else ())
+        | (Xm.Event.KEY_PRESS _) =>
+            new_gen ()
+        | _ => ()
+      end
+  in
+    Xm.Event.addHandler (main,[Xm.Event.EXPOSURE_MASK],true,expose_handler);
+    Xm.Callback.add (main,Xm.Callback.INPUT,input_callback);
+    Xm.Callback.add (main,Xm.Callback.RESIZE,resize_callback)
+  end;
+
+d342 2
+d345 6
+a350 3
+  fun runx () = Xm.mainLoop ();
+
+
+a351 7
+
+val world_x = 121
+val world_y = 37
+
+fun test () =  create (init_gen (initvals,world_x,world_y), world_x,world_y)
+fun life (vals,x,y) = create (init_gen (vals,x,y),x,y)
+fun appl () = (test (); runx ())
+@
+
+
+1.2
+log
+@Making the size be a parameter
+@
+text
+@d158 2
+a159 2
+    val name = Xm.Widget.NAME "mlworks"
+    val class = Xm.APP_CLASS "MLWorks"
+d170 1
+a170 1
+       [(Xm.Title, Xm.STRING title), (Xm.IconName, Xm.STRING title)]);
+d174 2
+a175 2
+      (Xm.Widget.NAME "drawPane", Xm.Widget.Class.DrawingArea,applicationShell,
+       [(Xm.Width,Xm.INT xextent),(Xm.Height,Xm.INT yextent)])
+d185 1
+a185 1
+      case Xm.Widget.valuesGet (widget,[Xm.Width,Xm.Height]) of
+d191 1
+a191 1
+    val bg  = case Xm.Widget.valuesGet (main,[Xm.Background]) of 
+d274 2
+a275 2
+          Xm.Event.Expose expose_event => do_expose expose_event
+        | Xm.Event.GraphicsExpose expose_event => do_expose expose_event
+d281 1
+a281 1
+      if Xm.Widget.is_realized main
+d297 1
+a297 1
+          Xm.Event.ButtonPress 
+d318 1
+a318 1
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "x",...})) =>
+d320 1
+a320 1
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "r",...})) =>
+d323 1
+a323 1
+        | (Xm.Event.KeyPress (Xm.Event.KEY_EVENT {key = "s",...})) =>
+d326 1
+a326 1
+        | (Xm.Event.KeyPress _) =>
+d331 3
+a333 3
+    Xm.Event.addHandler (main,[Xm.Event.EXPOSURE],true,expose_handler);
+    Xm.Widget.callbackAdd (main,Xm.Callback.Input,input_callback);
+    Xm.Widget.callbackAdd (main,Xm.Callback.Resize,resize_callback)
+@
+
+
+1.1
+log
+@new unit
+New demo
+@
+text
+@d6 2
+a7 3
+
+val world_x = 61
+val world_y = 47
+a50 19
+    MLWorks.Internal.Value.unsafe_array_sub (top_row,lix) +
+    MLWorks.Internal.Value.unsafe_array_sub (top_row,mix) +
+    MLWorks.Internal.Value.unsafe_array_sub (top_row,rix) +
+    MLWorks.Internal.Value.unsafe_array_sub (mid_row,lix) +
+    MLWorks.Internal.Value.unsafe_array_sub (mid_row,rix) +
+    MLWorks.Internal.Value.unsafe_array_sub (bottom_row,lix) +
+    MLWorks.Internal.Value.unsafe_array_sub (bottom_row,mix) +
+    MLWorks.Internal.Value.unsafe_array_sub (bottom_row,rix)
+  end
+
+fun calc_val ((a,n,m),i,j) : int =
+  let
+    val lix = if j = 0 then m-1 else j-1
+    val mix = j
+    val rix = if j = m-1 then 0 else j+1
+    val top_row = Array.sub (a,if i=0 then n-1 else i-1)
+    val mid_row = Array.sub (a,i)
+    val bottom_row = Array.sub (a,if i = n-1 then 0 else i+1)
+  in
+d138 1
+a138 1
+fun init_gen initvals = 
+d156 1
+a156 1
+fun make_toplevel () =
+d164 2
+a165 2
+    val xextent = world_x * 16
+    val yextent = world_y * 16
+d201 1
+a201 1
+      Xm.Draw.fillRectangle (display,window,on_gc,x+1,y+1,14,14)
+d204 1
+a204 1
+      Xm.Draw.fillRectangle (display,window,off_gc,x+1,y+1,14,14)
+d207 1
+a207 1
+      (Bits.lshift (x,4)+1 ,Bits.lshift (y,4)+1,14,14)
+d300 2
+a301 2
+              val i = x div 16
+              val j = y div 16
+d313 2
+a314 2
+                      then draw_image (i*16,j*16)
+                    else clear_image (i*16,j*16)
+d321 1
+a321 1
+            (state :=init_gen initvals;
+d336 1
+a336 1
+  fun run (init) = 
+d338 5
+a342 2
+     make_toplevel ();
+     Xm.mainLoop ())
+d345 2
+a346 1
+fun appl () = run (init_gen initvals)
+d348 3
+a350 1
+fun life vals = run (init_gen vals)
+@

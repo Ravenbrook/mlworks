@@ -1,0 +1,677 @@
+head	1.17;
+access;
+symbols
+	ML_beta_release_12/08/94:1.17
+	ML_beta_release_03/08/94:1.17
+	ML_revised_beta_release_25/05/94:1.17
+	ML_final_beta_release_02/03/94:1.17
+	mlworks-28-01-1994:1.17
+	Release:1.17
+	mlworks-beta-01-09-1993:1.17
+	MLWorks-1-0-4-29/01/1993:1.12
+	MLWorks-1-0-3-21/12/1992:1.12
+	MLWorks-1-0-2-15/12/1992:1.12
+	MLWorks-1-0-1-04/12/1992:1.12
+	checkpoint_17_08_92:1.7
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.17
+date	93.03.17.18.41.11;	author matthew;	state Exp;
+branches
+	1.17.1.1;
+next	1.16;
+
+1.16
+date	93.03.04.10.45.00;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.02.19.16.10.39;	author matthew;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.02.08.17.51.32;	author matthew;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.02.01.16.14.04;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.11.26.17.15.10;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.10.27.19.14.05;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.10.02.16.08.42;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.26.13.16.19;	author davidt;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.18.16.02.58;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.11.18.14.16;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.03.13.18.06;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.06.24.17.19.53;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.05.05.10.34.08;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.27.20.02.55;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.47.19;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.38.07;	author colin;	state Exp;
+branches;
+next	;
+
+1.17.1.1
+date	93.03.17.18.41.11;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Signature Environment (G)
+See The Definition (section 5.1)
+@
+
+
+1.17
+log
+@Nameset signature changes
+@
+text
+@(* _sigenv.sml the functor *)
+(*
+$Log: _sigenv.sml,v $
+Revision 1.16  1993/03/04  10:45:00  matthew
+Options & Info changes
+
+Revision 1.15  1993/02/19  16:10:39  matthew
+Removed names_of_sigenv function
+
+Revision 1.14  1993/02/08  17:51:32  matthew
+Changes for BASISTYPES signature
+
+Revision 1.13  1993/02/01  16:14:04  matthew
+Removed look_at_sigmas
+
+Revision 1.12  1992/11/26  17:15:10  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.11  1992/10/27  19:14:05  jont
+Modified to use less than functions for maps
+
+Revision 1.10  1992/10/02  16:08:42  clive
+Change to NewMap.empty which now takes < and = functions instead of the single-function
+
+Revision 1.9  1992/08/26  13:16:19  davidt
+Made some changes to the NewMap signature.
+
+Revision 1.8  1992/08/18  16:02:58  jont
+Removed irrelevant handlers and new exceptions
+
+Revision 1.7  1992/08/11  18:14:16  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.6  1992/08/03  13:18:06  jont
+Anel's changes to use NewMap instead of Map
+
+Revision 1.5  1992/06/24  17:19:53  jont
+Changed to imperative implementation of namesets with hashing
+
+Revision 1.4  1992/05/05  10:34:08  jont
+Anel's fixes
+
+Revision 1.3  1992/01/27  20:02:55  jont
+Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+
+Revision 1.2  1991/11/21  16:47:19  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:38:07  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/lists";
+require "../utils/print";
+require "../basics/identprint";
+require "ty_debug";
+require "environment";
+require "sigma";
+require "sigenv";
+
+functor Sigenv (
+  structure Lists     : LISTS
+  structure Print     : PRINT
+  structure IdentPrint : IDENTPRINT
+  structure Ty_Debug  : TY_DEBUG
+  structure Env       : ENVIRONMENT
+  structure Sigma     : SIGMA
+  structure Debug :
+	       sig
+		 val set_debug_level : int -> unit
+		 val debug_level : unit -> int
+	       end
+  sharing Sigma.Options = IdentPrint.Options
+  sharing Sigma.BasisTypes.Datatypes = Env.Datatypes
+  sharing Env.Datatypes.Ident = IdentPrint.Ident
+
+    ) : SIGENV =
+
+  struct
+    structure BasisTypes = Sigma.BasisTypes
+    structure Options = Sigma.Options
+
+    val do_debug = Ty_Debug.do_debug
+    open Sigma.BasisTypes.Datatypes
+
+    exception Lookup_SigId = NewMap.Undefined
+
+    fun sigid_order x =
+      Ident.sigid_eq x 
+      orelse  Ident.sigid_order x 
+
+    val sigid_equal = Ident.sigid_eq
+
+    val empty_sigenv = BasisTypes.SIGENV (NewMap.empty (Ident.sigid_lt, Ident.sigid_eq))
+
+    fun add_to_sigenv (sigid,asig,BasisTypes.SIGENV amap) = 
+      BasisTypes.SIGENV (NewMap.define (amap,sigid,asig))
+
+    fun lookup (sigid,BasisTypes.SIGENV amap) = 
+      (if (do_debug andalso Debug.debug_level () > 10) 
+	 then (Print.print ("sigid lookup \n");
+	       Print.print (IdentPrint.printSigId sigid);
+	       Print.print ("\n"))
+       else ();
+	 NewMap.apply'(amap, sigid))
+
+(*  (* This function ain't used no more *)
+
+    (**** 
+     Check for the presence of free imperative type variables.
+     ****)
+
+    fun no_imptyvars (BasisTypes.SIGENV amap) =  
+      let 
+	fun look_at_sigmas(_, BasisTypes..SIGMA (_,STR (_,_,env))) =
+	  Env.no_imptyvars (env)
+      in
+	NewMap.forall look_at_sigmas amap
+      end
+*)
+
+    fun sigenv_plus_sigenv (BasisTypes.SIGENV amap,BasisTypes.SIGENV amap') =
+      BasisTypes.SIGENV (NewMap.union(amap, amap'))
+
+    fun string_sigenv options (BasisTypes.SIGENV amap) =
+      let
+        val sigid_sig_list = NewMap.to_list_ordered amap
+        fun print_pair ((object,image),print_object,print_image,connector) = 
+          print_object object ^ connector ^ print_image image
+      in
+        Lists.to_string
+        (fn (x,y) => print_pair ((x,y),IdentPrint.printSigId,
+                                 fn sigma => (Sigma.string_sigma options sigma) ^ "\n",
+                                 " |--> "))
+        sigid_sig_list
+      end
+
+end
+@
+
+
+1.17.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.17  1993/03/17  18:41:11  matthew
+Nameset signature changes
+
+@
+
+
+1.16
+log
+@Options & Info changes
+@
+text
+@d4 3
+a63 1
+require "nameset";
+a72 1
+  structure Nameset   : NAMESET
+d78 1
+a78 2
+  sharing Sigma.Options = Nameset.Options = IdentPrint.Options
+  sharing Sigma.BasisTypes = Nameset.BasisTypes
+d81 2
+a82 1
+) : SIGENV =
+@
+
+
+1.15
+log
+@Removed names_of_sigenv function
+@
+text
+@d4 3
+d77 1
+d85 1
+@
+
+
+1.14
+log
+@Changes for BASISTYPES signature
+@
+text
+@d4 3
+d137 1
+a137 9
+    fun names_of_sigenv (BasisTypes.SIGENV amap) =
+      let 
+	fun gather_names (names, _, BasisTypes.SIGMA (names',str)) =
+	  Nameset.union (names',names)
+      in
+	NewMap.fold gather_names (Nameset.empty_nameset (), amap)
+      end
+
+end;
+@
+
+
+1.13
+log
+@Removed look_at_sigmas
+@
+text
+@d4 3
+d55 1
+d65 1
+d71 3
+a73 2
+  sharing Sigma.Nameset.Datatypes = Env.Datatypes
+  sharing Sigma.Nameset.Datatypes.Ident = IdentPrint.Ident
+d77 1
+a77 1
+    structure Sigma = Sigma
+d80 1
+a80 8
+    open Sigma.Nameset.Datatypes
+
+    (****
+     Datatype declaration for the compound semantic object SigEnv and
+     the operations on it.
+     ****)
+
+    datatype Sigenv = SIGENV of (Ident.SigId,Sigma.Sigma) NewMap.T
+d90 1
+a90 1
+    val empty_sigenv = SIGENV (NewMap.empty (Ident.sigid_lt, Ident.sigid_eq))
+d92 2
+a93 2
+    fun add_to_sigenv (sigid,asig,SIGENV amap) = 
+      SIGENV (NewMap.define (amap,sigid,asig))
+d95 1
+a95 1
+    fun lookup (sigid,SIGENV amap) = 
+d109 1
+a109 1
+    fun no_imptyvars (SIGENV amap) =  
+d111 1
+a111 1
+	fun look_at_sigmas(_, Sigma.SIGMA (_,STR (_,_,env))) =
+d118 2
+a119 2
+    fun sigenv_plus_sigenv (SIGENV amap,SIGENV amap') =
+      SIGENV (NewMap.union(amap, amap'))
+d121 1
+a121 1
+    fun string_sigenv options (SIGENV amap) =
+d134 1
+a134 1
+    fun names_of_sigenv (SIGENV amap) =
+d136 2
+a137 2
+	fun gather_names (names, _, Sigma.SIGMA (names',str)) =
+	  Sigma.Nameset.union (names',names)
+d139 1
+a139 1
+	NewMap.fold gather_names (Sigma.Nameset.empty_nameset (), amap)
+@
+
+
+1.12
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d104 2
+d112 1
+a112 1
+	fun look_at_sigmas(_, Sigma.SIGMA (_,STR (_,env))) =
+d117 1
+@
+
+
+1.11
+log
+@Modified to use less than functions for maps
+@
+text
+@d4 3
+d115 1
+a115 1
+    fun string_sigenv (SIGENV amap) =
+d123 1
+a123 1
+                                 fn sigma => (Sigma.string_sigma sigma) ^ "\n",
+@
+
+
+1.10
+log
+@Change to NewMap.empty which now takes < and = functions instead of the single-function
+@
+text
+@d4 3
+d84 1
+a84 1
+    val empty_sigenv = SIGENV (NewMap.empty (sigid_order,sigid_equal))
+@
+
+
+1.9
+log
+@Made some changes to the NewMap signature.
+@
+text
+@d4 3
+d76 2
+a77 6
+      if Ident.sigid_eq x 
+        then NewMap.EQUAL
+      else
+        if Ident.sigid_order x 
+          then NewMap.LESS
+        else NewMap.GREATER
+d79 3
+a81 1
+    val empty_sigenv = SIGENV (NewMap.empty sigid_order)
+@
+
+
+1.8
+log
+@Removed irrelevant handlers and new exceptions
+@
+text
+@d4 3
+d99 1
+a99 1
+	fun look_at_sigmas(Sigma.SIGMA (_,STR (_,env))) =
+@
+
+
+1.7
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d67 1
+a67 1
+    exception Lookup_SigId
+d88 1
+a88 2
+	 NewMap.apply'(amap, sigid)
+	 handle NewMap.Undefined => raise Lookup_SigId)
+@
+
+
+1.6
+log
+@Anel's changes to use NewMap instead of Map
+@
+text
+@d4 3
+d28 1
+a29 1
+require "datatypes";
+d37 1
+a38 1
+  structure Datatypes : DATATYPES
+d46 3
+a48 1
+  sharing Datatypes = Sigma.Datatypes = Env.Datatypes) : SIGENV =
+a50 1
+    structure Datatypes = Datatypes
+d54 1
+a54 1
+    open Datatypes
+d84 1
+a84 1
+	 NewMap.apply amap sigid
+d93 2
+a94 6
+	val sigid_sig_list = NewMap.to_list amap
+	fun look_at_sigmas [] = true
+	  | look_at_sigmas ((sigid,Sigma.SIGMA (_,STR (_,env)))::sigid_sigs) = 
+	    Env.no_imptyvars (env) 
+	    andalso
+	    look_at_sigmas sigid_sigs
+d96 1
+a96 1
+	look_at_sigmas sigid_sig_list
+d100 1
+a100 7
+      let 
+        val sigid_sig_list' = NewMap.to_list amap'
+      in
+        SIGENV (Lists.reducel
+                (fn (tree,(sigid,sigma)) => NewMap.define (tree,sigid,sigma))
+                (amap,sigid_sig_list'))
+      end
+d117 2
+a118 4
+	val sigma_list = NewMap.range amap
+	fun gather_names ([],names) = names
+	  | gather_names (Sigma.SIGMA (names',str)::sigmas,names) = 
+	    gather_names (sigmas,Sigma.Nameset.union (names',names))
+d120 1
+a120 1
+	gather_names (sigma_list,Sigma.Nameset.empty_nameset ())
+@
+
+
+1.5
+log
+@Changed to imperative implementation of namesets with hashing
+@
+text
+@d4 3
+d23 1
+d27 2
+a29 2
+require "sigma";
+require "environment";
+d31 4
+a34 3
+functor Sigenv(
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+d36 2
+a37 2
+  structure Sigma : SIGMA
+  structure Env : ENVIRONMENT
+d57 1
+a57 1
+    datatype Sigenv = SIGENV of (Ident.SigId,Sigma.Sigma) Mapping.Map
+d61 7
+a67 1
+    val empty_sigenv = SIGENV Mapping.empty_map
+d69 2
+d72 1
+a72 1
+      SIGENV (Mapping.add ((sigid,asig),amap,Ident.sigid_order))
+d74 1
+a74 1
+    fun lookup_sigid (sigid,SIGENV amap) = 
+d80 2
+a81 2
+	 Mapping.lookup (sigid,amap)
+	 handle Mapping.Lookup => raise Lookup_SigId)
+d89 1
+a89 1
+	val sigid_sig_list = Mapping.assoc amap
+d100 7
+a106 1
+      SIGENV (Mapping.plus (amap,amap',Ident.sigid_order))
+d108 12
+a119 5
+    fun string_sigenv (SIGENV amap) = 
+      Mapping.print_map (amap,
+			 IdentPrint.printSigId,
+			 Sigma.string_sigma,
+			 " |--> ")	
+d123 1
+a126 1
+	val sigma_list = Mapping.range amap
+@
+
+
+1.4
+log
+@Anel's fixes
+@
+text
+@d4 3
+d102 1
+a102 1
+	gather_names (sigma_list,Sigma.Nameset.empty_nameset)
+@
+
+
+1.3
+log
+@Added use of variable from ty_debug, with local copy, to control
+debug output. For efficiency reasons
+@
+text
+@d4 4
+d71 1
+a71 1
+    fun no_imptyvars (se as SIGENV amap) =  
+d73 6
+a78 10
+	val sigidlist = Mapping.domain amap
+	fun look_at_sigmas ([],_) = true
+	  | look_at_sigmas (sigid::sigidlist,se) = 
+	    let val Sigma.SIGMA (_,STR (_,env)) =
+	      lookup_sigid (sigid,se)
+	    in
+	      Env.no_imptyvars (env) 
+	      andalso
+	      look_at_sigmas (sigidlist,se)
+	    end
+d80 1
+a80 1
+	look_at_sigmas (sigidlist,se)
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_sigenv.sml,v $
+d12 4
+a16 1
+require "datatypes";
+a18 1
+require "../utils/print";
+d20 12
+a31 8
+functor Sigenv (structure Datatypes : DATATYPES
+		structure Sigma : SIGMA
+		structure Env : ENVIRONMENT
+		structure Debug : sig val set_debug_level : int -> unit
+				      val debug_level : unit -> int
+				  end
+		structure Print : PRINT
+		sharing Datatypes = Sigma.Datatypes = Env.Datatypes) : SIGENV =
+d37 1
+d55 1
+a55 1
+      (if (Debug.debug_level () > 10) 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

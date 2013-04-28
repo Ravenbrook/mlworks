@@ -1,0 +1,356 @@
+head	1.12;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.12
+date	95.07.20.14.25.06;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.07.17.11.57.20;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.07.05.12.08.16;	author io;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.06.27.14.01.13;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.05.26.15.10.44;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.02.14.14.19.01;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.12.09.19.33.44;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.10.08.16.27.17;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.05.18.19.05.52;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	93.04.29.16.51.06;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.04.29.11.20.28;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.04.21.12.48.35;	author daveb;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	93.05.18.19.05.52;	author jont;	state Exp;
+branches;
+next	1.4.1.2;
+
+1.4.1.2
+date	93.10.07.14.03.16;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@Context Browser.
+@
+
+
+1.12
+log
+@Adding Graph Widget structure
+@
+text
+@(*
+ *  $Log: __browser_tool.sml,v $
+ *  Revision 1.11  1995/07/17  11:57:20  matthew
+ *  Removing Xm structure
+ *
+ *  Revision 1.10  1995/07/05  12:08:16  io
+ *  added search capability
+ *
+ *  Revision 1.9  1995/06/27  14:01:13  matthew
+ *  Adding Capi structure
+ *
+ *  Revision 1.8  1995/05/26  15:10:44  daveb
+ *  Added Preferences parameter.
+ *
+ *  Revision 1.7  1995/02/14  14:19:01  matthew
+ *  Removing redundant structures
+ *
+ *  Revision 1.6  1993/12/09  19:33:44  jont
+ *  Added copyright message
+ *
+ *  Revision 1.5  1993/10/08  16:27:17  matthew
+ *  Mergin in bug fixes
+ *
+ *  Revision 1.4.1.2  1993/10/07  14:03:16  matthew
+ *  Added ShellUtils structure
+ *
+ *  Revision 1.4.1.1  1993/05/18  19:05:52  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.4  1993/05/18  19:05:52  jont
+ *  Removed integer parameter
+ *
+ *  Revision 1.3  1993/04/29  16:51:06  daveb
+ *  Added ToolData parameter.
+ *
+ *  Revision 1.2  1993/04/29  11:20:28  daveb
+ *  Added Crash parameter.
+ *
+ *  Revision 1.1  1993/04/21  12:48:35  daveb
+ *  Initial revision
+ *
+ * Copyright (c) 1993 Harlequin Ltd.
+ *)
+
+require "../library/__capi";
+require "../library/__graph_widget";
+require "../utils/__lists";
+require "../utils/__crash";
+require "../main/__user_options";
+require "../main/__preferences";
+require "../interpreter/__shell_utils";
+require "../interpreter/__entry";
+require "__motif_utils";
+require "__tooldata";
+require "__menus";
+require "_browser_tool";
+
+structure BrowserTool_ =
+  BrowserTool (
+    structure Capi = Capi_
+    structure GraphWidget = GraphWidget_
+    structure Lists = Lists_
+    structure Crash = Crash_
+    structure UserOptions = UserOptions_
+    structure Preferences = Preferences_
+    structure Menus = Menus_
+    structure ToolData = ToolData_
+    structure MotifUtils = MotifUtils_
+    structure ShellUtils = ShellUtils_
+    structure Entry = Entry_
+)
+@
+
+
+1.11
+log
+@Removing Xm structure
+@
+text
+@d3 3
+d46 1
+d61 1
+@
+
+
+1.10
+log
+@added search capability
+@
+text
+@d3 3
+a41 1
+require "../library/__xm";
+a44 6
+require "../basics/__identprint";
+require "../interpreter/__incremental";
+require "../typechecker/__basis";
+require "../typechecker/__types";
+require "../typechecker/__scheme";
+require "../typechecker/__valenv";
+d48 1
+a51 1
+require "__entry";
+a55 1
+    structure Xm = Xm_
+a58 6
+    structure Incremental = Incremental_
+    structure IdentPrint = IdentPrint_
+    structure Basis = Basis_
+    structure Types = Types_
+    structure Scheme = Scheme_
+    structure Valenv = Valenv_
+@
+
+
+1.9
+log
+@Adding Capi structure
+@
+text
+@d3 3
+d55 1
+a55 1
+
+d76 1
+@
+
+
+1.8
+log
+@Added Preferences parameter.
+@
+text
+@d3 3
+d37 1
+d58 1
+@
+
+
+1.7
+log
+@Removing redundant structures
+@
+text
+@d3 3
+d43 1
+d63 1
+@
+
+
+1.6
+log
+@Added copyright message
+@
+text
+@d3 3
+a34 1
+require "../parser/__parser";
+a40 1
+require "../debugger/__value_printer";
+a53 1
+    structure Parser = Parser_
+a58 1
+    structure ValuePrinter = ValuePrinter_
+a63 2
+
+  
+@
+
+
+1.5
+log
+@Mergin in bug fixes
+@
+text
+@d3 3
+d24 1
+@
+
+
+1.4
+log
+@Removed integer parameter
+@
+text
+@d3 9
+d34 1
+a34 1
+require "../interpreter/__shell_types";
+a49 1
+    structure ShellTypes = ShellTypes_
+d59 1
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 3
+ *  Revision 1.4  1993/05/18  19:05:52  jont
+ *  Removed integer parameter
+ *
+@
+
+
+1.4.1.2
+log
+@Added ShellUtils structure
+@
+text
+@a2 3
+ *  Revision 1.4.1.1  1993/05/18  19:05:52  jont
+ *  Fork for bug fixing
+ *
+d28 1
+a28 1
+require "../interpreter/__shell_utils";
+d44 1
+a53 1
+    structure ShellUtils = ShellUtils_
+@
+
+
+1.3
+log
+@Added ToolData parameter.
+@
+text
+@d3 3
+a14 1
+require "../utils/__integer";
+a35 1
+    structure Integer = Integer_
+@
+
+
+1.2
+log
+@Added Crash parameter.
+@
+text
+@d3 3
+d26 1
+d48 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+ *  $Log$
+d11 1
+d32 1
+@

@@ -1,0 +1,137 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.05.21.09.47.43;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.15.13.28.28;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.46.10;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@signature changes
+@
+text
+@(*  ==== INITIAL BASIS : TEXTBIN ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: textbin.sml,v $
+ * Revision 1.2  1996/05/15  13:28:28  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.1  1996/04/18  11:46:10  jont
+ * new unit
+ *
+ *  Revision 1.2  1996/03/28  12:49:39  matthew
+ *  New language definition
+ *
+ *  Revision 1.1  1995/04/13  14:12:28  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+require "integer";
+require "imperative_io";
+require "__word8";
+require "__word8vector";
+
+signature STANDARD_IO =
+  sig
+     include IMPERATIVE_IO
+     structure Position : INTEGER
+     val openIn : string -> instream
+     val openOut: string -> outstream
+     val openAppend: string -> outstream
+     val stdIn : instream
+     val stdOut: outstream
+     val stdErr: outstream
+  end
+
+signature BIN_IO =
+   STANDARD_IO where type StreamIO.elem = Word8.word 
+                     and StreamIO.vector = Word8Vector.vector
+
+signature TEXT_IO =
+  sig
+    include STANDARD_IO where type StreamIO.elem = char
+                              and StreamIO.vector = string
+    structure BinIO : BIN_IO
+    val inputLine : instream -> string
+(*
+    val translateIn: BinIO.StreamIO.PrimIO.reader -> 
+      StreamIO.PrimIO.reader
+    val translateOut: BinIO.StreamIO.PrimIO.writer -> 
+      StreamIO.PrimIO.writer
+*)
+  end
+@
+
+
+1.2
+log
+@pack_words moved to pack_word
+@
+text
+@d10 3
+d28 1
+a28 1
+require "io";
+d34 1
+a34 1
+     include IO
+a42 2
+  where type pos = Position.int
+
+d54 1
+d59 1
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d24 1
+a24 1
+require"fileposint";
+d32 1
+a32 1
+     structure FilePosInt : FILEPOSINT
+d40 1
+a40 1
+  where type pos = FilePosInt.int
+@

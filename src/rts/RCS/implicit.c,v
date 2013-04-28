@@ -1,0 +1,512 @@
+head	1.19;
+access;
+symbols
+	Final_version_of_old_runtime:1.19
+	ML_revised_beta_release_25/05/94:1.19
+	ML_final_beta_release_02/03/94:1.19
+	mlworks-28-01-1994:1.19
+	Release:1.18
+	mlworks-beta-01-09-1993:1.18
+	MLWorks-1-0-3-21/12/1992:1.16
+	MLWorks-1-0-2-15/12/1992:1.16
+	MLWorks-1-0-1-04/12/1992:1.16
+	checkpoint_17_08_92:1.15;
+locks; strict;
+comment	@ *  @;
+
+
+1.19
+date	93.11.05.14.32.16;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.04.22.16.50.46;	author jont;	state Exp;
+branches
+	1.18.1.1;
+next	1.17;
+
+1.17
+date	93.04.14.13.24.05;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.11.11.11.38.16;	author clive;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.07.31.07.55.28;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.07.27.14.05.54;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.07.22.13.39.37;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.07.10.14.19.29;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.03.13.51.11;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.06.17.13.38.14;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.05.08.16.32.06;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.04.13.16.23.05;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.03.25.09.52.37;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.24.16.08.27;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.20.13.51.29;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.14.14.51.26;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.08.12.48.16;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.03.12.44.30;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.24.16.24.22;	author davidt;	state Exp;
+branches;
+next	;
+
+1.18.1.1
+date	93.04.22.16.50.46;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The `implicit' vector.
+@
+
+
+1.19
+log
+@Added check_event entries for leaf and non-leaf.
+@
+text
+@/*  ==== THE IMPLICIT VECTOR ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd
+ *
+ *  IMPORTANT
+ *  ---------
+ *  This file is scanned automatically to produce the file
+ *  implicit.sml so follow the instructions in the comments when
+ *  modifying it.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: implicit.c,v $
+ *  Revision 1.18  1993/04/22  16:50:46  jont
+ *  Added leaf raise code
+ *
+ *  Revision 1.17  1993/04/14  13:24:05  richard
+ *  Removed old junk.  Added entries for new tracing mechanism.
+ *  (See sparc/interface.m4s.)
+ *
+ *  Revision 1.16  1992/11/11  11:38:16  clive
+ *  Added a trace hook
+ *
+ *  Revision 1.15  1992/07/31  07:55:28  richard
+ *  Added ml_trap, which might be useful.
+ *
+ *  Revision 1.14  1992/07/27  14:05:54  richard
+ *  poly_equal was never used.
+ *  ml_external is now ml_lookup_pervasive.
+ *
+ *  Revision 1.13  1992/07/22  13:39:37  clive
+ *  Zeroed out profiler slot
+ *
+ *  Revision 1.12  1992/07/10  14:19:29  richard
+ *  Removed redundent memory_profiler entry.
+ *
+ *  Revision 1.11  1992/07/03  13:51:11  richard
+ *  The implicit vector is now a struct, since it contains
+ *  various things of various types.
+ *
+ *  Revision 1.10  1992/06/17  13:38:14  richard
+ *  Added ml_gc_leaf to implicit vector.
+ *
+ *  Revision 1.9  1992/05/08  16:32:06  clive
+ *  Added code for memory profiling
+ *
+ *  Revision 1.8  1992/04/13  16:23:05  clive
+ *  First version of the profiler
+ *
+ *  Revision 1.7  1992/03/25  09:52:37  richard
+ *  Added ml_poly_equal to implicit vector.
+ *
+ *  Revision 1.6  1992/03/24  16:08:27  richard
+ *  Removed obsolete `ml_preserve' from implicit vector.
+ *
+ *  Revision 1.5  1992/01/20  13:51:29  richard
+ *  Added ref_chain.
+ *
+ *  Revision 1.4  1992/01/14  14:51:26  richard
+ *  Added raise_code.
+ *
+ *  Revision 1.3  1992/01/08  12:48:16  richard
+ *  Tidied up documentation, changed the names of the externals to be more
+ *  meaningful and added a new external `extend'.
+ *
+ *  Revision 1.2  1992/01/03  12:44:30  richard
+ *  Added ml_preserve to the implicit vector.
+ *
+ *  Revision 1.1  1991/10/24  16:24:22  davidt
+ *  Initial revision
+ */
+
+#include "mltypes.h"
+#include "values.h"
+#include "implicit.h"
+#include "interface.h"
+
+struct implicit_vector implicit_vector =
+{
+  /* ref_chain              */  NULL,
+  /* gc                     */  ml_gc,
+  /* gc_leaf                */  ml_gc_leaf,
+  /* external               */  ml_lookup_pervasive,
+  /* extend                 */  ml_disturbance,
+  /* raise_code             */  ml_raise,
+  /* leaf raise_code        */  ml_raise_leaf,
+  /* replace		    */  ml_replace,
+  /* replace_leaf	    */  ml_replace_leaf,
+  /* intercept              */  ml_intercept,
+  /* intercept_leaf         */  ml_intercept_leaf,
+  /* interrupt              */  0,
+  /* event_check	    */  ml_event_check,
+  /* event_check_leaf	    */  ml_event_check_leaf
+};
+@
+
+
+1.18
+log
+@Added leaf raise code
+@
+text
+@d14 3
+d91 3
+a93 1
+  /* interrupt              */  0
+@
+
+
+1.18.1.1
+log
+@Fork for bug fixing
+@
+text
+@a13 3
+ *  Revision 1.18  1993/04/22  16:50:46  jont
+ *  Added leaf raise code
+ *
+@
+
+
+1.17
+log
+@Removed old junk.  Added entries for new tracing mechanism.
+(See sparc/interface.m4s.)
+@
+text
+@d14 4
+d83 1
+@
+
+
+1.16
+log
+@Added a trace hook
+@
+text
+@d14 3
+d75 1
+a76 1
+  /* trace                  */  ml_trace,
+d79 5
+a83 5
+  /* profiler               */  ml_trap,
+  /* interrupt_exception    */  MLUNIT,
+  /* gc_leaf                */  ml_gc_leaf,
+  /* interrupt              */  0,
+  /* trace_hook             */  0
+@
+
+
+1.15
+log
+@Added ml_trap, which might be useful.
+@
+text
+@d14 3
+d73 1
+a73 1
+  /* poly_equal             */  0, /* obsolete */
+d79 2
+a80 1
+  /* interrupt              */  0
+@
+
+
+1.14
+log
+@poly_equal was never used.
+ml_external is now ml_lookup_pervasive.
+@
+text
+@d14 4
+d73 1
+a73 1
+  /* profiler               */  0, /* obsolete */
+@
+
+
+1.13
+log
+@Zeroed out profiler slot
+@
+text
+@d14 3
+d65 2
+a66 2
+  /* external               */  ml_external,
+  /* poly_equal             */  ml_poly_equal,
+d69 1
+a69 1
+  /* profiler               */  0, /* Now obsolete */
+@
+
+
+1.12
+log
+@Removed redundent memory_profiler entry.
+@
+text
+@d14 3
+d66 1
+a66 1
+  /* profiler               */  ml_profile,
+@
+
+
+1.11
+log
+@The implicit vector is now a struct, since it contains
+various things of various types.
+@
+text
+@d14 4
+d64 1
+a64 1
+  /* memory_profiler        */  ml_memory_profile,
+a65 1
+  /* interrupt_exception    */  MLUNIT,
+@
+
+
+1.10
+log
+@Added ml_gc_leaf to implicit vector.
+@
+text
+@d14 3
+d46 2
+a47 2
+
+#include "types.h"
+d51 13
+a63 17
+
+/*
+ *  The implicit vector declaration must be a sequence of lines which
+ *  begin with a comment containing the ML identifier to use for the
+ *  vector offset.
+ */
+
+word implicit_vector[] = {
+/* ref_chain */		0,	 /* See implicit.h. */
+/* gc */		(word)ml_gc,
+/* external */		(word)ml_external,
+/* poly_equal */	(word)ml_poly_equal,
+/* extend */		(word)ml_extend,
+/* raise_code */	(word)ml_raise,
+/* profiler */		(word)ml_profile,
+/* memory_profiler */	(word)ml_memory_profile,
+/* gc_leaf */		(word)ml_gc_leaf
+@
+
+
+1.9
+log
+@Added code for memory profiling
+@
+text
+@d14 3
+d63 2
+a64 1
+/* memory_profiler */	(word)ml_memory_profile
+@
+
+
+1.8
+log
+@First version of the profiler
+@
+text
+@d14 3
+d59 2
+a60 1
+/* profiler */		(word)ml_profile
+@
+
+
+1.7
+log
+@Added ml_poly_equal to implicit vector.
+@
+text
+@d14 3
+d55 2
+a56 1
+/* raise_code */	(word)ml_raise
+@
+
+
+1.6
+log
+@Removed obsolete `ml_preserve' from implicit vector.
+@
+text
+@d14 3
+d50 1
+@
+
+
+1.5
+log
+@Added ref_chain.
+@
+text
+@d14 3
+a46 1
+/* preserve */		(word)ml_preserve,
+@
+
+
+1.4
+log
+@Added raise_code.
+@
+text
+@d14 3
+d41 1
+@
+
+
+1.3
+log
+@Tidied up documentation, changed the names of the externals to be more
+meaningful and added a new external `extend'.
+@
+text
+@d14 4
+d38 5
+a42 4
+/* gc */	(word)ml_gc,		/* Garbage collector */
+/* external */	(word)ml_external,	/* Pervasive C interface */
+/* preserve */	(word)ml_preserve,	/* State preserver for debugging */
+/* extend */	(word)ml_extend		/* Stack extender */
+@
+
+
+1.2
+log
+@Added ml_preserve to the implicit vector.
+@
+text
+@d1 1
+a1 6
+/*
+ * implicit.c
+ * The `implicit' vector. This file is scanned automatically to
+ * produce the files implicit.sml so please do not leave any
+ * blank lines within the vector declaration and make sure that each
+ * line is given a name in a comment at the start of the line.
+d3 1
+a3 3
+ * $Log: implicit.c,v $
+ * Revision 1.1  1991/10/24  16:24:22  davidt
+ * Initial revision
+d5 14
+a18 2
+ * 
+ * Copyright (c) Harlequin 1991.
+d21 1
+d26 12
+a37 4
+word implicit_vector [3] = {
+/* callgc */	(word)ml_callgc,	/* Address of the ml_callgc routine. */
+/* callc */	(word)ml_callc,		/* Address of the ml_callc routine.  */
+/* preserve */	(word)ml_preserve	/* Address of the ml_preserve routine. */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 4
+a11 1
+ * $Log$
+d20 4
+a23 3
+word implicit_vector [2] = {
+/* callgc */	(word)ml_callgc,	/* Address of the callgc function. */
+/* callc */	(word)ml_callc		/* Address of the callc function.  */
+@

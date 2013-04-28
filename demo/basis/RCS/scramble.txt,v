@@ -1,0 +1,261 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.3.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.1.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.1.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.1.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.1.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.1.2
+	MLWorks_1_0_Unix_1996_11_14:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.04.02.18.00.00;	author jkbrook;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	96.11.07.13.14.27;	author jkbrook;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1;
+next	;
+
+1.1.1.1
+date	96.11.14.12.40.34;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1
+date	96.11.28.14.52.25;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.11.22.18.01.02;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.12.17.17.39.55;	author hope;	state Exp;
+branches
+	1.1.3.1.1.1;
+next	;
+
+1.1.3.1.1.1
+date	97.02.24.11.27.07;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.10.24.56;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.10.53;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.11.35.20;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.04.12;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.13.59.14;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.11.30.16.49.15;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+README file for basis/scramble.sml
+@
+
+
+1.2
+log
+@[Bug #2014]
+Correcting typo in example code
+@
+text
+@   Load File: __scramble.sml
+
+   This module illustrates some of the lower level binary IO features provided
+   by the basis library.  It defines functions to scramble and unscramble
+   files into a different order.  It demonstrates the BinIO structure,
+   in particular the underlying functional streams used in the BinIO.StreamIO
+   structure.  It also demonstrates the use of the BinPrimIO, Position and
+   Word8Array structures.
+
+   The functions Scramble.scramble and Scramble.unscramble open an
+   in-file and an out-file, convert them into their underlying functional
+   streams and either scramble or unscramble them using the given 
+   permutation function. Examples of such functions are provided by this 
+   module as the functions Scramble.rotate, which takes an integer argument
+   and rotates to the right by that number of bytes, Scramble.reverse,
+   which reverses elements, and Scramble.shuffle
+
+   For example
+
+	Scramble.scramble (Scramble.reverse) ("foo","foo.s");
+      
+   reverses the order of the file `foo' and writes the result to `foo.s', 
+   while 
+
+        Scramble.scramble (Scramble.shuffle) ("foo","foo.s");
+ 
+   performs a shuffle operation on the order of elements in the file,
+   ard
+
+        Scramble.unscramble (Scramble.shuffle) ("foo.s","foo");
+ 
+   unscrambles a file scrambled using Scramble.shuffle, and so on.
+   
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+README file for basis/scramble.sml
+@
+text
+@d10 1
+a10 1
+   The functions Scrable.scramble and Scramble.unscramble open an
+@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.3.1.1.1
+log
+@branched from 1.1.3.1
+@
+text
+@@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1.1.1
+log
+@branched from 1.1.1.1
+@
+text
+@@

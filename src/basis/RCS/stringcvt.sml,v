@@ -1,0 +1,121 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	96.05.07.11.48.54;	author io;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.02.17.22.22;	author io;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.12.24.18;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@visiblize stuff in signature
+@
+text
+@(*  ==== INITIAL BASIS : STRING_CVT ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: stringcvt.sml,v $
+ *  Revision 1.2  1996/05/02  17:22:22  io
+ *  finis stringcvt
+ *
+ *  Revision 1.1  1996/04/23  12:24:18  matthew
+ *  new unit
+ *
+ *
+ *)
+
+require "toplevel";
+
+signature STRING_CVT =
+  sig
+    datatype radix = BIN | OCT | DEC | HEX
+    datatype realfmt = 
+      SCI of int option
+    | FIX of int option
+    | GEN of int option
+
+    type cs
+    type ('a,'b) reader
+
+    val scanString : ((char, cs) reader -> ('a, cs) reader) -> string -> 'a option
+    val skipWS : (char,'a) reader -> 'a -> 'a
+    val padLeft : char -> int -> string -> string
+    val padRight : char -> int -> string -> string
+    val scanList : ((char list -> (char * char list) option) -> char list -> ('a * 'b) option) -> char list -> 'a option
+
+    val splitl : (char -> bool) -> (char,'a) reader -> 'a -> (string * 'a)
+    val takel : (char -> bool) ->  (char,'a) reader -> 'a -> string
+    val dropl : (char -> bool) ->  (char,'a) reader -> 'a -> 'a
+
+  end
+
+@
+
+
+1.2
+log
+@finis stringcvt
+@
+text
+@d10 3
+d37 5
+a41 5
+(*    
+    val split1 : (char -> bool) -> (char,'a) reader -> 'a -> (string * 'a)
+    val take1 : (char -> bool) ->  (char,'a) reader -> 'a -> string
+    val drop1 : (char -> bool) ->  (char,'a) reader -> 'a -> 'a
+*)
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log: real.sml,v $
+d26 1
+d29 6
+a34 5
+    type cs
+(*      
+    val padleft : char -> int -> string -> string
+    val padright : char -> int -> string -> string
+
+a35 1
+
+a37 3
+    val skipWS : (char,'a) reader -> 'a -> 'a
+    val scanString : ((char, cs) reader -> ('a, cs) reader) -> string -> 'a option
+    val scanList : ((char, char list) reader -> ('a, char list) reader) -> char list -> ('a * char list) option
+@

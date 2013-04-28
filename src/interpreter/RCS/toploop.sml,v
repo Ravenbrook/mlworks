@@ -1,0 +1,554 @@
+head	1.4;
+access;
+symbols
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.4
+date	92.07.01.11.34.49;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.06.30.17.22.47;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.06.26.17.27.42;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.06.23.14.41.40;	author jont;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.07.01.11.34.49;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The top level loop of the interpreter
+@
+
+
+1.4
+log
+@Converted to standard sig/fun/str form. This signature exports nothing
+@
+text
+@(* toploop.sml the signature *)
+(*
+$Log$
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+signature TOPLOOP = sig end
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: toploop.sml,v $
+Revision 1.4  1992/07/01  11:34:49  jont
+Converted to standard sig/fun/str form. This signature exports nothing
+
+@
+
+
+1.3
+log
+@First workable version with use
+@
+text
+@d1 1
+a1 1
+(* toploop.sml top level of interpreter *)
+d3 1
+a3 4
+$Log: toploop.sml,v $
+Revision 1.2  1992/06/26  17:27:42  jont
+First vaguely working version. Contains a form of use, but not very good
+
+d7 1
+a7 315
+require "../utils/__crash";
+require "../utils/__print";
+require "../utils/__lists";
+require "../utils/__btree";
+require "../basics/__symbol";
+require "../basics/__ident";
+require "../lexer/__lexer";
+require "../parser/__parser";
+require "../typechecker/__basis";
+require "../typechecker/__valenv";
+require "../typechecker/__scheme";
+require "../typechecker/__types";
+require "../typechecker/__datatypes";
+require "../lambda/__lambdatypes";
+require "../lambda/__lambdaprint";
+require "../lambda/__environtypes";
+require "../lambda/__environ";
+require "../lambda/__environprint";
+require "../interpreter/__inter_envtypes";
+require "../lambda/__lambdaoptimiser";
+require "../mir/__mir_cg";
+require "../mir/__mirprint";
+require "../mir/__miroptimiser";
+require "../machine/__machtypes";
+require "../machine/__mach_cg";
+require "../debugger/__value_printer";
+require "../main/__toplevel";
+
+exception not_yet_implemented of string
+
+val the_env =
+  ref(TopLevel_.initial_compiler_basis, Inter_EnvTypes_.initial_env)
+
+fun augment_cb(TopLevel_.CB(p, t, c), TopLevel_.CB(p', t', c')) =
+  TopLevel_.CB(Parser_.augment_pB(p, p'),
+	       Basis_.basis_circle_plus_basis(t, t'),
+	       Environ_.augment_top_env(c, c'))
+
+fun unpick(result, [], acc) = (result, acc)
+  | unpick([], _, _) = Crash_.impossible"Result has too few values"
+  | unpick(r :: rest, l :: list, acc) = unpick(rest, list, (l, r) :: acc)
+  
+fun element_order((i:int, _), (j, _)) = i < j
+
+fun make_list(done, bytes, value) =
+  if bytes <= 0 then done
+  else
+    make_list(chr(value mod 256) :: done, bytes-1, value div 256)
+
+fun encode_int i =
+  if i < 0 then
+    Crash_.impossible"Negative size of code object"
+  else
+    implode(make_list([], 4, i))
+      
+fun add_spills(spills, string) = [encode_int spills, string]
+
+fun add_back(_, []) = []
+  | add_back(prev_size, (_, spills, code) :: rest) =
+    let
+      val full_string =
+	implode(encode_int prev_size :: add_spills(spills, code))
+    in
+      full_string :: add_back(size full_string * 62 + 42, rest)
+    end
+
+fun fix_up(code_env as Inter_EnvTypes_.INTER_ENV(val_map, exn_map, str_map,
+						 fun_map),
+	   MachTypes_.MODULE module_element_list) =
+  let
+    val app_v_map = BTree_.apply val_map
+    val app_e_map = BTree_.apply exn_map
+    val app_s_map = BTree_.apply str_map
+    val app_f_map = BTree_.apply fun_map
+    fun fix_up_elements(acc, []) = acc
+      | fix_up_elements(acc, MachTypes_.REAL(i, s) :: rest) =
+      fix_up_elements((i, System.Unsafe.Int.make_ml_value s) :: acc, rest)
+      | fix_up_elements(acc, MachTypes_.STRING(i, s) :: rest) =
+      fix_up_elements((i, System.Unsafe.Int.make_ml_value s) :: acc, rest)
+      | fix_up_elements(acc, MachTypes_.VAR(i, s) :: rest) =
+	fix_up_elements((i, app_v_map(Ident_.VAR(Symbol_.find_symbol s))) ::
+			acc, rest)
+      | fix_up_elements(acc, MachTypes_.EXN(i, s) :: rest) =
+	fix_up_elements((i, app_e_map(Ident_.EXCON(Symbol_.find_symbol s))) ::
+			acc, rest)
+      | fix_up_elements(acc, MachTypes_.STRUCT(i, s) :: rest) =
+	fix_up_elements((i, app_s_map(Ident_.STRID(Symbol_.find_symbol s))) ::
+			acc, rest)
+      | fix_up_elements(acc, MachTypes_.FUNCT(i, s) :: rest) =
+	fix_up_elements((i, app_f_map(Ident_.FUNID(Symbol_.find_symbol s))) ::
+			acc, rest)
+      | fix_up_elements(acc,
+			MachTypes_.WORDSET(MachTypes_.WORD_SET i_j_s_list) ::
+			rest) =
+	(case i_j_s_list of
+	   [] => Crash_.impossible"Empty word_set list"
+	 | [(pos, spills, code)] =>
+	     fix_up_elements
+	     ((pos, System.Unsafe.Int.make_ml_value(implode(add_spills
+						       (spills, code)))) ::
+	      acc, rest)
+	 | (pos, spills, code) :: others =>
+	     let
+	       val first_string = implode(add_spills(spills, code))
+	       val other_strings = add_back((size first_string + 4) * 64 + 42,
+					    others)
+	       fun get_offsets(_, []) = []
+		 | get_offsets(now, [x]) = [now]
+		 | get_offsets(now, str :: rest) =
+		   let
+		     val size = size str
+		   in
+		     size :: get_offsets(now+size, rest)
+		   end
+	       val offsets = get_offsets(size first_string + 4, other_strings)
+	       val ml_val =
+		 System.Unsafe.Int.make_ml_value(implode(first_string ::
+						    other_strings))
+	       fun get_new_values([], acc) = acc
+		 | get_new_values(((pos, _, _), offset) :: rest, acc) =
+		   get_new_values
+		   (rest,
+		    (pos,
+		     System.Unsafe.Int.ml_value_from_offset(ml_val, offset)) ::
+		    acc)
+	     in
+	       fix_up_elements(get_new_values(Lists_.zip(others, offsets),
+					      (pos, ml_val) :: acc), rest)
+	     end)
+      | fix_up_elements(acc, MachTypes_.EXTERNAL(i, name) :: rest) =
+	let
+	  val ml_value = System.Unsafe.Int.ml_require name
+	in
+	  fix_up_elements((i, ml_value) :: acc, rest)
+	end
+  in
+    Lists_.qsort element_order (fix_up_elements([], module_element_list))
+  end
+
+fun print_val(ml_value, valid,
+	      basis as Basis_.BASIS(_, _, _, Datatypes_.ENV(_, _, venv, _))) =
+  let
+    val the_type = case Valenv_.lookup(valid, venv) of
+      scheme as Datatypes_.SCHEME _ => Scheme_.instantiate(0, scheme)
+    | Datatypes_.UNBOUND_SCHEME ty => ty
+    | _ => Crash_.impossible"no scheme found for valid"
+  in
+    Print_.print("val " ^ Datatypes_.IdentPrint.printValId valid ^ " = " ^
+		 ValuePrinter_.toplevel_value_printer(ml_value, the_type) ^
+		 " : " ^ Types_.print_type the_type ^ "\n")
+  end
+
+fun print_exn(ml_value, valid,
+	      basis as Basis_.BASIS(_, _, _, Datatypes_.ENV(_, _, _, eenv))) =
+  let
+    val the_type = case Valenv_.lookup(valid, eenv) of
+      Datatypes_.SCHEME(_, ty) => ty
+    | Datatypes_.UNBOUND_SCHEME ty => ty
+    | _ => Crash_.impossible"no scheme found for valid"
+  in
+    Print_.print("val " ^ Datatypes_.IdentPrint.printValId valid ^
+		 " : " ^ Types_.print_type the_type ^ "\n")
+  end
+
+fun print_str(ml_value, strid, basis) =
+  Print_.print"Str printing not yet implemented\n"
+
+fun print_fun(ml_value, funid, basis) =
+  Print_.print"Fun printing not yet implemented\n"
+
+fun topdec(ts, filename) =
+  (let
+     val (basis, code_env) = !the_env
+     val (new_cb as TopLevel_.CB(p, t, top_env), lambda_exp) =
+       TopLevel_.compile_ts(ts, basis)
+   in
+     case lambda_exp of
+       LambdaTypes_.STRUCT[] => ()
+     | _ =>
+	 let
+	   val _ = Print_.print"New environment\n"
+	   val _ = Print_.print(EnvironPrint_.printtopenv top_env)
+	   val _ = Print_.print"\n"
+	   val new_cb = TopLevel_.CB(p, t, Environ_.make_external top_env)
+	   (* Compile what he types *)
+	   val opt_lambda_exp = LambdaOptimiser_.optimise lambda_exp
+	   val (the_mir_code,debugger_information) =
+	     Mir_Cg_.mir_cg(opt_lambda_exp, top_env, filename)
+	   val the_optimised_code = MirOptimiser_.optimise the_mir_code
+	   val the_machine_code =
+	     let
+	       val assign = MirOptimiser_.machine_register_assignments
+	     in
+	       Mach_Cg_.mach_cg(the_optimised_code,
+				(#gc assign,
+				 #non_gc assign,
+				 #fp assign))
+	     end
+	   val fixed_up_code = fix_up(code_env, the_machine_code)
+	     (* Generate runnable code *)
+	   val ml_value =
+	     System.Unsafe.Int.make_ml_value_tuple(map #2 fixed_up_code)
+	   val result = System.Unsafe.Int.call_ml_value ml_value
+	   (* And run it *)
+	   val EnvironTypes_.TOP_ENV(EnvironTypes_.ENV(v_map, e_map, s_map),
+				     EnvironTypes_.FUN_ENV f_map) = top_env
+	   val v_list = BTree_.domain_ordered v_map
+	   val e_list = BTree_.domain_ordered e_map
+	   val s_list = BTree_.domain_ordered s_map
+	   val f_list = BTree_.domain_ordered f_map
+
+	   val (result, new_v_list) = unpick(result, v_list, [])
+	   val (result, new_e_list) = unpick(result, e_list, [])
+	   val (result, new_s_list) = unpick(result, s_list, [])
+	   val (result, new_f_list) = unpick(result, f_list, [])
+	   val _ = case result of
+	     [] => ()
+	   | _ => Crash_.impossible"Result has too many values"
+
+	   val (basis, code_env) = !the_env
+	   val code_env =
+	     Inter_EnvTypes_.add_fun_list
+	     (Inter_EnvTypes_.add_str_list
+	      (Inter_EnvTypes_.add_exn_list
+	       (Inter_EnvTypes_.add_val_list(code_env, new_v_list),
+		new_e_list),
+	       new_s_list),
+	      new_f_list)
+	   (* Decode the result *)
+	   val _ =
+	     (Lists_.iterate
+	      (fn (v, r) => print_val(r, v, t))
+	      new_v_list;
+	      Lists_.iterate
+	      (fn (e, r) => print_exn(r, e, t))
+	      new_e_list;
+	      Lists_.iterate
+	      (fn (s, r) => print_str(r, s, t))
+	      new_s_list;
+	      Lists_.iterate
+	      (fn (f, r) => print_fun(r, f, t))
+	      new_f_list)
+	   val _ = the_env := (augment_cb(basis, new_cb), code_env)
+	 in
+	   ()
+	 end
+   end) handle exn =>
+     Print_.print("Uncaught exception " ^ System.exn_name exn ^ "\n")
+
+fun topdecs(ts, filename) =
+  if Lexer_.eof ts then
+    ()
+  else
+    (topdec(ts, filename); topdecs(ts, filename))
+
+fun input_line file =
+  let
+    fun extend_line line =
+      if end_of_stream file then
+	implode(rev line)
+      else
+	let
+	  val char = input(file, 1)
+	in
+	  if char = "\n" then implode(rev("\n" :: line))
+	  else
+	    extend_line(char :: line)
+	end
+  in
+    extend_line []
+  end
+
+fun internal_use filename =
+  let
+    val instream = open_in filename
+    fun input_fn() = input_line instream
+      handle exn => (close_in instream; raise exn)
+    val _ = topdecs(Lexer_.mkTokenStream(input_fn, filename), filename)
+  in
+    close_in instream
+  end
+
+fun do_line text =
+  let
+    val done = ref false
+    fun input_fn () =
+      if !done then ""
+      else
+	(done := true; text)
+    val ts = Lexer_.mkTokenStream(input_fn, "")
+  in
+    topdecs(ts, "")
+  end
+  
+fun loop () =
+  let
+    val _ = Print_.print"MLWorks> "
+  in
+    if end_of_stream std_in then
+      ()
+    else
+      (do_line(input_line std_in); loop ())
+  end
+
+val _ = TopLevel_.Diagnostic.set 0
+val _ = TopLevel_.print_timings := false
+val _ = TopLevel_.print_minor_timings := false
+val _ = do_line("fun use(x:string) = ()")
+val (cb, rb) = !the_env
+
+val rb =
+  Inter_EnvTypes_.add_val(rb, (Ident_.VAR(Symbol_.find_symbol"use"),
+			       System.Unsafe.Int.make_ml_value internal_use))
+val _ = the_env := (cb, rb)
+val _ = loop()
+@
+
+
+1.2
+log
+@First vaguely working version. Contains a form of use, but not very good
+@
+text
+@d3 4
+a6 1
+$Log$
+d20 1
+d153 1
+a153 1
+      Datatypes_.SCHEME(_, ty) => ty
+d180 1
+a180 1
+fun topdec(env as (basis, code_env), ts, filename) =
+d182 1
+d187 1
+a187 1
+       LambdaTypes_.STRUCT[] => (basis, code_env)
+a195 4
+(*
+	   val _ = Print_.print"The optimised lambda code\n"
+	   val _ = LambdaPrint_.output_lambda(std_out, opt_lambda_exp)
+*)
+a197 4
+(*
+	   val _ = Print_.print"The unoptimised intermediate code\n"
+	   val _ = Print_.print(MirPrint_.print_mir_code the_mir_code)
+*)
+a198 4
+(*
+	   val _ = Print_.print"The optimised intermediate code\n"
+	   val _ = Print_.print(MirPrint_.print_mir_code the_optimised_code)
+*)
+d229 1
+d252 1
+a252 1
+	   val env = (augment_cb(basis, new_cb), code_env)
+d254 1
+a254 1
+	   env
+d257 1
+a257 1
+     (Print_.print("Uncaught exception " ^ System.exn_name exn ^ "\n"); env)
+d259 1
+a259 1
+fun topdecs(env, ts, filename) =
+d261 1
+a261 1
+    env
+d263 1
+a263 1
+    topdecs(topdec(env, ts, filename), ts, filename)
+d282 1
+a282 1
+fun internal_use(env, filename) =
+d287 1
+a287 3
+    val new_env = topdecs(env, Lexer_.mkTokenStream(input_fn, filename),
+			  filename)
+    val _ = the_env := new_env
+d292 1
+a292 1
+fun do_line(env, text) =
+d301 1
+a301 1
+    topdecs(env, ts, "")
+a306 1
+    val env = !the_env
+d311 1
+a311 7
+      let
+	val text = input_line std_in
+	val new_env = do_line(env, text)
+	val _ = the_env := new_env
+      in
+	loop ()
+      end
+d317 2
+a318 2
+val new_env as (cb, rb) = do_line(!the_env, "fun use(x:string) = ()")
+fun use x = internal_use(!the_env, x)
+d320 3
+a322 2
+val rb = Inter_EnvTypes_.add_val(rb, (Ident_.VAR(Symbol_.find_symbol"use"),
+				     System.Unsafe.Int.make_ml_value use))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 6
+d20 1
+d27 1
+d31 1
+d36 3
+d110 1
+a110 1
+	       val other_strings = add_back((size first_string + 1) * 64 + 32,
+d113 1
+a113 1
+		 | get_offsets(_, [x]) = [] (* Don't care about last length *)
+d120 1
+a120 1
+	       val offsets = get_offsets(size first_string + 1, other_strings)
+d137 1
+a137 1
+	  val ml_value = Lists_.hd(System.Unsafe.Int.ml_require name)
+d153 2
+a154 1
+    Print_.print("val " ^ Datatypes_.IdentPrint.printValId valid ^
+d191 5
+a195 1
+	   val (the_mir_code,debugger_information) = 
+d197 4
+d202 4
+d219 1
+a219 1
+	   val result = [System.Unsafe.Int.call_ml_value ml_value]
+d258 1
+d260 1
+a260 1
+	   (augment_cb(basis, new_cb), code_env) (* Fix up code env later *)
+d288 1
+a288 1
+fun use(env, filename) =
+d295 1
+d297 1
+a297 1
+    (close_in instream; new_env)
+d312 1
+a312 1
+fun loop env =
+d315 1
+d323 1
+d325 1
+a325 1
+	loop new_env
+d329 10
+a338 1
+val _ = loop(TopLevel_.initial_compiler_basis, Inter_EnvTypes_.initial_env)
+@

@@ -1,0 +1,134 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.02.16.09.31.35;	author mitchell;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	99.02.15.14.08.07;	author mitchell;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.52.22;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+
+
+1.2
+log
+@[Bug #190508]
+Improve layout
+@
+text
+@(* inet-sock.sml
+ *
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell 
+ * Laboratories. All rights reserved.  
+ *
+ * $Log: inet_sock.sml,v $
+ *  Revision 1.1  1999/02/15  14:08:07  mitchell
+ *  new unit
+ *  [Bug #190508]
+ *  Add socket support to the basis library
+ *
+ *)
+
+require "__host_db.sml";
+require "__socket.sml";
+
+signature INET_SOCK =
+  sig
+    type inet
+
+    type 'a sock = (inet, 'a) Socket.sock
+    type 'a stream_sock = 'a Socket.stream sock
+    type dgram_sock = Socket.dgram sock
+
+    type sock_addr = inet Socket.sock_addr
+
+    val inetAF : Socket.AF.addr_family   (* DARPA internet protocols *)
+
+    val toAddr   : (NetHostDB.in_addr * int) -> sock_addr
+    val fromAddr : sock_addr -> (NetHostDB.in_addr * int)
+    val any  : int -> sock_addr
+
+    structure UDP : sig
+        val socket  : unit -> dgram_sock
+        val socket' : int -> dgram_sock
+      end
+
+    structure TCP : sig
+        val socket  : unit -> 'a stream_sock
+        val socket' : int -> 'a stream_sock
+
+        (* tcp control options *)
+        val getNODELAY : 'a stream_sock -> bool
+        val setNODELAY : ('a stream_sock * bool) -> unit
+      end
+  end
+
+
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a6 4
+ *  Revision 1.2  1999/02/16  09:31:35  mitchell
+ *  [Bug #190508]
+ *  Improve layout
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+text
+@d6 5
+a10 1
+ * $Log$
+a18 1
+
+d34 2
+a35 2
+	val socket  : unit -> dgram_sock
+	val socket' : int -> dgram_sock
+d39 6
+a44 5
+	val socket  : unit -> 'a stream_sock
+	val socket' : int -> 'a stream_sock
+      (* tcp control options *)
+	val getNODELAY : 'a stream_sock -> bool
+	val setNODELAY : ('a stream_sock * bool) -> unit
+a48 6
+(*
+ * $Log: inet-sock-sig.sml,v $
+ * Revision 1.1.1.1  1997/01/14 01:38:24  george
+ *   Version 109.24
+ *
+ *)
+@

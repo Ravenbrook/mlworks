@@ -1,0 +1,90 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.44.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : PRIM_IO ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log$
+ *  Revision 1.1  1995/04/13  14:05:56  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+
+signature PRIM_IO =
+  sig
+    type elem
+    type vector
+    type array
+    type pos
+    val posLess : pos * pos -> bool
+
+    datatype reader = Rd of 
+              {readBlock :   (int -> vector) option,
+               readaBlock:   ({data: array, first: int, nelems: int} -> 
+                               int) option,
+               readNoBlock : (int -> vector option) option,
+               readaNoBlock: ({data: array, first: int, nelems: int} -> 
+                               int option) option,
+               block     : (unit -> unit) option,
+               canInput  : (unit -> bool) option,
+               name      : string,
+               chunkSize : int,
+               close     : unit -> unit,
+               getPos    : unit -> pos,
+	       findPos   : {data: vector, first: int, nelems: int}*pos -> pos,
+               setPos    : pos -> unit,
+               endPos    : unit -> pos
+              }
+
+    datatype writer = Wr of 
+              {writeNoBlock: ({data: vector, first: int, nelems: int} -> 
+                               int option) option,
+               writeaNoBlock: ({data: array, first: int, nelems: int} -> 
+                                int option) option,
+               writeBlock: ({data: vector, first: int, nelems: int} -> 
+                             int) option,
+               writeaBlock: ({data: array, first: int, nelems: int} -> 
+                              int) option,
+               block: (unit->unit) option,
+               canOutput: (unit->bool) option,
+               name: string,
+               chunkSize: int,
+               close: unit -> unit,
+               getPos : unit->pos,
+               setPos : pos->unit,
+               endPos : unit->pos}
+
+    val augmentIn : reader -> reader
+    val augmentOut: writer -> writer
+
+  end
+@

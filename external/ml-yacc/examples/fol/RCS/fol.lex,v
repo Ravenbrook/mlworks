@@ -1,0 +1,77 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.05.25.18.44.59;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@require "_interface";
+require "fol_grm";
+require "$.lib.base";
+
+structure Tokens = Tokens
+structure Interface = Interface
+open Interface
+
+type pos = Interface.pos
+type svalue = Tokens.svalue
+type ('a,'b) token = ('a,'b) Tokens.token
+type lexresult= (svalue,pos) token
+
+val eof = fn () => Tokens.EOF(!line,!line)
+fun makeInt (s : string) = s
+
+%%
+%header (functor FolLexFun(structure Tokens: Fol_TOKENS
+			   structure Interface: INTERFACE) : LEXER);
+lcstart=[a-z!&$+/<=>?@@~|#*`]|\-;
+ucstart=[A-Z_];
+idchars={lcstart}|{ucstart}|[0-9];
+lcid={lcstart}{idchars}*;
+ucid={ucstart}{idchars}*;
+ws=[\t\ ]*;
+num=[0-9]+;
+%%
+<INITIAL>{ws}	=> (lex());
+<INITIAL>\n	=> (next_line; lex());
+<INITIAL>":-"	=> (Tokens.BACKARROW(!line,!line));
+<INITIAL>","	=> (Tokens.COMMA(!line,!line));
+<INITIAL>";"	=> (Tokens.SEMICOLON(!line,!line));
+<INITIAL>"."    => (Tokens.DOT(!line,!line));
+<INITIAL>"("	=> (Tokens.LPAREN(!line,!line));
+<INITIAL>")"	=> (Tokens.RPAREN(!line,!line));
+<INITIAL>"->"	=> (Tokens.ARROW(!line,!line));
+<INITIAL>"=>"	=> (Tokens.DOUBLEARROW(!line,!line));
+<INITIAL>"|"	=> (Tokens.BAR(!line,!line));
+<INITIAL>"true" => (Tokens.TRUE(!line,!line));
+<INITIAL>"forall" => (Tokens.FORALL(!line,!line));
+<INITIAL>"exists" => (Tokens.EXISTS(!line,!line));
+<INITIAL>{lcid} => (Tokens.LCID (yytext,!line,!line));
+<INITIAL>{ucid} => (Tokens.UCID (yytext,!line,!line));
+<INITIAL>{num}	=> (Tokens.INT (makeInt yytext,!line,!line));
+<INITIAL>.	=> (error ("ignoring illegal character" ^ yytext,
+			   !line,!line); lex());
+@

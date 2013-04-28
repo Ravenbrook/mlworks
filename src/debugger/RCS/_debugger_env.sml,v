@@ -1,0 +1,201 @@
+head	1.4;
+access;
+symbols
+	ML_beta_release_12/08/94:1.3
+	ML_beta_release_03/08/94:1.3
+	ML_revised_beta_release_25/05/94:1.3
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.2
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	94.09.22.09.59.17;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.11.19.10.25.31;	author nosa;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.08.16.12.09.54;	author nosa;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.07.30.15.46.38;	author nosa;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.07.30.15.46.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Local and closure variable inspection in the debugger.
+@
+
+
+1.4
+log
+@Abstraction of debug information
+@
+text
+@(* _debugger_env.sml the functor *)
+(*
+$Log: _debugger_env.sml,v $
+# Revision 1.3  1993/11/19  10:25:31  nosa
+# Type function spills for Modules Debugger;
+# Improved Control Transfer determining in HANDLEs.
+#
+# Revision 1.2  1993/08/16  12:09:54  nosa
+# Instances for polymorphic debugger.
+#
+# Revision 1.1  1993/07/30  15:46:38  nosa
+# Initial revision
+#
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/option";
+require "../typechecker/datatypes";
+require "debugger_env";
+
+functor RuntimeEnv (structure Datatypes : DATATYPES
+                    structure Option : OPTION
+                      ) : RUNTIMEENV =
+  struct
+
+    structure Option = Option
+
+    type Type = Datatypes.Type
+    type Tyfun = Datatypes.Tyfun
+    type Instance = Datatypes.Instance
+
+    datatype Tag = 
+      CONSTRUCTOR of string
+    | INT of string
+    | REAL of string
+    | STRING of string
+    | DYNAMIC
+    | DEFAULT
+
+    (* I'm not sure what this is meant to represent *)
+    (* Something to do with spill offsets *)
+    datatype Offset = OFFSET1 of int | OFFSET2 of int
+
+    datatype RuntimeInfo = RUNTIMEINFO of (Instance ref Option.opt * (Tyfun ref * Offset ref) list)
+
+    datatype VarInfo = VARINFO of (string * (Type ref * RuntimeInfo ref) * Offset ref Option.opt) Option.opt
+
+    datatype FunInfo = FUNINFO of ((int * Type * Instance) ref list * Offset ref Option.opt)
+
+    datatype debugger_env = 
+      LET of (VarInfo * debugger_env) list * debugger_env
+    | FN of string * debugger_env * Offset ref * FunInfo Option.opt
+    | APP of debugger_env * debugger_env * int Option.opt
+    | RAISE of debugger_env
+    | SELECT of int * debugger_env
+    | STRUCT of debugger_env list
+    | LIST of debugger_env list
+    | SWITCH of debugger_env * Offset ref * int * (Tag * debugger_env) list 
+    | HANDLE of debugger_env * Offset ref * int * int * debugger_env 
+    | EMPTY
+    | BUILTIN
+
+  end
+@
+
+
+1.3
+log
+@Type function spills for Modules Debugger;
+Improved Control Transfer determining in HANDLEs.
+@
+text
+@d4 4
+d22 3
+a24 4
+functor Debugger_Env_type(
+    structure Datatypes : DATATYPES
+    structure Option : OPTION
+) : DEBUGGER_ENVIRONMENT_TYPE =
+a28 1
+    type spill = int
+d41 10
+d52 2
+a53 8
+      LET of ((string * (Type * Instance ref Option.opt 
+                                  * (Tyfun ref * (int,int) Option.option ref) list) ref 
+               * (spill,spill) Option.option ref 
+               Option.opt) Option.opt
+              * debugger_env) list * debugger_env
+    | FN of string * debugger_env * (int,int) Option.option ref 
+      * ((int * Type * Instance) ref list 
+         * (int,int) Option.option ref Option.opt) Option.opt
+d59 2
+a60 2
+    | SWITCH of debugger_env * (spill,spill) Option.option ref * int * (Tag * debugger_env) list 
+    | HANDLE of debugger_env * (spill,spill) Option.option ref * int * int * debugger_env 
+@
+
+
+1.2
+log
+@Instances for polymorphic debugger.
+@
+text
+@d4 3
+d28 2
+a29 1
+    type Instance = Datatypes.instance
+d40 2
+a41 1
+      LET of ((string * (Type * Instance ref Option.opt) ref 
+d45 3
+a47 2
+    | FN of string * debugger_env * (spill,spill) Option.option ref 
+      * ((int * Type * Instance) ref list * (int,int) Option.option ref Option.opt) Option.opt
+d54 1
+a54 1
+    | HANDLE of debugger_env * (spill,spill) Option.option ref * int * debugger_env 
+a56 1
+    | DEALLOCATED 
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+d25 1
+a25 1
+    type lvar = int
+d36 1
+a36 1
+      LET of ((string * Type ref 
+d41 1
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+# Revision 1.1  1993/07/30  15:46:38  nosa
+# Initial revision
+#
+@

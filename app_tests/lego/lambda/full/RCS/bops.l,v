@@ -1,0 +1,58 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	98.08.06.10.36.10;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Lego test application
+@
+
+
+1.1
+log
+@new unit
+Lego test application
+@
+text
+@(*
+ * Copyright (c) 1998, Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log$
+ *
+ *)
+Forget bopapply;
+
+Inductive [bopapply : bop -> val -> state -> val -> state -> Prop]
+Constructors
+[plus_rule : 
+ {n1,n2:NN}{s:state}
+ bopapply plusbop (vtuple (valcons (vnum n1) (valcons (vnum n2) valnil))) s (vnum (add n1 n2)) s]
+[sub_rule : 
+ {n:NN}{s:state}
+ bopapply subbop (vnum n) s (vnum (pred n)) s]
+[assign_rule :
+ {l:loc}{x:val}{s:state}
+ bopapply assign 
+          (vtuple (valcons (vloc l) (valcons x valnil)))
+          s 
+          (vtuple valnil)
+          (state_update s l x)]
+[ref_rule :
+ {x:val}{s:state}
+ bopapply ref x s (vloc (nextloc s)) (state_extend s x)]
+[deref_rule :
+ {l:loc}{s:state}
+ bopapply deref (vloc l) s (state_lookup l s) s];
+@

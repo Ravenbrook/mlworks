@@ -1,0 +1,1130 @@
+head	1.17;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.17
+date	95.07.07.15.31.21;	author daveb;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	95.07.04.14.04.00;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	95.06.29.10.05.23;	author matthew;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	95.06.20.14.37.37;	author daveb;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.06.08.14.20.49;	author daveb;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.06.06.10.38.12;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.06.01.12.57.45;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.05.23.09.27.14;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.05.04.09.46.49;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.04.28.15.00.41;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.04.24.14.51.52;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.04.19.12.17.10;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.04.19.10.59.29;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.04.06.16.08.23;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.03.31.17.44.02;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.31.13.27.29;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.31.09.14.08;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Context history window.
+@
+
+
+1.17
+log
+@Minor changes to layout.
+@
+text
+@(*  Context window
+ *
+ *  $Log: _context.sml,v $
+ *  Revision 1.16  1995/07/04  14:04:00  matthew
+ *  More capification
+ *
+ *  Revision 1.15  1995/06/29  10:05:23  matthew
+ *  Capification
+ *
+ *  Revision 1.14  1995/06/20  14:37:37  daveb
+ *  Added call to Xm.List.setBottomPos, to ensure that selected item is
+ *  always visible.
+ *
+ *  Revision 1.13  1995/06/08  14:20:49  daveb
+ *  Ensured that current selection is highlighted after an update.
+ *
+ *  Revision 1.12  1995/06/06  10:38:12  daveb
+ *  Made the context history highlight the current selection on start up.
+ *
+ *  Revision 1.11  1995/06/01  12:57:45  daveb
+ *  Separated user_options into tool-specific and context-specific parts.
+ *
+ *  Revision 1.10  1995/05/23  09:27:14  daveb
+ *  Made contexts only visible if full_menus set.
+ *
+ *  Revision 1.9  1995/05/04  09:46:49  matthew
+ *  Changing createPopupShell to create
+ *
+ *  Revision 1.8  1995/04/28  15:00:41  daveb
+ *  Moved all the user_context stuff from ShellTypes into a separate file.
+ *
+ *  Revision 1.7  1995/04/24  14:51:52  daveb
+ *  Changed title to Context History.
+ *
+ *  Revision 1.6  1995/04/19  12:17:10  daveb
+ *  A new tool is now passed the right user context.
+ *
+ *  Revision 1.4  1995/04/06  16:08:23  daveb
+ *  FileDialog.find_file now takes an applicationShell parameter.
+ *
+ *  Revision 1.3  1995/03/31  17:44:02  daveb
+ *  Added the history number to items in the history, and made this tool
+ *  sensitive to selections elsewhere.
+ *
+ *  Revision 1.2  1995/03/31  13:27:29  daveb
+ *  Tidied writing of history to files.
+ *  Also disabled "save" menu item when there is no name for the save file.
+ *  Also fixed bug that stopped version 1.1 from compiling at all!!
+ *
+ *  Revision 1.1  1995/03/31  09:14:08  daveb
+ *  new unit
+ *  Context history window.
+ *
+ *  Copyright (c) 1995 Harlequin Ltd.
+ *
+ *)
+
+require "../library/capi";
+require "../utils/lists";
+require "../main/user_options";
+require "../main/preferences";
+require "tooldata";
+require "menus";
+require "motif_utils";
+require "context";
+
+functor ContextHistory (
+  structure Capi : CAPI
+  structure ToolData : TOOL_DATA
+  structure Menus : MENUS
+  structure MotifUtils : MOTIF_UTILS
+  structure Lists: LISTS
+  structure UserOptions : USER_OPTIONS
+  structure Preferences : PREFERENCES
+
+  sharing ToolData.ShellTypes.Options = UserOptions.Options
+
+  sharing type Preferences.user_preferences =
+	       ToolData.ShellTypes.user_preferences =
+	       MotifUtils.user_preferences
+
+  sharing type MotifUtils.user_context_options =
+	       ToolData.UserContext.user_context_options
+
+  sharing type ToolData.ShellTypes.user_options =
+	       MotifUtils.user_tool_options =
+	       UserOptions.user_tool_options
+
+  sharing type Menus.Widget = ToolData.Widget =
+	       MotifUtils.Widget = Capi.Widget
+
+  sharing type Menus.ButtonSpec = MotifUtils.ButtonSpec = ToolData.ButtonSpec
+
+  sharing type ToolData.ShellTypes.user_context = MotifUtils.user_context
+
+  sharing type MotifUtils.MotifContext = ToolData.MotifContext
+): CONTEXT_HISTORY =
+struct
+  
+  structure UserContext = ToolData.UserContext
+  structure ShellTypes = ToolData.ShellTypes
+  structure Options = UserOptions.Options
+
+  type ToolData = ToolData.ToolData
+
+  val context_window_number = ref 1;
+
+  fun create (tooldata as ToolData.TOOLDATA
+                {args,appdata,current_context,motif_context,tools}) =
+    let
+      val ShellTypes.LISTENER_ARGS {user_options,
+                                    user_preferences,
+                                    prompter,
+                                    mk_xinterface_fn,
+                                    ...} = args
+      val ToolData.APPLICATIONDATA {applicationShell,...} = appdata
+
+      val full_menus =
+	case user_preferences
+	of Preferences.USER_PREFERENCES ({full_menus, ...}, _) =>
+          !full_menus
+
+      val title =
+        let
+          val n = !context_window_number
+          fun p (s, 0) = s
+            | p (s, n) = p (chr (48+(n mod 10)) ^ s, n div 10)
+        in
+          context_window_number := n+1;
+          "Context History #" ^ p ("", n)
+        end
+
+
+      (*** Make the windows ***)
+      val (shell,frame,menuBar,contextLabel) = 
+        Capi.make_main_window ("context",title,applicationShell,full_menus)
+
+      val local_context = ref motif_context
+
+      fun get_user_context () =
+	MotifUtils.get_user_context (!local_context)
+
+      val history = ref []: UserContext.history_entry list ref;
+
+      fun select_fn
+	    _
+            (entry as UserContext.ITEM (item as (_, _, _, result, _))) =
+        UserContext.set_selected (get_user_context (), user_options, entry)
+
+      val (winScroll, winList, set_items) =
+        Capi.make_scrolllist
+          {parent = frame, name = "context_window",
+           print_fn =
+             fn _ => fn (UserContext.ITEM (_, _, _, result, _)) => result,
+           select_fn = select_fn,
+           action_fn = fn _ => fn _ => ()}
+
+      fun get_print_options () =
+        UserOptions.new_print_options user_options
+
+      fun sense_select (UserContext.ITEM (n, _, _, _, _)) =
+	(Capi.List.select_pos (winList, n, false);
+	 Capi.List.set_bottom_pos (winList, n))
+
+      fun set_history_from_context user_context  =
+        let
+          val (_, _, hist, _) =
+            UserContext.get_context_info user_context
+        in
+          history := hist;
+          set_items (get_print_options ()) (rev hist);
+	  case UserContext.get_selected (get_user_context (), user_options)
+	  of MLWorks.Option.NONE => ()
+	  |  MLWorks.Option.SOME item => sense_select item
+        end
+
+      val select_register_key =
+        ref (UserContext.add_select_fn
+	       (get_user_context (),
+		(sense_select, fn () => user_options)))
+
+      fun update_fn () =
+        set_history_from_context (get_user_context ())
+
+      val update_register_key =
+        ref (UserContext.add_update_fn (get_user_context (), update_fn))
+
+      fun set_state motif_context =
+        let
+          val context_name = MotifUtils.get_context_name motif_context
+
+          val cstring = "Context: " ^ context_name
+
+	  val old_user_context = get_user_context ()
+
+	  val new_user_context = MotifUtils.get_user_context motif_context
+        in
+          UserContext.remove_update_fn
+            (old_user_context, !update_register_key);
+          UserContext.remove_select_fn
+            (old_user_context, !select_register_key);
+	  case contextLabel
+	  of MLWorks.Option.SOME w =>
+            Capi.set_label_string (w,cstring)
+	  |  MLWorks.Option.NONE => ();
+          local_context := motif_context;
+          set_history_from_context new_user_context;
+          update_register_key :=
+            UserContext.add_update_fn (new_user_context, update_fn);
+          select_register_key :=
+            UserContext.add_select_fn
+	      (new_user_context, (sense_select, fn () => user_options))
+        end
+
+      val _ = set_state (!local_context)
+
+      val context_key =
+        ToolData.add_context_fn
+          (current_context,
+	   (set_state, fn () => user_options, ToolData.WRITABLE))
+
+      fun select_state motif_context =
+        (set_state motif_context;
+         ToolData.set_current
+           (current_context, context_key, user_options, motif_context))
+
+      val quit_funs = ref []
+
+      fun do_quit_funs _ = Lists.iterate (fn f => f ()) (!quit_funs)
+
+      val _ =
+        quit_funs :=
+          (fn _ =>
+	     let
+	       val user_context = get_user_context ()
+	     in
+	       ToolData.remove_context_fn (current_context, context_key);
+	       UserContext.remove_select_fn
+                 (user_context, !select_register_key);
+	       UserContext.remove_update_fn
+                 (user_context, !update_register_key)
+	     end)
+          :: !quit_funs
+
+      fun close_window _ =
+        (do_quit_funs ();
+         Capi.destroy shell)
+
+      fun mk_tooldata () =
+        ToolData.TOOLDATA
+          {args = ToolData.ShellTypes.LISTENER_ARGS
+                    {user_options = user_options,
+                     user_context = get_user_context (),
+		     user_preferences = user_preferences,
+                     prompter = prompter,
+                     mk_xinterface_fn = mk_xinterface_fn},
+           appdata = appdata,
+	   motif_context = !local_context,
+           current_context = current_context,
+           tools = tools}
+
+      val view_options =
+        MotifUtils.view_options
+          {parent = shell, title = title, user_options = user_options,
+	   user_preferences = user_preferences,
+           caller_update_fn = fn _ => (),
+	   sensitivity = MotifUtils.SENSE_ALL,
+	   view_type = MotifUtils.SENSE_ONLY}
+
+      val view_menu =
+        Menus.CASCADE ("view", view_options, fn _ => true)
+
+      val menuspec =
+        [ToolData.works_menu
+           (mk_tooldata, close_window, fn _ => true, get_user_context),
+         view_menu,
+	 MotifUtils.context_menu
+	   {set_state = select_state,
+	    get_context = fn _ => !local_context,
+	    writable = MotifUtils.WRITABLE,
+	    applicationShell = applicationShell,
+	    user_preferences = user_preferences}]
+
+      val sep_size = 10
+    in
+      Menus.make_submenus (menuBar,menuspec);
+      Capi.Layout.lay_out
+      ([Capi.Layout.MENUBAR menuBar] @@
+       (case contextLabel of
+          MLWorks.Option.SOME w => [Capi.Layout.OTHER w]
+        | _ => [Capi.Layout.SPACE]) @@
+       [Capi.Layout.OTHER winScroll,
+        Capi.Layout.SPACE]);
+      Capi.Callback.add (shell, Capi.Callback.Destroy,do_quit_funs);
+      case UserContext.get_selected (get_user_context (), user_options)
+      of MLWorks.Option.SOME item => sense_select item
+      |  MLWorks.Option.NONE => ();
+      Capi.manage shell;
+      Capi.realize shell
+    end
+end;
+
+@
+
+
+1.16
+log
+@More capification
+@
+text
+@d4 3
+d290 2
+a291 2
+          MLWorks.Option.SOME w => [Capi.Layout.OTHER w,Capi.Layout.SPACE]
+        | _ => []) @@
+@
+
+
+1.15
+log
+@Capification
+@
+text
+@d4 3
+a61 1
+require "file_dialog";
+a69 1
+  structure FileDialog: FILE_DIALOG
+d73 1
+a73 2
+  sharing ToolData.ShellTypes.Options = MotifUtils.Options =
+	  UserOptions.Options
+d87 1
+a87 1
+	       MotifUtils.Widget = FileDialog.Widget = Capi.Widget
+d148 1
+a148 1
+        MotifUtils.make_scrolllist
+@
+
+
+1.14
+log
+@Added call to Xm.List.setBottomPos, to ensure that selected item is
+always visible.
+@
+text
+@d4 4
+d52 1
+a52 1
+require "../library/xm";
+d63 1
+a63 1
+  structure Xm: XM
+d86 2
+a87 2
+  sharing type Menus.Widget = Xm.Widget = ToolData.Widget =
+	       MotifUtils.Widget = FileDialog.Widget
+d132 2
+a133 23
+      val shell =
+        Xm.Widget.create
+          (Xm.Widget.NAME "contextShell",
+           Xm.Widget.Class.TopLevelShell,
+           applicationShell,
+           [(Xm.Title, Xm.STRING title), (Xm.IconName, Xm.STRING title)])
+
+      val frame =
+        Xm.Widget.createManaged
+          (Xm.Widget.NAME "main", Xm.Widget.Class.Form, shell, [])
+
+      val menuBar =
+        Xm.Widget.createManaged
+          (Xm.Widget.NAME "menuBar", Xm.Widget.Class.RowColumn, frame, [])
+
+      val contextLabel =
+	if full_menus then
+	  MLWorks.Option.SOME
+            (Xm.Widget.createManaged
+               (Xm.Widget.NAME "contextLabel",
+		Xm.Widget.Class.Label, frame, []))
+	else
+	  MLWorks.Option.NONE
+d159 2
+a160 2
+	(Xm.List.selectPos (winList, n, false);
+	 Xm.List.setBottomPos (winList, n))
+d189 1
+a189 2
+          val cstring =
+            Xm.CompoundString.createSimple("Context: " ^ context_name)
+d201 1
+a201 2
+            Xm.Widget.valuesSet
+              (w, [(Xm.LabelString, Xm.COMPOUNDSTRING cstring)])
+d244 1
+a244 1
+         Xm.Widget.destroy shell)
+d284 8
+a291 33
+      Xm.Widget.valuesSet
+        (menuBar,
+         [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+      case contextLabel
+      of MLWorks.Option.SOME w =>
+        Xm.Widget.valuesSet
+          (w,
+           [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+            (Xm.TopWidget, Xm.WIDGET menuBar),
+            (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+            (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+            (Xm.LeftOffset, Xm.INT sep_size),
+            (Xm.RightOffset, Xm.INT sep_size),
+            (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)])
+      |  MLWorks.Option.NONE => ();
+      Xm.Widget.valuesSet
+        (winScroll,
+         [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+          (Xm.TopWidget,
+	   case contextLabel 
+	   of MLWorks.Option.SOME w => Xm.WIDGET w
+	   |  MLWorks.Option.NONE => Xm.WIDGET menuBar),
+          (Xm.TopOffset, Xm.INT sep_size),
+          (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.LeftOffset, Xm.INT sep_size),
+          (Xm.RightOffset, Xm.INT sep_size),
+          (Xm.BottomOffset, Xm.INT sep_size),
+          (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)]);
+      Xm.Widget.callbackAdd (shell, Xm.Callback.Destroy,do_quit_funs);
+d295 2
+a296 2
+      Xm.Widget.manage shell;
+      Xm.Widget.realize shell
+@
+
+
+1.13
+log
+@Ensured that current selection is highlighted after an update.
+@
+text
+@d4 3
+d176 2
+a177 1
+	Xm.List.selectPos (winList, n, false)
+@
+
+
+1.12
+log
+@Made the context history highlight the current selection on start up.
+@
+text
+@d4 3
+d172 3
+d181 4
+a184 1
+          set_items (get_print_options ()) (rev hist)
+a185 4
+
+
+      fun sense_select (UserContext.ITEM (n, _, _, _, _)) =
+	Xm.List.selectPos (winList, n, false)
+@
+
+
+1.11
+log
+@Separated user_options into tool-specific and context-specific parts.
+@
+text
+@d4 3
+d148 3
+d156 1
+a156 2
+        UserContext.set_selected
+	  (MotifUtils.get_user_context (!local_context), user_options, entry)
+d184 1
+a184 1
+	       (MotifUtils.get_user_context (!local_context),
+d188 1
+a188 2
+        set_history_from_context
+	  (MotifUtils.get_user_context (!local_context))
+d191 1
+a191 2
+        ref (UserContext.add_update_fn
+	       (MotifUtils.get_user_context (!local_context), update_fn))
+d200 1
+a200 1
+	  val old_user_context = MotifUtils.get_user_context (!local_context)
+d242 1
+a242 1
+	       val user_context = MotifUtils.get_user_context (!local_context)
+d260 1
+a260 2
+                     user_context =
+		       MotifUtils.get_user_context (!local_context),
+d282 1
+a282 2
+           (mk_tooldata, close_window, fn _ => true,
+	    fn () => MotifUtils.get_user_context (!local_context)),
+d327 3
+@
+
+
+1.10
+log
+@Made contexts only visible if full_menus set.
+@
+text
+@d4 3
+d42 1
+d49 1
+a49 1
+functor ContextWindow (
+d57 1
+d62 10
+a71 2
+  sharing type ToolData.ShellTypes.user_options = MotifUtils.UserOptions =
+	       UserOptions.user_options
+d79 3
+a81 1
+): CONTEXT_WINDOW =
+d93 1
+a93 1
+                {args,appdata,current_context,tools}) =
+d95 2
+a96 2
+      val ShellTypes.LISTENER_ARGS {user_context,
+                                    user_options,
+d102 4
+a105 6
+      val context_name = UserContext.get_context_name user_context
+
+      val (full_menus, update_fns) =
+	case user_options
+	of UserOptions.USER_OPTIONS({full_menus, ...}, update_fns) =>
+          (!full_menus, update_fns)
+d143 1
+a143 1
+      val local_context = ref user_context
+d150 2
+a151 1
+        UserContext.set_selected (user_context, user_options, entry)
+a160 66
+      fun save_name_set () =
+        case UserContext.get_saved_file_name user_context
+	of MLWorks.Option.NONE => false
+        |  MLWorks.Option.SOME _ => true
+
+      fun save_history prompt =
+        let
+          val filename_opt =
+            if prompt then
+              FileDialog.find_file (shell, applicationShell)
+            else
+              case UserContext.get_saved_file_name user_context of
+                MLWorks.Option.NONE =>
+                  FileDialog.find_file (shell, applicationShell)
+              | x => x
+        in
+          case filename_opt of
+            MLWorks.Option.NONE => ()
+          | MLWorks.Option.SOME filename =>
+            let
+              val file = open_out filename
+
+	      (* examine_source checks whether the source ends with a
+		 semi-colon, and if so whether the semicolon is followed
+		 by a newline.  It skips trailing white space. *)
+	      fun examine_source (s, ~1, seen_newline) =
+		(false, false)
+	      |   examine_source (s, n, seen_newline) =
+		let
+		  val c = String.ordof (s, n)
+		in
+		  if c = ord ";" then
+		    (true, seen_newline)
+		  else if c = ord "\n" then
+		    examine_source (s, n-1, true)
+		  else if c = ord " " orelse c = ord "\t" then
+		    examine_source (s, n-1, seen_newline)
+		  else 
+		    (false, false)
+		end
+		
+	      fun massage_source s =
+		let
+		  val (has_semicolon, has_newline) =
+		    examine_source (s, size s - 1, false)
+		in
+		  s ^ (if has_semicolon then "" else ";")
+		    ^ (if has_newline then "" else "\n")
+		end
+		
+              fun write_hist (UserContext.ITEM (_, _, _, _, source)) =
+                output (file, massage_source source)
+            in
+              Lists.iterate write_hist (rev (!history));
+              MLWorks.IO.flush_out file;
+              close_out file;
+	      MotifUtils.send_message
+		(shell, "Saved " ^ context_name ^ " to " ^ filename);
+              UserContext.set_saved_file_name (user_context, filename)
+            end
+            handle Io _ => ()
+        end
+
+      fun null [] = true
+      |   null (h::t) = false
+
+d162 1
+a162 2
+        case UserOptions.new_options (user_options) of
+          Options.OPTIONS{print_options,...} => print_options
+a167 2
+
+          val new_hist = hist
+d169 2
+a170 2
+          history := new_hist;
+          set_items (get_print_options ()) (rev (new_hist))
+d179 2
+a180 1
+	       (!local_context, (sense_select, fn () => user_options)))
+d183 2
+a184 1
+        set_history_from_context (!local_context)
+d187 2
+a188 1
+        ref (UserContext.add_update_fn (!local_context, update_fn))
+d190 28
+a217 25
+      fun set_state (user_context) =
+        (local_context := user_context;
+         let
+            val context_name = UserContext.get_context_name user_context
+
+            val cstring =
+              Xm.CompoundString.createSimple("Context: " ^ context_name)
+          in
+            UserContext.remove_update_fn
+              (!local_context, !update_register_key);
+            UserContext.remove_select_fn
+              (!local_context, !select_register_key);
+	    case contextLabel
+	    of MLWorks.Option.SOME w =>
+              Xm.Widget.valuesSet
+                (w, [(Xm.LabelString, Xm.COMPOUNDSTRING cstring)])
+	    |  MLWorks.Option.NONE => ();
+            set_history_from_context
+              user_context;
+            update_register_key :=
+              UserContext.add_update_fn (user_context, update_fn);
+            select_register_key :=
+              UserContext.add_select_fn
+		(user_context, (sense_select, fn () => user_options))
+          end)
+d224 1
+a224 1
+	   (set_state, fn () =>user_options, ToolData.WRITABLE))
+d226 2
+a227 2
+      fun select_state user_context =
+        (set_state user_context;
+d229 1
+a229 5
+           (current_context, context_key, user_options, user_context))
+
+      val (options_menu,update) =
+        MotifUtils.options_menu
+	  (shell, title, fn () => user_options, fn _ => ())
+a230 2
+      val _ = update_fns := update :: (!update_fns)
+
+d237 10
+a246 5
+          (fn _ => ToolData.remove_context_fn (current_context, context_key))
+          :: (fn _ => UserContext.remove_select_fn
+                        (!local_context, !select_register_key))
+          :: (fn _ => UserContext.remove_update_fn
+                        (!local_context, !update_register_key))
+d257 3
+a259 1
+                     user_context = !local_context,
+d263 1
+d267 10
+a276 20
+      val menus_tail =
+        [options_menu,
+         Menus.CASCADE
+           ("history",
+            Menus.PUSH
+              ("save",
+               fn _ => save_history false,
+               fn _ => not (null (!history)) andalso save_name_set ())
+            :: Menus.PUSH
+                 ("saveAs",
+                  fn _ => save_history true,
+                  fn _ => not (null (!history)))
+(*
+            :: Menus.PUSH ("copy", fn _ => copy_history (), is_selection)
+*)
+            (*
+            :: Menus.PUSH ("edit", fn _ => (), is_selection)
+            *)
+            :: nil,
+            fn _ => true)]
+d279 10
+a288 8
+        ToolData.works_menu
+          (mk_tooldata, close_window, fn _ => true, fn () => user_context)
+        :: (if full_menus then
+	      MotifUtils.context_menu
+	        (select_state, fn _ => !local_context, MotifUtils.WRITABLE)
+	      :: menus_tail
+	    else
+	      menus_tail)
+@
+
+
+1.9
+log
+@Changing createPopupShell to create
+@
+text
+@d4 3
+d89 5
+d122 7
+a128 2
+        Xm.Widget.createManaged
+        (Xm.Widget.NAME "contextLabel", Xm.Widget.Class.Label, frame, [])
+d254 5
+a258 2
+            Xm.Widget.valuesSet
+              (contextLabel, [(Xm.LabelString, Xm.COMPOUNDSTRING cstring)]);
+a283 2
+      val UserOptions.USER_OPTIONS(_, update_fns) = user_options
+
+d314 21
+d338 6
+a343 22
+        :: MotifUtils.context_menu
+	     (select_state, fn _ => !local_context, MotifUtils.WRITABLE)
+        :: options_menu
+        :: Menus.CASCADE
+             ("history",
+              Menus.PUSH
+                ("save",
+                 fn _ => save_history false,
+                 fn _ => not (null (!history)) andalso save_name_set ())
+              :: Menus.PUSH
+                   ("saveAs",
+                    fn _ => save_history true,
+                    fn _ => not (null (!history)))
+(*
+              :: Menus.PUSH ("copy", fn _ => copy_history (), is_selection)
+*)
+              (*
+              :: Menus.PUSH ("edit", fn _ => (), is_selection)
+              *)
+              :: nil,
+              fn _ => true)
+        :: nil
+d354 12
+a366 9
+        (contextLabel,
+         [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+          (Xm.TopWidget, Xm.WIDGET menuBar),
+          (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.LeftOffset, Xm.INT sep_size),
+          (Xm.RightOffset, Xm.INT sep_size),
+          (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+      Xm.Widget.valuesSet
+d369 5
+a373 1
+          (Xm.TopWidget, Xm.WIDGET contextLabel),
+a384 1
+
+@
+
+
+1.8
+log
+@Moved all the user_context stuff from ShellTypes into a separate file.
+@
+text
+@d4 3
+d99 1
+a99 1
+        Xm.Widget.createPopupShell
+@
+
+
+1.7
+log
+@Changed title to Context History.
+@
+text
+@d4 3
+d63 1
+d81 1
+a81 1
+      val context_name = ShellTypes.get_context_name user_context
+d116 1
+a116 1
+      val history = ref []: ShellTypes.history_entry list ref;
+d120 2
+a121 2
+            (entry as ShellTypes.ITEM (item as (_, _, _, result, _))) =
+        ShellTypes.set_selected (user_context, user_options, entry)
+d127 1
+a127 1
+             fn _ => fn (ShellTypes.ITEM (_, _, _, result, _)) => result,
+d132 1
+a132 1
+        case ShellTypes.get_saved_file_name user_context
+d142 1
+a142 1
+              case ShellTypes.get_saved_file_name user_context of
+d181 1
+a181 1
+              fun write_hist (ShellTypes.ITEM (_, _, _, _, source)) =
+d189 1
+a189 1
+              ShellTypes.set_saved_file_name (user_context, filename)
+d204 1
+a204 1
+            ShellTypes.get_context_info user_context
+d213 1
+a213 1
+      fun sense_select (ShellTypes.ITEM (n, _, _, _, _)) =
+d217 1
+a217 1
+        ref (ShellTypes.add_select_fn
+d224 1
+a224 1
+        ref (ShellTypes.add_update_fn (!local_context, update_fn))
+d229 1
+a229 1
+            val context_name = ShellTypes.get_context_name user_context
+d234 1
+a234 1
+            ShellTypes.remove_update_fn
+d236 1
+a236 1
+            ShellTypes.remove_select_fn
+d243 1
+a243 1
+              ShellTypes.add_update_fn (user_context, update_fn);
+d245 1
+a245 1
+              ShellTypes.add_select_fn
+d276 1
+a276 1
+          :: (fn _ => ShellTypes.remove_select_fn
+d278 1
+a278 1
+          :: (fn _ => ShellTypes.remove_update_fn
+@
+
+
+1.6
+log
+@A new tool is now passed the right user context.
+@
+text
+@d4 3
+d86 1
+a86 1
+          "Context Tool #" ^ p ("", n)
+@
+
+
+1.5
+log
+@Changes to context_menu.
+@
+text
+@d279 11
+d292 1
+a292 1
+          (fn () => tooldata, close_window, fn _ => true, fn () => user_context)
+@
+
+
+1.4
+log
+@FileDialog.find_file now takes an applicationShell parameter.
+@
+text
+@d4 3
+d74 1
+a74 1
+      val context_name = ShellTypes.context_name user_context
+d222 1
+a222 1
+            val context_name = ShellTypes.context_name user_context
+a253 3
+      fun push_state _ =
+        select_state (ShellTypes.copyUserContext (user_context))
+
+a261 8
+      fun initialContext _ =
+        let
+          val context = ShellTypes.getNewInitialContext()
+        in
+          select_state (context)
+        end
+
+
+d282 2
+a283 7
+        :: Menus.CASCADE
+             ("context",
+              [Menus.PUSH ("pushContext", push_state, fn _ => true),
+               Menus.PUSH ("initialContext", initialContext, fn _ => true),
+               Menus.SEPARATOR,
+               MotifUtils.context_menu (select_state, MotifUtils.WRITABLE)],
+              fn _ => true)
+@
+
+
+1.3
+log
+@Added the history number to items in the history, and made this tool
+sensitive to selections elsewhere.
+@
+text
+@d4 4
+d130 1
+a130 1
+              FileDialog.find_file shell
+d134 1
+a134 1
+                  FileDialog.find_file shell
+@
+
+
+1.2
+log
+@Tidied writing of history to files.
+Also disabled "save" menu item when there is no name for the save file.
+Also fixed bug that stopped version 1.1 from compiling at all!!
+@
+text
+@d4 5
+d102 1
+a102 6
+      type hist_entry = ShellTypes.history_entry * int
+
+      val history = ref []: hist_entry list ref;
+      val history_size = ref 0;
+      val initial_index = ~1;
+      val history_index = ref initial_index;
+d104 3
+a106 2
+      fun select_fn _
+                    (entry as ShellTypes.ITEM (item as (_, _, result, _)), _) =
+d113 1
+a113 1
+             fn _ => fn (ShellTypes.ITEM (_, _, result, _), _) => result,
+d167 1
+a167 1
+              fun write_hist (ShellTypes.ITEM (_, _, _, source), _) =
+d192 1
+a192 7
+          fun aux ([], n) =
+            (history_size := n;
+             [])
+          |   aux (item :: t, n) =
+            (item, n) :: aux (t, n+1)
+
+          val new_hist = aux (hist, 0)
+d198 8
+d222 2
+d230 3
+a232 1
+            history_index := initial_index
+d273 2
+@
+
+
+1.1
+log
+@new unit
+Context history window.
+@
+text
+@d3 4
+a6 1
+ *  $Log$
+a103 2
+      val current_history = ref NONE
+
+d106 1
+a106 5
+        (current_history := SOME item;
+         ShellTypes.set_selected
+           (user_context,
+            user_options,
+            entry))
+d116 5
+d138 28
+d167 1
+a167 2
+                (output (file, source);
+                 output (file, ";\n"))
+a180 7
+(*
+      fun copy_history () =
+        Xm.Text.insert
+          (inputText,
+           Xm.Text.getInsertionPosition inputText,
+           #3 (!current_history))
+*)
+d290 1
+a290 1
+                 fn _ => not (null (!history)))
+@

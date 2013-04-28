@@ -1,0 +1,163 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	95.11.22.14.27.44;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.07.26.14.41.48;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New unit
+@
+
+
+1.2
+log
+@Removed Recompile parameter
+@
+text
+@(*
+ * Copyright (c) 1993 Harlequin Ltd.
+ $Log: __fileselect.sml,v $
+ * Revision 1.1  1995/07/26  14:41:48  matthew
+ * new unit
+ * New unit
+ *
+Revision 1.23  1995/07/04  15:35:29  matthew
+Capification
+
+Revision 1.22  1995/07/04  12:50:39  daveb
+Replaced input and output windows with a single console window.
+
+Revision 1.21  1995/06/13  16:23:42  daveb
+Added Input parameter.
+
+Revision 1.20  1995/05/26  14:36:58  daveb
+Added Preferences parameter.
+
+Revision 1.19  1995/05/15  16:20:58  matthew
+Removing Toplevel structure
+
+Revision 1.18  1995/01/16  13:41:31  daveb
+Replaced FileName argument with Path argument.
+
+Revision 1.17  1994/12/09  10:51:52  jont
+Move OS specific stuff into a system link directory
+
+Revision 1.16  1994/08/17  17:32:21  daveb
+Removed unused Module and Crash arguments.
+
+Revision 1.15  1994/05/17  14:53:40  daveb
+Added Output argument.
+
+Revision 1.14  1994/05/13  14:14:37  daveb
+Added ErrorBrowser argument.
+
+Revision 1.13  1994/02/02  11:50:36  daveb
+Added UnixFileName_ and Module_ arguments.
+
+Revision 1.12  1993/12/09  19:34:09  jont
+Added copyright message
+
+Revision 1.11  1993/11/03  10:37:59  daveb
+Merged in bug fix.
+
+Revision 1.10.1.2  1993/11/01  14:17:32  daveb
+Added Crash structure.
+
+Revision 1.10.1.1  1993/08/17  15:09:58  jont
+Fork for bug fixing
+
+Revision 1.10  1993/08/17  15:09:58  daveb
+Added Io parameter.
+
+Revision 1.9  1993/05/18  17:28:21  jont
+Removed integer parameter
+
+Revision 1.8  1993/05/12  12:01:31  matthew
+ Added ActionQueue structure
+
+Revision 1.7  1993/05/11  15:20:41  matthew
+ Added Ml_Debugger, ShellUtils and DebuggerWindow
+
+Revision 1.6  1993/04/27  14:53:17  daveb
+Added MotifUtils parameter.
+
+Revision 1.5  1993/04/19  10:56:28  matthew
+Added Integer and Lists structures
+
+Revision 1.4  1993/04/16  11:29:55  matthew
+*** empty log message ***
+
+Revision 1.2  1993/04/14  14:57:10  matthew
+Added recompilation structures.
+
+Revision 1.1  1993/04/01  17:04:10  matthew
+Initial revision
+
+
+*)
+
+require "../utils/__lists";
+require "../system/__path";
+require "../winsys/__capi";
+require "../winsys/__menus";
+require "__gui_utils";
+require "../debugger/__ml_debugger";
+require "../interpreter/__shell_utils";
+require "../interpreter/__action_queue";
+require "../main/__io";
+require "../editor/__editor";
+require "../main/__user_options";
+require "../main/__preferences";
+require "__tooldata";
+require "__debugger_window";
+require "__error_browser";
+require "__console";
+
+require "_fileselect";
+
+structure FileSelect_ =
+  FileSelect
+    (structure Lists = Lists_
+     structure Path = Path_
+     structure Capi = Capi_
+     structure Ml_Debugger = Ml_Debugger_
+     structure Menus = Menus_
+     structure GuiUtils = GuiUtils_
+     structure ShellUtils = ShellUtils_
+     structure ActionQueue = ActionQueue_
+     structure Editor = Editor_
+     structure UserOptions = UserOptions_
+     structure Preferences = Preferences_
+     structure DebuggerWindow = DebuggerWindow_
+     structure ToolData = ToolData_
+     structure ErrorBrowser = ErrorBrowser_
+     structure Console = Console_
+     structure Io = Io_)
+@
+
+
+1.1
+log
+@new unit
+New unit
+@
+text
+@d4 4
+a90 1
+require "../make/__recompile";
+a112 1
+     structure Recompile = Recompile_
+@

@@ -1,0 +1,68 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.01.18.09.53.02;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.25.17.17.53;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+The OS.FileSys structure from the basis.
+@
+
+
+1.2
+log
+@OS reorganisation: parameterise functor with UnixOS since OS
+specific stuff is no longer in the pervasive library.
+@
+text
+@(* FILE SYSTEM INTERFACE *)
+(*
+ * Copyright Harlequin Ltd. 1994.
+ *
+ * $Log: __filesys.sml,v $
+# Revision 1.1  1995/01/25  17:17:53  daveb
+# new unit
+# The OS.FileSys structure from the basis.
+#
+ *
+ *)
+
+require "__unixos";
+require "_unixfilesys";
+
+structure FileSys_ =
+  UnixFileSys (
+    structure UnixOS = UnixOS_
+  )
+@
+
+
+1.1
+log
+@new unit
+The OS.FileSys structure from the basis.
+@
+text
+@d5 5
+a9 1
+ * $Log$
+d13 1
+a13 1
+require "__getenv";
+d18 1
+a18 1
+    structure Getenv = Getenv_
+@

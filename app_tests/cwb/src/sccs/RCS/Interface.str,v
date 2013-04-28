@@ -1,0 +1,271 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.49.29;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.40;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Interface.str,v 1.2 1994/12/05 17:03:05 pxs Exp $";
+functor Interface ( structure AgIO  : AGENTIO;
+                    structure LogIO : LOGIO;
+                    structure E     : ENV;
+                    structure SL    : SORTEDLIST;
+(* Have replaced the original type sharing constraint of env  here,    *)
+(* because LogIO no longer exports types.			       *)
+		    sharing AgIO.Ag.A = LogIO.L.A
+		    and E.V = AgIO.Ag.V = LogIO.L.V ) : INTERFACE =
+struct
+   structure E = E
+   structure Ag = AgIO.Ag
+   structure L = LogIO.L
+
+   structure V  = E.V
+   structure A = AgIO.Ag.A
+
+   type part   =  A.P.part
+   type act    =  A.act
+   type var    =  V.var
+
+(* LogIO no longer exports the type prop. *)                             
+(*    type prop = LogIO.prop						  *)
+
+   exception IO of string
+
+   val agentenv : ((Ag.param list * Ag.agent) E.env ref) = ref E.empty
+   val setenv   : (act list E.env ref)                   = ref E.empty
+   val psetenv  : (part list E.env ref)                  = ref E.empty
+   val relenv   : ((act * part) list E.env ref)          = ref E.empty
+   val propenv  : ((L.param list * L.prop) E.env ref)    = ref E.empty
+
+
+                              
+(*****************************************************************************)
+(*    F U N C T I O N S   F O R   W R I T I N G   E N V I R O N M E N T S    *)
+(*****************************************************************************)
+
+   val actseq = Lib.mkstr A.mkstr " "
+   val actlist = Lib.mkstr A.mkstr ","
+
+(* HORRID. This fn artificially makes a printout of the parameterised  *)
+(* agent definition, given its formal params and body and a way to     *)
+(* print the body. This must go.*)
+   fun mkstragdef mkstr (fp,ag) = 
+       let fun mkstr_al (Ag.Permlist l) = "{"^(Lib.mkstr A.P.mkstr "," l) ^ "}"
+             | mkstr_al (Ag.Actlistvar v) = V.mkstr v
+
+	   fun mkstrparam (Ag.Actparam a) = A.mkstr a
+	     | mkstrparam (Ag.Actlistparam A) = mkstr_al A
+             | mkstrparam (Ag.Agentparam A) = mkstr A
+             | mkstrparam (Ag.Timeparam t) = makestring t
+
+           fun mkstrparamlist pl =
+               if null pl then ""
+               else "("^(Lib.mkstr mkstrparam "," pl)^")"
+        in (mkstrparamlist fp)^" = "^(mkstr ag)
+       end
+
+(* Made more use of stuff in LogIO here -- removed duplication *)
+   fun mkstrpropdef (fp,prop) = 
+       let fun mkstrparamlist pl =
+               if null pl then ""
+               else "("^(Lib.mkstr LogIO.mkstrparam "," pl)^")"
+        in (mkstrparamlist fp)^" = "^(LogIO.mkstr prop)
+       end
+
+   fun mkstrpair (a,b) = (A.mkstr a)^"/"^(A.P.mkstr b)
+           
+   fun write_agt_env s file agentenv =
+       UI.print
+       (file,
+        (E.mkstr (mkstragdef AgIO.mkstr) agentenv 
+          ("\n ** Agents **\n\nagent ","",s^"\n\nagent ",s^"\n")))
+
+   fun write_set_env s file setenv=
+       let fun str l = "{"^(Lib.mkstr A.mkstr "," l)^"}"
+        in UI.print
+           (file,
+            (E.mkstr str setenv 
+             ("\n ** Action Sets **\n\nset "," = ",s^"\n\nset ",s^"\n")))
+       end
+
+   fun write_pset_env s file psetenv=
+       let fun str l = "{"^(Lib.mkstr A.P.mkstr "," l)^"}"
+        in UI.print
+           (file,
+            (E.mkstr str psetenv 
+             ("\n ** Permission Sets **\n\nset "," = ",s^"\n\nset ",s^"\n")))
+       end
+
+   fun write_rel_env s file relenv =
+       let fun str aal = "["^(Lib.mkstr mkstrpair "," aal)^"]"
+        in UI.print
+           (file,
+            (E.mkstr str relenv 
+             ("\n ** Relabelling Functions **\n\nrelabel ",
+                 " = ",s^"\n\nrelabel ",s^"\n")))
+       end
+
+   fun write_prop_env s file propenv =
+       UI.print (file,(E.mkstr LogIO.mkstr propenv
+                       ("\nprop "," = ","s^\n\nprop ",s^"\n")))
+
+   fun write_prop_env s file propenv =
+       UI.print
+       (file,
+        (E.mkstr (mkstrpropdef) propenv 
+          ("\n ** Propositions **\n\nprop ","",s^"\n\nprop ",s^"\n")))
+
+   fun printagentenv env = write_agt_env  "" (!UI.outfile) env
+   fun printsetenv env   = write_set_env  "" (!UI.outfile) env
+   fun printpsetenv env   = write_pset_env  "" (!UI.outfile) env
+   fun printrelenv env  = write_rel_env  "" (!UI.outfile) env
+   fun printpropenv env = write_prop_env "" (!UI.outfile) env
+
+   fun dump_agt_env file  = write_agt_env  ";" file (!agentenv)
+   fun dump_set_env file  = write_set_env  ";" file (!setenv)
+   fun dump_pset_env file = write_pset_env ";" file (!psetenv)
+   fun dump_rel_env file  = write_rel_env  ";" file (!relenv)
+   fun dump_prop_env file = write_prop_env ";" file (!propenv)
+
+(*****************************************************************************)
+(*    F U N C T I O N S   F O R   D U M P I N G   E N V I R O N M E N T S    *)
+(*****************************************************************************)
+
+   fun dumpallenvs fname = if (E.isempty (!agentenv)) andalso
+                              (E.isempty (!propenv))  andalso
+                              (E.isempty (!setenv))   andalso
+                              (E.isempty (!psetenv))  andalso
+                              (E.isempty (!relenv)) 
+                           then ()
+                           else let val file = open_out fname
+                                 in dump_agt_env file ;
+                                    dump_prop_env file;
+                                    dump_set_env file;
+                                    dump_pset_env file;
+                                    dump_rel_env file;
+                                    close_out file
+                                end
+                                handle Io _ => raise (IO "File Error")
+
+
+(*****************************************************************************)
+(*                    P R I N T I N G   F U N C T I O N S                    *)
+(*****************************************************************************)
+
+   fun print s = UI.print(!UI.outfile,s)
+
+   fun printagent a = print(AgIO.mkstr a^"\n")
+
+   fun printagents [] = print "\nNo such agents.\n"
+     | printagents l  =
+       let fun prt [] _ = ()
+             | prt (h::t) i =
+                  (print((makestring i)^": "^(AgIO.mkstr h)^"\n");
+                   prt t (i+1))
+        in prt l 1
+       end
+
+   fun printeqagents [] = print "\nNo such agents.\n"
+     | printeqagents l  =
+       let fun prtlist [] = ""
+             | prtlist (h::t) = "\n      = "^(AgIO.mkstr h)^(prtlist t)
+           fun prt [] _ = ()
+             | prt (h::t) i =
+                  (print((makestring i)^": "^(AgIO.mkstr (hd h))
+                                            ^(prtlist (tl h))^"\n");
+                   prt t (i+1))
+        in prt l 1
+       end
+
+   fun printders [] = print "\nNo transitions.\n"
+     | printders l =
+       let fun prt [] = ()
+             | prt ((a,A)::t) =
+                  (print("--- "^(A.mkstr a)^" ---> "^(AgIO.mkstr A)^"\n");
+                   prt t)
+        in prt l
+       end
+
+   fun printdersseq [] = print "\nNo such agents.\n"
+     | printdersseq l =
+       let fun prt [] = ()
+             | prt ((al,A)::t) =
+                  (print("--- "^(actseq al)^" ---> "^(AgIO.mkstr A)^"\n");
+                   prt t)
+        in prt l
+       end
+
+   fun printexps [] = print "\nNo such agents.\n"
+     | printexps l =
+       let fun prt [] = ()
+             | prt ((al,A)::t) =
+                  (print("=== "^(actseq al)^" ===> "^(AgIO.mkstr A)^"\n");
+                   prt t)
+        in prt l
+       end
+
+   fun printseq [] = print "\nNo such agents.\n"
+     | printseq l =
+       let fun prt [] = ()
+             | prt (al::t) = (print("=== "^(actseq al)^" ===>\n"); prt t)
+        in prt l
+       end
+
+   val printoneseq = print o actlist
+
+   fun printeqs [] = ()
+     | printeqs ((a,x,b)::t) =
+       (print ("   "^(AgIO.mkstr a)^"  ||  "^(V.mkstr x)^"   =   "
+                    ^(AgIO.mkstr b)^"\n");
+        printeqs t)
+
+   fun printgraph (top, []) = ()
+     | printgraph (top, (node as (agent, edges))::nodelist)
+	     = (print ("\n"^(AgIO.mkstr agent)^"\n");
+		printders edges;
+		printgraph (top, nodelist))
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

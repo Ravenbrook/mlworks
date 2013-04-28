@@ -1,0 +1,51 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	95.10.17.13.40.22;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@/*  ==== ARENA MANAGEMENT ====
+ *
+ *  Copyright (C) 1994 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  This header defines values controlling the overall structure of
+ *  the memory arena. It can be included by either C or asm sources,
+ *  so contains no C declarations. C declarations concerned with the
+ *  arena are in arena.h (which includes this header).
+ *
+ *  $Id: src:OS:NT:arenadefs.h,v 1.1 1994/12/12 14:25:26 jont Exp $
+ */
+
+#ifndef arenadefs_h
+#define arenadefs_h
+
+#define ADDRESS_WIDTH	30	/* 2Gb address space */
+#define SPACE_WIDTH	24	/* 128 * 16Mb spaces */
+#define BLOCK_WIDTH	16	/* 64Kb blocks */
+
+#define SPACE_SIZE	(1 << SPACE_WIDTH)
+#define NR_SPACES	(1 << (ADDRESS_WIDTH-SPACE_WIDTH))
+#define BLOCK_SIZE	(1 << BLOCK_WIDTH)
+#define BLOCKS_PER_SPACE (SPACE_SIZE / BLOCK_SIZE)
+
+#endif
+@

@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.1
+date	92.04.21.14.55.43;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.04.21.14.55.43;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@New version of sigma using hashed sets as the underlying implementation
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@(* newsigma.sml the signature *)
+(*
+$Log$
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "datatypes";
+require "nameset";
+
+signature NEWSIGMA =
+  sig
+    structure Datatypes : DATATYPES
+    structure Nameset : NAMESET
+
+    sharing Datatypes = Nameset.Datatypes
+
+    val new_names_of : Datatypes.Str * Nameset.Nameset -> Nameset.Nameset
+    val names_of : Datatypes.Str * Nameset.Nameset -> Nameset.Nameset
+    val names_of_env : Datatypes.Env * Nameset.Nameset -> Nameset.Nameset
+  end
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: newsigma.sml,v $
+Revision 1.1  1992/04/21  14:55:43  jont
+Initial revision
+
+@

@@ -1,0 +1,332 @@
+head	1.9;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.8
+	MLWorks_Beta_1996_06_06:1.8
+	MLWorks_Beta_1996_06_05:1.7
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.9
+date	96.06.15.14.12.07;	author brianm;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.06.06.11.14.28;	author brianm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.06.05.16.09.33;	author brianm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.06.05.15.54.19;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.06.05.15.11.26;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.06.05.14.59.12;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.06.05.13.50.05;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.05.11.45.55;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.24.14.57.49;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.9
+log
+@Updating mk_interface due to recent renaming of remove_src_hdr.
+@
+text
+@#!/bin/sh
+
+sourceOnly="no"
+
+case $1
+in
+   -source*)  sourceOnly="yes"
+              ;;
+   -all*)     sourceOnly="no"
+              ;;
+   -full*)    cd `dirname $0`
+              rm -f interface.sml __interface.sml
+              ;;
+esac
+
+PATH=../../tools:$PATH
+export PATH
+
+if test -f interface.sml
+then :
+else echo "Making interface.sml"
+
+     set `date`
+     year=$6
+
+cat - <<%%%% > interface.sml
+(* ==== Foreign Interface signature file : interface.sml ====
+ * Copyright (C) The Harlequin Group, $year (All rights reserved)
+ *)
+%%%%
+
+     ptmp1=%ptmp1%.$$
+
+     expand foreign.sml | remove_src_hdr.sh > $ptmp1
+     sed -e 's;FOREIGN_INTERFACE;INTERFACE;g' $ptmp1 >> interface.sml 
+
+     rm -f __interface.sml $ptmp1
+fi
+
+if test -f __interface.sml
+then :
+else
+     rm -f buildlist
+     cat - <<%%%% > buildlist
+__libml.sml
+__static_bytearray.sml
+__types.sml
+__utils.sml
+__store.sml
+__core.sml
+__aliens.sml
+__object.sml
+__structure.sml
+__c_object.sml
+__signature.sml
+__c_signature.sml
+__c_structure.sml
+__c_function.sml
+__foreign.sml
+%%%%
+
+     flatten interface buildlist
+
+     rm -f buildlist
+fi
+
+if test -f __interface.sml
+then :
+else echo "mk_interface : can't find foreign/__interface.sml"
+     exit 1
+fi
+
+case "$sourceOnly"
+in
+   yes) ;;
+   no)
+     case "$ARCH$OS"
+     in
+	"") case "`uname``uname -r`"
+	    in
+		SunOS4*)  ARCH=SPARC
+			  OS=SunOS
+			  ;;
+		SunOS5*)  ARCH=SPARC
+			  OS=Solaris
+			  ;;
+		*) ARCH=Unknown
+		   OS=Unknown
+		   ;;
+	    esac
+	    echo "mk_interface: locally setting ARCH=$ARCH and OS=$OS ..."
+	    ;;
+     esac
+
+     echo "Compiling foreign/__interface.sml"
+     cd ..
+     MLWORKS_SRC_PATH=.
+     MLWORKS_OBJ_PATH=.
+     MLWORKS_PERVASIVE=./pervasive
+     rts/runtime-g  -load images/$ARCH/$OS/batch.img \
+	  -pass argz -pervasive-dir $MLWORKS_PERVASIVE \
+		     foreign/__interface.sml \
+		argz
+     ;;
+esac
+@
+
+
+1.8
+log
+@Minor correction
+@
+text
+@a18 3
+echo mk_interface: PATH=$PATH
+
+
+d34 1
+a34 1
+     expand foreign.sml | remove_src_hdr > $ptmp1
+@
+
+
+1.7
+log
+@Minore corrections & added auto-selection of ARCH/OS using uname.
+@
+text
+@d7 1
+a7 1
+   -source*)  sourceOnly = "yes"
+d9 1
+a9 1
+   -all*)     sourceOnly = "no"
+d19 3
+d35 1
+a35 3
+     expand foreign.sml |
+     remove_src_hdr     |
+     sed -e 's;FOREIGN_INTERFACE;INTERFACE;g' >> interface.sml 
+d37 4
+a40 1
+     rm -f __interface.sml
+a69 18
+case "$ARCH$OS"
+in
+   "") case "`uname``uname -r`"
+       in
+           SunOS4*)  ARCH=SPARC
+                     OS=SunOS
+	             ;;
+           SunOS5*)  ARCH=SPARC
+                     OS=Solaris
+                     ;;
+           *) ARCH=Unknown
+              OS=Unknown
+              ;;
+       esac
+       echo "mk_interface: locally setting ARCH=$ARCH and OS=$OS ..."
+       ;;
+esac
+
+d80 18
+@
+
+
+1.6
+log
+@Minor correction.
+@
+text
+@d68 12
+a79 2
+   "") ARCH=SPARC
+       OS=SunOS
+@
+
+
+1.5
+log
+@Changed main-g to runtime-g ...
+@
+text
+@d89 1
+a89 1
+     rts/bin/runtime-g  -load images/$ARCH/$OS/batch.img \
+@
+
+
+1.4
+log
+@Added explicit PATH setting to get tools invoked correctly.
+@
+text
+@d28 1
+a28 1
+ * (Copyright) The Harlequin Group, $year (All rights reserved)
+d70 1
+d76 1
+a76 1
+else echo "Can't find foreign/__interface.sml"
+d89 1
+a89 1
+     rts/bin/$ARCH/$OS/main-g  -load images/$ARCH/$OS/batch.img \
+@
+
+
+1.3
+log
+@Added -full switch for use in building foreign.img (see images/GNUMake)
+@
+text
+@d16 2
+a17 1
+rm -f buildlist
+d42 1
+@
+
+
+1.2
+log
+@Adding switches for use in overnight build.
+@
+text
+@d7 7
+a13 2
+   -source*)  sourceOnly = "yes";;
+   -all*)     sourceOnly = "no";;
+a58 1
+     echo "Making __interface.sml"
+d79 2
+a80 1
+   yes)
+d91 1
+a91 1
+esac@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d3 7
+a9 1
+#rm -f __interface.sml
+d70 1
+a70 1
+     exit 0
+d73 14
+a86 9
+echo "Compiling foreign/__interface.sml"
+cd ..
+MLWORKS_SRC_PATH=.
+MLWORKS_OBJ_PATH=.
+MLWORKS_PERVASIVE=./pervasive
+rts/bin/$ARCH/$OS/main-g  -load images/$ARCH/$OS/batch.img \
+     -pass argz -pervasive-dir $MLWORKS_PERVASIVE \
+                foreign/__interface.sml \
+           argz
+@

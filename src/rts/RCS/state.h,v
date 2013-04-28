@@ -1,0 +1,295 @@
+head	1.8;
+access;
+symbols
+	Final_version_of_old_runtime:1.8
+	ML_revised_beta_release_25/05/94:1.8
+	ML_final_beta_release_02/03/94:1.8
+	mlworks-28-01-1994:1.8
+	Release:1.8
+	mlworks-beta-01-09-1993:1.8
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.8;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	92.07.27.12.47.00;	author richard;	state Exp;
+branches
+	1.8.1.1;
+next	1.7;
+
+1.7
+date	92.06.30.09.41.59;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.24.15.19.16;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.07.16.21.03;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.24.15.36.31;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.23.16.00.45;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.18.18.36.21;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.18.16.26.19;	author davidt;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	92.07.27.12.47.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The ML and C states are stored here.
+@
+
+
+1.8
+log
+@Moved stack_extension_count and raise_count here from the obsolete
+callc_codes.h.
+@
+text
+@/*
+ * state.h
+ * The ML and C states are stored here.
+ * $Log: state.h,v $
+ * Revision 1.7  1992/06/30  09:41:59  richard
+ * Moved declaration of ml_state to storeman.h.
+ *
+ * Revision 1.6  1992/03/24  15:19:16  richard
+ * Changed the types of the C and ML states to reflect changes in
+ * interface.s.
+ *
+ * Revision 1.5  1992/01/07  16:21:03  richard
+ * Changed g6 to `stack' to reflect its new meaning.
+ *
+ * Revision 1.4  1991/10/24  15:36:31  davidt
+ * Gave g4 and g4 their proper names (global and implicit).
+ *
+ * Revision 1.3  91/10/23  16:00:45  davidt
+ * The complete register set in now stored in ml_state and c_state
+ * so that ml_callc can function correctly.
+ * 
+ * Revision 1.2  91/10/18  18:36:21  davidt
+ * We don't need the setjmp stuff any more.
+ * 
+ * Revision 1.1  91/10/18  16:26:19  davidt
+ * Initial revision
+ * 
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ */
+
+#ifndef state_h
+#define state_h
+
+#include "storeman.h"	/* declaration of struct ml_state */
+
+struct c_state
+{
+  word g2, g3, g4, g5, g6, g7, g1;
+  word sp;
+} c_state;
+
+
+/* Statistics collected by interface.m4s */
+
+extern unsigned int stack_extension_count;
+extern unsigned int raise_count;
+
+#endif
+@
+
+
+1.8.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 4
+ * Revision 1.8  1992/07/27  12:47:00  richard
+ * Moved stack_extension_count and raise_count here from the obsolete
+ * callc_codes.h.
+ *
+@
+
+
+1.7
+log
+@Moved declaration of ml_state to storeman.h.
+@
+text
+@d5 3
+d42 6
+@
+
+
+1.6
+log
+@Changed the types of the C and ML states to reflect changes in
+interface.s.
+@
+text
+@d5 4
+d32 1
+a32 14
+#include "mltypes.h"
+
+extern struct ml_state
+{
+  word heap_limit;	/* %g2 */
+  word handler;		/* %g3 */
+  word global;		/* %g4 */
+  word implicit;	/* %g5 */
+  word stack;		/* %g6, a Stack *, see mem.h */
+  word g7;		/* %g7 */
+  word heap_start;	/* %g1 */
+  word sp;		/* last save area to fix */
+} ml_state;
+
+a38 1
+
+@
+
+
+1.5
+log
+@Changed g6 to `stack' to reflect its new meaning.
+@
+text
+@d5 3
+a24 1
+/* Avoid multiple inclusion */
+a27 2
+/* For efficiency */
+#ifndef mltypes_h
+a28 1
+#endif
+d30 2
+a31 6
+/*
+ * The type of the ML state.
+ */
+
+typedef struct {
+  word heap_start;	/* %g1 */
+d36 1
+a36 1
+  word stack;		/* Stack *, see mem.h */
+d38 3
+a40 2
+  word sp;		/* points to first save area for ml_callc */
+} ml_state_type;
+a41 3
+/*
+ * The ML state is stored here.
+ */
+d43 5
+a47 1
+extern ml_state_type ml_state;
+a48 11
+/*
+ * The type of the C state.
+ */
+
+typedef struct { word g1,g2,g3,g4,g5,g6,g7,sp; } c_state_type;
+
+/*
+ * The C state is stored here.
+ */
+
+extern c_state_type c_state;
+@
+
+
+1.4
+log
+@Gave g4 and g4 their proper names (global and implicit).
+@
+text
+@d4 4
+a7 1
+ * $Log:	state.h,v $
+d41 1
+a41 1
+  word g6;		/* %g6 */
+d43 1
+a43 1
+  word sp;		/* %sp */
+@
+
+
+1.3
+log
+@The complete register set in now stored in ml_state and c_state
+so that ml_callc can function correctly.
+@
+text
+@d5 4
+d36 2
+a37 2
+  word g4;		/* %g4 */
+  word g5;		/* %g5 */
+@
+
+
+1.2
+log
+@We don't need the setjmp stuff any more.
+@
+text
+@d5 3
+d25 1
+a25 1
+ * The C state is stored here.
+d28 10
+a37 1
+extern word c_state;
+d40 1
+a40 1
+ * The current ML stack, heap and heap limit pointers.
+d43 13
+a55 4
+extern mlval ml_stack;
+extern mlval ml_heap;
+extern mlval ml_heap_limit;
+extern mlval ml_c_arguments;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+a14 2
+
+#include <setjmp.h>
+@

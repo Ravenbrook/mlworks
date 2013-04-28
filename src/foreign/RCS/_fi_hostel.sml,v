@@ -1,0 +1,949 @@
+head	1.9;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.9
+	MLWorks_Beta_1996_06_06:1.9
+	MLWorks_Beta_1996_06_05:1.9
+	MLWorks_Beta_1996_06_03:1.9
+	MLWorks_Beta_1996_05_31:1.9
+	MLWorks_Beta_1996_05_30:1.9;
+locks; strict;
+comment	@ * @;
+
+
+1.9
+date	96.05.13.10.02.07;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.01.11.41.39;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.04.30.14.59.08;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.04.18.16.57.16;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.12.16.23.04;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.09.07.22.43.41;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.06.21.16.31.53;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.05.04.19.23.38;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.35.59;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.9
+log
+@Changes to basis.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_HOSTEL ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _fi_hostel.sml,v $
+ * Revision 1.8  1996/05/01  11:41:39  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.7  1996/04/30  14:59:08  matthew
+ * Removing MLWorks.Integer
+ *
+ * Revision 1.6  1996/04/18  16:57:16  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.5  1995/09/12  16:23:04  daveb
+ * Word conversion functions have changed.
+ *
+ *  Revision 1.4  1995/09/07  22:43:41  brianm
+ *  Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.3  1995/06/21  16:31:53  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.2  1995/05/04  19:23:38  brianm
+ *  Removing restrictive eqtype constraints & introduce abstypes in
+ *  various implementing types.
+ *
+ *  Revision 1.1  1995/04/25  11:35:59  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__integer";
+require "../basis/__general";
+require "../basis/__word32";
+
+require "static_bytearray";
+require "fi_types";
+require "fi_utils";
+require "fi_hostel";
+
+functor ForeignHostel(
+
+   structure StaticByteArray : STATIC_BYTEARRAY
+   structure FIUtils : FOREIGN_UTILS
+   structure FITypes : FOREIGN_TYPES
+
+
+) : FOREIGN_HOSTEL =
+   struct
+
+   (* Mapping *)
+
+     structure FITypes = FITypes
+     open FITypes
+     open General
+
+     structure ByteArray = MLWorks.ByteArray
+
+     type static_bytearray  = StaticByteArray.static_bytearray
+
+     val static_array       = StaticByteArray.alloc_array
+
+     val static_addr        = StaticByteArray.address_of
+
+     val to_bytearray : static_bytearray -> bytearray  =
+           StaticByteArray.to_bytearray
+
+     val copy_ba'           = ByteArray.copy
+     val copy_ba  =
+         fn (src,src_st,len,tgt,tgt_st) =>
+            copy_ba'(src,src_st,src_st+len,tgt,tgt_st)
+
+     val sub_bytearray  =  ByteArray.subarray
+     val length_ba      =  ByteArray.length
+     val to_list        =  ByteArray.to_list
+
+     val disp                 =  FIUtils.disp
+     val sep_list             =  FIUtils.sep_items
+
+     val word32_to_hex        =  FIUtils.word32_to_hex
+     val bytearray_to_hex     =  FIUtils.bytearray_to_hex
+     val bytearray_to_string  =  FIUtils.bytearray_to_string
+
+     val extract            =  General.valOf
+     val int_string         =  Int.toString
+
+     val min                =  Int.min
+     val max                =  Int.max
+
+     val addrToInt          =  Word32.toIntX
+     val intToAddr          =  Word32.fromInt
+     val pl32               =  Word32.+
+     val mi32               =  Word32.-
+
+     infix 6 pl32 mi32
+
+
+   (* Implementation auxiliaries *)
+
+     fun static_copy(src_sba,st,len,dest_sba,offset) =
+         let val src_ba    = to_bytearray(src_sba)
+             val dest_ba   = to_bytearray(dest_sba)
+         in 
+             copy_ba(src_ba,st,len,dest_ba,offset)
+         end
+
+
+     fun addr_plus(a,i)    = a pl32 (intToAddr i)
+     fun addr_minus(a1,a2) = addrToInt(a1 mi32 a2)
+
+   (* Exported Definitions *)
+
+     datatype hostel_status = LOCKED_HS | RD_HS | WR_HS | RDWR_HS 
+
+     datatype alloc_policy = ORIGIN_AP | SUCC_AP | ALIGNED_4_AP | ALIGNED_8_AP
+
+     datatype overflow_policy = BREAK_OV | EXTEND_OV | RECYCLE_OV
+
+     abstype hostel =
+              HOSTEL of
+                {
+                     origin : address ref,
+                     status : hostel_status ref,
+                      alloc : alloc_policy,
+                   overflow : overflow_policy,
+                       size : int ref,
+                        top : int ref,
+                    content : static_bytearray ref
+                }
+     with
+	fun hostel_alloc(HOSTEL{alloc, ...})         =  alloc
+	fun hostel_overflow(HOSTEL{overflow, ...})   =  overflow
+	fun hostel_origin(HOSTEL{origin, ...})       = !origin
+	fun hostel_size(HOSTEL{size, ...})           = !size
+
+	fun hostel_status(HOSTEL{status, ...}) = !status
+	fun set_hostel_status(HOSTEL{status, ...}, new_status) = (status := new_status)
+
+	fun hostel_content(HOSTEL{content, ...}) = to_bytearray(!content)
+
+	fun is_standard_hostel(HOSTEL{alloc=ORIGIN_AP, ...})    =  false
+	  | is_standard_hostel(HOSTEL{overflow=BREAK_OV, ...})  =  true
+	  | is_standard_hostel(_)  =  false
+
+	fun is_ephemeral_hostel(HOSTEL{alloc=ORIGIN_AP, ...})      =  false
+	  | is_ephemeral_hostel(HOSTEL{overflow=RECYCLE_OV, ...})  =  true
+	  | is_ephemeral_hostel(_)  =  false
+
+
+	exception ReadOnly
+	exception WriteOnly
+
+	local
+	   fun round_up(size,base) =
+	       let val spill = (size mod base)
+	       in
+		   size + (base - spill)
+	       end
+
+	   fun round_down(size,base) =
+	       let val spill = (size mod base)
+	       in
+		   size - spill
+	       end
+
+	   fun adjust_size_up(ORIGIN_AP,    size) = size
+	     | adjust_size_up(SUCC_AP,     size) = size
+	     | adjust_size_up(ALIGNED_4_AP, size) = round_up(size,4)
+	     | adjust_size_up(ALIGNED_8_AP, size) = round_up(size,8)
+
+	   fun adjust_size_down(ORIGIN_AP,    size) = size
+	     | adjust_size_down(SUCC_AP,     size) = size
+	     | adjust_size_down(ALIGNED_4_AP, size) = round_down(size,4)
+	     | adjust_size_down(ALIGNED_8_AP, size) = round_down(size,8)
+	in
+	   val adjust_hostel_size       = adjust_size_up
+	   val adjust_object_size_above = adjust_size_up
+	   val adjust_object_size_below = adjust_size_down
+	end
+
+	fun hostel {alloc,overflow,status,size} =
+	    let val size' = adjust_hostel_size(alloc,size)
+		val store = static_array(size')
+		val addr  = static_addr(store,0)
+	    in
+		HOSTEL{ origin   =  ref(addr),
+			status   =  ref(status),
+			alloc    =  alloc,
+			overflow =  overflow,
+			size     =  ref(size'),
+			top      =  ref(0),
+			content  =  ref(store)
+		      }
+	    end
+
+	exception ExpandHostel
+
+	local
+	   val min_expand = 512
+	   val max_expand = min_expand * min_expand
+
+	   fun adjust_increment(n) = min(max_expand,max(n,min_expand))        
+
+	   fun expand_content(HOSTEL{origin,content,size,alloc, ...},increment) =
+	       let val new_size  = adjust_hostel_size(alloc,!size + increment)
+		   val new_store = static_array(new_size)
+		   val new_addr  = static_addr(new_store,0)
+	       in
+		   static_copy(!content,0,!size,new_store,0);
+		   content := new_store;
+		   size := new_size;
+		   origin := new_addr
+	       end
+
+	   fun expand_hostel(hostel,increment') =
+	       let val increment = adjust_increment(increment')
+	       in
+		   case hostel_status(hostel) of
+		      RDWR_HS => expand_content(hostel,increment)
+		   |
+		      WR_HS   => expand_content(hostel,increment)
+		   |
+		      _      => raise ExpandHostel
+	       end
+
+	   fun expand_hostel'(hostel,space_required) =
+	       let val size = hostel_size(hostel)
+		   val increment = min(2 * space_required, size)
+	       in
+		   expand_hostel(hostel,increment)
+	       end
+	in
+
+	   fun expand(hostel,increment) =
+	       if is_standard_hostel(hostel) 
+	       then expand_hostel(hostel,increment)
+	       else expand_hostel'(hostel,increment)
+
+	   fun expand_managed(hostel,space_required) =
+	       if is_standard_hostel(hostel) 
+	       then raise ExpandHostel
+	       else expand_hostel'(hostel,space_required)
+
+	end
+
+
+
+	(* ==== OVERFLOW & ALLOCATION MANAGEMENT ====
+
+
+	In general we have the following relationships holding:
+
+	  %--- .. ---%---------------%---- .. ----%--------%---------
+	  %          %    OBJECT     %            % free   %     
+	  %          %               %            % space  %     
+	  %--- .. ---%---------------%---- .. ----%--------%---------
+	  0          |---obj_size---> ^            ^       ^
+		     ^                |            |       |
+		     |                |            |       |
+	  offset ---/                 |            |       |
+				      |            |       |
+	  obj_end -------------------/             |       |
+						   |       |
+	  top (= next_offset) --------------------/        |
+							   |
+	  hostel_size ------------------------------------/
+
+	So:
+
+	       0 <= offset < obj_end = offset + obj_size
+			   <= top = next_offset
+			   <= hostel_size
+
+               free_space = hostel_size - top
+
+               Each object : offset <= i < obj_end 
+
+
+	When objects are either originally allocated or (conceptually)
+	moved, this may cause:
+
+	   - allocation of (some) remaining free space in the hostel
+	     to be used by an object.
+
+	   - overflow of the hostel by consuming all remaining
+	     free space.  This may lead to an ML exception being
+	     raised or to the hostel being extended in some way.
+
+	In either case the object has a putative value for the index just
+	beyond the end, called new_obj_end.
+
+	  The hostel needs allocation iff:   new_obj_end > top
+	  The hostel has overflowed iff:     new_obj_end > hostel_size
+
+	*)
+
+	local
+
+	   fun adjust_next_top( ORIGIN_AP, _ ) = 0
+	     | adjust_next_top( _, next_top )  = next_top
+
+	in
+
+	   fun fresh_object_offset(hostel,obj_size) =
+	       let val HOSTEL{alloc,top,size,overflow, ...} = hostel
+		   val new_offset = !top
+		   val new_obj_end' = new_offset + obj_size
+		   val new_obj_end = adjust_object_size_above(alloc,new_obj_end')
+		   val free_space = !size - new_obj_end
+	       in 
+		   ( if free_space < 0
+		     then case overflow of
+			    EXTEND_OV   =>
+			      ( expand(hostel,~free_space);
+				top := adjust_next_top(alloc,new_obj_end)
+			      )
+			  | RECYCLE_OV  => top := 0
+			  | BREAK_OV    => raise ExpandHostel
+		     else top := adjust_next_top(alloc,new_obj_end)
+		   );
+		   new_offset
+	       end
+
+	   fun adjust_hostel(hostel,obj_offset,obj_size) =
+	       let val HOSTEL{top, ...} = hostel
+		   val next_offset = !top
+		   val new_obj_end = obj_offset + obj_size
+		   val remaining_space = next_offset - new_obj_end
+	       in 
+		   if remaining_space < 0
+		   then ignore( fresh_object_offset(hostel,obj_size) )
+		   else ()
+	       end
+	end
+
+        (* Diagnostic tools *)
+        local
+           fun push_if b x stk = if b then x :: stk else stk
+
+           fun str_kind(hostel) =
+               let val strl = push_if (is_standard_hostel hostel) "standard" []
+                   val strl = push_if (is_ephemeral_hostel hostel) "ephemeral" strl
+               in
+                   if strl = [] then "non-standard" else
+                   String.implode(sep_list ", " strl)
+               end
+
+           fun str_status(LOCKED_HS)  = "LOCKED_HS (locked - no access)"
+             | str_status(RD_HS)      = "RD_HS (read-only access)"
+             | str_status(WR_HS)      = "WR_HS (write-only access)"
+             | str_status(RDWR_HS)    = "RDWR_HS (read/write access)"
+
+           fun str_alloc(ORIGIN_AP)  =
+                 "ORIGIN_AP     (allocate objects at the origin)"
+             | str_alloc(SUCC_AP)   =
+                 "SUCC_AP      (allocate objects at the top end)"
+             | str_alloc(ALIGNED_4_AP)  =
+                 "ALIGNED_4_AP  (allocate objects at the top end - 4-byte aligned)"
+             | str_alloc(ALIGNED_8_AP)  =
+                 "ALIGNED_8_AP  (allocate objects at the top end - 8-byte aligned)"
+  
+           fun str_overflow(BREAK_OV) =
+                 "BREAK_OV    (raise exception on overflow)"
+             | str_overflow(EXTEND_OV) =
+                 "EXTEND_OV   (extend hostel on overflow)"
+             | str_overflow(RECYCLE_OV) =
+                 "RECYCLE_OV  (restart at origin on overflow)"
+        in
+
+	   fun hostel_info (hostel) =
+               let val HOSTEL{origin, status, alloc, overflow, size, top, ...} = hostel
+                   val size = !size
+                   val top  = !top
+               in
+		   { kind     = str_kind(hostel),
+                     origin   = !origin,
+		     status   = str_status(!status),
+		     alloc    = str_alloc(alloc),
+		     overflow = str_overflow(overflow),
+		     size     = size,
+		     top      = top,
+		     free     = (size - top) }
+               end
+
+	   fun hostel_data {hostel, start, length} =
+               let val data = hostel_content(hostel)
+                   val ba = sub_bytearray(data,start,(start + length))
+               in
+                   to_list(ba)
+               end
+
+	   fun hostel_data_hex {hostel, start, length} =
+               let val data = hostel_content(hostel)
+               in
+                   bytearray_to_hex{arr=data,st=start,len=length}
+               end
+
+	   fun hostel_data_ascii {hostel, start, length} =
+               let val data = hostel_content(hostel)
+               in
+                   bytearray_to_string{arr=data,st=start,len=length}
+               end
+
+
+           fun view_hostel (hostel) =
+	       let val { kind, origin, status, alloc, overflow, size, top, free } =
+		       hostel_info hostel
+	       in
+		   String.implode   [ "\n\n",
+			       "   Hostel (", kind, ", ", status, ")\n",
+			       "          alloc      = ", alloc, "\n",
+                               "          overflow   = ", overflow, "\n",
+			       "          origin     = ", word32_to_hex(origin), "\n",
+			       "          top (size) = ", int_string(top),
+                                          " (", int_string(size), ")", "\n",
+			       "          free = (size - top) = ",
+                                          int_string(free), "\n",
+			       "\n\n" ]
+	       end
+
+           val disp_hostel = disp view_hostel
+
+	   fun diff_addr a1 a2 = addr_minus(a1,a2)
+
+	   val incr_addr = addr_plus
+        end
+
+     end
+   end;
+@
+
+
+1.8
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@d12 6
+d102 2
+a103 2
+     val addrToInt          =  Word32.IntCvt.extend
+     val intToAddr          =  Word32.IntCvt.from
+@
+
+
+1.7
+log
+@Removing MLWorks.Integer
+@
+text
+@d12 3
+d351 1
+a351 1
+                   implode(sep_list ", " strl)
+d415 1
+a415 1
+		   implode   [ "\n\n",
+@
+
+
+1.6
+log
+@initbasis becomes basis
+@
+text
+@d12 3
+d35 1
+a38 2
+require "../utils/integer";
+
+a46 1
+   structure Integer : INTEGER
+d88 1
+a88 1
+     val int_string         =  MLWorks.Integer.makestring
+d90 2
+a91 2
+     val min                =  Integer.min
+     val max                =  Integer.max
+@
+
+
+1.5
+log
+@Word conversion functions have changed.
+@
+text
+@d12 3
+d32 2
+a33 2
+require "../initbasis/__general";
+require "../initbasis/__word32";
+@
+
+
+1.4
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d12 3
+d89 2
+a90 2
+     val addrToInt          =  Word32.signExtend
+     val intToAddr          =  Word32.intToWord
+@
+
+
+1.3
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d12 3
+d109 1
+a109 1
+     datatype hostel_status = LOCKED_H | RD_H | WR_H | RDWR_H 
+d111 1
+a111 1
+     datatype alloc_policy = ORIGIN_AP | FLOAT_AP | ALIGNED_4_AP | ALIGNED_8_AP
+d163 1
+a163 1
+	     | adjust_size_up(FLOAT_AP,     size) = size
+d168 1
+a168 1
+	     | adjust_size_down(FLOAT_AP,     size) = size
+d215 1
+a215 1
+		      RDWR_H => expand_content(hostel,increment)
+d217 1
+a217 1
+		      WR_H   => expand_content(hostel,increment)
+d344 4
+a347 4
+           fun str_status(LOCKED_H)  = "LOCKED_H (locked - no access)"
+             | str_status(RD_H)      = "RD_H (read-only access)"
+             | str_status(WR_H)      = "WR_H (write-only access)"
+             | str_status(RDWR_H)    = "RDWR_H (read/write access)"
+d351 2
+a352 2
+             | str_alloc(FLOAT_AP)   =
+                 "FLOAT_AP      (allocate objects at the top end)"
+d419 1
+a419 1
+	   fun conv_addr a1 a2 = addr_minus(a1,a2)
+@
+
+
+1.2
+log
+@Removing restrictive eqtype constraints & introduce abstypes in
+various implementing types.
+@
+text
+@d12 4
+d24 1
+d30 1
+d37 1
+d40 1
+a53 6
+
+(*
+     val null_byte = Word8.intToWord(0)
+
+     val static_array       = fn sz => StaticByteArray.array(sz,null_byte)
+ *)
+d66 6
+a71 1
+     val length_ba          = ByteArray.length
+d73 3
+a75 1
+     val extract            = General.valOf
+d77 2
+a78 2
+     val min                = Integer.min
+     val max                = Integer.max
+d80 2
+d83 4
+d88 3
+d101 3
+d110 1
+a110 2
+     datatype overflow_policy = BREAK_OV | EXTEND_OV
+                              | EPHEM_BREAK_OV | EPHEM_EXTEND_OV | EPHEM_RECYCLE_OV
+d123 1
+a123 1
+    with
+d134 7
+a140 9
+	fun is_standard_hostel(HOSTEL{overflow=EXTEND_OV, ...}) = false
+	  | is_standard_hostel(HOSTEL{overflow=EPHEM_EXTEND_OV, ...}) = false
+	  | is_standard_hostel(HOSTEL{alloc=ORIGIN_AP, ...})  =  false
+	  | is_standard_hostel(_)  =  true
+
+	fun is_ephemeral_hostel(HOSTEL{overflow=EPHEM_BREAK_OV, ...}) = true
+	  | is_ephemeral_hostel(HOSTEL{overflow=EPHEM_EXTEND_OV, ...}) = true
+	  | is_ephemeral_hostel(HOSTEL{overflow=EPHEM_RECYCLE_OV, ...}) = true
+	  | is_ephemeral_hostel(_) = false
+d267 5
+d275 1
+a275 1
+	   - allocation of remaining free space in the hostel
+d280 1
+a280 1
+	     raised or to the hostel being extended or to 
+a291 8
+	   datatype overflow_choices = EXPAND | RECYCLE | BREAK
+
+	   fun choose_overflow_action( BREAK_OV         )  =  BREAK
+	     | choose_overflow_action( EXTEND_OV        )  =  EXPAND
+	     | choose_overflow_action( EPHEM_BREAK_OV   )  =  BREAK
+	     | choose_overflow_action( EPHEM_EXTEND_OV  )  =  EXPAND
+	     | choose_overflow_action( EPHEM_RECYCLE_OV )  =  RECYCLE
+
+d305 2
+a306 2
+		     then case choose_overflow_action(overflow) of
+			    EXPAND =>
+d310 2
+a311 6
+			  |
+			    RECYCLE =>
+				top := 0
+			  |
+			    BREAK =>
+				raise ExpandHostel
+d328 93
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d11 4
+a14 6
+ *  $Log: fi_data.sml,v $
+# Revision 1.1  1995/03/27  15:47:52  brianm
+# new unit
+#
+# New file.
+#
+d16 1
+d92 1
+a92 1
+     datatype hostel =
+d103 214
+a316 213
+
+     fun hostel_alloc(HOSTEL{alloc, ...})         =  alloc
+     fun hostel_overflow(HOSTEL{overflow, ...})   =  overflow
+     fun hostel_origin(HOSTEL{origin, ...})       = !origin
+     fun hostel_size(HOSTEL{size, ...})           = !size
+
+     fun hostel_status(HOSTEL{status, ...}) = !status
+     fun set_hostel_status(HOSTEL{status, ...}, new_status) = (status := new_status)
+
+     fun hostel_content(HOSTEL{content, ...}) = to_bytearray(!content)
+
+     fun is_standard_hostel(HOSTEL{overflow=EXTEND_OV, ...}) = false
+       | is_standard_hostel(HOSTEL{overflow=EPHEM_EXTEND_OV, ...}) = false
+       | is_standard_hostel(HOSTEL{alloc=ORIGIN_AP, ...})  =  false
+       | is_standard_hostel(_)  =  true
+
+     fun is_ephemeral_hostel(HOSTEL{overflow=EPHEM_BREAK_OV, ...}) = true
+       | is_ephemeral_hostel(HOSTEL{overflow=EPHEM_EXTEND_OV, ...}) = true
+       | is_ephemeral_hostel(HOSTEL{overflow=EPHEM_RECYCLE_OV, ...}) = true
+       | is_ephemeral_hostel(_) = false
+
+
+     exception ReadOnly
+     exception WriteOnly
+
+     local
+        fun round_up(size,base) =
+            let val spill = (size mod base)
+            in
+                size + (base - spill)
+            end
+
+        fun round_down(size,base) =
+            let val spill = (size mod base)
+            in
+                size - spill
+            end
+
+        fun adjust_size_up(ORIGIN_AP,    size) = size
+          | adjust_size_up(FLOAT_AP,     size) = size
+          | adjust_size_up(ALIGNED_4_AP, size) = round_up(size,4)
+          | adjust_size_up(ALIGNED_8_AP, size) = round_up(size,8)
+
+        fun adjust_size_down(ORIGIN_AP,    size) = size
+          | adjust_size_down(FLOAT_AP,     size) = size
+          | adjust_size_down(ALIGNED_4_AP, size) = round_down(size,4)
+          | adjust_size_down(ALIGNED_8_AP, size) = round_down(size,8)
+     in
+        val adjust_hostel_size       = adjust_size_up
+        val adjust_object_size_above = adjust_size_up
+        val adjust_object_size_below = adjust_size_down
+     end
+             
+     fun hostel {alloc,overflow,status,size} =
+         let val size' = adjust_hostel_size(alloc,size)
+             val store = static_array(size')
+             val addr  = static_addr(store,0)
+         in
+             HOSTEL{ origin   =  ref(addr),
+                     status   =  ref(status),
+                     alloc    =  alloc,
+                     overflow =  overflow,
+                     size     =  ref(size'),
+                     top      =  ref(0),
+                     content  =  ref(store)
+                   }
+         end
+
+     exception ExpandHostel
+
+     local
+        val min_expand = 512
+        val max_expand = min_expand * min_expand
+
+        fun adjust_increment(n) = min(max_expand,max(n,min_expand))        
+
+        fun expand_content(HOSTEL{origin,content,size,alloc, ...},increment) =
+            let val new_size  = adjust_hostel_size(alloc,!size + increment)
+                val new_store = static_array(new_size)
+                val new_addr  = static_addr(new_store,0)
+            in
+                static_copy(!content,0,!size,new_store,0);
+                content := new_store;
+                size := new_size;
+                origin := new_addr
+            end
+
+        fun expand_hostel(hostel,increment') =
+            let val increment = adjust_increment(increment')
+            in
+                case hostel_status(hostel) of
+                   RDWR_H => expand_content(hostel,increment)
+                |
+                   WR_H   => expand_content(hostel,increment)
+                |
+                   _      => raise ExpandHostel
+            end
+
+        fun expand_hostel'(hostel,space_required) =
+            let val size = hostel_size(hostel)
+                val increment = min(2 * space_required, size)
+            in
+                expand_hostel(hostel,increment)
+            end
+     in
+
+        fun expand(hostel,increment) =
+            if is_standard_hostel(hostel) 
+            then expand_hostel(hostel,increment)
+            else expand_hostel'(hostel,increment)
+
+        fun expand_managed(hostel,space_required) =
+            if is_standard_hostel(hostel) 
+            then raise ExpandHostel
+            else expand_hostel'(hostel,space_required)
+
+     end
+
+
+
+     (* ==== OVERFLOW & ALLOCATION MANAGEMENT ====
+
+
+     In general we have the following relationships holding:
+
+       %--- .. ---%---------------%---- .. ----%--------%---------
+       %          %    OBJECT     %            % free   %     
+       %          %               %            % space  %     
+       %--- .. ---%---------------%---- .. ----%--------%---------
+       0          |---obj_size---> ^            ^       ^
+                  ^                |            |       |
+                  |                |            |       |
+       offset ---/                 |            |       |
+                                   |            |       |
+       obj_end -------------------/             |       |
+                                                |       |
+       top (= next_offset) --------------------/        |
+                                                        |
+       hostel_size ------------------------------------/
+
+     So:
+
+            0 <= offset < obj_end = offset + obj_size
+                        <= top = next_offset
+                        <= hostel_size
+
+     When objects are either originally allocated or (conceptually)
+     moved, this may cause:
+
+        - allocation of remaining free space in the hostel
+          to be used by an object.
+
+        - overflow of the hostel by consuming all remaining
+          free space.  This may lead to an ML exception being
+          raised or to the hostel being extended or to 
+
+     In either case the object has a putative value for the index just
+     beyond the end, called new_obj_end.
+
+       The hostel needs allocation iff:   new_obj_end > top
+       The hostel has overflowed iff:     new_obj_end > hostel_size
+
+     *)
+
+     local
+
+        datatype overflow_choices = EXPAND | RECYCLE | BREAK
+
+        fun choose_overflow_action( BREAK_OV         )  =  BREAK
+          | choose_overflow_action( EXTEND_OV        )  =  EXPAND
+          | choose_overflow_action( EPHEM_BREAK_OV   )  =  BREAK
+          | choose_overflow_action( EPHEM_EXTEND_OV  )  =  EXPAND
+          | choose_overflow_action( EPHEM_RECYCLE_OV )  =  RECYCLE
+
+        fun adjust_next_top( ORIGIN_AP, _ ) = 0
+          | adjust_next_top( _, next_top )  = next_top
+
+     in
+
+        fun fresh_object_offset(hostel,obj_size) =
+            let val HOSTEL{alloc,top,size,overflow, ...} = hostel
+                val new_offset = !top
+                val new_obj_end' = new_offset + obj_size
+                val new_obj_end = adjust_object_size_above(alloc,new_obj_end')
+                val free_space = !size - new_obj_end
+            in 
+                ( if free_space < 0
+                  then case choose_overflow_action(overflow) of
+                         EXPAND =>
+                           ( expand(hostel,~free_space);
+                             top := adjust_next_top(alloc,new_obj_end)
+                           )
+                       |
+                         RECYCLE =>
+                             top := 0
+                       |
+                         BREAK =>
+                             raise ExpandHostel
+                  else top := adjust_next_top(alloc,new_obj_end)
+                );
+                new_offset
+            end
+
+        fun adjust_hostel(hostel,obj_offset,obj_size) =
+            let val HOSTEL{top, ...} = hostel
+                val next_offset = !top
+                val new_obj_end = obj_offset + obj_size
+                val remaining_space = next_offset - new_obj_end
+            in 
+                if remaining_space < 0
+                then ignore( fresh_object_offset(hostel,obj_size) )
+                else ()
+            end
+@

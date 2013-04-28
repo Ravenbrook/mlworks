@@ -1,0 +1,761 @@
+head	1.16;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.16
+	mlworks-28-01-1994:1.16
+	Release:1.16
+	mlworks-beta-01-09-1993:1.16
+	MLWorks-1-0-4-29/01/1993:1.16
+	MLWorks-1-0-3-21/12/1992:1.16
+	MLWorks-1-0-2-15/12/1992:1.16
+	MLWorks-1-0-1-04/12/1992:1.16
+	checkpoint_17_08_92:1.16;
+locks; strict;
+
+
+1.16
+date	92.08.13.17.49.32;	author davidt;	state Exp;
+branches
+	1.16.1.1;
+next	1.15;
+
+1.15
+date	92.04.13.15.23.35;	author clive;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.02.07.14.34.08;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.01.28.12.16.45;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	91.12.03.12.15.10;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.11.19.15.19.52;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.10.31.14.21.50;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.10.24.09.49.23;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.10.15.10.13.50;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.10.11.09.40.45;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.10.01.15.02.13;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.09.25.12.44.30;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	91.09.24.11.35.57;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.19.14.22.50;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.18.11.04.55;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.17.13.32.37;	author richard;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	91.09.26.13.43.19;	author richard;	state Exp;
+branches;
+next	;
+
+1.16.1.1
+date	92.08.13.17.49.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatypes for use by the MIR optimiser. Created from version 1.7 of
+mirdatatypes.sml.
+This is the signature.
+@
+
+
+1.16
+log
+@THIS FILE IS NO LONGER IN USE! Commented out code so
+that any use of this file causes a parse error.
+@
+text
+@(* miropttypes.sml the signature *)
+
+(*
+$Log: miropttypes.sml,v $
+Revision 1.15  1992/04/13  15:23:35  clive
+First version of the profiler
+
+Revision 1.14  1992/02/07  14:34:08  richard
+Added `blocks' function.
+
+Revision 1.13  1992/01/28  12:16:45  richard
+Changed printing functions to produce lists of strings rather than
+concatenating large strings.  This is now much more efficient.
+
+Revision 1.12  1991/12/03  12:15:10  richard
+Exported print_opcode.
+
+Revision 1.11  91/11/19  15:19:52  richard
+Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+
+Revision 1.10  91/10/31  14:21:50  richard
+Moved annotate and unannotate here from MirOptimiser.
+
+Revision 1.9  91/10/24  09:49:23  richard
+Made procedure type abstract.
+
+Revision 1.8  91/10/15  10:13:50  richard
+Added block_fold and block_map.
+
+Revision 1.7  91/10/11  09:40:45  richard
+Slight alterations to cope with new MirTypes.
+
+Revision 1.6  91/10/01  15:02:13  richard
+Added proc_fold function.
+
+Revision 1.5  91/09/25  12:44:30  richard
+Added proc_map function.
+
+Revision 1.4  91/09/24  11:35:57  richard
+Altered procedure type to use a table of blocks rather than a list.
+This makes for efficiency and solves some block ordering problems
+in MirOptimiser.
+
+
+Revision 1.3  91/09/19  14:22:50  richard
+Added printing functions.
+.,
+
+Revision 1.2  91/09/18  11:04:55  richard
+Added control flow information to instructions. See MirFlow module.
+
+Revision 1.1  91/09/17  13:32:37  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+require "../utils/diagnostic";
+require "../utils/set";
+require "mirtypes";
+*)
+
+signature MIROPTTYPES (*=
+
+  sig
+
+    structure MirTypes	: MIRTYPES
+    structure Set	: SET
+
+    (* Diagnostic output levels:
+     *   0  none
+     *   1  procedure tags processed by annotate and deannotate
+     *)
+
+    structure Diagnostic	: DIAGNOSTIC
+
+
+    (*  == Annotated code ==
+     *
+     *  block is the analog of MirTypes.block. Each opcode as the
+     *  following information attached:
+     *    - a set of registers live before the opcode;
+     *    - a list of block tags which might be jumped to by the opcode.
+     *
+     *  The procedure type is an abstract look-up table of blocks, and
+     *  records the tag of the entry block and procedure parameters. The
+     *  ordering of the blocks is not significant otherwise.
+     *)
+
+    datatype registers =
+      REGS of MirTypes.any_register Set.Set |
+      REGS_UNKNOWN;
+
+    datatype successors =
+      SUCCS of MirTypes.tag list |
+      SUCCS_UNKNOWN;
+
+    datatype block = BLOCK of
+      MirTypes.tag *
+      (MirTypes.opcode * registers * successors) list;
+
+    type block_table
+
+    datatype procedure = PROC of
+      string *
+      MirTypes.tag *
+      MirTypes.procedure_parameters *
+      block_table
+
+
+
+    (*  === CONVERSION FUNCTIONS ===  *)
+
+
+    (*  == Annotate a procedure ==
+     *
+     *  This function convertes a MirTypes.procedure into a procedure, setting
+     *  live variable and successor information to unknown.
+     *)
+
+    val annotate : MirTypes.procedure -> procedure
+
+
+    (*  == Remove annotation from a procedure ==
+     *
+     *  This is the reverse of the above function. The block list in the body
+     *  of the MirTypes.procedure is not in any particular order.
+     *)
+
+    val unannotate : procedure -> MirTypes.procedure
+
+
+    (*  == Extract block list from procedure ==
+     *
+     *  The list of MirOptTypes blocks is extracted from the procedure.
+     *)
+
+    val blocks : procedure -> block list
+
+
+
+    (*  === PROCEDURE MANIPULATION FUNCTIONS ===  *)
+
+
+    (*  == Add a block to a procedure ==
+     *
+     *  Returns a new procedure. Any existing block with the same tag is
+     *  discarded.
+     *)
+
+    val new_block : procedure -> block -> procedure
+
+
+    (*  == Get a block from a procedure ==
+     *
+     *  Returns the block in the procedure which has the given tag.
+     *  Raises NoSuchBlock if not found.
+     *)
+
+    exception NoSuchBlock;
+    val get_block : procedure -> MirTypes.tag -> block
+
+
+    (*  == Make a procedure ==
+     *
+     *  A procedure is constructed from a tag (the tag of the entry
+     *  block) and a list of blocks. Note that the blocks are included
+     *  unconditionally. Control flow analysis should be applied to
+     *  remove unreached blocks.
+     *)
+
+    val make_proc :
+      string * MirTypes.tag * MirTypes.procedure_parameters * block list -> procedure
+
+
+    (*  == Convert a procedure into an alist of tags and blocks ==  *)
+
+    val alist_of_proc : procedure -> (MirTypes.tag * block) list
+
+    (*  == Apply function to every block in a procedure ==  *)
+
+    val proc_map : (block -> block) -> procedure -> procedure
+
+
+    (*  == Fold a function over every block in a procedure ==  *)
+
+    val proc_fold : ('a -> block -> 'a) -> 'a -> procedure -> 'a
+
+
+    (*  == Apply a function to every opcode in a block ==  *)
+
+    val block_map :
+      (MirTypes.opcode * registers * successors ->
+       MirTypes.opcode * registers * successors) ->
+      block -> block
+
+
+    (*  == Fold a function over every opcode in a block ==  *)
+
+    val block_fold :
+      ('a -> MirTypes.opcode * registers * successors -> 'a) ->
+      'a -> block -> 'a
+
+
+    (*  === PRINT ROUTINES FOR DEBUGGING TYPES ===  *)
+
+    val print_registers	 : registers -> string list
+    val print_successors : successors -> string list
+    val print_opcode     : MirTypes.opcode * registers * successors -> string list
+    val print_block	 : block -> string list
+    val print_procedure	 : procedure -> string list
+
+  end
+*)
+@
+
+
+1.16.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 4
+Revision 1.16  1992/08/13  17:49:32  davidt
+THIS FILE IS NO LONGER IN USE! Commented out code so
+that any use of this file causes a parse error.
+
+@
+
+
+1.15
+log
+@First version of the profiler
+@
+text
+@d5 3
+d60 1
+d64 1
+d66 1
+a67 2
+signature MIROPTTYPES =
+
+d217 1
+@
+
+
+1.14
+log
+@Added `blocks' function.
+@
+text
+@d5 3
+d104 1
+d172 1
+a172 1
+      MirTypes.tag * MirTypes.procedure_parameters * block list -> procedure
+@
+
+
+1.13
+log
+@Changed printing functions to produce lists of strings rather than
+concatenating large strings.  This is now much more efficient.
+@
+text
+@d5 4
+d126 8
+@
+
+
+1.12
+log
+@Exported print_opcode.
+@
+text
+@d4 4
+a7 1
+$Log:	miropttypes.sml,v $
+d190 5
+a194 5
+    val print_registers	 : registers -> string
+    val print_successors : successors -> string
+    val print_opcode     : MirTypes.opcode * registers * successors -> string
+    val print_block	 : block -> string
+    val print_procedure	 : procedure -> string
+@
+
+
+1.11
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d5 5
+d71 1
+a71 3
+     *    - a set of registers live before the opcode and a set of
+     *      registers referenced by the opcode and its out-of-block
+     *      successors;
+d80 1
+a80 1
+      REGS of MirTypes.any_register Set.Set * MirTypes.any_register Set.Set |
+d187 5
+a191 4
+    val print_registers	: registers -> string
+    val print_successors	: successors -> string
+    val print_block	: block -> string
+    val print_procedure	: procedure -> string
+@
+
+
+1.10
+log
+@Moved annotate and unannotate here from MirOptimiser.
+@
+text
+@d5 3
+d42 1
+a43 1
+require "../utils/balancedtree";
+a47 1
+sig
+d49 1
+a49 2
+  structure MirTypes	: MIRTYPES
+  structure Set		: SET
+d51 2
+d54 4
+a57 13
+  (*  == Annotated code ==
+   *
+   *  block is the analog of MirTypes.block. Each opcode as the
+   *  following information attached:
+   *    - a set of registers live before the opcode and a set of
+   *      registers referenced by the opcode and its out-of-block
+   *      successors;
+   *    - a list of block tags which might be jumped to by the opcode.
+   *
+   *  The procedure type is an abstract look-up table of blocks, and
+   *  records the tag of the entry block and procedure parameters. The
+   *  ordering of the blocks is not significant otherwise.
+   *)
+d59 20
+a78 3
+  datatype registers =
+    REGS of MirTypes.any_register Set.Set * MirTypes.any_register Set.Set |
+    REGS_UNKNOWN;
+d80 3
+a82 3
+  datatype successors =
+    SUCCS of MirTypes.tag list |
+    SUCCS_UNKNOWN;
+d84 3
+a86 3
+  datatype block = BLOCK of
+    MirTypes.tag *
+    (MirTypes.opcode * registers * successors) list;
+d88 1
+a88 1
+  type block_table
+d90 4
+a93 4
+  datatype procedure = PROC of
+    MirTypes.tag *
+    MirTypes.procedure_parameters *
+    block_table
+d97 1
+a97 1
+  (*  === CONVERSION FUNCTIONS ===  *)
+d100 5
+a104 5
+  (*  == Annotate a procedure ==
+   *
+   *  This function convertes a MirTypes.procedure into a procedure, setting
+   *  live variable and successor information to unknown.
+   *)
+d106 1
+a106 1
+  val annotate : MirTypes.procedure -> procedure
+d109 5
+a113 5
+  (*  == Remove annotation from a procedure ==
+   *
+   *  This is the reverse of the above function. The block list in the body
+   *  of the MirTypes.procedure is not in any particular order.
+   *)
+d115 1
+a115 1
+  val unannotate : procedure -> MirTypes.procedure
+d119 1
+a119 1
+  (*  === PROCEDURE MANIPULATION FUNCTIONS ===  *)
+d122 5
+a126 5
+  (*  == Add a block to a procedure ==
+   *
+   *  Returns a new procedure. Any existing block with the same tag is
+   *  discarded.
+   *)
+d128 1
+a128 1
+  val new_block : procedure -> block -> procedure
+d131 5
+a135 5
+  (*  == Get a block from a procedure ==
+   *
+   *  Returns the block in the procedure which has the given tag.
+   *  Raises NoSuchBlock if not found.
+   *)
+d137 2
+a138 2
+  exception NoSuchBlock;
+  val get_block : procedure -> MirTypes.tag -> block
+d141 7
+a147 7
+  (*  == Make a procedure ==
+   *
+   *  A procedure is constructed from a tag (the tag of the entry
+   *  block) and a list of blocks. Note that the blocks are included
+   *  unconditionally. Control flow analysis should be applied to
+   *  remove unreached blocks.
+   *)
+d149 2
+a150 2
+  val make_proc :
+    MirTypes.tag * MirTypes.procedure_parameters * block list -> procedure
+d153 1
+a153 1
+  (*  == Convert a procedure into an alist of tags and blocks ==  *)
+d155 1
+a155 1
+  val alist_of_proc : procedure -> (MirTypes.tag * block) list
+d157 1
+a157 1
+  (*  == Apply function to every block in a procedure ==  *)
+d159 1
+a159 1
+  val proc_map : (block -> block) -> procedure -> procedure
+d162 1
+a162 1
+  (*  == Fold a function over every block in a procedure ==  *)
+d164 1
+a164 1
+  val proc_fold : ('a -> block -> 'a) -> 'a -> procedure -> 'a
+d167 1
+a167 1
+  (*  == Apply a function to every opcode in a block ==  *)
+d169 4
+a172 4
+  val block_map :
+    (MirTypes.opcode * registers * successors ->
+     MirTypes.opcode * registers * successors) ->
+    block -> block
+d175 1
+a175 1
+  (*  == Fold a function over every opcode in a block ==  *)
+d177 3
+a179 3
+  val block_fold :
+    ('a -> MirTypes.opcode * registers * successors -> 'a) ->
+    'a -> block -> 'a
+d182 1
+a182 1
+  (*  === PRINT ROUTINES FOR DEBUGGING TYPES ===  *)
+d184 4
+a187 4
+  val print_registers	: registers -> string
+  val print_successors	: successors -> string
+  val print_block	: block -> string
+  val print_procedure	: procedure -> string
+d189 1
+a189 1
+end
+@
+
+
+1.9
+log
+@Made procedure type abstract.
+@
+text
+@d5 3
+d83 22
+@
+
+
+1.8
+log
+@Added block_fold and block_map.
+@
+text
+@d5 3
+d37 1
+a37 1
+require "../utils/table";
+a45 1
+  structure Table	: TABLE
+d57 3
+a59 3
+   *  The procedure type is a look-up table of blocks, and records the
+   *  tag of the entry block. The ordering of the blocks is not
+   *  significant otherwise.
+d74 2
+d79 1
+a79 1
+    (MirTypes.tag, block) Table.table;
+d116 4
+@
+
+
+1.7
+log
+@Slight alterations to cope with new MirTypes.
+@
+text
+@d5 3
+d122 14
+@
+
+
+1.6
+log
+@Added proc_fold function.
+@
+text
+@d5 3
+d70 3
+a72 1
+    MirTypes.tag * (MirTypes.tag, block) Table.table;
+d106 2
+a107 1
+  val make_proc : MirTypes.tag * block list -> procedure
+@
+
+
+1.5
+log
+@Added proc_map function.
+@
+text
+@d5 3
+d44 3
+a46 1
+   *    - a set of variables live before the opcode;
+d55 1
+a55 1
+    REGS of MirTypes.any_register Set.Set |
+d107 5
+@
+
+
+1.5.1.1
+log
+@This is a modified version to use the reworked MirTypes module
+(ver 1.23.1.1). This module is correct, but work has been suspended
+on this branch because of the amount of time it would take to convert
+the code generator (Mir_Cg) module.
+@
+text
+@a4 3
+Revision 1.5  91/09/25  12:44:30  richard
+Added proc_map function.
+
+d50 1
+a50 1
+    REGS of MirTypes.operand Set.Set |
+@
+
+
+1.4
+log
+@Altered procedure type to use a table of blocks rather than a list.
+This makes for efficiency and solves some block ordering problems
+in MirOptimiser.
+
+@
+text
+@d5 6
+d97 5
+@
+
+
+1.3
+log
+@Added printing functions.
+.,
+@
+text
+@d5 4
+d19 1
+d28 1
+d38 3
+a40 2
+   *  The procedure type records the tag of the entry block, because
+   *  the ordering of the blocks may be changed during optimisation.
+d55 37
+a91 1
+  datatype procedure = PROC of MirTypes.tag * block list;
+@
+
+
+1.2
+log
+@Added control flow information to instructions. See MirFlow module.
+@
+text
+@d5 3
+d48 9
+a56 1
+  datatype procedure = PROC of MirTypes.tag * block list
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log:$
+d24 7
+a30 4
+   *  This is the analog of MirTypes.block, except that each opcode
+   *  has live variables attached. The procedure type records the tag
+   *  of the entry block, because the ordering of the blocks may be
+   *  changed during optimisation.
+d35 1
+a35 1
+    UNKNOWN;
+d37 4
+d43 1
+a43 1
+    (MirTypes.opcode * registers) list;
+@

@@ -1,0 +1,151 @@
+head	1.3;
+access;
+symbols
+	ML_beta_release_12/08/94:1.3
+	ML_beta_release_03/08/94:1.3
+	ML_revised_beta_release_25/05/94:1.3
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.3
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.3
+date	91.11.21.17.00.56;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	91.11.19.12.20.12;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.15.56.40;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.13.36;	author jont;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	91.11.21.17.00.56;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Internal debugging routines for various parts of the compiler
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@(* _debug.sml the functor *)
+(*
+$Log:	_debug.sml,v $
+Revision 1.2  91/11/19  12:20:12  jont
+Merging in comments from Ten15 branch to main trunk
+
+Revision 1.1.1.1  91/11/19  11:13:36  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  15:56:40  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(* This functor is used throughout the compiler to provide a debug
+message mechanism. For instance, many of the typechecker modules have
+a debug substructure. The two functions provided are obvious. *)
+
+functor Debug (): 
+  sig val set_debug_level : int -> unit
+    val debug_level : unit -> int
+  end
+  =
+  struct
+    local 
+      val debug = ref 0
+    in
+      fun set_debug_level n = debug := n
+      fun debug_level () =  ! debug
+    end
+  end
+    
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: _debug.sml,v $
+Revision 1.3  1991/11/21  17:00:56  jont
+Added copyright message
+
+@
+
+
+1.2
+log
+@Merging in comments from Ten15 branch to main trunk
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 5
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	_debug.sml,v $
+Revision 1.1  91/06/07  15:56:40  colin
+Initial revision
+
+a3 5
+
+(* This functor is used throughout the compiler to provide a debug
+message mechanism. For instance, many of the typechecker modules have
+a debug substructure. The two functions provided are obvious. *)
+
+@

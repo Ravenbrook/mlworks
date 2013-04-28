@@ -1,0 +1,76 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.44.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : MONO ARRAYS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *  Revision 1.3  1995/03/18  17:52:59  brianm
+ *  Changed spelling of arrayoflist to arrayOfList and
+ *  made all types eqtypes (as per current draft).
+ *
+ * Revision 1.2  1995/03/17  16:59:49  brianm
+ * Adding copy and copyv to signature ...
+ *
+ * Revision 1.1  1995/03/16  21:17:46  brianm
+ * new unit
+ * renamed from mono-arrays.sml
+ *
+ *)
+
+signature MONO_ARRAY =
+  sig
+
+    eqtype array
+    eqtype elem
+    eqtype vector
+
+    val maxlen : int
+
+  (* array creation functions *)
+    val array       : (int * elem) -> array
+    val tabulate    : (int * (int -> elem)) -> array
+    val arrayOfList : elem list -> array
+
+    val length      : array -> int
+    val sub         : (array * int) -> elem
+    val update      : (array * int * elem) -> unit
+    val extract     : (array * int * int) -> vector
+
+    val copy        : { src : array, si : int, len : int,
+                        dst : array, di : int
+                      } -> unit
+
+    val copyv       : { src : vector, si : int, len : int,
+                        dst : array, di : int
+                      } -> unit
+
+  end
+@

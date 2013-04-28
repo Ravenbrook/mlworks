@@ -1,0 +1,148 @@
+head	1.2;
+access;
+symbols
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1
+	hope_poo:1.1.1
+	ML_beta_release_12/08/94:1.1.1.1
+	ML_beta_release_03/08/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.09.02.16.30.31;	author daveb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	94.07.08.10.44.50;	author nickh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	95.07.05.10.30.51;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.21.23;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.11.22;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@[Bug #1576]
+Added comment about Solaris 2.3 and 2.4.
+@
+text
+@/* Addition to MLWorks runtime to allow it to link statically under
+ * some versions of SunOS. Dynamic linking is not a problem. Added by
+ * Nick Haines, 1994-06-14. This file is part of the X11R5
+ * distribution, and the following comment explains it quite well. */
+
+/* Also required under Solaris 2.2. Nick Haines 1994-07-07 */
+
+/* This caused problems under Solaris 2.3 and 2.4.  Some other libraries
+ * called dlopen(), and those calls were linked to these stubs.  This
+ * meant that main-static couldn't look up host names in DISPLAY variables.
+ * See Bug 1576.  Dave Berry 1996-09-02
+ */
+
+/*
+ * Stub interface to dynamic linker routines
+ * that SunOS uses but didn't ship with 4.1.
+ *
+ * The C library routine wcstombs in SunOS 4.1 tries to dynamically
+ * load some routines using the dlsym interface, described in dlsym(3x).
+ * Unfortunately SunOS 4.1 does not include the necessary library, libdl.
+ *
+ * The R5 Xlib uses wcstombs.  If you link dynamically, your program can
+ * run even with the unresolved reference to dlsym.  However, if you
+ * link statically, you will encounter this bug.  One workaround
+ * is to include these stub routines when you link.
+ */
+
+void *dlopen(void);
+void *dlsym(void);
+int dlclose(void);
+char *dlerror(void);
+
+void *dlopen()
+{
+    return 0;
+}
+
+void *dlsym()
+{
+    return 0;
+}
+
+int dlclose()
+{
+    return -1;
+}
+
+char *dlerror()
+{
+  return 0;
+}
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.1
+log
+@new file
+@
+text
+@d8 6
+d22 1
+a22 1
+ * The R5 Xlib uses wcstombs.  If you link dynamcally, your program can
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@

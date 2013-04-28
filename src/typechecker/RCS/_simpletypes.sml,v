@@ -1,0 +1,393 @@
+head	1.11;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.8
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.5
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	95.02.07.16.47.58;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.05.18.18.16.13;	author jont;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	93.04.06.12.01.51;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.10.20.07.58;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.10.30.15.03.15;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.27.17.54.33;	author davidt;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.11.11.00.09;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.23.14.51.19;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.07.16.15.01;	author colin;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.47.44;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.38.30;	author colin;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	93.05.18.18.16.13;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatypes for several core static semantic objects
+(see also datatypes and basis)
+@
+
+
+1.11
+log
+@Removing debug structures
+@
+text
+@(* _simpletypes.sml the functor *)
+(*
+$Log: _simpletypes.sml,v $
+Revision 1.10  1993/05/18  18:16:13  jont
+Removed integer parameter
+
+Revision 1.9  1993/04/06  12:01:51  jont
+Added push and pop functions for the id counters
+
+Revision 1.8  1992/11/10  20:07:58  jont
+Made tyname_id_eq understand that it's working on int
+
+Revision 1.7  1992/10/30  15:03:15  jont
+Added special maps for tyfun_id, tyname_id, strname_id
+
+Revision 1.6  1992/08/27  17:54:33  davidt
+Made various changes so that structure copying can be
+done more efficiently.
+
+Revision 1.5  1992/08/11  11:00:09  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.4  1992/01/23  14:51:19  jont
+Added functions to read and reset tyfun_id_counter
+
+Revision 1.3  1992/01/07  16:15:01  colin
+Added counters to tyname_id and strname_id and removed no of constructor
+field from tyname_id (now tynames contain ref to valenv length of domain
+achieves same effect)
+
+Revision 1.2  1991/11/21  16:47:44  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:38:30  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/counter";
+require "../utils/intnewmap";
+
+require "simpletypes";
+
+functor Tyname_id (structure Counter : COUNTER
+		   structure Map : INTNEWMAP
+		     ) : TYNAME_ID =
+  struct
+    structure Map = Map
+    type Tyname_id = int
+    fun make_tyname_id () = Counter.counter ()
+    fun make_tyname_n n = n
+    fun tyname_id n = n
+    val tyname_id_eq = op= : int * int -> bool
+    val tyname_id_lt = op< : int * int -> bool
+    val read_counter = Counter.read_counter
+    val reset_counter = Counter.reset_counter
+    exception stack_empty of string
+    val counter_stack = ref [] : int list ref
+    fun push_counter() = counter_stack := read_counter() :: !counter_stack
+    fun pop_counter() =
+      case !counter_stack of
+	[] => raise stack_empty "tyname_id stack"
+      | x :: xs =>
+	  (counter_stack := xs;
+	   reset_counter x)
+  end;
+
+
+functor Tyfun_id (structure Counter : COUNTER
+		  structure Map : INTNEWMAP
+		    ) : TYFUN_ID =
+  struct
+    structure Map = Map
+    type Tyfun_id = int
+    fun make_tyfun_id () = Counter.counter ()
+    fun make_tyfun_n n = n
+    fun tyfun_id n = n
+    val tyfun_id_lt = op < : int * int -> bool
+    fun string_tyfun_id (id) = MLWorks.Integer.makestring id
+    val read_counter = Counter.read_counter
+    val reset_counter = Counter.reset_counter
+    exception stack_empty of string
+    val counter_stack = ref [] : int list ref
+    fun push_counter() = counter_stack := read_counter() :: !counter_stack
+    fun pop_counter() =
+      case !counter_stack of
+	[] => raise stack_empty "tyfun_id stack"
+      | x :: xs =>
+	  (counter_stack := xs;
+	   reset_counter x)
+  end;
+
+
+functor Strname_id (structure Counter : COUNTER
+		    structure Map : INTNEWMAP
+		      ) : STRNAME_ID =
+  struct
+    structure Map = Map
+    type Strname_id = int
+    fun make_strname_id () = Counter.counter ()
+    fun make_strname_n n = n
+    fun strname_id n = n
+    fun string_strname_id (id) = MLWorks.Integer.makestring id
+    val strname_id_lt = (op <) : (Strname_id * Strname_id) -> bool
+    val read_counter = Counter.read_counter
+    val reset_counter = Counter.reset_counter
+    exception stack_empty of string
+    val counter_stack = ref [] : int list ref
+    fun push_counter() = counter_stack := read_counter() :: !counter_stack
+    fun pop_counter() =
+      case !counter_stack of
+	[] => raise stack_empty "strname_id stack"
+      | x :: xs =>
+	  (counter_stack := xs;
+	   reset_counter x)
+  end
+@
+
+
+1.10
+log
+@Removed integer parameter
+@
+text
+@d4 3
+a40 1
+require "simpletypes";
+d44 2
+a46 3
+		   structure Debug :  sig val set_debug_level : int -> unit
+					  val debug_level : unit -> int
+				      end
+a71 3
+		  structure Debug :  sig val set_debug_level : int -> unit
+					 val debug_level : unit -> int
+				     end
+a96 3
+		    structure Debug :  sig val set_debug_level : int -> unit
+					   val debug_level : unit -> int
+				       end
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.10  1993/05/18  18:16:13  jont
+Removed integer parameter
+
+@
+
+
+1.9
+log
+@Added push and pop functions for the id counters
+@
+text
+@d4 3
+a39 1
+require "../utils/integer";
+a70 1
+		  structure Integer : INTEGER
+d83 1
+a83 1
+    fun string_tyfun_id (id) = Integer.makestring id
+a98 1
+		    structure Integer : INTEGER
+d110 1
+a110 1
+    fun string_strname_id (id) = Integer.makestring id
+@
+
+
+1.8
+log
+@Made tyname_id_eq understand that it's working on int
+@
+text
+@d4 3
+d56 9
+d85 9
+d114 9
+@
+
+
+1.7
+log
+@Added special maps for tyfun_id, tyname_id, strname_id
+@
+text
+@d4 3
+d49 1
+a49 1
+    fun tyname_id_eq (tyname_id,tyname_id') = tyname_id = tyname_id'
+@
+
+
+1.6
+log
+@Made various changes so that structure copying can be
+done more efficiently.
+@
+text
+@d4 4
+d28 1
+d32 1
+d37 3
+a39 1
+				      end) : TYNAME_ID =
+d41 1
+d57 3
+a59 1
+				     end) : TYFUN_ID =
+d61 1
+d77 3
+a79 1
+				       end) : STRNAME_ID =
+d81 1
+@
+
+
+1.5
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d72 1
+a72 1
+    val strname_id_lt = (op <=) : (Strname_id * Strname_id) -> bool
+@
+
+
+1.4
+log
+@Added functions to read and reset tyfun_id_counter
+@
+text
+@d4 3
+d34 1
+d50 1
+@
+
+
+1.3
+log
+@Added counters to tyname_id and strname_id and removed no of constructor
+field from tyname_id (now tynames contain ref to valenv length of domain
+achieves same effect)
+@
+text
+@d4 5
+d47 2
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_simpletypes.sml,v $
+d21 4
+a24 10
+    (****
+     The first int is a unique counter used as the identifier and the second
+     one indicates the number of constructors associated with this identifier.
+     ****)
+    type Tyname_id = int * int
+
+    fun make_tyname_id (no_cons) = (Counter.counter (),no_cons)
+    fun make_tyname_mn (m,n) = (m,n)
+    fun no_of_cons (tyname_id : (int * int)) = #2 tyname_id
+    fun tyname_id (tyname_id : (int * int)) = #1 tyname_id
+d26 2
+d57 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

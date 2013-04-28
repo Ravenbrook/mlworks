@@ -1,0 +1,148 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.05.07.12.04.50;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.38.12;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Array moving to MLWorks.Array
+@
+text
+@(*  ==== INITIAL BASIS : MONO VECTORS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The functor MonoVectors is implemented generically using standard
+ *  MLWorks vectors.
+ *
+ *  This is part of the extended Initial Basis.
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _mono_vectors.sml,v $
+ * Revision 1.1  1996/04/18  11:38:12  jont
+ * new unit
+ *
+ *  Revision 1.2  1996/03/20  14:58:20  matthew
+ *  Changes for language revision
+ *
+ *  Revision 1.1  1995/03/22  20:23:51  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+
+require "mono_vectors";
+require "general";
+
+functor MonoVectors(
+   eqtype element
+   structure General : GENERAL
+) : MONO_VECTOR =
+   struct
+
+    fun pow2(n) = Bits.lshift(1,n)
+
+    val vector_vec    = MLWorks.Internal.Vector.vector
+    val sub_vec       = MLWorks.Internal.Vector.sub
+    val length_vec    = MLWorks.Internal.Vector.length
+    val tabulate_vec  = MLWorks.Internal.Vector.tabulate
+
+    type elem = element
+    type vector = element MLWorks.Internal.Vector.vector
+
+    exception Subscript = General.Subscript
+
+    val maxlen : int = pow2(28)
+
+  (* vector creation functions *)
+    val vector   : elem list -> vector              = vector_vec
+    val tabulate : (int * (int -> elem)) -> vector  = tabulate_vec
+
+    val length   : vector -> int                    = length_vec
+    val sub      : (vector * int) -> elem           = sub_vec
+
+    local
+
+       val MLWcast = MLWorks.Internal.Value.cast
+
+       val unsafe_array_sub  = MLWorks.Internal.Value.unsafe_array_sub
+       val unsafe_vector_sub : (vector * int) -> elem =
+           MLWcast(unsafe_array_sub)
+
+       fun extract'(vec : vector, si, len, accum) =
+           let fun getlst(0,_,lst) = lst
+                 | getlst(i,n,lst) =
+		   getlst(i-1,n+1,unsafe_vector_sub(vec,n)::lst)
+           in
+               getlst(len,si,accum)
+           end
+
+    in
+
+       fun extract(vec : vector, si, len) =
+	   let val size = length(vec)
+	   in
+	       if ((0 <= si)  andalso
+		   (0 <= len) andalso
+		   (si + len < size)
+		  )
+	       then vector(rev(extract'(vec,si,len,[])))
+	       else raise Subscript
+	   end
+
+       fun concat(v_lst) =
+           let fun veccat([],lst) = lst
+                 | veccat(vec::vl,lst) =
+		   veccat(vl,extract'(vec,0,length(vec),lst))
+           in
+               vector(rev(veccat(v_lst,[])))
+           end
+
+    end
+
+   end;
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d15 4
+a18 1
+ *  $Log$
+d41 4
+a44 4
+    val vector_vec    = Vector.vector
+    val sub_vec       = Vector.sub
+    val length_vec    = Vector.length
+    val tabulate_vec  = Vector.tabulate
+d47 1
+a47 1
+    type vector = element Vector.vector
+@

@@ -1,0 +1,116 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.2.1
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.07.02.13.52.43;	author stephenb;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.05.22.13.04.00;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.11.30.16.47.08;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30121]
+@
+
+
+1.2
+log
+@[Bug #30029]
+Removed phones.sml from the list of files to distribute.
+@
+text
+@#! /bin/sh 
+#
+# Copy all the user visible files to a new directory
+#
+# Usage: DIST.sh dist-dir [ OS ARCH ]
+#
+# Example:
+#
+#  $ DIST.sh /u/sml/distributions/test/samples/foreign/ndbm
+#
+# Revision Log
+# ------------
+# $Log: foreign:ndbm:DIST.sh,v $
+# Revision 1.1  1997/05/22  13:04:00  stephenb
+# new unit
+# [Bug #30121]
+#
+
+dist_dir=$1
+OS=${2:-$OS}
+ARCH=${3:-$ARCH}
+
+rm -rf $dist_dir
+mkdir $dist_dir
+
+case "$OS" in
+  SunOS) flags=SunOS/__open_flags.sml ;;
+  *) flags=__open_flags.sml ;;
+esac
+
+../../../tools/remove_log.sh < Makefile.${OS} > $dist_dir/Makefile
+cat README.txt > $dist_dir/README
+
+for file in __ndbm.sml __ndbm_stub.sml ndbm.sml ndbm_stub.c ndbm_stub.c __phones.sml $flags
+do
+  ../../../tools/remove_log.sh < $file > $dist_dir/`basename $file`
+done
+
+cat phones.dat > $dist_dir/phones.dat
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a13 4
+# Revision 1.2  1997/07/02  13:52:43  stephenb
+# [Bug #30029]
+# Removed phones.sml from the list of files to distribute.
+#
+@
+
+
+1.1
+log
+@new unit
+[Bug #30121]
+@
+text
+@d13 5
+a17 1
+# $Log$
+d34 1
+a34 1
+for file in __ndbm.sml __ndbm_stub.sml ndbm.sml ndbm_stub.c ndbm_stub.c __phones.sml phones.sml $flags
+@

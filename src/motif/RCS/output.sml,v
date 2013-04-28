@@ -1,0 +1,117 @@
+head	1.4;
+access;
+symbols
+	ML_beta_release_12/08/94:1.2
+	ML_beta_release_03/08/94:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	95.06.14.13.27.52;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.05.31.11.03.16;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.08.01.10.10.07;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.06.21.18.53.41;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.4
+log
+@Removed redundant get_context parameter.
+@
+text
+@(*
+ * Copyright (c) 1994 Harlequin Ltd.
+ * 
+ * $Log: output.sml,v $
+ *  Revision 1.3  1995/05/31  11:03:16  daveb
+ *  Combined the show_output and hide_output fields of the result into
+ *  a single function of type bool->unit, for use with Toggle buttons.
+ *
+ *  Revision 1.2  1994/08/01  10:10:07  daveb
+ *  Moved environment options to preferences structure.
+ * 
+ *  Revision 1.1  1994/06/21  18:53:41  daveb
+ *  new file
+ * 
+ *)
+
+signature OUTPUT_WINDOW =
+sig
+  type Widget
+  type preferences
+
+  val create:
+    {parent: Widget, title: string, get_preferences: unit -> preferences}
+    -> {outstream: outstream, output_widget: Widget,
+	show_output: bool -> unit, output_visible: unit -> bool}
+end;
+@
+
+
+1.3
+log
+@Combined the show_output and hide_output fields of the result into
+a single function of type bool->unit, for use with Toggle buttons.
+@
+text
+@d5 4
+a20 1
+  type Context
+d23 1
+a23 2
+    {parent: Widget, title: string, get_context: unit -> Context,
+     get_preferences: unit -> preferences}
+@
+
+
+1.2
+log
+@Moved environment options to preferences structure.
+@
+text
+@d5 6
+a10 3
+# Revision 1.1  1994/06/21  18:53:41  daveb
+# new file
+#
+d22 2
+a23 2
+    -> {outstream: outstream, output_widget: Widget, show_output: 'a -> unit,
+	output_visible: unit -> bool, hide_output: 'a -> unit}
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d13 1
+a13 1
+  type options
+d18 1
+a18 1
+     get_options: unit -> options}
+@

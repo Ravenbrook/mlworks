@@ -1,0 +1,1053 @@
+head	1.13;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.13
+	mlworks-28-01-1994:1.13
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.13
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.12;
+locks; strict;
+
+
+1.13
+date	92.08.19.15.57.43;	author davidt;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	92.04.23.12.28.25;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.01.14.11.16.07;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.01.06.17.21.08;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.12.02.20.00.04;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.11.29.18.55.51;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.11.28.16.32.11;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.11.28.14.57.21;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.11.27.19.02.10;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.11.26.15.22.52;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.25.19.06.02;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.15.10.49;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.20.18.11.44;	author jont;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	92.08.19.15.57.43;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Attempts to optimise use of save/restore out of partial leaf case blocks
+@
+
+
+1.13
+log
+@THIS FILE IS NO LONGER IN USE!
+@
+text
+@(* _save.sml the functor *)
+(*
+$Log: _save.sml,v $
+Revision 1.12  1992/04/23  12:28:25  jont
+Removed references to pervasive length, hd, tl
+
+Revision 1.11  1992/01/14  11:16:07  jont
+Added diagnostic parameter
+
+Revision 1.10  1992/01/06  17:21:08  jont
+Fixed problem with save/restore elimination involving branches to other
+procedures (caused by tail continuation)
+
+Revision 1.9  1991/12/02  20:00:04  jont
+Sorted out problems with very small self referencing blocks
+
+Revision 1.8  91/11/29  18:55:51  jont
+Changed block splitting to avoid splits at delay slots
+
+Revision 1.8  91/11/29  18:38:06  jont
+Fixed bug whereby blocks might get split at a delay slot
+
+Revision 1.7  91/11/28  16:32:11  jont
+Sorted out preventing saves passing other saves again (better this time)!
+
+Revision 1.6  91/11/28  14:57:21  jont
+Stopped saves trying to move past other saves or restores
+
+Revision 1.5  91/11/27  19:02:10  jont
+Did initial block splitting to allow save shifting in things like fib.
+
+Revision 1.4  91/11/26  15:22:52  jont
+Fixed a few bugs
+
+Revision 1.3  91/11/25  19:06:02  jont
+Got first version working, which will optimise save/restore use in things
+like fun f x = x + 1, moving them away from the main case
+
+Revision 1.2  91/11/21  15:10:49  jont
+Bit more coding
+
+Revision 1.1  91/11/20  18:11:44  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+require "../utils/diagnostic";
+require "../utils/crash";
+require "../utils/set";
+require "../utils/map";
+require "../utils/lists";
+require "../utils/print";
+require "../mir/mirtypes";
+require "machtypes";
+require "sparc_assembly";
+require "save";
+*)
+
+functor Save (*(
+  structure Diagnostic : DIAGNOSTIC
+  structure Crash : CRASH
+  structure Set : SET
+  structure Map : MAP
+  structure Lists : LISTS
+  structure Print : PRINT
+  structure MirTypes : MIRTYPES
+  structure Sparc_Assembly : SPARC_ASSEMBLY
+  structure MachTypes : MACHTYPES
+
+  sharing Set = Sparc_Assembly.Set
+  sharing MachTypes = Sparc_Assembly.MachTypes
+  sharing MirTypes = Sparc_Assembly.MirTypes
+) : SAVE =
+
+struct
+  structure Diagnostic = Diagnostic
+  structure MirTypes = MirTypes
+  structure Sparc_Assembly = Sparc_Assembly
+  fun check_for_delay_slot [] = false
+  | check_for_delay_slot((operation, _, _) :: _) =
+    (case operation of
+       Sparc_Assembly.BRANCH _ => true
+     | Sparc_Assembly.BRANCH_ANNUL _ => true
+     | Sparc_Assembly.FBRANCH _ => true
+     | Sparc_Assembly.FBRANCH_ANNUL _ => true
+     | Sparc_Assembly.Call _ => true
+     | Sparc_Assembly.JUMP_AND_LINK _ => true
+     | _ => false)
+
+  fun is_branch (Sparc_Assembly.BRANCH _, _, _) = true
+  | is_branch(Sparc_Assembly.BRANCH_ANNUL _, _, _) = true
+  | is_branch(Sparc_Assembly.FBRANCH _, _, _) = true
+  | is_branch(Sparc_Assembly.FBRANCH_ANNUL _, _, _) = true
+  | is_branch _ = false
+
+
+  fun remove_save_and_restore_from_block(block as (tag, opcode_list)) =
+    let
+(*
+      val _ = Print.print("Trying to removing save/restore from block " ^ MirTypes.print_tag tag ^ "\n")
+*)
+      fun try_remove_save_and_restore(true, true, done, []) =
+(*
+	(Print.print"Removed it\n";
+*)
+	 (true, rev done)
+      | try_remove_save_and_restore(_, _, _, []) = (false, [])
+      | try_remove_save_and_restore(had_save, had_restore, done,
+				    opcode :: rest) =
+	(case opcode of
+	  (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE, rd,
+					   reg_or_imm, rs2), opt, comment) =>
+	  let
+	    val done =
+	      if check_for_delay_slot done then
+		Sparc_Assembly.nop :: done
+	      else
+		done
+	  in
+	    try_remove_save_and_restore(true, had_restore, done, rest)
+	  end
+	| (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.RESTORE, rd,
+					   reg_or_imm, rs2), opt, comment) =>
+	  if had_save then
+	    if not had_restore then
+	      let
+		val done =
+		  if check_for_delay_slot done then
+		    Sparc_Assembly.nop :: done
+		  else
+		    done
+	      in
+		try_remove_save_and_restore(true, true, done, rest)
+	      end
+	    else
+	      Crash.impossible"Too many restores in block"
+	  else
+	    try_remove_save_and_restore(false, false, opcode :: done, rest)
+	| (operation, opt, comment) =>
+	    if had_save andalso not had_restore then
+	      try_remove_save_and_restore(true, false,
+					  (Sparc_Assembly.post_restore
+					   operation, opt, comment) :: done,
+					  rest)
+	    else
+	      try_remove_save_and_restore(had_save, had_restore,
+					  opcode :: done, rest))
+      val (removed, result) =
+	try_remove_save_and_restore(false, false, [], opcode_list)
+    in
+      if removed then (tag, result)
+      else block
+    end
+
+(*
+  fun op_needs_save(Sparc_Assembly.SAVE_AND_RESTORE _, _, _) = true
+*)
+  fun op_needs_save(operation, _, _) =
+    let
+      val (i_defines, i_uses, _, _) =
+	Sparc_Assembly.defines_and_uses operation
+    in
+      Set.is_member(MachTypes.fp, i_uses) orelse
+      (* Check for off stack references indicating spilling etc *)
+      ((Set.map MachTypes.check_reg (Set.union(i_defines, i_uses));
+	false)
+       handle MachTypes.NeedsPreserve => true)
+    end
+
+  fun block_needs_save [] = false
+(*
+  | block_needs_save((Sparc_Assembly.SAVE_AND_RESTORE _, _, _) :: rest) =
+    block_needs_save rest
+*)
+  | block_needs_save(operation :: rest) =
+    op_needs_save operation orelse block_needs_save rest
+
+  fun predecessors(pre_map, []) = pre_map
+  | predecessors(pre_map, (tag, opcode_list) :: rest) =
+    let
+      fun update_map(pre_map, []) = pre_map
+      | update_map(pre_map, (_, opt, _) :: rest) =
+	let
+	  val pre_map = case opt of
+	    MirTypes.PRESENT tag' =>
+	      if Map.domain_member(tag', pre_map) then
+		let
+		  val info = Set.add_member(tag, Map.lookup(tag', pre_map))
+		  val new_map = Map.remove(tag', pre_map)
+		in
+		  Map.add((tag', info), new_map, MirTypes.order_tag)
+		end
+	      else
+		Map.add((tag', Set.singleton tag), pre_map, MirTypes.order_tag)
+	  | MirTypes.ABSENT => pre_map
+	in
+	  update_map(pre_map, rest)
+	end
+      val pre_map = update_map(pre_map, opcode_list)
+    in
+      predecessors(pre_map, rest)
+    end
+
+  fun successors(suc_map, [], _) = suc_map
+  | successors(_, (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE, _, _,
+						   _), _, _) :: rest,
+	       false) = successors([], rest, true)
+  | successors(_, (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE, _, _,
+						   _), _, _) :: _, _) =
+    Crash.impossible"Too many saves in block"
+  | successors(_, (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.RESTORE, _,
+						   _, _), _, _) :: _,
+	       false) = Crash.impossible"Too many restores in block"
+  | successors(suc_map,
+	       (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.RESTORE, _, _,
+						_), _, _) :: _, true) = suc_map
+  | successors(suc_map, (opcode, MirTypes.PRESENT tag, _) :: rest, true) =
+    successors(tag :: suc_map, rest, true)
+  | successors(suc_map, (opcode, _, _) :: rest, had_save) =
+    successors(suc_map, rest, had_save)
+
+  fun has_save_or_restore(_, []) = false
+  | has_save_or_restore(save_or_restore, (operation, _, _) :: rest) =
+    (case operation of
+      Sparc_Assembly.SAVE_AND_RESTORE(s_r, _, offset, _) =>
+	if s_r = save_or_restore then
+	  case (s_r, offset) of
+	    (Sparc_Assembly.RESTORE, _) => true
+	  | (Sparc_Assembly.SAVE, Sparc_Assembly.IMM ~64) => true
+	  | _ => false
+	(* Don't count saves setting up spill areas *)
+	(* Should really be done using GC_SPILL_SIZE, *)
+	(* but that isn't available here *)
+	else has_save_or_restore(save_or_restore, rest)
+    | _ => has_save_or_restore(save_or_restore, rest))
+
+  fun has_save opcode_list =
+    has_save_or_restore(Sparc_Assembly.SAVE, opcode_list)
+
+  fun has_restore opcode_list =
+    has_save_or_restore(Sparc_Assembly.RESTORE, opcode_list)
+
+  fun save_from_first(block_list, suc_tags, out_of_proc_tags,
+		      has_restore, prec_map) =
+    let
+      val ((first_tag, first_opcodes), others) = case block_list of
+	first_block :: others => (first_block, others)
+      | _ => Crash.impossible"Empty block list"
+(*
+      val _ =
+	Print.print(implode("save_from_first of\n" ::
+		      map
+		      (fn (x, _, _) => Sparc_Assembly.print x ^ "\n")
+		      first_opcodes))
+*)
+      val save_instr = case first_opcodes of
+	((arg as
+	  (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE, _, _, _),
+	   _, _)) :: _) => arg
+	| _ => Crash.impossible"Save instruction missing"
+      val suc_map = map (fn x => (x, MirTypes.new_tag())) suc_tags
+
+      fun new_first(done, [], _) = rev done
+      | new_first(done, (opcode as
+			 (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE,
+							  _, _, _), _, _)) ::
+		  rest, false) =
+	new_first(opcode :: done, rest, true)
+      | new_first(done, arg as
+		  (opcode as
+		   (Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.RESTORE,
+						    _, _, _), _, _)) ::
+		  rest, true) = rev done @@ arg
+      | new_first(done, (operation, MirTypes.PRESENT tag, comment) :: rest,
+		  true) =
+	new_first((operation,
+		   MirTypes.PRESENT
+		   (if Set.is_member(tag, out_of_proc_tags) then tag
+		    else
+		      Lists.assoc(tag, suc_map)),
+		   comment) :: done, rest, true)
+      | new_first(done, opcode :: rest, had_save) =
+	new_first(opcode :: done, rest, had_save)
+      val first' =
+	(first_tag, new_first([], first_opcodes, false))
+
+      fun new_others(done, []) = done
+      | new_others(done, (block as (tag, opcode_list)) :: rest) =
+	if Lists.member(tag, suc_tags) then
+	  let
+	    val prec = Map.lookup(tag, prec_map)
+	  in
+	    if Lists.length(Set.set_to_list prec) = 1 then
+	      new_others((Lists.assoc(tag, suc_map),
+			  save_instr :: opcode_list) :: done, rest)
+	    else
+	      new_others((Lists.assoc(tag, suc_map),
+			  [save_instr,
+			   (Sparc_Assembly.BRANCH_ANNUL(Sparc_Assembly.BAA, 0),
+			    MirTypes.PRESENT tag, "Moved save"),
+			   Sparc_Assembly.nop]) :: block :: done, rest)
+	  end
+	else
+	  new_others(block :: done, rest)
+      val new_first =
+	if has_restore then
+	  remove_save_and_restore_from_block first'
+	else
+	  (first_tag,
+	   map
+	   (fn (operation, opt, comment) =>
+	    (Sparc_Assembly.post_restore operation, opt, comment))
+	   (Lists.tl(#2 first')))
+(*
+      val _ =
+	Print.print(implode("save_from_first (new_first)\n" ::
+		      map
+		      (fn (x, _, _) => Sparc_Assembly.print x ^ "\n")
+		      (#2 new_first)))
+*)
+    in
+      new_first :: new_others([], others)
+    end
+
+  fun split_first_block(block as (tag, opcode_list)) =
+    let
+      fun do_split(done, [], _, _) = (block, (tag, []))
+      | do_split(done, remainder as (operation :: rest), branches,
+		 had_save_or_restore) =
+	if (had_save_or_restore andalso
+	    (case operation of
+	       (Sparc_Assembly.SAVE_AND_RESTORE _, _, _) => true
+	     | _ => false)) orelse op_needs_save operation then
+	  (* Ensure we split before second save or restore if there is one *)
+	  let
+	    val (done, remainder, branches) =
+	      if check_for_delay_slot done then
+		let
+		  val curr_op = Lists.hd done
+		in
+		  (Lists.tl done, curr_op :: remainder,
+		   if is_branch curr_op then branches - 1 else branches)
+		end
+	      else (done, remainder, branches)
+	  in
+	    if branches >= 1 then
+	      let
+		val new_tag = MirTypes.new_tag()
+(*
+	      val _ =
+		Print.print("Splitting at " ^ Sparc_Assembly.print(#1 operation) ^ "\n")
+*)
+		val first_block =
+		  (tag, rev(Sparc_Assembly.nop ::
+			    (Sparc_Assembly.BRANCH_ANNUL(Sparc_Assembly.BAA,
+							 0),
+			     MirTypes.PRESENT new_tag, "Split block") ::
+			    done))
+		val second_block = (new_tag, remainder)
+(*
+              val _ =
+		Print.print(implode("First block\n" ::
+			      map
+			      (fn (x, _, _) => Sparc_Assembly.print x ^ "\n")
+			      (#2 first_block)))
+	      val _ =
+		Print.print(implode("Second block\n" ::
+			      map
+			      (fn (x, _, _) => Sparc_Assembly.print x ^ "\n")
+			      (#2 second_block)))
+*)
+	      in
+		(first_block, second_block)
+	      end
+	    else
+	      (block, (tag, []))
+	  end
+	(* No point in splitting if no control flow in leading section *)
+	else
+	  let
+	    val branches =
+	      branches + (if is_branch operation then 1 else 0)
+	    val had_save_or_restore =
+	      had_save_or_restore orelse
+	      (case operation of
+		(Sparc_Assembly.SAVE_AND_RESTORE _, _, _) => true
+	      | _ => false)
+	  in
+	    do_split(operation :: done, rest, branches, had_save_or_restore)
+	  end
+    in
+      case do_split([], opcode_list, 0, false) of
+	(_, (_, [])) => (block, block, false)
+      | (first, second) => (first, second, true)
+    end
+
+  fun remove_redundant_saves(arg as (tag, block_list)) =
+    let
+      val (hd_block as (_, hd_opcodes), others) = case block_list of
+	block :: rest => (block, rest)
+      | _ => Crash.impossible"Procedure with no blocks"
+    in
+      if has_save hd_opcodes then
+	if block_needs_save hd_opcodes then
+	  let
+	    val _ =
+	      (Print.print"Save required by first block, no optimisation possible\n";
+	       Print.print"Now try splitting block for partial results\n")
+	    val (new_first as (first_tag, first_opc), new_second, ok) =
+	      split_first_block hd_block
+	  in
+	    if ok then
+	      let
+		val _ =
+		  if block_needs_save first_opc then
+		    Crash.impossible"Save still required following split"
+		  else ()
+	      in
+		remove_redundant_saves(tag, new_first :: new_second :: others)
+	      end
+	    else
+	      arg
+	  end
+	else
+	  let
+	    val predecessor_map = predecessors(Map.empty_map, block_list)
+	    val successor_map = successors([], hd_opcodes, false)
+	    val proc_tags = Set.list_to_set(map #1 block_list)
+	    fun is_in_proc tag = Set.is_member(tag, proc_tags)
+	    val out_of_proc_tags =
+	      Set.list_to_set(Lists.filterp (not o is_in_proc) successor_map)
+	    val in_proc_tags = Lists.filterp is_in_proc successor_map
+(*
+	    fun print_map(name, the_map) =
+	      implode(
+		      name ::
+		      map
+		      (fn (tag, tag_set) =>
+		       implode("\nTag " :: MirTypes.print_tag tag ::
+			       " -> " ::
+			       map
+			       (fn tag => " " ^ MirTypes.print_tag tag)
+			       (Set.set_to_list tag_set)))
+		      (Map.assoc the_map))
+	    val _ =
+	      (Print.print(print_map("Predecessor map ", predecessor_map));
+	       Print.print"Successor map\n";
+	       map (Print.print o MirTypes.print_tag) successor_map)
+*)
+	    val has_rest = has_restore hd_opcodes
+	  in
+	    (tag,
+	     map
+	     (fn block as (tag, opcodes) =>
+	      if has_save opcodes andalso has_restore opcodes andalso
+		(not(block_needs_save opcodes)) then
+		 remove_save_and_restore_from_block block
+
+	      else
+		 block)
+	     (save_from_first(block_list, in_proc_tags, out_of_proc_tags,
+			      has_rest, predecessor_map)))
+	  end
+      else
+	(Diagnostic.output 4 (fn i => ["No save in first block\n"]);
+	 arg)
+    end
+end*)
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.13  1992/08/19  15:57:43  davidt
+THIS FILE IS NO LONGER IN USE!
+
+@
+
+
+1.12
+log
+@Removed references to pervasive length, hd, tl
+@
+text
+@d4 3
+d48 1
+d59 1
+d61 1
+a61 1
+functor Save(
+d470 1
+a470 1
+end
+@
+
+
+1.11
+log
+@Added diagnostic parameter
+@
+text
+@d4 3
+d290 1
+a290 1
+	    if length(Set.set_to_list prec) = 1 then
+d310 1
+a310 1
+	   (tl(#2 first')))
+d336 1
+a336 1
+		  val curr_op = hd done
+d338 1
+a338 1
+		  (tl done, curr_op :: remainder,
+@
+
+
+1.10
+log
+@Fixed problem with save/restore elimination involving branches to other
+procedures (caused by tail continuation)
+@
+text
+@d4 4
+d42 1
+d54 1
+d70 1
+d459 1
+a459 1
+	(Print.print"No save in first block\n";
+@
+
+
+1.9
+log
+@Sorted out problems with very small self referencing blocks
+@
+text
+@d3 4
+a6 1
+$Log:	_save.sml,v $
+d42 1
+d53 1
+d87 1
+a87 1
+      val _ = print("Trying to removing save/restore from block " ^ MirTypes.print_tag tag)
+d91 1
+a91 1
+	(print"Removed it";
+d230 2
+a231 1
+  fun save_from_first(block_list, suc_tags, has_restore, prec_map) =
+d238 1
+a238 1
+	print(implode("save_from_first of\n" ::
+d240 1
+a240 1
+		      (fn (x, _, _) => Sparc_Assembly.print x)
+d263 5
+a267 1
+	new_first((operation, MirTypes.PRESENT(Lists.assoc(tag, suc_map)),
+d303 1
+a303 1
+	print(implode("save_from_first (new_first)\n" ::
+d305 1
+a305 1
+		      (fn (x, _, _) => Sparc_Assembly.print x)
+d338 1
+a338 1
+		print("Splitting at " ^ Sparc_Assembly.print(#1 operation))
+d349 1
+a349 1
+		print(implode("First block\n" ::
+d351 1
+a351 1
+			      (fn (x, _, _) => Sparc_Assembly.print x)
+d354 1
+a354 1
+		print(implode("Second block\n" ::
+d356 1
+a356 1
+			      (fn (x, _, _) => Sparc_Assembly.print x)
+d394 2
+a395 2
+	      (print"Save required by first block, no optimisation possible";
+	       print"Now try splitting block for partial results")
+d415 6
+a431 1
+(*
+d433 3
+a435 3
+	      (print(print_map("Predecessor map ", predecessor_map));
+	       print"Successor map";
+	       map (print o MirTypes.print_tag) successor_map)
+d444 2
+a445 1
+		remove_save_and_restore_from_block block
+d447 3
+a449 3
+		block)
+	     (save_from_first(block_list, successor_map, has_rest,
+			      predecessor_map)))
+d452 1
+a452 1
+	(print"No save in first block";
+@
+
+
+1.8
+log
+@Changed block splitting to avoid splits at delay slots
+@
+text
+@d4 3
+d81 3
+d85 4
+a88 1
+	(true, rev done)
+d186 17
+a202 18
+  fun successors(suc_map, []) = suc_map
+  | successors(suc_map, (tag, opcode_list) :: rest) =
+    let
+      val suc_tags =
+	Lists.filterp
+	(fn (_, MirTypes.PRESENT _, _) => true
+	 | _ => false)
+	opcode_list
+      val suc_tags =
+	map
+	(fn (_, MirTypes.PRESENT tag, _) => tag
+	 | _ => Crash.impossible"suc_tags")
+	suc_tags
+      val suc_map =
+	Map.add((tag, Set.list_to_set suc_tags), suc_map, MirTypes.order_tag)
+    in
+      successors(suc_map, rest)
+    end
+d242 19
+a260 2
+      val suc_map =
+	map (fn x => (x, MirTypes.new_tag())) (Set.set_to_list suc_tags)
+d262 2
+a263 6
+	(first_tag,
+	 map
+	 (fn (operation, MirTypes.PRESENT tag, comment) =>
+	  (operation, MirTypes.PRESENT(Lists.assoc(tag, suc_map)), comment)
+         | arg => arg)
+	 first_opcodes)
+d266 1
+a266 1
+	if Set.is_member(tag, suc_tags) then
+d404 1
+a404 1
+	    val successor_map = successors(Map.empty_map, block_list)
+d419 2
+a420 1
+	       print(print_map("Successor map ", successor_map)))
+d432 2
+a433 3
+	     (save_from_first(block_list,
+			      Map.lookup(tag, successor_map),
+			      has_rest, predecessor_map)))
+@
+
+
+1.7
+log
+@Sorted out preventing saves passing other saves again (better this time)!
+@
+text
+@d4 6
+d69 7
+d284 1
+a284 1
+      | do_split(done, remainder as (operation :: rest), had_branch,
+d291 14
+a304 3
+	  if had_branch then
+	    let
+	      val new_tag = MirTypes.new_tag()
+d309 7
+a315 6
+	      val first_block =
+		(tag, rev(Sparc_Assembly.nop ::
+			  (Sparc_Assembly.BRANCH_ANNUL(Sparc_Assembly.BAA, 0),
+			   MirTypes.PRESENT new_tag, "Split block") ::
+			  done))
+	      val second_block = (new_tag, remainder)
+d317 1
+a317 1
+	      val _ =
+d328 7
+a334 6
+	    in
+	      (first_block, second_block)
+	    end
+	  else
+	    (block, (tag, []))
+	    (* No point in splitting if no control flow in leading section *)
+d337 2
+a338 8
+	    val had_branch =
+	      had_branch orelse
+	      (case operation of
+		(Sparc_Assembly.BRANCH _, _, _) => true
+	      | (Sparc_Assembly.BRANCH_ANNUL _, _, _) => true
+	      | (Sparc_Assembly.FBRANCH _, _, _) => true
+	      | (Sparc_Assembly.FBRANCH_ANNUL _, _, _) => true
+	      | _ => false)
+d345 1
+a345 1
+	    do_split(operation :: done, rest, had_branch, had_save_or_restore)
+d348 1
+a348 1
+      case do_split([], opcode_list, false, false) of
+@
+
+
+1.6
+log
+@Stopped saves trying to move past other saves or restores
+@
+text
+@d4 3
+d115 1
+d117 2
+a118 1
+  | op_needs_save(operation, _, _) =
+d131 4
+d270 8
+a277 3
+      fun do_split(done, [], _) = (block, (tag, []))
+      | do_split(done, remainder as (operation :: rest), had_branch) =
+	if op_needs_save operation then
+d319 5
+d325 1
+a325 1
+	    do_split(operation :: done, rest, had_branch)
+d328 1
+a328 1
+      case do_split([], opcode_list, false) of
+@
+
+
+1.5
+log
+@Did initial block splitting to allow save shifting in things like fib.
+@
+text
+@d4 3
+d112 2
+a113 1
+  fun op_needs_save(operation, _, _) =
+d177 1
+a177 1
+      Sparc_Assembly.SAVE_AND_RESTORE(s_r, _, _, _) =>
+d179 7
+a185 1
+	  true
+@
+
+
+1.4
+log
+@Fixed a few bugs
+@
+text
+@d4 3
+d109 1
+a109 2
+  fun block_needs_save [] = false
+  | block_needs_save((operation, _, _) :: rest) =
+d114 5
+a118 3
+      (Set.map MachTypes.check_reg (Set.union(i_defines, i_uses));
+       block_needs_save rest)
+      handle MachTypes.NeedsPreserve => true
+d121 4
+a184 16
+(*
+  fun check_prec_suc(prec_map, suc_map, tag) =
+    let
+      val sucs = Map.lookup(tag, suc_map)
+      val precs = map (fn x => Map.lookup(x, prec_map)) (Set.set_to_list sucs)
+      fun check [] = true
+      | check(set :: rest) =
+	if Set.seteq(set, Set.singleton tag) then
+	  check rest
+	else
+	  false
+    in
+      check precs
+    end
+*)
+
+d190 7
+d233 12
+a244 1
+	  (first_tag, tl(#2 first'))
+d249 55
+d306 3
+a308 8
+      val new_block_list =
+	map
+	(fn (block as (tag, opcode_list)) =>
+	 (block_needs_save opcode_list, block))
+	block_list
+      val first_needs_save = case new_block_list of
+	(needs, _) :: rest => needs
+      | _ => Crash.impossible"Empty block_list to remove_redundant_saves"
+d310 21
+a330 5
+      if has_save(#2 (hd block_list)) then
+	if first_needs_save then
+	  (print"Save required by first block, no optimisation possible";
+	   print"Later try splitting block for partial results";
+	   arg)
+a334 5
+(*
+	    val check_flow =
+	      check_prec_suc(predecessor_map, successor_map,
+			     #1 (hd block_list))
+*)
+d351 1
+d353 11
+a363 21
+(*
+	    if check_flow then
+*)
+	      let
+		val has_restore = has_restore(#2 (hd block_list))
+	      in
+(*
+		(print"Good flow from first block";
+*)
+		(tag,
+		 save_from_first(block_list,
+				 Map.lookup(tag, successor_map),
+				 has_restore, predecessor_map))
+(*
+)
+*)
+	      end
+(*
+	    else
+	      (print"Bad flow from first block"; arg)
+*)
+@
+
+
+1.3
+log
+@Got first version working, which will optimise save/restore use in things
+like fun f x = x + 1, moving them away from the main case
+@
+text
+@d4 4
+d126 6
+a131 2
+		Map.add((tag', Set.add_member(tag, Map.lookup(tag', pre_map))),
+			pre_map, MirTypes.order_tag)
+d177 1
+d191 1
+d259 1
+d263 17
+d281 1
+d283 1
+d287 1
+d289 8
+a296 4
+		 (tag,
+		  save_from_first(block_list,
+				  Map.lookup(tag, successor_map),
+				  has_restore, predecessor_map)))
+d298 1
+d301 1
+@
+
+
+1.2
+log
+@Bit more coding
+@
+text
+@d4 3
+d33 1
+d39 11
+d60 9
+a68 1
+	   try_remove_save_and_restore(true, had_restore, done, rest)
+d73 9
+a81 1
+	      try_remove_save_and_restore(true, true, done, rest)
+d88 1
+a88 1
+	      try_remove_save_and_restore(false, false,
+d154 2
+a155 2
+  fun has_save [] = false
+  | has_save((operation, _, _) :: rest) =
+d157 5
+a161 2
+      Sparc_Assembly.SAVE_AND_RESTORE(Sparc_Assembly.SAVE, _, _, _) => true
+    | _ => has_save rest)
+d163 6
+d183 46
+d240 6
+a245 5
+      if first_needs_save then
+	(print"Save required by first block, no optimisation possible";
+	 arg)
+      else
+	if has_save(#2 (hd block_list)) then
+d254 9
+a262 4
+	      (print"Good flow from first block"; arg)
+(*
+	      Crash.unimplemented"remove_redundant_saves"
+*)
+d266 3
+a268 3
+	else
+	  (print"No save in first block";
+	   arg)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d11 3
+d21 3
+a26 1
+  ) : SAVE =
+d28 4
+d71 2
+a72 1
+  fun remove_redundant_saves(tag, block_list) =
+d74 2
+d77 100
+a176 1
+      Crash.unimplemented"remove_redundant_saves"
+@

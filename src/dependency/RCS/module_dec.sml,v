@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	99.02.12.10.15.45;	author mitchell;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.17.53.23;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190507]
+Adding files to support CM-style dependency analysis
+@
+
+
+1.1
+log
+@new unit
+[Bug #190507]
+Adding files to support CM-style dependency analysis
+@
+text
+@(* 
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell 
+ * Laboratories. All rights reserved.  
+ *
+ * $Log$
+ *)
+ 
+require "module_name";
+
+signature MODULE_DEC =
+sig
+  structure ModuleName : MODULE_NAME
+
+  datatype Dec =
+      StrDec of { name: ModuleName.t,
+                  def: StrExp,
+                  constraint: StrExp option
+                } list
+    | FctDec of { name: ModuleName.t, 
+                  params: (ModuleName.t option * StrExp) list,
+                  body: StrExp,
+                  constraint: StrExp option
+                } list
+    | LocalDec of Dec * Dec
+    | SeqDec   of Dec list    
+    | OpenDec  of StrExp list
+    | DecRef   of ModuleName.set
+
+  and StrExp = 
+      VarStrExp  of ModuleName.path
+    | BaseStrExp of Dec
+    | AppStrExp  of ModuleName.t * StrExp 
+    | LetStrExp  of Dec * StrExp  
+    | AugStrExp  of StrExp * ModuleName.set (* StrExp where ... *)
+    | ConStrExp  of StrExp * StrExp   (* Constrained StrExp *)
+
+  val display : (string -> unit) -> Dec -> unit
+end
+
+
+
+
+
+
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d5 1
+a5 6
+ * $Log: module_dec.sml,v $
+ *  Revision 1.1  1999/02/12  10:15:45  mitchell
+ *  new unit
+ *  [Bug #190507]
+ *  Adding files to support CM-style dependency analysis
+ *
+@

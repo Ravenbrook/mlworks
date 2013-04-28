@@ -1,0 +1,116 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	98.08.06.10.36.11;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Lego test application
+@
+
+
+1.1
+log
+@new unit
+Lego test application
+@
+text
+@(*
+ * Copyright (c) 1998, Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log$
+ *
+ *)
+Forget deb_occurs;
+
+(* new stuff *)
+(* A function to say if a debruijn occurs *)
+
+Goal {e:exp}{n:NN}BB;
+Refine exp_elim([e:exp]{n:NN}BB)([el:explist]{n:NN}BB);
+intros;Refine ff;
+intros n m;
+Refine neq n m;
+intros;Refine orr (f_ih n) (arg_ih n);
+intros;Refine body_ih(S n);
+intros;[newlen = add (el_length fl) n];
+Refine orr (fl_ih (S newlen)) (body_ih newlen);
+intros;Refine arg_ih n;
+intros;Refine vl_ih n;
+intros;Refine ff;
+intros;Refine orr (car_ih n) (cdr_ih n);
+Save deb_occurs;
+
+Goal {e:exp}{n:NN}exp;
+Refine exp_elim ([_:exp]{n:NN}exp) ([_:explist]{n:NN}explist);
+intros;Refine num n;
+intros;Refine tt_or_ff (lt v n);
+intros;Refine var v;
+intros;Refine var (pred v);
+intros;Refine app (f_ih n) (arg_ih n);
+intros;Refine fn (body_ih (S n));
+intros;[newlen = add (el_length fl) n];
+Refine letrec (fl_ih (S newlen)) (body_ih newlen);
+intros;Refine bopapp b (arg_ih n);
+intros;Refine mktuple (vl_ih n);
+intros;Refine expnil;
+intros;Refine expcons (car_ih n) (cdr_ih n);
+Save drop;
+
+Goal {l,m|NN}(is_tt (lt m l)) -> Q (drop (var m) l) (var m);
+Intros ___;Normal;Intros;Qrepl H;Refine Q_refl;
+Save drop_thm_lt;
+
+Goal {l,m|NN}(is_ff (lt m l))  -> Q (drop (var m) l) (var (pred m));
+Intros ___;Normal;Intros;Qrepl H;Refine Q_refl;
+Save drop_thm_ge;
+
+[liftaux_drop_thm : {e:exp}{n:NN} (is_ff (deb_occurs e n)) -> Q (liftaux one (drop e n) n) e];
+[drop_liftaux_thm : {e:exp}{n:NN} Q (drop (liftaux one e n) n) e];
+
+
+Goal {e|exp} (is_ff (deb_occurs e Z)) ->
+     {x:val}
+     {ve1,ve2|val_env}(ve_equiv ve1 ve2)->
+     {s1,s2|state}(state_equiv s1 s2)->
+     {a,a':val}{s1',s2':state}
+     (sem ve1 s1 (drop e Z) a s1') ->
+     (sem (extend_ve x ve2) s2 e a' s2')->
+     and (equiv a a')(state_equiv s1' s2');
+intros _____________;
+Qrepl (Q_sym (liftaux_drop_thm e Z H));
+Qrepl drop_liftaux_thm (drop e Z) Z;
+intros;
+Refine lift_lemma H1 H2 (extend_ve x empty_ve) a a' s1' s2' H3 H4;
+Save drop_thm;
+
+Goal {ve:val_env}{s:state}{e1,e2:exp}{esafe:safe_no_update e2 ve}
+     {nocc:is_ff (deb_occurs e1 Z)}
+     {v1,v2:val}{s1,s2:state}
+     {eval1: sem ve s (drop e1 Z) v1 s1}
+     {eval2: sem ve s (app (fn e1) e2) v2 s2}
+     and (equiv v1 v2)(state_equiv s1 s2);
+intros;
+Refine extract_app eval2;intros ____;Refine and3_elim;intros _;
+Refine extract_fn H;intros __;
+Qrepl H1;Qrepl H2;intros;
+Refine cut (apply_thm H4);intros;
+Refine drop_thm;
+Refine e1;Refine nocc;Refine s3;Refine ve;Refine ve;Refine ve_equiv_eq;
+Refine s;Refine s;Refine state_equiv_eq;Refine Q_refl;
+Refine eval1;
+Qrepl esafe H3;
+Refine H5;
+Save unused_elim_thm;
+@

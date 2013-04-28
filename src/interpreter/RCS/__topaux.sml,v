@@ -1,0 +1,185 @@
+head	1.3;
+access;
+symbols
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3;
+locks; strict;
+
+
+1.3
+date	92.09.03.17.43.59;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.08.20.15.05.33;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.08.19.17.09.23;	author matthew;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.09.03.17.43.59;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Nasty low level bits used by the top loop.
+@
+
+
+1.3
+log
+@Installed central error reporting mechanism.
+@
+text
+@(* __topaux.sml the structure *)
+(*
+$Log: __topaux.sml,v $
+Revision 1.2  1992/08/20  15:05:33  matthew
+Tidied up header.
+
+Revision 1.1  1992/08/19  17:09:23  matthew
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/__crash";
+require "../utils/__print";
+require "../utils/__lists";
+require "../utils/__integer";
+require "../basics/__ident";
+require "../basics/__identprint";
+require "../parser/__parser";
+require "../typechecker/__basis";
+require "../typechecker/__valenv";
+require "../typechecker/__scheme";
+require "../typechecker/__types";
+require "../typechecker/__mod_rules";
+require "../lambda/__lambdaprint";
+require "../lambda/__environtypes";
+require "../lambda/__environ";
+require "../lambda/__environprint";
+require "../lambda/__lambdaoptimiser";
+require "../lambda/__topdecprint";
+require "../mir/__mir_cg";
+require "../mir/__mirprint";
+require "../mir/__miroptimiser";
+require "../machine/__mach_cg";
+require "../main/__pervasives";
+require "../main/__toplevel";
+require "../main/__io";
+require "../debugger/__value_printer";
+require "../debugger/__get_type_information";
+require "../debugger/__ml_debugger";
+require "__str_print";
+require "__inter_envtypes";
+require "_topaux";
+
+structure TopAux_ = TopAux(
+  structure Crash = Crash_
+  structure Print = Print_
+  structure Lists = Lists_
+  structure Integer = Integer_
+  structure Ident = Ident_
+  structure IdentPrint = IdentPrint_
+  structure Parser = Parser_
+  structure Basis = Basis_
+  structure Valenv = Valenv_
+  structure Scheme = Scheme_
+  structure Types = Types_
+  structure Mod_Rules = Module_rules_
+  structure LambdaPrint = LambdaPrint_
+  structure EnvironTypes = EnvironTypes_
+  structure Environ = Environ_
+  structure EnvironPrint = EnvironPrint_
+  structure TopdecPrint = TopdecPrint_
+  structure LambdaOptimiser = LambdaOptimiser_
+  structure Mir_Cg = Mir_Cg_
+  structure MirPrint = MirPrint_
+  structure MirOptimiser = MirOptimiser_
+  structure Mach_Cg = Mach_Cg_
+  structure Value_Printer = ValuePrinter_
+  structure GetTypeInformation = GetTypeInformation_
+  structure Pervasives = Pervasives_
+  structure TopLevel = TopLevel_
+  structure Str_Print = Str_Print_
+  structure Ml_Debugger = Ml_Debugger_
+  structure Inter_EnvTypes = Inter_EnvTypes_
+  structure Io = Io_
+    );
+
+
+
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.3  1992/09/03  17:43:59  richard
+Installed central error reporting mechanism.
+
+@
+
+
+1.2
+log
+@Tidied up header.
+@
+text
+@d4 3
+a24 1
+require "../typechecker/__errors";
+d37 1
+a56 1
+  structure Errors = Errors_
+d75 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+a1 1
+(* __toploop.sml the structure *)
+d3 2
+a4 20
+$Log: __toploop.sml,v $
+Revision 1.7  1992/08/17  16:07:09  clive
+Needs integer and error
+
+Revision 1.6  1992/08/13  14:55:38  clive
+Changes to reflect lower level sharing changes
+
+Revision 1.5  1992/07/23  17:47:31  jont
+Added Unix parameter
+
+Revision 1.4  1992/07/22  16:23:32  jont
+Added Io, Recompile and TopdecPrint parameters
+
+Revision 1.3  1992/07/08  15:19:14  clive
+Debugger support added
+
+Revision 1.2  1992/07/03  19:21:01  jont
+Added pervasive parameter
+
+Revision 1.1  1992/07/01  17:33:31  jont
+@

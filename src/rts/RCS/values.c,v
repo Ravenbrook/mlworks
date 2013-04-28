@@ -1,0 +1,1571 @@
+head	1.29;
+access;
+symbols
+	Final_version_of_old_runtime:1.29
+	ML_revised_beta_release_25/05/94:1.29
+	ML_final_beta_release_02/03/94:1.29
+	mlworks-28-01-1994:1.29
+	Release:1.29
+	mlworks-beta-01-09-1993:1.29
+	MLWorks-1-0-3-21/12/1992:1.25
+	MLWorks-1-0-2-15/12/1992:1.25
+	MLWorks-1-0-1-04/12/1992:1.25
+	checkpoint_17_08_92:1.22;
+locks; strict;
+comment	@ *  @;
+
+
+1.29
+date	93.04.19.13.08.12;	author richard;	state Exp;
+branches
+	1.29.1.1;
+next	1.28;
+
+1.28
+date	93.02.04.12.32.02;	author jont;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	93.02.01.16.04.20;	author richard;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	93.01.14.14.52.32;	author daveb;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.10.29.11.11.21;	author richard;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.08.24.15.20.27;	author richard;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.08.24.10.52.14;	author richard;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.07.27.17.38.45;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.07.22.15.30.33;	author clive;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.07.20.13.30.36;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.07.15.15.35.33;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.07.01.13.21.54;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.03.25.09.50.09;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.03.20.15.24.37;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.03.18.13.32.02;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.03.11.12.37.50;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.03.06.16.13.14;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.03.06.14.33.10;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.02.27.11.04.20;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.02.25.15.48.45;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.02.17.11.15.25;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.02.14.17.08.22;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.01.20.15.35.25;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.01.16.14.11.38;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.14.15.51.12;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.12.23.13.18.38;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.12.17.14.03.48;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.16.11.02.18;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.13.16.15.50;	author richard;	state Exp;
+branches;
+next	;
+
+1.29.1.1
+date	93.04.19.13.08.12;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@ML Value Tools.
+@
+
+
+1.29
+log
+@Removed rusty value printer.  (Now in print.c.)
+@
+text
+@/*  ==== ML VALUE TOOLS ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: values.c,v $
+ *  Revision 1.28  1993/02/04  12:32:02  jont
+ *  Changes for code vector reform.
+ *
+ *  Revision 1.27  1993/02/01  16:04:20  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.26  1993/01/14  14:52:32  daveb
+ *  Changed cons to use the new list representation.
+ *
+ *  Revision 1.25  1992/10/29  11:11:21  richard
+ *  Fixed some mistakes in string output.
+ *
+ *  Revision 1.24  1992/08/24  15:20:27  richard
+ *  Corrected the printing of bytearrays and reals.
+ *
+ *  Revision 1.23  1992/08/24  10:52:14  richard
+ *  Corrected printing of bytearrays.
+ *
+ *  Revision 1.22  1992/07/27  17:38:45  richard
+ *  Added exn_name(), exn(), and ref().
+ *
+ *  Revision 1.21  1992/07/22  15:30:33  clive
+ *  Weak array printing
+ *
+ *  Revision 1.20  1992/07/20  13:30:36  richard
+ *  Removed storage manager specific stuff from value printing.
+ *
+ *  Revision 1.19  1992/07/15  15:35:33  richard
+ *  Corrected mlupdate.
+ *
+ *  Revision 1.18  1992/07/01  13:21:54  richard
+ *  Added mlupdate().
+ *
+ *  Revision 1.17  1992/03/25  09:50:09  richard
+ *  Improved polymorphic equality function.
+ *
+ *  Revision 1.16  1992/03/20  15:24:37  richard
+ *  Added code to val_print() to deal with shared closures.
+ *
+ *  Revision 1.15  1992/03/18  13:32:02  richard
+ *  Generalised parameter mechanism to val_print().
+ *
+ *  Revision 1.14  1992/03/11  12:37:50  richard
+ *  Miscellaneous minor improvements and changes to printing to deal with
+ *  the new memory arrangement.
+ *
+ *  Revision 1.13  1992/03/06  16:13:14  clive
+ *  Equality for strings was also checking the nulls, but there is currently some
+ *  error so that some strings are not null terminated
+ *
+ *  Revision 1.12  1992/03/06  14:33:10  clive
+ *  equality for strings now uses memcmp
+ *
+ *  Revision 1.11  1992/02/27  11:04:20  clive
+ *   Needed to use declare_root around calls to allocate in case a garbage collection was
+ *  forced
+ *
+ *  Revision 1.10  1992/02/25  15:48:45  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.9  1992/02/17  11:15:25  richard
+ *  Added parameters to string_print() to limit the length of strings.
+ *  Added other cases to tuple printing to spot records on the stack and outside
+ *  the heap.
+ *  Added a missing `break' after array printing.
+ *
+ *  Revision 1.8  1992/02/14  17:08:22  richard
+ *  Added extra debugging information to val_print.  This is switched on with the
+ *  `-i' option.  (See main.c)
+ *
+ *  Revision 1.7  1992/01/20  15:35:25  richard
+ *  Modified polymorphic equality to work with REFPTRs.
+ *
+ *  Revision 1.6  1992/01/16  14:11:38  richard
+ *   Changed the way that arrays are printed, as the primary tag for an array
+ *  is now REFPTR.
+ *
+ *  Revision 1.5  1992/01/14  15:51:12  richard
+ *  Added BACKPTR to the printing routine.
+ *
+ *  Revision 1.4  1991/12/23  13:18:38  richard
+ *  Added some missing #include's.  Added void casts to some
+ *  unused results.
+ *
+ *  Revision 1.3  91/12/17  14:03:48  richard
+ *  Removed debugging code and added printing of reals.
+ *  Added pointer equality as a short cut.
+ *  
+ *  Revision 1.2  91/12/16  11:02:18  richard
+ *  Wrote polymorphic equality and list cons.
+ *  
+ *  Revision 1.1  91/12/13  16:15:50  richard
+ *  Initial revision
+ *  
+ */
+
+
+#include "mltypes.h"
+#include "storeman.h"
+#include "values.h"
+#include "allocator.h"
+#include "utils.h"
+#include "diagnostic.h"
+
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
+
+
+/*  == Update an array element ==
+ *
+ *  An updated array needs to be unlinked from its entry list and linked to
+ *  the modified list.
+ */
+
+void mlupdate(mlval a, mlval subscript, mlval value)
+{
+  union ml_array_header *array = (union ml_array_header *)(a-REFPTR);
+
+  if(array->the.forward != NULL)
+  {
+    if(array->the.back != NULL)
+    {
+      array->the.forward->the.back = array->the.back;
+      array->the.back->the.forward = array->the.forward;
+    }
+    array->the.forward = NULL;
+    array->the.back = GC_MODIFIED_LIST;
+    GC_MODIFIED_LIST = array;
+  }
+
+  array->the.element[subscript] = value;
+}
+
+
+/*  === LIST CONSTRUCTOR ===  */
+
+mlval cons(mlval head, mlval tail)
+{
+  mlval result;
+
+  declare_root(& head);
+  declare_root(& tail);
+  result = allocate_record(2);
+  retract_root(& head);
+  retract_root(& tail);
+
+  FIELD(result, 0) = head;
+  FIELD(result, 1) = tail;
+
+  return(result);
+}
+
+
+/*  == Make an exception name ==
+ *
+ *  An ML exception name is a pair consisting of a unique (ref unit) and a
+ *  string.
+ */
+
+mlval exn_name(const char *name)
+{
+  mlval exn_name, unique, string;
+
+  unique = allocate_array(1);
+  MLUPDATE(unique, 0, MLUNIT);
+  declare_root(&unique);
+  string = ml_string(name);
+  declare_root(&string);
+  exn_name = allocate_record(2);
+  FIELD(exn_name, 0) = unique;
+  FIELD(exn_name, 1) = string;
+  retract_root(&string);
+  retract_root(&unique);
+
+  return(exn_name);
+}
+
+
+/*  == Make an exception packet ==
+ *
+ *  An exception packet is a pair consisting of an exception name and its
+ *  argument.
+ */
+
+mlval exn(mlval exn_name, mlval arg)
+{
+  mlval exn;
+
+  declare_root(&exn_name);
+  declare_root(&arg);
+  exn = allocate_record(2);
+  FIELD(exn, 0) = exn_name;
+  FIELD(exn, 1) = arg;
+  retract_root(&arg);
+  retract_root(&exn_name);
+
+  return(exn);
+}
+
+
+/*  == Make a ref cell ==
+ *
+ *  A ref cell is just a single element array.
+ */
+
+mlval ref(mlval value)
+{
+  mlval r;
+
+  declare_root(&value);
+  r = allocate_array(1);
+  retract_root(&value);
+  mlupdate(r, 0, value);
+
+  return(r);
+}
+@
+
+
+1.29.1.1
+log
+@Fork for bug fixing
+@
+text
+@a7 3
+ *  Revision 1.29  1993/04/19  13:08:12  richard
+ *  Removed rusty value printer.  (Now in print.c.)
+ *
+@
+
+
+1.28
+log
+@Changes for code vector reform.
+@
+text
+@d8 3
+a142 217
+/*  == Print a string with escapes ==
+ *
+ *  Print a string as an ML string literal. The string is enclosed in
+ *  double quotes, and the characters `"', `\', newline, and tab are
+ *  esacped using \", \\, \n, and \t respectively.  Control characters
+ *  in the range 0-29 are printed as \^c where c is an upper case
+ *  letter or symbol. All other non-printing characters are escaped
+ *  using their decimal value, e.g. \230.
+ *
+ *  If the length parameter is negative then the string is treated as '\0'
+ *  terminated, otherwise it is assumed to be a character array.  If the
+ *  maximum length parameter is non-zero then the string is truncated to
+ *  that length, and '...' appended.
+ */
+
+static void string_print(FILE *stream, char *string, int length, int maximum)
+{
+  char c;
+  int terminated = (length < 0);
+  int truncated = maximum;
+
+  putc('"', stream);
+
+  do	
+  {
+    char c = *string++;
+
+    if(terminated ? c == '\0' : length-- == 0)
+      break;
+
+    if(c == '"') fprintf(stream, "\\\"");
+    else if(c == '\\') fprintf(stream, "\\\\");
+    else if(c >= 21 && c < 127) putc(c, stream);
+    else if(c == '\n') fprintf(stream, "\\n");
+    else if(c == '\t') fprintf(stream, "\\t");
+    else if((unsigned char)c <= 26) fprintf(stream, "\\^%c", c+64);
+    else fprintf(stream, "\\%03u", (unsigned char)c);
+  }
+  while(!truncated || --maximum);
+
+  if(truncated && (terminated ? c != '\0' : length > 0))
+    fprintf(stream, "...");
+  else
+    putc('"', stream);
+}
+
+
+/*  === PRINT A VALUE TO A STREAM ===
+ *
+ *  Calls itself recursively, decrementing `depth' each time, to
+ *  display values pointed to by the value given.
+ */
+
+struct val_print_parameters val_print_defaults = {0, 100, 20};
+
+static void print(FILE *stream, mlval value,
+		  int depth, int string_length, int internals)
+{
+  int tag = PRIMARY(value), i;
+  mlval header;
+
+  switch(value)
+  {
+    case ERROR:
+    fprintf(stream, "ERROR");
+    return;
+
+    case EVACUATED:
+    fprintf(stream, "EVACUATED");
+    return;
+
+    case DEAD:
+    fprintf(stream, "DEAD");
+    return;
+  }
+
+  if(ISPTR(value) && !is_ml_heap(OBJECT(value)))
+    fprintf(stream, "<0x%lX outside heap>", value);
+
+  switch(tag)
+  {
+    case INTEGER0:
+    case INTEGER1:
+    fprintf(stream, "%d", CINT(value));
+    break;
+
+    case HEADER:
+    fprintf(stream, "<header word 0x%lX>", value);
+    break;
+
+    case REFPTR:
+    if(depth == 0)
+    {
+      putc('#', stream);
+      return;
+    }
+    header = ARRAYHEADER(value);
+    if(internals)
+      fprintf(stream, "<0x%lX>", value);
+    switch(SECONDARY(header))
+    {
+      case ARRAY:
+      case WEAKARRAY:
+      if(LENGTH(header))
+      {
+	putc('[', stream);
+	print(stream, CARRAY(value)[0], depth-1, string_length, internals);
+	for(i=1; i<LENGTH(header);  ++i)
+	{
+	  fprintf(stream, ", ");
+	  print(stream, CARRAY(value)[i], depth-1, string_length, internals);
+	}
+	putc(']', stream);
+      }
+      else
+	fprintf(stream, "[]");
+      break;
+
+      default:
+      fprintf(stream, "<unknown REF header 0x%lX at 0x%lX>", header, value);
+    }
+    break;
+
+    case PAIRPTR:
+    case POINTER:
+    if(depth == 0)
+    {
+      putc('#', stream);
+      return;
+    }
+
+    header = GETHEADER(value);
+
+    /* It might be a shared closure... */
+    if(header == 0)
+    {
+      mlval h, v = value;
+
+      do
+      {
+	v -= 8;
+	h = GETHEADER(v);
+      }
+      while(h == 0);
+
+      if(SECONDARY(h) == RECORD)
+      {
+	fprintf(stream, "<shared closure offset %u>", (value - v)/sizeof(word));
+	header = h;
+	value = v;
+      }
+    }
+	  
+    if(internals)
+      fprintf(stream, "<0x%lX header 0x%lX>", value, header);
+    
+    switch(SECONDARY(header))
+    {
+      case RECORD:
+      if(LENGTH(header))
+      {
+	putc('{', stream);
+	print(stream, FIELD(value, 0), depth-1, string_length, internals);
+	for(i=1; i<LENGTH(header);  ++i)
+	{
+	  fprintf(stream, ", ");
+	  print(stream, FIELD(value, i), depth-1, string_length, internals);
+	}
+	  putc('}', stream);
+      }
+      else
+	fprintf(stream, "{}");
+      break;
+
+      case STRING:
+      string_print(stream, CSTRING(value), CSTRINGLENGTH(value), string_length);
+      break;
+
+      case BYTEARRAY:
+      if(MLISREAL(value))
+	fprintf(stream, "%G/", GETREAL(value));
+      if(LENGTH(header))
+      {
+	fprintf(stream, "byte[0x%02X", CBYTEARRAY(value)[0]);
+	for(i=1; i<LENGTH(header);  ++i)
+	  fprintf(stream, ", 0x%02X", CBYTEARRAY(value)[i]);
+	fprintf(stream, "]byte");
+      }
+      else
+	fprintf(stream, "byte[]byte");
+      break;
+
+      case BACKPTR:
+      print(stream, FOLLOWBACK(value), depth-1, string_length, internals);
+      break;
+
+      default:
+      fprintf(stream, "<0x%lX unknown header 0x%lX>", value, header);
+    }
+    break;
+
+    default:
+    fprintf(stream, "<0x%lX unknown value>", value);
+  }
+}
+
+void val_print(FILE *stream, mlval value,
+	       struct val_print_parameters *parameters)
+{
+  if(parameters == NULL)
+    parameters = &val_print_defaults;
+  print(stream, value, parameters->depth,
+	parameters->string_length, parameters->internals);
+}
+
+
+
+a223 54
+}
+
+
+/*  === POLYMORPHIC EQUALITY ===
+ *
+ */
+
+int equal(mlval x, mlval y)
+{
+  mlval header;
+  int i;
+
+  if(x == y)
+    return(1);
+
+  if(PRIMARY(x) != PRIMARY(y))
+    return(0);
+
+  switch(PRIMARY(x))
+  {
+    case INTEGER0:
+    case INTEGER1:
+    return(0);		/* since they're not EQ */
+
+    case PAIRPTR:
+    return(equal(FIELD(x, 0), FIELD(y, 0)) &&
+	   equal(FIELD(x, 1), FIELD(y, 1)));
+
+    case POINTER:
+    header = GETHEADER(x);
+    if(header != GETHEADER(y))
+      return 0;
+    switch(SECONDARY(header))
+    {
+      case RECORD:
+      for(i=0; i<LENGTH(header); ++i)
+	if(!equal(FIELD(x, i), FIELD(y, i)))
+	  return(0);
+      return(1);
+
+      case STRING:
+      /* The lengths must be equal since the headers are equal. */
+      return(memcmp(CSTRING(x), CSTRING(y), LENGTH(header)-1) == 0);
+
+      case BYTEARRAY:
+      return(0);	/* since they're not EQ */
+    }
+    break;
+
+    case REFPTR:
+    return(0);		/* since they're not EQ */
+  }
+
+  error("pervasives (equal): Unknown objects found.");
+@
+
+
+1.27
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d8 3
+d246 1
+a246 1
+	print(stream, CARRAY(value)[2], depth-1, string_length, internals);
+d250 1
+a250 1
+	  print(stream, CARRAY(value)[i+2], depth-1, string_length, internals);
+@
+
+
+1.26
+log
+@Changed cons to use the new list representation.
+@
+text
+@d8 3
+d299 1
+a299 1
+	print(stream, GETFIELD(value, 0), depth-1, string_length, internals);
+d303 1
+a303 1
+	  print(stream, GETFIELD(value, i), depth-1, string_length, internals);
+d366 2
+a367 2
+  (void)SETFIELD(result, 0, head);
+  (void)SETFIELD(result, 1, tail);
+d389 2
+a390 2
+  (void)SETFIELD(exn_name, 0, unique);
+  (void)SETFIELD(exn_name, 1, string);
+d411 2
+a412 2
+  (void)SETFIELD(exn, 0, exn_name);
+  (void)SETFIELD(exn, 1, arg);
+d460 2
+a461 2
+    return(equal(GETFIELD(x, 0), GETFIELD(y, 0)) &&
+	   equal(GETFIELD(x, 1), GETFIELD(y, 1)));
+d471 1
+a471 1
+	if(!equal(GETFIELD(x, i), GETFIELD(y, i)))
+@
+
+
+1.25
+log
+@Fixed some mistakes in string output.
+@
+text
+@d8 3
+d355 1
+a355 1
+  mlval outer, inner;
+d359 1
+a359 1
+  inner = allocate_record(2);
+d363 2
+a364 9
+  (void)SETFIELD(inner, 0, head);
+  (void)SETFIELD(inner, 1, tail);
+
+  declare_root(& inner);
+  outer = allocate_record(2);
+  retract_root(& inner) ;
+
+  (void)SETFIELD(outer, 0, MLINT(0));
+  (void)SETFIELD(outer, 1, inner);
+d366 1
+a366 1
+  return(outer);
+@
+
+
+1.24
+log
+@Corrected the printing of bytearrays and reals.
+@
+text
+@d8 3
+d163 1
+a163 1
+    else if(isprint(c)) putc(c, stream);
+d166 2
+a167 2
+    else if(c <= 26) fprintf(stream, "\\^%c", c+64);
+    else fprintf(stream, "\\%03d", c);
+@
+
+
+1.23
+log
+@Corrected printing of bytearrays.
+@
+text
+@d8 3
+a302 2
+      if(MLISREAL(value))
+	fprintf(stream, "%G/", GETREAL(value));
+d307 2
+d311 1
+a311 1
+	fprintf(stream, "byte[0x%2X", CBYTEARRAY(value)[0]);
+@
+
+
+1.22
+log
+@Added exn_name(), exn(), and ref().
+@
+text
+@d8 3
+d308 1
+a308 2
+	fprintf(stream, "byte[");
+	print(stream, CBYTEARRAY(value)[0], depth-1, string_length, internals);
+@
+
+
+1.21
+log
+@Weak array printing
+@
+text
+@d8 3
+d342 1
+a342 1
+mlval cons (mlval head, mlval tail)
+d363 65
+@
+
+
+1.20
+log
+@Removed storage manager specific stuff from value printing.
+@
+text
+@d8 3
+d221 1
+@
+
+
+1.19
+log
+@Corrected mlupdate.
+@
+text
+@d8 3
+a83 2
+#include "mem.h"
+#include "gc.h"
+a175 1
+  word block;
+d177 1
+a177 1
+  if(depth == 0)
+d179 10
+a188 1
+    putc('#', stream);
+d192 3
+d207 9
+a215 2
+    block = BLKNO(value);
+    switch(typemap[block])
+d217 2
+a218 8
+      case HEAPBLK:
+      case FROMBLK:
+      header = ARRAYHEADER(value);
+      if(internals)
+	fprintf(stream, "<0x%lX gen %d.%d header 0x%lX links 0x%lX,0x%lX>",
+		value, spacemap[block]->gen->number, spacemap[block]->number,
+		header, CARRAY(value)[0], CARRAY(value)[1]);
+      switch(SECONDARY(header))
+d220 3
+a222 2
+	case ARRAY:
+	if(LENGTH(header))
+d224 2
+a225 8
+	  putc('[', stream);
+	  print(stream, CARRAY(value)[2], depth-1, string_length, internals);
+	  for(i=1; i<LENGTH(header);  ++i)
+	  {
+	    fprintf(stream, ", ");
+	    print(stream, CARRAY(value)[i+2], depth-1, string_length, internals);
+	  }
+	  putc(']', stream);
+d227 1
+a227 6
+	else
+	  fprintf(stream, "[]");
+	break;
+
+	default:
+	fprintf(stream, "<unknown REF header 0x%lX at 0x%lX>", header, value);
+d229 2
+d234 1
+a234 1
+      fprintf(stream, "<0x%lX array outside heap>");
+d240 10
+a249 2
+    block = BLKNO(value);
+    switch(typemap[block])
+d251 1
+a251 3
+      case HEAPBLK:
+      case FROMBLK:
+      header = GETHEADER(value);
+d253 1
+a253 2
+      /* It might be a shared closure... */
+      if(header == 0)
+d255 4
+a258 1
+	mlval h, v = value;
+d260 5
+a264 13
+	do
+	{
+	  v -= 8;
+	  h = GETHEADER(v);
+	}
+	while(h == 0);
+
+	if(SECONDARY(h) == RECORD)
+	{
+	  fprintf(stream, "<shared closure offset %u>", (value - v)/sizeof(word));
+	  header = h;
+	  value = v;
+	}
+d266 1
+d268 7
+a274 1
+      switch(SECONDARY(header))
+d276 3
+a278 5
+	case RECORD:
+	if(internals)
+	  fprintf(stream, "<0x%lX gen %d.%d header 0x%lX>",
+		  value, spacemap[block]->gen->number, spacemap[block]->number, header);
+	if(LENGTH(header))
+d280 3
+a282 7
+	  putc('{', stream);
+	  print(stream, GETFIELD(value, 0), depth-1, string_length, internals);
+	  for(i=1; i<LENGTH(header);  ++i)
+	  {
+	    fprintf(stream, ", ");
+	    print(stream, GETFIELD(value, i), depth-1, string_length, internals);
+	  }
+d284 19
+a302 40
+	}
+	else
+	  fprintf(stream, "{}");
+	break;
+
+	case STRING:
+	if(internals)
+	  fprintf(stream, "<0x%lX gen %d.%d header 0x%lX>",
+		  value, spacemap[block]->gen->number, spacemap[block]->number, header);
+	if(MLISREAL(value))
+	  fprintf(stream, "%G/", GETREAL(value));
+	string_print(stream, CSTRING(value), CSTRINGLENGTH(value), string_length);
+	break;
+
+	case BYTEARRAY:
+	if(internals)
+	  fprintf(stream, "<0x%lX gen %d.%d header 0x%lX>",
+		  value, spacemap[block]->gen->number, spacemap[block]->number, header);
+	if(LENGTH(header))
+	{
+	  fprintf(stream, "byte[");
+	  print(stream, CBYTEARRAY(value)[0], depth-1, string_length, internals);
+	  for(i=1; i<LENGTH(header);  ++i)
+	    fprintf(stream, ", 0x%02X", CBYTEARRAY(value)[i]);
+	  fprintf(stream, "]byte");
+	}
+	else
+	  fprintf(stream, "byte[]byte");
+	break;
+
+	case BACKPTR:
+	if(internals)
+	  fprintf(stream, "<0x%lX gen %d.%d backpointer>", value,
+		  spacemap[block]->gen->number, spacemap[block]->number);
+	print(stream, FOLLOWBACK(value), depth-1, string_length, internals);
+	break;
+
+	default:
+	fprintf(stream, "<0x%lX gen %d.%d unknown header 0x%lX>",
+		value, spacemap[block]->gen->number, spacemap[block]->number, header);
+d304 2
+d308 2
+a309 2
+      case STACKBLK:
+      fprintf(stream, "<0x%lX stack record>", value);
+d313 1
+a313 1
+      fprintf(stream, "<0x%lX record outside heap>", value);
+d318 1
+a318 1
+    fprintf(stream, "<unknown value 0x%lX>", value);
+@
+
+
+1.18
+log
+@Added mlupdate().
+@
+text
+@d8 3
+d95 1
+a95 1
+void mlupdate(mlval array, mlval subscript, mlval x)
+d97 1
+a97 1
+  union ml_array_header *header = (union ml_array_header *)OBJECT(array), *t;
+d99 1
+a99 1
+  if(header->the.forward != NULL)
+d101 1
+a101 1
+    if(header->the.back != NULL)
+d103 2
+a104 2
+      header->the.forward->the.back = header->the.back;
+      header->the.back->the.forward = header->the.forward;
+d106 3
+a108 3
+    header->the.forward = NULL;
+    header->the.back = GC_MODIFIED_LIST;
+    GC_MODIFIED_LIST = header;
+d111 1
+a111 1
+  ((mlval *)(header+1))[subscript] = x;
+@
+
+
+1.17
+log
+@Improved polymorphic equality function.
+@
+text
+@d8 3
+d73 1
+d84 26
+@
+
+
+1.16
+log
+@Added code to val_print() to deal with shared closures.
+@
+text
+@d8 3
+d349 1
+a349 1
+    return 1;
+d352 1
+a352 1
+    return 0;
+d358 1
+a358 1
+    return(x == y);
+d377 2
+a378 5
+      {
+	int lengthx = CSTRINGLENGTH(x);
+	int lengthy = CSTRINGLENGTH(y);
+	return(lengthx == lengthy && memcmp(CSTRING(x), CSTRING(y), lengthx) == 0);
+      }
+d381 1
+a381 1
+      return(x == y);
+d386 1
+a386 1
+    return(x == y);
+@
+
+
+1.15
+log
+@Generalised parameter mechanism to val_print().
+@
+text
+@d8 3
+d205 21
+@
+
+
+1.14
+log
+@Miscellaneous minor improvements and changes to printing to deal with
+the new memory arrangement.
+@
+text
+@d8 4
+d129 1
+a129 1
+int val_print_internals = 0;
+d131 2
+a132 1
+void val_print(FILE *stream, mlval value, int depth, int val_print_internals)
+d162 1
+a162 1
+      if(val_print_internals)
+d172 1
+a172 1
+	  val_print(stream, CARRAY(value)[2], depth-1,val_print_internals);
+d176 1
+a176 1
+	    val_print(stream, CARRAY(value)[i+2], depth-1,val_print_internals);
+d205 1
+a205 1
+	if(val_print_internals)
+d211 1
+a211 1
+	  val_print(stream, GETFIELD(value, 0), depth-1,val_print_internals);
+d215 1
+a215 1
+	    val_print(stream, GETFIELD(value, i), depth-1,val_print_internals);
+d224 1
+a224 1
+	if(val_print_internals)
+d229 1
+a229 1
+	string_print(stream, CSTRING(value), CSTRINGLENGTH(value), 20);
+d233 1
+a233 1
+	if(val_print_internals)
+d239 1
+a239 1
+	  val_print(stream, CBYTEARRAY(value)[0], depth-1,val_print_internals);
+d249 1
+a249 1
+	if(val_print_internals)
+d252 1
+a252 1
+	val_print(stream, FOLLOWBACK(value), depth-1,val_print_internals);
+d275 8
+d285 1
+d334 2
+a335 2
+    return(equal(GETFIELD(x,0), GETFIELD(y,0)) &&
+	   equal(GETFIELD(x,1), GETFIELD(y,1)));
+d345 1
+a345 1
+	if(!equal(GETFIELD(x,i), GETFIELD(y,i)))
+@
+
+
+1.13
+log
+@Equality for strings was also checking the nulls, but there is currently some
+error so that some strings are not null terminated
+@
+text
+@d8 4
+d81 1
+a81 1
+ *  If the length parameter is zero then the string is treated as '\0'
+d90 1
+a90 1
+  int terminated = (length == 0);
+d125 1
+a125 1
+extern val_print_internals = 0;
+d155 1
+d158 3
+a160 3
+	fprintf(stream, "<0x%lX gen %d header 0x%lX links 0x%lX,0x%lX>",
+		value, genmap[block], header,
+		CARRAY(value)[0], CARRAY(value)[1]);
+d195 1
+d201 2
+a202 2
+	  fprintf(stream, "<0x%lX gen %d header 0x%lX>",
+		  value, genmap[block], header);
+d220 2
+a221 2
+	  fprintf(stream, "<0x%lX gen %d header 0x%lX>",
+		  value, genmap[block], header);
+d224 1
+a224 1
+	string_print(stream, CSTRING(value), LENGTH(GETHEADER(value))-1, 20);
+d229 2
+a230 2
+	  fprintf(stream, "<0x%lX gen %d header 0x%lX>",
+		  value, genmap[block], header);
+d245 2
+a246 1
+	  fprintf(stream, "<0x%lX gen %d backpointer>", value, genmap[block]);
+d251 2
+a252 2
+	fprintf(stream, "<0x%lX gen %d unknown header 0x%lX>",
+		value, genmap[block], header);
+d337 4
+a340 5
+	int length1 = CSTRINGLENGTH(x);
+	int length2 = CSTRINGLENGTH(y);
+	return((length1 == length2) && 
+	       memcmp(CSTRING(x), CSTRING(y), length1-1) == 0);
+      };
+@
+
+
+1.12
+log
+@equality for strings now uses memcmp
+@
+text
+@d8 3
+d333 1
+a333 1
+	       memcmp(CSTRING(x), CSTRING(y), length1) == 0);
+@
+
+
+1.11
+log
+@ Needed to use declare_root around calls to allocate in case a garbage collection was
+forced
+@
+text
+@d8 4
+d326 6
+a331 1
+      return(strcmp(CSTRING(x), CSTRING(y)) == 0);
+@
+
+
+1.10
+log
+@Added val_print in the System structure in ML
+@
+text
+@d8 3
+d54 1
+d264 2
+d267 3
+d273 1
+d275 2
+@
+
+
+1.9
+log
+@Added parameters to string_print() to limit the length of strings.
+Added other cases to tuple printing to spot records on the stack and outside
+the heap.
+Added a missing `break' after array printing.
+@
+text
+@d8 6
+d110 1
+a110 1
+int val_print_internals = 0;
+d112 1
+a112 1
+void val_print(FILE *stream, mlval value, int depth)
+d151 1
+a151 1
+	  val_print(stream, CARRAY(value)[2], depth-1);
+d155 1
+a155 1
+	    val_print(stream, CARRAY(value)[i+2], depth-1);
+d189 1
+a189 1
+	  val_print(stream, GETFIELD(value, 0), depth-1);
+d193 1
+a193 1
+	    val_print(stream, GETFIELD(value, i), depth-1);
+d217 1
+a217 1
+	  val_print(stream, CBYTEARRAY(value)[0], depth-1);
+d229 1
+a229 1
+	val_print(stream, FOLLOWBACK(value), depth-1);
+@
+
+
+1.8
+log
+@Added extra debugging information to val_print.  This is switched on with the
+`-i' option.  (See main.c)
+@
+text
+@d8 4
+d58 6
+a63 3
+ *  using their decimal value, e.g. \230.  If the length positive is
+ *  supplied that many characters are printed.  If it is zero then the
+ *  string is treated as null terminated.
+d66 1
+a66 1
+static void string_print(FILE *stream, char *string, int length)
+d68 1
+a68 1
+  unsigned char c;
+d70 1
+d74 7
+a80 1
+  while(terminated ? (c = *string++) != '\0' : (c = *string++, length--))
+d88 2
+d91 4
+a94 1
+  putc('"', stream);
+d160 1
+d163 1
+a163 1
+      fprintf(stream, "<0x%lX outside heap>");
+d201 1
+a201 1
+	string_print(stream, CSTRING(value), LENGTH(GETHEADER(value))-1);
+d230 8
+@
+
+
+1.7
+log
+@Modified polymorphic equality to work with REFPTRs.
+@
+text
+@d8 3
+d40 1
+d85 2
+d91 1
+d111 2
+a112 2
+    header = ARRAYHEADER(value);
+    switch(SECONDARY(header))
+d114 7
+a120 3
+      case ARRAY:
+      fprintf(stream, "<0x%lX,0x%lX>", CARRAY(value)[0], CARRAY(value)[1]);
+      if(LENGTH(header))
+d122 2
+a123 3
+	putc('[', stream);
+	val_print(stream, CARRAY(value)[2], depth-1);
+	for(i=1; i<LENGTH(header);  ++i)
+d125 8
+a132 2
+	  fprintf(stream, ", ");
+	  val_print(stream, CARRAY(value)[i+2], depth-1);
+d134 6
+a139 1
+	putc(']', stream);
+a140 3
+      else
+	fprintf(stream, "[]");
+      break;
+d143 1
+a143 1
+      fprintf(stream, "<unknown REF header 0x%lX at 0x%lX>", header, value);
+d149 2
+a150 2
+    header = GETHEADER(value);
+    switch(SECONDARY(header))
+d152 3
+a154 2
+      case RECORD:
+      if(LENGTH(header))
+d156 5
+a160 3
+	putc('{', stream);
+	val_print(stream, GETFIELD(value, 0), depth-1);
+	for(i=1; i<LENGTH(header);  ++i)
+d162 8
+a169 2
+	  fprintf(stream, ", ");
+	  val_print(stream, GETFIELD(value, i), depth-1);
+d171 3
+a173 5
+	putc('}', stream);
+      }
+      else
+	fprintf(stream, "{}");
+      break;
+d175 8
+a182 5
+      case STRING:
+      if(MLISREAL(value))
+	fprintf(stream, "%G/", GETREAL(value));
+      string_print(stream, CSTRING(value), LENGTH(GETHEADER(value))-1);
+      break;
+d184 15
+a198 12
+      case BYTEARRAY:
+      if(LENGTH(header))
+      {
+	fprintf(stream, "byte[");
+	val_print(stream, CBYTEARRAY(value)[0], depth-1);
+	for(i=1; i<LENGTH(header);  ++i)
+	  fprintf(stream, ", 0x%02X", CBYTEARRAY(value)[i]);
+	fprintf(stream, "]byte");
+      }
+      else
+	fprintf(stream, "byte[]byte");
+      break;
+d200 5
+a204 3
+      case BACKPTR:
+      fprintf(stream, "<back to 0x%lX>", FOLLOWBACK(value));
+      break;
+d206 4
+a209 2
+      default:
+      fprintf(stream, "<unknown header 0x%lX at 0x%lX>", header, value);
+@
+
+
+1.6
+log
+@ Changed the way that arrays are printed, as the primary tag for an array
+is now REFPTR.
+@
+text
+@d8 4
+d222 1
+a222 1
+    return(CINT(x) == CINT(y));
+a242 1
+      case ARRAY:
+d246 4
+@
+
+
+1.5
+log
+@Added BACKPTR to the printing routine.
+@
+text
+@d8 3
+d32 1
+d100 23
+a122 2
+    fprintf(stream, "ref ");
+    val_print(stream, DEREF(value), depth-1);
+a151 16
+      case ARRAY:
+      if(LENGTH(header))
+      {
+	putc('[', stream);
+	val_print(stream, CARRAY(value)[0], depth-1);
+	for(i=1; i<LENGTH(header);  ++i)
+	{
+	  fprintf(stream, ", ");
+	  val_print(stream, CARRAY(value)[i], depth-1);
+	}
+	putc(']', stream);
+      }
+      else
+	fprintf(stream, "[]");
+      break;
+
+d170 1
+a170 1
+      fprintf(stream, "<unknown header at 0x%lX>", value);
+@
+
+
+1.4
+log
+@Added some missing #include's.  Added void casts to some
+unused results.
+@
+text
+@d7 5
+a11 1
+ *  $Log:	values.c,v $
+d156 4
+d161 1
+a161 1
+      fprintf(stream, "<unknown pointer 0x%lX>", value);
+@
+
+
+1.3
+log
+@Removed debugging code and added printing of reals.
+Added pointer equality as a short cut.
+@
+text
+@d8 4
+d24 1
+d28 1
+d171 2
+a172 2
+  SETFIELD(inner, 0, head);
+  SETFIELD(inner, 1, tail);
+d175 2
+a176 2
+  SETFIELD(outer, 0, MLINT(0));
+  SETFIELD(outer, 1, inner);
+d228 1
+a228 1
+  runtime_error("pervasives (equal): Unknown objects found.");
+@
+
+
+1.2
+log
+@Wrote polymorphic equality and list cons.
+@
+text
+@d8 3
+d32 3
+a34 1
+ *  using their decimal value, e.g. \230.
+d37 1
+a37 1
+static void string_print(FILE *stream, char *string)
+d40 1
+d44 1
+a44 1
+  while((c = *string++) != '\0')
+d112 3
+a114 1
+      string_print(stream, CSTRING(value));
+d185 2
+a186 4
+val_print(stderr, x, -1);
+putc('\n', stderr);
+val_print(stderr, y, -1);
+putc('\n', stderr);
+a187 1
+
+a203 1
+{fprintf(stderr, "headers not equal: 0x%lX and 0x%lX\n", header, GETHEADER(y));
+a204 1
+}
+a209 1
+{fprintf(stderr, "failed field %d\n", i);
+a210 1
+}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d7 4
+a10 1
+ *  $Log$
+d16 1
+a21 6
+/*  === PRINT A VALUE TO A STREAM ===
+ *
+ *  Calls itself recursively, decrementing `depth' each time, to
+ *  display values pointed to by the value given.
+ */
+
+d24 6
+a29 2
+ *  Prints a string, but escapes the `"' and `\' characters, along
+ *  with any control characters to make a valid ML expression.
+d44 1
+a44 1
+    else if(c <= 26) fprintf(stream, "^%c", c+64);
+d50 7
+d148 75
+@

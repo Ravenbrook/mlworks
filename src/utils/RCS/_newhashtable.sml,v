@@ -1,0 +1,1130 @@
+head	1.15;
+access;
+symbols
+	ML_beta_release_12/08/94:1.14
+	ML_beta_release_03/08/94:1.14
+	ML_revised_beta_release_25/05/94:1.14
+	ML_final_beta_release_02/03/94:1.14
+	mlworks-28-01-1994:1.14
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.12
+	MLWorks-1-0-3-21/12/1992:1.12
+	MLWorks-1-0-2-15/12/1992:1.12
+	MLWorks-1-0-1-04/12/1992:1.12
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.15
+date	94.09.07.11.51.50;	author matthew;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.11.01.14.39.54;	author nickh;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.02.25.13.43.19;	author jont;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	92.09.22.09.08.30;	author clive;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.09.16.14.08.37;	author clive;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.09.14.14.20.21;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.26.14.56.11;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.21.09.00.59;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.13.16.47.41;	author davidt;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.10.16.51.20;	author davidt;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.07.16.05.13;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.28.09.53.20;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.16.17.28.16;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.16.16.23.25;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.16.11.21.17;	author jont;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	93.02.25.13.43.19;	author jont;	state Exp;
+branches;
+next	1.13.1.2;
+
+1.13.1.2
+date	93.11.01.15.08.32;	author nickh;	state Exp;
+branches;
+next	;
+
+
+desc
+@A hash table allowing more than one per functor application
+@
+
+
+1.15
+log
+@Use MLWorks.Integer.makestring
+@
+text
+@(* _newhashtable.sml the functor *)
+(*
+$Log: _newhashtable.sml,v $
+Revision 1.14  1993/11/01  14:39:54  nickh
+Fixed bugs in map() and copy(), which previously returned empty hash tables.
+
+Revision 1.13  1993/02/25  13:43:19  jont
+Fixed a bug in the resizing code which allowed more to be placed in the
+new table than it should
+
+Revision 1.12  1992/09/22  09:08:30  clive
+Changed hashtables to a single structure implementation
+
+Revision 1.11  1992/09/16  14:08:37  clive
+Added tryLookup
+
+Revision 1.10  1992/09/14  14:20:21  jont
+Added a lookup_default function to assign a default value when the
+key is not found
+
+Revision 1.9  1992/08/26  14:56:11  richard
+Changed MLWorks.Bits to Bits to improve performance under
+New Jersey.
+
+Revision 1.8  1992/08/21  09:00:59  clive
+Don't recalculate hash function on resize
+
+Revision 1.7  1992/08/13  16:47:41  davidt
+Added fold and iterate functions.
+
+Revision 1.6  1992/08/10  16:51:20  davidt
+Changed MLworks to MLWorks.
+
+Revision 1.5  1992/08/07  16:05:13  davidt
+Now uses MLworks structure instead of NewJersey structure.
+
+Revision 1.4  1992/07/28  09:53:20  clive
+Added some functionality including the printing of statistics, and resizing
+
+Revision 1.3  1992/07/16  17:28:16  jont
+Removed count from tables. Allows better imperative use
+
+Revision 1.2  1992/07/16  16:23:25  jont
+Removed array parameter, now uses pervasive one
+
+Revision 1.1  1992/07/16  11:21:17  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "newhashtable";
+require "crash";
+require "lists";
+
+(* A hash table with more than one table *)
+
+functor NewHashTable(
+  S : sig
+	structure Crash : CRASH
+	structure Lists : LISTS
+      end
+ ) : NEWHASHTABLE =
+  struct
+
+    type HashValue = int
+    type ('Key,'Value) HashTable = (('Key * HashValue * 'Value ref) list Array.array 
+                                    * int ref
+                                    * ('Key * 'Key -> bool) 
+                                    * ('Key -> int)) ref
+
+    val print_debug = false
+
+    (* This expansion ratio of 2 is used to maintain the fact that the tables
+     are a power of two in size. This means we may use bitwise operations to go from
+     hash value to table index, and can do the resize operation much more
+     quickly - if this is changed, some of the other functions need to be re-written *)
+
+    val expansion_ratio = 2 (* factor to increase by on re-size - if this is changed from 2, adjust
+                             partitioning part of the re-sizing code in update *)
+    val max_size_ratio = 4  (* resize when number of elements is this multiplied by the size *)
+
+    exception Lookup 
+
+    local
+      fun nearest_power_of_two (size,x) =
+        if x >= size
+          then x
+        else nearest_power_of_two (size,2*x)
+    in
+      fun new (size,eq,hash) =
+        let
+          val initial_size = nearest_power_of_two(size,1)
+        in
+          ref(Array.array(initial_size, []),
+              ref(max_size_ratio * initial_size),
+              eq,
+              hash)
+        end
+    end
+
+    fun assoc(eq,key, []) = raise Lookup
+      | assoc(eq,key, (k, _, v) :: xs) =
+	if eq(key, k) then v else assoc(eq,key, xs)
+
+    fun lookup(ref (elt_array,_,eq,hash), key) =
+      let
+	val hash = hash key
+	val len = Array.length elt_array
+	val list_map = Array.sub(elt_array, Bits.andb(hash,len-1))
+      in
+	!(assoc(eq,key, list_map))
+      end
+
+    datatype 'a option = YES of 'a | NO
+
+    fun assoc_default(eq,_, []) = NO
+      | assoc_default(eq, key, (k, _, ref v) :: xs) =
+	if eq(key, k) 
+          then YES (v) 
+        else assoc_default(eq,key, xs)
+
+    fun tryLookup(ref (elt_array,_,eq,hash),key) =
+      let
+	val hash = hash key
+	val len = Array.length elt_array
+	val list_map = Array.sub(elt_array, Bits.andb(hash,len-1))
+      in
+        assoc_default(eq,key,list_map)
+      end
+
+    fun lookup_default (table,value,key) =
+      case tryLookup (table,key) of
+        YES(res) => res
+      | _ => value
+
+    fun iterate_hash f (arr,_,_,_) =
+      let
+        fun down x =
+          if x < 0 then ()
+          else (S.Lists.iterate (fn (k, v', ref v) => f(k,v',v)) (Array.sub(arr,x)); down (x-1))
+      in
+        down (Array.length arr - 1)
+      end
+
+    fun iterate f (ref h) = iterate_hash (fn (x,_,y) => f(x,y)) h
+
+    fun fold f (res, ref (arr,_,_,_)) =
+      let
+        fun down (res, x) =
+          if x < 0 then
+	    res
+          else
+	    down(S.Lists.reducel (fn (res, (k, _, ref v)) => f(res, k, v)) (res, Array.sub(arr,x)), x-1)
+      in
+        down (res, Array.length arr - 1)
+      end
+
+    val makestring = MLWorks.Integer.makestring
+
+    fun assoc_default'(eq,_, []) = NO
+      | assoc_default'(eq,key, (k, _, v) :: xs) =
+	if eq(key, k) 
+          then YES (v) 
+        else assoc_default'(eq,key, xs)
+
+    fun update(initial as ref (elt_array,count_down as ref c,eq,hash_fn), key, value) =
+      let
+	val hash = hash_fn key
+	val old_size = Array.length elt_array
+	val pos = Bits.andb(hash,old_size - 1)
+	val list_map = Array.sub(elt_array, pos)
+        val assoced = assoc_default'(eq,key, list_map)
+      in
+        (case assoced of
+           YES r => r := value 
+         | NO => 
+             (if c <= 0
+                then 
+                  let
+                    val _ = if print_debug 
+                              then output(std_out,"Resizing " ^ makestring(old_size) ^ "...\n")
+                            else ()
+                    val new_size = old_size * expansion_ratio
+                    val new_arr = Array.array(new_size, [])
+                    val _ = initial := (new_arr,ref(max_size_ratio * (new_size - old_size) + c - 1),eq,hash_fn)
+		    (* Since the expansion size is two, we can calculate the new position  *)
+		    (* of the elements from the old positions very easily *)
+		    fun partition([],size,f,s) = (f,s)
+		      | partition((elem as (_,hashvalue,_))::rest,size,f,s) =
+			if MLWorks.Bits.andb(hashvalue,size) = 0
+			  then partition(rest,size,elem::f,s)
+			else partition(rest,size,f,elem::s)
+
+                    fun deal_with_elements index = 
+                      if index < 0
+                        then ()
+                      else
+                        let
+                          val elems = Array.sub(elt_array,index)
+                       in
+                         case elems of
+                           [] => deal_with_elements (index-1)
+                         | _ =>
+                             let
+                               val (f,s) =
+                                 partition(elems,old_size,[],[])
+                             in
+                               Array.update(new_arr,index,f);
+                               Array.update(new_arr,index + old_size,s);
+                               deal_with_elements (index-1)
+                             end
+                       end
+                 in
+                   deal_with_elements (old_size-1);
+                   let
+                     val new_pos = Bits.andb(hash,new_size - 1)                     
+                     val old_value = Array.sub(new_arr, new_pos)
+                   in 
+                     Array.update(new_arr, new_pos, (key, hash,ref value)::old_value)
+                   end
+                 end
+             else (count_down := c - 1;
+                   Array.update(elt_array, pos, (key, hash,ref value) :: list_map))))
+      end
+
+    fun delete_from_list(eq,key, [], acc) = (acc, false)
+      | delete_from_list(eq,key, (elt as (k, _, _)) :: rest, acc) =
+	if eq(key, k) then
+	  (acc @@ rest, true)
+	else
+	  delete_from_list(eq,key, rest, elt :: acc)
+
+    fun delete(ref (elt_array,count_down,eq,hash), key) =
+      let
+	val hash = hash key
+	val len = Array.length elt_array
+	val pos = Bits.andb(hash,len-1)
+	val list_map = Array.sub(elt_array, pos)
+	val (list_map, found) = delete_from_list(eq,key, list_map, [])
+        val _ = count_down := !count_down + 1
+      in
+	Array.update(elt_array, pos, list_map)
+      end
+
+    fun check_nil(array, curr, max) =
+      if curr >= max then true
+      else
+	case Array.sub(array, curr) of
+	  [] => check_nil(array, curr + 1, max)
+	| _ => false
+
+    fun empty_setp(ref (elt_array,_)) =
+      check_nil(elt_array, 0, Array.length elt_array)
+
+    fun add_members(pos:int, max, mems, elts) =
+      if pos >= max then
+	mems
+      else
+	let
+	  val set = map (fn (x,_,ref y) => (x,y)) (Array.sub(elts, pos))
+	in
+	  add_members(pos+1, max, set @@ mems, elts)
+	end
+
+    fun to_list(ref (elt_array,_,_,_)) =
+      add_members(0, Array.length elt_array, [], elt_array)
+
+    (* have to copy each entry because it's all ref cells *)
+
+    fun copy_list (acc,[]) = acc (* reversal doesn't matter *)
+      | copy_list (acc,(k,h,ref v)::xs) =
+      copy_list ((k,h,ref v)::acc,xs)
+
+    fun copy_array(old_array, new_array, max, curr) =
+      if curr >= max then new_array
+      else
+	let
+	  val this = Array.sub(old_array, curr)
+	  val _ = Array.update(new_array, curr, copy_list ([],this))
+	in
+	  copy_array(old_array, new_array, max, curr+1)
+	end
+
+    fun copy(ref (elt_array,count_down,eq,hash)) =
+      let
+	val len = Array.length elt_array
+	val new_array = Array.array(len, [])
+	val _ = copy_array(elt_array, new_array, len, 0)
+      in
+	ref (new_array,ref(!count_down),eq,hash)
+      end
+
+    fun map f (ref(table as (elt_array,count_down,eq,hash))) =
+      let
+        val new_table = new(Array.length elt_array,eq,hash)
+      in
+        iterate_hash (fn (x,_,y) => update(new_table,x,f (x,y))) table;
+        new_table
+      end
+
+    fun stats(ref (arr,_,_,_)) = 
+      let
+        val len = Array.length(arr)
+        val largest = ref(0)
+        val smallest = ref(if len >0
+                             then S.Lists.length(Array.sub(arr,0))
+                           else 0)
+        val count = ref(0)
+
+        fun walk_buckets x =
+          if x<0
+            then ()
+          else
+            let
+              val length = S.Lists.length(Array.sub(arr,x))
+              val _ = if length > !largest 
+                        then largest := length
+                      else ()
+              val _ = if length < !smallest
+                        then smallest := length
+                      else ()
+            in
+              (count := !count + length;
+               walk_buckets(x-1))
+            end
+
+        val _ = walk_buckets (len - 1)
+      in
+        {size = len,
+         smallest = !smallest,
+         largest = ! largest,
+         count = ! count}
+      end
+
+    fun string_hash_table_stats(table) =
+      let
+        val {size : int ,count : int ,smallest : int ,largest : int} = stats table
+      in
+        if count>0 then
+          (" statistics: "^
+           "size = "^(makestring size)^
+           " count = "^(makestring count)^
+           "\n                              smallest = "^
+           (makestring smallest)^
+           " largest = "^(makestring largest))
+        else " EMPTY"
+      end
+        
+
+  end
+@
+
+
+1.14
+log
+@Fixed bugs in map() and copy(), which previously returned empty hash tables.
+@
+text
+@d4 3
+d159 1
+a159 13
+    fun makestring anint =
+      let
+	val sign = if anint < 0 then "~" else ""
+	val anint = if anint < 0 then 0 - anint else anint
+	val new_int = anint div 10
+      in
+	sign ^
+	(if new_int > 0
+	  then makestring new_int
+	else
+	   "") ^
+	   chr ((anint mod 10) + 48)
+      end
+@
+
+
+1.13
+log
+@Fixed a bug in the resizing code which allowed more to be placed in the
+new table than it should
+@
+text
+@d4 4
+d278 6
+d289 1
+a289 1
+	  val _ = Array.update(new_array, curr, this)
+d298 1
+a298 1
+	val _ = copy_array(elt_array, new_array, 0, len)
+d305 1
+a305 1
+        val new_table as ref table' = new(Array.length elt_array,eq,hash)
+d307 1
+a307 1
+        iterate_hash (fn (x,_,y) => update(new_table,x,f (x,y))) table';
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 4
+Revision 1.13  1993/02/25  13:43:19  jont
+Fixed a bug in the resizing code which allowed more to be placed in the
+new table than it should
+
+@
+
+
+1.13.1.2
+log
+@copy() and map() bug fixes.
+@
+text
+@a3 3
+Revision 1.13.1.1  1993/02/25  13:43:19  jont
+Fork for bug fixing
+
+a277 6
+    (* have to copy each entry because it's all ref cells *)
+
+    fun copy_list (acc,[]) = acc (* reversal doesn't matter *)
+      | copy_list (acc,(k,h,ref v)::xs) =
+      copy_list ((k,h,ref v)::acc,xs)
+
+d283 1
+a283 1
+	  val _ = Array.update(new_array, curr, copy_list ([],this))
+d292 1
+a292 1
+	val _ = copy_array(elt_array, new_array, len, 0)
+d299 1
+a299 1
+        val new_table = new(Array.length elt_array,eq,hash)
+d301 1
+a301 1
+        iterate_hash (fn (x,_,y) => update(new_table,x,f (x,y))) table;
+@
+
+
+1.12
+log
+@Changed hashtables to a single structure implementation
+@
+text
+@d4 3
+d172 1
+a172 1
+    fun update(initial as ref (elt_array,count_down,eq,hash_fn), key, value) =
+d183 1
+a183 1
+             (if !count_down <= 0
+d191 9
+a199 1
+                    val _ = initial := (new_arr,ref(max_size_ratio * new_size - old_size + !count_down - 1),eq,hash_fn)
+a210 7
+                               (* Since the expansion size is two, we can calculate the new position  *)
+                               (* of the elements from the old positions very easily *)
+                               fun partition([],size,f,s) = (f,s)
+                                 | partition((elem as (_,hashvalue,_))::rest,size,f,s) =
+                                   if MLWorks.Bits.andb(hashvalue,size) = 0
+                                     then partition(rest,size,elem::f,s)
+                                   else partition(rest,size,f,elem::s)
+d228 1
+a228 1
+             else (count_down := !count_down - 1;
+@
+
+
+1.11
+log
+@Added tryLookup
+@
+text
+@d4 3
+a51 5
+	type Key
+	type Value
+	val eq : Key * Key -> bool
+	val hash : Key -> int
+	val size : int
+a54 3
+    type Key = S.Key
+
+    type Value = S.Value
+d57 4
+a60 12
+
+    type HashTable = ((Key * HashValue * Value ref) list Array.array * int ref) ref
+
+
+    local
+      fun nearest_power_of_two x =
+        if x >= S.size
+          then x
+        else nearest_power_of_two (2*x)
+    in
+      val initial_size = nearest_power_of_two 1
+    end
+d73 1
+a73 1
+    exception Lookup of Key
+d75 16
+a90 3
+    fun new () =
+      ref(Array.array(initial_size, [] : (Key * HashValue * Value ref) list),
+          ref(max_size_ratio * initial_size))
+d92 3
+a94 3
+    fun assoc(key, []) = raise Lookup key
+      | assoc(key, (k, _, v) :: xs) =
+	if S.eq(key, k) then v else assoc(key, xs)
+d96 1
+a96 1
+    fun lookup(ref (elt_array,_), key) =
+d98 1
+a98 1
+	val hash = S.hash key
+d102 1
+a102 1
+	!(assoc(key, list_map))
+d107 3
+a109 3
+    fun assoc_default(_, []) = NO
+      | assoc_default(key, (k, _, ref v) :: xs) =
+	if S.eq(key, k) 
+d111 1
+a111 1
+        else assoc_default(key, xs)
+d113 1
+a113 1
+    fun tryLookup(ref (elt_array,_),key) =
+d115 1
+a115 1
+	val hash = S.hash key
+d119 1
+a119 1
+        assoc_default(key,list_map)
+d127 1
+a127 1
+    fun iterate_hash f (arr,_) =
+d138 1
+a138 1
+    fun fold f (res, ref (arr,_)) =
+d163 3
+a165 3
+    fun assoc_default'(_, []) = NO
+      | assoc_default'(key, (k, _, v) :: xs) =
+	if S.eq(key, k) 
+d167 1
+a167 1
+        else assoc_default'(key, xs)
+d169 1
+a169 1
+    fun update(initial as ref (elt_array,count_down), key, value) =
+d171 1
+a171 1
+	val hash = S.hash key
+d175 1
+d177 18
+a194 18
+        case assoc_default'(key, list_map) of
+          YES r => r := value
+        | NO => 
+            (if !count_down <= 0
+               then 
+                 let
+                   val _ = if print_debug 
+                             then output(std_out,"Resizing " ^ makestring(old_size) ^ "...\n")
+                           else ()
+                   val new_size = old_size * expansion_ratio
+                   val new_arr = Array.array(new_size, [] : (Key * HashValue * Value ref) list)
+                   val _ = initial := (new_arr,ref(max_size_ratio * new_size - old_size + !count_down - 1))
+                   fun deal_with_elements index = 
+                     if index < 0
+                       then ()
+                     else
+                       let
+                         val elems = Array.sub(elt_array,index)
+d225 1
+a225 1
+                   Array.update(elt_array, pos, (key, hash,ref value) :: list_map)))
+d228 3
+a230 3
+    fun delete_from_list(key, [], acc) = (acc, false)
+      | delete_from_list(key, (elt as (k, _, _)) :: rest, acc) =
+	if S.eq(key, k) then
+d233 1
+a233 1
+	  delete_from_list(key, rest, elt :: acc)
+d235 1
+a235 1
+    fun delete(ref (elt_array,count_down), key) =
+d237 1
+a237 1
+	val hash = S.hash key
+d241 1
+a241 1
+	val (list_map, found) = delete_from_list(key, list_map, [])
+d267 1
+a267 1
+    fun to_list(ref (elt_array,_)) =
+d280 1
+a280 1
+    fun copy(ref (elt_array,count_down)) =
+d283 1
+a283 1
+	val new_array = Array.array(len, [] : (Key * HashValue * Value ref) list)
+d286 9
+a294 1
+	ref (new_array,ref(!count_down))
+d297 1
+a297 1
+    fun stats(ref (arr,_)) = 
+@
+
+
+1.10
+log
+@Added a lookup_default function to assign a default value when the
+key is not found
+@
+text
+@d4 4
+d76 9
+a84 4
+    val expansion_ratio = 2 (* If you change this from a power of two,
+                               then you won't be able to do andb but will
+                               need to use mod again !!!! *)
+    val max_size_ratio = 4
+d108 4
+a111 2
+      | assoc_default(key, (k, _, v) :: xs) =
+	if S.eq(key, k) then YES v else assoc_default(key, xs)
+d113 1
+a113 1
+    fun lookup_default(ref (elt_array,_), value, key) =
+d119 1
+a119 3
+	case assoc_default(key, list_map) of
+	  YES(ref res) => res
+	| _ => value
+d122 4
+d163 5
+a167 10
+    fun unsafe_update(elt_array, key, hashvalue, value) =
+      let
+	val len = Array.length elt_array
+	val pos = Bits.andb(hashvalue,len-1)
+	val list_map = Array.sub(elt_array, pos)
+      in
+	(assoc(key, list_map) := value;
+	 ()) handle Lookup _ =>
+               Array.update(elt_array, pos, (key, hashvalue, ref value) :: list_map)
+      end
+d172 2
+a173 2
+	val len = Array.length elt_array
+	val pos = Bits.andb(hash,len-1)
+d176 49
+a224 18
+	(assoc(key, list_map) := value;
+	 ()) handle Lookup _ =>
+        (if !count_down = 0
+           then 
+             let
+               val _ = if print_debug 
+                         then output(std_out,"Resizing " ^ makestring(len) ^ "...\n")
+                       else ()
+               val new_size = len * expansion_ratio
+               val new_arr = Array.array(new_size, [] : (Key * HashValue * Value ref) list)
+               val old = ! initial
+               val _ = initial := (new_arr,ref(max_size_ratio * new_size))
+             in
+               iterate_hash (fn (key,hashvalue,value) => unsafe_update(new_arr,key,hashvalue,value)) old;
+               unsafe_update(new_arr,key,hash,value)
+             end
+         else (count_down := !count_down - 1;
+               Array.update(elt_array, pos, (key, hash,ref value) :: list_map)))
+@
+
+
+1.9
+log
+@Changed MLWorks.Bits to Bits to improve performance under
+New Jersey.
+@
+text
+@d4 4
+d95 18
+@
+
+
+1.8
+log
+@Don't recalculate hash function on resize
+@
+text
+@d4 3
+d87 1
+a87 1
+	val list_map = Array.sub(elt_array, MLWorks.Bits.andb(hash,len-1))
+d131 1
+a131 1
+	val pos = MLWorks.Bits.andb(hashvalue,len-1)
+d143 1
+a143 1
+	val pos = MLWorks.Bits.andb(hash,len-1)
+d177 1
+a177 1
+	val pos = MLWorks.Bits.andb(hash,len-1)
+@
+
+
+1.7
+log
+@Added fold and iterate functions.
+@
+text
+@d4 3
+d50 1
+a50 1
+    type HashTable = ((Key * Value ref) list Array.array * int ref) ref
+d52 3
+d73 2
+a74 1
+      ref(Array.array(initial_size, [] : (Key * Value ref) list),ref(max_size_ratio * initial_size))
+d77 1
+a77 1
+      | assoc(key, (k, v) :: xs) =
+d93 1
+a93 1
+          else (S.Lists.iterate (fn (k, ref v) => f(k,v)) (Array.sub(arr,x)); down (x-1))
+d98 1
+a98 1
+    fun iterate f (ref h) = iterate_hash f h
+d106 1
+a106 1
+	    down(S.Lists.reducel (fn (res, (k, ref v)) => f(res, k, v)) (res, Array.sub(arr,x)), x-1)
+d125 11
+d152 1
+a152 1
+               val new_arr = (Array.array(new_size, [] : (Key * Value ref) list),ref(max_size_ratio * new_size))
+d154 1
+a154 1
+               val _ = initial := new_arr
+d156 2
+a157 2
+               iterate_hash (fn (key,value) => update(initial,key,value)) old;
+               update(initial,key,value)
+d160 1
+a160 1
+               Array.update(elt_array, pos, (key, ref value) :: list_map)))
+d164 1
+a164 1
+      | delete_from_list(key, (elt as (k, _)) :: rest, acc) =
+d197 1
+a197 1
+	  val set = map (fn (x,ref y) => (x,y)) (Array.sub(elts, pos))
+d218 1
+a218 1
+	val new_array = Array.array(len, [] : (Key * Value ref) list)
+@
+
+
+1.6
+log
+@Changed MLworks to MLWorks.
+@
+text
+@d4 3
+d41 1
+a41 16
+) : sig
+      type HashTable
+      type Key
+      type Value
+      sharing type Key = S.Key and type Value = S.Value
+      exception Lookup of Key
+      val new : unit -> HashTable
+      val lookup : (HashTable * Key) -> Value
+      val update : (HashTable * Key * Value) -> unit
+      val delete : (HashTable * Key) -> unit
+      val to_list : HashTable -> (Key * Value) list
+      val copy : HashTable -> HashTable
+      val stats : HashTable -> {size:int, count:int, smallest:int, largest:int}
+      val string_hash_table_stats : HashTable -> string
+    end
+  =
+d47 1
+a47 2
+    type HashTable =
+      ((Key * Value ref) list Array.array * int ref) ref
+d79 1
+a79 1
+	! (assoc(key, list_map))
+d82 1
+a82 1
+    fun map_over_hash f (arr,_) =
+a83 2
+        fun map_over [] = ()
+          | map_over(h::t) = (f h; map_over t)
+d85 13
+a97 2
+          if x<0
+            then ()
+d99 1
+a99 6
+            let
+              val els = Array.sub(arr,x) 
+            in
+              map_over els ;
+              down (x-1)
+            end
+d101 1
+a101 1
+        down (Array.length arr - 1)
+d138 1
+a138 1
+               map_over_hash (fn (key,ref value) => update(initial,key,value)) old;
+@
+
+
+1.5
+log
+@Now uses MLworks structure instead of NewJersey structure.
+@
+text
+@d4 3
+d90 1
+a90 1
+	val list_map = Array.sub(elt_array, MLworks.Bits.andb(hash,len-1))
+d131 1
+a131 1
+	val pos = MLworks.Bits.andb(hash,len-1)
+d165 1
+a165 1
+	val pos = MLworks.Bits.andb(hash,len-1)
+@
+
+
+1.4
+log
+@Added some functionality including the printing of statistics, and resizing
+@
+text
+@d4 3
+d87 1
+a87 1
+	val list_map = Array.sub(elt_array, NewJersey.Bits.andb(hash,len-1))
+d128 1
+a128 1
+	val pos = NewJersey.Bits.andb(hash,len-1)
+d162 1
+a162 1
+	val pos = NewJersey.Bits.andb(hash,len-1)
+@
+
+
+1.3
+log
+@Removed count from tables. Allows better imperative use
+@
+text
+@d4 3
+d44 2
+d54 1
+a54 1
+      (Key * Value) list Array.array ref
+d56 15
+a72 3
+    val max_size = 16384
+    (* A safe amount by which to reduce during hash calculation *)
+
+d74 1
+a74 1
+      ref(Array.array(S.size, [] : (Key * Value) list))
+d80 1
+a80 1
+    fun lookup(ref elt_array, key) =
+d84 1
+a84 1
+	val list_map = Array.sub(elt_array, hash mod len)
+d86 1
+a86 1
+	assoc(key, list_map)
+d89 1
+a89 1
+    fun update(ref elt_array, key, value) =
+d91 32
+d125 1
+a125 1
+	val pos = hash mod len
+d128 1
+a128 1
+	(assoc(key, list_map);
+d130 16
+a145 1
+	  Array.update(elt_array, pos, (key, value) :: list_map)
+d155 1
+a155 1
+    fun delete(ref elt_array, key) =
+d159 1
+a159 1
+	val pos = hash mod len
+d162 1
+d174 1
+a174 1
+    fun empty_setp(ref elt_array) =
+d182 1
+a182 1
+	  val set = Array.sub(elts, pos)
+d187 1
+a187 1
+    fun to_list(ref elt_array) =
+d200 1
+a200 1
+    fun copy(ref elt_array) =
+d203 1
+a203 1
+	val new_array = Array.array(len, [] : (Key * Value) list)
+d206 1
+a206 1
+	ref new_array
+d208 50
+a257 1
+  
+@
+
+
+1.2
+log
+@Removed array parameter, now uses pervasive one
+@
+text
+@d4 3
+d49 1
+a49 1
+      {count : int, elts: (Key * Value) list Array.array ref}
+d57 1
+a57 1
+      {count=0, elts = ref(Array.array(S.size, [] : (Key * Value) list))}
+d63 8
+a70 9
+    fun lookup({count = count, elts = ref elt_array}, key) =
+      if count = 0 then raise Lookup key
+      else
+	let
+	  val hash = S.hash key
+	  val list_map = Array.sub(elt_array, hash mod S.size)
+	in
+	  assoc(key, list_map)
+	end
+d72 1
+a72 2
+    fun update(table as {count = count, elts = elts as ref elt_array}, key,
+	       value) =
+d75 2
+a76 1
+	val pos = hash mod S.size
+d91 13
+a103 2
+    fun delete(table as {count=count, elts=elts as ref elt_array}, key) =
+      if count = 0 then ()
+d105 3
+a107 8
+	let
+	  val hash = S.hash key
+	  val pos = hash mod S.size
+	  val list_map = Array.sub(elt_array, pos)
+	  val (list_map, found) = delete_from_list(key, list_map, [])
+	in
+	  Array.update(elt_array, pos, list_map)
+	end
+d109 2
+a110 1
+    fun empty_setp({count=count, ...} : HashTable) = count = 0
+d112 2
+a113 2
+    fun add_members(pos:int, mems, elts) =
+      if pos >= S.size then
+d119 1
+a119 1
+	  add_members(pos+1, set @@ mems, elts)
+d122 2
+a123 1
+    fun to_list{count=_, elts = ref elt_array} = add_members(0, [], elt_array)
+d135 1
+a135 1
+    fun copy{count = count, elts = ref elt_array} =
+d141 1
+a141 1
+	{count=count, elts = ref new_array}
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+a11 1
+require "array";
+a17 1
+	structure Array : ARRAY
+@

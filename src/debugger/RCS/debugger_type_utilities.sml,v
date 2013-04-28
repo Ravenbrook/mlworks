@@ -1,0 +1,290 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.10
+	ML_final_beta_release_02/03/94:1.10
+	mlworks-28-01-1994:1.10
+	Release:1.9
+	mlworks-beta-01-09-1993:1.9
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.10
+date	93.12.09.19.27.33;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.03.10.16.58.33;	author matthew;	state Exp;
+branches
+	1.9.1.1;
+next	1.8;
+
+1.8
+date	93.03.04.13.10.30;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.02.04.14.16.17;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.11.10.13.30.08;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.10.12.11.22.02;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.31.14.29.48;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.21.09.59.22;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.16.16.54.31;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.09.09.43.28;	author clive;	state Exp;
+branches;
+next	;
+
+1.9.1.1
+date	93.03.10.16.58.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initial version
+@
+
+
+1.10
+log
+@Added copyright message
+@
+text
+@(* debugger_type_utilities the signature *)
+(*
+$Log: debugger_type_utilities.sml,v $
+Revision 1.9  1993/03/10  16:58:33  matthew
+Signature revisions
+
+Revision 1.8  1993/03/04  13:10:30  matthew
+Options & Info changes
+
+Revision 1.7  1993/02/04  14:16:17  matthew
+Removed Info substructure
+
+Revision 1.6  1992/11/10  13:30:08  matthew
+Changed Error structure to Info
+
+Revision 1.5  1992/10/12  11:22:02  clive
+Tynames now have a slot recording their definition point
+
+Revision 1.4  1992/07/31  14:29:48  clive
+Handles the propogation of types better
+
+Revision 1.3  1992/07/21  09:59:22  clive
+More work on the debugger
+
+Revision 1.2  1992/07/16  16:54:31  clive
+Added utilites for the polymorphic deduction code
+
+Revision 1.1  1992/07/09  09:43:28  clive
+Initial revision
+
+ * Copyright (c) 1993 Harlequin Ltd.
+*)
+
+require "debugger_types";
+
+signature DEBUGGER_TYPE_UTILITIES =
+  sig
+    structure Debugger_Types : DEBUGGER_TYPES
+
+    val slim_down_a_type : Debugger_Types.Type -> Debugger_Types.Type
+
+    val is_type_polymorphic : Debugger_Types.Type -> bool
+
+    val generate_recipe :
+      Debugger_Types.Type * Debugger_Types.Type * string * bool -> 
+      Debugger_Types.Backend_Annotation * bool
+
+    exception RecipeApplicationProblem of string
+
+    val apply_recipe : Debugger_Types.Backend_Annotation  * Debugger_Types.Type
+                             -> Debugger_Types.Type
+
+    exception InValidMatch of string
+
+    val check_type : Debugger_Types.Type * Debugger_Types.Type
+                             -> Debugger_Types.Type
+
+  end
+@
+
+
+1.9
+log
+@Signature revisions
+@
+text
+@d4 3
+d31 1
+@
+
+
+1.9.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.9  1993/03/10  16:58:33  matthew
+Signature revisions
+
+@
+
+
+1.8
+log
+@Options & Info changes
+@
+text
+@d4 3
+d35 2
+a36 1
+    val slim_down_a_type : Debugger_Types.Datatypes.Type -> Debugger_Types.Datatypes.Type
+d38 1
+a38 1
+    val is_type_polymorphic : Debugger_Types.Datatypes.Type -> bool
+d41 1
+a41 1
+      Debugger_Types.Datatypes.Type * Debugger_Types.Datatypes.Type * string * bool -> 
+d46 2
+a47 2
+    val apply_recipe : Debugger_Types.Backend_Annotation  * Debugger_Types.Datatypes.Type
+                             -> Debugger_Types.Datatypes.Type
+d51 2
+a52 2
+    val check_type : Debugger_Types.Datatypes.Type * Debugger_Types.Datatypes.Type
+                             -> Debugger_Types.Datatypes.Type
+@
+
+
+1.7
+log
+@Removed Info substructure
+@
+text
+@d4 3
+a36 1
+      Debugger_Types.Info.options -> 
+@
+
+
+1.6
+log
+@Changed Error structure to Info
+@
+text
+@d4 3
+a23 2
+require "../typechecker/types";
+require "../main/info";
+a28 2
+    structure Info : INFO
+
+d33 4
+a36 2
+    val generate_recipe : Info.options -> Debugger_Types.Datatypes.Type * Debugger_Types.Datatypes.Type * string * bool
+                             -> Debugger_Types.Backend_Annotation * bool
+@
+
+
+1.5
+log
+@Tynames now have a slot recording their definition point
+@
+text
+@d4 3
+d22 1
+d28 1
+d34 1
+a34 1
+    val generate_recipe : Debugger_Types.Datatypes.Type * Debugger_Types.Datatypes.Type * string * bool
+@
+
+
+1.4
+log
+@Handles the propogation of types better
+@
+text
+@d4 3
+d37 1
+a37 1
+    exception InValidMatch
+@
+
+
+1.3
+log
+@More work on the debugger
+@
+text
+@d4 3
+d29 2
+d33 2
+@
+
+
+1.2
+log
+@Added utilites for the polymorphic deduction code
+@
+text
+@d4 3
+d23 2
+a24 2
+    val generate_recipe : Debugger_Types.Datatypes.Type * Debugger_Types.Datatypes.Type 
+                             -> Debugger_Types.Backend_Annotation
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log: $
+d16 1
+a16 1
+    val slim_down_a_type : Debugger_Types.Types.Datatypes.Type -> Debugger_Types.Types.Datatypes.Type
+d18 3
+a20 1
+    val generate_recipe : Debugger_Types.Types.Datatypes.Type * Debugger_Types.Types.Datatypes.Type 
+d22 7
+@

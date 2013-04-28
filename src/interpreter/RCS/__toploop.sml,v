@@ -1,0 +1,348 @@
+head	1.10;
+access;
+symbols
+	mlworks-28-01-1994:1.10
+	Release:1.10
+	mlworks-beta-01-09-1993:1.10
+	MLWorks-1-0-4-29/01/1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.10
+	MLWorks-1-0-2-15/12/1992:1.10
+	MLWorks-1-0-1-04/12/1992:1.10
+	checkpoint_17_08_92:1.6;
+locks; strict;
+
+
+1.10
+date	92.10.08.15.11.51;	author clive;	state Exp;
+branches
+	1.10.1.1;
+next	1.9;
+
+1.9
+date	92.08.24.17.04.47;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.20.10.23.30;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.17.16.07.09;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.13.14.55.38;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.23.17.47.31;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.22.16.23.32;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.08.15.19.14;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.03.19.21.01;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.01.17.33.31;	author jont;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	92.10.08.15.11.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@structure form of top level loop
+@
+
+
+1.10
+log
+@Made compatible with the new shell
+@
+text
+@(* __toploop.sml the structure *)
+(*
+$Log: __toploop.sml,v $
+Revision 1.9  1992/08/24  17:04:47  matthew
+Added lists structure
+
+Revision 1.8  1992/08/20  10:23:30  matthew
+Extracted low level parts to topaux.
+
+Revision 1.7  1992/08/17  16:07:09  clive
+Needs integer and error
+
+Revision 1.6  1992/08/13  14:55:38  clive
+Changes to reflect lower level sharing changes
+
+Revision 1.5  1992/07/23  17:47:31  jont
+Added Unix parameter
+
+Revision 1.4  1992/07/22  16:23:32  jont
+Added Io, Recompile and TopdecPrint parameters
+
+Revision 1.3  1992/07/08  15:19:14  clive
+Debugger support added
+
+Revision 1.2  1992/07/03  19:21:01  jont
+Added pervasive parameter
+
+Revision 1.1  1992/07/01  17:33:31  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/__print";
+require "../utils/__integer";
+require "../utils/__lists";
+require "../utils/__btree";
+require "../main/__toplevel";
+require "../main/__io";
+require "../make/__recompile";
+require "../make/__unix";
+require "../debugger/__ml_debugger";
+require "__topaux";
+require "_toploop";
+
+structure TopLoop_ = TopLoop(
+  structure Print = Print_
+  structure Integer = Integer_
+  structure Lists = Lists_
+  structure NewMap = BTree_
+  structure TopLevel = TopLevel_
+  structure Io = Io_
+  structure Recompile = Recompile_
+  structure Unix = Unix_
+  structure TopAux = TopAux_
+  structure Ml_Debugger = Ml_Debugger_
+)
+
+
+@
+
+
+1.10.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.10  1992/10/08  15:11:51  clive
+Made compatible with the new shell
+
+@
+
+
+1.9
+log
+@Added lists structure
+@
+text
+@d4 3
+d42 1
+d56 1
+@
+
+
+1.8
+log
+@Extracted low level parts to topaux.
+@
+text
+@d4 3
+d33 1
+d45 1
+@
+
+
+1.7
+log
+@Needs integer and error
+@
+text
+@d4 3
+a27 1
+require "../utils/__crash";
+a28 1
+require "../utils/__lists";
+a30 25
+require "../basics/__symbol";
+require "../basics/__ident";
+require "../basics/__identprint";
+require "../lexer/__lexer";
+require "../parser/__parser";
+require "../typechecker/__basis";
+require "../typechecker/__valenv";
+require "../typechecker/__scheme";
+require "../typechecker/__types";
+require "../typechecker/__datatypes";
+require "../typechecker/__mod_rules";
+require "../typechecker/__errors";
+require "../lambda/__lambdatypes";
+require "../lambda/__lambdaprint";
+require "../lambda/__environtypes";
+require "../lambda/__environ";
+require "../lambda/__environprint";
+require "../lambda/__lambdaoptimiser";
+require "../lambda/__topdecprint";
+require "../mir/__mir_cg";
+require "../mir/__mirprint";
+require "../mir/__miroptimiser";
+require "../machine/__machtypes";
+require "../machine/__mach_cg";
+require "../main/__pervasives";
+d35 1
+a35 5
+require "../debugger/__value_printer";
+require "../debugger/__get_type_information";
+require "../debugger/__ml_debugger";
+require "__str_print";
+require "__inter_envtypes";
+a38 1
+  structure Crash = Crash_
+a39 1
+  structure Lists = Lists_
+a41 27
+  structure Symbol = Symbol_
+  structure Ident = Ident_
+  structure IdentPrint = IdentPrint_
+  structure Lexer = Lexer_
+  structure Parser = Parser_
+  structure Basis = Basis_
+  structure Valenv = Valenv_
+  structure Scheme = Scheme_
+  structure Types = Types_
+  structure Errors = Errors_
+  structure Datatypes = Datatypes_
+  structure Mod_Rules = Module_rules_
+  structure LambdaTypes = LambdaTypes_
+  structure LambdaPrint = LambdaPrint_
+  structure EnvironTypes = EnvironTypes_
+  structure Environ = Environ_
+  structure EnvironPrint = EnvironPrint_
+  structure TopdecPrint = TopdecPrint_
+  structure LambdaOptimiser = LambdaOptimiser_
+  structure Mir_Cg = Mir_Cg_
+  structure MirPrint = MirPrint_
+  structure MirOptimiser = MirOptimiser_
+  structure MachTypes = MachTypes_
+  structure Mach_Cg = Mach_Cg_
+  structure Value_Printer = ValuePrinter_
+  structure GetTypeInformation = GetTypeInformation_
+  structure Pervasives = Pervasives_
+a42 3
+  structure Str_Print = Str_Print_
+  structure Ml_Debugger = Ml_Debugger_
+  structure Inter_EnvTypes = Inter_EnvTypes_
+d46 1
+@
+
+
+1.6
+log
+@Changes to reflect lower level sharing changes
+@
+text
+@d4 3
+d28 1
+d41 1
+d70 1
+d81 1
+@
+
+
+1.5
+log
+@Added Unix parameter
+@
+text
+@d4 3
+a25 1
+require "../utils/__string";
+d28 1
+d68 1
+a94 1
+  structure String = String_
+@
+
+
+1.4
+log
+@Added Io, Recompile and TopdecPrint parameters
+@
+text
+@d4 3
+d50 1
+d95 1
+@
+
+
+1.3
+log
+@Debugger support added
+@
+text
+@d4 3
+a35 1
+require "../interpreter/__inter_envtypes";
+d37 1
+d45 2
+d51 1
+a51 1
+
+d74 1
+a74 1
+  structure Inter_EnvTypes = Inter_EnvTypes_
+d88 3
+@
+
+
+1.2
+log
+@Added pervasive parameter
+@
+text
+@d4 3
+d17 1
+d40 2
+d44 1
+a44 2
+require "../main/__pervasives";
+require "../main/__toplevel";
+d46 1
+d81 2
+d84 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d37 2
+d71 2
+@

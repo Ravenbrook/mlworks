@@ -1,0 +1,509 @@
+head	1.5;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.5.1
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.5
+	MLWorks_20b0_1998_03_20:1.5
+	MLWorks_20m2_1998_02_16:1.4
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_11r1:1.3.1.1.1.2.1
+	MLWorks_workspace_97:1.4.2
+	MLWorks_dt_wizard:1.4.1
+	MLWorks_11c0_1997_09_09:1.3.1.1.1.2
+	MLWorks_10r3:1.3.1.1.3
+	MLWorks_10r2_551:1.3.1.1.2
+	MLWorks_11:1.3.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.3.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.3.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.3.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.3.1
+	MLWorks_BugFix_1997_04_24:1.3
+	MLWorks_1_0_r2_Win32_1997_04_11:1.3
+	MLWorks_1_0_r2_Unix_1997_04_04:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	98.02.19.16.17.28;	author mitchell;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	97.08.08.16.15.10;	author brucem;	state Exp;
+branches
+	1.4.1.1
+	1.4.2.1;
+next	1.3;
+
+1.3
+date	97.03.06.17.44.24;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	97.01.21.18.29.05;	author io;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.01.14.10.37.06;	author io;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	97.05.12.10.27.44;	author hope;	state Exp;
+branches
+	1.3.1.1.1.1
+	1.3.1.1.2.1
+	1.3.1.1.3.1;
+next	;
+
+1.3.1.1.1.1
+date	97.07.28.18.13.27;	author daveb;	state Exp;
+branches;
+next	1.3.1.1.1.2;
+
+1.3.1.1.1.2
+date	97.08.12.08.49.10;	author johnh;	state Exp;
+branches
+	1.3.1.1.1.2.1.1;
+next	;
+
+1.3.1.1.1.2.1.1
+date	97.10.07.11.38.36;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.3.1.1.2.1
+date	97.09.08.17.06.48;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.1.1.3.1
+date	97.09.09.14.02.10;	author daveb;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	97.09.10.19.16.36;	author brucem;	state Exp;
+branches;
+next	;
+
+1.4.2.1
+date	97.09.11.20.46.43;	author daveb;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	99.04.01.17.52.16;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #1757]
+renamed __charvector to __char_vector
+@
+
+
+1.5
+log
+@[Bug #30349]
+Fix to avoid non-unit sequence warnings
+@
+text
+@(*  ==== INITIAL BASIS : charvector structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __char_vector.sml,v $
+ *  Revision 1.4  1997/08/08  16:15:10  brucem
+ *  [Bug #30086]
+ *  Add map and mapi.
+ *
+ *  Revision 1.3  1997/03/06  17:44:24  jont
+ *  [Bug #1938]
+ *  Get rid of nasty stuff from __pre_basis
+ *
+ *  Revision 1.2  1997/01/21  18:29:05  io
+ *  [Bug #1892]
+ *  update comment
+ *
+ *  Revision 1.1  1997/01/14  10:37:06  io
+ *  new unit
+ *  [Bug #1757]
+ *  renamed __charvector to __char_vector
+ *
+ * Revision 1.7  1996/11/04  16:45:03  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+ * Revision 1.6  1996/10/21  15:22:18  jont
+ * Remove references to basis.toplevel
+ *
+ * Revision 1.5  1996/10/03  13:15:35  io
+ * [Bug #1614]
+ * convert MLWorks.String
+ *
+ * Revision 1.4  1996/05/21  12:24:27  matthew
+ * UPdating
+ *
+ * Revision 1.3  1996/05/15  13:07:57  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.2  1996/05/01  11:33:58  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.1  1996/04/18  11:25:09  jont
+ * new unit
+ *
+ *  Revision 1.4  1995/05/16  14:37:01  daveb
+ *  Removed commented out old code.
+ *
+ *  Revision 1.1  1995/04/13  16:40:38  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "mono_vector";
+require "__string";
+require "__pre_basis";
+
+structure CharVector : MONO_VECTOR =
+  struct
+    type elem = char
+
+    (* The rest is directly copied from __word8_vector *)
+    type vector = string 
+    val maxLen = PreBasis.maxSize + 1
+    fun check_size n = if n < 0 orelse n > maxLen then raise Size else n
+    val toint : elem -> int = ord
+    val fromint : int -> elem = chr
+
+    (* vector creation functions *)
+    fun fromList x = (ignore(check_size (length x)); implode x)
+    fun tabulate(len, f) =
+      let
+	val _ = check_size len
+	fun next(n, acc) =
+	  if n = len then acc else next(n+1, (f n) :: acc)
+      in
+	implode(rev(next(0, [])))
+      end
+
+    val length = size
+    fun sub (v,i) = 
+      if i < 0 orelse i >= size v
+        then raise Subscript
+(*
+      else fromint(unsafe_string_sub (v,i))
+*)
+      else String.sub(v, i)
+
+    fun check_slice (array,i,SOME j) =
+      if i < 0 orelse j < 0 orelse i + j > length array
+        then raise Subscript
+      else j
+      | check_slice (array,i,NONE) =
+        let
+          val l = length array
+        in
+          if i < 0 orelse i > l
+            then raise Subscript
+          else l - i
+        end
+
+    val extract = 
+      fn (s,i,len) =>
+      let
+        val len = check_slice (s,i,len)
+      in 
+        String.substring (s,i,len)
+      end
+    val concat = concat
+
+    fun appi f (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun iterate n =
+	  if n >= l then
+	    ()
+	  else
+	    (ignore(f(n, sub(vector, n)));
+	     iterate(n+1))
+      in
+	iterate i
+      end
+
+    fun app f vector =
+      let
+	val l = length vector
+	fun iterate n =
+	  if n = l then
+	    ()
+	  else
+	    (ignore(f(sub(vector, n)));
+	     iterate(n+1))
+      in
+	iterate 0
+      end
+
+    fun foldl f b vector =
+      let
+	val l = length vector
+	fun reduce(n, x) =
+	  if n = l then
+	    x
+	  else
+	    reduce(n+1, f(sub(vector, n), x))
+      in
+	reduce(0, b)
+      end
+
+    fun foldr f b vector =
+      let
+	val l = length vector
+	fun reduce(n, x) =
+	  if n < 0 then
+	    x
+	  else
+	    reduce(n-1, f(sub(vector, n), x))
+      in
+	reduce(l-1, b)
+      end
+
+    fun foldli f b (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce(n, x) =
+	  if n >= len then
+	    x
+	  else
+	    reduce(n+1, f(n, sub(vector, n), x))
+      in
+	reduce(0, b)
+      end
+
+    fun foldri f b (vector, i, j) =
+      let
+	val l = length vector
+	val len = case j of
+	  SOME len => i+len
+	| NONE => l
+	fun reduce(n, x) =
+	  if n < 0 then
+	    x
+	  else
+	    reduce(n-1, f(n, sub(vector, n), x))
+      in
+	reduce(len-1, b)
+      end
+
+    val map = String.map and mapi = String.mapi
+
+  end
+@
+
+
+1.5.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a9 4
+ *  Revision 1.5  1998/02/19  16:17:28  mitchell
+ *  [Bug #30349]
+ *  Fix to avoid non-unit sequence warnings
+ *
+@
+
+
+1.4
+log
+@[Bug #30086]
+Add map and mapi.
+@
+text
+@d10 4
+d79 1
+a79 1
+    fun fromList x = (check_size (length x); implode x)
+d130 1
+a130 1
+	    (f(n, sub(vector, n));
+d143 1
+a143 1
+	    (f(sub(vector, n));
+@
+
+
+1.4.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a9 4
+ *  Revision 1.4  1997/08/08  16:15:10  brucem
+ *  [Bug #30086]
+ *  Add map and mapi.
+ *
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@a9 4
+ *  Revision 1.4  1997/08/08  16:15:10  brucem
+ *  [Bug #30086]
+ *  Add map and mapi.
+ *
+@
+
+
+1.3
+log
+@[Bug #1938]
+Get rid of nasty stuff from __pre_basis
+@
+text
+@d10 4
+d198 3
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a9 4
+ *  Revision 1.3  1997/03/06  17:44:24  jont
+ *  [Bug #1938]
+ *  Get rid of nasty stuff from __pre_basis
+ *
+@
+
+
+1.3.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a9 3
+ *  Revision 1.3.1.1  1997/05/12  10:27:44  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a9 3
+ *  Revision 1.3.1.1  1997/05/12  10:27:44  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a9 3
+ *  Revision 1.3.1.1  1997/05/12  10:27:44  hope
+ *  branched from 1.3
+ *
+@
+
+
+1.3.1.1.1.2
+log
+@[Bug #30086]
+Merging - add map and mapi.
+@
+text
+@a9 3
+ *  Revision 1.3.1.1.1.1  1997/07/28  18:13:27  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+a200 3
+
+    val map = String.map and mapi = String.mapi
+
+@
+
+
+1.3.1.1.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a9 4
+ *  Revision 1.3.1.1.1.2  1997/08/12  08:49:10  johnh
+ *  [Bug #30086]
+ *  Merging - add map and mapi.
+ *
+@
+
+
+1.2
+log
+@[Bug #1892]
+update comment
+@
+text
+@d10 4
+d67 2
+a68 2
+    val toint : elem -> int = cast
+    val fromint : int -> elem = cast
+@
+
+
+1.1
+log
+@new unit
+[Bug #1757]
+renamed __charvector to __char_vector
+@
+text
+@d9 6
+a14 1
+ *  $Log: __charvector.sml,v $
+d59 1
+a59 1
+    (* The rest is directly copied from __word8vector *)
+@

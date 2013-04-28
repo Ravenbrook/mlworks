@@ -1,0 +1,126 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.3;
+locks; strict;
+
+
+1.3
+date	92.08.13.16.10.45;	author davidt;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.05.01.14.16.26;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.04.28.15.12.33;	author clive;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.08.13.16.10.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initial version
+@
+
+
+1.3
+log
+@NO LONGER IN USE. Commented out code so that a parse
+error is generated if the file is used.
+@
+text
+@(*
+$Log: hashtable-with-extras.sml,v $
+Revision 1.2  1992/05/01  14:16:26  clive
+Make the hash generator function take more useful diagnostic information
+
+Revision 1.1  1992/04/28  15:12:33  clive
+Initial revision
+
+
+ This is just like the standard hashtable functor, but it notices when a bucket is getting too full
+ and trys to adjust the hash function to compensate
+
+*)
+
+signature (*HASHTABLE' =
+  sig
+    type Key
+    type Value
+    exception Lookup of Key
+    val clear : unit -> unit
+    val lookup : Key -> Value
+    val update : Key * Value -> unit
+    val stats : unit -> {size : int, count : int, 
+			 smallest : int, largest : int, used : int,
+                         largest_row_contents : (Key * Value) list}
+  end
+
+
+signature HASHSPEC' =
+  sig
+    type Key
+    type Value
+    val size : int
+    val hash_generator : (int * (unit -> Key list)) -> ((Key -> int) * bool)
+    val eq : Key * Key -> bool
+    val maximum_bucket_size : int
+  end
+*)
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a2 4
+Revision 1.3  1992/08/13  16:10:45  davidt
+NO LONGER IN USE. Commented out code so that a parse
+error is generated if the file is used.
+
+@
+
+
+1.2
+log
+@Make the hash generator function take more useful diagnostic information
+@
+text
+@d3 3
+d15 1
+a15 1
+signature HASHTABLE' =
+d38 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 2
+d6 1
+d31 1
+a31 1
+    val hash_generator : int -> ((Key -> int) * bool)
+@

@@ -1,0 +1,118 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.05.28.15.27.02;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.16.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications/tests into hope
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ * $Log$
+ *)               
+
+       (* Further examples of LIMITS and COLIMITS in FinSet *)
+
+
+                 (* Tends to run fairly slowly ! *)
+
+   (* An example DIAGRAM *)
+
+    val G = let val N = set([word "a",word "b",word "c",word "d"]);
+                val E = set([word "f",word "g",word "h", word "i"]);;
+                fun src (word "f") = word "a"
+                  | src (word "g") = word "b"
+                  | src (word "h") = word "a"
+                  | src (word "i") = word "b"
+		  | src _ = raise Match;
+                fun tgt (word "f") = word "c" 
+                  | tgt (word "g") = word "c"
+                  | tgt (word "h") = word "d"
+                  | tgt (word "i") = word "d"
+		  | tgt _ = raise Match
+            in graph(N,E,src,tgt) end;
+
+    val d_set = set([just "A",just "B",just "C",just "D"]);
+
+    fun f_fn (just "A") = just "B"
+      | f_fn (just "B") = just "B" 
+      | f_fn (just "C") = just "E" 
+      | f_fn (just "D") = just "F"
+      | f_fn _ = raise Match;
+    fun g_fn (just "C") = just "B"
+      | g_fn (just "D") = just "F"
+      | g_fn (just "E") = just "B" 
+      | g_fn (just "F") = just "E"
+      | g_fn (just "G") = just "F"
+      | g_fn _ = raise Match;
+    fun h_fn (x) = x;
+    fun i_fn (just "C") = just "A"
+      | i_fn (just "D") = just "A" 
+      | i_fn (just "E") = just "B"
+      | i_fn (just "F") = just "C" 
+      | i_fn (just "G") = just "D"
+      | i_fn _ = raise Match;
+
+    fun nodes_to_sets (word "a") = a_set
+      | nodes_to_sets (word "b") = b_set
+      | nodes_to_sets (word "c") = c_set
+      | nodes_to_sets (word "d") = d_set
+      | nodes_to_sets _ = raise Match;
+    fun edges_to_arrows (word "f") = 
+              set_mor(a_set,f_fn,c_set) 
+      | edges_to_arrows (word "g") = 
+              set_mor(b_set,g_fn,c_set)
+      | edges_to_arrows (word "h") = 
+              set_mor(a_set,h_fn,d_set)
+      | edges_to_arrows (word "i") = 
+              set_mor(b_set,i_fn,d_set)
+      | edges_to_arrows _ = raise Match;
+
+    val D = diagram(G,nodes_to_sets,edges_to_arrows);
+
+       (* COLIMIT of D *)
+
+    let val cocomplete_cat(_,set_colimit) =  cocomplete_FinSet () in
+         set_colimit(D) end;
+
+       (* LIMIT of D *)
+
+    let val complete_cat(_,set_limit)     =  complete_FinSet in
+         set_limit(D) end;
+
+@
+
+
+1.1
+log
+@new unit
+Adding applications/tests into hope
+@
+text
+@@

@@ -1,0 +1,899 @@
+head	1.11;
+access;
+symbols
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.11
+	MLWorks-1-0-3-21/12/1992:1.11
+	MLWorks-1-0-2-15/12/1992:1.11
+	MLWorks-1-0-1-04/12/1992:1.11
+	checkpoint_17_08_92:1.10
+	Ten15_release_19-11-91:1.2
+	Ten15_release_21-08-91:1.2;
+locks; strict;
+
+
+1.11
+date	92.08.18.13.33.23;	author davidt;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	92.08.14.21.12.26;	author davidt;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.07.15.41.49;	author davidt;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.05.14.44.45;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.04.15.42.50;	author davidt;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.05.06.10.36.06;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.30.18.15.19;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.11.21.17.34.07;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.11.13.35.49;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.21.13.14.49;	author colin;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.20.20.10.56;	author jont;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	92.08.18.13.33.23;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.11
+log
+@THIS FILE IS NO LONGER IN USE!
+@
+text
+@(* _lexer.sml the functor *)
+(*
+$Log: _lexer.sml,v $
+Revision 1.10  1992/08/14  21:12:26  davidt
+Added Crash and Lists structures to MLRules arguments.
+
+Revision 1.9  1992/08/07  15:41:49  davidt
+String structure is now pervasive.
+
+Revision 1.8  1992/08/05  14:44:45  jont
+Removed some structures and sharing
+
+Revision 1.7  1992/08/04  15:42:50  davidt
+Took out redundant Array argument and require.
+
+Revision 1.6  1992/05/06  10:36:06  richard
+Changed BalancedTree to BTree
+
+Revision 1.5  1992/01/30  18:15:19  jont
+Added string parameter
+
+Revision 1.4  1991/11/21  17:34:07  jont
+Fixed type sharing violation discovered by NJML 0.75
+
+Revision 1.3  91/10/11  13:35:49  davidt
+This is the functor which used to be built in __lexer.sml Note that
+this functor is completely different from the previous functor in
+this file (which is a left-over from the old lexer generator).
+
+Revision 1.2  91/09/06  16:47:25  nickh
+Lexer structure. This uses the lexer generator, and is quite messy for
+reasons of type sharing.
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+require "../utils/crash";
+require "../utils/lists";
+require "../utils/integer";
+require "../utils/print";
+require "../utils/newmap";
+require "../basics/token";
+require "../lexer/ndfa";
+require "../lexer/regexp";
+require "../lexer/inbuffer";
+require "../lexer/lexbasics";
+require "../lexer/lexer";
+require "../lexer/_lexrules";
+require "../lexer/_lexgen";
+*)
+
+(* this is really far too complex. There is a problem with the type
+`result' from LexRules/LexGen, and making it equal to Token.Token,
+while keeping LexGen, LexBasics, and LEXRULES entirely free of all
+references to the ML language (e.g. `structure Token' in LEXRULES).
+There is probably a better way. If there is not, this reveals a
+deficiency with the ML language. *)
+
+functor Lexer (*(
+  structure Crash : CRASH
+  structure Lists : LISTS
+  structure Integer : INTEGER
+  structure Print : PRINT
+  structure Map : NEWMAP
+  structure Token : TOKEN
+  structure Ndfa : NDFA
+  structure RegExp : REGEXP
+  structure InBuffer : INBUFFER
+  structure LexBasics : LEXBASICS
+  sharing type Ndfa.action = int = Ndfa.state
+    ) : LEXER =
+struct
+  structure LexRules = MLRules(structure Crash = Crash
+			       structure Lists = Lists
+			       structure Integer = Integer
+			       structure Token = Token
+			       structure RegExp = RegExp
+			       structure LexBasics = LexBasics)
+    
+  structure LexGen = LexGen(structure Lists = Lists
+			    structure Print = Print
+			    structure Integer = Integer
+			    structure Map = Map
+			    structure Ndfa = Ndfa
+			    structure Token = Token
+			    structure InBuffer = InBuffer
+			    structure LexRules = LexRules)
+    
+  open LexGen
+  structure Token = Token
+end;*)
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.11  1992/08/18  13:33:23  davidt
+THIS FILE IS NO LONGER IN USE!
+
+@
+
+
+1.10
+log
+@Added Crash and Lists structures to MLRules arguments.
+@
+text
+@d4 3
+d37 1
+d51 1
+d60 1
+a60 1
+functor Lexer(
+d92 1
+a92 1
+end;
+@
+
+
+1.9
+log
+@String structure is now pervasive.
+@
+text
+@d4 3
+d34 1
+d56 1
+d69 3
+a71 1
+  structure LexRules = MLRules(structure Integer = Integer
+@
+
+
+1.8
+log
+@Removed some structures and sharing
+@
+text
+@d4 3
+a34 1
+require "../utils/string";
+a55 1
+  structure String : STRING
+a64 1
+			       structure String = String
+@
+
+
+1.7
+log
+@Took out redundant Array argument and require.
+@
+text
+@d4 3
+a32 1
+require "../basics/symbol";
+a54 1
+  structure Symbol : SYMBOL
+a59 1
+  sharing Token.Symbol = Symbol
+a65 1
+			       structure Symbol = Symbol
+d74 1
+a74 1
+			    structure RegExp = RegExp
+d76 1
+a76 2
+			    structure LexRules = LexRules
+			    structure LexBasics = LexBasics)
+d79 1
+a79 2
+  structure Token = LexGen.LexRules.Token
+  structure Symbol = Token.Symbol
+@
+
+
+1.6
+log
+@Changed BalancedTree to BTree
+@
+text
+@d4 3
+a27 1
+require "../utils/array";
+a50 1
+  structure Array : ARRAY
+a75 1
+			    structure Array = Array
+@
+
+
+1.5
+log
+@Added string parameter
+@
+text
+@d4 3
+d26 1
+a26 1
+require "../utils/balancedtree";
+d50 1
+a50 1
+  structure BalancedTree : BALANCEDTREE
+d72 1
+a72 1
+			    structure BalancedTree = BalancedTree
+@
+
+
+1.4
+log
+@Fixed type sharing violation discovered by NJML 0.75
+@
+text
+@d3 4
+a6 1
+$Log:	_lexer.sml,v $
+d18 1
+a18 1
+require "../basics/token";
+d24 1
+d26 8
+a33 7
+require "ndfa";
+require "regexp";
+require "inbuffer";
+require "lexbasics";
+require "lexer";
+require "_lexrules";
+require "_lexgen";
+d42 16
+a57 14
+functor Lexer (structure Token : TOKEN
+	       structure Lists : LISTS
+	       structure Integer : INTEGER
+	       structure Print : PRINT
+	       structure Array : ARRAY
+	       structure BalancedTree : BALANCEDTREE
+	       structure Symbol : SYMBOL
+	       structure Ndfa : NDFA
+	       structure RegExp : REGEXP
+	       structure InBuffer : INBUFFER
+	       structure LexBasics : LEXBASICS
+	       sharing Token.Symbol = Symbol
+	       sharing type Ndfa.action = int = Ndfa.state
+		 ) : LEXER =
+@
+
+
+1.3
+log
+@This is the functor which used to be built in __lexer.sml Note that
+this functor is completely different from the previous functor in
+this file (which is a left-over from the old lexer generator).
+@
+text
+@d1 1
+d3 6
+a8 1
+$Log:	__lexer.sml,v $
+d49 1
+@
+
+
+1.2
+log
+@updated paths of matrix files to relative rather than absolute path names
+@
+text
+@d2 4
+a5 3
+$Log:	_lexer.sml,v $
+Revision 1.1  91/06/20  20:10:56  jont
+Initial revision
+d7 1
+a7 3
+Revision 1.1  91/06/07  16:21:48  colin
+Initial revision
+
+d9 14
+a22 1
+require "lexer" ; 
+d24 6
+a29 1
+functor Lexer(structure Token : TOKEN) : LEXER = 
+d31 20
+a50 166
+ struct 
+ 
+ structure Token = Token
+ structure Symbol = Token.Symbol
+
+(*
+$Log:	_lexer.sml,v $
+Revision 1.1  91/06/20  20:10:56  jont
+Initial revision
+
+Revision 1.1  91/06/07  16:19:26  colin
+Initial revision
+
+*)
+open Array
+
+type TokenStream = (string ref * int ref * int ref * (unit -> string)
+		    ref * bool ref * int ref) ref ;
+
+fun mkTokenStream(f) = ref ( ref("") , ref(0) , ref(0) , ref(f) ,
+			    ref(false), ref(0) );
+
+fun linenum( x ) = let val (_,b,_,_,_,_) = !x in !b end;
+  
+fun getpos( x ) = let val (_,_,c,_,_,_) = !x in !c end;
+
+fun linepos( x ) = let val (_,_,_,_,_,c) = !x in !c end;
+  
+fun getbuffer( x ) = let val (a,_,_,_,_,_) = !x in !a end;
+
+fun eof (ref (_,_,_,_,ref x,_)) = x
+  
+fun flushTokenStream( x) = let val (_,_,_,f,_,_) = !x 
+			   in
+			     ( x := ( ref(""),ref(0),ref(0),f,ref(false),ref(0)) )
+			   end ;
+
+val current_token_stream = ref(mkTokenStream( fn() => "alala")) ;
+
+fun increment_linenum() = let val (_,b,_,_,_,_) = !(!current_token_stream)
+  			  in
+			   ( b := !b + 1 )
+			  end ;
+
+fun line_pos_to_zero() = let val (_,_,_,_,_,b) = !(!current_token_stream)
+  			  in
+			   ( b := 0 )
+			  end ;
+
+fun line_pos_to_next_tab() = let val (_,_,_,_,_,b) = !(!current_token_stream)
+  			  in
+			    if !b mod 8 = 0
+			      then ()
+			    else
+			      (b := !b + ( 8 - (!b mod 8)))
+			  end ;
+
+fun fst(x,_) = x ;
+fun snd(_,x) = x ;
+
+fun output' stream astring = output (stream,astring)
+fun input' stream anum = input (stream,anum)
+
+fun reduce(f,[],y)   = y
+  | reduce(f,x::y,r) = reduce(f,y,f(x,r)) ;
+
+fun generate_new_row([]) = ByteArray.array(1,0)
+  | generate_new_row(x) = let val temp = ByteArray.array(List.length(x),0)
+                          in
+                          ( reduce( fn(x,y) => ( ByteArray.update(temp,y,x) ; y+1 ) , x , 0) ; temp )
+			  end ;
+
+fun make_matrix(x) = let val temp = array(List.length(x), ByteArray.array(List.length(hd(x)),0))
+                     in
+                       ( reduce( fn(x,y) => ( update(temp,y,generate_new_row(x)) ; y+1 ) , x , 0) ; temp )
+                     end ;
+
+fun dummy_row(x) = ByteArray.array(x,0) ;
+
+fun instantiate_row(matrix,x,y) = if x = ~1 then () else ( update(matrix,x,dummy_row(y)) ;
+						       instantiate_row(matrix,x-1,y) ) ;
+  
+				   
+fun make_empty_state_matrix(x,y) = let val temp = Array.array(x,ByteArray.array(1,0))
+				   in
+				     ( output' std_out "\nForming the state matrix\n" ;
+				      instantiate_row(temp,x-1,y);
+				      temp)
+				   end ;
+				   
+fun set_matrix_row(matrix,x,y) = ( output' std_out "*" ; flush_out std_out ;
+			update(matrix,x,generate_new_row(y))) ;
+
+fun make_letter_array1([],_,x) = x
+  | make_letter_array1(h::t,count,x) = 
+    if h="" then make_letter_array1(t,count,x) else make_letter_array1(t,count+1,( ByteArray.update(x,ord(h),count+1) ; x )) ;
+
+fun make_letter_array(x) = let val temp = ByteArray.array(256,0)
+			   in
+			   ( make_letter_array1(x,0,temp) ; temp )
+			   end ;
+
+fun make_final_array1([],_) = ()
+  | make_final_array1(h::t,temp) = ( ByteArray.update(temp,h,1) ;
+				    make_final_array1(t,temp ));
+					  
+fun make_final_array(x) = let val temp = ByteArray.array(256,0)
+			  in
+			    ( make_final_array1(x,temp) ;
+			      temp )
+			  end ;
+			
+fun member(x,[]) = false
+  | member(x,h::t) = if x=h then true else member(x,t) ;
+
+fun position(x,h::t) = if x=h then 0 else 1+position(x,t);
+
+val numbers_list = [ "0","1","2","3","4","5","6","7","8","9" ];
+
+fun get_next_number(f,x) =
+let val char = f(1)
+in
+if member(char,numbers_list)
+then
+get_next_number(f,x*10+position(char,numbers_list))
+else x 
+end ;
+
+fun read_matrix(matrix,file,x,y) =
+let val stream = open_in (file ^ ".matrix")
+in
+let val f = input' stream
+in
+let val i = ref(0)
+in
+let val j = ref(0)
+in
+(
+ while( !i < x)
+  do
+  (
+   output' std_out "*" ;
+   j := 0;
+   let val row = Array.sub(matrix,!i)
+   in 
+   (
+   while(!j < y)
+   do
+   ( ByteArray.update(row,!j,get_next_number(f,0)) ;
+     j := !j +1 ) ;
+   Array.update(matrix,!i,row) ;
+    f 1; (* newline *)
+   i := !i + 1 )
+   end
+   )
+  )
+end
+end
+end
+end ;
+
+exception LexError of string;
+exception LexEof;
+
+fun reverse1([],x) = x
+  | reverse1(h::t,x) = reverse1(t,h::x) ;
+d52 15
+a66 325
+
+fun reverse(x) = reverse1(x,[]) ;
+  
+fun lex(sofar,matrix,final_array,letter_array,state,dead_array,match,result_function,token_stream) =
+  let 
+    val (buffer,line_no,pos,func,eof,line_pos) = !token_stream
+  in
+    (if !pos >= String.length(!buffer) 
+       then (  let val rest = (!func) () 
+	       in
+		 if rest="" 
+		   then if !eof
+			  then raise LexEof
+			else ( eof:=true ;
+			      buffer:= !buffer ^ "\n") 
+		 else buffer := !buffer ^ rest
+	       end )
+     else () ) ;
+       let val char_value =  ByteArray.sub(letter_array,ord(substring(!buffer,!pos,1)))-1
+       in
+	 if char_value = ~1
+	   then
+	     ( if snd(sofar)=""  (* if nil, then need to advance one character, otherwise we
+				  have a valid match already so leave the invalid character until
+				      next time     *)
+		   then 
+		     ( let val started_at = fst(sofar)
+			in
+			  (line_pos := !line_pos - (!pos - ~started_at) ;
+			   pos := ~started_at;
+		          result_function(fst sofar,substring(!buffer,!pos-1,1)) )
+			end )
+		 else result_function sofar )
+	   else
+	     let val new_state = ByteArray.sub((matrix sub state),char_value)
+	     in
+	       let val new_match = (match^substring(!buffer,!pos,1))
+	       in
+		 if ByteArray.sub(dead_array,new_state) = 1
+		   then
+		       ( if snd(sofar)=""  (* if nil, then need to advance one character, otherwise we
+					      have a valid match already so leave the invalid character until
+					      next time     *)
+		 	  then 
+			     ( let val started_at = fst(sofar)
+				in
+				  (line_pos := !line_pos - (!pos - ~started_at) ;
+				   pos := ~started_at;
+				   result_function(fst sofar,substring(!buffer,!pos-1,1)) )
+				end )
+			 else result_function sofar )
+		 else
+		   ( pos := !pos + 1 ;
+		    line_pos := !line_pos + 1;
+		    if ByteArray.sub(final_array,new_state)=1 
+		      then
+			lex((new_state,new_match),matrix,final_array,letter_array,new_state,dead_array,new_match,result_function,token_stream)
+		    else
+			lex(sofar,matrix,final_array,letter_array,new_state,dead_array,new_match,result_function,token_stream) )
+	       end
+	     end
+       end  
+  end;
+
+
+val letter_array_LexC = make_letter_array [ ".","t","n","\\","\"" ] ; 
+val start_LexC = 5 ; 
+val final_array_LexC = make_final_array([4,3,1,0,7]) ; 
+val dead_array_LexC = make_final_array([2]) ; 
+val matrix_LexC = make_empty_state_matrix(8,5);  
+val dummy = read_matrix(matrix_LexC,"lexer/LexC",8,5);  
+val letter_array_LexB = make_letter_array [ ".","\n",")","*","(" ] ; 
+val start_LexB = 5 ; 
+val final_array_LexB = make_final_array([4,2,6]) ; 
+val dead_array_LexB = make_final_array([0]) ; 
+val matrix_LexB = make_empty_state_matrix(7,5);  
+val dummy = read_matrix(matrix_LexB,"lexer/LexB",7,5);  
+val letter_array_LexA = make_letter_array [ "\t"," ","\n","\"","^","`","\\","@@","?","<","/","+","$","&","%","!","*","Y","X","W","V","U","T","S","R","Q","P","O","N","M","L","K","J","I","H","G","F","D","C","B","A","Z","z","m","k","j","'","E","9","8","7","6","5","4","3","2","1","0","~","#","-",">","=","|","_",".",";",":",",","}","{","]","[",")","(","g","w","v","q","r","h","u","f","i","x","c","o","l","d","n","e","p","y","t","s","b","a" ] ; 
+val start_LexA = 62 ; 
+val final_array_LexA = make_final_array([199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180,179,178,177,176,175,174,173,172,171,170,169,168,167,166,165,164,163,162,161,160,159,158,157,156,155,154,153,152,151,150,149,148,147,146,145,144,143,142,141,140,139,138,137,136,135,134,133,132,131,130,128,127,126,125,124,123,122,121,119,118,117,116,115,114,113,112,111,110,109,108,107,106,105,104,103,102,101,100,99,98,97,96,95,94,92,91,90,89,87,86,85,84,83,82,81,80,79,77,76,75,74,73,72,71,70,69,67,66,65,64,63,61,60,59,58,57,56,55,54,53,52,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0,201]) ; 
+val dead_array_LexA = make_final_array([200]) ; 
+val matrix_LexA = make_empty_state_matrix(202,97);  
+val dummy = read_matrix(matrix_LexA,"lexer/LexA",202,97);  
+fun deal_with_results_LexC(3,match) =  nil
+  | deal_with_results_LexC(4,match) =  "\""::LexC()
+  | deal_with_results_LexC(7,match) =  "\\"::LexC()
+  | deal_with_results_LexC(0,match) =  "\n"::LexC()
+  | deal_with_results_LexC(1,match) =  "\t"::LexC()
+  | deal_with_results_LexC(_,match) =   match::LexC() 
+and LexC () = lex((~(getpos(!current_token_stream) + 1),""),matrix_LexC,final_array_LexC,letter_array_LexC,start_LexC,dead_array_LexC,"",deal_with_results_LexC,!current_token_stream)  
+and deal_with_results_LexB(2,match) =  ( LexB()  ; LexB() )
+  | deal_with_results_LexB(4,match) =  ()
+  | deal_with_results_LexB(6,match) =  ( increment_linenum() ; line_pos_to_zero() ; LexB())
+  | deal_with_results_LexB(_,match) =   LexB()
+and LexB () = lex((~(getpos(!current_token_stream) + 1),""),matrix_LexB,final_array_LexB,letter_array_LexB,start_LexB,dead_array_LexB,"",deal_with_results_LexB,!current_token_stream)  
+and deal_with_results_LexA(10,match) = Token.RESERVED (Token.ABSTYPE)
+  | deal_with_results_LexA(20,match) = Token.RESERVED (Token.AND)
+  | deal_with_results_LexA(185,match) = Token.RESERVED (Token.ANDALSO)
+  | deal_with_results_LexA(190,match) = Token.RESERVED (Token.AS)
+  | deal_with_results_LexA(178,match) = Token.RESERVED (Token.CASE)
+  | deal_with_results_LexA(111,match) = Token.RESERVED (Token.DO)
+  | deal_with_results_LexA(75,match) = Token.RESERVED (Token.DATATYPE)
+  | deal_with_results_LexA(199,match) = Token.RESERVED (Token.ELSE)
+  | deal_with_results_LexA(13,match) = Token.RESERVED (Token.END)
+  | deal_with_results_LexA(163,match) = Token.RESERVED (Token.EXCEPTION)
+  | deal_with_results_LexA(110,match) = Token.RESERVED (Token.FN)
+  | deal_with_results_LexA(104,match) = Token.RESERVED (Token.FUN)
+  | deal_with_results_LexA(58,match) = Token.RESERVED (Token.HANDLE)
+  | deal_with_results_LexA(173,match) = Token.RESERVED (Token.IF)
+  | deal_with_results_LexA(168,match) = Token.RESERVED (Token.IN)
+  | deal_with_results_LexA(126,match) = Token.RESERVED (Token.INFIX)
+  | deal_with_results_LexA(121,match) = Token.RESERVED (Token.INFIXR)
+  | deal_with_results_LexA(59,match) = Token.RESERVED (Token.LET)
+  | deal_with_results_LexA(43,match) = Token.RESERVED (Token.LOCAL)
+  | deal_with_results_LexA(117,match) = Token.RESERVED (Token.NONFIX)
+  | deal_with_results_LexA(33,match) = Token.RESERVED (Token.OF)
+  | deal_with_results_LexA(28,match) = Token.RESERVED (Token.OP)
+  | deal_with_results_LexA(17,match) = Token.RESERVED (Token.OPEN)
+  | deal_with_results_LexA(193,match) = Token.RESERVED (Token.ORELSE)
+  | deal_with_results_LexA(32,match) = Token.RESERVED (Token.RAISE)
+  | deal_with_results_LexA(22,match) = Token.RESERVED (Token.REC)
+  | deal_with_results_LexA(197,match) = Token.RESERVED (Token.REQUIRE)
+  | deal_with_results_LexA(39,match) = Token.RESERVED (Token.THEN)
+  | deal_with_results_LexA(49,match) = Token.RESERVED (Token.TYPE)
+  | deal_with_results_LexA(187,match) = Token.RESERVED (Token.VAL)
+  | deal_with_results_LexA(167,match) = Token.RESERVED (Token.WITH)
+  | deal_with_results_LexA(145,match) = Token.RESERVED (Token.WITHTYPE)
+  | deal_with_results_LexA(130,match) = Token.RESERVED (Token.WHILE)
+  | deal_with_results_LexA(142,match) = Token.RESERVED (Token.EQTYPE)
+  | deal_with_results_LexA(84,match) = Token.RESERVED (Token.FUNCTOR)
+  | deal_with_results_LexA(136,match) = Token.RESERVED (Token.INCLUDE)
+  | deal_with_results_LexA(71,match) = Token.RESERVED (Token.SHARING)
+  | deal_with_results_LexA(128,match) = Token.RESERVED (Token.SIG)
+  | deal_with_results_LexA(96,match) = Token.RESERVED (Token.SIGNATURE)
+  | deal_with_results_LexA(148,match) = Token.RESERVED (Token.STRUCT)
+  | deal_with_results_LexA(133,match) = Token.RESERVED (Token.STRUCTURE)
+  | deal_with_results_LexA(82,match) = Token.RESERVED(Token.LPAR)
+  | deal_with_results_LexA(87,match) = Token.RESERVED(Token.RPAR)
+  | deal_with_results_LexA(92,match) = Token.RESERVED(Token.BRA)
+  | deal_with_results_LexA(97,match) = Token.RESERVED(Token.KET)
+  | deal_with_results_LexA(102,match) = Token.RESERVED(Token.LBRACE)
+  | deal_with_results_LexA(107,match) = Token.RESERVED(Token.RBRACE)
+  | deal_with_results_LexA(113,match) = Token.RESERVED(Token.COMMA)
+  | deal_with_results_LexA(119,match) = Token.RESERVED(Token.COLON)
+  | deal_with_results_LexA(124,match) = Token.RESERVED(Token.SEMICOLON)
+  | deal_with_results_LexA(115,match) = Token.RESERVED(Token.ELLIPSIS)
+  | deal_with_results_LexA(134,match) = Token.RESERVED(Token.UNDERBAR)
+  | deal_with_results_LexA(139,match) = Token.RESERVED(Token.VBAR)
+  | deal_with_results_LexA(144,match) = Token.RESERVED(Token.EQUAL)
+  | deal_with_results_LexA(109,match) = Token.RESERVED(Token.DARROW)
+  | deal_with_results_LexA(103,match) = Token.RESERVED(Token.ARROW)
+  | deal_with_results_LexA(154,match) = Token.RESERVED(Token.HASH)
+  | deal_with_results_LexA(165,match) = Token.INTEGER( match )
+  | deal_with_results_LexA(98,match) = Token.INTEGER( match )
+  | deal_with_results_LexA(83,match) = Token.REAL( match )
+  | deal_with_results_LexA(73,match) = Token.REAL( match )
+  | deal_with_results_LexA(63,match) = Token.REAL( match )
+  | deal_with_results_LexA(57,match) = Token.REAL( match )
+  | deal_with_results_LexA(46,match) = Token.REAL( match )
+  | deal_with_results_LexA(21,match) = Token.TYVAR((Symbol.find_symbol (match)),true,true)
+  | deal_with_results_LexA(31,match) = Token.TYVAR((Symbol.find_symbol (match)),false,true)
+  | deal_with_results_LexA(36,match) = Token.TYVAR((Symbol.find_symbol (match)),true,false)
+  | deal_with_results_LexA(26,match) = Token.TYVAR((Symbol.find_symbol (match)),true,false)
+  | deal_with_results_LexA(171,match) = Token.TYVAR((Symbol.find_symbol (match)),false,false)
+  | deal_with_results_LexA(41,match) = Token.TYVAR((Symbol.find_symbol (match)),false,false)
+  | deal_with_results_LexA(198,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(194,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(192,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(189,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(188,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(186,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(184,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(183,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(182,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(181,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(180,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(179,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(177,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(176,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(175,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(174,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(172,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(170,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(169,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(166,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(164,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(162,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(161,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(160,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(159,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(158,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(157,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(156,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(155,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(153,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(152,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(151,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(150,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(149,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(147,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(146,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(143,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(141,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(140,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(138,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(137,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(135,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(132,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(131,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(127,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(123,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(122,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(118,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(116,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(114,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(112,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(108,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(106,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(105,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(101,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(100,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(99,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(95,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(94,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(91,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(90,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(89,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(86,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(85,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(81,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(80,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(79,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(77,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(76,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(74,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(72,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(70,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(69,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(67,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(66,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(65,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(64,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(61,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(60,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(56,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(55,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(54,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(53,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(52,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(50,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(48,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(47,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(45,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(44,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(42,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(40,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(38,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(37,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(35,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(34,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(30,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(29,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(27,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(25,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(24,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(23,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(19,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(18,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(16,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(14,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(12,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(11,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(9,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(8,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(7,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(6,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(5,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(3,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(2,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(1,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(0,match) = Token.LONGID( [] , Symbol.find_symbol(match) )
+  | deal_with_results_LexA(195,match) = let val token = LexA() 
+                  fun trim x =
+		    let val len = String.length x
+		    in
+		      String.substring (x,0,len-1)
+		    end
+              in 
+               case token of 
+                 Token.LONGID(symlist,id) => 
+                           Token.LONGID((Symbol.find_symbol (trim match))::symlist,id) 
+                 | _ => raise LexError "Illegal dot context" 
+               end
+  | deal_with_results_LexA(125,match) = ( LexB() ; LexA() )
+  | deal_with_results_LexA(15,match) = raise LexError "Mismatched Comment"
+  | deal_with_results_LexA(191,match) = Token.STRING(implode(LexC()))
+  | deal_with_results_LexA(196,match) = ( increment_linenum() ; line_pos_to_zero() ; LexA())
+  | deal_with_results_LexA(201,match) = LexA()
+  | deal_with_results_LexA(4,match) = (line_pos_to_next_tab() ; LexA())
+  | deal_with_results_LexA(_,match) = raise LexError(match) 
+ and LexA () = lex((~(getpos(!current_token_stream) + 1),""),matrix_LexA,final_array_LexA,letter_array_LexA,start_LexA,dead_array_LexA,"",deal_with_results_LexA,!current_token_stream)  
+ and getToken(x) = ( current_token_stream := x ; 
+		    if getpos(!current_token_stream) > 32 
+		    then 
+			let val (a,_,c,_,_,_) = !(!current_token_stream) 
+			in 
+			  (a := String.substring(!a,!c, 
+						 String.length(!a)- !c); 
+              		   c := 0) 
+			end 
+		    else () ; 
+LexA () ) ;  
+(*
+$Log:	_lexer.sml,v $
+Revision 1.1  91/06/20  20:10:56  jont
+Initial revision
+
+Revision 1.1  91/06/07  16:21:38  colin
+Initial revision
+
+*)
+
+val getToken = (fn(x) => getToken(x) handle LexEof => Token.RESERVED(Token.EOF)) ;
+  
+end
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log:	mlhead.sml,v $
+d20 4
+a23 1
+$Log:	lexhead.sml,v $
+d251 1
+a251 1
+val dummy = read_matrix(matrix_LexC,"/home/ml/nickh/ml/src/lexgen/LexC",8,5);  
+d257 1
+a257 1
+val dummy = read_matrix(matrix_LexB,"/home/ml/nickh/ml/src/lexgen/LexB",7,5);  
+d263 1
+a263 1
+val dummy = read_matrix(matrix_LexA,"/home/ml/nickh/ml/src/lexgen/LexA",202,97);  
+d494 4
+a497 1
+$Log:	mlfoot.sml,v $
+@

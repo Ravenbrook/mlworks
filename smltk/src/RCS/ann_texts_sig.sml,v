@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	99.06.16.09.51.28;	author johnh;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+new file.
+@
+
+
+1.1
+log
+@new unit
+new file.
+@
+text
+@(* ***************************************************************************
+ 
+   $Source: /home/uniform/rep/sml/sml_tk/ann_texts.sig,v $
+ 
+   Annotated texts for sml_tk.
+
+   $Date: 1998/03/12 15:02:05 $
+   $Revision: 1.2 $
+   Author: cxl (Last modification by $Author: cxl $)
+
+   (C) 1996, Bremen Institute for Safe Systems, Universitaet Bremen
+ 
+  ************************************************************************** *)
+
+require "basic_types";
+
+signature ANNOTATED_TEXT =
+    sig
+	(* This type represents annotated texts. *)
+	(* type AnnoText *)
+
+        (* selectors *)
+        val selText  : BasicTypes.AnnoText -> string
+        val selAnno  : BasicTypes.AnnoText -> BasicTypes.Annotation list
+	val updAnno  : BasicTypes.AnnoText -> BasicTypes.Annotation list 
+	                                             -> BasicTypes.AnnoText
+
+
+	(* The empty annotated text *)
+	val mtAT : BasicTypes.AnnoText 
+
+	(* Concatenate annotated texts, keeping track of the annotations. *)
+	val ++ : BasicTypes.AnnoText * BasicTypes.AnnoText -> BasicTypes.AnnoText
+
+	(* add a new line at the end *)
+	val nl : BasicTypes.AnnoText -> BasicTypes.AnnoText
+
+	(* make a string into an annotated text with no annotations *)
+	val mk : string   -> BasicTypes.AnnoText
+
+	(* like concatWith from BasicUtil *)
+	val concatATWith : string -> BasicTypes.AnnoText list 
+	                                                -> BasicTypes.AnnoText 
+
+	(* utility function *)
+	(* val replaceTextWidAnnText : TkTypes.WidId-> BasicTypes.AnnoText-> unit *)
+
+    end
+@

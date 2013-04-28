@@ -1,0 +1,178 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.02.16.09.31.26;	author mitchell;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	99.02.15.14.07.53;	author mitchell;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.52.46;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+
+
+1.2
+log
+@[Bug #190508]
+Improve layout
+@
+text
+@(* inet-sock.sml
+ *
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell 
+ * Laboratories. All rights reserved.  
+ *
+ * $Log: __inet_sock.sml,v $
+ *  Revision 1.1  1999/02/15  14:07:53  mitchell
+ *  new unit
+ *  [Bug #190508]
+ *  Add socket support to the basis library
+ *
+ *)
+
+require "inet_sock";
+require "__pre_sock";
+require "__socket";
+require "__generic_sock";
+require "__option";
+
+structure INetSock : INET_SOCK =
+  struct
+    structure SOCK = Socket.SOCK
+
+    val sockFn = MLWorks.Internal.Runtime.environment
+
+    datatype inet = INET
+
+    type 'a sock = (inet, 'a) Socket.sock
+    type 'a stream_sock = 'a Socket.stream sock
+    type dgram_sock = Socket.dgram sock
+
+    type sock_addr = inet Socket.sock_addr
+
+    val inetAF = Option.valOf(Socket.AF.fromString "INET")
+
+    local
+      val toInetAddr : (PreSock.addr * int) -> PreSock.addr = 
+            sockFn "system os toInetAddr"
+      val fromInetAddr : PreSock.addr -> (PreSock.addr * int) = 
+            sockFn "system os fromInetAddr"
+      val inetAny  : int -> PreSock.addr = 
+            sockFn "system os inetany"
+    in
+      fun toAddr (PreSock.INADDR a, port) = PreSock.ADDR(toInetAddr(a, port))
+      fun fromAddr (PreSock.ADDR addr) = 
+          let val (a, port) = fromInetAddr addr
+           in (PreSock.INADDR a, port)
+          end
+      fun any port = PreSock.ADDR(inetAny port)
+    end
+
+    structure UDP =
+      struct
+        fun socket () = GenericSock.socket (inetAF, SOCK.dgram)
+        fun socket' proto = GenericSock.socket' (inetAF, SOCK.dgram, proto)
+      end
+
+    structure TCP =
+      struct
+        fun socket () = GenericSock.socket (inetAF, SOCK.stream)
+        fun socket' proto = GenericSock.socket' (inetAF, SOCK.stream, proto)
+
+        (* tcp control options *)
+        local
+          val ctlDELAY : (int * bool option) -> bool = sockFn "system os ctlNODELAY"
+        in
+          fun getNODELAY (PreSock.SOCK fd) = ctlDELAY(fd, NONE)
+          fun setNODELAY (PreSock.SOCK fd, flg) = ignore(ctlDELAY(fd, SOME flg))
+        end (* local *)
+      end
+  end
+
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a6 4
+ *  Revision 1.2  1999/02/16  09:31:26  mitchell
+ *  [Bug #190508]
+ *  Improve layout
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+text
+@d6 5
+a10 1
+ * $Log$
+d37 6
+a42 3
+      val toInetAddr : (PreSock.addr * int) -> PreSock.addr = sockFn "system os toInetAddr"
+      val fromInetAddr : PreSock.addr -> (PreSock.addr * int) = sockFn "system os fromInetAddr"
+      val inetAny  : int -> PreSock.addr = sockFn "system os inetany"
+d44 6
+a49 7
+    fun toAddr (PreSock.INADDR a, port) = PreSock.ADDR(toInetAddr(a, port))
+    fun fromAddr (PreSock.ADDR addr) = let
+	  val (a, port) = fromInetAddr addr
+	  in
+	    (PreSock.INADDR a, port)
+	  end
+    fun any port = PreSock.ADDR(inetAny port)
+d54 2
+a55 2
+	fun socket () = GenericSock.socket (inetAF, SOCK.dgram)
+	fun socket' proto = GenericSock.socket' (inetAF, SOCK.dgram, proto)
+d60 10
+a69 9
+	fun socket () = GenericSock.socket (inetAF, SOCK.stream)
+	fun socket' proto = GenericSock.socket' (inetAF, SOCK.stream, proto)
+      (* tcp control options *)
+	local
+	  val ctlDELAY : (int * bool option) -> bool = sockFn "system os ctlNODELAY"
+	in
+	fun getNODELAY (PreSock.SOCK fd) = ctlDELAY(fd, NONE)
+	fun setNODELAY (PreSock.SOCK fd, flg) = ignore(ctlDELAY(fd, SOME flg))
+	end (* local *)
+a72 10
+(*
+ * $Log: inet-sock.sml,v $
+ * Revision 1.2  1997/02/26 21:00:29  george
+ *    Defined a new top level Option structure. All 'a option related
+ *    functions have been moved out of General.
+ *
+ * Revision 1.1.1.1  1997/01/14  01:38:24  george
+ *   Version 109.24
+ *
+ *)
+@

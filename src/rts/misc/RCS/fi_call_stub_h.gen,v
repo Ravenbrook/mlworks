@@ -1,0 +1,70 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.03.09.11.11.20;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+new file.
+@
+
+
+1.1
+log
+@new unit
+new file.
+@
+text
+@/*  ==== FOREIGN INTERFACE CALL STUB HEADER ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  Still experimental and under development.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ */
+
+#include "types.h"
+#include "mltypes.h"
+
+#define MAX_FI_ARG_LIMIT      (+NN+)
+/*
+ *  Gives the maximum no. of arguments that the FI can
+ *  manage using the call stub.
+ *
+ *  Its value is specified in the build ... see rts/GNUmakefile
+ */
+
+
+extern void *call_ffun(void *, void *[], int);
+/*
+ *  call_ffun(function, arg_vector, num_of_args) : result
+ *
+ *  Foreign call stub code  (see gen/fi_call_code.c)
+ *  That code is automatically generated (see misc/fi_call_code_gen.c) 
+ *
+ */
+
+
+extern mlval call_ffun_error(int);
+/*
+ *  call_ffun_error(num_of_args)
+ *
+ *  Reports error for request for too many foreign arguments.
+ *  Can provide an mlval result.
+ *  (implemented externally)
+ */ 
+@

@@ -1,0 +1,320 @@
+head	1.4;
+access;
+symbols
+	Final_version_of_old_runtime:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	93.06.02.13.04.42;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	93.05.18.14.11.32;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.04.26.14.51.09;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.04.15.14.22.46;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	93.06.02.13.04.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Code vector interception
+@
+
+
+1.4
+log
+@Added missing parameters to memcmp() calls.
+@
+text
+@/*  ==== CODE VECTOR INTERCEPTION ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd
+ *
+ *  Implementation
+ *  --------------
+ *  This is rather SPARC specific and will need to be moved later.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: intercept.c,v $
+ *  Revision 1.3  1993/05/18  14:11:32  richard
+ *  Added call counting for the profiler.
+ *
+ *  Revision 1.2  1993/04/26  14:51:09  richard
+ *  Increased diagnostic levels.
+ *
+ *  Revision 1.1  1993/04/15  14:22:46  richard
+ *  Initial revision
+ *
+ */
+
+#include "values.h"
+#include "intercept.h"
+#include "interface.h"
+#include "tags.h"
+#include "diagnostic.h"
+#include "extensions.h"
+#include "profiler.h"
+#include <errno.h>
+#include <memory.h>
+
+#define INTERCEPT_BYTES	(sizeof(word)*INTERCEPT_LENGTH)
+
+static int blat(mlval code, word *new)
+{
+  word *start;
+  int offset;
+
+  DIAGNOSTIC(4, "blat(code = 0x%X, new = 0x%X)", code, new);
+
+  /* Check that the parameter is actually a code object */
+
+  if(PRIMARY(code) != POINTER || SECONDARY(GETHEADER(code)) != BACKPTR)
+  {
+    DIAGNOSTIC(4, "  not code!", 0, 0);
+    errno = EINTERCEPTCODE;
+    return(-1);
+  }
+
+  /* Check that it can be intercepted */
+
+  offset = CINT(CCODEANCSUB(code, INTERCEPTS));
+  DIAGNOSTIC(4, "  offset = %d", offset, 0);
+
+  if(offset == -1)
+  {
+    errno = EINTERCEPTFORM;
+    return(-1);
+  }
+
+  /* Copy the intercepting instructions into the slot */
+
+  start = CCODESTART(code) + offset;
+  memcpy(start, new, INTERCEPT_BYTES);
+
+  return(0);
+}
+
+int code_intercept(mlval code)
+{
+  DIAGNOSTIC(4, "code_intercept(0x%X)  name `%s'", code, CSTRING(CCODENAME(code)));
+
+  return(blat(code,
+	      CCODEANCSUB(code, LEAFS) == MLTRUE ?
+	        ml_intercept_on_leaf : ml_intercept_on));
+}
+
+int code_replace(mlval code)
+{
+  DIAGNOSTIC(4, "code_replace(0x%X)  name `%s'", code, CSTRING(CCODENAME(code)));
+
+  return(blat(code,
+	      CCODEANCSUB(code, LEAFS) == MLTRUE ?
+	        ml_replace_on_leaf : ml_replace_on));
+}
+
+int code_nop(mlval code)
+{
+  DIAGNOSTIC(4, "code_nop(0x%X)  name `%s'", code, CSTRING(CCODENAME(code)));
+
+  /* If call-count profiling is operating on this code then change to */
+  /* interception rather than nothing. */
+
+  if((unsigned int *)CCODEANCSUB(code, PROFILES) != NULL)
+    return(blat(code,
+		CCODEANCSUB(code, LEAFS) == MLTRUE ?
+	          ml_intercept_on_leaf : ml_intercept_on));
+  else
+    return(blat(code, ml_nop));
+}
+
+enum code_status code_status(mlval code)
+{
+  word *start;
+  int offset;
+
+  if(PRIMARY(code) != POINTER || SECONDARY(GETHEADER(code)) != BACKPTR)
+  {
+    errno = EINTERCEPTCODE;
+    return(-1);
+  }
+
+  offset = CINT(CCODEANCSUB(code, INTERCEPTS));
+
+  if(offset == -1)
+  {
+    errno = EINTERCEPTFORM;
+    return(-1);
+  }
+
+  start = CCODESTART(code) + offset;
+
+  if(!memcmp(start, ml_nop, INTERCEPT_BYTES))
+    return(CS_NOP);
+  else if(!memcmp(start, ml_intercept, INTERCEPT_BYTES) ||
+	  !memcmp(start, ml_intercept_leaf, INTERCEPT_BYTES))
+    return(CS_INTERCEPT);
+  else if(!memcmp(start, ml_replace, INTERCEPT_BYTES) ||
+	  !memcmp(start, ml_replace_leaf, INTERCEPT_BYTES))
+    return(CS_REPLACE);
+
+  error("code_status: code 0x%X has unrecognisable instructions in its intercept slot");
+}
+
+static inline void count_call(mlval code)
+{
+  unsigned int *count = (unsigned int *)CCODEANCSUB(code, PROFILES);
+  if(count != NULL && !profile_suspended)
+    ++*count;
+}
+
+void intercept(struct stack_frame *frame)
+{
+  mlval code, f;
+
+  flush_windows();
+  code = FIELD(frame->closure, 0);
+  f = CCODEANCSUB(code, INTERFNS);
+
+  DIAGNOSTIC(2, "intercept(frame = 0x%X)", frame, 0);
+  DIAGNOSTIC(2, "  function `%s'  intercept function `%s'",
+	        CSTRING(CCODENAME(code)), CSTRING(CCODENAME(FIELD(f, 0))));
+  DIAGNOSTIC(2, "  closure = 0x%X  arg = 0x%X", frame->closure, frame->i0);
+
+  count_call(code);
+
+  if(f != MLUNIT)
+    callml((mlval)frame, f);
+}
+
+void replace(struct stack_frame *frame)
+{
+  mlval code, f;
+
+  flush_windows();
+  code = FIELD(frame->closure, 0);
+  f = CCODEANCSUB(code, INTERFNS);
+
+  DIAGNOSTIC(2, "replace(frame = 0x%X)", frame, 0);
+  DIAGNOSTIC(2, "  function `%s'  replace function `%s'",
+	        CSTRING(CCODENAME(code)), CSTRING(CCODENAME(FIELD(f, 0))));
+  DIAGNOSTIC(2, "  closure = 0x%X  arg = 0x%X", frame->closure, frame->i0);
+
+  count_call(code);
+
+  if(f != MLUNIT)
+    callml((mlval)frame, f);
+}
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a11 3
+ *  Revision 1.4  1993/06/02  13:04:42  richard
+ *  Added missing parameters to memcmp() calls.
+ *
+@
+
+
+1.3
+log
+@Added call counting for the profiler.
+@
+text
+@d12 3
+d124 1
+a124 1
+  if(!memcmp(start, ml_nop))
+d126 2
+a127 2
+  else if(!memcmp(start, ml_intercept) ||
+	  !memcmp(start, ml_intercept_leaf))
+d129 2
+a130 2
+  else if(!memcmp(start, ml_replace) ||
+	  !memcmp(start, ml_replace_leaf))
+@
+
+
+1.2
+log
+@Increased diagnostic levels.
+@
+text
+@d12 3
+d25 2
+d37 4
+d43 1
+d48 2
+d51 1
+d59 2
+a61 1
+
+d69 2
+d78 2
+d87 11
+a97 1
+  return(blat(code, ml_nop));
+d133 7
+a144 1
+
+d153 4
+a156 1
+  callml((mlval)frame, f);
+a163 1
+
+d172 4
+a175 1
+  callml((mlval)frame, f);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 4
+a14 1
+ *  $Log$
+d114 2
+a115 2
+  DIAGNOSTIC(0, "intercept(frame = 0x%X)", frame, 0);
+  DIAGNOSTIC(0, "  function `%s'  intercept function `%s'",
+d117 1
+a117 1
+  DIAGNOSTIC(0, "  closure = 0x%X  arg = 0x%X", frame->closure, frame->i0);
+d131 2
+a132 2
+  DIAGNOSTIC(0, "replace(frame = 0x%X)", frame, 0);
+  DIAGNOSTIC(0, "  function `%s'  replace function `%s'",
+d134 1
+a134 1
+  DIAGNOSTIC(0, "  closure = 0x%X  arg = 0x%X", frame->closure, frame->i0);
+@

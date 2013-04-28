@@ -1,0 +1,383 @@
+head	1.3;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.2.7.1.1
+	MLWorks_gui_1996_12_18:1.2.8
+	MLWorks_1_0_Win32_1996_12_17:1.2.7
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.2.4.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.2.4.1
+	JFHrts:1.2.6
+	MLWorks_1_0_Irix_1996_11_28:1.2.4.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.2.5
+	MLWorks_1_0_Unix_1996_11_14:1.2.4
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.2
+	MLWorks_Beta_1996_07_02:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.12.19.09.37.04;	author stephenb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.06.22.14.16.31;	author brianm;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1
+	1.2.4.1
+	1.2.5.1
+	1.2.6.1
+	1.2.7.1
+	1.2.8.1;
+next	1.1;
+
+1.1
+date	96.06.22.13.11.57;	author brianm;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.23.55;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.14.13;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.33.38;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.4.1
+date	96.11.14.12.59.19;	author hope;	state Exp;
+branches
+	1.2.4.1.1.1;
+next	;
+
+1.2.4.1.1.1
+date	96.11.28.15.09.19;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.5.1
+date	96.11.22.18.17.03;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.6.1
+date	96.12.17.10.03.48;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.7.1
+date	96.12.17.17.55.23;	author hope;	state Exp;
+branches
+	1.2.7.1.1.1;
+next	;
+
+1.2.7.1.1.1
+date	97.02.24.11.46.36;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.8.1
+date	96.12.18.09.49.59;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.3
+log
+@[Bug #1791]
+check_expiry_date: wrap the body in a do { ... } while (0)
+to avoid any binding problems.
+@
+text
+@/*  ==== General Expiry Date protection ====
+ *
+ *  Copyright (C) 1996 Harequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  Provides a _simple_ expiry-date mechanism for all current
+ *  platforms (i.e. Unix and Win32).  As everyone knows, expiry dates
+ *  are not *IN ANY WAY* secure - they can be easily defeated by
+ *  resetting the system clock or in some way subverting system calls
+ *  for providing timing info.
+ *
+ *  The date is specified via the `best-before' code (see below).
+ *  
+ *  The expiry check produces a warning (at most once per invocation of
+ *  MLWorks) if the expiry date is within `warning_limit' days.  If
+ *  the current time exceeds the expiry time then the system prints a
+ *  message on stderr and exits.
+ *  
+ * To use the expiry check, simply include this header file and use
+ * the macro:
+ *
+ *                         check_expiry_date();
+ *
+ *  as a statement somewhere in the code - this does the expiry date
+ *  check.
+ *
+ *  Note that the expiry check will be exercised frequently if placed
+ *  within runtime code that ML programs will often need to make use
+ *  of.
+ *
+ *  To compute the `best_before' code, you could use the following
+ *  program, by editing the year, month and day variables:
+ *
+----------------------------- bb.c ----------------------------------
+#include <stdio.h>
+#include <time.h>
+
+void main()
+{  int year  = 1997;
+   int month = 1; 
+   int day   = 1; 
+   struct tm tv = {0};
+
+   tv.tm_year = (year - 1900);
+   tv.tm_mon  = (month - 1);
+   tv.tm_mday = day;
+   printf("best before (%d/%d/%d) = %ld\n", year, month, day, mktime(&tv));
+}
+----------------------------------------------------------------------
+ *
+ *  and compile using:
+ *
+ *       gcc bb.c -o bb;    ./bb;    /bin/rm ./bb
+ *
+ *  or whatever the local compiler is ...
+ *
+ *  Revision Log
+ *  ------------
+ * Revision log: $Log: src:expiry.h,v $
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+ * Revision 1.1  1996/06/22  13:11:57  brianm
+ * new unit
+ * New file.
+ *
+ *
+ */
+
+#ifndef expiry_h
+
+#include <time.h>
+
+#define best_before  852076800 /* Expiry : 1997/1/1 = 1st Jan, 1997 */
+/* Some previous `best-befores'                      */
+/* 835574400 Expiry : 1996/6/24 = 24th June, 1996    */
+/* 820454400 Expiry : 1996/1/1 = 1st Jan, 1996       */
+/* 852076800 Expiry : 1997/1/1 = 1st Jan, 1997       */
+
+/* == A flag to say if the expiry warning has been issued this invocation == */
+extern int expiry_warning;
+           
+#define warning_limit 10
+
+#define warning_msg \
+        "\n\nYour license is due to expire in a few days time.\n\n"  \
+        "Please contact MLWorks customer support:\n"             \
+	"   electronic mail:  mlworks-support@@harlequin.com\n"   \
+	"   telephone:        +44 1223 872522\n\n"
+
+#define expired_msg \
+        "\n\nYour license has expired.  Contact MLWorks customer support:\n" \
+	"   electronic mail:  mlworks-support@@harlequin.com\n"           \
+	"   telephone:        +44 1223 872522\n\n"
+
+#define check_expiry_date()                                \
+do { time_t today = time(0U);                              \
+     time_t limit = best_before;                           \
+     time_t warn  = limit - (warning_limit * 86400);       \
+     if (today < warn) {}                                  \
+     else if (today < limit) {                             \
+             if (0 == expiry_warning) {                    \
+	        fprintf(stderr, warning_msg );             \
+	        expiry_warning = 1;                        \
+	     };                                            \
+          }                                                \
+          else { fprintf(stderr, expired_msg );            \
+	         exit(1);                                  \
+	       };                                          \
+   } while (0)
+
+#endif
+@
+
+
+1.2
+log
+@Minor mod. to messages - extra new lines ...
+@
+text
+@d61 3
+d98 1
+a98 1
+   { time_t today = time(0U);                              \
+d111 1
+a111 1
+   }
+@
+
+
+1.2.8.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.7.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.7.1.1.1
+log
+@branched from 1.2.7.1
+@
+text
+@a60 3
+ * Revision 1.2.7.1  1996/12/17  17:55:23  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.6.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.5.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.4.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.4.1.1.1
+log
+@branched from 1.2.4.1
+@
+text
+@a60 3
+ * Revision 1.2.4.1  1996/11/14  12:59:19  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a60 3
+ * Revision 1.2  1996/06/22  14:16:31  brianm
+ * Minor mod. to messages - extra new lines ...
+ *
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d60 5
+a64 1
+ * Revision log: $Log$
+d84 1
+a84 1
+        "Your license is due to expire in a few days time.\n\n"  \
+d87 1
+a87 1
+	"   telephone:        +44 1223 872522"
+d90 1
+a90 1
+        "Your license has expired.  Contact MLWorks customer support:\n" \
+d92 1
+a92 1
+	"   telephone:        +44 1223 872522"
+@

@@ -1,0 +1,1086 @@
+head	1.16;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.15.3.1.1
+	MLWorks_gui_1996_12_18:1.15.4
+	MLWorks_1_0_Win32_1996_12_17:1.15.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.15.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.15.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.15.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.15.2
+	MLWorks_1_0_Unix_1996_11_14:1.15.1
+	MLWorks_Open_Beta2_1996_10_11:1.14.2
+	MLWorks_License_dev:1.14.1
+	MLWorks_1_open_beta_1996_09_13:1.11.1
+	MLWorks_Open_Beta_1996_08_22:1.11
+	MLWorks_Beta_1996_07_02:1.11
+	MLWorks_Beta_1996_06_07:1.11
+	MLWorks_Beta_1996_06_06:1.11
+	MLWorks_Beta_1996_06_05:1.11
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.9;
+locks; strict;
+comment	@ * @;
+
+
+1.16
+date	97.01.06.10.57.26;	author matthew;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	96.11.04.15.51.46;	author jont;	state Exp;
+branches
+	1.15.1.1
+	1.15.2.1
+	1.15.3.1
+	1.15.4.1;
+next	1.14;
+
+1.14
+date	96.10.03.14.54.04;	author io;	state Exp;
+branches
+	1.14.1.1
+	1.14.2.1;
+next	1.13;
+
+1.13
+date	96.10.03.12.35.58;	author io;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	96.10.02.17.19.25;	author io;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	96.06.04.15.28.11;	author io;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	96.05.30.11.28.10;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.17.11.06.37;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.10.12.41.48;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.05.10.09.18.23;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.02.11.17.39;	author stephenb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.02.09.47.39;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.01.13.49.29;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.04.30.15.43.55;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.30.12.58.13;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.32.58;	author jont;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	96.09.13.11.10.07;	author hope;	state Exp;
+branches;
+next	;
+
+1.14.1.1
+date	96.10.07.16.00.58;	author hope;	state Exp;
+branches;
+next	;
+
+1.14.2.1
+date	96.10.17.11.19.13;	author hope;	state Exp;
+branches;
+next	;
+
+1.15.1.1
+date	96.11.14.12.42.45;	author hope;	state Exp;
+branches
+	1.15.1.1.1.1;
+next	;
+
+1.15.1.1.1.1
+date	96.11.28.14.54.38;	author hope;	state Exp;
+branches;
+next	;
+
+1.15.2.1
+date	96.11.22.18.03.14;	author hope;	state Exp;
+branches;
+next	;
+
+1.15.3.1
+date	96.12.17.17.42.09;	author hope;	state Exp;
+branches
+	1.15.3.1.1.1;
+next	;
+
+1.15.3.1.1.1
+date	97.02.24.11.30.34;	author hope;	state Exp;
+branches;
+next	;
+
+1.15.4.1
+date	96.12.18.09.36.07;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.16
+log
+@Adding structure PreInt
+@
+text
+@(*  ==== INITIAL BASIS : Unconstrinaed Integer structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __preinteger.sml,v $
+ * Revision 1.15  1996/11/04  15:51:46  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+ * Revision 1.14  1996/10/03  14:54:04  io
+ * [Bug #1614]
+ * remove redundant requires
+ *
+ * Revision 1.13  1996/10/03  12:35:58  io
+ * [Bug #1614]
+ * basifying MLWorks.String
+ *
+ * Revision 1.12  1996/10/02  17:19:25  io
+ * [Bug #1628]
+ * revise scan() to support Hex
+ *
+ * Revision 1.11  1996/06/04  15:28:11  io
+ * stringcvt -> string_cvt
+ *
+ * Revision 1.10  1996/05/30  11:28:10  daveb
+ * ord is now at top level
+ *
+ * Revision 1.9  1996/05/17  11:06:37  jont
+ * Revise to latest signature
+ *
+ * Revision 1.8  1996/05/10  12:41:48  matthew
+ * Adding scan function
+ *
+ * Revision 1.7  1996/05/10  09:18:23  matthew
+ * Enhancing fromString
+ *
+ * Revision 1.6  1996/05/02  11:17:39  stephenb
+ * Undo the last two changes since by the time this is checked in
+ * the boostrap compiler will contain the necessary runtime routines.
+ *
+ * Revision 1.5  1996/05/02  09:47:39  jont
+ * Change toLarge and fromLarge to exception raising functions
+ *
+ * Revision 1.4  1996/05/01  13:49:29  matthew
+ * Hack to enable bootstrapping
+ *
+ * Revision 1.3  1996/04/30  15:43:55  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.2  1996/04/30  12:58:13  matthew
+ * Adding LargeInteger
+ *
+ * Revision 1.1  1996/04/18  11:32:58  jont
+ * new unit
+ *
+ *  Revision 1.3  1995/09/19  10:41:38  daveb
+ *  Replaced real literals with their fractional equivalents, so that the
+ *  overnight build can cope.
+ *
+ *  Revision 1.2  1995/09/15  13:24:26  daveb
+ *  Added makestring
+ *
+ *  Revision 1.1  1995/04/13  13:27:33  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+require "__pre_string_cvt";
+require "__pre_basis";
+
+structure Int =
+  struct
+
+    type int = int
+
+    (* Convert to and from int32's *)
+    val toLarge : int -> MLWorks.Internal.Types.int32 =
+      env "int int_to_int32"
+    val fromLarge : MLWorks.Internal.Types.int32 ->int = 
+      env "int int32_to_int"
+
+    val toInt = fn x :int => x
+    val fromInt = fn x : int => x
+
+    val precision = SOME 30
+    val minInt = SOME ~536870912
+    val maxInt = SOME 536870911
+    val ~ : int -> int = ~
+    val op* : int * int -> int = op*
+    val op div : int * int -> int = op div
+    val op mod : int * int -> int = op mod
+    fun quot (a,b) =
+      let
+	val q = a div b
+	val r = a mod b
+      in
+	if r = 0 orelse (a > 0 andalso b > 0) orelse (a < 0 andalso b < 0) then q
+	else q + 1
+      end
+    fun rem (a,b) =
+      let
+	val q = a div b
+	val r = a mod b
+      in
+	if r = 0 orelse (a > 0 andalso b > 0) orelse (a < 0 andalso b < 0) then r
+	else r - b
+      end
+
+    val op + : int * int -> int = op +
+    val op - : int * int -> int = op -
+    val op > : int * int -> bool = op >
+    val op >= : int * int -> bool = op >=
+    val op < : int * int -> bool = op <
+    val abs : int -> int = abs
+
+    val compare = 
+      fn (n,m) =>
+      if n < m then LESS
+      else if n > m then GREATER
+      else EQUAL
+
+    fun min(a, b) = if a < b then a else b
+    fun max(a, b) = if a < b then b else a
+    fun sign x = if x < 0 then ~1 else if x = 0 then 0 else 1
+    fun sameSign(a, b) = sign a = sign b
+
+    fun makeString (base,n) =
+      let
+        fun make_digit digit =
+          if digit >= 10 then chr (ord #"A" + digit - 10)
+          else chr (ord #"0" + digit)
+        fun makedigits (n,acc) =
+            let
+              val digit = 
+                if n >= 0 
+                  then n mod base
+                else 
+                  let
+                    val res = n mod base
+                  in
+                    if res = 0 then 0 else base - res
+                  end
+              val n' = 
+                if n >= 0 orelse digit = 0 then 
+                  n div base
+                else 1 + n div base
+              val acc' = make_digit digit :: acc
+            in 
+              if n' <> 0
+                then makedigits (n',acc')
+              else acc'
+            end
+      in
+	  implode (if n < 0 then #"~" :: makedigits(n,[]) else makedigits(n,[]))
+      end
+
+    fun tobase StringCvt.BIN = 2
+      | tobase StringCvt.OCT = 8
+      | tobase StringCvt.DEC = 10
+      | tobase StringCvt.HEX = 16
+      
+    fun fmt radix n =
+      makeString (tobase radix,n)
+
+    fun toString n = fmt StringCvt.DEC n
+
+    (* toDigit is unsafe with isAlphanumeric characters
+     * eg toDigit #"c" = 51
+     *    toDigit #"a" = 10
+     *    toDigit #"1" = 1
+     *)
+    fun toDigit radix = 
+      if tobase radix <= 10 then
+	fn c=> (ord c) - (ord #"0")
+      else
+	fn c=> 
+	if #"0" <= c andalso c <= #"9" then
+	  ord c - ord #"0"
+	else if #"A" <= c andalso c <= #"Z" then
+	  ord c - ord #"A" + 10
+	else if #"a" <= c andalso c <= #"z" then
+	  (ord c) - ord #"a" + 10
+	     else raise Fail ("toDigit" ^ (str c))
+	       
+    fun scan radix getc src = 
+      let
+	val toDigit : char -> int = toDigit radix
+	fun isSign #"+" = true
+	  | isSign #"-" = true
+	  | isSign #"~" = true
+	  | isSign _ = false
+	  
+	fun convertSign "~" = 1
+	  | convertSign "-" = 1
+	  | convertSign _ = ~1
+	  
+	val base = tobase radix
+	val isDigit =
+	  case radix of
+	    StringCvt.OCT=> isOctDigit
+	  | StringCvt.DEC => isDigit
+	  | StringCvt.HEX => isHexDigit
+	  | StringCvt.BIN => (fn c=>c = #"0" orelse c = #"1")
+	      
+	fun convertDigit s = 
+	  let val sz = size s 
+	    fun scan (i,acc) = 
+	      if i < sz then
+		let
+		  val c = chr(MLWorks.String.ordof(s,i))
+		in
+		  scan (i+1, (acc * base) - (toDigit c))
+		end
+	      else 
+		acc
+	  in
+	    scan (0, 0)
+	  end
+	
+	val (sign,src) = 
+	  case StringCvt.splitlN 1 isSign getc (StringCvt.skipWS getc src) of
+	    (sign, src) => (sign,
+			    (case radix of
+			       StringCvt.HEX =>
+				 (case getc src of 
+				    SOME (#"0", src') =>
+				      (case getc src' of
+					 SOME (#"x", src'') => src''
+				       | SOME (#"X", src'') => src''
+				       | SOME _ => src
+				       | NONE => src)
+				  | _ => src)
+			     | _ => src))
+      in
+	case StringCvt.splitl isDigit getc src of
+	  ("", _) => NONE
+	| (digit, src) =>
+	    SOME (convertSign sign * (convertDigit digit), src)
+      end
+    
+    val fromString = StringCvt.scanString (scan StringCvt.DEC)
+    val op <= : int * int -> bool = op <=
+
+  end
+
+structure PreInt = Int
+@
+
+
+1.15
+log
+@[Bug #1725]
+Remove unsafe string operations introduced when String structure removed
+@
+text
+@d10 4
+d253 2
+@
+
+
+1.15.4.1
+log
+@branched from 1.15
+@
+text
+@a9 4
+ * Revision 1.15  1996/11/04  15:51:46  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.15.3.1
+log
+@branched from 1.15
+@
+text
+@a9 4
+ * Revision 1.15  1996/11/04  15:51:46  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.15.3.1.1.1
+log
+@branched from 1.15.3.1
+@
+text
+@a9 3
+ * Revision 1.15.3.1  1996/12/17  17:42:09  hope
+ * branched from 1.15
+ *
+@
+
+
+1.15.2.1
+log
+@branched from 1.15
+@
+text
+@a9 4
+ * Revision 1.15  1996/11/04  15:51:46  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.15.1.1
+log
+@branched from 1.15
+@
+text
+@a9 4
+ * Revision 1.15  1996/11/04  15:51:46  jont
+ * [Bug #1725]
+ * Remove unsafe string operations introduced when String structure removed
+ *
+@
+
+
+1.15.1.1.1.1
+log
+@branched from 1.15.1.1
+@
+text
+@a9 3
+ * Revision 1.15.1.1  1996/11/14  12:42:45  hope
+ * branched from 1.15
+ *
+@
+
+
+1.14
+log
+@[Bug #1614]
+remove redundant requires
+@
+text
+@d10 4
+d213 2
+a214 1
+		let val c = unsafe_string_char_sub(s,i)
+@
+
+
+1.14.2.1
+log
+@branched from 1.14
+@
+text
+@a9 4
+ * Revision 1.14  1996/10/03  14:54:04  io
+ * [Bug #1614]
+ * remove redundant requires
+ *
+@
+
+
+1.14.1.1
+log
+@branched from 1.14
+@
+text
+@a9 4
+ * Revision 1.14  1996/10/03  14:54:04  io
+ * [Bug #1614]
+ * remove redundant requires
+ *
+@
+
+
+1.13
+log
+@[Bug #1614]
+basifying MLWorks.String
+@
+text
+@d10 4
+a67 2
+
+require "toplevel";
+@
+
+
+1.12
+log
+@[Bug #1628]
+revise scan() to support Hex
+@
+text
+@d10 4
+d90 1
+a90 1
+    fun quot(a, b) =
+d98 1
+a98 1
+    fun rem(a, b) =
+d151 3
+a153 3
+        in
+          implode (if n<0 then #"~"::makedigits(n,[]) else makedigits (n,[]))
+        end
+a230 1
+
+@
+
+
+1.11
+log
+@stringcvt -> string_cvt
+@
+text
+@d10 3
+d62 2
+a63 1
+require "__string_cvt";
+d72 1
+a72 1
+      MLWorks.Internal.Runtime.environment "int int_to_int32"
+d74 1
+a74 1
+      MLWorks.Internal.Runtime.environment "int int32_to_int"
+a107 1
+    val op <= : int * int -> bool = op <=
+d124 2
+a125 3
+          if digit >= 10 then String.chr (String.ord "A" + digit - 10)
+          else String.chr (String.ord "0" + digit)
+        val sign = if n < 0 then "~" else ""
+d148 1
+a148 1
+          String.implode (sign :: makedigits (n,[]))
+d161 19
+a179 1
+    fun scan radix getc src =
+d181 46
+a226 42
+        val base = tobase radix
+
+        (* Handy predicates *)
+        fun isSign c =
+          case c of
+            #"+" => true
+          | #"~" => true
+          | #"-" => true
+          | _ => false
+
+        fun isDigit a =
+          if base <= 10
+            then 
+              a >= ord #"0" andalso
+              a < ord #"0" + base
+          else
+            (a >= ord #"0" andalso a < ord #"0" + 10) orelse
+            (a >= ord #"A" andalso a < ord #"A" + base - 10) orelse
+            (a >= ord #"a" andalso a < ord #"a" + base - 10)
+
+        exception Valof
+        fun valof n =
+          if n >= ord #"0" andalso n <= ord #"9"
+            then n - ord #"0"
+          else if n >= ord #"a" andalso n <= ord #"z"
+                 then n - ord #"a" + 10
+          else if n >= ord #"A" andalso n <= ord #"Z"
+                 then n - ord #"A" + 10
+               else raise Valof
+
+        fun convert_digits s =
+          let
+            fun convert ([],acc) = acc
+              | convert (c :: rest,acc) =
+                convert (rest,acc * base - valof c)
+          in
+            convert (map String.ord (String.explode s),0)
+          end
+
+        fun convert_sign "~" = 1
+          | convert_sign "-" = 1
+          | convert_sign _ = ~1
+a227 1
+        val (sign,src) = StringCvt.splitl isSign getc (StringCvt.skipWS getc src)
+d229 4
+a232 6
+        if size sign > 1 then NONE
+        else
+          case StringCvt.splitl (isDigit o ord) getc src of
+            ("",src) => NONE
+          | (digits,src) => 
+              SOME (convert_sign sign * convert_digits digits,src)
+d234 1
+a234 1
+
+d236 1
+@
+
+
+1.11.1.1
+log
+@branched from 1.11
+@
+text
+@a9 3
+ * Revision 1.11  1996/06/04  15:28:11  io
+ * stringcvt -> string_cvt
+ *
+@
+
+
+1.10
+log
+@ord is now at top level
+@
+text
+@d10 3
+d59 1
+a59 1
+require "__stringcvt";
+@
+
+
+1.9
+log
+@Revise to latest signature
+@
+text
+@d10 3
+d171 2
+a172 2
+              a >= Char.ord #"0" andalso
+              a < Char.ord #"0" + base
+d174 3
+a176 3
+            (a >= Char.ord #"0" andalso a < Char.ord #"0" + 10) orelse
+            (a >= Char.ord #"A" andalso a < Char.ord #"A" + base - 10) orelse
+            (a >= Char.ord #"a" andalso a < Char.ord #"a" + base - 10)
+d180 6
+a185 6
+          if n >= Char.ord #"0" andalso n <= Char.ord #"9"
+            then n - Char.ord #"0"
+          else if n >= Char.ord #"a" andalso n <= Char.ord #"z"
+                 then n - Char.ord #"a" + 10
+          else if n >= Char.ord #"A" andalso n <= Char.ord #"Z"
+                 then n - Char.ord #"A" + 10
+d205 1
+a205 1
+          case StringCvt.splitl (isDigit o Char.ord) getc src of
+@
+
+
+1.8
+log
+@Adding scan function
+@
+text
+@d10 3
+d70 2
+a71 2
+    val minint = SOME ~536870912
+    val maxint = SOME 536870911
+@
+
+
+1.7
+log
+@Enhancing fromString
+@
+text
+@d10 3
+d40 1
+a40 1
+ *  Added makestring.
+d110 26
+a135 15
+      if n = 0 then "0"
+      else
+        let
+          fun make_digit digit =
+            if digit >= 10 then String.chr (String.ord "A" + digit - 10)
+            else String.chr (String.ord "0" + digit)
+          val (s,n) = if n < 0 then ("~",~n) else ("",n)
+          fun makedigits (0,acc) = acc
+            | makedigits (n,acc) =
+              let
+                val digit = n mod base
+                val n' = n div base
+              in 
+                makedigits (n',make_digit digit :: acc)
+              end
+d137 1
+a137 1
+          String.implode (s :: makedigits (n,[]))
+a149 41
+    fun fromString str =
+      let
+        (* skip whitespace *)
+        fun skip (" "::rest) = skip rest
+          | skip ("\t" :: rest) = skip rest
+          | skip ("\n" :: rest) = skip rest
+          | skip rest = rest
+        (* get a sign *)
+        fun sign ("+"::rest) = (1,rest)
+          | sign ("~"::rest) = (~1,rest)
+          | sign ("-"::rest) = (~1,rest)
+          | sign rest = (1,rest)
+
+        fun is_digit a = 
+          a >= String.ord "0" andalso
+          a <= String.ord "9"
+
+        fun check (a::rest) =
+          is_digit (String.ord a)
+          | check _ = false
+
+	fun convert ([],acc) = acc
+	  | convert (a :: rest,acc) =
+            let
+              val d = String.ord a - String.ord "0"
+            in
+              if d >= 0 andalso d < 10 then
+                convert (rest,acc * 10 + d)
+              else acc
+            end
+
+        val (sign,chars) = sign (skip (String.explode str))
+      in
+        if check chars
+          then SOME (sign * convert (chars,0))
+        else NONE
+      end
+
+    exception Unimplementable
+    fun scan radix getc src = raise Unimplementable
+(*
+a152 13
+        fun push (char,src) = fn x => SOME (char,src)
+        fun peek src = 
+          case getc src of
+            SOME (char,src') => SOME (char, push (char,src'))
+          | _ => NONE
+        (* get a sign *)
+        fun sign src =
+          case getc src of
+            SOME ("+",rest) => (1,rest)
+          | SOME ("~",rest) => (~1,rest)
+          | SOME ("-",rest) => (~1,rest)
+          | SOME (c,rest) => (1,push (c,rest))
+          | NONE => (1,src)
+d154 9
+a162 1
+        fun is_digit a = 
+d165 2
+a166 2
+              a >= String.ord "0" andalso
+              a < String.ord "0" + base
+d168 3
+a170 4
+            a >= String.ord "0" andalso
+            (a < String.ord "0" + 10 orelse
+             (a >= String.ord "A" andalso a < String.ord "A" + base - 10) orelse
+             (a >= String.ord "a" andalso a < String.ord "a" + base - 10))
+d173 10
+a182 1
+        fun valof a =
+d184 3
+a186 1
+            val n = String.ord a
+d188 1
+a188 7
+            if n <= String.ord "9"
+              then n - String.ord "0"
+            else if n > String.ord "a" andalso n < String.ord "z"
+                   then n - String.ord "a" + 10
+            else if n > String.ord "A" andalso n < String.ord "Z"
+                   then n - String.ord "A" + 10
+            else raise Valof
+a189 20
+        fun check src =
+          case peek src of
+            SOME (char,src') =>
+              if is_digit (String.ord char)
+                then SOME src'
+              else NONE
+          | _ => NONE
+              
+	fun convert (src,acc) =
+          case getc src of
+            NONE => (src,acc)
+          | SOME (a,src') =>
+              if is_digit a
+                then
+                  let
+                    val d = valof a
+                  in
+                    convert (src',acc * 10 + d)
+                  end
+              else (push (a,src'),acc)
+d191 5
+a195 1
+        val (s,src') = sign (StringCvt.skipWS src)
+d197 6
+a202 4
+        case check src' of
+          NONE => NONE
+        | SOME src'' =>
+            SOME (convert (src'',0))
+d204 2
+a205 1
+*)
+@
+
+
+1.6
+log
+@Undo the last two changes since by the time this is checked in
+the boostrap compiler will contain the necessary runtime routines.
+@
+text
+@d10 4
+d106 72
+a177 2
+    (* This isn't quite right *)
+    fun toString anint =
+d179 28
+a206 2
+        val sign = if anint < 0 then "~" else ""
+        fun makedigits anint =
+d208 1
+a208 13
+            val digit = if anint >= 0 
+                          then anint mod 10 
+                        else 
+                          let
+                            val res = anint mod 10
+                          in
+                            if res = 0
+                              then 0
+                                else 10 - res
+                          end
+            val new_int = if anint >= 0 orelse digit = 0
+                            then anint div 10
+                          else 1 + anint div 10
+d210 7
+a216 5
+            (if new_int <> 0
+               then makedigits new_int
+             else
+               "") ^
+               String.chr (digit + 48)
+d218 20
+a237 3
+      in
+        sign ^ makedigits anint
+      end
+d239 1
+a239 13
+    fun fromString str =
+      let
+        exception Invalid
+	fun convert res [] = res
+	  | convert res (h :: t) =
+	    let
+	      val d = String.ord h - String.ord "0"
+	    in
+	      if d >= 0 andalso d <= 9 then
+		convert (res * 10 + d) t
+	      else
+		raise Invalid
+	    end
+d241 4
+a244 2
+	SOME (convert 0 (String.explode str))
+        handle Invalid => NONE
+d246 1
+@
+
+
+1.5
+log
+@Change toLarge and fromLarge to exception raising functions
+@
+text
+@d10 3
+a49 1
+    exception Convert
+d52 1
+a52 2
+      fn _ => raise Convert
+    (* MLWorks.Internal.Runtime.environment "int int_to_int32" *)
+d54 1
+a54 2
+      fn _ => raise Convert
+    (* MLWorks.Internal.Runtime.environment "int int32_to_int" *)
+@
+
+
+1.4
+log
+@Hack to enable bootstrapping
+@
+text
+@d10 3
+d50 1
+a50 1
+      raise Convert
+d53 1
+a53 1
+      raise Convert
+@
+
+
+1.3
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@d10 6
+d44 1
+d47 2
+a48 1
+      MLWorks.Internal.Runtime.environment "int int_to_int32"
+d50 2
+a51 1
+      MLWorks.Internal.Runtime.environment "int int32_to_int"
+@
+
+
+1.2
+log
+@Adding LargeInteger
+@
+text
+@d10 3
+d114 1
+a114 1
+               chr (digit + 48)
+d126 1
+a126 1
+	      val d = ord h - ord "0"
+d134 1
+a134 1
+	SOME (convert 0 (explode str))
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d28 1
+d30 1
+a30 1
+structure Integer =
+d32 1
+a33 26
+    val precision = NONE
+    val minint = NONE
+    val maxint = NONE
+
+    val ceil : real -> int = fn x => ~(floor(~x))
+
+    val trunc : real -> int =
+      fn x =>
+      if x >= real 0 then floor x else ceil x
+
+    val round : real -> int =
+      (* round towards nearest, ties towards even *)
+      fn x =>
+      let
+	val near = floor x
+	val diff = abs(real near - x)
+	val half = real 1 / real 2
+      in
+	if diff < half then
+	  near
+	else
+	  if diff > half orelse near mod 2 = 1 then
+	    near + 1
+	  else
+	    near
+      end
+d35 12
+d67 1
+d76 6
+d87 48
+a134 10
+    val makestring = MLWorks.Integer.makestring
+    (*
+    fun toDefault x = x
+    fun fromDefault x = x
+
+    val floor = floor
+    val trunc : real -> int = fn x => raise Fail "Integer.trunc" (* round towards zero *)
+    val round : real -> int = fn x => raise Fail "Integer.round" (* round towards nearest, ties towards even *)
+    val real  = real
+    *)
+@

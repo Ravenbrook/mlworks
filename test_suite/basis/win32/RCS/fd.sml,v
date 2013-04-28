@@ -1,0 +1,118 @@
+head	1.4;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.4
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	98.07.15.14.17.50;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.07.14.16.30.31;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.04.24.15.43.30;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.04.21.12.54.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.4
+log
+@[Bug #20130]
+Use forceCompileAll instead of compileAll
+@
+text
+@(*  ==== Testing ====
+ *
+ *  Result: OK
+ *
+ *  Copyright (C) 1998. Harlequin Group plc
+ *  All rights reserved.
+ *
+ *  $Log: win32:fd.sml,v $
+ * Revision 1.3  1998/07/14  16:30:31  jont
+ * [Bug #20130]
+ * Modify to avoid recompiling into the release area
+ *
+ * Revision 1.2  1998/04/24  15:43:30  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ * Revision 1.1  1998/04/21  12:54:00  jont
+ * new unit
+ * ** No reason given. **
+ *
+ *
+ *)
+
+local
+  structure s = Shell.Project;
+in
+  val _ = s.openProject"../src/mlworks.mlp";
+  val _ = s.setConfiguration"I386/NT";
+  val {binariesLoc, libraryPath, objectsLoc} = s.showLocations();
+  val _ = s.setLocations
+    {binariesLoc=binariesLoc, libraryPath=libraryPath, objectsLoc="objects"};
+  val _ = s.setMode"Debug";
+  val _ = s.setTargets["__batch.sml"];
+  val _ = s.forceCompileAll();
+  val _ = s.loadAll();
+end
+@
+
+
+1.3
+log
+@[Bug #20130]
+Modify to avoid recompiling into the release area
+@
+text
+@d9 4
+d34 1
+a34 1
+  val _ = s.compileAll();
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@d8 5
+a12 1
+ *  $Log: fd.sml,v $
+d25 3
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

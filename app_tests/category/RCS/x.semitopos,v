@@ -1,0 +1,140 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.05.28.15.29.31;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.16.50;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications/tests into hope
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ * $Log$
+ *)               
+               (* This is an example of a TOPOS -
+                     that of ARROWS in FinSet       *)
+
+            (* Compute TRUTH TABLES of LOGICAL CONNECTIVES for
+                   the THREE-VALUED logic in this topos *)
+
+   (* Do not need cartesian closure for connectives (only for 
+      quantifiers) hence introduce semitopos - toposes without 
+                    cartesian closure *)
+   (* Warning: compile on top of `semitopos' not `topos' - there
+                    is overloading of names *)
+            (* Needs "comma" as well as "semitopos" *)
+
+
+   (* Represent the category of arrows in FinSet as a COMMA CATEGORY *)
+
+   val arrow_cat = fn x => comma_cat(I(FinSet),I(FinSet));
+   val cocomplete_arrow_cat = fn x => 
+          cocomplete_comma_cat(cocomplete_FinSet(),cocomplete_FinSet())
+                              (cocontinuous_I(FinSet),I(FinSet));
+   val complete_arrow_cat =
+          complete_comma_cat(complete_FinSet,complete_FinSet)
+                            (I(FinSet),continuous_I(FinSet));
+
+
+   (* The SUBOBJECT CLASSIFIER *) 
+
+   val src = set([just("0"),just("1"),just("2")]);
+   val tgt = set([just("1"),just("0")]);
+   val Omega = 
+        ( src,
+          set_mor(src,
+                  fn just("1") => just("1")
+                   | just("2") => just("1")
+                   | just("0") => just("0")
+		  | _ => raise Match,
+                  tgt),
+           tgt );
+                       
+   val truth = fn () => 
+         let val T_obj as (T,_,T') = terminal_obj(complete_arrow_cat) in
+      comma_mor( T_obj,
+                 ( set_mor(T,fn _ => just("2"),src),
+                   set_mor(T',fn _ => just("1"),tgt) ),
+                 Omega ) end;
+
+   fun add(x,set(l)) = set(x::l);
+
+   fun inv_image(set_mor(S,f,T),T') =
+         if is_nil_set(S) then nil_set else
+         let val (x,S') = singleton_split(S) in
+           if (f(x) is_in T') then add(x,inv_image(set_mor(S',f,T),T')) 
+                              else inv_image(set_mor(S',f,T),T') end;
+
+   fun chi(comma_mor(s_obj as (a,f,a'),(m,m'),t_obj as (c,g,c'))) =
+          comma_mor( t_obj,
+                     ( set_mor(c,
+                         fn z => if z is_in (image_set m) then just("2") 
+                           else if z is_in (inv_image(g,image_set(m')) diff image_set(m))
+                           then just("1") else just("0"),
+                               src),
+                       set_mor(c',
+                         fn z => if z is_in (image_set m') then just("1")
+                         else just("0"),
+                               tgt) ),
+                     Omega );
+
+   val subobject_classifier =  fn () =>
+        let val lC as complete_cat(C,_) = complete_arrow_cat in
+          ( (Omega,truth()),
+	    fn M as comma_mor(s_obj as (a,f,a'),(m,m'),t_obj as (c,g,c')) =>
+              let val t = terminal_mor(lC)(source(C)(M)) in
+              ((truth(),chi(M),t,M),
+               fn (p,q) => 
+                 compose(C)
+                  (q,comma_mor(target(C)(q),(inv(m),inv(m')),s_obj)) )
+                 end  )
+       end;
+
+   val semi_arrow_topos =
+	   let val cocomplete_cat(C,colim) = cocomplete_arrow_cat()
+	       val complete_cat(_,lim) = complete_arrow_cat
+           in semi_topos(C,lim,colim,subobject_classifier()) end;
+
+
+  (* Truth tables of the logical connectives *)
+
+  val false3 = FALSE(semi_arrow_topos);
+  val not3   = NOT(semi_arrow_topos);
+  val and3   = AND(semi_arrow_topos);
+  val or3    = OR(semi_arrow_topos);
+  val imply3 = IMPLY(semi_arrow_topos);
+@
+
+
+1.1
+log
+@new unit
+Adding applications/tests into hope
+@
+text
+@@

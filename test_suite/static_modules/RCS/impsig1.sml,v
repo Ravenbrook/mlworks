@@ -1,0 +1,97 @@
+head	1.2;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1
+	ML_beta_release_12/08/94:1.1
+	ML_beta_release_03/08/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.09.25.09.21.27;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.07.05.11.27.16;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.35.27;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Updating for new definition
+@
+text
+@(*
+Test that signature matching doesn't instantiate imperative type variables
+Result: FAIL
+ 
+$Log: impsig1.sml,v $
+ * Revision 1.1  1994/07/05  11:27:16  jont
+ * new file
+ *
+Copyright (c) 1994 Harlequin Ltd.
+*)
+
+Shell.Options.set(Shell.Options.Language.oldDefinition, true);
+
+signature S =
+  sig
+    type t
+    val f: unit -> t list
+  end;
+
+structure T:S =
+  struct
+    type t = int
+    val r = ref []
+    fun f () = !r
+  end
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d5 4
+a8 1
+$Log$
+d11 2
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d5 1
+a5 4
+$Log: impsig1.sml,v $
+ * Revision 1.1  1994/07/05  11:27:16  jont
+ * new file
+ *
+@

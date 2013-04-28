@@ -1,0 +1,95 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.41.43;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C HEADERS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "c_data";
+require "fi_types";
+
+signature C_SIGNATURE =
+  sig
+
+    structure CData   : C_DATA
+    structure FITypes : FOREIGN_TYPES
+
+       sharing FITypes = CData.FITypes
+
+    type 'a deferred
+    type name
+    type filename
+    type c_type
+
+       sharing type deferred   = FITypes.deferred
+       sharing type name       = FITypes.name  
+       sharing type filename   = FITypes.filename
+       sharing type c_type     = CData.c_type
+
+
+  (* SIGNATURE ENTRY *)
+
+    datatype c_sig_entry =
+        UNDEF_SE
+    |
+        VAR_SE of { name : name, ctype : c_type deferred }
+    |
+        CODE_SE of { name   : name,
+                     source : c_type list deferred,
+                     target : c_type deferred }
+    |
+        TYPE_SE of { name : name,
+                     defn : c_type deferred,
+                     size : int deferred }
+    |
+        CONST_SE of { name : name, ctype : c_type deferred }
+
+
+    (* C SIGNATURE operations *)
+
+    type c_signature
+
+    val new_sig      : unit -> c_signature
+
+    val lookup_entry : c_signature -> name -> c_sig_entry
+    val def_entry    : c_signature * c_sig_entry -> unit
+    val hide_entry   : c_signature * name -> unit
+
+    val show_entries : c_signature -> c_sig_entry list
+
+    val load_header : filename -> c_signature
+
+  end; (* signature C_SIGNATURE *)
+@

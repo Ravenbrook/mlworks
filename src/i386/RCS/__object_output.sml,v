@@ -1,0 +1,119 @@
+head	1.3;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.3.1
+	MLWorks_21c0_1999_03_25:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	98.08.27.13.04.32;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	98.08.25.12.09.18;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.24.10.24.28;	author jont;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	99.04.01.17.56.28;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Direct production of object files
+@
+
+
+1.3
+log
+@[Bug #30108]
+Fix faulty require statement which prevents bootstrapping on I386
+@
+text
+@(* Object_Output the structure *)
+(*
+ * Functions to output code as genuine (.o) object files, either in assembler
+ * format, or binary
+ *
+ * Copyright (c) 1998, Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log: __object_output.sml,v $
+ * Revision 1.2  1998/08/25  12:09:18  jont
+ * Automatic checkin:
+ * changed attribute _comment to ' * '
+ *
+ *
+ *)
+
+require "../utils/__crash";
+require "../basis/__list";
+require "../utils/__lists";
+require "../main/__info";
+require "../main/__code_module";
+require "../main/__project";
+require "../basics/__module_id";
+require "../rts/gen/__tags.sml";
+require "__i386_assembly";
+require "_i386_object_output";
+
+structure Object_Output_ =
+  I386_Object_Output
+  (structure Crash = Crash_
+   structure List = List
+   structure Lists = Lists_
+   structure Info = Info_
+   structure Code_Module = Code_Module_
+   structure Project = Project_
+   structure ModuleId = ModuleId_
+   structure Tags = Tags_
+   structure I386_Assembly = I386_Assembly_)
+@
+
+
+1.3.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a9 4
+ * Revision 1.3  1998/08/27  13:04:32  jont
+ * [Bug #30108]
+ * Fix faulty require statement which prevents bootstrapping on I386
+ *
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@d9 5
+a13 1
+ * $Log$
+d19 1
+a19 1
+require "../basis/__lists";
+@
+
+
+1.1
+log
+@new unit
+Direct production of object files
+@
+text
+@@

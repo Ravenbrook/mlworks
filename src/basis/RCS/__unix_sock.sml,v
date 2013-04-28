@@ -1,0 +1,157 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.02.16.09.31.32;	author mitchell;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	99.02.15.14.08.02;	author mitchell;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.52.17;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+
+
+1.2
+log
+@[Bug #190508]
+Improve layout
+@
+text
+@(* unix-sock.sml
+ *
+ * This file includes parts which are Copyright (c) 1995 AT&T Bell 
+ * Laboratories. All rights reserved.  
+ *
+ * $Log: __unix_sock.sml,v $
+ *  Revision 1.1  1999/02/15  14:08:02  mitchell
+ *  new unit
+ *  [Bug #190508]
+ *  Add socket support to the basis library
+ *
+ *)
+
+require "unix_sock.sml";
+require "__pre_sock.sml";
+require "__socket.sml";
+require "__generic_sock.sml";
+require "__option";
+
+structure UnixSock : UNIX_SOCK =
+  struct
+    structure SOCK = Socket.SOCK
+
+    val sockFn = MLWorks.Internal.Runtime.environment
+
+    datatype unix = UNIX
+
+    type 'a sock = (unix, 'a) Socket.sock
+    type 'a stream_sock = 'a Socket.stream sock
+    type dgram_sock = Socket.dgram sock
+
+    type sock_addr = unix Socket.sock_addr
+
+    val unixAF = Option.valOf(Socket.AF.fromString "UNIX")
+
+    (* We should probably do some error checking on the length of the string *)
+    local
+      val toUnixAddr : string -> PreSock.addr = sockFn "system os toUnixAddr"
+      val fromUnixAddr : PreSock.addr -> string = sockFn "system os fromUnixAddr"
+    in
+      fun toAddr s = PreSock.ADDR(toUnixAddr s)
+      fun fromAddr (PreSock.ADDR addr) = fromUnixAddr addr
+    end
+
+    structure Strm =
+      struct
+        fun socket () = GenericSock.socket (unixAF, SOCK.stream)
+        fun socket' proto = GenericSock.socket' (unixAF, SOCK.stream, proto)
+        fun socketPair () = GenericSock.socketPair (unixAF, SOCK.stream)
+        fun socketPair' proto = GenericSock.socketPair' (unixAF, SOCK.stream, proto)
+      end
+    structure DGrm =
+      struct
+        fun socket () = GenericSock.socket (unixAF, SOCK.dgram)
+        fun socket' proto = GenericSock.socket' (unixAF, SOCK.dgram, proto)
+        fun socketPair () = GenericSock.socketPair (unixAF, SOCK.dgram)
+        fun socketPair' proto = GenericSock.socketPair' (unixAF, SOCK.dgram, proto)
+      end
+  end;
+
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a6 4
+ *  Revision 1.2  1999/02/16  09:31:32  mitchell
+ *  [Bug #190508]
+ *  Improve layout
+ *
+@
+
+
+1.1
+log
+@new unit
+[Bug #190508]
+Add socket support to the basis library
+@
+text
+@d6 5
+a10 1
+ * $Log$
+d36 1
+a36 1
+(** We should probably do some error checking on the length of the string *)
+d41 2
+a42 2
+    fun toAddr s = PreSock.ADDR(toUnixAddr s)
+    fun fromAddr (PreSock.ADDR addr) = fromUnixAddr addr
+d47 4
+a50 4
+	fun socket () = GenericSock.socket (unixAF, SOCK.stream)
+	fun socket' proto = GenericSock.socket' (unixAF, SOCK.stream, proto)
+	fun socketPair () = GenericSock.socketPair (unixAF, SOCK.stream)
+	fun socketPair' proto = GenericSock.socketPair' (unixAF, SOCK.stream, proto)
+d54 4
+a57 4
+	fun socket () = GenericSock.socket (unixAF, SOCK.dgram)
+	fun socket' proto = GenericSock.socket' (unixAF, SOCK.dgram, proto)
+	fun socketPair () = GenericSock.socketPair (unixAF, SOCK.dgram)
+	fun socketPair' proto = GenericSock.socketPair' (unixAF, SOCK.dgram, proto)
+a60 11
+
+(*
+ * $Log: unix-sock.sml,v $
+ * Revision 1.2  1997/02/26 21:00:30  george
+ *    Defined a new top level Option structure. All 'a option related
+ *    functions have been moved out of General.
+ *
+ * Revision 1.1.1.1  1997/01/14  01:38:24  george
+ *   Version 109.24
+ *
+ *)
+@

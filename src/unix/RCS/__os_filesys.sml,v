@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.08.12.27.00;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Changed name from filesys inline with lastest filename conventions.
+@
+
+
+1.1
+log
+@new unit
+Changed name from filesys inline with lastest filename conventions.
+@
+text
+@(* Copyright Harlequin Ltd. 1994.
+ *
+ * $Log: __filesys.sml,v $
+ * Revision 1.2  1996/01/18  09:53:02  stephenb
+ * OS reorganisation: parameterise functor with UnixOS since OS
+ * specific stuff is no longer in the pervasive library.
+ *
+# Revision 1.1  1995/01/25  17:17:53  daveb
+# new unit
+# The OS.FileSys structure from the basis.
+#
+ *
+ *)
+
+require "__unixos";
+require "_unixfilesys";
+
+structure OSFileSys_ = UnixFileSys (structure UnixOS = UnixOS_)
+@

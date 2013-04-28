@@ -1,0 +1,190 @@
+head	1.4;
+access;
+symbols
+	Final_version_of_old_runtime:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.03.26.11.53.15;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.03.24.15.55.15;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.07.11.31.25;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.21.15.18.35;	author davidt;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.03.26.11.53.15;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Interpret ml_callc calls.
+@
+
+
+1.4
+log
+@Redocumented according to new role and added `stack_extension_count' and
+`raise_count' statistics.
+@
+text
+@/*  ==== ML INTERFACE TO EXTERNAL C FUNCTIONS ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This module contains a table of functions which is accessed from ML via
+ *  the ml_external routine in interface.s.  ML requests a function via the
+ *  System.call_c pervasive function using the function number from the
+ *  table.  ML gets the numbers from __callc_codes.sml which is generated
+ *  from callc_codes.c.
+ *
+ *  The module also contains various counters which may be updated by the
+ *  routines in interface.s in order to count the number of invocations of
+ *  each external function.  (See interface.s.)
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: callc_codes.h,v $
+ *  Revision 1.3  1992/03/24  15:55:15  richard
+ *  The `interpret_callc' routine has been coded in assembler to remove
+ *  an unnecessary level.  `external_invocation_count' is incremented by
+ *  the assembler routine when a pervasive is called (see interface.s).
+ *
+ *  Revision 1.2  1992/01/07  11:31:25  richard
+ *  Changed the first argument to interpret_callc to an integer to allow
+ *  negative values.
+ *
+ *  Revision 1.1  1991/10/21  15:18:35  davidt
+ *  Initial revision
+ */
+
+
+#ifndef ml_callc_codes_h
+#define ml_callc_codes_h
+
+
+#include "mltypes.h"
+
+
+extern mlval (*ml_externals[])(mlval);
+extern unsigned int external_invocation_count[];
+extern unsigned int stack_extension_count;
+extern unsigned int raise_count;
+
+
+#endif
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a19 4
+ *  Revision 1.4  1992/03/26  11:53:15  richard
+ *  Redocumented according to new role and added `stack_extension_count' and
+ *  `raise_count' statistics.
+ *
+@
+
+
+1.3
+log
+@The `interpret_callc' routine has been coded in assembler to remove
+an unnecessary level.  `external_invocation_count' is incremented by
+the assembler routine when a pervasive is called (see interface.s).
+@
+text
+@d1 1
+a1 1
+/*  ==== ML TO C INTERFACE ====
+d7 5
+a11 2
+ *  The function `interpret_callc' is called from the ML to C interface (see
+ *  interface.s) in response to System.call_c function invocations.
+d13 4
+d19 6
+a24 1
+ *  $Log: callc.h,v $
+a32 2
+#ifndef ml_callc_h
+#define ml_callc_h
+d34 2
+d37 1
+d41 1
+d43 2
+@
+
+
+1.2
+log
+@Changed the first argument to interpret_callc to an integer to allow
+negative values.
+@
+text
+@d1 1
+a1 6
+/*
+ * callc.h
+ * Interpret ml_callc calls.
+ * $Log: callc.h,v $
+ * Revision 1.1  1991/10/21  15:18:35  davidt
+ * Initial revision
+d3 16
+a18 2
+ * 
+ * Copyright (c) Harlequin 1991.
+a20 1
+/* Avoid multiple inclusion */
+d24 1
+a24 2
+/* For efficiency */
+#ifndef mltypes_h
+a25 1
+#endif
+d27 3
+a29 1
+extern mlval interpret_callc (int request_number, mlval arguments);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d21 1
+a21 1
+extern mlval interpret_callc (mlval request_number, mlval arguments);
+@

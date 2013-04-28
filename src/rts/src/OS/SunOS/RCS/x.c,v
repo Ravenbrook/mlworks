@@ -1,0 +1,2376 @@
+head	1.14;
+access;
+symbols
+	hope_poo:1.4.1
+	ML_beta_release_12/08/94:1.4.1.1
+	ML_beta_release_03/08/94:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.14
+date	95.04.24.11.06.22;	author daveb;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.04.20.12.01.35;	author matthew;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.04.13.16.10.58;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.04.10.13.06.23;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.04.07.16.44.53;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.04.07.11.40.27;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.03.09.17.02.53;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.02.23.17.13.08;	author nickb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.02.13.19.31.12;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	94.10.19.14.40.32;	author nickb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.06.30.12.05.25;	author nickh;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	94.06.23.09.18.56;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.06.09.14.26.14;	author nickh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.06.09.10.50.51;	author nickh;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	95.07.05.10.30.20;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.14
+log
+@Added ungrab_pointer.
+@
+text
+@/*  ==== PERVASIVE INTERFACE TO X LIBRARIES ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:SunOS:x.c,v $
+ * Revision 1.13  1995/04/20  12:01:35  matthew
+ * Change use of allocate_record to allocate_vector in list_get_selected_pos
+ * Temporarily removed test of mainLoopContinue in main_loop
+ *
+ * Revision 1.12  1995/04/13  16:10:58  daveb
+ * Changed treatment of application shells again.  Now use one application
+ * context for all shells, so that user windows and system windows share
+ * the same mainloop.  The main application shell is stored as before;
+ * subsequent calls to initialise return a new application shell.  Mainloop
+ * ignores calls when one loop is already running.  This allows user's
+ * programs to be run interactively or stand-alone.
+ * Also ensured that application shells can't be destroyed.
+ *
+ * Revision 1.11  1995/04/10  13:06:23  daveb
+ * Fixed some minor compiler warnings.
+ *
+ * Revision 1.10  1995/04/07  16:44:53  daveb
+ * Removed create_application_shell, updated comments.
+ *
+ * Revision 1.9  1995/04/07  11:40:27  daveb
+ * Made repeated calls to initialize return a new application shell.
+ * main_loop and related functions take an application shell argument.
+ *
+ * Revision 1.8  1995/03/09  17:02:53  matthew
+ * New text widget functions
+ *
+ * Revision 1.7  1995/02/23  17:13:08  nickb
+ * Fix compiler warning.
+ *
+ * Revision 1.6  1995/02/13  19:31:12  daveb
+ * Replaced buggy version of widget_values_get.
+ *
+ * Revision 1.5  1994/10/19  14:40:32  nickb
+ * prototype of strncpy has changed.
+ *
+ * Revision 1.4  1994/06/30  12:05:25  nickh
+ * Add text message widget functions.
+ *
+ * Revision 1.3  1994/06/23  09:18:56  daveb
+ * Added XmProcessTraversal.
+ *
+ * Revision 1.2  1994/06/09  14:26:14  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:50:51  nickh
+ * new file
+ *
+ *  Revision 1.37  1994/03/16  17:27:58  matthew
+ *  Moved check of quit_on_exit flag to after the main_loop has terminated.
+ *
+ *  Revision 1.36  1994/01/28  17:40:36  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.35  1993/12/20  11:10:38  matthew
+ *  Added map and unmap functions
+ *
+ *  Revision 1.34  1993/12/17  11:21:05  matthew
+ *   Changed client event handler to print data.
+ *
+ *  Revision 1.33  1993/12/09  18:20:48  matthew
+ *  Added some test code for inter client communication
+ *  Added register_window function (nothing to do with SPARC).
+ *
+ *  Revision 1.32  1993/11/26  12:08:49  matthew
+ *  Added mainLoopContinue flag to control main loop
+ *  Added check on destroy notify event in do_input
+ *  do_input returns boolean for whether to continue event loop or not
+ *
+ *  Revision 1.31  1993/11/23  12:40:53  daveb
+ *  Ensured that XtOpenDisplay is called even if the toolkit has been
+ *  initialized.  This prevents a core dump if the first call to
+ *  Shell.xinterface() fails due to an unset DISPLAY variable.
+ *
+ *  Revision 1.30  1993/10/12  16:16:22  matthew
+ *  Merging bug fixes
+ *
+ *  Revision 1.29  1993/10/08  16:04:00  matthew
+ *  Bug fixes
+ *
+ *  Revision 1.28  1993/09/07  11:08:01  daveb
+ *  Added -mono option.
+ *
+ *  Revision 1.27.1.4  1993/10/12  13:31:37  matthew
+ *  Added quit_on_exit flag.  If set do an exit after terminating main loop
+ *
+ *  Revision 1.27.1.3  1993/10/08  10:21:44  matthew
+ *  Added text_getselectionand text_remove functions
+ *
+ *  Revision 1.27.1.2  1993/09/07  09:48:11  daveb
+ *  Added -mono option.
+ *
+ *  Revision 1.27  1993/08/29  19:37:28  daveb
+ *  Added list_select_pos and file_selection_do_search.
+ *
+ *  Revision 1.26  1993/08/27  09:45:35  daveb
+ *  Ensured that window values are converted to ML integers when returning
+ *  to ML.
+ *
+ *  Revision 1.25  1993/08/10  12:10:08  matthew
+ *  Added bell function.
+ *
+ *  Revision 1.24  1993/08/03  16:17:07  matthew
+ *  Added window_to_front functions
+ *
+ *  Revision 1.23  1993/07/29  15:47:39  matthew
+ *  Added widget_set_busy and widget_unset_busy
+ *
+ *  Revision 1.22  1993/07/23  11:12:40  richard
+ *  An exception is now raised if the server connection fails.
+ *
+ *  Revision 1.21  1993/06/03  16:30:03  daveb
+ *  Added messageBoxGetChild.
+ *
+ *  Revision 1.20  1993/06/03  15:35:12  matthew
+ *  Added peek_event
+ *
+ *  Revision 1.19  1993/06/02  13:10:30  richard
+ *  Added missing include of stdlib.h.
+ *
+ *  Revision 1.18  1993/05/25  11:36:49  matthew
+ *  Added file_selection_box_get_child
+ *
+ *  Revision 1.17  1993/05/12  13:38:31  daveb
+ *  Now increases the size of the callback table when it fulls up.  Fixed an
+ *  off-by-one error in the process.
+ *
+ *  Revision 1.16  1993/04/26  11:51:08  richard
+ *  Increased diagnostic levels.
+ *
+ *  Revision 1.15  1993/04/19  16:42:31  matthew
+ *   Added list_get_selected_pos function.
+ *
+ *  Revision 1.14  1993/04/08  17:35:11  matthew
+ *  Added string_convert_text function
+ *
+ *  Revision 1.13  1993/04/07  12:58:23  daveb
+ *  Added conversion functions for AnyEvent, KeyEvent, ButtonEvent and
+ *  TextVerifyCallback.  Added function for setting a C boolean (needed
+ *  for ModifyVerify callbacks).
+ *
+ *  Revision 1.12  1993/04/07  12:16:31  daveb
+ *  Now uses the same display for repeated invocations -- without this, Motif
+ *  would crash.
+ *
+ *  Revision 1.11  1993/03/31  12:11:58  matthew
+ *  In args_to_pairs, need to coerce pointers to returned values before dereferencing.
+ *
+ *  Revision 1.10  1993/03/30  12:26:59  matthew
+ *  Changed DIAGNOSTIC 0's to DIAGNOSTIC 1's
+ *  /
+ *
+ *  Revision 1.9  1993/03/26  19:04:41  matthew
+ *  Replaced lost log message for r1.7.  These changes are definitely there.
+ *
+ *  Revision 1.8  1993/03/25  15:57:04  matthew
+ *  List and text utility functions
+ *
+ *  Revision 1.7  1993/03/24  11:09:07  matthew
+ *  Richard's changes and additions --
+ *  Changes to types &  function calls to fix incompatible pointer warnings
+ *  Added callback conversion functions
+ *
+ *  Revision 1.6  1993/03/18  10:41:48  matthew
+ *  callback despatcher now calls the callback function with the call data
+ *
+ *  Revision 1.5  1993/03/17  15:46:00  matthew
+ *  Added close_display, do_input
+ *  Removed local display from main_loop
+ *  Added call to XtCloseDisplay in main_loop
+ *
+ *  Revision 1.4  1993/03/08  16:38:29  daveb
+ *  Changed all occurrences of DIAGNOSTIC(0 ... to DIAGNOSTIC(1 ...
+ *
+ *  Revision 1.3  1993/02/16  11:09:49  daveb
+ *  Added support for conversion from CLM.
+ *  Hid application contexts from ML.  We just create one, because Motif
+ *  crashes if we destroy an application context and create a new one,
+ *  e.g. when we end an X session, return to top-level, and start a new X
+ *  session.
+ *  Now raise an exception if the programmer tries to initialise motif more
+ *  then once.
+ *
+ *  Revision 1.2  1993/02/01  16:04:31  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.1  1993/01/27  08:07:30  richard
+ *  Initial revision
+ *
+ */
+
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <X11/Xlib.h>
+#include <X11/Intrinsic.h>
+#include <X11/Shell.h>
+#include <X11/cursorfont.h>
+#include <X11/Xatom.h>
+#include <Xm/Xm.h>
+#include <Xm/ArrowB.h>
+#include <Xm/ArrowBG.h>
+#include <Xm/BulletinB.h>
+#include <Xm/CascadeB.h>
+#include <Xm/CascadeBG.h>
+#include <Xm/Command.h>
+#include <Xm/DialogS.h>
+#include <Xm/DrawingA.h>
+#include <Xm/DrawnB.h>
+#include <Xm/FileSB.h>
+#include <Xm/Form.h>
+#include <Xm/Frame.h>
+#include <Xm/Label.h>
+#include <Xm/LabelG.h>
+#include <Xm/List.h>
+#include <Xm/MainW.h>
+#include <Xm/MenuShell.h>
+#include <Xm/MessageB.h>
+#include <Xm/PanedW.h>
+#include <Xm/PushB.h>
+#include <Xm/PushBG.h>
+#include <Xm/RowColumn.h>
+#include <Xm/Scale.h>
+#include <Xm/ScrollBar.h>
+#include <Xm/ScrolledW.h>
+#include <Xm/SelectioB.h>
+#include <Xm/Separator.h>
+#include <Xm/SeparatoG.h>
+#include <Xm/Text.h>
+#include <Xm/TextF.h>
+#include <Xm/ToggleB.h>
+#include <Xm/ToggleBG.h>
+
+#include "ansi.h"
+#include "environment.h"
+#include "values.h"
+#include "main.h"
+#include "utils.h"
+#include "diagnostic.h"
+#include "allocator.h"
+#include "interface.h"
+#include "gc.h"
+#include "exceptions.h"
+#include "global.h"
+#include "extensions.h"
+#include "x.h"
+
+#define MAX_NR_ARGS		20
+
+static mlval perv_exn_ref_x;
+
+#define INITIAL_CALLBACK_TABLE_SIZE	1024 /* *** IMPROVE THIS MECHANISM */
+					     /* One possibility would be to
+						re-use callbacks.  They would
+						have to be freed manually
+						though. Better still would be
+						a proper FFI. */
+static unsigned int callback_table_size = INITIAL_CALLBACK_TABLE_SIZE;
+static mlval callback_table;
+
+static void fix_callback_table(mlval *root, mlval value)
+{
+  unsigned int i;
+
+  callback_table = value;
+
+  MLUPDATE(callback_table, 0, MLINT(0));
+  for(i=1; i<callback_table_size; ++i)
+    MLUPDATE(callback_table, i, MLUNIT);
+}
+
+#define NR_WIDGET_CLASSES	(sizeof(widget_classes)/sizeof(WidgetClass *))
+static WidgetClass *widget_classes[] =
+{
+  /* ApplicationShell */	&applicationShellWidgetClass,
+  /* ArrowButton */		&xmArrowButtonWidgetClass,
+  /* ArrowButtonGadget */	&xmArrowButtonGadgetClass,
+  /* BulletinBoard */		&xmBulletinBoardWidgetClass,
+  /* CascadeButton */		&xmCascadeButtonWidgetClass,
+  /* CascadeButtonGadget */	&xmCascadeButtonGadgetClass,
+  /* Command */			&xmCommandWidgetClass,
+  /* DialogShell */		&xmDialogShellWidgetClass,
+  /* DrawingArea */		&xmDrawingAreaWidgetClass,
+  /* DrawnButton */		&xmDrawnButtonWidgetClass,
+  /* FileSelectionBox */	&xmFileSelectionBoxWidgetClass,
+  /* Form */			&xmFormWidgetClass,
+  /* Frame */			&xmFrameWidgetClass,
+  /* Label */			&xmLabelWidgetClass,
+  /* LabelGadget */		&xmLabelGadgetClass,
+  /* List */			&xmListWidgetClass,
+  /* MainWindow */		&xmMainWindowWidgetClass,
+  /* Manager */			&xmManagerWidgetClass,
+  /* MenuShell */		&xmMenuShellWidgetClass,
+  /* MessageBox */		&xmMessageBoxWidgetClass,
+  /* OverrideShell */		&overrideShellWidgetClass,
+  /* PanedWindow */		&xmPanedWindowWidgetClass,
+  /* Primitive */		&xmPrimitiveWidgetClass,
+  /* PushButton */		&xmPushButtonWidgetClass,
+  /* PushButtonGadget */	&xmPushButtonGadgetClass,
+  /* RowColumn */		&xmRowColumnWidgetClass,
+  /* Scale */			&xmScaleWidgetClass,
+  /* ScrollBar */		&xmScrollBarWidgetClass,
+  /* ScrolledWindow */		&xmScrolledWindowWidgetClass,
+  /* SelectionBox */		&xmSelectionBoxWidgetClass,
+  /* Separator */		&xmSeparatorWidgetClass,
+  /* SeparatorGadget */		&xmSeparatorGadgetClass,
+  /* Shell */			&shellWidgetClass,
+  /* Text */			&xmTextWidgetClass,
+  /* TextField */		&xmTextFieldWidgetClass,
+  /* ToggleButton */		&xmToggleButtonWidgetClass,
+  /* ToggleButtonGadget */	&xmToggleButtonGadgetClass,
+  /* TopLevelShell */		&topLevelShellWidgetClass,
+  /* TransientShell */		&transientShellWidgetClass,
+  /* WMShell */ 		&wmShellWidgetClass
+};
+
+static mlval widget_class_table;
+
+static void fix_widget_class_table(mlval *root, mlval value)
+{
+  int i;
+
+  DIAGNOSTIC(2, "fix_widget_class_table(root = 0x%X, value = 0x%X)", root, value);
+
+  widget_class_table = value;
+
+  for(i=0; i<NR_WIDGET_CLASSES; ++i)
+  {
+    DIAGNOSTIC(3, "  0x%X -> 0x%X", DEREF(FIELD(widget_class_table, i)), *widget_classes[i]);
+
+    MLUPDATE(FIELD(widget_class_table, i), 0, (mlval)*widget_classes[i]);
+  }
+}
+
+
+static inline mlval box(unsigned long int x)
+{
+  mlval b = allocate_bytearray(sizeof(x));
+
+  memcpy(CBYTEARRAY(b), (char *)&x, sizeof(x));
+
+  return(b);
+}
+
+static inline unsigned long int unbox(mlval b)
+{
+  unsigned long int x;
+
+  memcpy((char *)&x, CBYTEARRAY(b), sizeof(x));
+
+  return(x);
+}
+
+static void pairs_to_args(Arg args[], Cardinal *nr_args_return, mlval list)
+{
+  Cardinal nr_args = 0;
+
+  DIAGNOSTIC(2, "pairs_to_args(args = 0x%X, list = 0x%X)", args, list);
+
+  while(!MLISNIL(list))
+  {
+    mlval head = MLHEAD(list);
+    mlval argument = FIELD(head, 1);
+    mlval value = MLDEREF(FIELD(argument, 1));
+
+    DIAGNOSTIC(2, "  %3d: %s", nr_args, CSTRING(FIELD(head, 0)));
+
+    args[nr_args].name = CSTRING(FIELD(head, 0));
+
+    switch(FIELD(argument, 0))
+    {
+      case MLINT(0):	/* ARGBOOL */
+      args[nr_args].value = (XtArgVal)(value != MLFALSE);
+      DIAGNOSTIC(2, "       boolean %d", (int)args[nr_args].value, 0);
+      break;
+
+      case MLINT(1):	/* ARGBOXED */
+      if(value != MLUNIT)
+	args[nr_args].value = (XtArgVal)unbox(value);
+      DIAGNOSTIC(2, "       boxed 0x%lX", (unsigned long int)args[nr_args].value, 0);
+      break;
+
+      case MLINT(2):	/* ARGINT */
+      args[nr_args].value = (XtArgVal)CINT(value);
+      DIAGNOSTIC(2, "       int %ld", (long int)args[nr_args].value, 0);
+      break;
+
+      case MLINT(3):	/* ARGSTRING */
+      args[nr_args].value = (XtArgVal)CSTRING(value);
+      DIAGNOSTIC(2, "       string `%s'", (char *)args[nr_args].value, 0);
+      break;
+
+      case MLINT(4):	/* ARGUNBOXED */
+      args[nr_args].value = (XtArgVal)value;
+      DIAGNOSTIC(2, "       unboxed 0x%lX", (unsigned long int)args[nr_args].value, 0);
+      break;
+
+      default:
+      error("pairs_to_args: Illegal Argument constructor for resource `%s': 0x%X",
+	    CSTRING(FIELD(head, 0)), FIELD(argument, 0));
+    }
+
+    ++nr_args;
+    list = MLTAIL(list);
+  }
+
+  *nr_args_return = nr_args;
+}
+
+static void args_to_pairs(Arg args[], mlval list)
+{
+  Cardinal nr_args = 0;
+
+  declare_root(&list);
+
+  while(!MLISNIL(list))
+  {
+    mlval head = MLHEAD(list);
+    mlval argument = FIELD(head, 1);
+    mlval ref = FIELD(argument, 1);
+
+    switch(FIELD(argument, 0))
+    {
+      case MLINT(0):	/* ARGBOOL */
+      /* Need to cast the pointer before dereferencing */
+      MLUPDATE(ref, 0, *(Boolean *)(&(args[nr_args].value)) ? MLTRUE : MLFALSE);
+      break;
+
+      case MLINT(1):	/* ARGBOXED */
+      {
+	mlval bytearray = box((unsigned long int)args[nr_args].value);
+	MLUPDATE(ref, 0, bytearray);
+      }
+      break;
+
+      case MLINT(2):	/* ARGINT */
+      /* Need to cast the pointer before dereferencing */
+      MLUPDATE(ref, 0, MLINT(*(int *)(&(args[nr_args].value))));
+      break;
+
+      case MLINT(3):	/* ARGSTRING */
+      MLUPDATE(ref, 0, ml_string((char *)args[nr_args].value));
+      break;
+
+      case MLINT(4):	/* ARGUNBOXED */
+      MLUPDATE(ref, 0, (mlval)args[nr_args].value);
+      break;
+
+      default:
+      error("args_to_pairs: Illegal Argument constructor for resource `%s': 0x%X",
+	    CSTRING(FIELD(head, 0)), FIELD(argument, 0));
+    }
+
+    ++nr_args;
+    list = MLTAIL(list);
+  }
+
+  retract_root(&list);
+}
+
+/* Some test code for inter client communication -- MLA */
+
+static void my_message_handler (Widget w, XtPointer client_data,
+				XEvent *event, Boolean *continue_to_dispatch)
+
+{
+  if (event->type != ClientMessage)
+    return;
+  else
+    {
+      Atom MLWORKS_MESSAGE = XInternAtom(XtDisplay ((Widget) w),"MLWorksMessage",FALSE);
+      DIAGNOSTIC (4,"MLWorks message is %ld, message type is %ld\n",
+		  MLWORKS_MESSAGE,
+		  event->xclient.message_type);
+      if (event->xclient.message_type == MLWORKS_MESSAGE)
+	printf ("%s\n",event->xclient.data.b);
+    }
+}
+
+static mlval register_window (mlval arg)
+{
+  Widget w = (Widget) arg;
+  Window window = XtWindow (w);
+  Display *dpy = XtDisplay (w);
+  Atom MLWORKS_WINDOW = XInternAtom(dpy,"MLWorksWindow",0);
+
+  DIAGNOSTIC (4,"Window is %ld\n", window,0);
+  XChangeProperty (dpy,DefaultRootWindow (dpy),
+		   MLWORKS_WINDOW, XA_WINDOW,
+		   32, PropModeReplace,
+		   (unsigned char *) &window, 1);
+  XtAddEventHandler(w,NoEventMask,TRUE,my_message_handler,NULL);
+  return (MLUNIT);
+}
+
+static Widget applicationShell = NULL;
+
+/* Each call to initialize creates a new application shell.  The first
+ * application shell is stored globally, so that main_loop can text for
+ * its destruction.  We use one application context for all application
+ * shells, so that we can create user windows interactively from the Motif
+ * environment.
+ */
+static mlval initialize(mlval argument)
+{
+  /* These static values record whether we have initialized the X toolkit and
+     connection to the display. */
+  static int toolkit_initialized = 0;
+  static Display *display = NULL;
+
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+  Widget w;
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 2));
+
+  if(!toolkit_initialized)
+  {
+    DIAGNOSTIC(2, "initializing toolkit", 0, 0);
+    XtToolkitInitialize();
+    toolkit_initialized = 1;
+  }
+
+  if (display == NULL) {
+    XtAppContext applicationContext;
+    Cardinal argc = 3;
+    const char *argv[argc + 1];
+
+    applicationContext = XtCreateApplicationContext();
+
+    argv[0] = "mlworks";
+    argv[1] = "-xrm";
+    argv[2] = mono ? "*customization: -mono" : "*customization: -color";
+    argv[argc] = NULL;
+    display = XtOpenDisplay(applicationContext, (char *) "",
+			    CSTRING(FIELD(argument, 0)),
+			    CSTRING(FIELD(argument, 1)),
+			    NULL, 0, &argc, (char **) argv);
+    if(display == NULL)
+      exn_raise_string(perv_exn_ref_x, "Couldn't open display");
+  }
+
+  DIAGNOSTIC(2, "creating application shell", 0, 0);
+
+  w = XtAppCreateShell(CSTRING(FIELD(argument, 0)),
+		       CSTRING(FIELD(argument, 1)),
+		       applicationShellWidgetClass,
+		       display, args, nr_args);
+
+  args[0].name = (char *)"deleteResponse";
+  args[0].value = (XtArgVal)XmDO_NOTHING;
+  XtSetValues (w, args, 1);
+   
+  if (applicationShell == NULL) {
+    applicationShell = w;
+  }
+
+  return (mlval)w;
+}
+
+static int quit_on_exit_flag = 0;
+
+static mlval quit_on_exit (mlval argument)
+{
+  quit_on_exit_flag = 1;
+  return (MLUNIT);
+}
+
+static mlval ungrab_pointer(mlval argument)
+{
+  if (applicationShell != NULL) {
+    XUngrabPointer (XtDisplay ((Widget)applicationShell), CurrentTime);
+    XUngrabKeyboard (XtDisplay ((Widget)applicationShell), CurrentTime);
+  }
+  return MLUNIT;
+}
+
+/* The main_loop function extracts the application context from the stored
+ * application shell.  It uses a flag to indicate whether it is still a
+ * valid source of input.  The main_loop and do_input functions communicate
+ * via this flag.  Calls to main_loop when one is already running are ignored.
+ */
+static int mainLoopContinue = 0;
+
+static mlval main_loop(mlval argument)
+{
+  Display *display;
+  Window window;
+
+  if (applicationShell == NULL)
+    c_raise(argument);
+
+/* Removed for the moment, else exit from a top level debugger doesn't work */
+/*
+  if (mainLoopContinue)
+    return(MLUNIT);
+  else
+*/
+    mainLoopContinue = 1;
+
+  window = XtWindow((Widget)applicationShell);
+  display = XtDisplay((Widget)applicationShell);
+
+  XSelectInput(display, window, StructureNotifyMask);
+
+  DIAGNOSTIC(2, "shell window is %ld", window, 0);
+  while (mainLoopContinue) {
+    XEvent event;
+    XtAppNextEvent(XtDisplayToApplicationContext (display), &event);
+    XtDispatchEvent(&event);
+    if (event.type == DestroyNotify) {
+      DIAGNOSTIC(2, "destroy notify: window = %ld", event.xdestroywindow.window, 0);
+	if (event.xdestroywindow.window == window) {
+          DIAGNOSTIC(2, "breaking out of main loop", 0, 0);
+	  mainLoopContinue = 0;
+          break;
+	}
+    }
+  }
+  if (quit_on_exit_flag) {
+    exit (0);
+  }
+  applicationShell = NULL;
+  return(MLUNIT);
+}
+
+static mlval do_input (mlval argument)
+{
+  XEvent event;
+  Window window;
+
+  if (applicationShell == NULL)
+    c_raise(argument);
+
+  if (mainLoopContinue == 0)
+    return(MLFALSE);
+
+  window = XtWindow(applicationShell);
+
+  XtAppNextEvent(
+    XtDisplayToApplicationContext (XtDisplay (applicationShell)),
+    &event);
+  XtDispatchEvent(&event);
+  if (event.type == DestroyNotify) 
+    {
+      DIAGNOSTIC(2, "destroy notify: window = %d", event.xdestroywindow.window, 0);
+      if (event.xdestroywindow.window == window)
+	{
+	  DIAGNOSTIC(2, "breaking out of sub loop", 0, 0);
+	  mainLoopContinue = 0;
+	  return(MLFALSE);
+	}
+      else
+	return (MLTRUE);
+    }
+  else
+    return(MLTRUE);
+}
+
+static mlval widget_create(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+  Widget widget;
+
+  DIAGNOSTIC(2, "widget_create(\"%s\", ...)", CSTRING(FIELD(argument, 0)), 0);
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 3));
+
+  widget = XtCreateWidget(CSTRING(FIELD(argument, 0)),
+			  (WidgetClass)DEREF(FIELD(argument, 1)),
+			  (Widget)FIELD(argument, 2),
+			  args, nr_args);
+
+  DIAGNOSTIC(2, "  widget = 0x%X", widget, 0);
+
+  return((mlval)widget);
+}
+
+static mlval widget_create_popupshell(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+  Widget widget;
+
+  DIAGNOSTIC(2, "widget_create_popupshell(\"%s\", ...)", CSTRING(FIELD(argument, 0)), 0);
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 3));
+
+  widget = XtCreatePopupShell(CSTRING(FIELD(argument, 0)),
+			      (WidgetClass)DEREF(FIELD(argument, 1)),
+			      (Widget)FIELD(argument, 2),
+			      args, nr_args);
+
+  DIAGNOSTIC(2, "  widget = 0x%X", widget, 0);
+
+  return((mlval)widget);
+}
+
+static mlval widget_create_pulldownmenu(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+  Widget widget;
+
+  DIAGNOSTIC(2, "widget_create_pulldownmenu(\"%s\", ...)", CSTRING(FIELD(argument, 1)), 0);
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 2));
+
+  widget = XmCreatePulldownMenu((Widget)FIELD(argument, 0),
+			        CSTRING(FIELD(argument, 1)),
+			        args, nr_args);
+
+  DIAGNOSTIC(2, "  widget = 0x%X", widget, 0);
+
+  return((mlval)widget);
+}
+
+static mlval widget_create_scrolledtext(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+  Widget widget;
+
+  DIAGNOSTIC(2, "widget_create_scrolledtext(\"%s\", ...)", CSTRING(FIELD(argument, 1)), 0);
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 2));
+
+  widget = XmCreateScrolledText((Widget)FIELD(argument, 0),
+			        CSTRING(FIELD(argument, 1)),
+			        args, nr_args);
+
+  DIAGNOSTIC(2, "  widget = 0x%X", widget, 0);
+
+  return((mlval)widget);
+}
+
+static mlval widget_destroy(mlval widget)
+{
+  XtDestroyWidget((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_realize(mlval widget)
+{
+  XtRealizeWidget((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_unrealize(mlval widget)
+{
+  XtUnrealizeWidget((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_manage(mlval widget)
+{
+  XtManageChild((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_unmanage(mlval widget)
+{
+  XtUnmanageChild((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_map(mlval widget)
+{
+  XtMapWidget((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval widget_unmap(mlval widget)
+{
+  XtUnmapWidget((Widget)widget);
+  return(MLUNIT);
+}
+
+/* Bring a window to the front */
+
+static mlval window_to_front (mlval widget)
+{
+  XWindowChanges changes;
+  changes.stack_mode=Above;
+  XReconfigureWMWindow(XtDisplay((Widget)widget),
+		       XtWindow((Widget)widget),
+		       XScreenNumberOfScreen(XtScreen((Widget)widget)),
+		       (unsigned int) CWStackMode,
+		       &changes);
+  return(MLUNIT);
+  }
+
+/* This, of course, should be done on the ML side of things --
+   apologies Richard */
+/* Reuse same watch cursor -- the display should be the same each time
+   window interface is run */
+static Cursor watch = (Cursor) NULL;
+
+static mlval widget_set_busy (mlval widget)
+{
+  Widget w = (Widget)widget;
+  if (!watch) watch = XCreateFontCursor(XtDisplay(w),XC_watch);
+  XDefineCursor(XtDisplay(w),XtWindow(w),watch);
+  XmUpdateDisplay(w);
+  return (MLUNIT);
+}
+
+static mlval widget_unset_busy (mlval widget)
+{
+  Widget w = (Widget)widget;
+  XUndefineCursor(XtDisplay(w),XtWindow(w));
+  XmUpdateDisplay(w);
+  return(MLUNIT);
+}
+  
+static mlval widget_values_set(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 1));
+  XtSetValues((Widget)FIELD(argument, 0), args, nr_args);
+
+  return(MLUNIT);
+}
+
+static mlval widget_values_get(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args, i;
+  mlval list = FIELD(argument, 1);
+
+  pairs_to_args(args, &nr_args, list);
+  for(i=0; i<nr_args; ++i) {
+    XtArgVal tmp = (XtArgVal)malloc(sizeof (XtArgVal));
+    if (tmp == 0)
+      error("widget_values_get: malloc failed", 0, 0);
+    else
+      args[i].value = tmp;
+  }
+  XtGetValues((Widget)FIELD(argument, 0), args, nr_args);
+  for(i=0; i<nr_args; ++i) {
+    XtArgVal *tmp = (XtArgVal*)args[i].value;
+    args[i].value = *tmp;
+    XtFree ((char*)tmp);
+  }
+  args_to_pairs(args, list);
+
+  return(MLUNIT);
+}  
+
+static mlval widget_display(mlval widget)
+{
+  return((mlval)XtDisplay((Widget)widget));
+}
+
+static mlval widget_screen(mlval widget)
+{
+  return((mlval)XtScreen((Widget)widget));
+}
+
+static mlval widget_window(mlval widget)
+{
+  return(MLINT(XtWindow((Widget)widget)));
+}
+
+static mlval widget_name(mlval widget)
+{
+  return(ml_string(XtName((Widget)widget)));
+}
+
+static mlval widget_parent(mlval widget)
+{
+  DIAGNOSTIC(2, "parent of 0x%X is 0x%X", widget, XtParent((Widget)widget));
+  return((mlval)XtParent((Widget)widget));
+}
+
+static mlval process_traversal(mlval argument)
+{
+  Widget w = (Widget)FIELD(argument, 0);
+  int i = CINT(FIELD(argument, 1));
+  return (XmProcessTraversal(w, i) ?
+	  MLTRUE : MLFALSE);
+}
+
+static mlval text_setstring(mlval argument)
+{
+  XmTextSetString((Widget)FIELD(argument, 0),
+		  CSTRING(FIELD(argument, 1)));
+  return MLUNIT;
+}
+
+static mlval text_insert(mlval argument)
+{
+  XmTextInsert((Widget)FIELD(argument, 0),
+	       CINT(FIELD(argument, 1)),
+	       CSTRING(FIELD(argument, 2)));
+  return MLUNIT;
+}
+
+static mlval text_replace(mlval argument)
+{
+  XmTextReplace((Widget)FIELD(argument, 0),
+		CINT(FIELD(argument, 1)),
+		CINT(FIELD(argument, 2)),
+		CSTRING(FIELD(argument, 3)));
+  return MLUNIT;
+}
+
+static mlval text_getstring(mlval widget)
+{
+  char *tmp = XmTextGetString((Widget)widget);
+  mlval str = ml_string(tmp);
+
+  XtFree(tmp);
+  return str;
+}
+
+static mlval text_getlastposition(mlval widget)
+{
+  return (mlval)MLINT(XmTextGetLastPosition((Widget)widget));
+}
+
+static mlval text_getinsertionposition(mlval widget)
+{
+  return (mlval)MLINT(XmTextGetInsertionPosition((Widget)widget));
+}
+
+static mlval text_setinsertionposition(mlval argument)
+{
+  XmTextSetInsertionPosition((Widget)FIELD(argument, 0),
+			     CINT(FIELD(argument, 1)));
+  return MLUNIT;
+}
+
+static mlval text_getselection (mlval widget)
+{
+  char *tmp = XmTextGetSelection((Widget)widget);
+  mlval str = ml_string(tmp);
+
+  XtFree(tmp);
+  return str;
+}
+
+static mlval text_remove (mlval widget)
+{
+  XmTextRemove ((Widget) widget);
+  return MLUNIT;
+}
+
+static mlval fontstruct_load(mlval argument)
+{
+  XFontStruct *fontstruct =
+    XLoadQueryFont((Display *)FIELD(argument, 1),
+		   CSTRING(FIELD(argument, 2)));
+
+  if(fontstruct == NULL)
+    c_raise(FIELD(argument, 0));
+
+  return((mlval)fontstruct);
+}
+
+static mlval fontstruct_free(mlval argument)
+{
+  XFreeFont((Display *)FIELD(argument, 0),
+	    (XFontStruct *)FIELD(argument, 1));
+  return(MLUNIT);
+}
+
+static mlval fontlist_create(mlval argument)
+{
+  return((mlval)XmFontListCreate((XFontStruct *)FIELD(argument, 0),
+				 CSTRING(FIELD(argument, 1))));
+}
+
+static mlval fontlist_add(mlval argument)
+{
+  return((mlval)XmFontListAdd((XmFontList)FIELD(argument, 0),
+			      (XFontStruct *)FIELD(argument, 1),
+			      CSTRING(FIELD(argument, 2))));
+}
+
+static mlval fontlist_copy(mlval argument)
+{
+  return((mlval)XmFontListCopy((XmFontList)argument));
+}
+
+static mlval fontlist_free(mlval argument)
+{
+  XmFontListFree((XmFontList)argument);
+  return(MLUNIT);
+}
+
+static mlval string_create(mlval argument)
+{
+  return((mlval)XmStringCreate(CSTRING(FIELD(argument, 0)),
+			       CSTRING(FIELD(argument, 1))));
+}
+
+static mlval string_create_direction(mlval argument)
+{
+  return((mlval)XmStringDirectionCreate(CINT(argument)));
+}
+
+static mlval string_create_separator(mlval unit)
+{
+  return((mlval)XmStringSeparatorCreate());
+}
+
+static mlval string_create_segment(mlval argument)
+{
+  return((mlval)XmStringSegmentCreate(CSTRING(FIELD(argument, 0)),
+				      CSTRING(FIELD(argument, 1)),
+				      CINT(FIELD(argument, 2)),
+				      FIELD(argument, 3) == MLTRUE));
+}
+
+static mlval string_create_ltor(mlval argument)
+{
+  return((mlval)XmStringCreateLtoR(CSTRING(FIELD(argument, 0)),
+				   CSTRING(FIELD(argument, 1))));
+}
+
+static mlval string_create_simple(mlval string)
+{
+  return((mlval)XmStringCreateSimple(CSTRING(string)));
+}
+
+static mlval string_free(mlval string)
+{
+  XmStringFree((XmString)string);
+  return(MLUNIT);
+}
+
+static mlval string_compare(mlval argument)
+{
+  return(XmStringCompare((XmString)FIELD(argument, 0),
+			 (XmString)FIELD(argument, 1)) ?
+	 MLTRUE : MLFALSE);
+}
+
+static mlval string_bytecompare(mlval argument)
+{
+  return(XmStringByteCompare((XmString)FIELD(argument, 0),
+			     (XmString)FIELD(argument, 1)) ?
+	 MLTRUE : MLFALSE);
+}
+
+static mlval string_copy(mlval string)
+{
+  return((mlval)XmStringCopy((XmString)string));
+}
+
+static mlval string_ncopy(mlval argument)
+{
+  return((mlval)XmStringNCopy((XmString)FIELD(argument, 0),
+			      CINT(FIELD(argument, 1))));
+}
+
+static mlval string_concat(mlval argument)
+{
+  return((mlval)XmStringConcat((XmString)FIELD(argument, 0),
+			       (XmString)FIELD(argument, 1)));
+}
+
+static mlval string_nconcat(mlval argument)
+{
+  return((mlval)XmStringNConcat((XmString)FIELD(argument, 0),
+				(XmString)FIELD(argument, 1),
+				CINT(FIELD(argument, 2))));
+}
+
+static mlval string_empty(mlval string)
+{
+  return(XmStringEmpty((XmString)string) ? MLTRUE : MLFALSE);
+}
+
+static mlval string_length(mlval string)
+{
+  return(MLINT(XmStringLength((XmString)string)));
+}
+
+static mlval string_linecount(mlval string)
+{
+  return(MLINT(XmStringLineCount((XmString)string)));
+}
+
+static mlval string_extent(mlval argument)
+{
+  Dimension width, height;
+  mlval result;
+
+  XmStringExtent((XmFontList)FIELD(argument, 0),
+		 (XmString)FIELD(argument, 1),
+		 &width, &height);
+
+  result = allocate_record(2);
+  FIELD(result, 0) = MLINT(width);
+  FIELD(result, 1) = MLINT(height);
+
+  return(result);
+}
+
+static mlval string_height(mlval argument)
+{
+  return(MLINT(XmStringHeight((XmFontList)FIELD(argument, 0),
+			      (XmString)FIELD(argument, 1))));
+}
+
+static mlval string_width(mlval argument)
+{
+  return(MLINT(XmStringWidth((XmFontList)FIELD(argument, 0),
+			     (XmString)FIELD(argument, 1))));
+}
+
+/* This is nicked out of my Motif book - MLA */
+static mlval string_convert_text (mlval argument)
+{
+  XmStringContext context;
+  char *text;
+  XmStringCharSet charset;
+  XmStringDirection dir;
+  Boolean separator;
+  char *buf = NULL;
+  int done = FALSE;
+  mlval result;
+
+  XmStringInitContext (&context,(XmString)argument);
+  while (!done)
+    if (XmStringGetNextSegment (context,&text,&charset,&dir,&separator))
+      {
+	/* Don't know why it does this, seems wrong */
+	if (separator)
+	  done = TRUE;
+	if (buf)
+	  {
+	    buf = XtRealloc (buf,strlen(buf) + strlen(text) + 2u);
+	    strcat(buf,text);
+	  }
+	else
+	  {buf = (char *) XtMalloc(strlen(text) + 1u);
+	   strcpy(buf,text);
+	 }
+	XtFree(text);
+      }
+    else
+      done = TRUE;
+  XmStringFreeContext (context);
+  result = ml_string(buf);
+  XtFree(buf);
+  return result;
+  }
+  
+  
+static void callback_dispatch(Widget widget, XtPointer client_data, XtPointer call_data)
+{
+  DIAGNOSTIC(2, "callback_dispatch(widget = 0x%X, callback_nr = %d)", widget, client_data);
+  DIAGNOSTIC(2, "  invoking f 0x%X", MLSUB(callback_table, (size_t)client_data+1), 0);
+
+  callml((mlval)call_data, MLSUB(callback_table, (size_t)client_data+1));
+}
+
+static mlval widget_callback_add(mlval argument)
+{
+  size_t callback_nr = CINT(MLSUB(callback_table, 0));
+
+  DIAGNOSTIC(3, "widget_callback_add(widget = 0x%X, name = `%s',",
+	     FIELD(argument, 0), CSTRING(FIELD(argument, 1)));
+  DIAGNOSTIC(3, "                    f = 0x%X)", FIELD(argument, 2), 0);
+
+  /* Element 0 of the table gives the number of callbacks stored.  Callback
+     i is stored in element i+1.  Therefore the old value of element 0 gives
+     the id number of the new callback.  If the table is full, then
+     number of callbacks (i.e. element 0) = size of table - 1. */
+  if(callback_nr >= callback_table_size - 1) {
+    unsigned int i;
+    unsigned int new_table_size = callback_table_size * 2;
+    mlval new_table;
+
+    declare_root(&argument);
+    DIAGNOSTIC(2, "Resizing callback table to %d, callback_nr = %d",
+	       new_table_size, callback_nr);
+    new_table = allocate_array(new_table_size);
+    retract_root(&argument);
+
+    for(i=0; i<callback_table_size; ++i)
+      MLUPDATE(new_table, i, MLSUB(callback_table, i));
+    for(; i<new_table_size; ++i)
+      MLUPDATE(new_table, i, MLUNIT);
+    callback_table = new_table;
+    callback_table_size = new_table_size;
+    callback_nr = CINT(MLSUB(callback_table, 0));
+  }
+
+  MLUPDATE(callback_table, callback_nr+1, FIELD(argument, 2));
+  MLUPDATE(callback_table, 0, MLINT(callback_nr+1));
+
+  XtAddCallback((Widget)FIELD(argument, 0),
+		CSTRING(FIELD(argument, 1)),
+		callback_dispatch,
+		(XtPointer)callback_nr);
+
+  DIAGNOSTIC(3, "  callback_nr = %d", callback_nr, 0);
+
+  return(MLUNIT);
+}
+
+static mlval translations_parse_table(mlval table)
+{
+  return((mlval)XtParseTranslationTable(CSTRING(table)));
+}
+
+static mlval translations_override(mlval argument)
+{
+  XtOverrideTranslations((Widget)FIELD(argument, 0),
+			 (XtTranslations)FIELD(argument, 1));
+  return(MLUNIT);
+}
+
+static mlval translations_augment(mlval argument)
+{
+  XtAugmentTranslations((Widget)FIELD(argument, 0),
+			(XtTranslations)FIELD(argument, 1));
+  return(MLUNIT);
+}
+
+static mlval translations_uninstall(mlval widget)
+{
+  XtUninstallTranslations((Widget)widget);
+  return(MLUNIT);
+}
+
+static mlval pixmap_create(mlval argument)
+{
+  return((mlval)XCreatePixmap((Display *)FIELD(argument, 0),
+			      (Drawable)FIELD(argument, 1),
+			      (unsigned int) CINT(FIELD(argument, 2)),
+			      (unsigned int) CINT(FIELD(argument, 3)),
+			      (unsigned int) CINT(FIELD(argument, 4))));
+}
+
+static mlval pixmap_free(mlval argument)
+{
+  XFreePixmap((Display *)FIELD(argument, 0),
+	      (Pixmap)FIELD(argument, 1));
+  return(MLUNIT);
+}
+
+static mlval pixel_screen_black(mlval screen)
+{
+  return(box((unsigned long int)BlackPixelOfScreen((Screen *)screen)));
+}
+
+static mlval pixel_screen_white(mlval screen)
+{
+  return(box((unsigned long int)WhitePixelOfScreen((Screen *)screen)));
+}
+
+static mlval pixmap_get(mlval argument)
+{
+  Pixmap pixmap;
+  Pixel foreground, background;
+
+  foreground = (Pixel)unbox(FIELD(argument, 2));
+  background = (Pixel)unbox(FIELD(argument, 3));
+
+  pixmap = XmGetPixmap((Screen *)FIELD(argument, 0),
+		       CSTRING(FIELD(argument, 1)),
+		       foreground, background);
+
+  if(pixmap == XmUNSPECIFIED_PIXMAP)
+    exn_raise_format(perv_exn_ref_io,
+		     "Couldn't read pixmap from %.2000s",
+		     CSTRING(FIELD(argument, 1)));
+
+  return((mlval)pixmap);
+}
+
+static mlval convert_AnyEvent(mlval arg)
+{
+  mlval result;
+  XEvent *event = (XEvent*)arg;
+
+  declare_root(&arg);
+  result = allocate_record(5);
+  retract_root(&arg);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * display
+   * event_type
+   * send_event
+   * serial
+   * window
+   */
+
+  if (arg == (mlval)NULL) {
+    /* Yes, sometimes the event component of a TextVerifyCallback can be NULL,
+       just like the manual says it can't. */
+    FIELD(result,  0) = (mlval)(NULL);
+    FIELD(result,  1) = MLINT(0);
+    FIELD(result,  2) = MLFALSE;
+    FIELD(result,  3) = MLINT(0);
+    FIELD(result,  4) = MLINT(0);
+  } else {
+    FIELD(result,  0) = (mlval)(event->xany.display);
+    FIELD(result,  1) = MLINT(event->xany.type);
+    FIELD(result,  2) = (event->xany.send_event) ? MLTRUE : MLFALSE;
+    FIELD(result,  3) = MLINT(event->xany.serial);
+    FIELD(result,  4) = MLINT(event->xany.window);
+  }
+
+  return result;
+}
+
+static mlval convert_KeyEvent(mlval arg)
+{
+  mlval common = FIELD(arg, 0);
+  XEvent *event = (XEvent*)FIELD(arg, 1);
+  mlval result;
+  char c;
+
+  declare_root(&arg);
+  result = allocate_record(11);
+  declare_root(&result);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * common     stuff common to all events
+   * key    	the key used
+   * root       root window
+   * same_screen
+   * state      modifiers to key
+   * subwindow  child window
+   * time       in milliseconds
+   * x     	x position in window
+   * x_root     x position relative to root
+   * y     	y position in window
+   * y_root     y position relative to root
+   */
+
+  FIELD(result,  0) = common;
+  FIELD(result,  1) = allocate_string(2);
+  retract_root(&arg);
+  retract_root(&result);
+  c = XLookupKeysym(&(event->xkey), (signed int) event->xkey.state);
+  /* XLookupKeysym only seems to handle normal and shifted characters.
+     We want control characters as well. We could leave it up to the
+     ML, but we can just as easily handle it here. */
+  if (c == '\0') {
+    c = XLookupKeysym(&(event->xkey), 0);
+    if (c && (event->xkey.state & ControlMask))
+      c -= '`';
+  }
+  CSTRING(FIELD(result, 1))[0] = c;
+  CSTRING(FIELD(result, 1))[1] = '\0';
+  FIELD(result,  2) = MLINT(event->xkey.root);
+  FIELD(result,  3) = (event->xkey.same_screen) ? MLTRUE : MLFALSE;
+  FIELD(result,  4) = MLINT(event->xkey.state);
+  FIELD(result,  5) = MLINT(event->xkey.subwindow);
+  FIELD(result,  6) = MLINT(event->xkey.time);
+  FIELD(result,  7) = MLINT(event->xkey.x);
+  FIELD(result,  8) = MLINT(event->xkey.x_root);
+  FIELD(result,  9) = MLINT(event->xkey.y);
+  FIELD(result, 10) = MLINT(event->xkey.y_root);
+
+  return result;
+}
+
+static mlval convert_ButtonEvent(mlval arg)
+{
+  mlval common = FIELD(arg, 0);
+  XEvent *event = (XEvent*)FIELD(arg, 1);
+  mlval result;
+
+  declare_root(&arg);
+  result = allocate_record(11);
+  retract_root(&arg);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * button    	the button used
+   * common     stuff common to all events
+   * root       root window
+   * same_screen
+   * state      modifiers to key
+   * subwindow  child window
+   * time       in milliseconds
+   * x     	x position in window
+   * x_root     x position relative to root
+   * y     	y position in window
+   * y_root     y position relative to root
+   */
+
+  FIELD(result,  0) = MLINT(event->xbutton.button);
+  FIELD(result,  1) = common;
+  FIELD(result,  2) = MLINT(event->xbutton.root);
+  FIELD(result,  3) = (event->xbutton.same_screen) ? MLTRUE : MLFALSE;
+  FIELD(result,  4) = MLINT(event->xbutton.state);
+  FIELD(result,  5) = MLINT(event->xbutton.subwindow);
+  FIELD(result,  6) = MLINT(event->xbutton.time);
+  FIELD(result,  7) = MLINT(event->xbutton.x);
+  FIELD(result,  8) = MLINT(event->xbutton.x_root);
+  FIELD(result,  9) = MLINT(event->xbutton.y);
+  FIELD(result, 10) = MLINT(event->xbutton.y_root);
+
+  return result;
+}
+
+
+static mlval convert_AnyCallbackStruct(mlval arg)
+{
+  XmAnyCallbackStruct *s = (XmAnyCallbackStruct *)arg;
+  mlval result = allocate_record(2);
+
+  FIELD(result, 0) = MLINT(s->reason);
+  FIELD(result, 1) = (mlval)(s->event);
+
+  return(result);
+}
+
+static mlval convert_ToggleButtonCallbackStruct(mlval arg)
+{
+  XmToggleButtonCallbackStruct *s = (XmToggleButtonCallbackStruct *)arg;
+  mlval result = allocate_record(3);
+
+  FIELD(result, 0) = MLINT(s->reason);
+  FIELD(result, 1) = (mlval)(s->event);
+  FIELD(result, 2) = MLINT(s->set);
+
+  return(result);
+}
+
+static mlval convert_ListCallbackStruct(mlval arg)
+{
+  XmListCallbackStruct *s = (XmListCallbackStruct *)arg;
+  mlval result = allocate_record(9);
+
+  FIELD(result, 0) = MLINT(s->reason);
+  FIELD(result, 1) = (mlval)(s->event);
+  FIELD(result, 2) = (mlval)(s->item);
+  FIELD(result, 3) = MLINT(s->item_length);
+  FIELD(result, 4) = MLINT(s->item_position);
+  /* The following fields are not implemented properly yet. */
+  FIELD(result, 5) = MLNIL;
+  FIELD(result, 6) = MLINT(-1);
+  FIELD(result, 7) = MLNIL;
+  FIELD(result, 8) = MLINT(s->selection_type);
+
+  return(result);
+}
+  
+static mlval convert_TextVerifyCallbackStruct(mlval arg)
+{
+  XmTextVerifyCallbackStruct *s = (XmTextVerifyCallbackStruct *)arg;
+  mlval result = allocate_record(8);
+
+  declare_root(&result);
+  declare_root(&arg);
+  FIELD(result, 0) = MLINT(s->reason);
+  FIELD(result, 1) = (mlval)(s->event);
+  FIELD(result, 2) = (mlval)(&s->doit);
+  FIELD(result, 3) = MLINT(s->currInsert);
+  FIELD(result, 4) = MLINT(s->newInsert);
+  FIELD(result, 5) = MLINT(s->startPos);
+  FIELD(result, 6) = MLINT(s->endPos);
+  FIELD(result, 7) = allocate_string((size_t) (s->text->length + 1));
+  strncpy(CSTRING(FIELD(result, 7)), s->text->ptr, (unsigned) s->text->length);
+  CSTRING(FIELD(result, 7))[s->text->length] = '\0';
+  retract_root(&result);
+  retract_root(&arg);
+
+  return(result);
+}
+  
+static mlval boolean_set(mlval arg)
+{
+  char *do_it = (char*)FIELD(arg, 0);
+  mlval bool = FIELD(arg, 1);
+
+  if (bool == MLTRUE)
+    *do_it = 1;
+  else
+    *do_it = 0;
+  return MLUNIT;
+}
+
+
+static mlval list_add(mlval arg)
+{
+  size_t length;
+  XmString *items;
+  mlval list;
+
+  length = 0;
+  for(list=FIELD(arg, 1); list!=MLNIL; list=MLTAIL(list))
+    ++length;
+
+  items = alloc(length * sizeof(XmString), "list_add");
+
+  length = 0;
+  for(list=FIELD(arg, 1); list!=MLNIL; list=MLTAIL(list))
+    items[length++] = (XmString)MLHEAD(list);
+
+  XmListAddItems((Widget)FIELD(arg, 0),
+		 items, (signed int) length,
+		 CINT(FIELD(arg, 2)));
+
+  free(items);
+
+  return(MLUNIT);
+}
+
+static mlval list_delete_all(mlval arg)
+{
+  XmListDeleteAllItems((Widget)arg);
+  return(MLUNIT);
+}
+
+static mlval list_select_pos(mlval arg)
+{
+  XmListSelectPos((Widget)FIELD(arg, 0),
+		  CINT(FIELD(arg, 1)),
+		  (FIELD(arg, 2) == MLTRUE) ? 1 : 0);
+  return(MLUNIT);
+}
+
+static mlval list_get_selected_pos (mlval arg)
+{
+  int *items,count,i;
+  if (XmListGetSelectedPos((Widget)arg,&items,&count))
+    {mlval result = allocate_vector((size_t) count);
+     for(i=0;i<count;i++)
+       FIELD(result, i) = MLINT(items[i]);
+     XtFree((char*)items);
+     return (result);
+   }
+  else
+    return (allocate_vector(0));
+}
+
+static mlval file_selection_do_search (mlval arg)
+{
+  XmFileSelectionDoSearch ((Widget)FIELD(arg,0), (XmString)(FIELD(arg,1)));
+  return MLUNIT;
+}
+
+static mlval file_selection_box_get_child (mlval arg)
+{
+  return ((mlval)XmFileSelectionBoxGetChild ((Widget)FIELD(arg,0),
+					     (unsigned)CINT(FIELD(arg,1))));
+}
+
+static mlval message_box_get_child (mlval arg)
+{
+  return ((mlval)XmMessageBoxGetChild ((Widget)FIELD(arg,0),
+				       (unsigned)CINT(FIELD(arg,1))));
+}
+
+static mlval bell (mlval arg)
+{
+  XBell ((Display *)FIELD(arg, 0),CINT(FIELD(arg,1)));
+  return (MLUNIT);
+}
+
+static Widget message_widget;
+static XmTextPosition message_widget_position;
+
+static void message_widget_output(const char *message)
+{
+  XmTextInsert(message_widget,
+	       message_widget_position,
+	       (char *)message);
+  message_widget_position += strlen(message);
+}
+
+static mlval text_setmessagewidget (mlval arg)
+{
+  message_widget = (Widget)arg;
+  message_widget_position = 0;
+
+  messager_function = message_widget_output;
+  message_flusher = NULL;	/* Can't think of anything useful to do here */
+  return (MLUNIT);
+}
+
+static mlval text_nomessagewidget (mlval unit)
+{
+  messager_function = NULL;
+  return (MLUNIT);
+}
+
+static mlval text_scroll(mlval argument)
+{
+  XmTextScroll((Widget)FIELD(argument, 0),
+			     CINT(FIELD(argument, 1)));
+  return MLUNIT;
+}
+
+static mlval text_settopcharacter(mlval argument)
+{
+  XmTextSetTopCharacter((Widget)FIELD(argument, 0),
+			CINT(FIELD(argument, 1)));
+  return MLUNIT;
+}
+
+static mlval text_showposition(mlval argument)
+{
+  XmTextShowPosition((Widget)FIELD(argument, 0),
+		     CINT(FIELD(argument, 1)));
+  return MLUNIT;
+}
+
+static mlval text_xytopos (mlval argument)
+{
+  return (MLINT (XmTextXYToPos((Widget)FIELD(argument, 0),
+			       CINT(FIELD(argument, 1)),
+			       CINT(FIELD(argument, 2)))));
+}
+
+static mlval text_postoxy (mlval argument)
+{
+  Position x;
+  Position y;
+
+  mlval result = allocate_record(2);
+
+  
+  if (XmTextPosToXY((Widget)FIELD(argument, 0),
+		    CINT(FIELD(argument, 1)),
+		    &x,&y))
+    {
+      FIELD(result, 0) = MLINT (x);
+      FIELD(result, 1) = MLINT (y);
+    }
+  else
+    {
+      FIELD(result, 0) = MLINT (-1);
+      FIELD(result, 1) = MLINT (-1);
+    }
+    
+
+  return(result);
+
+}
+
+
+void x_init(void)
+{
+  size_t i;
+
+  callback_table = allocate_array(INITIAL_CALLBACK_TABLE_SIZE);
+  MLUPDATE(callback_table, 0, MLINT(0));
+  for(i=1; i<INITIAL_CALLBACK_TABLE_SIZE; ++i)
+    MLUPDATE(callback_table, i, MLUNIT);
+  declare_global("x callback table", &callback_table, fix_callback_table);
+
+  widget_class_table = allocate_record(NR_WIDGET_CLASSES);
+  declare_root(&widget_class_table);
+  for(i=0; i<NR_WIDGET_CLASSES; ++i)
+  {
+    mlval ref = allocate_array(1);
+    MLUPDATE(ref, 0, (mlval)*widget_classes[i]);
+    FIELD(widget_class_table, i) = ref;
+  }
+  retract_root(&widget_class_table);
+  declare_global("x widget class table", &widget_class_table, fix_widget_class_table);
+  env_value("x widget class table", widget_class_table);
+
+  env_function("x initialize", initialize);
+  env_function("x quit on exit", quit_on_exit);
+  env_function("x main loop", main_loop);
+  env_function("x do input", do_input);
+  env_function("x ungrab pointer", ungrab_pointer);
+  env_function("x text insert", text_insert);
+  env_function("x text replace", text_replace);
+  env_function("x text getstring", text_getstring);
+  env_function("x text setstring", text_setstring);
+  env_function("x text getlastposition", text_getlastposition);
+  env_function("x text getinsertionposition", text_getinsertionposition);
+  env_function("x text setinsertionposition", text_setinsertionposition);
+  env_function("x text getselection", text_getselection);
+  env_function("x text remove", text_remove);
+  env_function("x widget create", widget_create);
+  env_function("x widget create popupshell", widget_create_popupshell);
+  env_function("x widget create pulldownmenu", widget_create_pulldownmenu);
+  env_function("x widget create scrolledtext", widget_create_scrolledtext);
+  env_function("x widget destroy", widget_destroy);
+  env_function("x widget realize", widget_realize);
+  env_function("x widget unrealize", widget_unrealize);
+  env_function("x widget manage", widget_manage);
+  env_function("x widget unmanage", widget_unmanage);
+  env_function("x widget map", widget_map);
+  env_function("x widget unmap", widget_unmap);
+  env_function("x widget values set", widget_values_set);
+  env_function("x widget values get", widget_values_get);
+  env_function("x widget callback add", widget_callback_add);
+  env_function("x widget display", widget_display);
+  env_function("x widget parent", widget_parent);
+  env_function("x widget screen", widget_screen);
+  env_function("x widget window", widget_window);
+  env_function("x widget name", widget_name);
+  env_function("x widget set busy", widget_set_busy);
+  env_function("x widget unset busy", widget_unset_busy);
+  env_function("x widget to front", window_to_front);
+  env_function("x widget process traversal", process_traversal);
+  env_function("x translations parse table", translations_parse_table);
+  env_function("x translations override", translations_override);
+  env_function("x translations augment", translations_augment);
+  env_function("x translations uninstall", translations_uninstall);
+  env_function("x string create", string_create);
+  env_function("x string create direction", string_create_direction);
+  env_function("x string create separator", string_create_separator);
+  env_function("x string create segment", string_create_segment);
+  env_function("x string create ltor", string_create_ltor);
+  env_function("x string create simple", string_create_simple);
+  env_function("x string free", string_free);
+  env_function("x string compare", string_compare);
+  env_function("x string bytecompare", string_bytecompare);
+  env_function("x string copy", string_copy);
+  env_function("x string ncopy", string_ncopy);
+  env_function("x string concat", string_concat);
+  env_function("x string nconcat", string_nconcat);
+  env_function("x string empty", string_empty);
+  env_function("x string length", string_length);
+  env_function("x string linecount", string_linecount);
+  env_function("x string extent", string_extent);
+  env_function("x string height", string_height);
+  env_function("x string width", string_width);
+  env_function("x string convert text", string_convert_text);
+  env_function("x fontstruct load", fontstruct_load);
+  env_function("x fontstruct free", fontstruct_free);
+  env_function("x fontlist create", fontlist_create);
+  env_function("x fontlist add", fontlist_add);
+  env_function("x fontlist copy", fontlist_copy);
+  env_function("x fontlist free", fontlist_free);
+  env_function("x pixmap create", pixmap_create);
+  env_function("x pixmap free", pixmap_free);
+  env_function("x pixmap get", pixmap_get);
+  env_function("x pixel screen black", pixel_screen_black);
+  env_function("x pixel screen white", pixel_screen_white);
+  env_function("x convert AnyEvent", convert_AnyEvent);
+  env_function("x convert KeyEvent", convert_KeyEvent);
+  env_function("x convert ButtonEvent", convert_ButtonEvent);
+  env_function("x convert AnyCallbackStruct", convert_AnyCallbackStruct);
+  env_function("x convert ToggleButtonCallbackStruct", convert_ToggleButtonCallbackStruct);
+  env_function("x convert ListCallbackStruct", convert_ListCallbackStruct);
+  env_function("x convert TextVerifyCallbackStruct", convert_TextVerifyCallbackStruct);
+  env_function("x boolean set", boolean_set);
+  env_function("x list add", list_add);
+  env_function("x list delete all", list_delete_all);
+  env_function("x list select pos", list_select_pos);
+  env_function("x list get selected pos",list_get_selected_pos);
+  env_function("x file selection do search",file_selection_do_search);
+  env_function("x file selection box get child",file_selection_box_get_child);
+  env_function("x message box get child",message_box_get_child);
+  env_function("x bell", bell);
+  env_function("x register window", register_window);
+  env_function("x text set message widget", text_setmessagewidget);
+  env_function("x text no message widget", text_nomessagewidget);
+  env_function("x text scroll", text_scroll);
+  env_function("x text set top character", text_settopcharacter);
+  env_function("x text show position", text_showposition);
+  env_function("x text xy to pos", text_xytopos);
+  env_function("x text pos to xy", text_postoxy);
+  
+
+  perv_exn_ref_x = ref(exn_default);
+  env_value("exception X", perv_exn_ref_x);
+  declare_global("pervasive exception X", &perv_exn_ref_x, NULL);
+
+}
+@
+
+
+1.13
+log
+@Change use of allocate_record to allocate_vector in list_get_selected_pos
+Temporarily removed test of mainLoopContinue in main_loop
+@
+text
+@d11 4
+d579 9
+d1685 1
+@
+
+
+1.12
+log
+@Changed treatment of application shells again.  Now use one application
+context for all shells, so that user windows and system windows share
+the same mainloop.  The main application shell is stored as before;
+subsequent calls to initialise return a new application shell.  Mainloop
+ignores calls when one loop is already running.  This allows user's
+programs to be run interactively or stand-alone.
+Also ensured that application shells can't be destroyed.
+@
+text
+@d11 9
+d590 2
+d595 1
+d1530 1
+a1530 1
+    {mlval result = allocate_record((size_t) count);
+d1537 1
+a1537 1
+    return (allocate_record(0));
+@
+
+
+1.11
+log
+@Fixed some minor compiler warnings.
+@
+text
+@d11 3
+d493 7
+a499 2
+/* Each call to initialize creates a new application context, opens the display
+ * for that context, and returns a new application shell.
+d503 5
+d510 1
+a510 6
+  Cardinal argc = 3;
+  const char *argv[argc + 1];
+  XtAppContext applicationContext;
+  Display *display = NULL;
+  Widget applicationShell;
+  static int toolkit_initialized = 0;
+d521 18
+a538 12
+  applicationContext = XtCreateApplicationContext();
+
+  argv[0] = "mlworks";
+  argv[1] = "-xrm";
+  argv[2] = mono ? "*customization: -mono" : "*customization: -color";
+  argv[argc] = NULL;
+  display = XtOpenDisplay(applicationContext, (char *) "",
+			  CSTRING(FIELD(argument, 0)),
+			  CSTRING(FIELD(argument, 1)),
+			  NULL, 0, &argc, (char **) argv);
+  if(display == NULL)
+    exn_raise_string(perv_exn_ref_x, "Couldn't open display");
+d542 12
+a553 5
+  applicationShell =
+    XtAppCreateShell(CSTRING(FIELD(argument, 0)),
+		     CSTRING(FIELD(argument, 1)),
+		     applicationShellWidgetClass,
+		     display, args, nr_args);
+d555 1
+a555 1
+  return (mlval)applicationShell;
+d566 2
+a567 3
+/* The main_loop function is called with an application shell.  The application
+ * context is extracted from this shell.  The shell is stored on the list
+ * applicationShells, along with a flag to indicate whether it is still a
+d569 1
+a569 2
+ * via this flag, and the presence of a widget on the list prevents multiple
+ * calls to main_loop for the same widget.
+d571 1
+a571 33
+struct WidgetChain {
+  Widget item;
+  int mainLoopContinue;
+  struct WidgetChain *next;
+};
+
+static struct WidgetChain* applicationShells;
+
+static int *findWidgetInChain (Widget widget) {
+  struct WidgetChain *w;
+
+  for (w = applicationShells;
+       w != NULL;
+       w = w->next)
+  {
+    if (widget == w->item)
+      return &(w->mainLoopContinue);
+  }
+  return NULL;
+}
+
+static void removeWidgetFromChain (Widget widget) {
+  struct WidgetChain *w, *w1;
+
+  if (applicationShells == NULL)
+    /* Unlikely */
+    return;
+
+  w = applicationShells;
+  if (widget == w->item) {
+    applicationShells = w->next;
+    free (w);
+  }
+d573 1
+a573 46
+  for (w1 = w->next;
+       w1 != NULL;
+       w = w1, w1 = w1->next)
+  {
+    if (widget == w1->item) {
+      w->next = w1->next;
+      free (w1);
+    }
+  }
+  return;
+}
+
+static struct WidgetChain* newChainElement (Widget widget, int** mainLoopContinue) {
+  struct WidgetChain *w;
+
+  w = (struct WidgetChain *)malloc (sizeof (struct WidgetChain));
+  w->next = NULL;
+  w->item = widget;
+  w->mainLoopContinue = 1;
+  *mainLoopContinue = &(w->mainLoopContinue);
+  return w;
+}
+
+static int addWidgetToChain (Widget widget, int** mainLoopContinue) {
+  struct WidgetChain *w;
+
+  if (applicationShells == NULL)
+    applicationShells = newChainElement (widget, mainLoopContinue);
+  else {
+    for (w = applicationShells;
+         w != NULL;
+         w = w->next)
+    {
+      if (widget == w->item)
+        return 0;
+      if (w->next == NULL) {
+	w->next = newChainElement (widget, mainLoopContinue);
+	break;
+      }
+    }
+  }
+  return 1;
+}
+
+
+static mlval main_loop(mlval widget)
+d577 3
+a579 1
+  int *mainLoopContinue;
+d581 4
+a584 2
+  if (!addWidgetToChain((Widget)widget, &mainLoopContinue))
+    return MLUNIT;
+d586 2
+a587 2
+  window = XtWindow((Widget)widget);
+  display = XtDisplay((Widget)widget);
+d592 1
+a592 1
+  while (*mainLoopContinue) {
+d600 1
+a600 1
+	  removeWidgetFromChain ((Widget)widget);
+d608 1
+a615 5
+  Widget widget;
+  int *mainLoopContinue;
+
+  widget = (Widget)FIELD (argument, 1);
+  mainLoopContinue = findWidgetInChain (widget);
+d617 2
+a618 2
+  if (mainLoopContinue == NULL)
+    c_raise(FIELD (argument, 0));
+d620 1
+a620 1
+  if (*mainLoopContinue == 0)
+d623 1
+a623 1
+  window = XtWindow(widget);
+d626 1
+a626 1
+    XtDisplayToApplicationContext (XtDisplay (widget)),
+d635 1
+a635 1
+	  *mainLoopContinue = 0;
+@
+
+
+1.10
+log
+@Removed create_application_shell, updated comments.
+@
+text
+@d11 3
+d1595 1
+a1595 1
+					     CINT(FIELD(arg,1))));
+d1601 1
+a1601 1
+				       CINT(FIELD(arg,1))));
+@
+
+
+1.9
+log
+@Made repeated calls to initialize return a new application shell.
+main_loop and related functions take an application shell argument.
+@
+text
+@d11 4
+d487 2
+a488 6
+/* We create one application context for each session, because Motif crashes
+   if we destroy one (e.g. on exiting the window system and returning to a
+   TTY top loop).  Within this context, we have an applicationShell that
+   is the top level of everything.  Mainloop needs to know about it, so we
+   store it locally.  This shell can be destroyed; only the context needs
+   to be preserved.
+a533 20
+/* This creates extra top level shells.  It should be called with
+   widgetClass = topLevelShell.
+ */
+static mlval create_application_shell(mlval argument)
+{
+  Arg args[MAX_NR_ARGS];
+  Cardinal nr_args;
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 5));
+
+  DIAGNOSTIC (2, "create_application_shell(\"%s\", ...)",
+	      CSTRING(FIELD(argument, 2)), 0);
+
+  return((mlval)XtAppCreateShell(CSTRING(FIELD(argument, 1)),
+				 CSTRING(FIELD(argument, 2)),
+				 (WidgetClass)DEREF(FIELD(argument, 3)),
+				 XtDisplay ((Widget)FIELD(argument, 0)),
+				 args, nr_args));
+}
+
+d542 7
+a1711 1
+  env_function("x create application shell", create_application_shell);
+@
+
+
+1.8
+log
+@New text widget functions
+@
+text
+@d11 3
+a447 12
+/* We create one aplication context for each session, because Motif crashes
+   if we destroy one (e.g. on exiting the window system and returning to a
+   TTY top loop).  Within this context, we have an applicationShell that
+   is the top level of everything.  Mainloop needs to know about it, so we
+   store it locally.  This shell can be destroyed; only the context needs
+   to be preserved.
+ */
+static Widget applicationShell;
+static XtAppContext applicationContext;
+static Display *display;
+
+
+d483 7
+d496 3
+d501 1
+a501 4
+  if (applicationShell != NULL)
+    c_raise(FIELD(argument, 0));
+
+  pairs_to_args(args, &nr_args, FIELD(argument, 3));
+a506 1
+    applicationContext = XtCreateApplicationContext();
+d510 12
+a521 12
+  if (display == NULL) {
+    argv[0] = "mlworks";
+    argv[1] = "-xrm";
+    argv[2] = mono ? "*customization: -mono" : "*customization: -color";
+    argv[argc] = NULL;
+    display = XtOpenDisplay(applicationContext, (char *) "",
+			    CSTRING(FIELD(argument, 1)),
+			    CSTRING(FIELD(argument, 2)),
+			    NULL, 0, &argc, (char **) argv);
+    if(display == NULL)
+      exn_raise_string(perv_exn_ref_x, "Couldn't open display");
+  }
+d526 2
+a527 2
+    XtAppCreateShell(CSTRING(FIELD(argument, 1)),
+		     CSTRING(FIELD(argument, 2)),
+d531 1
+a531 1
+  return((mlval)applicationShell);
+d542 1
+a542 3
+  pairs_to_args(args, &nr_args, FIELD(argument, 4));
+
+  DIAGNOSTIC(2, "create_application_shell(\"%s\", ...)", CSTRING(FIELD(argument, 0)), 0);
+d544 2
+a545 2
+  if (applicationShell == NULL)
+    c_raise(FIELD(argument, 0));
+d550 2
+a551 1
+				 display, args, nr_args));
+d562 78
+a639 1
+static int mainLoopContinue = 1;
+d641 1
+a641 1
+static mlval main_loop(mlval argument)
+d643 1
+d645 1
+d647 2
+a648 2
+  if (applicationShell == NULL)
+    c_raise(argument);
+d650 2
+a651 1
+  window = XtWindow(applicationShell);
+d655 2
+a656 2
+  DIAGNOSTIC(2, "shell window is %d", window, 0);
+  while (mainLoopContinue) {
+d658 1
+a658 1
+    XtAppNextEvent(applicationContext, &event);
+d661 1
+a661 1
+      DIAGNOSTIC(2, "destroy notify: window = %d", event.xdestroywindow.window, 0);
+d664 1
+d669 1
+a669 1
+  if (quit_on_exit_flag)
+d671 1
+a671 2
+  mainLoopContinue = 1;
+  applicationShell = NULL;
+d678 6
+a683 1
+  Window window = XtWindow(applicationShell);
+d685 2
+a686 2
+  if (applicationShell == NULL)
+    c_raise(argument);
+d688 2
+a689 1
+  if (!mainLoopContinue) return (MLFALSE);
+d691 5
+a695 1
+  XtAppNextEvent(applicationContext, &event);
+d703 1
+a703 1
+	  mainLoopContinue = 0;
+a712 11
+static mlval peek_event (mlval argument)
+{
+  XEvent event;
+  
+  if (applicationShell == NULL)
+    c_raise(argument);
+  
+  XtAppPeekEvent(applicationContext,&event);
+  return(MLUNIT);
+}
+
+d839 1
+a839 1
+  XReconfigureWMWindow(display,
+a1728 1
+  env_function("x peek event", peek_event);
+@
+
+
+1.7
+log
+@Fix compiler warning.
+@
+text
+@d11 3
+d1572 55
+d1741 6
+@
+
+
+1.6
+log
+@Replaced buggy version of widget_values_get.
+@
+text
+@d11 3
+d821 1
+a821 1
+    XtFree (tmp);
+@
+
+
+1.5
+log
+@prototype of strncpy has changed.
+@
+text
+@d11 3
+d807 7
+a813 2
+  for(i=0; i<nr_args; ++i)
+    args[i].value = (XtArgVal)&args[i].value;
+d815 5
+@
+
+
+1.4
+log
+@Add text message widget functions.
+@
+text
+@d11 3
+d1428 1
+a1428 1
+  strncpy(CSTRING(FIELD(result, 7)), s->text->ptr, s->text->length);
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@a10 3
+ * Revision 1.4  1994/06/30  12:05:25  nickh
+ * Add text message widget functions.
+ *
+@
+
+
+1.3
+log
+@Added XmProcessTraversal.
+@
+text
+@d11 3
+d1523 27
+d1662 2
+@
+
+
+1.2
+log
+@new file
+@
+text
+@d11 3
+d832 8
+d1579 1
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d10 4
+a13 1
+ *  $Log: x.c,v $
+@

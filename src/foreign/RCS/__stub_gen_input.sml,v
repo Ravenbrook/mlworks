@@ -1,0 +1,97 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	99.03.17.17.37.43;	author johnh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.17.54.43;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #190529]
+Stub generator.
+@
+
+
+1.1
+log
+@new unit
+[Bug #190529]
+Stub generator.
+@
+text
+@(* 
+ * Copyright (c) 1999 Harlequin Group plc.  All rights reserved.
+ *
+ * These datatypes describe the input format to the stub generator.
+ * 
+ * Revision log
+ * ------------
+ * 
+ * $log$
+ *
+ *)
+
+
+structure StubGenInput = 
+struct
+
+  datatype range = SIGNED | UNSIGNED
+
+  datatype argUse = IN | OUT | IN_OUT
+
+  datatype intType = SHORT | INT | LONG | BITS of int
+
+  datatype ctype = 
+      CvoidT
+    | CaddrT
+    | CcharT of range
+    | CintT of range * intType
+    | CdoubleT
+    | CfloatT
+    | CptrT of ctype
+    | CstructT of string
+    | CunionT of string
+    | CarrayT of (int option * ctype)
+    | CfunctionT of (cArgType list * cResultType)
+    | CconstT of ctype
+
+  and cResultType = 
+      Normal of ctype
+    | Exception of ctype * string * string
+
+  and cArgType = 
+      CptrAT of ctype * argUse
+    | CdefaultAT of ctype
+
+  (* Cdecl string is used to generate names in ML stubs *)
+  (* CstructD string is used as a placeholder for struct names *)
+  datatype cdecl =
+      Cdecl of string * ctype
+    | CstructD of string * (string * ctype) list
+    | CunionD of string * (string * ctype) list
+    | CexnD of string
+    | MLcoerceD of cdecl * string
+
+end (* struct StubGenInput *)@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@

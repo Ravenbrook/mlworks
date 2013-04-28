@@ -1,0 +1,349 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.2
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.3
+date	92.10.14.11.45.31;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	91.11.21.16.50.04;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.42.23;	author colin;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.10.14.11.45.31;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Long type constructor name completion
+@
+
+
+1.3
+log
+@Added line number to token stream input functions.
+@
+text
+@(* build.sml the signature *)
+(*
+$Log: build.sml,v $
+Revision 1.2  1991/11/21  16:50:04  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:42:23  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+require "../utils/__counter";
+require "../basics/__absyn";
+require "../lexer/__lexer";
+require "../parser/__parserenv";
+require "../parser/__parser";
+require "../typechecker/__errors";
+require "../typechecker/__basis";
+require "../typechecker/__assemblies";
+require "../typechecker/__mod_rules";
+
+fun parse_file (file,pB) =
+  let
+    val ts = Lexer_.mkTokenStream (fn _ =>
+				   let val line = input_line file
+				   in
+				     ((*print line;*)
+				      if String.length line > 7
+					then 
+					  if String.substring (line,0,7) = 
+					    "require"
+					    then "    "
+					  else line
+				      else line)
+				   end)
+    fun do_topdec pB =
+      if Lexer_.eof ts
+	then []
+      else
+	let 
+	  val (topdec,pB') = Parser_.parse_topdec (ts,pB)
+	    handle Parser_.ParseError s => 
+	      (print "PARSE ERROR";
+	       print s;
+	       (Absyn_.STRDECtopdec (Absyn_.DECstrdec (Absyn_.SEQUENCEdec [])),
+		pB))
+	  val new_pB = ParserEnv_.augment_pB (pB,pB')
+	in 
+	  (topdec,new_pB)::(do_topdec (new_pB))
+	end    
+  in
+    do_topdec pB
+  end;
+  
+fun member (m,[]) = false
+  | member (m,h::t) = (m = h) orelse member (m,t)
+
+fun findFiles name =
+  let
+    fun makeFilelist (pathname,alist) = 
+      let
+	val filename = PathName.pathname_namestring pathname
+	val open_file = open_in filename
+	      
+	fun getImports alist =
+	  let
+	    val first = lookahead open_file   (* first char *)
+	    val line = input_line open_file   (* all of string *)
+	    fun extract_path line =   (* get part in quotes *)
+	      let
+		(* a function which removes up 'til a quote *)
+		fun strip ("\""::x) = x     (* Damn emacs messes up \" *)
+		  | strip (_::x) = strip x
+		  | strip [] = []
+	      in
+		implode (rev (strip (rev (strip (explode line)))))
+	      end
+	  in
+	    if (first = " " orelse first = "\n" orelse first = "\t") then
+	      getImports alist   (* Skip blank lines *)
+	    else
+	      if String.size (line) > 7 then
+		if String.substring (line,0,7) = "require" then
+		  getImports      (* go for it *)
+		  ((PathName.parsePathName (extract_path line))::alist)
+		else
+		  rev alist
+	      else
+		rev alist
+	  end
+	
+	val topdir = PathName.pathname_directory pathname
+	val imports = getImports []
+	val _ = close_in open_file
+	      
+	fun mkImportFilelist ([],alist,_) = alist
+	  | mkImportFilelist (pathname::names,alist,topdir) = 
+	    let 
+	      val filetype = PathName.pathname_type pathname
+		
+	      (** Merge pathname in with existing directory **)
+	      val new_path = PathName.modify_directory
+		(pathname, PathName.resolveRelative
+		 (topdir, PathName.pathname_directory pathname))
+	      val fullpath =  (* check out the type! *)
+		if filetype = ".sml" orelse filetype = ".str" then
+		  new_path
+		else   (* force it to be '*.sml' *)
+		  PathName.modify_type (new_path, ".sml")
+	      val fullname = PathName.pathname_namestring fullpath
+	    in
+	      if member (fullname, alist) then
+		mkImportFilelist (names, alist, topdir)
+	      else
+		mkImportFilelist (names,makeFilelist (fullpath,alist), topdir)
+	    end
+      in
+	if imports = [] then
+	  if member (filename,alist) then
+	    alist
+	  else
+	    filename :: alist
+	else
+	  if member (filename,alist) then
+	    mkImportFilelist (imports,alist,topdir)
+	  else
+	    filename :: (mkImportFilelist (imports,alist,topdir))
+      end
+  in
+    rev (makeFilelist (PathName.parsePathName name, []))
+  end;
+
+(* a list of the files in the test suite that are supposed to fail *)
+val faulty_files = ref ["testdir/t2.sml",
+			"testdir/t4.sml",
+			"testdir/t6.sml",
+			"testdir/t7.sml",
+			"testdir/t8.sml",
+			"testdir/t9.sml",
+			"testdir/t11.sml",
+			"testdir/t12.sml",
+			"testdir/t14.sml",
+			"testdir/t21.sml",
+			"testdir/test1.sml",
+			"testdir/test2.sml",
+			"testdir/test5.sml",
+			"testdir/test6.sml",
+			"testdir/t.sml"]
+
+fun typecheck ([],(sB,pB)) = sB
+  | typecheck (file::files,(sB,pB)) = 
+    let
+      fun check_file ([],sB,pB) = (sB,pB)
+	| check_file ((topdec,pB')::topdecs,sB,_) = 
+	  let 
+	    val sB' = Module_rules_.check_topdec (topdec,sB)
+	  in
+	    check_file (topdecs,
+			Basis_.basis_circle_plus_basis (sB,sB'),pB')
+	  end;
+      val open_file = open_in file
+      val topdeclist = parse_file (open_file,pB)
+      val _ = print ("typechecking " ^ file)
+
+      val (sB',pB') = 
+	 check_file (topdeclist,sB,pB) handle Errors_.Stop_compilation =>
+	   (print "ERROR!!";
+	    (sB,pB))
+    in
+      (close_in open_file;
+       typecheck (files,(sB',pB')))
+    end;
+
+local
+  fun parse_string (s,pB) =
+    let
+      val done = ref false
+      val ts = Lexer_.mkTokenStream (fn _ => if !done then ""
+                                             else
+                                               (done := true; s))
+    in
+      Parser_.parse_topdec (ts,pB)
+    end
+  
+in
+  val (_,initial_pB) =
+    parse_string 
+    ("(* first value constructors *) \
+     \  datatype constructors = true | false | nil | :: | ref \
+     
+     \  (* next exception constructors *) \
+     \  exception Abs and Ord and Chr and Div and Mod and Quot and Prod and \
+     \  Neg and Sum and Diff and Floor and Sqrt and Exp and Ln and Io and \
+     \  Match and Bind and Interrupt \
+     
+     \  (* next value variables *) \
+     \  val map = () and rev = () and not = () and ~ = () and abs = () \
+     \  and floor = () and real = () and sqrt = () and sin = () and cos = () \
+     \  and arctan = () and exp = () and ln = () and size = () and chr = () \
+     \  and ord = () and explode = () and implode = () and ! = () \
+     
+     \  and / = () and div = () and mod = () and + = () and - = () \
+     \  and ^ = () and @@ = () and <> = () and < = () and > = () \
+     \  and <= = () and >= = () and := = () and o = () \
+     
+     \  (* finally we define the infix identifiers *) \
+     \  infix 7 / * div mod \
+     \  infix 6 + - ^ \
+     \  infix 5 @@ \
+     \  infixr 5 :: \
+     \  infix 4 <> < > <= >= =\
+     \  infix 3 := o", ParserEnv_.empty_pB)
+end;
+
+val basis = Basis_.initial_basis;
+
+fun do_it (filename,basis) = 
+  let
+    val filelist = findFiles filename
+  in
+    Module_rules_.str_ass := Assemblies_.empty_strassembly;
+    Module_rules_.ty_ass := Assemblies_.empty_tyassembly;
+    Module_rules_.sigstr_ass := Assemblies_.empty_strassembly;
+    Module_rules_.sigty_ass := Assemblies_.empty_tyassembly;
+    Module_rules_.shadowing_occurred := false;
+    Counter_.reset_counter 0;
+    typecheck (filelist,(basis,initial_pB))
+  end;
+  
+fun show () =
+  (print ("StrAssembly : \n" ^ 
+	  (Assemblies_.stringStrAssembly (! Module_rules_.str_ass)));
+   print ("TypeAssembly : \n" ^
+	  (Assemblies_.stringTypeAssembly (! Module_rules_.ty_ass))));
+  
+  
+fun extract_env (Basis_.BASIS (_,_,_,env)) = env;
+
+fun extract_sigenv (Basis_.BASIS (_,_,sigenv,_)) = sigenv;
+
+fun extract_funenv (Basis_.BASIS (_,funenv,_,_)) = funenv;
+
+fun printenv basis =
+  print
+  ("E = \n" ^ (Environment_.string_environment (extract_env basis)));
+
+fun printsigenv basis =
+  print
+  ("G = \n" ^ (Sigenv_.string_sigenv (extract_sigenv basis)));
+
+fun printfunenv basis =
+  print
+  ("F = \n" ^ (Funenv_.string_funenv (extract_funenv basis)));
+
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.3  1992/10/14  11:45:31  richard
+Added line number to token stream input functions.
+
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	build.sml,v $
+d24 1
+a24 1
+    val ts = Lexer_.mkTokenStream (fn () =>
+d178 3
+a180 3
+      val ts = Lexer_.mkTokenStream (fn () => if !done then ""
+					      else
+						(done := true; s))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

@@ -1,0 +1,213 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.5
+	MLWorks_20b0_1998_03_20:1.5
+	MLWorks_20m2_1998_02_16:1.5
+	MLWorks_20m1_1997_10_23:1.5
+	MLWorks_11r1:1.2.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.1.1.1.1
+	MLWorks_10r3:1.2.1.1.3
+	MLWorks_10r2_551:1.2.1.1.2
+	MLWorks_11:1.2.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.1.1
+	MLWorks_20m0_1997_06_20:1.3
+	MLWorks_1_0_r2c2_1997_06_14:1.2.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.1
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	97.07.25.15.33.19;	author johnh;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.07.18.09.19.51;	author johnh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.06.16.14.10.39;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.04.04.14.25.15;	author daveb;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.04.04.14.10.45;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.05.12.10.26.04;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1
+	1.2.1.1.2.1
+	1.2.1.1.3.1;
+next	;
+
+1.2.1.1.1.1
+date	97.07.28.18.12.05;	author daveb;	state Exp;
+branches
+	1.2.1.1.1.1.1.1;
+next	;
+
+1.2.1.1.1.1.1.1
+date	97.10.07.11.37.00;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1.2.1
+date	97.09.08.17.05.20;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1.3.1
+date	97.09.09.14.00.37;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Licensing tests.
+@
+
+
+1.5
+log
+@[Bug #30212]
+test file for allowing user to type license after one has expired.
+@
+text
+@Change 2705.
+
+On any Unix platform, remove .mlworks_user, unset MLWORKS_LICENSE and run
+mlworks.  It should prompt for registration licensing.
+
+
+Change 2708.
+
+Ensure that the license dialog pops up correctly on Unix when using
+license registration.  To test, remove .mlworks_user, unset MLWORKS_LICENSE
+and run mlworks.
+
+
+Change 30176.
+
+On Windows, check that the encoded license is stored in the registry under
+the key HKEY_LOCAL_MACHINE\SOFTWARE\Harlequin\MLWorks.  The key should not
+include the MLWorks version number.
+
+
+Change 20074:  Improve license dialog.
+
+Windows: cut, copy and paste accelerator keys now work:  Ctrl-X, Ctrl-C, and
+Ctrl-V respectively to and from each input text box on the dialog.  
+Windows and Unix:  User is given the option to retry to input the license
+information - there is now a 'Retry' button on the complain box.  When the 
+license dialog pops up again, the text fields contain what the user last 
+typed in.
+
+
+Change 30212:  MLWorks should prompt for new license when stored license expires
+
+On all platforms, if a stored license is either invalid or has expired, the user
+is given the chance to type in a new license, and if even the new typed license
+is invalid, the user is given a further chance and so on.  This applies to
+the tty interface as well as the GUI.@
+
+
+1.4
+log
+@[Bug #20074]
+test for improving license dialog - request 20074.
+@
+text
+@d29 8
+@
+
+
+1.3
+log
+@[Bug #30176]
+Added check for location of encoded Windows licenses.
+@
+text
+@d19 10
+@
+
+
+1.2
+log
+@Added note for fix to Irix.
+@
+text
+@d13 6
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.2.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.2.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.2.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+Licensing tests.
+@
+text
+@d6 7
+@

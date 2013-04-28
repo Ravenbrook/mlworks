@@ -1,0 +1,131 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	99.05.13.15.27.31;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.01.25.17.58.49;	author johnh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.09.24;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New Unix signature.
+@
+
+
+1.2
+log
+@[Bug #190553]
+Added exit_status and fromStatus.
+@
+text
+@(*  The Unix signature
+ * 
+ * Copyright (C)  1999 Harlequin Group plc.  All rights reserved.
+ * 
+ * Revision Log
+ * ------------
+ * 
+ *  $Log: unix.sml,v $
+ *  Revision 1.1  1999/01/25  17:58:49  johnh
+ *  new unit
+ *  New Unix signature.
+ *
+ * 
+ *)
+
+require "^.basis.__text_io";
+require "^.basis.__word8";
+require "__os";
+
+signature UNIX = 
+  sig
+
+    (* represents a handle to the operating system process *)
+    type proc
+
+    type signal
+
+    datatype exit_status =
+      W_EXITED
+    | W_EXITSTATUS of Word8.word
+    | W_SIGNALED of signal
+    | W_STOPPED of signal
+
+    (* fromStatus sts *)
+    val fromStatus : OS.Process.status -> exit_status
+
+    val exit : exit_status -> 'a
+
+    (* executeInEnv (cmd, args, env) 
+     *   raises SysErr 
+     *)
+    val executeInEnv : (string * string list * string list) -> proc
+
+    (* execute (cmd, args)
+     *   raise SysErr
+     *)
+    val execute : (string * string list) -> proc
+
+    val streamsOf : proc -> (TextIO.instream * TextIO.outstream)
+
+    (* reap process 
+     *   raises SysErr
+     *)
+    val reap : proc -> OS.Process.status
+
+    (* kill (process, signal)
+     *   raises SysErr
+     *)
+    val kill : (proc * signal) -> unit
+
+  end
+
+
+@
+
+
+1.1
+log
+@new unit
+New Unix signature.
+@
+text
+@d8 5
+a12 1
+ *  $Log$
+d17 1
+d27 11
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d8 1
+a8 5
+ *  $Log: unix.sml,v $
+ *  Revision 1.1  1999/01/25  17:58:49  johnh
+ *  new unit
+ *  New Unix signature.
+ *
+@

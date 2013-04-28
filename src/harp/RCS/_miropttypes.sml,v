@@ -1,0 +1,1171 @@
+head	1.22;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.22
+	mlworks-28-01-1994:1.22
+	Release:1.22
+	mlworks-beta-01-09-1993:1.22
+	MLWorks-1-0-4-29/01/1993:1.22
+	MLWorks-1-0-3-21/12/1992:1.22
+	MLWorks-1-0-2-15/12/1992:1.22
+	MLWorks-1-0-1-04/12/1992:1.22
+	checkpoint_17_08_92:1.22;
+locks; strict;
+
+
+1.22
+date	92.08.13.17.49.07;	author davidt;	state Exp;
+branches
+	1.22.1.1;
+next	1.21;
+
+1.21
+date	92.04.13.15.05.44;	author clive;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.04.02.11.04.54;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.02.27.16.03.39;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.02.07.14.18.45;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.01.28.12.16.48;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	91.12.03.12.15.05;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	91.11.19.15.24.09;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	91.11.14.10.39.42;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	91.10.31.14.31.45;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	91.10.24.09.50.30;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.10.21.14.08.56;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.10.15.10.13.21;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.10.11.09.53.25;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.10.04.13.01.56;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.10.01.15.21.12;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.09.25.12.44.28;	author richard;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	91.09.24.11.35.56;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.09.20.10.00.33;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.19.14.24.41;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.18.11.04.54;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.17.13.32.36;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	91.09.26.13.47.57;	author richard;	state Exp;
+branches;
+next	;
+
+1.22.1.1
+date	92.08.13.17.49.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatypes for use by the MIR optimiser. Created from version 1.7 of
+mirdatatypes.sml.
+This is the functor.
+@
+
+
+1.22
+log
+@THIS FILE IS NO LONGER IN USE! Commented out code so
+that any use of this file causes a parse error.
+@
+text
+@(* miropttypes.sml the functor *)
+
+(*
+$Log: _miropttypes.sml,v $
+Revision 1.21  1992/04/13  15:05:44  clive
+First version of the profiler
+
+Revision 1.20  1992/04/02  11:04:54  jont
+Added integer parameter to functor
+
+Revision 1.19  1992/02/27  16:03:39  richard
+Changed the way virtual registers are handled.  See MirTypes.
+
+Revision 1.18  1992/02/07  14:18:45  richard
+Added `blocks' function.
+
+Revision 1.17  1992/01/28  12:16:48  richard
+Changed printing functions to produce lists of strings rather than
+concatenating large strings.  This is now much more efficient.
+
+Revision 1.16  1991/12/03  12:15:05  richard
+Exported print_opcode.  Removed the referenced registers from
+the registers datatype as these are obsolete.
+
+Revision 1.15  91/11/19  15:24:09  richard
+Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+
+Revision 1.14  91/11/14  10:39:42  richard
+Removed references to fp_double registers.
+
+Revision 1.13  91/10/31  14:31:45  richard
+Moved annotate and unannotate here from MirOptimiser.
+
+Revision 1.12  91/10/24  09:50:30  richard
+Made MirOptTypes.procedure abstract, and changed over to using
+balanced trees rather than tables for block lookup.
+
+Revision 1.11  91/10/21  14:08:56  richard
+Improved the printing functions a bit.
+
+Revision 1.10  91/10/15  10:13:21  richard
+Added block_map and block_fold.
+
+Revision 1.9  91/10/11  09:53:25  richard
+Slight alterations to cope with new MirTypes.
+
+Revision 1.8  91/10/04  13:01:56  richard
+Removed a minor bug involving carriage returns.
+
+Revision 1.7  91/10/01  15:21:12  richard
+Added extra `referenced registers' field to registers type.
+Tidied up printing functions to use printing functions for lists
+and sets rather than own versions.
+
+Revision 1.6  91/09/25  12:44:28  richard
+Added a proc_map function.
+
+Revision 1.5  91/09/24  11:35:56  richard
+Altered procedure type to use a table of blocks rather than a list.
+This makes for efficiency and solves some block ordering problems
+in MirOptimiser.
+
+Revision 1.4  91/09/20  10:00:33  richard
+Prevented printing of annotations on comments in print_block.
+
+Revision 1.3  91/09/19  14:24:41  richard
+Added printing functions.
+
+Revision 1.2  91/09/18  11:04:54  richard
+Added control flow information to instructions. See MirFlow module.
+
+Revision 1.1  91/09/17  13:32:36  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(*
+require "../utils/diagnostic";
+require "../utils/set";
+require "../utils/balancedtree";
+require "../utils/lists";
+require "../utils/integer";
+require "mirtypes";
+require "mirprint";
+require "miropttypes";
+*)
+
+functor MirOptTypes (*(
+
+  structure MirTypes	: MIRTYPES
+  structure MirPrint	: MIRPRINT
+  structure Set 	: SET
+  structure Tree	: BALANCEDTREE
+  structure Lists	: LISTS
+  structure Integer	: INTEGER
+  structure Diagnostic	: DIAGNOSTIC
+
+  sharing MirTypes = MirPrint.MirTypes
+  sharing Set = MirTypes.Set
+
+) : MIROPTTYPES =
+
+struct
+
+  structure MirTypes = MirTypes
+  structure Set = Set
+  structure Diagnostic = Diagnostic
+
+
+  (*  == Annotated code ==
+   *
+   *  block is the analog of MirTypes.block. Each opcode as the
+   *  following information attached:
+   *    - a set of registers live before the opcode and a set of
+   *      registers referenced by the opcode and its out-of-block
+   *      successors;
+   *    - a list of block tags which might be jumped to by the opcode.
+   *
+   *  The procedure type is a look-up table of blocks, and records the
+   *  tag of the entry block. The ordering of the blocks is not
+   *  significant otherwise.
+   *)
+
+  datatype registers =
+    REGS of MirTypes.any_register Set.Set |
+    REGS_UNKNOWN;
+
+  datatype successors =
+    SUCCS of MirTypes.tag list |
+    SUCCS_UNKNOWN;
+
+  datatype block = BLOCK of
+    MirTypes.tag *
+    (MirTypes.opcode * registers * successors) list;
+
+  type block_table = (MirTypes.tag, block) Tree.btree
+
+  datatype procedure = PROC of
+    string *
+    MirTypes.tag *
+    MirTypes.procedure_parameters *
+    block_table
+
+
+
+  (*  === PROCEDURE MANIPULATION FUNCTIONS ===  *)
+
+
+  (*  == Tag ordering function for the btrees ==  *)
+
+  fun tag_ordering (tag, tag') =
+    if tag=tag' then Tree.EQ
+    else if MirTypes.order_tag (tag, tag') then Tree.LT
+	 else Tree.GT
+
+
+  (*  == Add a block to a procedure ==
+   *
+   *  Returns a new procedure. Any existing block with the same tag is
+   *  discarded.
+   *)
+
+  fun new_block (PROC(name,start_tag, params, block_table))
+    		(block as BLOCK(tag,_)) =
+    PROC(name,start_tag, params, Tree.insert (block_table, tag, block))
+
+
+  (*  == Get a block from a procedure ==
+   *
+   *  Returns the block in the procedure which has the given tag.
+   *  Raises NoSuchBlock if not found.
+   *)
+
+  exception NoSuchBlock;
+  fun get_block (PROC(_,_, _, block_table)) tag =
+    case Tree.lookup (block_table, tag)
+      of Tree.NO => raise NoSuchBlock
+       | Tree.YES block => block
+
+
+  (*  == Extract all blocks from procedure ==  *)
+
+  fun blocks (PROC(_,_, _, block_table)) =
+    map #2 (Tree.to_alist block_table)
+
+
+  (*  == Make a procedure ==
+   *
+   *  A procedure is constructed from a tag (the tag of the entry
+   *  block) and a list of blocks. Note that the blocks are included
+   *  unconditionally. Control flow analysis should be applied to
+   *  remove unreached blocks.
+   *)
+
+  fun make_proc (name,tag, params, blocks) =
+  let
+    val alist = map (fn (block as BLOCK(tag,_)) => (tag, block)) blocks
+
+    val table = Tree.from_alist tag_ordering alist
+  in
+    PROC(name,tag, params, table)
+  end;
+
+
+  (*  == Convert a procedure into an alist of tags and blocks ==  *)
+
+  fun alist_of_proc (PROC(_,_,_,block_table)) = Tree.to_alist block_table
+
+
+  (*  == Apply function to every block in a procedure ==  *)
+
+  fun proc_map function (PROC(name,start_tag, params, block_table)) =
+    let
+      val alist = Tree.to_alist block_table
+
+      val new_alist =
+	map (fn (tag, block) => (tag, function block)) alist
+
+      val new_table = Tree.from_alist tag_ordering new_alist
+    in
+      PROC(name,start_tag, params, new_table)
+    end
+
+
+  (*  == Fold a function over every block in a procedure ==  *)
+
+  fun proc_fold function identity (PROC(_,_, _, block_table)) =
+    let
+      val blocks = map #2 (Tree.to_alist block_table)
+    in
+      Lists.foldl (fn block => fn b => function b block) identity blocks
+    end
+
+
+  (*  == Apply a function to every opcode in a block ==  *)
+
+  fun block_map function (BLOCK(tag, opcodes)) =
+    BLOCK(tag, map function opcodes)
+
+
+  (*  == Fold a function over every opcode in a block ==  *)
+
+  fun block_fold function identity (BLOCK(_, opcodes)) =
+    Lists.reducel (fn (b, opcode) => function b opcode) (identity, opcodes)
+
+
+
+  (*  === CONVERSION FUNCTIONS ===  *)
+
+
+  (*  == Annotate a procedure ==
+   *
+   *  This function convertes a MirTypes.procedure into a procedure, setting
+   *  live variable and successor information to unknown.
+   *)
+
+  fun annotate (MirTypes.PROC(name,start_tag, params, blocks)) =
+    let
+      val _ =
+	Diagnostic.output 1 (fn _ =>
+			     ["MirOptTypes: annotating procedure ",
+			      MirTypes.print_tag start_tag])
+
+      fun do_block (MirTypes.BLOCK(tag,opcodes)) =
+	let
+	  fun do_opcodes (done, []) = rev done
+	    | do_opcodes (done, opcode::opcodes) =
+	      let
+		val annotated_opcode =
+		  (opcode, REGS_UNKNOWN, SUCCS_UNKNOWN)
+	      in
+		do_opcodes (annotated_opcode::done, opcodes)
+	      end
+	in
+	  BLOCK(tag, do_opcodes ([], opcodes))
+	end
+    in
+      make_proc (name,start_tag, params, map do_block blocks)
+    end
+
+
+  (*  == Remove annotation from a procedure ==
+   *
+   *  This is the reverse of the above function. The block list in the body
+   *  of the MirTypes.procedure is not in any particular order.
+   *)
+
+  fun unannotate (procedure as PROC(name,start_tag, params, _)) =
+    let
+      val _ =
+	Diagnostic.output 1 (fn _ =>
+			     ["MirOptTypes: unannotating procedure ",
+			      MirTypes.print_tag start_tag])
+
+      fun do_block (BLOCK(tag, opcodes)) =
+	let
+	  fun do_opcodes (done, []) = rev done
+	    | do_opcodes (done, (opcode,_,_)::opcodes) =
+	      do_opcodes (opcode::done, opcodes)
+	in
+	  MirTypes.BLOCK(tag, do_opcodes ([], opcodes))
+	end
+    in
+      MirTypes.PROC(name,
+                    start_tag,
+		    params,
+		    map (do_block o #2) (alist_of_proc procedure))
+    end
+
+
+
+  (*  === PRINT ROUTINES FOR DEBUGGING TYPES ===  *)
+
+  fun print_registers (REGS live) =
+      ["\n      live:       ", Set.set_print(live, MirPrint.any_reg)]
+    | print_registers REGS_UNKNOWN = []
+
+  fun print_successors (SUCCS []) = []
+    | print_successors (SUCCS tags) =
+      ["\n      ", Lists.to_string MirTypes.print_tag tags]
+    | print_successors SUCCS_UNKNOWN = []
+
+  fun print_opcode (opcode as MirTypes.COMMENT _, _, _) =
+      [MirPrint.opcode opcode]
+
+    | print_opcode (opcode, live, succs) =
+      MirPrint.opcode opcode ::
+      ((print_registers live) @@ (print_successors succs))
+
+  fun print_block (BLOCK(tag,opcodes)) =
+    "\n  Block " :: (MirTypes.print_tag tag) ::
+    (Lists.reducel
+     (fn(a,b) => a @@ ("\n    " :: print_opcode b))
+     ([], opcodes))
+
+  fun print_procedure (PROC(name,
+                            start_tag,
+			    MirTypes.PROC_PARAMS {leaf,
+						  registers_used,
+						  spill_sizes,
+						  stack_allocated},
+			    block_table)) =
+    let
+      val leaf_string = (if leaf then "" else "non-") ^ "leaf"
+
+      val reg_string_list =
+	case registers_used
+	  of MirTypes.ABSENT => ["\n    No register information."]
+	   | MirTypes.PRESENT {gc, non_gc, fp} =>
+	       ["\n    GCs used: ",
+		Set.set_print(gc, MirTypes.GC.to_string),
+		"\n    NON_GCs used: ",
+		Set.set_print(non_gc, MirTypes.NonGC.to_string),
+		"\n    FPs used: ",
+		Set.set_print(fp, MirTypes.FP.to_string)]
+
+      val spill_string_list =
+	case spill_sizes
+	  of MirTypes.ABSENT => ["\n    No spill size information."]
+	   | MirTypes.PRESENT {gc, non_gc, fp} =>
+	       ["\n    Spill areas: GC ", Integer.makestring gc,
+		", NON_GC ", Integer.makestring non_gc,
+		", FP ", Integer.makestring fp]
+
+      val stack_string_list =
+	case stack_allocated
+	  of MirTypes.ABSENT => ["\n    No stack allocation information."]
+	   | MirTypes.PRESENT s =>
+	       ["\n    ", Integer.makestring s,
+		" words of stack required."]
+
+      val message =
+	["Procedure ", MirTypes.print_tag start_tag,
+         " (", leaf_string, ")"] @@
+        reg_string_list @@ spill_string_list @@ stack_string_list
+
+    in
+      Lists.reducel
+      (fn (s,(_,block)) => s @@ print_block block)
+      (message, Tree.to_alist block_table)
+    end
+
+
+end (* of functor *)
+*)
+@
+
+
+1.22.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 4
+Revision 1.22  1992/08/13  17:49:07  davidt
+THIS FILE IS NO LONGER IN USE! Commented out code so
+that any use of this file causes a parse error.
+
+@
+
+
+1.21
+log
+@First version of the profiler
+@
+text
+@d5 3
+d80 1
+d89 1
+d91 1
+a92 2
+functor MirOptTypes(
+
+d247 1
+a247 1
+    Lists.foldl (fn opcode => fn b => function b opcode) identity opcodes
+d388 1
+@
+
+
+1.20
+log
+@Added integer parameter to functor
+@
+text
+@d5 3
+d138 1
+d162 1
+a162 1
+  fun new_block (PROC(start_tag, params, block_table))
+d164 1
+a164 1
+    PROC(start_tag, params, Tree.insert (block_table, tag, block))
+d174 1
+a174 1
+  fun get_block (PROC(_, _, block_table)) tag =
+d182 1
+a182 1
+  fun blocks (PROC(_, _, block_table)) =
+d194 1
+a194 1
+  fun make_proc (tag, params, blocks) =
+d200 1
+a200 1
+    PROC(tag, params, table)
+d206 1
+a206 1
+  fun alist_of_proc (PROC(_,_,block_table)) = Tree.to_alist block_table
+d211 1
+a211 1
+  fun proc_map function (PROC(start_tag, params, block_table)) =
+d220 1
+a220 1
+      PROC(start_tag, params, new_table)
+d226 1
+a226 1
+  fun proc_fold function identity (PROC(_, _, block_table)) =
+d256 1
+a256 1
+  fun annotate (MirTypes.PROC(start_tag, params, blocks)) =
+d277 1
+a277 1
+      make_proc (start_tag, params, map do_block blocks)
+d287 1
+a287 1
+  fun unannotate (procedure as PROC(start_tag, params, _)) =
+d303 2
+a304 1
+      MirTypes.PROC(start_tag,
+d335 2
+a336 1
+  fun print_procedure (PROC(start_tag,
+@
+
+
+1.19
+log
+@Changed the way virtual registers are handled.  See MirTypes.
+@
+text
+@d5 3
+d78 1
+d91 1
+@
+
+
+1.18
+log
+@Added `blocks' function.
+@
+text
+@d5 3
+d339 1
+a339 1
+		Set.set_print(gc, MirTypes.print_gc_register),
+d341 1
+a341 1
+		Set.set_print(non_gc, MirTypes.print_non_gc_register),
+d343 1
+a343 1
+		Set.set_print(fp, MirTypes.print_fp_register)]
+@
+
+
+1.17
+log
+@Changed printing functions to produce lists of strings rather than
+concatenating large strings.  This is now much more efficient.
+@
+text
+@d5 4
+d166 6
+@
+
+
+1.16
+log
+@Exported print_opcode.  Removed the referenced registers from
+the registers datatype as these are obsolete.
+@
+text
+@d4 5
+a8 1
+$Log:	_miropttypes.sml,v $
+d291 2
+a292 2
+      "\n      live:       " ^ Set.set_print(live, MirPrint.any_reg)
+    | print_registers REGS_UNKNOWN = ""
+d294 1
+a294 1
+  fun print_successors (SUCCS []) = ""
+d296 2
+a297 2
+      "\n      " ^ Lists.to_string MirTypes.print_tag tags
+    | print_successors SUCCS_UNKNOWN = ""
+d300 1
+a300 1
+      MirPrint.opcode opcode
+d303 2
+a304 2
+      MirPrint.opcode opcode ^
+      print_registers live ^ print_successors succs
+d307 1
+a307 1
+    "\n  Block " ^ (MirTypes.print_tag tag) ^
+d309 2
+a310 2
+     (fn(a,b) => a ^ "\n    " ^ print_opcode b)
+     ("", opcodes))
+d321 1
+a321 1
+      val reg_string =
+d323 1
+a323 1
+	  of MirTypes.ABSENT => "\n    No register information."
+d325 6
+a330 6
+	       ("\n    GCs used: " ^
+		Set.set_print(gc, MirTypes.print_gc_register) ^
+		"\n    NON_GCs used: " ^
+		Set.set_print(non_gc, MirTypes.print_non_gc_register) ^
+		"\n    FPs used: " ^
+		Set.set_print(fp, MirTypes.print_fp_register))
+d332 1
+a332 1
+      val spill_string =
+d334 1
+a334 1
+	  of MirTypes.ABSENT => "\n    No spill size information."
+d336 3
+a338 3
+	       ("\n    Spill areas: GC " ^ Integer.makestring gc ^
+		", NON_GC " ^ Integer.makestring non_gc ^
+		", FP " ^ Integer.makestring fp)
+d340 1
+a340 1
+      val stack_string =
+d342 1
+a342 1
+	  of MirTypes.ABSENT => "\n    No stack allocation information."
+d344 2
+a345 2
+	       ("\n    " ^ Integer.makestring s ^
+		" words of stack required.")
+d348 3
+a350 3
+	"Procedure " ^ MirTypes.print_tag start_tag ^
+	" (" ^ leaf_string ^ ")" ^ reg_string ^ spill_string ^
+	stack_string
+d354 1
+a354 1
+      (fn (s,(_,block)) => s ^ print_block block)
+@
+
+
+1.15
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d5 5
+d105 1
+a105 1
+    REGS of MirTypes.any_register Set.Set * MirTypes.any_register Set.Set |
+d286 2
+a287 3
+  fun print_registers (REGS(live,referenced)) =
+      "\n      live:       " ^ Set.set_print(live, MirPrint.any_reg) ^
+      "\n      referenced: " ^ Set.set_print(referenced, MirPrint.any_reg)
+d295 2
+a296 2
+  fun print_block (BLOCK(tag,opcodes)) =
+    let
+d298 3
+a300 2
+      fun print_opcode (opcode as MirTypes.COMMENT _, _, _) =
+	  MirPrint.opcode opcode
+d302 5
+a306 10
+	| print_opcode (opcode, live, succs) =
+	  MirPrint.opcode opcode ^
+	  print_registers live ^ print_successors succs
+
+    in
+      "\n  Block " ^ (MirTypes.print_tag tag) ^
+      (Lists.reducel
+       (fn(a,b) => a ^ "\n    " ^ print_opcode b)
+       ("", opcodes))
+    end;
+@
+
+
+1.14
+log
+@Removed references to fp_double registers.
+@
+text
+@d5 3
+d55 1
+d71 1
+d82 1
+d227 5
+d258 5
+@
+
+
+1.13
+log
+@Moved annotate and unannotate here from MirOptimiser.
+@
+text
+@d5 3
+d304 1
+a304 1
+	   | MirTypes.PRESENT {gc, non_gc, fp, fp_double} =>
+d310 1
+a310 3
+		Set.set_print(fp, MirTypes.print_fp_register) ^
+		"\n    FP_DOUBLEs used: " ^
+		Set.set_print(fp_double, MirTypes.print_fp_double_register))
+d315 1
+a315 1
+	   | MirTypes.PRESENT {gc, non_gc, fp, fp_double} =>
+d318 1
+a318 2
+		", FP " ^ Integer.makestring fp ^
+		", FP_DOUBLE " ^ Integer.makestring fp_double)
+@
+
+
+1.12
+log
+@Made MirOptTypes.procedure abstract, and changed over to using
+balanced trees rather than tables for block lookup.
+@
+text
+@d5 4
+d205 52
+@
+
+
+1.11
+log
+@Improved the printing functions a bit.
+@
+text
+@d5 3
+d46 1
+a46 1
+require "../utils/table";
+d58 1
+a58 1
+  structure Table	: TABLE
+a69 1
+  structure Table = Table
+d98 2
+d103 1
+a103 1
+    (MirTypes.tag, block) Table.table;
+d110 8
+d126 1
+a126 1
+    PROC(start_tag, params, Table.overwrite ((tag, block), block_table));
+d137 3
+a139 2
+    Table.lookup (tag, block_table)
+    handle Table.Lookup => raise NoSuchBlock;
+d152 1
+a152 1
+    val alist = map (fn (block as BLOCK(tag,_)) => (tag, block)) blocks;
+d154 1
+a154 4
+    val spec =
+      Table.TableSpec { order = MirTypes.order_tag, eq = MirTypes.equal_tag };
+
+    val table = Table.table_of_alist (alist, spec)
+d160 5
+d168 2
+a169 1
+    PROC(start_tag, params, Table.apply function block_table);
+d171 2
+d174 6
+d184 1
+a184 1
+      val blocks = map #2 (Table.alist_of_table block_table)
+d227 1
+a227 1
+      "  Block " ^ (MirTypes.print_tag tag) ^
+a275 2
+      val blocks =
+	map (fn (_,block) => block) (Table.alist_of_table block_table)
+d277 3
+a279 4
+      message ^
+      (Lists.reducel
+       (fn(a,b) => a ^ "\n\n" ^ print_block b)
+       ("", blocks))
+@
+
+
+1.10
+log
+@Added block_map and block_fold.
+@
+text
+@d5 3
+d183 3
+a185 4
+      "live = { " ^ Set.set_print(live, MirPrint.any_reg) ^
+      "}  referenced = {" ^ Set.set_print(referenced, MirPrint.any_reg) ^ "}"
+    | print_registers REGS_UNKNOWN =
+      "(live registers unknown)"
+d187 4
+a190 4
+  fun print_successors (SUCCS tags) =
+      Lists.to_string MirTypes.print_tag tags
+      | print_successors SUCCS_UNKNOWN =
+	"(successor blocks unknown)";
+d195 6
+a200 9
+      fun print_opcode (opcode, live, succs) =
+	(case opcode
+	   of (MirTypes.COMMENT _) => (MirPrint.opcode opcode)
+	    | _ =>
+		(MirPrint.opcode opcode) ^
+		"\n      " ^ (print_registers live) ^
+		(case succs
+		   of (SUCCS []) => ""
+		    | _ => "\n      " ^ (print_successors succs)));
+@
+
+
+1.9
+log
+@Slight alterations to cope with new MirTypes.
+@
+text
+@d5 3
+d161 13
+@
+
+
+1.8
+log
+@Removed a minor bug involving carriage returns.
+@
+text
+@d5 3
+d53 1
+d91 3
+a93 1
+    MirTypes.tag * (MirTypes.tag, block) Table.table;
+d106 3
+a108 2
+  fun new_block (PROC(start_tag, block_table)) (block as BLOCK(tag,_)) =
+    PROC(start_tag, Table.overwrite ((tag, block), block_table));
+d118 1
+a118 1
+  fun get_block (PROC(_, block_table)) tag =
+d131 1
+a131 1
+  fun make_proc (tag, blocks) =
+d140 1
+a140 1
+    PROC(tag, table)
+d146 2
+a147 2
+  fun proc_map function (PROC(start_tag, block_table)) =
+    PROC(start_tag, Table.apply function block_table);
+d152 1
+a152 1
+  fun proc_fold function identity (PROC(start_tag, block_table)) =
+d182 1
+a182 1
+		"   " ^ (print_registers live) ^
+d185 1
+a185 1
+		    | _ => "\n    " ^ (print_successors succs)));
+d188 1
+a188 1
+      "Tag " ^ (MirTypes.print_tag tag) ^
+d190 1
+a190 1
+       (fn(a,b) => a ^ "\n  " ^ print_opcode b)
+d194 6
+a199 1
+  fun print_procedure (PROC(start_tag, block_table)) =
+d201 36
+d240 1
+a240 1
+      "Procedure " ^ (MirTypes.print_tag start_tag) ^
+@
+
+
+1.7
+log
+@Added extra `referenced registers' field to registers type.
+Tidied up printing functions to use printing functions for lists
+and sets rather than own versions.
+@
+text
+@d5 5
+d181 1
+a181 1
+      "Tag " ^ (MirTypes.print_tag tag) ^ "\n  " ^
+@
+
+
+1.6
+log
+@Added a proc_map function.
+@
+text
+@d5 3
+d59 3
+a61 1
+   *    - a set of variables live before the opcode;
+d70 1
+a70 1
+    REGS of MirTypes.any_register Set.Set |
+d138 1
+d140 6
+a145 1
+  (*  === PRINT ROUTINES FOR DEBUGGING TYPES ===  *)
+a146 1
+  local
+a147 4
+    fun print_list (_,[],_) = ""
+      | print_list (printer,[x],_) = printer x
+      | print_list (printer,x::xs,separator) =
+	(printer x) ^ separator ^ (print_list (printer,xs,separator));
+d149 1
+a149 1
+  in
+d151 5
+a155 4
+    fun print_registers (REGS regs) =
+        "{ " ^ (print_list (MirPrint.any_reg, Set.set_to_list regs, "")) ^ "}"
+      | print_registers REGS_UNKNOWN =
+	"(live registers unknown)"
+d157 2
+a158 2
+    fun print_successors (SUCCS tags) =
+        "[" ^ (print_list (MirTypes.print_tag, tags, ",")) ^ "]"
+d162 1
+a162 1
+    fun print_block (BLOCK(tag,opcodes)) =
+d177 3
+a179 1
+      (print_list (print_opcode, opcodes, "\n  "))
+d182 1
+a182 1
+    fun print_procedure (PROC(start_tag, block_table)) =
+d188 3
+a190 1
+      (print_list (print_block, blocks, "\n\n"))
+a191 2
+
+  end
+@
+
+
+1.6.1.1
+log
+@This is a modified version to use the reworked MirTypes module
+(ver 1.23.1.1). This module is correct, but work has been suspended
+on this branch because of the amount of time it would take to convert
+the code generator (Mir_Cg) module.
+@
+text
+@a4 3
+Revision 1.6  91/09/25  12:44:28  richard
+Added a proc_map function.
+
+d65 1
+a65 1
+    REGS of MirTypes.operand Set.Set |
+d146 1
+a146 1
+        "{ " ^ (print_list (MirPrint.operand, Set.set_to_list regs, "")) ^ "}"
+@
+
+
+1.5
+log
+@Altered procedure type to use a table of blocks rather than a list.
+This makes for efficiency and solves some block ordering problems
+in MirOptimiser.
+@
+text
+@d5 5
+d125 6
+@
+
+
+1.4
+log
+@Prevented printing of annotations on comments in print_block.
+@
+text
+@d5 3
+d21 1
+d33 1
+d44 1
+d54 3
+a56 2
+   *  The procedure type records the tag of the entry block, because
+   *  the ordering of the blocks may be changed during optimisation.
+d71 2
+a72 1
+  datatype procedure = PROC of MirTypes.tag * block list;
+d75 48
+d162 5
+a166 1
+    fun print_procedure (PROC(start_tag, blocks)) =
+d169 1
+@
+
+
+1.3
+log
+@Added printing functions.
+@
+text
+@d5 3
+d92 8
+a99 5
+	(MirPrint.opcode opcode) ^
+	"   " ^ (print_registers live) ^
+	(case succs
+	   of (SUCCS []) => ""
+	    | _ => "\n    " ^ (print_successors succs));
+@
+
+
+1.2
+log
+@Added control flow information to instructions. See MirFlow module.
+@
+text
+@d5 3
+d15 1
+d17 1
+d24 1
+d26 1
+d28 2
+d61 44
+a104 1
+  datatype procedure = PROC of MirTypes.tag * block list
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log:$
+d31 7
+a37 4
+   *  This is the analog of MirTypes.block, except that each opcode
+   *  has live variables attached. The procedure type records the tag
+   *  of the entry block, because the ordering of the blocks may be
+   *  changed during optimisation.
+d42 1
+a42 1
+    UNKNOWN;
+d44 4
+d50 1
+a50 1
+    (MirTypes.opcode * registers) list;
+d53 1
+@

@@ -1,0 +1,349 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.10.10.09.48.29;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.09.23.14.52.12;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Lambdatypes changes
+@
+text
+@require "../utils/integer";
+require "../utils/lists";
+require "../utils/crash";
+require "../main/pervasives";
+require "../basics/identprint";
+require "lambdatypes";
+
+require "simpletypes";
+
+functor SimpleTypes (structure Integer : INTEGER
+                     structure Lists : LISTS
+                     structure Crash : CRASH
+                     structure Pervasives : PERVASIVES
+                     structure LambdaTypes : LAMBDATYPES
+                     structure IdentPrint : IDENTPRINT
+                     sharing LambdaTypes.Ident = IdentPrint.Ident
+                     sharing type Pervasives.pervasive = LambdaTypes.Primitive
+                     sharing type LambdaTypes.LVar = int
+                       ) : SIMPLETYPES =
+  struct
+    structure Ident = IdentPrint.Ident
+    structure Pervasives = Pervasives
+    structure LambdaTypes = LambdaTypes
+
+    open MLWorks.Option
+
+    type Type = LambdaTypes.Type
+
+    val crash = Crash.impossible
+
+    (* The language *)
+      
+    type var = int;
+      
+    datatype Status = ENTRY | BODY | FUNC
+      
+    datatype StructType = STRUCTURE | TUPLE | CONSTRUCTOR
+
+    datatype tag = 
+      VCC_TAG of int |
+      IMM_TAG of int |
+      SCON_TAG of Ident.SCon |
+      EXP_TAG of exp
+      
+    and exp = 
+      VAR of var |
+      FN of var list * exp * Status * string * LambdaTypes.Type * LambdaTypes.FunInfo LambdaTypes.Option.opt |
+      LET of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * exp) * exp |
+      LETREC of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt) list * exp list * exp |
+      APP of exp * exp list * LambdaTypes.Type ref option |
+      SCON of LambdaTypes.Ident.SCon |
+      INT of int |
+      SWITCH of exp * {num_vccs:int,num_imms:int} option * (tag * exp) list * exp option |
+      STRUCT of exp list * StructType |
+      SELECT of {index: int,size: int,selecttype: StructType} * exp |
+      RAISE of exp |
+      HANDLE of exp * exp * string |
+      BUILTIN of LambdaTypes.Primitive |
+
+      (* These are new ones *)
+      BUILTINAPP of LambdaTypes.Primitive * exp list * LambdaTypes.Type ref option
+
+
+    datatype Dec = 
+      VAL of exp |
+      FUNCTOR of var * string * ((var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp)
+      
+    datatype program =
+      PROGRAM of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp
+
+    (* This is incomplete -- used for simple expressions *)
+    fun exp_eq (VAR v,VAR v') = v = v'
+      | exp_eq (APP (e1,el,_),APP (e1',el',_)) = exp_eq (e1,e1') andalso explist_eq (el,el')
+      | exp_eq (SCON s, SCON s') = Ident.scon_eqrep (s,s')
+      | exp_eq (INT n, INT n') = n = n'
+      | exp_eq (STRUCT (el,ty),STRUCT (el',ty')) = ty = ty' andalso explist_eq (el,el')
+      | exp_eq (SELECT ({index=i,size=j,selecttype=ty},e), SELECT ({index=i',size=j',selecttype=ty'},e')) = 
+        ty = ty' andalso i = i' andalso j = j' andalso exp_eq (e,e')
+      | exp_eq (BUILTIN b,BUILTIN b') = b = b'
+      | exp_eq (BUILTINAPP (b,el,_),BUILTINAPP (b',el',_)) =
+        b = b' andalso explist_eq (el,el')
+      | exp_eq _ = false
+    and explist_eq ([],[]) = true
+      | explist_eq (e::el,e'::el') = exp_eq (e,e') andalso explist_eq (el,el')
+      | explist_eq _ = false
+
+    fun telfun f (EXP_TAG e, e') = (EXP_TAG (f e), f e')
+      | telfun f (t,e) = (t,f e)
+
+    (* Dispensers of unique ids *)
+    val new_valid = LambdaTypes.new_LVar
+
+(* Printing *)
+
+exception PrintExp
+
+fun print_var v = "v" ^ Integer.makestring v
+
+fun print_varlist vl =
+  let
+    fun aux [] = ""
+      | aux [a]=print_var a
+      | aux (a::l) = print_var a^","^aux l
+  in
+    "("^aux vl^")"
+  end
+
+fun indent level =
+  let
+    fun aux (0,acc) = acc
+      | aux (n,acc) = aux (n-1,"  "::acc)
+  in
+    implode ("\n" :: aux (level,[]))
+  end
+
+exception ExpTag
+
+fun print_builtin b = "<" ^ Pervasives.print_pervasive b ^ ">"
+
+fun iprint_exp (e,level,acc) =
+  case e of 
+    (* Simple expressions *)
+    INT n => Integer.makestring n :: acc
+  | SCON s => IdentPrint.printSCon s :: acc
+  | BUILTIN b => print_builtin b :: acc
+  | VAR var => print_var var :: acc
+  | APP (e,el,_) => print_explist (el,level,iprint_exp (e,level,acc))
+  | BUILTINAPP(b,el,_) => print_explist (el,level," " :: print_builtin b::acc)
+  | STRUCT ([],_) => "1" :: acc
+  | STRUCT (el,STRUCTURE) => print_explist (el,level,"structure " :: acc)
+  | STRUCT (el,TUPLE) => print_explist (el,level,"tuple " :: acc)
+  | STRUCT (el,CONSTRUCTOR) => print_explist (el,level,"cons " :: acc)
+  | SWITCH (e,info,tel,oe) => print_opte (oe, level+1,
+                                     print_tel (tel,level+1,indent (level+1)::" of ":: iprint_exp (e,level+1,"case " :: acc)))
+  | HANDLE (e1,e2,_) => iprint_exp (e2,level," handle ":: indent (level+1) :: iprint_exp (e1,level+1,acc))
+  | RAISE e => iprint_exp (e,level+1,"raise " :: acc)
+  | FN (vl,e,functorp,name,_,_) => iprint_exp (e,level+1," => "::
+                                     "]" :: name :: "[" ::
+                                     print_varlist vl::"fn "::indent level :: acc)
+  | LETREC (fl, vel,e) =>
+      "end" :: indent level :: iprint_exp (e,level+1, indent (level+1) :: "in" :: indent level :: print_flist (Lists.zip (fl,vel),level+1,"let rec "::acc))
+  | SELECT ({index,selecttype=STRUCTURE,...},e) =>
+      ")" :: iprint_exp (e,level, ", " :: Integer.makestring index :: "sselect(" :: acc)
+  | SELECT ({index,...},e) => 
+      ")" :: iprint_exp (e,level, ", " :: Integer.makestring index :: "select(" :: acc)
+  | LET _ => print_let (e,level,acc)
+
+and print_opte (NONE,level,acc) = acc
+  | print_opte (SOME e,level,acc) = iprint_exp (e,level,"_ => " :: indent level :: " |":: acc)
+
+and print_tel (l,level,acc) =
+    let fun print_one ((t,e),acc) =
+      iprint_exp (e, level+1," => " :: print_tag (t,level+1,acc))
+    in
+      case l of
+        [] => acc
+      | [x] => print_one (x,acc)
+      | (x::y) => print_tel (y,level, indent level :: " |" :: print_one (x,acc))
+    end
+
+and print_tag (VCC_TAG i,level,acc) = Integer.makestring i :: "vcc " :: acc
+  | print_tag (IMM_TAG i,level,acc) = Integer.makestring i :: "imm " :: acc
+  | print_tag (SCON_TAG s,level,acc) = IdentPrint.printSCon s :: "scon " :: acc
+  | print_tag (EXP_TAG e,level,acc) = iprint_exp (e,level, "exp " :: acc)
+
+and print_flist ([],level,acc) = acc
+  | print_flist (((f,_),(FN (vl,e,_,name,_,_)))::l,level,acc) =
+    print_flist (l,level," " :: iprint_exp (e,level," = "::"*)"::name::"(*"::print_varlist vl::print_var f::acc))
+  | print_flist ((f,_)::l,level,acc) = crash "Bad exp in letrec"
+
+and print_explist (el,level,acc) =
+  let
+    fun aux ([],acc) = ")"::acc
+      | aux ([e],acc) = ")"::iprint_exp (e,level,acc)
+      | aux (e::el,acc) = aux(el,","::iprint_exp(e,level,acc))
+  in
+    aux (el,"("::acc)
+  end
+
+and print_let (e,level,acc) =
+  let
+    fun aux (e,acc) =
+      case e of
+        LET ((v,_,FN (args,body,status,name,_,_)),e2) =>
+          aux (e2," " :: iprint_exp (body,
+                                     level+2,
+                                     " = "::"]"::name::"["::print_varlist args::" "::print_var v::(case status of FUNC => "functor " | _ => "fun ")
+                                     ::indent(level+1)::acc))
+      | LET ((v,_,e1),e2) =>
+          aux (e2," " :: iprint_exp (e1,level+2," = "::print_var v::"val "::indent(level+1)::acc))
+      | e => "end " :: indent level :: iprint_exp (e,level+2,indent (level+1)::"in"::indent level :: acc)
+  in
+    case e of
+      LET _ => aux (e,"let "::indent level :: acc)
+    | _ => iprint_exp (e,level,acc)
+  end
+
+fun print_exp e = implode (rev (iprint_exp (e,0,[])))
+
+fun to_expression ([],exp) = exp
+  | to_expression ((v,i,dec)::rest,exp) =
+    LET ((v,i,dec_to_expression dec),
+         to_expression (rest,exp))
+and dec_to_expression (VAL e) = e
+  | dec_to_expression (FUNCTOR (arg,name,body)) =
+    FN ([arg],to_expression body,FUNC,name,LambdaTypes.null_type_annotation,LambdaTypes.Option.ABSENT)
+  
+fun pds (PROGRAM p) = implode (rev (print_let (to_expression p,0,[])))
+fun pde e = implode (rev (print_let (e,0,[])))
+
+(* End of printing *)
+
+end
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d2 2
+a4 1
+require "../typechecker/datatypes";
+d10 10
+a19 7
+functor SimpleTypes ( structure Integer : INTEGER
+                      structure Pervasives : PERVASIVES
+                      structure Datatypes : DATATYPES
+                      structure LambdaTypes : LAMBDATYPES
+                      structure IdentPrint : IDENTPRINT
+                      sharing type LambdaTypes.LVar = int
+                        ) : SIMPLETYPES =
+d23 1
+d27 1
+a27 1
+    type Type = Datatypes.Type
+d29 2
+d37 2
+d46 6
+a51 6
+      VAREXP of var |
+      FN of var list * Status * string * exp |
+      LET of var * exp * exp |
+      LETREC of (var * var list * string * exp) list * exp |
+      APP of exp * exp list * Type ref option |
+      SCONEXP of Ident.SCon |
+d54 2
+a55 2
+      STRUCT of exp list |
+      SELECT of int * int * exp |
+d57 3
+a59 3
+      HANDLE of exp * exp |
+      BOP of Pervasives.pervasive |
+      
+d61 3
+a63 2
+      BOPAPP of Pervasives.pervasive * exp list * Type ref option
+      
+d66 1
+a66 1
+      FUNCTOR of var * string * ((var * Dec) list * exp)
+d69 1
+a69 1
+      PROGRAM of (var * Dec) list * exp
+d72 1
+a72 1
+    fun exp_eq (VAREXP v,VAREXP v') = v = v'
+d74 1
+a74 1
+      | exp_eq (SCONEXP s, SCONEXP s') = Ident.scon_eqrep (s,s')
+d76 5
+a80 5
+      | exp_eq (STRUCT el,STRUCT el') = explist_eq (el,el')
+      | exp_eq (SELECT (i,j,e), SELECT (i',j',e')) = 
+        i = i' andalso j = j' andalso exp_eq (e,e')
+      | exp_eq (BOP b,BOP b') = b = b'
+      | exp_eq (BOPAPP (b,el,_),BOPAPP (b',el',_)) =
+d118 1
+a118 1
+fun print_bop b = "<" ^ Pervasives.print_pervasive b ^ ">"
+d124 3
+a126 3
+  | SCONEXP s => IdentPrint.printSCon s :: acc
+  | BOP b => print_bop b :: acc
+  | VAREXP var => print_var var :: acc
+d128 5
+a132 3
+  | BOPAPP(b,el,_) => print_explist (el,level," " :: print_bop b::acc)
+  | STRUCT [] => "1" :: acc
+  | STRUCT el => print_explist (el,level,"tuple " :: acc)
+d135 1
+a135 1
+  | HANDLE (e1,e2) => iprint_exp (e2,level," handle ":: indent (level+1) :: iprint_exp (e1,level+1,acc))
+d137 1
+a137 1
+  | FN (vl,functorp,name,e) => iprint_exp (e,level+1," => "::
+d140 6
+a145 3
+  | LETREC (fvel,e) =>
+      "end" :: indent level :: iprint_exp (e,level+1, indent (level+1) :: "in" :: indent level :: print_flist (fvel,level+1,"let rec "::acc))
+  | SELECT (i,j,e) => ")" :: iprint_exp (e,level, ", " :: Integer.makestring i :: "select(" :: acc)
+d167 1
+a167 1
+  | print_flist ((f,vl,name,e)::l,level,acc) =
+d169 1
+d184 1
+a184 1
+        LET (v,FN (args,status,name,body),e2) =>
+d189 1
+a189 1
+      | LET (v,e1,e2) =>
+d201 3
+a203 2
+  | to_expression ((v, dec)::rest,exp) =
+    LET (v,dec_to_expression dec,to_expression (rest,exp))
+d206 1
+a206 1
+    FN ([arg],FUNC,name,to_expression body)
+@

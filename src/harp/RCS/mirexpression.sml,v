@@ -1,0 +1,236 @@
+head	1.4;
+access;
+symbols
+	ML_beta_release_12/08/94:1.4
+	ML_beta_release_03/08/94:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.03.05.15.31.37;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	91.11.19.11.11.45;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.17.11.33.13;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.17.14.48.31;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.03.05.15.31.37;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Module to perform forward dataflow optimisations (available expression
+substitution and copy propagation). Created from version 1.8 of
+_mirdataflow.sml.
+This is the signature.
+@
+
+
+1.4
+log
+@Changed analyser to use MirProcedure annotations.
+@
+text
+@(*  ==== AVAILABLE EXPRESSION ANALYSIS ====
+ *               SIGNATURE
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The available expression analyser attempts to reduce the amount of
+ *  recomputation performed in a procedure by re-using virtual registers
+ *  which contain identical results.  The analyser also performs copy
+ *  propagation which attempts to reduce the number of virtual registers
+ *  used by using the earliest available copy of a register.
+ *
+ *  Diagnostics
+ *  -----------
+ *   0  no output
+ *   1  procedure tags as they are processed
+ *   2  block tags and expressions on entry
+ *   3  changes to the code
+ *   4  the sets of expressions at every opcode
+ *   5  decisions made about expressions
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: mirexpression.sml,v $
+ *  Revision 1.3  1991/11/19  11:11:45  richard
+ *  Changed debugging output to use the Diagnostic module, which
+ *  prevents the debugging output strings being constructed even
+ *  if they aren't printed.
+ *  
+ *  Revision 1.2  91/10/17  11:33:13  richard
+ *  Added Switches structure.
+ *  
+ *  Revision 1.1  91/09/17  14:48:31  richard
+ *  Initial revision
+ *)
+
+
+require "../utils/diagnostic";
+require "mirprocedure";
+require "mirtypes";
+
+
+signature MIREXPRESSION =
+
+  sig
+
+    structure MirProcedure	: MIRPROCEDURE
+    structure MirTypes		: MIRTYPES
+    sharing MirTypes = MirProcedure.MirTypes
+    structure Diagnostic	: DIAGNOSTIC
+
+    val copy_propagation	: bool ref
+    val expression_substitution	: bool ref
+
+    val analyse : MirProcedure.procedure -> MirTypes.procedure
+
+  end
+  
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a25 3
+ *  Revision 1.4  1992/03/05  15:31:37  richard
+ *  Changed analyser to use MirProcedure annotations.
+ *
+@
+
+
+1.3
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d1 36
+a36 1
+(* mirexpression.sml the signature *)
+a37 4
+(*
+$Log:	mirexpression.sml,v $
+Revision 1.2  91/10/17  11:33:13  richard
+Added Switches structure.
+a38 6
+Revision 1.1  91/09/17  14:48:31  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+d40 2
+a41 2
+require "switches";
+require "miropttypes";
+d48 3
+a50 12
+    structure MirOptTypes	: MIROPTTYPES
+    structure Switches		: SWITCHES
+
+    (* Diagnostic levels:
+     *   0  no output
+     *   1  procedure tags as they are processed
+     *   2  block tags and expressions on entry
+     *   3  changes to the code
+     *   4  the sets of expressions at every opcode
+     *   5  decisions made about expressions
+     *)
+
+d53 2
+d56 1
+a56 11
+    (*  === APPLY AVAILABLE EXPRESSION ANALYSIS ===
+     *
+     *  This function attempts to prevent recalculation of expressions
+     *  (available expression substitution) and minimise the number of
+     *  registers used by a procedure (copy propagation).
+     *
+     *  NOTE: Any live variable information is discarded by this
+     *  process.
+     *)
+
+    val analyse : MirOptTypes.procedure -> MirOptTypes.procedure
+@
+
+
+1.2
+log
+@Added Switches structure.
+@
+text
+@d5 3
+d14 1
+a19 1
+sig
+d21 1
+a21 2
+  structure MirOptTypes : MIROPTTYPES
+  structure Switches	: SWITCHES
+d23 2
+d26 8
+a33 9
+  (*  === APPLY AVAILABLE EXPRESSION ANALYSIS ===
+   *
+   *  This function attempts to prevent recalculation of expressions
+   *  (available expression substitution) and minimise the number of
+   *  registers used by a procedure (copy propagation).
+   *
+   *  NOTE: Any live variable information is discarded by this
+   *  process.
+   *)
+d35 1
+a35 1
+  val analyse : MirOptTypes.procedure -> MirOptTypes.procedure
+d37 15
+a51 1
+end
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log:$
+d11 1
+d14 1
+d19 1
+@

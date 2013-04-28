@@ -1,0 +1,217 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.08.22.10.30.42;	author brucem;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.08.22.09.27.54;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.19.15;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.50.26;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.54.07;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Defines abstract syntax used inside the Foreign Interface parser.
+Not used outside the foreign interface parser.
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(*
+ * Foreign Interface parser: internal abstract syntax.
+ *
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * $Log$
+ *
+ *)
+
+require "$.basis.__int";
+require "$.basis.__real";
+require "$.basis.__char";
+require "$.basis.__word";
+require "fi_abs_syntax";
+require "fi_int_abs_syn";
+
+(* FI Internal Abstract Syntax:
+   Extra structures and function used for constructing abstract syntax *)
+
+functor FIIntAbsSyn (structure FIAbsSyntax : FI_ABS_SYNTAX) : FI_INT_ABS_SYN =
+  struct
+
+    structure FIAbsSyntax = FIAbsSyntax
+
+    open FIAbsSyntax
+
+    (* Information for making new types from simpler ones *)
+    datatype type_info =
+      NO_TYPE_INFO
+    | AS_POINTER of type_info
+    | AS_ARRAY of 
+        {dimensions: FIAbsSyntax.expression option, elemTypeInfo: type_info}
+    | AS_FUNCTION of
+        {returnTypeInfo : type_info,
+         params: {name : string option,
+                  paramType : FIAbsSyntax.types} list }
+
+    val insertTypeInfo = fn (a, b) =>
+      let
+        fun ins NO_TYPE_INFO = b
+          | ins (AS_POINTER a') = AS_POINTER (ins a')
+          | ins (AS_ARRAY {dimensions, elemTypeInfo}) =
+              AS_ARRAY{dimensions=dimensions, elemTypeInfo=ins elemTypeInfo}
+          | ins (AS_FUNCTION {returnTypeInfo, params}) =
+              AS_FUNCTION{returnTypeInfo=ins returnTypeInfo, params=params}
+      in ins a end
+
+    fun makeSignedType INT = INT
+      | makeSignedType CHAR = CHAR
+      | makeSignedType SHORT = SHORT
+      | makeSignedType LONG = LONG
+      | makeSignedType (ILLEGAL_TYPE s) = ILLEGAL_TYPE s
+      | makeSignedType _ = ILLEGAL_TYPE "can't make signed"
+
+    fun makeUnsignedType INT = UNS_INT
+      | makeUnsignedType CHAR = UNS_CHAR
+      | makeUnsignedType SHORT = UNS_SHORT
+      | makeUnsignedType LONG = UNS_LONG
+      | makeUnsignedType (ILLEGAL_TYPE s) = ILLEGAL_TYPE s
+      | makeUnsignedType _ = ILLEGAL_TYPE "can't make unsigned"
+
+    fun makeLongType INT = LONG
+      | makeLongType UNS_INT = UNS_LONG
+      | makeLongType (ILLEGAL_TYPE s) = ILLEGAL_TYPE s
+      | makeLongType _ = ILLEGAL_TYPE "can't make long"
+
+    fun makeShortType INT = SHORT
+      | makeShortType UNS_INT = UNS_SHORT
+      | makeShortType (ILLEGAL_TYPE s) = ILLEGAL_TYPE s
+      | makeShortType _ = ILLEGAL_TYPE "can't make short"
+
+    fun makeType (t, ti) =
+      let
+        fun modify NO_TYPE_INFO = t
+          | modify (AS_POINTER i) = POINTER (modify i)
+          | modify (AS_ARRAY{dimensions, elemTypeInfo}) =
+              ARRAY{elemType= modify elemTypeInfo, dimensions = dimensions}
+          | modify (AS_FUNCTION {returnTypeInfo, params}) =
+              FUNCTION{returnType = modify returnTypeInfo, params = params}
+      in
+        modify ti
+      end
+
+    fun makeField (t, {name, typeInfo}) =
+      FIELD{name = name, fieldType = makeType(t, typeInfo)}
+
+    fun makeDeclaration (theType, {name, typeInfo}) =
+          ID_DECL{name = name,
+                  idType = makeType (theType, typeInfo) }
+
+    fun makeTypedef (ty, {name, typeInfo}) =
+          TYPE_DEF{oldType = makeType(ty, typeInfo), newName = name}
+
+    fun makeConst (ty, {name, typeInfo}, v) =
+          CONSTANT_DECL{name = name,
+                        value = v,
+                        valueType = makeType(ty, typeInfo) }
+
+  end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:_fi_int_abs_syn.sml,v $
+ *  Revision 1.2  1997/08/22  10:30:42  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:_fi_int_abs_syn.sml,v $
+ *  Revision 1.2  1997/08/22  10:30:42  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d6 1
+a6 5
+ * $Log: parser:_fi_int_abs_syn.sml,v $
+ *  Revision 1.2  1997/08/22  10:30:42  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+Defines abstract syntax used inside the Foreign Interface parser.
+Not used outside the foreign interface parser.
+@
+text
+@@

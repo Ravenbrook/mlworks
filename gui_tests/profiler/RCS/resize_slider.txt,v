@@ -1,0 +1,158 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.1.1.1.1.1
+	MLWorks_10r3:1.1.1.1.3
+	MLWorks_10r2_551:1.1.1.1.2
+	MLWorks_11:1.1.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.04.03.10.00.24;	author johnh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.10.26.17;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1
+	1.1.1.1.2.1
+	1.1.1.1.3.1;
+next	;
+
+1.1.1.1.1.1
+date	97.07.28.18.12.20;	author daveb;	state Exp;
+branches
+	1.1.1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1.1.1
+date	97.10.07.11.37.17;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.1.2.1
+date	97.09.08.17.05.36;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.1.3.1
+date	97.09.09.14.00.56;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Added new test script for bug fix.
+@
+
+
+1.1
+log
+@new unit
+Added new test script for bug fix.
+@
+text
+@
+Bug #1954:  Win32: Profiler messy when resized to be smaller and slider not
+	    working properly.
+Fixed by change #2869
+
+Repeat by:  In Listener, invoke the profiler by typing an expression and
+pressing 'Profile'.
+
+Bug report :
+
+1. On the Time/Space scroll bar, the arrow buttons at the ends are not
+synchronised with the slider bar.  For example, move the slider all the way
+along to the right hand end, then press the right arrow button - the slider
+jumps back close to the left hand end.  Keep pressing the right arrow
+button, and after the slider has returned to the right hand end, some of the
+bars on the graph start to show negative values, and after a while the scale
+changes so that the tallest bars show over 100%.  A similar effect can be
+seen by pressing the left arrow button when the slider is at the left hand
+end of the bar.
+
+Proper behaviour: arrow buttons are synchronized, and the values of the 
+tallest bars are never over 100%.  Also the Time/Space scroll bar can now
+be adjusted by clicking in the space between one end of the bar and the 
+slider button on the bar.
+
+2. If the profiler window is resized, making it narrower, 
+a) the Time/Space scroll bar does not shrink to fit the window, so the right
+hand end is inaccessible
+b) the horizontal scroll bar that appears on the graph covers the graph
+baseline.
+
+3. After resizing the profiler window a few times (has happened as early as
+the second resize operation, but may take several more), the profiler window
+becomes blank (white) and MLWorks hangs.  This is a little more difficult to
+reproduce, but does seem to happen quite regularly, particularly when
+resizing by grabbing the bottom right corner of the window and shrinking it.
+
+Proper behaviour: Profiler window cannot be resized below a certain minimum
+size which ensures that the above doesn't happen.
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@

@@ -1,0 +1,1389 @@
+head	1.19;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.19
+	mlworks-28-01-1994:1.19
+	Release:1.19
+	mlworks-beta-01-09-1993:1.19
+	MLWorks-1-0-4-29/01/1993:1.19
+	MLWorks-1-0-3-21/12/1992:1.19
+	MLWorks-1-0-2-15/12/1992:1.19
+	MLWorks-1-0-1-04/12/1992:1.19
+	checkpoint_17_08_92:1.19;
+locks; strict;
+
+
+1.19
+date	92.04.13.15.01.54;	author clive;	state Exp;
+branches
+	1.19.1.1;
+next	1.18;
+
+1.18
+date	92.01.14.15.43.04;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	91.12.03.15.13.18;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	91.12.02.16.50.23;	author jont;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	91.11.20.14.26.56;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	91.11.19.15.16.53;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	91.11.18.16.21.59;	author jont;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	91.10.24.09.47.36;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	91.10.21.13.47.36;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	91.10.17.12.34.38;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	91.10.11.10.02.31;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	91.10.10.14.06.52;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	91.10.10.13.40.26;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.09.30.12.41.45;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.09.25.13.34.46;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	91.09.24.12.25.39;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.09.23.14.35.09;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.09.19.14.42.28;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.18.12.27.11;	author richard;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	91.09.26.14.49.16;	author richard;	state Exp;
+branches;
+next	;
+
+1.19.1.1
+date	92.04.13.15.01.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The MirFlow module traces the flow of control in a MirOptTypes.procedure
+and adds this information to the data structure. This is the structure.
+@
+
+
+1.19
+log
+@First version of the profiler
+@
+text
+@(* mirflow.sml the functor *)
+
+(*
+$Log: _mirflow.sml,v $
+Revision 1.18  1992/01/14  15:43:04  jont
+Raise no longer has a parameter
+
+Revision 1.17  1991/12/03  15:13:18  richard
+Added flow for FLOOR.
+
+Revision 1.16  91/12/02  16:50:23  jont
+Added successor information on TAIL_CALL
+
+Revision 1.15  91/11/20  14:26:56  jont
+Added exception generating fp opcodes to tables.
+Made matches explicitly exhaustive.
+
+Revision 1.14  91/11/19  15:16:53  richard
+Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+
+Revision 1.13  91/11/18  16:21:59  jont
+Fixed bug whereby tags in FTEST instructions weren't being followed
+
+Revision 1.12  91/10/24  09:47:36  richard
+Removed explicit dependency on the representation of MirTypes.procedures.
+
+Revision 1.11  91/10/21  13:47:36  richard
+Added missing implied branch from subroutines to exception handlers.
+
+Revision 1.10  91/10/17  12:34:38  richard
+Now uses Switches module to control optimisation and debugging output.
+
+Revision 1.9  91/10/11  10:02:31  richard
+Slight alterations to cope with new MirTypes.
+
+Revision 1.8  91/10/10  14:06:52  richard
+New optimisation: RAISE to a local handler is now converted into
+an unconditional branch.
+
+Revision 1.6  91/09/30  12:41:45  richard
+Switched off debugging output.
+
+Revision 1.5  91/09/25  13:34:46  richard
+Added code to concatenate blocks where possible.
+
+Revision 1.4  91/09/24  12:25:39  richard
+Modified functor to use a table of blocks rather than a simple list.
+See MirOptTypes module.
+
+Revision 1.3  91/09/23  14:35:09  richard
+Rewrote the trace functions to perform a recursive control flow
+analysis. This is required so that dead code blocks are eliminated and
+exception handlers can be scoped.
+
+Revision 1.2  91/09/19  14:42:28  richard
+Switched off debuggging information.
+Fixed a bug which threw away RTS instructions.
+
+Revision 1.1  91/09/18  12:27:11  richard
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/diagnostic";
+require "../utils/lists";
+require "../utils/crash";
+require "../utils/print";
+require "switches";
+require "mirtypes";
+require "miropttypes";
+require "mirflow";
+
+
+functor MirFlow(
+
+  structure MirTypes	: MIRTYPES
+  structure MirOptTypes : MIROPTTYPES
+  structure Lists	: LISTS
+  structure Crash	: CRASH
+  structure Switches	: SWITCHES
+  structure Diagnostic	: DIAGNOSTIC
+
+  sharing MirTypes = MirOptTypes.MirTypes
+
+) : MIRFLOW =
+
+struct
+
+
+  structure MirOptTypes = MirOptTypes
+  structure Switches = Switches
+  structure Diagnostic = Diagnostic
+
+
+  (*  == Diagnostic output ==  *)
+
+  fun diagnostic (level, output_function) =
+    Diagnostic.output level
+    (fn verbosity => "MirOptimiser (Flow): " :: (output_function verbosity))
+
+  fun strings_of_handlers [] = ["none"]
+    | strings_of_handlers [tag] = [MirTypes.print_tag tag]
+    | strings_of_handlers (tag::tags) =
+      (MirTypes.print_tag tag) :: " " :: strings_of_handlers tags
+
+
+
+  (*  === MISCELLANEOUS UTILITY FUNCTIONS ===  *)
+
+  (*  == Filter out non-unique members of a list ==  *)
+
+  fun filter_unique list =
+  let
+    fun f (unique, _, []) = unique
+      | f (unique, not_unique, x::xs) =
+	if Lists.member (x, not_unique) then
+	  f (unique, not_unique, xs)
+	else
+	  if Lists.member (x, xs) then
+	    f (unique, x::not_unique, xs)
+	  else
+	    f (x::unique, not_unique, xs)
+  in
+    f ([], [], list)
+  end;
+
+	  
+    
+  (*  === ELIMINATE UNIQUE BRANCHES ===
+   *
+   *  Given a procedure and a list of block tags that are uniquely
+   *  referenced elsewhere in the procedure, this function
+   *  concatenates blocks where possible.
+   *)
+
+  fun eliminate_branches (proc as
+			  MirOptTypes.PROC(name,start_tag, params, _),
+			  unique_blocks) =
+  let
+
+    (* Scan through block looking for BRANCHes to unique blocks, and *)
+    (* concatenate the opcodes from those blocks. Returns a list of *)
+    (* successful concatenations as well as the new block. *)
+
+    fun try_block (successes, (MirOptTypes.BLOCK(block_tag, opcodes))) =
+    let
+
+      fun f (done, successes, []) = (rev done, successes)
+
+	| f (done, successes,
+	     (opcode as (MirTypes.BRANCH(_,MirTypes.TAG tag), _, _))::_) =
+	  if Lists.member (tag, unique_blocks) then
+	  let
+	    val _ =
+	      diagnostic (3, fn _ =>
+			  ["Concatenating block ",
+			   MirTypes.print_tag block_tag,
+			   " and ", MirTypes.print_tag tag])
+
+	    val MirOptTypes.BLOCK(_, opcodes) =
+	      MirOptTypes.get_block proc tag
+	  in
+	    f (done, tag::successes, opcodes)
+	  end
+	  else
+	    f (opcode::done, successes, [])
+
+	| f (done, successes, opcode::opcodes) =
+	  f (opcode::done, successes, opcodes);
+
+      val (new_opcodes, new_successes) = f ([], successes, opcodes)
+
+    in
+      (MirOptTypes.BLOCK(block_tag, new_opcodes), new_successes)
+    end;
+
+
+    (* Process an alist of (tag, block), trying to concatenate blocks *)
+    (* together. If a block is successfully tacked on to the end of *)
+    (* another it is discarded from the procedure as a whole. *)
+
+    fun process_blocks (proc_done, _, []) = proc_done
+
+      | process_blocks (proc_done, successes, (tag, block)::rest) =
+
+	(* If the block has been successfully concatenated to another *)
+	(* then discard it. *)
+
+	if Lists.member (tag, successes) then
+        (
+	  diagnostic (3, fn _ =>
+		      ["Discarding concatenated block ",
+		       MirTypes.print_tag tag]);
+	  process_blocks (proc_done, successes, rest)
+	)
+	else
+
+	(* Try to do concatenations within the block, and add the *)
+	(* resulting block to the procedure. *)
+	let
+	  val (new_block, new_successes) = try_block (successes, block)
+	in
+	  process_blocks (MirOptTypes.new_block proc_done new_block,
+			  new_successes,
+			  rest)
+	end;
+
+
+    val new_empty_proc = MirOptTypes.make_proc (name,start_tag, params, [])
+	
+  in
+
+    process_blocks (new_empty_proc,
+		    [],
+		    MirOptTypes.alist_of_proc proc)
+
+  end
+
+
+
+  (*  === FIND SUCCESSORS IN A SINGLE BLOCK ===
+   *
+   *  This function  analyses  the instructions in  a block to work out
+   *  the flow successors of  each instruction. It  returns a  list of
+   *  other  blocks reachable  from this one,   each  tupled with  the
+   *  exception handler blocks active at the time of branching.
+   *)
+
+  local
+    open MirTypes;
+
+    fun trace_ops (done, _, reachable_blocks, []) =
+	(rev done, reachable_blocks)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as BRANCH(_,TAG tag),vars,_)::_) =
+	  (
+	    diagnostic (4, fn _ => ["BRANCH to block ",
+				    MirTypes.print_tag tag]);
+
+	    trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		       handlers,
+		       (tag, handlers) :: reachable_blocks,
+		       [])
+	  )
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as BRANCH(_,REG _),vars,_)::_) =
+	  (
+	   diagnostic (4, fn _ => ["BRANCH outside procedure"]);
+
+	    trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		       handlers,
+		       reachable_blocks,
+		       [])
+	  )
+
+      | trace_ops (done, [], reachable_blocks,
+		   (opcode as TAIL_CALL(_,TAG _),vars,_)::_) =
+	  (
+	   diagnostic (4, fn _ => ["TAIL_CALL possibly outside procedure"]);
+
+	    trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		       [],
+		       reachable_blocks,
+		       [])
+	  )
+
+      | trace_ops (done, [], reachable_blocks,
+		   (opcode as TAIL_CALL(_,REG _),vars,_)::_) =
+	  (
+	   diagnostic (4, fn _ => ["TAIL_CALL outside procedure"]);
+
+	    trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		       [],
+		       reachable_blocks,
+		       [])
+	  )
+
+      | trace_ops (_, _, _, (TAIL_CALL _,_,_)::_) =
+	Crash.impossible"Tail call with local handler in existence"
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as RTS,vars,_)::_) =
+	(
+	  diagnostic (4, fn _ => ["RTS"]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		     handlers,
+		     reachable_blocks,
+		     [])
+	)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as SWITCH(_,_,[tag]),vars,_)::_) =
+	let
+	  val _ = diagnostic (4, fn _ => ["SWITCH to single block ",
+					  MirTypes.print_tag tag])
+
+	  val new_opcode =
+	    if !Switches.convert_branches then
+	      BRANCH(BRA, TAG tag)
+	    else
+	      opcode
+	in
+	  trace_ops ((new_opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     [])
+	end
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as SWITCH(_,_,tags),vars,_)::_) =
+	let
+	  val reach = map (fn tag => (tag, handlers)) tags;
+	in
+	  diagnostic (4, fn _ => "SWITCH to blocks " ::
+		      map (fn tag => MirTypes.print_tag tag ^ " ") tags);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS tags) :: done,
+		     handlers,
+		     reach @@ reachable_blocks,
+		     [])
+	end
+
+	(* A TEST instruction may continue through the block. *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as TEST(_,tag,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["TEST to block ", MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+	(* A FTEST instruction may continue through the block. *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as FTEST(_,tag,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["FTEST to block ", MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+	(* A tagged binary operation is like a TEST instruction. *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as TBINARY(_,tag,_,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["Tagged operation to block ",
+				  MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as TBINARYFP(_,tag,_,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["Tagged operation to block ",
+				  MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as TUNARYFP(_,tag,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["Tagged operation to block ",
+				  MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as FLOOR(_,tag,_,_),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["Tagged operation to block ",
+				  MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+	(* A NEW_HANDLER sets up a handler for subsequent RAISEs *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as NEW_HANDLER(tag),vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["NEW_HANDLER set to block ",
+				  MirTypes.print_tag tag]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		     tag :: handlers,
+		     reachable_blocks,
+		     rest)
+	)
+
+	(* OLD_HANDLER restores the handler that was in force before *)
+	(* the last NEW_HANDLER *)
+
+      | trace_ops (done, _::handlers, reachable_blocks,
+		   (opcode as OLD_HANDLER,vars,_)::rest) =
+	(
+	  diagnostic (4, fn _ => ["OLD_HANDLER (",
+				  (case handlers
+				     of [] => "external"
+				      | tag::_ => MirTypes.print_tag tag),
+				  ") restored"]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		     handlers,
+		     reachable_blocks,
+		     rest)
+	)
+
+      | trace_ops (_, _, _, (OLD_HANDLER,_,_)::_) =
+	Crash.impossible("MirOptimiser (Flow): There've been one "^
+			 "too many OLD_HANDLERs around here for my "^
+			 "liking.")
+
+	(* A RAISE when there are no handlers in force must go outside *)
+	(* the current function. The rest of the block is discarded. *)
+
+      | trace_ops (done, [], reachable_blocks,
+		   (opcode as RAISE,vars,_)::_) =
+	(
+	  diagnostic (4, fn _ => ["RAISE external handler"]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		     [],
+		     reachable_blocks,
+		     [])
+	)
+
+	(* A RAISE when there is a handler in force is a jump to the *)
+	(* handler block. The rest of the block is discarded. *)
+
+      | trace_ops (done, handlers as handler::_, reachable_blocks,
+		   (opcode as RAISE,vars,_)::_) =
+	let
+	  val _ = diagnostic (4, fn _ => ["RAISE to block ", 
+					  MirTypes.print_tag handler])
+
+	in
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [handler]) :: done,
+		     handlers,
+		     (handler, handlers) :: reachable_blocks,
+		     [])
+	end
+
+        (* A subroutine potentially contains RAISE instructions... *)
+
+      | trace_ops (done, handlers as handler::_, reachable_blocks,
+		   (opcode as BRANCH_AND_LINK _,vars,_)::rest) =
+	(
+          diagnostic (4, fn _ => ["Possible raise in subroutine to ",
+				  MirTypes.print_tag handler]);
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [handler]) :: done,
+		     handlers,
+		     (handler, handlers) :: reachable_blocks,
+		     rest)
+        )
+
+	(* An LEA instruction counts as a reference to a block tag, so *)
+	(* it adds to the reachable_blocks but doesn't count as a *)
+	(* branch. *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   ((opcode as ADR(_,_,tag),vars,_)::rest)) =
+	trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		   handlers,
+		   (tag, handlers)::reachable_blocks,
+		   rest)
+
+	(* Other instructions just continue through the block. *)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   ((opcode,vars,_)::rest)) =
+	trace_ops ((opcode, vars, MirOptTypes.SUCCS []) :: done,
+		   handlers,
+		   reachable_blocks,
+		   rest)
+
+  in
+
+    fun trace_block (handlers, MirOptTypes.BLOCK(tag, opcodes)) =
+    let
+      val _ =
+	diagnostic (2, fn _ =>
+		    ["processing block ", MirTypes.print_tag tag,
+		     " with handlers "] @@
+		    strings_of_handlers handlers)
+
+      val (done, reachable_blocks) = trace_ops ([], handlers, [], opcodes)
+
+      val _ =
+	diagnostic (3, fn _ =>
+		    ["block ", MirTypes.print_tag tag, " reaches "] @@
+		    map (MirTypes.print_tag o #1) reachable_blocks)
+
+      val block = MirOptTypes.BLOCK(tag, done);
+    in
+      (block, reachable_blocks)
+    end
+
+  end
+
+    
+
+  (*  === TRACE FLOW OF CONTROL ON A PROCEDURE ===
+   *
+   *  The instructions in the procedure are examined and successors
+   *  attached (see MirOptTypes module) to each so that the flow of
+   *  control can be followed by other modules.
+   *
+   *  As a side effect of this, any obviously unreachable code (e.g.,
+   *  after a BRA) or unreachable blocks will be discarded.
+   *)
+
+  fun trace (original_proc as
+	     MirOptTypes.PROC(name,start_tag, params, original_blocks)) =
+  let
+
+    val _ = diagnostic (1, fn _ => ["processing procedure ",
+				    MirTypes.print_tag start_tag])
+
+    fun trace_blocks (proc_done, references, []) = (proc_done, references)
+
+      | trace_blocks (proc_done, references, (tag, handlers)::rest) =
+	(* If the block has already been traced then just skip it. *)
+	let
+	  val _ = MirOptTypes.get_block proc_done tag
+	in
+	  trace_blocks (proc_done, tag::references, rest)
+	end
+
+        handle MirOptTypes.NoSuchBlock =>
+
+	  (* If the block hasn't been traced then find the original *)
+	  (* version and trace it. *)
+	  let
+	    val (block, others) =
+	      trace_block (handlers,
+			   MirOptTypes.get_block original_proc tag)
+	  in
+	    trace_blocks (MirOptTypes.new_block proc_done block,
+			  tag::references,
+			  others @@ rest)
+	  end
+
+	  handle MirOptTypes.NoSuchBlock =>
+
+	    Crash.impossible("MirOptimiser (Flow): There's a branch to "^
+			     "a block tagged "^(MirTypes.print_tag tag)^
+			     " which I can't find in the current "^
+			     "procedure.");
+
+
+    (* Create an empty procedure to start with. *)
+
+    val new_empty_proc = MirOptTypes.make_proc (name,start_tag, params, []);
+
+    (* Trace the flow of control of the block. *)
+
+    val (traced_proc, references) =
+      trace_blocks (new_empty_proc, [start_tag], [(start_tag, [])]);
+
+
+    (* Determine which blocks are uniquely referenced. *)
+
+    val _ = diagnostic (4, fn _ => "References: " ::
+			map (fn tag => MirTypes.print_tag tag ^ " ")
+			references)
+
+    val unique = filter_unique(references)
+
+    val _ = diagnostic (4, fn _ => "Unique references: " ::
+			map (fn tag => MirTypes.print_tag tag ^ " ")
+			unique)
+
+    (* Use this information to eliminate branches between blocks. *)
+
+    val new_proc =
+      if !Switches.concatenate_blocks then
+	eliminate_branches (traced_proc, unique)
+      else
+	traced_proc
+
+  in
+    new_proc
+  end
+
+
+end (* of functor *)
+@
+
+
+1.19.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+Revision 1.19  1992/04/13  15:01:54  clive
+First version of the profiler
+
+@
+
+
+1.18
+log
+@Raise no longer has a parameter
+@
+text
+@d5 3
+d140 1
+a140 1
+			  MirOptTypes.PROC(start_tag, params, _),
+d212 1
+a212 1
+    val new_empty_proc = MirOptTypes.make_proc (start_tag, params, [])
+d542 1
+a542 1
+	     MirOptTypes.PROC(start_tag, params, original_blocks)) =
+d582 1
+a582 1
+    val new_empty_proc = MirOptTypes.make_proc (start_tag, params, []);
+@
+
+
+1.17
+log
+@Added flow for FLOOR.
+@
+text
+@d4 4
+a7 1
+$Log:	_mirflow.sml,v $
+d442 1
+a442 1
+		   (opcode as RAISE _,vars,_)::_) =
+d456 1
+a456 1
+		   (opcode as RAISE _,vars,_)::_) =
+a460 5
+	  val new_opcode =
+	    if !Switches.convert_raises then
+	      BRANCH(BRA, TAG handler)
+	    else
+	      opcode
+d462 1
+a462 1
+	  trace_ops ((new_opcode, vars, MirOptTypes.SUCCS [handler]) :: done,
+@
+
+
+1.16
+log
+@Added successor information on TAIL_CALL
+@
+text
+@d5 3
+d376 12
+@
+
+
+1.15
+log
+@Added exception generating fp opcodes to tables.
+Made matches explicitly exhaustive.
+@
+text
+@d5 4
+d241 35
+@
+
+
+1.14
+log
+@Changed debugging output to use the Diagnostic module, which
+prevents the debugging output strings being constructed even
+if they aren't printed.
+@
+text
+@d5 5
+d310 24
+@
+
+
+1.13
+log
+@Fixed bug whereby tags in FTEST instructions weren't being followed
+@
+text
+@d5 3
+d49 1
+a64 1
+  structure Print	: PRINT
+d66 1
+d77 1
+d80 1
+a80 1
+  (*  === DEBUGGING INFORMATION OUTPUT ===  *)
+d82 3
+a84 4
+  fun info message =
+    if !Switches.flow_debug then
+      Print.print ("MIR Optimiser (Flow): "^message^"\n")
+    else ();
+d86 4
+d92 1
+d140 4
+a143 3
+	      info ("Concatenating block " ^
+		    (MirTypes.print_tag block_tag) ^ " and " ^
+		    (MirTypes.print_tag tag));
+d176 3
+a178 2
+	  info ("Discarding concatenated block "^
+		(MirTypes.print_tag tag));
+d223 2
+a224 1
+	    info ("BRANCH to block " ^ (MirTypes.print_tag tag));
+d235 1
+a235 1
+	  info "RTS";
+d246 2
+a247 1
+	  val _ = info ("SWITCH to single block " ^ (MirTypes.print_tag tag));
+d266 2
+a267 3
+	  info ("SWITCH to blocks " ^
+		(Lists.foldl (fn x => fn y => x^" "^y) ""
+		 (map MirTypes.print_tag tags)));
+d280 1
+a280 1
+	  info ("TEST to block " ^ (MirTypes.print_tag tag));
+d293 1
+a293 1
+	  info ("FTEST to block " ^ (MirTypes.print_tag tag));
+d306 2
+a307 1
+	  info ("Tagged operation to block " ^ (MirTypes.print_tag tag));
+d320 2
+a321 1
+	  info ("NEW_HANDLER set to block " ^ (MirTypes.print_tag tag));
+d335 5
+a339 5
+	  info ("OLD_HANDLER (" ^
+		(case handlers
+		   of [] => "external"
+		    | tag::_ => MirTypes.print_tag tag) ^
+		") restored");
+d358 1
+a358 1
+	  info "RAISE external handler";
+d372 2
+a373 2
+	  val _ = info ("RAISE to block " ^
+			(MirTypes.print_tag handler))
+d391 3
+a393 5
+	(info ("Possible subroutine raise to " ^ MirTypes.print_tag handler);
+	 trace_ops ((opcode, vars, MirOptTypes.SUCCS [handler]) :: done,
+		    handlers,
+		    (handler, handlers) :: reachable_blocks,
+		    rest))
+d395 6
+d425 5
+a429 6
+      val _ = info ("block " ^ (MirTypes.print_tag tag) ^
+		    " handlers [ " ^
+		    (Lists.foldl
+		     (fn tag => fn y => (MirTypes.print_tag tag)^" "^y)
+		     ""
+		     handlers) ^ "]");
+d431 1
+a431 1
+      val (done, reachable_blocks) = trace_ops ([], handlers, [], opcodes);
+d433 5
+a438 1
+
+d461 3
+d508 3
+a510 3
+    val _ = info ("References: " ^
+		  (Lists.foldl (fn x => fn y => x^" "^y) ""
+		   (map MirTypes.print_tag references)));
+d514 3
+a516 4
+    val _ = info ("Unique references: " ^
+		  (Lists.foldl (fn x => fn y => x^" "^y) ""
+		   (map MirTypes.print_tag unique)));
+
+@
+
+
+1.12
+log
+@Removed explicit dependency on the representation of MirTypes.procedures.
+@
+text
+@d5 3
+d269 13
+@
+
+
+1.11
+log
+@Added missing implied branch from subroutines to exception handlers.
+@
+text
+@d5 3
+d110 1
+a110 1
+			  MirOptTypes.PROC(start_tag, params, block_table),
+d186 1
+a186 1
+		    MirOptTypes.Table.alist_of_table block_table)
+@
+
+
+1.10
+log
+@Now uses Switches module to control optimisation and debugging output.
+@
+text
+@d5 3
+d348 1
+a348 1
+	  trace_ops (done,
+d350 2
+a351 2
+		     reachable_blocks,
+		     [(new_opcode, vars, MirOptTypes.SUCCS_UNKNOWN)])
+d353 10
+@
+
+
+1.9
+log
+@Slight alterations to cope with new MirTypes.
+@
+text
+@d5 3
+d40 1
+d53 1
+d63 1
+a65 4
+  val show_info = false;	(* false to disable debugging *)
+  val show_code = false;	(* false to disable listings *)
+
+
+d69 1
+a69 1
+    if show_info then
+a72 4
+   fun code_info message =
+    if show_code then
+      Print.print (message ^ "\n")
+    else ();
+a74 1
+
+d227 5
+a231 1
+	  val new_opcode = BRANCH(BRA, TAG tag)
+d339 5
+a343 1
+	  val new_opcode = BRANCH(BRA, TAG handler)
+a385 2
+      val _ = code_info (MirOptTypes.print_block block)
+
+d465 5
+a469 1
+    val new_proc = eliminate_branches (traced_proc, unique)
+@
+
+
+1.8
+log
+@New optimisation: RAISE to a local handler is now converted into
+an unconditional branch.
+@
+text
+@d5 4
+d106 2
+a107 1
+  fun eliminate_branches (proc as MirOptTypes.PROC(start_tag, block_table),
+d177 1
+a177 1
+    val new_empty_proc = MirOptTypes.make_proc (start_tag, [])
+d401 2
+a402 1
+  fun trace (original_proc as MirOptTypes.PROC(start_tag, original_blocks)) =
+d439 1
+a439 1
+    val new_empty_proc = MirOptTypes.make_proc (start_tag, []);
+@
+
+
+1.7
+log
+@Fixed debugging output to use Print module. Changed RAISE to use
+parameters.
+@
+text
+@d324 2
+a325 3
+	(* A RAISE when there is a handler in force is like a *)
+	(* conditional jump to the handler block. The rest of the *)
+	(* block is discarded. *)
+d329 3
+a331 2
+	(
+	  info ("RAISE to block " ^ (MirTypes.print_tag handler));
+d333 3
+a335 1
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [handler]) :: done,
+d337 3
+a339 3
+		     (handler, handlers) :: reachable_blocks,
+		     [])
+	)
+@
+
+
+1.6
+log
+@Switched off debugging output.
+@
+text
+@d5 3
+d32 1
+d44 1
+d63 3
+a65 1
+    if show_info then print ("MIR Optimiser (Flow): "^message) else ();
+d68 3
+a70 1
+    if show_code then print message else ();
+d314 1
+a314 1
+		   (opcode as RAISE,vars,_)::_) =
+d329 1
+a329 1
+		   (opcode as RAISE,vars,_)::_) =
+@
+
+
+1.5
+log
+@Added code to concatenate blocks where possible.
+@
+text
+@d5 3
+d51 1
+a51 1
+  val show_info = true;		(* false to disable debugging *)
+@
+
+
+1.5.1.1
+log
+@This is a modified version to use the reworked MirTypes module
+(ver 1.23.1.1). This module is correct, but work has been suspended
+on this branch because of the amount of time it would take to convert
+the code generator (Mir_Cg) module.
+@
+text
+@a4 3
+Revision 1.5  91/09/25  13:34:46  richard
+Added code to concatenate blocks where possible.
+
+d104 1
+a104 1
+	     (opcode as (MirTypes.BRANCH(_,tag), _, _))::_) =
+d187 1
+a187 1
+		   (opcode as BRANCH(_,tag),vars,_)::_) =
+d213 1
+a213 1
+	  val new_opcode = BRANCH(BRA, tag)
+a241 11
+
+	  trace_ops ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done,
+		     handlers,
+		     (tag, handlers) :: reachable_blocks,
+		     rest)
+	)
+
+      | trace_ops (done, handlers, reachable_blocks,
+		   (opcode as FTEST(_,tag,_,_),vars,_)::rest) =
+	(
+	  info ("FTEST to block " ^ (MirTypes.print_tag tag));
+@
+
+
+1.4
+log
+@Modified functor to use a table of blocks rather than a simple list.
+See MirOptTypes module.
+@
+text
+@d5 4
+d57 1
+a57 1
+  fun code_info message =
+d62 110
+d209 13
+d224 1
+a224 1
+	  val reach = map (fn tag => (tag, handlers)) tags
+d299 1
+a299 1
+	(* the current function. *)
+d302 1
+a302 1
+		   (opcode as RAISE,vars,_)::rest) =
+d309 1
+a309 1
+		     rest)
+d313 2
+a314 1
+	(* conditional jump to the handler block. *)
+d317 1
+a317 1
+		   (opcode as RAISE,vars,_)::rest) =
+d324 1
+a324 1
+		     rest)
+d327 11
+d351 6
+a356 1
+      val _ = info ("Tracing block " ^ (MirTypes.print_tag tag));
+d360 4
+a363 10
+      val _ = info ("Reachable: "^
+		    (Lists.foldl
+		     (fn (tag,handlers) => fn y =>
+		      "block " ^ (MirTypes.print_tag tag) ^
+		      " handlers [ " ^
+		      (Lists.foldl
+		       (fn tag => fn y => (MirTypes.print_tag tag)^" "^y)
+		       ""
+		       handlers) ^
+		      "] " ^ y) "" reachable_blocks))
+d365 1
+a365 1
+      (MirOptTypes.BLOCK(tag, done), reachable_blocks)
+d385 1
+a385 1
+    fun trace_blocks (proc_done, []) = proc_done
+d387 1
+a387 1
+      | trace_blocks (proc_done, (tag, handlers)::rest) =
+d392 1
+a392 1
+	  trace_blocks (proc_done, rest)
+d404 3
+a406 1
+	    trace_blocks (MirOptTypes.new_block proc_done block, others @@ rest)
+a415 1
+    val new_empty_proc = MirOptTypes.make_proc (start_tag, [])
+d417 27
+d445 1
+a445 2
+    (* Start the ball rolling with no handlers at the start tag. *)
+    trace_blocks (new_empty_proc, [(start_tag, [])])
+@
+
+
+1.3
+log
+@Rewrote the trace functions to perform a recursive control flow
+analysis. This is required so that dead code blocks are eliminated and
+exception handlers can be scoped.
+@
+text
+@d5 5
+d44 1
+a44 1
+  val show_info = false;	(* false to disable debugging *)
+d48 1
+a48 1
+  (* === DEBUGGING INFORMATION OUTPUT === *)
+d58 3
+a60 12
+  (* === MISCELLANEOUS UTILITY FUNCTIONS === *)
+
+
+  (* == Find a block in a list of blocks == *)
+
+  fun find_block (blocks, tag) =
+    Lists.findp (fn (MirOptTypes.BLOCK(tag',_)) => tag=tag') blocks;
+
+
+
+  (* === FIND SUCCESSORS IN A SINGLE BLOCK ===
+   * This function  analyses  the instructions in  a block to work out
+d231 1
+d244 1
+a244 1
+  fun trace (MirOptTypes.PROC(start_tag, original_blocks)) =
+d247 1
+a247 1
+    fun trace_blocks (blocks_done, []) = blocks_done
+d249 2
+a250 1
+      | trace_blocks (blocks_done, (tag, handlers)::rest) =
+d252 1
+a252 1
+	  val _ = find_block (blocks_done, tag)
+d254 1
+a254 1
+	  trace_blocks (blocks_done, rest)
+d256 5
+a260 1
+        handle Lists.Find =>
+d263 2
+a264 1
+	      trace_block (handlers, find_block (original_blocks, tag))
+d266 1
+a266 1
+	    trace_blocks (block::blocks_done, others @@ rest)
+d268 3
+a270 1
+	  handle Lists.Find =>
+d274 1
+a274 1
+			     "procedure.")
+d276 2
+d280 1
+a280 1
+    MirOptTypes.PROC(start_tag, trace_blocks ([], [(start_tag, [])]))
+@
+
+
+1.2
+log
+@Switched off debuggging information.
+Fixed a bug which threw away RTS instructions.
+@
+text
+@d5 4
+d16 1
+d27 1
+d39 1
+a39 1
+  val show_info = false;	(* false to disable debugging output *)
+d43 1
+a43 1
+  (*  === DEBUGGING INFORMATION OUTPUT ===  *)
+d53 1
+a53 1
+  (*  === TRACE SUCCESSORS IN A SINGLE BLOCK ===  *)
+a54 2
+  fun trace_block (MirOptTypes.BLOCK(block_tag, opcodes)) =
+  let
+d56 1
+a56 1
+    fun p (done,[]) = rev done
+d58 2
+a59 1
+        (* Instructions following a BRANCH, SWITCH, or RTS are discarded. *)
+d61 28
+a88 2
+      | p (done,
+	   ((opcode as MirTypes.BRANCH(_,MirTypes.TAG tag),vars,_)::_)) =
+d90 6
+a95 3
+	  info ("BRANCH from block " ^ (MirTypes.print_tag block_tag) ^
+		" to block " ^ (MirTypes.print_tag tag));
+	  p ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done, [])
+d98 19
+a116 1
+      | p (done, ((opcode as MirTypes.RTS,vars,_)::_)) =
+d118 6
+a123 2
+	  info ("RTS in block " ^ (MirTypes.print_tag block_tag));
+	  p ((opcode, vars, MirOptTypes.SUCCS []) :: done, [])
+d126 4
+a129 1
+      | p (done, ((opcode as MirTypes.SWITCH(_,_,tags),vars,_)::_)) =
+d131 6
+a136 5
+	  info ("SWITCH from block " ^ (MirTypes.print_tag block_tag) ^
+		" to blocks " ^
+		(Lists.foldl (fn x => fn y => x^" "^y) ""
+		 (map MirTypes.print_tag tags)));
+	  p ((opcode, vars, MirOptTypes.SUCCS tags) :: done, [])
+d139 1
+a139 1
+	(* A TEST instruction may continue through the block. *)
+d141 2
+a142 1
+      | p (done, ((opcode as MirTypes.TEST(_,tag,_,_),vars,_)::rest)) =
+d144 6
+a149 3
+	  info ("TEST from block " ^ (MirTypes.print_tag block_tag) ^
+		" to block " ^ (MirTypes.print_tag tag));
+	  p ((opcode, vars, MirOptTypes.SUCCS [tag]) :: done, rest)
+d152 51
+a203 3
+ 
+      | p (done, ((opcode,vars,_)::rest)) =
+	p ((opcode, vars, MirOptTypes.SUCCS []) :: done, rest)
+d205 7
+d213 22
+a234 2
+    MirOptTypes.BLOCK(block_tag, p ([], opcodes))
+  end;
+d247 28
+a274 2
+  fun trace (MirOptTypes.PROC(start_tag, blocks)) =
+    MirOptTypes.PROC(start_tag, map trace_block blocks)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log:$
+d33 2
+a34 2
+  val show_info = true;		(* false to disable debugging output *)
+  val show_code = true;		(* false to disable listings *)
+d67 1
+a67 1
+	  p (done, [])
+@

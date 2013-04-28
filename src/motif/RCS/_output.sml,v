@@ -1,0 +1,468 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.3
+	ML_beta_release_03/08/94:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	95.07.04.10.43.08;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.06.14.13.21.08;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.06.09.09.44.53;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.05.31.11.04.45;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.08.01.10.07.28;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.07.27.13.31.16;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.06.21.18.56.35;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.7
+log
+@Capification
+@
+text
+@(*
+ * Copyright (c) 1993 Harlequin Ltd.
+ * $Log: _output.sml,v $
+ *  Revision 1.6  1995/06/14  13:21:08  daveb
+ *  ShellUtils.edit_* functions no longer require a context argument.
+ *  Removed redundant get_context parameter from the create function.
+ *
+ *  Revision 1.5  1995/06/09  09:44:53  daveb
+ *  If the auto_output_window preference is set, the output window is
+ *  automatically displayed when written to.
+ *
+ *  Revision 1.4  1995/05/31  11:04:45  daveb
+ *  Combined show_output and hide_output fields of the result into a
+ *  single function that takes a boolean, for use with TOGGLE buttons.
+ *
+ *  Revision 1.3  1994/08/01  10:07:28  daveb
+ *  Moved environment options to preferences structure.
+ *
+ *  Revision 1.2  1994/07/27  13:31:16  daveb
+ *  Cut-down menus for novices.
+ * 
+ *  Revision 1.1  1994/06/21  18:56:35  daveb
+ *  new file
+ * 
+ *)
+
+require "../utils/lists";
+require "../main/preferences";
+require "../library/capi";
+require "../interpreter/shell_utils";
+require "motif_utils";
+require "menus";
+
+require "output";
+
+functor OutputWindow(
+  structure Lists : LISTS
+  structure Capi : CAPI
+  structure Menus : MENUS
+  structure MotifUtils : MOTIF_UTILS
+  structure ShellUtils : SHELL_UTILS
+  structure Preferences : PREFERENCES
+
+  sharing type Capi.Widget = Menus.Widget = MotifUtils.Widget
+  sharing type Menus.ButtonSpec = MotifUtils.ButtonSpec
+  sharing type MotifUtils.user_tool_options = ShellUtils.UserOptions
+  sharing type Preferences.preferences = ShellUtils.preferences
+               
+) : OUTPUT_WINDOW =
+  struct
+
+    type Widget = Capi.Widget
+    type preferences = Preferences.preferences
+    type Context = ShellUtils.Context
+
+    fun create {parent, title, get_preferences} =
+      let
+        val (shell,mainWindow,menuBar,_) =
+          Capi.make_main_window ("textOutput",
+                                 title ^ " Output",
+                                 parent,
+                                 false)
+
+        val (textscroll,text) =
+          Capi.make_scrolled_text ("textIO",mainWindow,[])
+
+        val write_pos = ref 0
+
+        fun getline (str, pos, length) =
+	let fun lastline ~1 = 0
+	    |   lastline n = if String.ordof (str, n) = ord "\n" then
+			  n+1
+			else
+			  lastline (n-1)
+
+	    fun nextline n =
+	      if n = length orelse String.ordof (str, n) = ord "\n" then
+		n
+	      else
+		nextline (n+1)
+
+	    val start = lastline (pos-1)
+	    val finish = nextline (pos)
+	    val all = String.substring (str, start, finish - start)
+	in
+          all
+	end
+
+        exception NoLocation
+        fun get_location line =
+          let
+            val sz = size line
+            fun aux index =
+              if index < sz
+                then
+                  if String.ordof(line,index) = ord ":"
+                    then index+1
+                  else
+                    aux (index+1)
+              else
+                raise NoLocation
+            (* skip up to second ":" *)
+            val result = String.substring(line,0,(aux (aux 0))-1)
+          in
+            result
+          end
+
+        val quit_funs = ref []
+
+        fun do_quit_funs _ =
+	  (Lists.iterate (fn f => f ()) (!quit_funs);
+	   quit_funs := [])
+
+        fun edit_error _ =
+          (let
+            val str = Capi.Text.get_string text
+	    val pos = Capi.Text.get_insertion_position text
+	    val length = size str
+            val line = getline (str, pos, length)
+            val locstring = get_location line
+            val quit_fun =
+	      ShellUtils.edit_string
+		(locstring, get_preferences())
+
+          in
+            quit_funs := quit_fun :: (!quit_funs)
+          end 
+          handle  ShellUtils.EditFailed s => Capi.send_message (shell,s)
+               | NoLocation => (output(std_out,"No location info found\n"))
+               | ShellUtils.Info.Location.InvalidLocation =>
+		   (output(std_out,"No location info found\n")))
+
+        val output_visible_ref = ref false
+        
+        fun output_visible _ = !output_visible_ref
+
+        fun show_output b =
+	  (output_visible_ref := b;
+	   if b then
+	     (Capi.manage shell;
+              Capi.to_front shell)
+	   else
+             (do_quit_funs();
+              Capi.unmanage shell))
+
+        fun ensure_output () =
+          let
+            val Preferences.PREFERENCES
+                  {environment_options =
+                     Preferences.ENVIRONMENT_OPTIONS {auto_output_window, ...},
+                   ...} =
+              get_preferences ()
+          in
+            if (!auto_output_window) then show_output true else ()
+          end
+
+        fun insert_text str =
+          (ensure_output ();
+           Capi.Text.insert(text, !write_pos, str);
+           write_pos := size str + !write_pos;
+           Capi.Text.set_insertion_position (text, !write_pos)
+           )
+
+	val outstream = MotifUtils.make_outstream insert_text
+
+	val Preferences.PREFERENCES
+	      {environment_options =
+		 Preferences.ENVIRONMENT_OPTIONS {full_menus, ...},
+	       ...} =
+	  get_preferences ()
+
+        val menuspec =
+          Menus.CASCADE ("window",
+                          [Menus.PUSH ("close",
+                                       fn _ => show_output false,
+                                       fn _ => true)],
+                          fn _ => true)
+          :: (if !full_menus then
+	        [Menus.CASCADE ("error",
+                                [Menus.PUSH ("edit",
+                                             edit_error,
+                                             fn _ => true)],
+                                fn _ => true)]
+	      else
+	        nil)
+      in
+        Menus.make_submenus (menuBar,menuspec);
+        Capi.Layout.lay_out [Capi.Layout.MENUBAR menuBar,
+                             Capi.Layout.TEXT textscroll,
+                             Capi.Layout.SPACE];
+        Capi.Callback.add (text, Capi.Callback.Activate, edit_error);
+        Capi.Callback.add (mainWindow, Capi.Callback.Unmap,
+                           fn _ => (output_visible_ref := false;
+                                    do_quit_funs ()));
+        Capi.Callback.add (shell, Capi.Callback.Destroy,do_quit_funs);
+        Capi.manage text;
+        {outstream = outstream, output_widget = shell,
+	 output_visible = output_visible,
+	 show_output = show_output}
+      end
+          
+  end;
+@
+
+
+1.6
+log
+@ShellUtils.edit_* functions no longer require a context argument.
+Removed redundant get_context parameter from the create function.
+@
+text
+@d4 4
+d29 1
+a29 1
+require "../library/xm";
+d38 1
+a38 1
+  structure Xm : XM
+d44 1
+a44 1
+  sharing type Xm.Widget = Menus.Widget = MotifUtils.Widget
+d52 1
+a52 1
+    type Widget = Xm.Widget
+d58 8
+a65 30
+        val shell =
+          Xm.Widget.createPopupShell (Xm.Widget.NAME "textOutputShell",
+                                      Xm.Widget.Class.TopLevelShell,
+                                      parent,
+                                      [(Xm.Title, Xm.STRING (title ^ " Output")),
+                                       (Xm.IconName, Xm.STRING (title ^ " Output"))])
+
+        val mainWindow =
+          Xm.Widget.createManaged (Xm.Widget.NAME "main",
+                                   Xm.Widget.Class.Form,
+                                   shell, [])
+
+        val menuBar =
+          Xm.Widget.createManaged
+	  (Xm.Widget.NAME "menuBar", Xm.Widget.Class.RowColumn, mainWindow,
+	   [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+	    (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+	    (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+	    (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)
+            ])
+
+        val text =
+          Xm.Widget.createScrolledText
+          (mainWindow, Xm.Widget.NAME "textIO",
+           [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+            (Xm.TopWidget, Xm.WIDGET menuBar),
+            (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+            (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+            (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)
+            ])
+d116 2
+a117 2
+            val str = Xm.Text.getString text
+	    val pos = Xm.Text.getInsertionPosition text
+d128 1
+a128 1
+          handle  ShellUtils.EditFailed s => MotifUtils.send_message (shell,s)
+d140 2
+a141 2
+	     (Xm.Widget.map shell;
+              Xm.Widget.toFront shell)
+d144 1
+a144 1
+              Xm.Widget.unmap shell))
+d159 1
+a159 1
+           Xm.Text.insert(text, !write_pos, str);
+d161 1
+a161 1
+           Xm.Text.setInsertionPosition (text, !write_pos)
+d188 9
+a196 6
+        Xm.Widget.callbackAdd (text, Xm.Callback.Activate, edit_error);
+        Xm.Widget.callbackAdd (mainWindow, Xm.Callback.Unmap,
+			       fn _ => (output_visible_ref := false;
+			       		do_quit_funs ()));
+        Xm.Widget.callbackAdd (shell, Xm.Callback.Destroy,do_quit_funs);
+        Xm.Widget.manage text;
+@
+
+
+1.5
+log
+@If the auto_output_window preference is set, the output window is
+automatically displayed when written to.
+@
+text
+@d4 4
+d52 1
+a52 1
+    fun create {parent, title, get_context, get_preferences} =
+d141 1
+a141 1
+		(locstring,get_context(), get_preferences())
+@
+
+
+1.4
+log
+@Combined show_output and hide_output fields of the result into a
+single function that takes a boolean, for use with TOGGLE buttons.
+@
+text
+@d4 4
+a82 8
+        fun insert_text str =
+          ( Xm.Text.insert(text, !write_pos, str);
+           write_pos := size str + !write_pos;
+           Xm.Text.setInsertionPosition (text, !write_pos)
+           )
+
+	val outstream = MotifUtils.make_outstream insert_text
+
+d159 20
+@
+
+
+1.3
+log
+@Moved environment options to preferences structure.
+@
+text
+@d4 2
+a5 6
+# Revision 1.2  1994/07/27  13:31:16  daveb
+# Cut-down menus for novices.
+#
+# Revision 1.1  1994/06/21  18:56:35  daveb
+# new file
+#
+d7 6
+d34 1
+a34 1
+  sharing type MotifUtils.UserOptions = ShellUtils.UserOptions
+d155 8
+a162 7
+        fun hide_output _ = (output_visible_ref := false;
+                             do_quit_funs();
+                             Xm.Widget.unmap shell)
+
+        fun show_output _ = (output_visible_ref := true;
+                             Xm.Widget.map shell;
+                             Xm.Widget.toFront shell)
+d173 1
+a173 1
+                                       hide_output,
+d194 1
+a194 1
+	 show_output = show_output, hide_output = hide_output}
+@
+
+
+1.2
+log
+@Cut-down menus for novices.
+@
+text
+@d4 3
+d14 1
+d28 1
+d33 1
+d39 1
+a39 1
+    type options = ShellUtils.Options.options
+d42 1
+a42 1
+    fun create {parent, title, get_context, get_options} =
+d137 3
+a139 1
+            val quit_fun = ShellUtils.edit_string (locstring,get_context(),get_options())
+d161 1
+a161 1
+	val ShellUtils.Options.OPTIONS
+d163 1
+a163 1
+		 ShellUtils.Options.ENVIRONMENT_OPTIONS {full_menus, ...},
+d165 1
+a165 1
+	  get_options ()
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d3 4
+a6 1
+ * $Log$
+a35 3
+    (* This is some test code that should be combined with the listener *)
+
+
+d153 6
+d160 1
+a160 1
+          [Menus.CASCADE ("window",
+d164 9
+a172 6
+                          fn _ => true),
+          Menus.CASCADE ("error",
+                         [Menus.PUSH ("edit",
+                                      edit_error,
+                                      fn _ => true)],
+                         fn _ => true)]
+@

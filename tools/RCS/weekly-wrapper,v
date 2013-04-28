@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.02.02.14.11.06;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #20104]
+Wrapper script for weekly benchmark collection
+@
+
+
+1.1
+log
+@new unit
+[Bug #20104]
+Wrapper script for weekly benchmark collection
+@
+text
+@#!/bin/sh
+#
+# Weekly benchmarks script wrapper.
+#
+# This runs the weekly benchmark script, redirecting the output to
+# weekly-log, and mailing the mlworkers if it fails.  This is the
+# script that is actually run from the crontab.
+#
+# Copyright (C) 1998 Harlequin Group plc.  All rights reserved.
+#
+# $Log: $
+#
+
+umask 002
+TERM=xterm; export TERM
+
+SML=/u/sml/MLW; export SML
+
+PATH=/usr/local/bin:/usr/ucb:.:/bin:$PATH; export PATH
+(echo "Checking out weekly benchmark script";
+ hope co -com MLWtools -writable-files skip weekly;
+ $SML/tools/weekly) > $SML/tools/weekly-log 2>&1 ||
+{
+  status=$?
+  {
+    echo "From: Weekly benchmarks script wrapper <sml>"
+    echo "To: mlworkers"
+    echo "Subject: The weekly benchmarks failed on: " `hostname`
+    echo
+    echo "The weekly benchmarks failed with exit code $status.  The end of the "
+    echo "log reads:"
+    echo
+    tail $SML/tools/weekly-log | sed -e 's/^/> /'
+    echo
+    echo "The lines of the log written directly by the weekly script read:"
+    echo
+    sed -n -e "s/^weekly: /> /p" < $SML/tools/weekly-log
+  } |
+  /usr/lib/sendmail -t
+}
+exit 0
+@

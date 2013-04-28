@@ -1,0 +1,282 @@
+head	1.6;
+access;
+symbols
+	Final_version_of_old_runtime:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	92.05.12.15.13.01;	author jont;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.03.17.14.27.57;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.21.09.34.13;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.18.16.14.48;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.17.16.58.21;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.05.14.11.11.04;	author jont;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.05.12.15.13.01;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Determination and handling of cross endian issues
+@
+
+
+1.6
+log
+@Changed to allow old or new magic numbers (will later lose old one)
+@
+text
+@/*
+ * endian.c
+ * Handle endian change requirements.
+ * $Log: endian.c,v $
+ * Revision 1.5  1992/03/17  14:27:57  richard
+ * Changed error behaviour and tidied up.
+ *
+ * Revision 1.4  1991/10/21  09:34:13  davidt
+ * change_endian now changes a number of words (this is so that we can
+ * call change_endian on a complete piece of code).
+ *
+ * Revision 1.3  91/10/18  16:14:48  davidt
+ * loader_error now takes 3 arguments.
+ * 
+ * Revision 1.2  91/10/17  16:58:21  davidt
+ * Moved MAGIC_ENDIAN into objectfile.h and tidied up a bit,
+ * including doing the renaming of types to come into line
+ * with the rest of the run-time system.
+ * 
+ * Revision 1.1  91/05/14  11:11:04  jont
+ * Initial revision
+ * 
+ * Copyright (c) Harlequin 1991.
+ */
+
+#include "types.h"
+#include "endian.h"
+#include "objectfile.h"
+
+/*
+ * Either change == ENDIAN_OK or change == WRONG_ENDIAN
+ * with the obvious meanings.
+ */
+
+#define ENDIAN_OK	0
+#define WRONG_ENDIAN	1
+
+static int change = ENDIAN_OK;
+
+/*
+ * Check if we need to change endian.
+ */
+
+int find_endian(word magic)
+{
+  switch(magic)
+  {
+    case OLD_GOOD_MAGIC:
+    case GOOD_MAGIC:
+    change = ENDIAN_OK;
+    return(1);
+
+    case NOT_SO_GOOD_MAGIC:
+    change = WRONG_ENDIAN;
+    return(1);
+    break;
+  }
+
+  return(0);
+}
+
+/*
+ * Change the endianness of a number of words.
+ */
+
+void change_endian (word *words, int length)
+{
+  if(change == WRONG_ENDIAN)
+  {
+    char *ptr = (char *)words;
+    int temp, loop;
+ 
+    for (loop=0; loop<length; ++loop)
+    {
+      temp = *ptr;
+      *ptr = *(ptr++ + 3);
+      temp = *ptr;
+      *ptr = *(ptr + 1);
+      ptr += 3;
+    }
+  }
+}
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+ * Revision 1.6  1992/05/12  15:13:01  jont
+ * Changed to allow old or new magic numbers (will later lose old one)
+ *
+@
+
+
+1.5
+log
+@Changed error behaviour and tidied up.
+@
+text
+@d5 3
+d48 1
+@
+
+
+1.4
+log
+@change_endian now changes a number of words (this is so that we can
+call change_endian on a complete piece of code).
+@
+text
+@d4 5
+a8 1
+ * $Log:	endian.c,v $
+a24 1
+#include "loader.h"
+d41 1
+a41 1
+void find_endian (char *file_name, word magic)
+d43 3
+a45 1
+  if (magic == GOOD_MAGIC) {
+d47 3
+a49 1
+  } else { if (magic == NOT_SO_GOOD_MAGIC) {
+d51 5
+a55 3
+  } else {
+    loader_error("Bad magic number in object file %s", file_name, 0);
+  }}
+d64 2
+a65 1
+  if (change == WRONG_ENDIAN) {
+d69 2
+a70 1
+   for (loop = 0; loop < length; loop++) {
+@
+
+
+1.3
+log
+@loader_error now takes 3 arguments.
+@
+text
+@d5 3
+d50 1
+a50 1
+ * Change the endianness of a word.
+d53 1
+a53 1
+word change_endian (word value)
+d56 10
+a65 8
+    char a[4];
+    a[3] = *(char *)(&value);
+    a[2] = *(((char *)(&value)) + 1);
+    a[1] = *(((char *)(&value)) + 2);
+    a[0] = *(((char *)(&value)) + 3);
+    return *(word *)a;
+  } else {
+    return value;
+@
+
+
+1.2
+log
+@Moved MAGIC_ENDIAN into objectfile.h and tidied up a bit,
+including doing the renaming of types to come into line
+with the rest of the run-time system.
+@
+text
+@d5 5
+d13 1
+d17 1
+a18 1
+#include "endian.h"
+d42 1
+a42 1
+    loader_error("Bad magic number in object file %s", file_name);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d10 2
+d13 1
+d15 4
+a18 1
+int endian = 0; /* 1 for change endian, 0 for leave it alone */
+d20 10
+a29 1
+void find_endian(u_int32 magic)
+d31 7
+a37 1
+endian = magic != MAGIC_ENDIAN;
+d40 5
+a44 1
+u_int32 change_endian(u_int32 value)
+d46 10
+a55 6
+char a[4];
+a[3] = *(char *)(&value);
+a[2] = *(((char *)(&value)) + 1);
+a[1] = *(((char *)(&value)) + 2);
+a[0] = *(((char *)(&value)) + 3);
+return *(u_int32 *)a;
+a56 2
+
+/* End endian.c */
+@

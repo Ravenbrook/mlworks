@@ -1,0 +1,444 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.4.1.1.1.1
+	MLWorks_workspace_97:1.1.6
+	MLWorks_dt_wizard:1.1.5
+	MLWorks_11c0_1997_09_09:1.1.4.1.1.1
+	MLWorks_10r3:1.1.4.1.3
+	MLWorks_10r2_551:1.1.4.1.2
+	MLWorks_11:1.1.4.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.4.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.4.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.4.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.4
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.2.1.1
+	MLWorks_gui_1996_12_18:1.1.3
+	MLWorks_1_0_Win32_1996_12_17:1.1.2
+	MLWorks_1_0_Win32_1996_11_22:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.05.05.20.15.45;	author jkbrook;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	96.11.18.12.12.58;	author brianm;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1
+	1.1.5.1
+	1.1.6.1;
+next	;
+
+1.1.1.1
+date	96.11.22.18.04.51;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.12.17.17.43.48;	author hope;	state Exp;
+branches
+	1.1.2.1.1.1;
+next	;
+
+1.1.2.1.1.1
+date	97.02.24.11.32.58;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.12.18.09.37.46;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	97.05.12.10.30.01;	author hope;	state Exp;
+branches
+	1.1.4.1.1.1
+	1.1.4.1.2.1
+	1.1.4.1.3.1;
+next	;
+
+1.1.4.1.1.1
+date	97.07.28.18.16.31;	author daveb;	state Exp;
+branches
+	1.1.4.1.1.1.1.1;
+next	;
+
+1.1.4.1.1.1.1.1
+date	97.10.07.11.41.25;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.4.1.2.1
+date	97.09.08.17.10.05;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.4.1.3.1
+date	97.09.09.14.05.34;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.5.1
+date	97.09.10.19.19.58;	author brucem;	state Exp;
+branches;
+next	;
+
+1.1.6.1
+date	97.09.11.20.51.11;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.54.54;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.2
+log
+@[Bug #30354]
+Updating for projects
+@
+text
+@
+README for foreign/samples  (Win32 platforms)
+=============================================
+
+CONTENTS:
+
+  1.    Introduction
+  2.    The hello example
+  3.    DLLexport and DLLimport
+  4.    Further assistance
+
+
+1. Introduction
+===============
+
+A single example is given illustrating how the MLWorks(TM) FI operates.
+As an example, it does not do a great deal in it's own right.  However,
+we hope that it illustrates the basic concept and suggest the kind of
+thing that is needed to put your own interfaces together via the FI.
+
+There are many coding styles possible within ML and this sample
+is merely a particular example - we neither recommend nor condemn
+it.  In particular, the code given here is advisory and given purely
+to assist you with making use of the MLWorks FI.
+
+
+2. The hello example
+====================
+
+The example should be run from a source directory containing the
+sample in a subdirectory called `foreign\samples'.  This requirement
+can be changed by editing the appropriate filename used by calls of
+`loadObjectFile' in the ML files.
+
+Before the example can be executed from MLWorks, the corresponding C
+code has to be compiled.  To do this, type:
+
+   nmake hello.dll
+
+in the foreign\samples directory.  This will generate the object code
+and DLL's for your platform.  When you wish to remove the object files
+(including shared object code), type:
+
+   nmake clean
+
+The hello example can either be compiled and loaded using the Project Workspace tool in the MLWorks GUI and opening the foreign_samples.mlp project file, or 
+programmatically as shown below:
+
+    Shell.Project.openProject "foreign\\samples\\foreign_samples.mlp";
+    Shell.Project.setTargets ["hello.sml"];
+    Shell.Project.compileAll ();
+    Shell.Project.loadAll ();
+
+Description:
+    A very simple example which calls a simple foreign function
+    with an integer argument.  It prints a message to standard
+    output - this will usually be the controlling Command Prompt
+    window.
+
+    Note that when this example is loaded by using loadSource, the message
+    printed by the foreign function appears *before* all the ML binding
+    information is printed.  This is because the foreign function is
+    called *during* the load - and the bindings are always printed at the
+    end of the load.
+
+
+3.    DLLexport and DLLimport
+=============================
+
+When making a DLL (Dynamiclly Linked Library) in C, functions and
+other defined values will need to be explicitly exported.  With
+MicroSoft compilers (e.g. VC++ 4.0), this may be done by -EITHER-
+creating a seperate DEF file which lists the exported values -OR- by
+annotating with DLLexport or DLLimport appropriately e.g.:
+
+     DLLexport int f (void) { return 42; }
+     DLLexport int x = 4
+
+     DLLimport int y;
+     DLLimport int g (int);
+
+Simplifying slightly, DLLexport is used to qualify definitions and
+DLLimport qualifies declarations.
+
+The names `DLLexport' and `DLLimport' are defined in
+foreign\samples\dll.h.  The definition of such names is recommended by
+MicroSoft in their documentation.
+
+For further information about DLL's, please consult the MicroSoft
+documentation (e.g. MSDN Library and/or VC++ documentation),
+obtainable direct from MicroSoft.
+
+
+4. Further assistance:
+======================
+
+Please contact MLWorks support at Harlequin - we will do all we can to
+assist you further.
+
+       mlworks-support@@harlequin.co.uk
+          - UK, Europe, Australia, Africa & South East Asia.
+
+       mlworks-support@@harlequin.com
+          - North America, Japan & South America.
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d1 104
+a104 100
+
+README for foreign/samples  (Win32 platforms)
+=============================================
+
+CONTENTS:
+
+  1.    Introduction
+  2.    The hello example
+  3.    DLLexport and DLLimport
+  4.    Further assistance
+
+
+1. Introduction
+===============
+
+A single example is given illustrating how the MLWorks(TM) FFI operates.
+As an example, it does not do a great deal in it's own right.  However,
+we hope that it illustrates the basic concept and suggest the kind of
+thing that is needed to put your own interfaces together via the FFI.
+
+There are many coding styles possible within ML and this sample
+is merely a particular example - we neither recommend nor condemn
+it.  In particular, the code given here is advisory and given purely
+to assist you with making use of the MLWorks FFI.
+
+
+2. The hello example
+====================
+
+The example should be run from a source directory containing the
+sample in a subdirectory called `foreign\samples'.  This requirement
+can be changed by editing the appropriate filename used by calls of
+`loadObjectFile' in the ML files.
+
+Before the example can be executed from MLWorks, the corresponding C
+code has to be compiled.  To do this, type:
+
+   nmake hello.dll
+
+in the foreign\samples directory.  This will generate the object code
+and DLL's for your platform.  When you wish to remove the object files
+(including shared object code), type:
+
+   nmake clean
+
+The hello example can be loaded by:
+
+    Shell.File.loadSource "foreign\\samples\\hello";
+
+Description:
+    A very simple example which calls a simple foreign function
+    with an integer argument.  It prints a message to standard
+    output - this will usually be the controlling Command Prompt
+    window.
+
+    Note that when this example is loaded by using loadSource, the message
+    printed by the foreign function appears *before* all the ML binding
+    information is printed.  This is because the foreign function is
+    called *during* the load - and the bindings are always printed at the
+    end of the load.
+
+
+3.    DLLexport and DLLimport
+=============================
+
+When making a DLL (Dynamiclly Linked Library) in C, functions and
+other defined values will need to be explicitly exported.  With
+MicroSoft compilers (e.g. VC++ 4.0), this may be done by -EITHER-
+creating a seperate DEF file which lists the exported values -OR- by
+annotating with DLLexport or DLLimport appropriately e.g.:
+
+     DLLexport int f (void) { return 42; }
+     DLLexport int x = 4
+
+     DLLimport int y;
+     DLLimport int g (int);
+
+Simplifying slightly, DLLexport is used to qualify definitions and
+DLLimport qualifies declarations.
+
+The names `DLLexport' and `DLLimport' are defined in
+foreign\samples\dll.h.  The definition of such names is recommended by
+MicroSoft in their documentation.
+
+For further information about DLL's, please consult the MicroSoft
+documentation (e.g. MSDN Library and/or VC++ documentation),
+obtainable direct from MicroSoft.
+
+
+4. Further assistance:
+======================
+
+Please contact MLWorks support at Harlequin - we will do all we can to
+assist you further.
+
+       mlworks-support@@harlequin.co.uk
+          - UK, Europe, Australia, Africa & South East Asia.
+
+       mlworks-support@@harlequin.com
+          - North America, Japan & South America.
+@
+
+
+1.1.6.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.1.5.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.4.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@@
+
+
+1.1.4.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@@
+
+
+1.1.4.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@@
+
+
+1.1.4.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@@
+
+
+1.1.2.1.1.1
+log
+@branched from 1.1.2.1
+@
+text
+@@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@@

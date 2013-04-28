@@ -1,0 +1,428 @@
+head	1.6;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	96.05.15.10.27.38;	author io;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.13.17.56.33;	author io;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.13.15.22.22;	author io;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.07.21.04.48;	author io;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.23.15.35.21;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.24.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.6
+log
+@further mods to fromString, scan
+@
+text
+@(*  ==== INITIAL BASIS : structure Char ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __chars.sml,v $
+ * Revision 1.5  1996/05/13  17:56:33  io
+ * update toString
+ *
+ * Revision 1.4  1996/05/13  15:22:22  io
+ * complete toString
+ *
+ * Revision 1.3  1996/05/07  21:04:48  io
+ * revising...
+ *
+ *)
+require "toplevel";
+require "__integer";
+require "chars";
+require "__pre_char";
+require "__stringcvt";
+structure Char : CHAR = 
+  struct
+    open PreChar
+    (* misc *)
+      fun getNChar (n:int) getc cs = 
+        let 
+          fun aux (acc, i, cs) = 
+            if i < n then
+              case getc cs of
+                SOME (c, cs') => aux (c::acc, i+1, cs')
+              | NONE => (acc, cs)
+            else
+              (acc, cs)
+          val (acc, cs') = aux ([], 0, cs)
+        in
+          if acc = [] then
+            NONE
+          else
+            SOME (rev acc, cs')
+        end
+      fun toDigit (c:char) : int = 
+        if isDigit c then
+          ctoi c - ctoi #"0"
+        else
+          raise Match
+      (* end of misc *)
+
+    fun toControlString (c:char):string = 
+      case c of
+        #"\a" => "\\a" (* Alert 7 *)
+      | #"\b" => "\\b" (* Backspace 8 *)
+      | #"\t" => "\\t" (* Horizontal Tab 9 *)
+      | #"\n" => "\\n" (* Linefeed 10 *)
+      | #"\v" => "\\v" (* Vertical Tab 11 *)
+      | #"\f" => "\\f" (* Form feed 12 *)
+      | #"\r" => "\\r" (* Carriage return 13 *)
+      | _ =>
+        if ctoi c < 32 then
+          "\\^" ^ makestring (itoc ((ctoi c) + ctoi #"@@"))
+        else
+          "??"
+
+    (* could raise Match if character was unexpected *)
+    fun toString (c:char) =
+      if isCntrl c orelse (ctoi c) < 32 then
+        toControlString c 
+      else if c = #"\\" orelse c = #"\"" then (* \" *)
+        case c of 
+          #"\\" => "\\\\"
+        | #"\"" => "\\\""
+        | _ => raise Match
+      else if ctoi c >= 127 then 
+        "\\" ^ Int.toString (ctoi c)
+      else
+        makestring c
+
+(* still faulty but usable *)
+    fun scan getc cs = 
+      case getc cs of
+        NONE => NONE
+      | SOME (#"\\", cs) =>
+          (case getc cs of
+             (args as (SOME (#"\\", cs))) => args
+           | (args as (SOME (#"\"", cs))) => args (* \" *)
+           | SOME (#"a", cs) => SOME (#"\a", cs)
+           | SOME (#"b", cs) => SOME (#"\b", cs)
+           | SOME (#"t", cs) => SOME (#"\t", cs)
+           | SOME (#"n", cs) => SOME (#"\n", cs)
+           | SOME (#"v", cs) => SOME (#"\v", cs)
+           | SOME (#"f", cs) => SOME (#"\f", cs)
+           | SOME (#"r", cs) => SOME (#"\r", cs)
+           | SOME (#"^", cs) => 
+                       (case getc cs of
+                          SOME (c, cs) => 
+                            if itoc 64 <= c andalso c <= itoc 95 then
+                              SOME (itoc (ctoi c - 64), cs)
+                            else
+                              NONE
+                        | NONE => NONE)
+
+           | SOME (c, cs) =>
+                          if isDigit c then
+                            (case getNChar 2 getc cs of
+                               SOME ([d, e], cs) => 
+                                 if isDigit d andalso isDigit e then
+                                   let
+                                     fun convert (c,d,e) = (100 * (toDigit c) + 10 * (toDigit d) + (toDigit e))
+                                     val res = convert (c, d, e)
+                                   in
+                                     if 0 <= res andalso res <= 255 then
+                                       SOME (itoc res, cs)
+                                     else
+                                       NONE
+                                   end
+                                 else
+                                   NONE
+                             | _ => NONE)
+                          else
+                               let
+                                 fun isFormat c = contains "nt " c
+                                 fun aux cs = 
+                                   case getc cs of
+                                     SOME (c, cs) => 
+                                       if isFormat c then
+                                         aux (StringCvt.dropl (fn c=>c <> #"\\" ) getc cs)
+                                       else
+                                         scan getc cs
+                                   | _ => NONE
+                               in
+                                 aux cs
+                               end
+           | NONE => NONE)
+      | args as SOME (c, cs) => 
+               if not (isPrint c) then
+                 NONE
+               else
+                 args
+
+      fun fromString "" = NONE
+        | fromString s = StringCvt.scanString scan s
+
+      (* See A2.5.2 Character Constants in K & R *)
+      exception Dummy of string
+    fun fromCString "" = NONE 
+      | fromCString s = 
+      let
+        val size = size s
+      in
+        if size = 1 then
+          SOME (itoc (unsafe_string_sub (s, 0)))
+        else if (itoc (unsafe_string_sub (s, 0))) = #"\\" then
+          if size = 2 then
+            (case itoc (unsafe_string_sub(s,1)) of
+                #"n" => SOME #"\n"
+              | #"t" => SOME #"\t"
+              | #"v" => SOME #"\v"
+              | #"b" => SOME #"\b"
+              | #"r" => SOME #"\r"
+              | #"f" => SOME #"\f"
+              | #"a" => SOME #"\a"
+              | #"\\" => SOME #"\\"
+              | #"?" => SOME #"?"
+              | #"'" => SOME #"'"
+              | #"\"" => SOME #"\"" 
+              | c => raise Dummy ("octal 1 character "^makestring c))
+          else if size = 4 andalso itoc (unsafe_string_sub (s, 1)) = #"x" then
+            (* hexadecimal conversion *)
+            let 
+              val c1 = itoc (unsafe_string_sub (s, 2))
+              val c2 = itoc (unsafe_string_sub (s, 3))
+            in
+              if isHexDigit c1 andalso isHexDigit c2 then
+                raise Dummy "fromCString hexadecimal true"
+              else
+                raise Dummy "fromCString hexadecimal false"
+            end
+          else raise Dummy "fromCString octal conversion"
+       else
+         raise Dummy "fromCString unexpected branch"
+      end
+
+    fun toCString c = 
+      if isCntrl c then
+        SOME (toControlString c)
+      else
+        raise Dummy "toCString not control character"
+
+    val op < : char * char -> bool = op <
+    val op <= : char * char -> bool= op <=
+    val op >  : char * char -> bool= op >
+    val op >= : char * char -> bool= op >=
+  end
+@
+
+
+1.5
+log
+@update toString
+@
+text
+@d10 3
+d81 1
+a81 1
+(* still invalid, do not use *)
+d99 2
+a100 2
+                            if #"@@" <= c andalso c < itoc 32 then
+                              SOME (itoc (ctoi c - ctoi #"@@"), cs)
+d104 1
+d111 2
+a112 1
+                                     fun convert (c,d,e) = itoc (100 * (toDigit c) + 10 * (toDigit d) + (toDigit e))
+d114 4
+a117 1
+                                     SOME (convert (c,d,e), cs)
+d122 14
+a135 1
+                          else NONE
+@
+
+
+1.4
+log
+@complete toString
+@
+text
+@d10 3
+d25 23
+d78 1
+d80 41
+a120 17
+      let val cs = StringCvt.skipWS getc cs
+      in
+        case getc cs of
+          (args as (SOME (#"\\", cs'))) => 
+            (case getc cs' of
+               (args as (SOME (#"\\", cs''))) => args
+             | (args as (SOME (#"\"", cs''))) => args (* \" *)
+             | SOME (#"t", cs'') => SOME (#"\t", cs'')
+             | SOME (#"n", cs'') => SOME (#"\n", cs'')
+             | _ => NONE)
+        | (args as (SOME (c, cs''))) => 
+             if isAlphaNum c then
+                args
+             else 
+                NONE
+        | _ => NONE
+      end
+d122 2
+a123 2
+    fun fromString "" = NONE
+      | fromString s = StringCvt.scanString scan s
+d125 2
+a126 2
+    (* See A2.5.2 Character Constants in K & R *)
+    exception Dummy of string
+@
+
+
+1.3
+log
+@revising...
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d15 1
+d25 25
+a49 13
+        #"\a" => "\\a" (* Alert *)
+      | #"\b" => "\\b" (* Backspace *)
+      | #"\t" => "\\t" (* Horizontal Tab *)
+      | #"\n" => "\\n" (* Linefeed *)
+      | #"\v" => "\\v" (* Vertical Tab *)
+      | #"\f" => "\\f" (* Form feed *)
+      | #"\r" => "\\r" (* Carriage return *)
+      | #"\000" => "\\^@@" 
+      | #"\001" => "\\^A" 
+      | n => "??"
+        
+    fun toString (c:char) = 
+      if isAlphaNum c then
+a50 11
+      else
+        if isCntrl c orelse (ctoi c) <= 32 then
+          toControlString c
+        else if c >= ascii_limit then
+          ("\\" ^ (StringCvt.padLeft #"0" 3 (makestring c)))
+        else 
+          let val alloc_s = unsafe_alloc_string (1+1)
+          in
+            unsafe_string_update (alloc_s, 0, ctoi c);
+            alloc_s
+          end
+d95 1
+a95 1
+              | #"\039" => raise Dummy "single quote problem"
+@
+
+
+1.2
+log
+@Change representation of char
+@
+text
+@d3 1
+a3 1
+ *  Copyright (C) 1995 Harlequin Ltd.
+d9 1
+a9 15
+ *  $Log: __chars.sml,v $
+ * Revision 1.1  1996/04/18  11:24:54  jont
+ * new unit
+ *
+ *  Revision 1.3  1995/09/11  16:31:15  daveb
+ *  Word-Int conversion functions have changed.
+ *
+ *  Revision 1.2  1995/05/02  10:49:40  daveb
+ *  Changed the representation of characters to be Word8.word.
+ *
+ *  Revision 1.1  1995/04/13  15:43:16  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+d11 1
+a11 2
+
+require "__word8";
+d13 3
+a15 2
+
+structure Char : CHAR =
+d17 1
+a17 1
+    type char = char
+d19 93
+a111 7
+    val maxCharOrd = 255
+
+    exception Chr
+
+    fun chr i =
+      if i < 0 orelse i > maxCharOrd then
+	raise Chr
+d113 1
+a113 3
+	MLWorks.Internal.Value.cast i
+
+    fun ord i = MLWorks.Internal.Value.cast i
+d119 1
+a119 2
+
+end
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d31 1
+a31 1
+    type char = Word8.word
+d45 4
+a48 4
+    val op <  = Word8.<
+    val op <= = Word8.<=
+    val op >  = Word8.>
+    val op >= = Word8.>=
+@

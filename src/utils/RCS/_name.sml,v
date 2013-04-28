@@ -1,0 +1,252 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.3
+date	92.02.17.13.33.09;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.02.14.16.47.55;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.02.12.12.01.03;	author richard;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.02.17.13.33.09;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Number Naming Module.
+Functor.
+@
+
+
+1.3
+log
+@spong.
+@
+text
+@(*  ==== ABSTRACT NAME TYPE ====
+ *	      FUNCTOR
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  A name is a simple record containing a unique integer provided by the
+ *  Counter module, and an integer reference which is used as the index.
+ * 
+ *  Revision Log
+ *  ------------
+ *  $Log: _name.sml,v $
+ *  Revision 1.2  1992/02/14  16:47:55  richard
+ *  Rewritten.  Will fix this log later.
+ *
+ *)
+
+
+require "set";
+require "text";
+require "array";
+require "lists";
+require "integer";
+require "counter";
+require "name";
+
+
+functor Name (
+
+  structure Set		: SET
+  structure Text	: TEXT
+  structure Lists	: LISTS
+  structure Array	: ARRAY
+  structure Integer	: INTEGER
+  structure Counter	: COUNTER
+  
+) : NAME =
+
+  struct
+
+    structure Set = Set
+    structure Text = Text
+    structure Array = Array
+
+    val _ = Counter.reset_counter 0
+
+    datatype 'a T =
+      NAME of {order	: int,
+               index	: int ref,
+               value	: 'a}
+
+    fun new value =
+      NAME {order = Counter.counter (),
+            index = ref ~1,
+            value = value}
+
+    fun value (NAME {value, ...}) = value
+
+    fun order (NAME {order, ...}, NAME {order = order', ...}) = order < order'
+
+    fun hash (NAME {order, ...}) = order
+
+    fun to_string (NAME {order, ...}) = Integer.makestring order
+    fun to_text (NAME {order, ...}) = Text.from_string (Integer.makestring order)
+
+    fun index (NAME {index, ...}) = index
+
+    fun pack name_set =
+      let
+        val names = Set.set_to_list name_set
+        val number =
+          Lists.reducel
+          (fn (n, NAME {index, ...}) => (index := n; n+1))
+          (0, names)
+      in
+        number
+      end
+
+    fun pack_invert name_set =
+      let
+        val names = Set.set_to_list name_set
+        val number =
+          Lists.reducel
+          (fn (n, NAME {index, ...}) => (index := n; n+1))
+          (0, names)
+      in
+        (number, Array.arrayoflist names)
+      end
+
+  end
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a13 3
+ *  Revision 1.3  1992/02/17  13:33:09  richard
+ *  spong.
+ *
+@
+
+
+1.2
+log
+@Rewritten.  Will fix this log later.
+@
+text
+@d13 4
+a16 1
+ *  $Log$
+d44 1
+d67 1
+a67 2
+    type '_a array = '_a Array.array
+    exception Subscript = Array.Subscript
+d69 1
+a69 1
+    fun array (name_set, initial) =
+d72 1
+a72 1
+        val size =
+d77 1
+a77 1
+        Array.array (size, initial)
+d80 1
+a80 1
+    fun array_of_list list =
+d82 2
+a83 1
+        val size =
+d85 2
+a86 2
+          (fn (n, (NAME {index, ...}, _)) => (index := n; n+1))
+          (0, list)
+d88 1
+a88 1
+        Array.arrayoflist (map #2 list)
+a89 3
+
+    fun sub (array, NAME {index = ref n, ...}) = Array.sub (array, n)
+    fun update (array, NAME {index = ref n, ...}, new) = Array.update (array, n, new)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 18
+d20 3
+a22 1
+require "text";
+a24 1
+functor Name ( structure Text : TEXT ) : NAME =
+d26 11
+d39 1
+d42 1
+a42 4
+    val consonants =
+      Array.arrayoflist
+       ["b", "d", "f", "h", "j", "k", "l", "m", "n", "p", "qu", "r", "s", "t", "v", "w", "y", "z", "ch", "sh", "th",
+        "sp", "sc", "tr","dr", "kr", "pr", "vr", "vl", "sl", "zr", "shr", "thr", "chr"]
+d44 4
+a47 1
+    val nr_consonants = Array.length consonants
+d49 4
+a52 3
+    val vowels =
+      Array.arrayoflist
+       ["a", "e", "i", "o", "u", "ay", "ee", "oo", "ar", "ur", "ir"]
+d54 1
+a54 1
+    val nr_vowels = Array.length vowels
+d56 1
+a56 19
+    fun int 0 = Text.from_string "zip"
+      | int i =
+        if i<0 then
+          Text.concatenate (Text.from_string "no", int (~i))
+        else
+          let
+            fun int' (text, 0) = text
+              | int' (text, i) =
+                let
+                  val vowel = Text.from_string (Array.sub (vowels, i mod nr_vowels))
+                  val i = i div nr_vowels
+                  val consonant = Text.from_string (Array.sub (consonants, i mod nr_consonants))
+                  val i = i div nr_consonants
+                in
+                  int' (Text.concatenate (consonant, Text.concatenate (vowel, text)), i)
+                end
+          in
+            int' (Text.from_string "", i)
+          end
+d58 32
+a90 1
+
+@

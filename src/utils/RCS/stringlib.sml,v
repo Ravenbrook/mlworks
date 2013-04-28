@@ -1,0 +1,468 @@
+head	1.2;
+access;
+symbols
+	MLWorks_11r1:1.2.5.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.2.5.1.1.1
+	MLWorks_10r3:1.2.5.1.3
+	MLWorks_10r2_551:1.2.5.1.2
+	MLWorks_11:1.2.5.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.2.5.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.2.5.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.2.5.1
+	MLWorks_1_0_r2c1_1997_05_12:1.2.5
+	MLWorks_BugFix_1997_04_24:1.2
+	MLWorks_1_0_r2_Win32_1997_04_11:1.2
+	MLWorks_1_0_r2_Unix_1997_04_04:1.2
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.2.3.1.1
+	MLWorks_gui_1996_12_18:1.2.4
+	MLWorks_1_0_Win32_1996_12_17:1.2.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.2.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.2.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.2.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.2.2
+	MLWorks_1_0_Unix_1996_11_14:1.2.1
+	MLWorks_Open_Beta2_1996_10_11:1.1.3
+	MLWorks_License_dev:1.1.2
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.11.02.19.31.56;	author io;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1
+	1.2.4.1
+	1.2.5.1;
+next	1.1;
+
+1.1
+date	95.03.30.11.56.19;	author brianm;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.43.36;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.10.07.16.36.50;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.10.17.11.55.49;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.11.14.13.24.10;	author hope;	state Exp;
+branches
+	1.2.1.1.1.1;
+next	;
+
+1.2.1.1.1.1
+date	96.11.28.15.34.56;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.11.22.18.41.16;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.12.17.18.20.13;	author hope;	state Exp;
+branches
+	1.2.3.1.1.1;
+next	;
+
+1.2.3.1.1.1
+date	97.02.24.12.14.41;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.4.1
+date	96.12.18.10.15.45;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.5.1
+date	97.05.12.10.53.51;	author hope;	state Exp;
+branches
+	1.2.5.1.1.1
+	1.2.5.1.2.1
+	1.2.5.1.3.1;
+next	;
+
+1.2.5.1.1.1
+date	97.07.28.18.36.12;	author daveb;	state Exp;
+branches
+	1.2.5.1.1.1.1.1;
+next	;
+
+1.2.5.1.1.1.1.1
+date	97.10.07.12.01.30;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.5.1.2.1
+date	97.09.08.17.28.32;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.5.1.3.1
+date	97.09.09.14.26.13;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.2
+log
+@[Bug #1614]
+remove toplevel String.
+@
+text
+@(*  ==== UTILITIES : STRING LIBRARY ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is a collection of items concerning strings that it was useful
+ *  to group together.
+ *
+ *  This uses small naturals (0 <= char <= 255) as synonyms for characters
+ *  (i.e. unsigned chars).
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: stringlib.sml,v $
+ * Revision 1.1  1995/03/30  11:56:19  brianm
+ * new unit
+ * New file.
+ *
+ *
+ *)
+
+signature STRING_LIB =
+   sig
+
+      val memstr : string -> char -> bool
+          (* Given a string, return a predicate for checking
+             membership of the string
+           *)
+
+      val squash : (char -> bool) * string -> string
+          (* Remove all occurrences of characters satisfying predicate
+             within string.
+           *)
+
+      val trim_left  : (char -> bool) * string -> string
+          (*  Removes any prefix of first string consisting
+           *  of characters satisfying predicate.
+           *)
+
+      val trim_right : (char -> bool) * string -> string
+          (*  Removes any suffix of string consisting
+           *  of characters satisfying predicate.
+           *)
+
+      val leading : (char -> bool) * string -> string
+          (*  Gives the prefix of first string upto left-most occ. of
+           *  a character satisfying predicate.
+           *)
+
+      val leading_split : (char -> bool) * string -> (string * string)
+          (*  Gives the pair of prefix (and rest) of first string upto
+           *  left-most occ. of a character satisfying predicate.
+           *)
+
+      val trailing : (char -> bool) * string -> string
+          (*  Gives the suffix of string upto right-most occ. of
+           *  any characters satisfying predicate.
+           *)
+
+      val trailing_split : (char -> bool) * string -> (string * string)
+          (*  Gives the pair of rest and suffix of first string upto
+           *  right-most occ. character satisfying predicate.
+           *)
+
+      val to_lower : string -> string
+          (* Map given string to lower case *)
+
+      val to_upper : string -> string
+          (* Map given string to upper case *)
+
+      val capitalise : (char -> bool) * string -> string
+          (* Capitalise string i.e. make the first alphabetic
+             character following any characters satisfying predicate.
+             In addition, the first alphabetic character in the first string
+             is capialised.
+
+             All other alphabetic characters in string are mapped
+             to lower-case.
+           *)
+
+      val is_lower_case : char -> bool
+      val is_upper_case : char -> bool
+      val is_digit      : char -> bool
+
+      val is_letter     : char -> bool
+      val is_alpha      : char -> bool
+
+   end;
+
+@
+
+
+1.2.5.1
+log
+@branched from 1.2
+@
+text
+@a16 4
+ * Revision 1.2  1996/11/02  19:31:56  io
+ * [Bug #1614]
+ * remove toplevel String.
+ *
+@
+
+
+1.2.5.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a16 3
+ * Revision 1.2.5.1  1997/05/12  10:53:51  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.5.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a16 3
+ * Revision 1.2.5.1  1997/05/12  10:53:51  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.5.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a16 3
+ * Revision 1.2.5.1  1997/05/12  10:53:51  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.5.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a16 3
+ * Revision 1.2.5.1.1.1  1997/07/28  18:36:12  daveb
+ * branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@
+
+
+1.2.4.1
+log
+@branched from 1.2
+@
+text
+@a16 4
+ * Revision 1.2  1996/11/02  19:31:56  io
+ * [Bug #1614]
+ * remove toplevel String.
+ *
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@a16 4
+ * Revision 1.2  1996/11/02  19:31:56  io
+ * [Bug #1614]
+ * remove toplevel String.
+ *
+@
+
+
+1.2.3.1.1.1
+log
+@branched from 1.2.3.1
+@
+text
+@a16 3
+ * Revision 1.2.3.1  1996/12/17  18:20:13  hope
+ * branched from 1.2
+ *
+@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@a16 4
+ * Revision 1.2  1996/11/02  19:31:56  io
+ * [Bug #1614]
+ * remove toplevel String.
+ *
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a16 4
+ * Revision 1.2  1996/11/02  19:31:56  io
+ * [Bug #1614]
+ * remove toplevel String.
+ *
+@
+
+
+1.2.1.1.1.1
+log
+@branched from 1.2.1.1
+@
+text
+@a16 3
+ * Revision 1.2.1.1  1996/11/14  13:24:10  hope
+ * branched from 1.2
+ *
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d16 5
+a20 1
+ *  $Log$
+d27 1
+a27 1
+      val memstr : string -> int -> bool
+d32 1
+a32 1
+      val squash : (int -> bool) * string -> string
+d37 1
+a37 1
+      val trim_left  : (int -> bool) * string -> string
+d42 1
+a42 1
+      val trim_right : (int -> bool) * string -> string
+d47 1
+a47 1
+      val leading : (int -> bool) * string -> string
+d52 1
+a52 1
+      val leading_split : (int -> bool) * string -> (string * string)
+d57 1
+a57 1
+      val trailing : (int -> bool) * string -> string
+d62 1
+a62 1
+      val trailing_split : (int -> bool) * string -> (string * string)
+d73 1
+a73 1
+      val capitalise : (int -> bool) * string -> string
+d83 3
+a85 3
+      val is_lower_case : int -> bool
+      val is_upper_case : int -> bool
+      val is_digit      : int -> bool
+d87 2
+a88 2
+      val is_letter     : int -> bool
+      val is_alpha      : int -> bool
+@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@d16 1
+a16 5
+ *  $Log: stringlib.sml,v $
+ * Revision 1.1  1995/03/30  11:56:19  brianm
+ * new unit
+ * New file.
+ *
+@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@d16 1
+a16 5
+ *  $Log: stringlib.sml,v $
+ * Revision 1.1  1995/03/30  11:56:19  brianm
+ * new unit
+ * New file.
+ *
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d16 1
+a16 5
+ *  $Log: stringlib.sml,v $
+ * Revision 1.1  1995/03/30  11:56:19  brianm
+ * new unit
+ * New file.
+ *
+@

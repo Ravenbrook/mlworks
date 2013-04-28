@@ -1,0 +1,59 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.40.50;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : ARRAYS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *  Revision 1.1  1995/03/08  16:22:11  brianm
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+signature ARRAY =
+  sig
+    type 'a array
+    type 'a vector
+
+    val maxlen      : int
+
+    val array       : int * '_a -> '_a array
+    val tabulate    : int * (int -> '_a) -> '_a array
+    val arrayoflist : '_a list -> '_a array
+    val array0      : 'a array
+
+    val length      : 'a array -> int
+    val sub         : 'a array * int -> 'a
+    val update      : 'a array * int * 'a -> unit
+    val extract     : ('a array * int * int) -> 'a vector
+  end
+@

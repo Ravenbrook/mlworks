@@ -1,0 +1,295 @@
+head	1.6;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.6.1.1.1
+	MLWorks_1_0_Win32_1996_12_17:1.6.1
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.3.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.3.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.3.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.4.1
+	MLWorks_1_0_Unix_1996_11_14:1.3.1
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.1;
+locks; strict;
+comment	@:: @;
+
+
+1.6
+date	96.12.04.17.18.45;	author jont;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	96.11.29.12.46.30;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.11.22.16.50.04;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	96.11.07.15.10.15;	author jont;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	96.08.22.11.42.32;	author jont;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	96.08.21.16.06.48;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.44.24;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.37.39;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.56.38;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	96.11.14.13.24.58;	author hope;	state Exp;
+branches
+	1.3.1.1.1.1;
+next	;
+
+1.3.1.1.1.1
+date	96.11.28.15.35.57;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	96.11.22.18.42.03;	author hope;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	96.12.17.18.21.04;	author hope;	state Exp;
+branches
+	1.6.1.1.1.1;
+next	;
+
+1.6.1.1.1.1
+date	97.02.24.12.15.51;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+InstallShield driver script for NT distribution
+@
+
+
+1.6
+log
+@Place basis and other signature files in a separate directory
+@
+text
+@@@echo off
+rem Check parameters
+del data.z
+if "%1" == "" goto bad_parameters
+if not "%2" == "" goto bad_parameters
+rem Get doc from hope
+mkdir ml
+call hope co -recursive -missing-dir create -comp DOCml
+rem Build the doc components
+icomp ml\guide\ps\guide-win-1-0.ps data.z documentation\guide\ps /h
+icomp ml\install\ps\install-win-1-0.ps data.z documentation\installation-notes\ps /h
+icomp ml\reference\ps\reference-1-0.ps data.z documentation\reference\ps /h
+icomp ml\relnotes\ps\relnotes-1-0.ps data.z documentation\release-notes\ps /h
+icomp ml\guide\htm\windows\*.htm data.z documentation\guide\html /h
+icomp ml\guide\htm\windows\*.gif data.z documentation\guide\html /h
+icomp ml\install\htm\windows\*.htm data.z documentation\installation-notes\html /h
+icomp ml\install\htm\windows\*.gif data.z documentation\installation-notes\html /h
+icomp ml\reference\htm\*.htm data.z documentation\reference\html /h
+icomp ml\reference\htm\*.gif data.z documentation\reference\html /h
+icomp ml\relnotes\htm\*.htm data.z documentation\release-notes\html /h
+icomp ml\relnotes\htm\*.gif data.z documentation\release-notes\html /h
+rem ....Build components...
+icomp %1\distribution\*.* data.z /h
+icomp %1\distribution\bin\i386\nt\*.* data.z bin /h
+icomp %1\distribution\images\i386\nt\*.* data.z images /h
+icomp %1\distribution\basis\i386\nt\*.* data.z basis /h
+icomp %1\distribution\foreign\i386\nt\*.* data.z foreign /h
+icomp %1\distribution\foreign\samples\*.* data.z foreign\samples /h
+icomp %1\distribution\pervasive\i386\nt\*.* data.z pervasive /h
+icomp %1\distribution\scripts\*.* data.z scripts /h
+icomp %1\distribution\system\i386\nt\*.* data.z system /h
+icomp %1\distribution\utils\i386\nt\*.* data.z utils /h
+icomp %1\distribution\winsys\i386\nt\*.* data.z winsys /h
+icomp %1\distribution\examples\basis\*.* data.z examples\basis /h
+icomp %1\distribution\examples\mswindows\*.* data.z examples\mswindows /h
+icomp %1\distribution\basis\*.sml data.z basis\signatures /h
+icomp %1\distribution\foreign\*.sml data.z foreign\signatures /h
+icomp %1\distribution\winsys\*.sml data.z winsys\signatures /h
+icomp standutl\MLextra.dll data.z /h
+mkdir disk1
+copy data.z disk1
+copy _ISDEL.EXE disk1
+copy _ISRES.DLL disk1
+copy _SETUP.DLL disk1
+copy setup.exe disk1
+copy UNINST.EXE disk1
+copy _setup.lib disk1
+copy _INST32I.EX_ disk1
+rem split -f1420 -d1@@770 data.z
+rem copy disk1.id disk1
+rem copy disk2.id disk2
+compile tools\setup.rul
+packlist tools\setup.lst
+copy tools\setup.ins disk1
+copy setup.pkg disk1
+goto done
+:bad_parameters
+@@echo Bad parameters to %0
+:done
+@
+
+
+1.6.1.1
+log
+@branched from 1.6
+@
+text
+@@
+
+
+1.6.1.1.1.1
+log
+@branched from 1.6.1.1
+@
+text
+@@
+
+
+1.5
+log
+@Ensure relevant source files (signatures) get into release
+@
+text
+@d36 3
+a38 3
+icomp %1\distribution\basis\*.sml data.z basis /h
+icomp %1\distribution\foreign\*.sml data.z foreign /h
+icomp %1\distribution\winsys\*.sml data.z winsys /h
+@
+
+
+1.4
+log
+@Add the documentation to the release
+@
+text
+@d36 3
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@@
+
+
+1.3
+log
+@Modify to get installation tools from the current directory
+Add the windows demo files
+@
+text
+@d2 1
+a2 1
+rem ....Build components...
+d6 17
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@@
+
+
+1.3.1.1.1.1
+log
+@branched from 1.3.1.1
+@
+text
+@@
+
+
+1.2
+log
+@Add examples to distribution process
+@
+text
+@d18 1
+d22 7
+a28 7
+copy d:\inst\PROGRAM\_ISDEL.EXE disk1
+copy d:\inst\PROGRAM\_ISRES.DLL disk1
+copy d:\inst\PROGRAM\_SETUP.DLL disk1
+copy d:\inst\PROGRAM\setup.exe disk1
+copy d:\inst\PROGRAM\UNINST.EXE disk1
+copy d:\inst\PROGRAM\_setup.lib disk1
+copy d:\inst\PROGRAM\_INST32I.EX_ disk1
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+InstallShield driver script for NT distribution
+@
+text
+@d17 1
+@

@@ -1,0 +1,88 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	95.03.24.19.22.29;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.01.11.01.24;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Foreign Interface signature
+@
+
+
+1.2
+log
+@Updated to use Word32.word values (instead of int * int) to
+encode addresses.
+@
+text
+@(*  ==== FOREIGN INTERFACE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is the low-level interface foreign interface - it is still
+ *  experimental.  It will soon have argument passing and a return
+ *  value (basic 4 byte quantities - no structs and a maximum of 32
+ *  args).
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: foreign_interface.sml,v $
+# Revision 1.1  1995/03/01  11:01:24  brianm
+# new unit
+# Foreign Interface signature
+#
+ *
+ *)
+
+signature FOREIGN_INTERFACE =
+  sig
+
+     type foreign_object
+     type foreign_value
+     eqtype memory
+
+     val load_object   : string -> foreign_object
+     val find_value    : (foreign_object * string) -> foreign_value
+     val list_content  : foreign_object -> string list
+     val call_unit_fun : foreign_value -> unit
+     val call_foreign_fun : (foreign_object * memory * int * memory) -> unit 
+
+  end
+@
+
+
+1.1
+log
+@new unit
+Foreign Interface signature
+@
+text
+@a6 1
+ *  
+d8 3
+a10 2
+ *  experimental.  It will soon argument passing and return (basic 4 byte
+ *  quantities - no structs and a maximum of 32 args.)
+d15 5
+a19 1
+ *  $Log$
+d28 1
+a28 1
+     type memory
+@

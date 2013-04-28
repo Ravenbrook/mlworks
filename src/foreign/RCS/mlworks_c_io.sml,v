@@ -1,0 +1,311 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.3
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	97.07.03.09.39.40;	author stephenb;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	97.07.02.13.40.26;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.19.31;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.50.43;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	99.04.01.17.54.25;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * An interface to <stdio.h> in C and some utility functions.
+ *
+ * The sprintf, fprintf, fprintf, scanf and sscanf functions are not supported.
+ *
+ * Any type, function or value without a comment behaves like the
+ * corresponding C type, function or value.
+ *
+
+ * Revision Log
+ * ------------
+ * $Log$
+ *)
+
+require "^.basis.__char_array";
+require "^.basis.__char_vector";
+require "^.basis.__real_array";
+require "^.basis.__real_vector";
+require "__mlworks_c_interface";
+
+signature MLWORKS_C_IO =
+  sig
+    type FILE
+
+    type size_t = MLWorksCInterface.Uint.word
+
+    type c_char = MLWorksCInterface.Char.char
+    type c_int = MLWorksCInterface.Int.int
+    type void = MLWorksCInterface.void
+
+    type 'a ptr = 'a MLWorksCInterface.ptr
+
+    val EOF : c_int
+
+    val clearerr : FILE ptr -> unit
+
+    val fclose : FILE ptr -> int
+
+    val ferror : FILE ptr -> c_int
+
+    val feof : FILE ptr -> c_int
+
+    val fgetc : FILE ptr -> c_int
+
+    val fopen : string * string -> FILE ptr 
+
+    val fputc : FILE ptr * c_char -> c_int
+
+    val fputs : FILE ptr * c_char ptr -> c_int
+
+    val fputString : FILE ptr * string -> c_int
+
+    val fflush : FILE ptr -> c_int
+
+    val fread : void ptr * size_t * size_t * FILE ptr -> size_t
+
+
+    (* freadCharArray array offset n stream
+     *
+     * read n characters from the input stream and place them starting at
+     * the given offset into the char array.  Returns the number of
+     * characters actually read.
+     * 
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val freadCharArray : CharArray.array * int * int * FILE ptr -> int
+
+
+
+    (* freadRealArray array offset n stream
+     *
+     * read n reals from the input stream and place them starting at
+     * the given offset into the real array.  Returns the number of
+     * reals actually read.
+     *
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val freadRealArray : RealArray.array * int * int * FILE ptr -> int
+
+
+    (* Add IntVector, Int32Vector, ... etc. when MLWorks supports them *)
+
+
+    val freopen : string * string * FILE ptr -> FILE ptr
+
+    val fseek : FILE ptr * MLWorksCInterface.Long.int * c_int -> c_int
+
+    val ftell : FILE ptr -> MLWorksCInterface.Long.int
+
+    val fwrite : void ptr * size_t * size_t * FILE ptr -> size_t
+
+
+
+    (* fwriteCharArray array offset n stream
+     *
+     * write n characters starting at the given offset from the start of 
+     * the array to the output stream.  Returns the number of characters
+     * written.
+     *
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val fwriteCharArray : CharArray.array * int * int * FILE ptr -> int
+
+
+
+    (* fwriteCharVector vector offset n stream
+     *
+     * write n characters starting at the given offset from the start of 
+     * the vector to the output stream.  Returns the number of characters
+     * written.
+     *
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val fwriteCharVector : CharVector.vector * int * int * FILE ptr -> int
+
+
+
+    (* fwriteRealArray array offset n stream
+     *
+     * write n reals starting at the given offset from the start of the
+     * array to the output stream.  Returns the number of reals written.
+     *
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val fwriteRealArray : RealArray.array * int * int * FILE ptr -> int
+
+
+
+    (* fwriteRealVector vector offset n stream
+     *
+     * write n reals starting at the given offset from the start of the
+     * vector to the output stream.  Returns the number of reals written.
+     *
+     * Raises Overflow if offset+n-1 is larger than Int.maxInt
+     * Raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val fwriteRealVector : RealVector.vector * int * int * FILE ptr -> int
+
+
+
+    (* fwriteString vector offset n stream
+     *
+     * write n characters starting at the given offset from the start of 
+     * the string to the output stream.  Returns the number of characters
+     * written.
+     *
+     * Unless n is 0, raises Overflow if offset+n-1 is larger than Int.maxInt
+     * and raises Subcript if [offset..offset+n-1] is not a subrange of
+     * [0..length(vector)-1]
+     *)
+    val fwriteString : string * int * int * FILE ptr -> int
+
+
+    (* Add IntVector Int32Vector, ... etc. when MLWorks supports them *)
+
+
+    val perror : c_char ptr -> unit
+
+
+    (*
+     * Like perror, except that it takes an ML string rather than
+     * a C string.
+     *)
+    val perrorString : string -> unit
+
+
+    val setvbuff : FILE ptr * c_char ptr * c_int * size_t -> c_int
+
+    val setbuff : 
+      FILE ptr * c_char -> unit
+
+
+    (*
+     * stdin, stdout and stderr each returns a file associated with
+     * the standard input, standard output and standard error respectively.
+     *)
+    val stdin  : unit -> FILE ptr
+    val stdout : unit -> FILE ptr
+    val stderr : unit -> FILE ptr
+
+
+    val ungetc : FILE ptr * c_int -> c_int
+  end
+@
+
+
+1.2.3.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d13 1
+a13 5
+ * $Log: mlworks_c_io.sml,v $
+ *  Revision 1.2  1997/07/03  09:39:40  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@d13 1
+a13 5
+ * $Log: mlworks_c_io.sml,v $
+ *  Revision 1.2  1997/07/03  09:39:40  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@d13 1
+a13 5
+ * $Log: mlworks_c_io.sml,v $
+ *  Revision 1.2  1997/07/03  09:39:40  stephenb
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

@@ -1,0 +1,173 @@
+head	1.5;
+access;
+symbols
+	Final_version_of_old_runtime:1.5
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	93.06.02.14.16.47;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.07.13.08.20.04;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.06.30.13.35.36;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.16.16.03.19;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.05.14.11.10.06;	author jont;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	93.06.02.14.16.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Ensuring that we get a type that respresents 32 bit integers
+@
+
+
+1.5
+log
+@Removed the RCS log since this file is distributed to users.
+@
+text
+@/*  ==== SYSTEM DEPENDENT TYPE DEFINITIONS ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Id$
+ */
+
+#ifndef types_h
+#define types_h
+
+#ifdef sparc
+typedef unsigned int word;
+typedef unsigned char byte;
+#else
+#error word and byte type not known for this architecture
+#endif
+
+#endif
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@d7 1
+a7 1
+ *  $Id: types.h,v 1.5 1993/06/02 14:16:47 richard Exp jont $
+@
+
+
+1.4
+log
+@Changed SPARC to sparc.  See Makefile.
+@
+text
+@d7 1
+a7 9
+ *  $Log: types.h,v $
+ * Revision 1.3  1992/06/30  13:35:36  richard
+ * Added #ifdef SPARC as a move towards architecture independence.
+ *
+ *  Revision 1.2  1991/10/16  16:03:19  davidt
+ *  Changed naming of the machine dependent types.
+ *
+ *  Revision 1.1  91/05/14  11:10:06  jont
+ *  Initial revision
+@
+
+
+1.3
+log
+@Added #ifdef SPARC as a move towards architecture independence.
+@
+text
+@d8 3
+d21 1
+a21 1
+#ifdef SPARC
+@
+
+
+1.2
+log
+@Changed naming of the machine dependent types.
+@
+text
+@d1 12
+a12 8
+/*
+ * types.h
+ * system dependent type definitions for 32 bit integers
+ * this needs to change for systems where sizeof(int) != 32
+ * $Log:	types.h,v $
+ * Revision 1.1  91/05/14  11:10:06  jont
+ * Initial revision
+ * 
+a14 1
+/* Avoid multiple inclusion */
+d18 6
+a23 3
+typedef unsigned char	byte;		/* Bytes */
+typedef unsigned int	word;		/* Words */
+typedef signed int	sword;		/* Signed words */
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 4
+a8 1
+ * $Log$
+d11 2
+a12 1
+#ifndef types_h /* Avoid multiple inclusion */
+d15 3
+a17 2
+typedef int int32;
+typedef unsigned int u_int32;
+a18 5
+/*
+ * Note that typedefs are used here rather than #defines.
+ * These are in general safer.
+ */
+
+a19 1
+/* End types.h */
+@

@@ -1,0 +1,345 @@
+head	1.9;
+access;
+symbols
+	ML_beta_release_12/08/94:1.9
+	ML_beta_release_03/08/94:1.9
+	ML_revised_beta_release_25/05/94:1.9
+	ML_final_beta_release_02/03/94:1.9
+	mlworks-28-01-1994:1.9
+	Release:1.9
+	mlworks-beta-01-09-1993:1.9;
+locks; strict;
+comment	@# @;
+
+
+1.9
+date	92.11.12.17.11.52;	author richard;	state Exp;
+branches
+	1.9.1.1;
+next	1.8;
+
+1.8
+date	92.10.09.15.02.26;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.09.29.13.21.54;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.09.09.15.05.28;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.09.09.14.43.56;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.09.09.10.40.21;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.09.09.10.38.52;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.08.22.16.46.16;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.07.10.15.06.49;	author jont;	state Exp;
+branches;
+next	;
+
+1.9.1.1
+date	92.11.12.17.11.52;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Check in entire tree preserving time stamps
+@
+
+
+1.9
+log
+@Files are only thought to be locked if locked by the current user
+(or by the user specified to the -u option).
+@
+text
+@#!/bin/sh
+# === CHECK IN ALL CHANGED FILES ===
+#
+# Searches for files which have been checked out locked from RCS.  If
+# they have been changed then they are checked in, otherwise they are
+# unlocked.
+#
+# $Log: cinall,v $
+# Revision 1.8  1992/10/09  15:02:26  richard
+# Corrected interactive option.
+#
+script=`basename $0`
+usage="Usage: $script [ -s -d -i -u USER ]"
+act=true
+ask=false
+ok ()
+{
+  if $ask
+  then
+    echo -n "? "
+    read result
+    while
+      case $result in
+	[yY][eE][sS])	result=true; false;;
+	[nN][oO])	result=false; false;;
+	[yY])		result=true; false;;
+	[nN])		result=false; false;;
+	*)		true;;
+      esac
+    do
+      echo -n "Please enter yes/no/y/n: "
+      read result
+    done
+    $result
+  else
+    echo
+    $act
+  fi
+}
+while getopts sdiu: option
+do
+  case $option in
+    s) act=false;;
+    d) rcsdiff_out="> /dev/null";;
+    i) ask=true;;
+    u) USER="$OPTARG";;
+    *) echo "$usage"; exit 2;;
+  esac
+done
+# Search all subdirectories not named RCS but which have an RCS
+# subdirectory.  These are the directories which will have files
+# checked out in them.
+for dir in `find . \( -name RCS -type d -prune \) -o \( -type d -print \)`
+do
+  if [ -d $dir/RCS ]
+  then
+    # Examine all writable files in the directory which have
+    # corresponding RCS files.
+    echo "$script: Searching $dir"
+    (
+      cd $dir &&
+      for file in *
+      do
+	if [ -w $file ] && rcs -q $file 2> /dev/null	# nasty test for RCS file
+	then
+	  # If the RCS file is locked by the user then see if there
+	  # are any differences between the working and RCS files.
+	  # Otherwise warn the user about the writable copy.
+	  if [ -n "`rlog -L -R -l$USER $file`" ]
+	  then
+	    eval rcsdiff -q $file $rcsdiff_out
+	    case $? in
+	      0) echo -n "$script: Unlock unchanged file $file"
+		 ok && rcs -u $file && rm $file && cout $file;;
+	      1) echo -n "$script: Check in changed file $file"
+		 ok && cin $file;;
+	      *) echo "$script: WARNING: Unexpected return code $? from rcsdiff; ignoring file $file"
+	    esac
+	  else
+	    echo "$script: WARNING: File $file is writable but not locked by $USER."
+	  fi
+	fi
+      done
+    )
+  fi
+done
+@
+
+
+1.9.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 4
+# Revision 1.9  1992/11/12  17:11:52  richard
+# Files are only thought to be locked if locked by the current user
+# (or by the user specified to the -u option).
+#
+@
+
+
+1.8
+log
+@Corrected interactive option.
+@
+text
+@d8 4
+a11 1
+# $Log$
+d13 1
+a13 1
+usage="Usage: $script [ -s -d -i ]"
+d40 1
+a40 1
+while getopts sdi option
+d46 1
+d66 4
+a69 4
+	  # If the RCS file is locked then see if there are any
+	  # differences between the working and RCS files.  Otherwise
+	  # warn the user about the writable copy.
+	  if [ -n "`rlog -L -R $file`" ]
+d80 1
+a80 1
+	    echo "$script: WARNING: File $file is writable but not locked out."
+@
+
+
+1.7
+log
+@Added -i option.
+@
+text
+@d8 1
+a8 1
+# $log$
+d34 1
+a34 1
+    true
+d70 1
+a70 1
+		 $act && ok && rcs -u $file && rm $file && cout $file;;
+d72 1
+a72 1
+		 $act && ok && cin $file;;
+@
+
+
+1.6
+log
+@Added -d option to supress diff output.
+@
+text
+@d10 1
+a10 1
+usage="Usage: $script [ -s -d ]"
+d12 26
+a37 1
+while getopts sd option
+d42 1
+d69 4
+a72 4
+	      0) echo "$script: Unlock unchanged file $file"
+		 $act && rcs -u $file && rm $file && cout $file;;
+	      1) echo "$script: Check in changed file $file"
+		 $act && cin $file;;
+@
+
+
+1.5
+log
+@Added -s option to show what would happen without the -s option.
+@
+text
+@d10 1
+a10 1
+usage="Usage: $script [ -s ]"
+d12 1
+a12 1
+while getopts s option
+d16 1
+d41 1
+a41 1
+	    rcsdiff -q $file
+d44 1
+a44 1
+		 act && rcs -u $file && rm $file && cout $file;;
+d46 1
+a46 1
+		 act && cin $file;;
+@
+
+
+1.4
+log
+@Corrected test for non-null RCS file name.
+@
+text
+@d10 9
+d29 5
+a33 9
+    cd $dir &&
+    for file in *
+    do
+      if [ -w $file ] && rcs -q $file 2> /dev/null	# nasty test for RCS file
+      then
+	# If the RCS file is locked then see if there are any
+	# differences between the working and RCS files.  Otherwise
+        # warn the user about the writable copy.
+	if [ -n "`rlog -L -R $file`" ]
+d35 16
+a50 10
+	  rcsdiff -q $file
+	  case $? in
+	    0) echo "$script: Unlocking unchanged file $file"
+	       rcs -u $file && rm $file && cout $file;;
+	    1) echo "$script: Checking in changed file $file"
+	       cin $file;;
+	    *) echo "$script: WARNING: Unexpected return code $? from rcsdiff; ignoring file $file"
+	  esac
+	else
+	  echo "$script: WARNING: File $file is writable but not locked out."
+d52 2
+a53 2
+      fi
+    done
+@
+
+
+1.3
+log
+@Copied by own version here for general consumption.
+@
+text
+@d28 1
+a28 1
+	if [ -n `rlog -L -R $file` ]
+@
+
+
+1.2
+log
+@Added logging and copyright
+@
+text
+@d1 44
+a44 10
+#!/bin/csh
+# $Log$
+# Copyright Harlequin Ltd. 1991
+foreach x(*.sml)
+if (-w $x) then
+  echo cin $x
+  cin $x
+else
+endif
+end
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 2
+@

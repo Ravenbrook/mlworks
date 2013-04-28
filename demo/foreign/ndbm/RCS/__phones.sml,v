@@ -1,0 +1,686 @@
+head	1.7;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.7
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.5
+	MLWorks_20b0_1998_03_20:1.5
+	MLWorks_20m2_1998_02_16:1.5
+	MLWorks_workspace_97:1.4.1
+	MLWorks_20m1_1997_10_23:1.4
+	MLWorks_20m0_1997_06_20:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.7
+date	98.10.28.11.30.46;	author jkbrook;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.10.26.14.43.57;	author jkbrook;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.01.22.19.03.58;	author jkbrook;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	97.07.07.12.36.20;	author stephenb;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	97.07.02.10.04.06;	author stephenb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.05.22.10.48.54;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.02.09.35.08;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	97.11.30.16.48.56;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30030]
+@
+
+
+1.7
+log
+@[Bug #70184]
+Remove debugging print statement
+@
+text
+@(* Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ * A very simple telephone database built on ndbm.
+ * See the associated README for more information.
+ * 
+ * Revision Log
+ * ------------
+ * $Log: foreign:ndbm:__phones.sml,v $
+ *  Revision 1.6  1998/10/26  14:43:57  jkbrook
+ *  [Bug #70184]
+ *  Update for changes to OS.Process
+ *
+ *  Revision 1.5  1998/01/22  19:03:58  jkbrook
+ *  [Bug #70047]
+ *  Syntax for delivery has changed
+ *
+ *  Revision 1.4  1997/07/07  12:36:20  stephenb
+ *  [Bug #30029]
+ *  Don't pass C to MLWorksCPointer since it is no longer required.
+ *
+ *  Revision 1.3  1997/07/02  10:04:06  stephenb
+ *  [Bug #30029]
+ *  The previous version used the signatures/structures from
+ *  the prototype version the new FI.  This version uses the
+ *  signatures/structures that a customer will see.
+ *
+ *  Revision 1.2  1997/05/22  10:48:54  stephenb
+ *  [Bug #30121]
+ *  The README is now either called README or README.TXT depending on
+ *  the platform rather than README.txt.  So just refer to the file as README.
+ *
+ *  Revision 1.1  1997/05/02  09:35:08  stephenb
+ *  new unit
+ *  [Bug #30030]
+ *
+ *)
+
+require "$.basis.__char";    (* Char.isSpace *)
+require "$.basis.__string";  (* String.fields *)
+require "$.basis.__int";     (* Int.toString *)
+require "$.basis.__text_io"; (* TextIO.* *)
+require "$.basis.__io";      (* IO.Io *)
+require "$.basis.__list";    (* List.foldl *)
+require "$.system.__os";     (* OS.Process.exit *)
+require "$.basis.__word";
+require "$.foreign._mlworks_c_pointer";
+require "$.foreign.__mlworks_c_interface";
+require "$.foreign.__mlworks_c_resource";
+require "__open_flags";
+require "__ndbm";
+
+
+(* This is an application which is going to be delivered so there 
+ * is nothing to be exported from the structure
+ *)
+structure Phones (* : sig end *) = 
+  struct
+
+    exception OutOfMemory
+    exception CannotOpenDbmFile
+
+    structure C = MLWorksCInterface
+
+    (*
+    **.fix.stderr: the error message should be displayed on stderr
+    *)
+    fun openError databaseName =
+      (print "Cannot open ";
+       print databaseName;
+       print " as a phones database\n";
+       OS.Process.exit OS.Process.failure)
+
+
+    fun internalError databaseName =
+      (print "internal error when reading ";
+       print databaseName;
+       print "\n";
+       OS.Process.exit OS.Process.failure)
+
+
+    structure datumPtr = MLWorksCPointer
+      (type value = Ndbm.datum;
+       val size = Ndbm.datum'size';
+       val addr = Ndbm.datum'addr')
+
+    fun makeDatum data =
+      let
+        val datum' = datumPtr.make ()
+        val datum = datumPtr.! datum'
+        val dataPtr = C.CharPtr.fromString data
+        val size' = (C.Uint.fromInt (size data))
+        val _ = C.PtrPtr.:= (Ndbm.datum'dptr'addr datum, dataPtr)
+        val _ = C.UintPtr.:= (Ndbm.datum'dsize'addr datum, size')
+      in
+        datum
+      end
+
+    datatype access_type = READ | WRITE
+
+    fun accessTypeToFlags (m, flags) = 
+      case m of
+        READ =>
+          if flags = OpenFlags.O_WRONLY
+          then OpenFlags.O_RDWR + OpenFlags.O_CREAT
+          else OpenFlags.O_RDONLY
+      | WRITE =>
+          if flags = OpenFlags.O_RDONLY
+          then OpenFlags.O_RDWR + OpenFlags.O_CREAT
+          else OpenFlags.O_WRONLY
+
+
+    (*
+     * Apply 'f' to every element in 'db' with 'z' as the left zero.
+     *)
+    fun foldDb f z (db: Ndbm.DBM C.ptr) =
+      let
+        fun aux (v as (z, keyDatum)) = 
+          if Ndbm.datum'dptr keyDatum = C.null then
+            z
+          else
+            aux (f v, Ndbm.dbm_nextkey db)
+      in
+        aux (z, Ndbm.dbm_firstkey db)
+      end
+
+
+    val withResource = MLWorksCResource.withResource
+
+    val withNonNullResource = MLWorksCResource.withNonNullResource
+
+    fun withDatum datum f =
+      withResource (datumPtr.free o Ndbm.datum'addr', datum, f)
+
+    fun withCString str action =
+      withNonNullResource (C.CharPtr.free, OutOfMemory, str, action)
+
+    fun withNdbm db action =
+       withNonNullResource (Ndbm.dbm_close, CannotOpenDbmFile, db, action)
+
+
+    local
+      fun fWrapper (f, data) datum' =
+        let
+          val datum = datumPtr.! datum'
+          val dataPtr = C.CharPtr.fromString data
+          val size' = C.Uint.fromInt (size data)
+          val _ = C.PtrPtr.:= (Ndbm.datum'dptr'addr datum, dataPtr)
+          val _ = C.UintPtr.:= (Ndbm.datum'dsize'addr datum, size')
+        in
+          f datum
+        end
+    in
+      fun withNewDatum data f =
+        withNonNullResource (datumPtr.free, OutOfMemory, datumPtr.make (), fWrapper (f, data))
+    end
+
+
+
+    (*
+     * Open an Ndbm database with the given 'fileName' and 'accessTypes'.
+     * If it cannot be opended for any reason, 'fail' is called.
+     * If the database can be opened, then 'succ' is called with the database
+     * as its only argument.
+     *)
+    fun withDb (fileName, accessTypes, action: Ndbm.DBM C.ptr -> 'a) =
+      let 
+        val flags = C.Int.fromInt (List.foldl accessTypeToFlags 0 accessTypes)
+        val mode = C.Int.fromInt 0x1b0 (* 0660 *)
+      in
+        withCString (C.CharPtr.fromString fileName)
+          (fn name =>
+             withNdbm (Ndbm.dbm_open (name, flags, mode)) action)
+      end
+
+
+    fun withReadOnlyDb (databaseName: string) action =
+      withDb (databaseName, [READ], action)
+        handle CannotOpenDbmFile => openError databaseName
+
+
+
+    fun withWriteOnlyDb (databaseName: string) action =
+      withDb (databaseName, [WRITE], action)
+        handle CannotOpenDbmFile => openError databaseName
+
+
+
+    fun addPerson (db, name: string, phoneNumber: string) =
+      withNewDatum name
+        (fn nameDatum => 
+          withNewDatum phoneNumber
+           (fn phoneDatum =>
+             let
+               val result = Ndbm.dbm_store (db, nameDatum, phoneDatum, Ndbm.DBM_INSERT)
+               val result' = C.Int.toInt result
+             in
+               if result' = 1 then
+                 (print "Sorry, cannot add ";
+                  print name;
+                  print " since it is already in the database\n")
+               else
+                 ()
+             end))
+
+
+    fun foldOverLinesInInputFile
+     (inputFileName: string)
+     (fail: string * string -> unit)
+     (succ: int * string -> unit) =
+      let
+        val stream = TextIO.openIn inputFileName
+        fun loop lineNumber =
+          if TextIO.endOfStream stream then
+            TextIO.closeIn stream
+          else
+            (succ (lineNumber, TextIO.inputLine stream);
+            loop (lineNumber+1))
+      in
+        loop 0
+      end
+      handle IO.Io {name, function, ...} => fail (name, function)
+
+
+
+    fun createDb (inputFileName, databaseName) =
+      withWriteOnlyDb databaseName
+        (fn db =>
+           (foldOverLinesInInputFile inputFileName
+             (fn (name, function) =>
+               (print "Could not ";
+                print function;
+                print " from ";
+                print name;
+                print "\n"))
+             (fn (lineNumber, line) =>
+               (case String.fields Char.isSpace line of
+                  [name, phoneNumber, ""] =>
+                    (addPerson (db, name, phoneNumber); ())
+                | [] => ()
+                | _ =>
+                  (print "Malformed input on line ";
+                   print (Int.toString lineNumber);
+                   print " ";
+                   print line;
+                   print "\n")))))
+
+
+
+    val wordFromUint = Word.fromLargeWord o C.Uint.toLargeWord
+
+    fun datumToString (datum: Ndbm.datum): string =
+      let
+        val data = Ndbm.datum'dptr datum
+        val size = wordFromUint (Ndbm.datum'dsize datum)
+      in
+        C.CharPtr.copySubString (data, size)
+      end
+
+
+
+    fun getNumber (db, nameDatum) =
+      withDatum (Ndbm.dbm_fetch (db, nameDatum)) 
+        (fn phoneDatum =>
+          if Ndbm.datum'dptr phoneDatum = C.null then
+            NONE
+          else
+            SOME (datumToString phoneDatum))
+
+
+
+    fun dumpDb databaseName =
+      withReadOnlyDb databaseName
+        (fn db =>
+          let
+            fun dumpItem (z, nameDatum) =
+              let
+                val name = datumToString nameDatum
+              in
+                case (getNumber (db, nameDatum)) of
+                 NONE => internalError databaseName
+               | SOME number =>
+                  (print name;
+                   print " ";
+                   print number;
+                   print "\n";
+                   datumPtr.free (Ndbm.datum'addr' nameDatum))
+              end
+          in
+            foldDb dumpItem () db
+          end)
+
+
+
+    fun lookupInDb (personName, databaseName) =
+      withReadOnlyDb databaseName
+        (fn db =>
+          withNewDatum personName
+            (fn personDatum =>
+              case getNumber (db, personDatum) of
+                NONE =>
+                  (print "Sorry, no number available for ";
+                   print personName;
+                   print "\n")
+              | SOME number =>
+                 (print personName;
+                  print " ";
+                  print number;
+                  print "\n")))
+
+
+
+    fun removeFromDb (personName, databaseName) =
+      withWriteOnlyDb databaseName
+        (fn db =>
+          withNewDatum personName
+            (fn person =>
+              let
+                val result = Ndbm.dbm_delete (db, person)
+                val result' = C.Int.toInt result
+              in
+                if result' <> 0 then
+                  (print "Sorry, cannot remove ";
+                   print personName;
+                   print " from ";
+                   print databaseName;
+                   print " since ";
+                   print personName;
+                   print " is not in the database\n")
+                else
+                  ()
+              end))
+
+
+
+    fun addToDb (personName, phoneNumber, databaseName) =
+      withWriteOnlyDb databaseName
+        (fn db => addPerson (db, personName, phoneNumber))
+
+
+
+    (*
+    **.fix.stderr: the usage message should be displayed on stderr.
+    **.fix.prog-name: the usage message should include the name of the program.
+    *)
+    fun usage () =
+      (print "[ -c input | -d | -r person | -a person phone | -l person ] database\n";
+      OS.Process.exit OS.Process.failure)
+
+
+
+    fun parseArgs ("-c"::inputFileName::[databaseName]) =
+        createDb (inputFileName, databaseName)
+    | parseArgs ("-d"::[databaseName]) =
+        dumpDb databaseName
+    | parseArgs ("-l"::personName::[databaseName]) =
+        lookupInDb (personName, databaseName)
+    | parseArgs ("-r"::personName::[databaseName]) =
+        removeFromDb (personName, databaseName)
+    | parseArgs ("-a"::personName::phoneNumber::[databaseName]) =
+        addToDb (personName, phoneNumber, databaseName)
+    | parseArgs _ = usage ()
+
+
+    fun main () =
+      (parseArgs (MLWorks.arguments ()))
+      handle OutOfMemory => print "out of memory\n";
+
+    val _ = MLWorks.Deliver.deliver ("phones", main, MLWorks.Deliver.CONSOLE);
+
+  end
+@
+
+
+1.6
+log
+@[Bug #70184]
+Update for changes to OS.Process
+@
+text
+@d9 4
+a146 2
+        val _ = print ("makeDatum:size"^(Int.toString(C.Uint.toInt
+size')))
+@
+
+
+1.5
+log
+@[Bug #70047]
+Syntax for delivery has changed
+@
+text
+@d9 4
+d52 1
+a52 1
+structure Phones : sig end = 
+d67 1
+a67 1
+       OS.Process.exit 1)
+d74 1
+a74 1
+       OS.Process.exit 1)
+d87 1
+a87 1
+        val size' = C.Uint.fromInt (size data)
+d143 2
+d188 1
+a188 1
+        (fn nameDatum =>
+a203 1
+
+d345 1
+a345 1
+      OS.Process.exit 1)
+@
+
+
+1.4
+log
+@[Bug #30029]
+Don't pass C to MLWorksCPointer since it is no longer required.
+@
+text
+@d9 4
+d361 1
+a361 1
+    val _ = MLWorks.Deliver.deliver ("phones", main, true);
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a8 4
+ *  Revision 1.4  1997/07/07  12:36:20  stephenb
+ *  [Bug #30029]
+ *  Don't pass C to MLWorksCPointer since it is no longer required.
+ *
+@
+
+
+1.3
+log
+@[Bug #30029]
+The previous version used the signatures/structures from
+the prototype version the new FI.  This version uses the
+signatures/structures that a customer will see.
+@
+text
+@d9 6
+a70 1
+       structure C = C;
+@
+
+
+1.2
+log
+@[Bug #30121]
+The README is now either called README or README.TXT depending on
+the platform rather than README.txt.  So just refer to the file as README.
+@
+text
+@d1 18
+a18 13
+(* Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+**
+** A very simple telephone database built on ndbm.
+** See the associated README for more information.
+** 
+** Revision Log
+** ------------
+** $Log: foreign:ndbm:__phones.sml,v $
+**  Revision 1.1  1997/05/02  09:35:08  stephenb
+**  new unit
+**  [Bug #30030]
+**
+*)
+a26 1
+require "$.foreign.__c";
+d28 3
+a32 1
+require "phones";
+d34 5
+a38 1
+structure Phones : PHONES = 
+d41 5
+d63 6
+d71 6
+a76 5
+        val datum = Ndbm.datum.make 0w1
+        val dataPtr = C.fromString data
+        val size' = C.Int.fromInt (size data)
+        val _ = C.updatePtrPtr (Ndbm.datum.fp_dptr datum, dataPtr)
+        val _ = C.IntPtr.:= (Ndbm.datum.fp_dsize datum, size')
+d98 1
+a98 1
+    fun foldDb f z (db: Ndbm.dbm) =
+d101 1
+a101 1
+          if Ndbm.datum.f_dptr keyDatum = C.null then
+d110 4
+a113 8
+    (*
+     * withDatum is an idiom for stack allocation.  The intent is that
+     * withDatum takes control of 'datum' such that 'datum' can be used
+     * by 'f' and it is guaranteed that 'datum' will be free'd however
+     * 'f' returns.  Obviously this means that 'f' should not (in)directly
+     * return 'datum' or otherwise store a reference to it that will live
+     * beyound the execution of 'f'.
+     *)
+d115 25
+a139 6
+      let
+        val r = (f datum) handle exn => (Ndbm.datum.free datum; raise exn)
+      in
+        Ndbm.datum.free datum;
+        r
+      end
+d148 1
+a148 1
+    fun withDb (fileName, accessTypes) (fail: unit -> 'a) (succ: Ndbm.dbm -> 'a) =
+a151 3
+        val name = C.fromString fileName
+        fun close () = C.free name
+        val db = Ndbm.dbm_open (name, flags, mode);
+d153 3
+a155 10
+        if db = Ndbm.null then
+          (close ();  fail ())
+        else 
+          let
+            val close = fn () => (Ndbm.dbm_close db; close ())
+            val result = (succ db) handle exn => (close (); raise exn)
+          in
+            close ();
+            result
+          end
+d159 3
+a161 3
+    fun withReadOnlyDb (databaseName: string) =
+      withDb (databaseName, [READ])
+        (fn () => openError databaseName)
+d165 3
+a167 3
+    fun withWriteOnlyDb (databaseName: string) =
+      withDb (databaseName, [WRITE])
+       (fn () => openError databaseName)
+d172 1
+a172 1
+      withDatum (makeDatum name)
+d174 1
+a174 1
+          withDatum (makeDatum phoneNumber)
+d233 1
+d235 1
+a235 1
+    fun datumToString datum =
+d237 2
+a238 2
+        val dsize = Ndbm.datum.f_dsize datum
+        val size = C.Int.toWord dsize
+d240 1
+a240 1
+        C.toStringN (Ndbm.datum.f_dptr datum, size)
+d246 1
+a246 1
+      withDatum (Ndbm.dbm_fetch(db, nameDatum)) 
+d248 4
+a251 14
+          let
+            val dptr = Ndbm.datum.f_dptr phoneDatum
+          in
+            if dptr = C.null then
+              NONE
+            else
+              let
+                val dsize = Ndbm.datum.f_dsize phoneDatum
+                val size = C.Int.toWord dsize
+                val str = C.toStringN (dptr, size)
+              in
+                SOME str
+              end
+          end)
+d270 1
+a270 1
+                   Ndbm.datum.free nameDatum)
+d281 1
+a281 1
+          withDatum (makeDatum personName)
+d299 1
+a299 1
+          withDatum (makeDatum personName)
+d348 3
+a350 1
+    fun main () = parseArgs (MLWorks.arguments ());
+@
+
+
+1.1
+log
+@new unit
+[Bug #30030]
+@
+text
+@d3 2
+a4 1
+** A very simple telephone database built on ndbm -- see README.txt
+d8 5
+a12 1
+** $Log$
+@

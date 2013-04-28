@@ -1,0 +1,1019 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.01.18.13.08.28;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved to OS and architceture specific directory because of assembler problems
+@
+
+
+1.1
+log
+@new unit
+Moved to OS and architceture specific directory because of assembler problems
+@
+text
+@/*
+ * ==== ML TO C INTERFACING CODE ====
+ *		I386 for NT
+ *
+ * Copyright (C) 1994 Harlequin Ltd
+ *
+ * Description
+ * -----------
+ * This code does the job of managing the calls between ML and C.  The ML
+ * and C states are stored in C structures declared in `state.c'.
+ *
+ * Notes
+ * -----
+ * This code uses some predefined macros as parameters.  These are
+ * defined (or not) in the Makefile.  They are as follows:
+ *
+ *   COLLECT_STATS: If defined the routines will update various
+ *                  counters defined in callc_codes.c when called.
+ *
+ * This file must be run through both CPP and the m4 macro processor to
+ * produce an assembler file. 
+ *
+ * Revision Log
+ * ------------
+ * $Log: src:arch:I386:interface.S,v $
+ * Revision 1.9  1994/11/23  17:02:16  nickb
+ * Remove set_stack_underflow.
+ *
+ * Revision 1.8  1994/11/18  15:30:27  jont
+ * Modify to new register assignment
+ *
+ * Revision 1.7  1994/11/03  14:46:48  jont
+ * Fix problem with old c_state.sp being corrupted during callml
+ *
+ * Revision 1.6  1994/11/02  15:40:23  jont
+ * Add ml_raise_leaf
+ * Intended to add ml_gc_leaf, but this may not be necessary
+ *
+ * Revision 1.5  1994/10/27  22:40:33  jont
+ * Add code for C_raise
+ *
+ * Revision 1.4  1994/10/20  16:11:09  jont
+ * Add code for non-leaf raise
+ *
+ * Revision 1.3  1994/10/18  11:24:49  jont
+ * Add gc entry code
+ *
+ * Revision 1.2  1994/10/06  17:30:14  jont
+ * Also stub_c and stub_asm
+ *
+ * Revision 1.1  1994/10/04  16:49:58  jont
+ * new file
+ *
+ *
+*/
+
+	.386
+	.MODEL	FLAT
+	.CODE
+
+#include "tags.h"
+#include "offsets.h"
+#include "mach_values.h"
+
+#undef	CCODE_MAX_SAVES
+#define	CCODE_MAX_SAVES ((1 SHL CCODE_SAVES_BITS)-1)
+
+#include "macros.h"
+
+	EXTERN	C_NAME(c_state):NEAR
+	EXTERN	C_NAME(ml_state):NEAR
+	EXTERN	C_NAME(gc):NEAR
+	EXTERN	C_NAME(perv_lookup):NEAR
+
+/* === CALL ML FROM C ===
+ *
+ * callml is a C-like function which allows C to invoke an ML function in
+ * the manner of a coroutine.
+ *
+ * The C global registers are stored in the structure c_state, and the
+ * ML global state is loaded.  A new ML stack frame is allocated below
+ * the base pointer of the current ML stack area (pointed to by %g6).
+ * The ML function is then called.  On return the stack area base
+ * pointer is restored to its calue on entry, the ML state is stored
+ * and the C state loaded, then control returns to C.
+ *
+ *
+ * Parameters:
+ *   8(ESP)	Closure of the function to call
+ *   4(ESP)	Argument for the ML function -- no multiple arg calls here.
+ *   0(ESP)	Link register for return to C
+ *   ESP	Current stack pointer
+ *   EBP	Current (C) frame pointer (callee save)
+ *   EBX	Callee save
+ *   ESI	Callee save
+ *   EDI	Callee save
+ * Returns:
+ *   EAX	Result of the ML function
+ */
+
+	PUBLIC	C_NAME(callml)
+
+C_NAME(callml):
+	save_C_regs
+	address_C_globals C_NAME(c_state), eax
+	mov	edi, 28[eax]		/* Old c_state.sp */
+	mov	28[eax], esp		/* Remember C stack ptr for calls to C */
+	mov	eax, edi		/* EDI will be overwritten by load_ML_state */
+	mov	fnarg, 20[esp]		/* Get arg to callml */
+	mov	ebp, 24[esp]
+	load_ML_state C_NAME(ml_state), ecx, edx
+	mov	esp, 24[ecx]		/* saved ml_state.sp */
+/* Now create a small frame at the top of the ml stack */
+	mov	ecx, esp		/* Remember current esp */
+	push	eax			/* Save old c_state.sp */
+	push	0			/* Dummy link here */
+	push	STACK_C_CALL		/* Dummy closure value */
+	push	ecx			/* Link fp */
+	clean_current_registers
+/*
+	Assume that we are calling a closure so there is only
+	one argument to propagate.
+*/
+	mov	edi, STACK_START	/* Set up old closure value */
+	mov	ecx, -1[ebp]		/* Get code pointer */
+	add	ecx, CODE_OFFSET
+	call	ecx
+	add	esp, 12		/* Pop ml_frame */
+	pop	edi			/* Previous c_state.sp */
+	store_ML_state C_NAME(ml_state), ecx, edx, callml_store
+	mov	24[ecx], esp
+	address_C_globals C_NAME(c_state), eax
+	mov	esp, 28[eax]		/* Reset to C stack */
+	mov	28[eax], edi		/* Restore old c_state.sp */
+	mov	eax, fnarg		/* Get result */
+	load_C_regs
+	ret
+/*
+ * === STUBS FROM ML ===
+ *
+ * These are static ML code vectors which call the routine pointed to
+ * by their first closure element.  The C calling stub swaps into the C
+ * state before calling the function, whereas the assembler version
+ * does not.
+ */
+
+	PUBLIC	C_NAME(text_internal_stub_c)
+	PUBLIC	C_NAME(text_internal_stub_c_end)
+C_NAME(text_internal_stub_c):
+	save_ML_regs
+	store_ML_state C_NAME(ml_state), ecx, edx, stub_c_store
+	mov	24[ecx], esp		/* Save last ML frame for GC */
+	address_C_globals C_NAME(c_state), eax
+#if 0
+	std	%f0, [%sp+0x58]		/* Preserve non-corrupted floats */
+	std	%f2, [%sp+0x60]
+	std	%f6, [%sp+0x70]
+#endif
+	mov	esp, 28[eax]		/* address of last C stack frame */
+	push	fnarg			/* Stack argument */
+	mov	ecx, 3[ebp]
+	shr	ecx, 2
+	call	ecx
+#if 0
+	call	3[ebp]			/* Call C function */
+#endif
+	mov	fnarg, eax		/* Get the answer */
+#if 0
+	ldd	[%sp+0x70], %f6
+	ldd	[%sp+0x60], %f2
+	ldd	[%sp+0x58], %f0
+#endif
+	load_ML_state C_NAME(ml_state), ecx, edx
+	mov	esp, 24[ecx]		/* Point back to ml frame */
+	load_ML_regs
+	ret
+
+C_NAME(text_internal_stub_c_end):
+	PUBLIC	C_NAME(text_internal_stub_asm)
+	PUBLIC	C_NAME(text_internal_stub_asm_end)
+C_NAME(text_internal_stub_asm):
+	mov	ecx, 3[ebp]
+	shr	ecx, 2
+	jmp	ecx
+#if 0
+	jmp	3[ebp]			/* Tail to it */
+#endif
+
+C_NAME(text_internal_stub_asm_end):
+
+stub_code_end:
+	ALIGN	4
+
+/* === LOOK UP A VALUE IN THE RUNTIME ENVIRONMENT ===
+ *
+ * Calls directly through to env_lookup() from environment.h.
+ */
+
+	PUBLIC	C_NAME(ml_lookup_pervasive)
+
+C_NAME(ml_lookup_pervasive):
+	save_ML_regs
+	ML_to_C	C_NAME(perv_lookup), perv_lookup_label
+	load_ML_regs
+	ret
+/*
+ * ml_gc
+ *
+ * ecx = requested size
+ * return address on stack
+ * edi = current closure
+ */
+
+	PUBLIC	C_NAME(ml_gc)
+C_NAME(ml_gc):
+	save_all_ML_regs		/* Save all the standard registers */
+	store_ML_state C_NAME(ml_state), eax, edx, ml_gc_store
+	mov	24[eax], esp		/* Save last frame for gc */
+	address_C_globals C_NAME(c_state), eax
+	mov	esp, 28[eax]		/* Onto c stack */
+	push	edi
+	push	ecx
+#if 0
+	store_fps(%sp+88)
+#endif
+	call	C_NAME(gc)		/* Call garabage collector */
+#if 0
+	load_fps(%sp+88)
+#endif
+	load_ML_state C_NAME(ml_state), ecx, edx	/* Answer in ml_state.temp */
+	mov	esp, 24[ecx]		/* Point back to ml frame */
+	mov	ecx, 8[ecx]		/* Answer in correct place */
+	load_all_ML_regs		/* restore ml's registers */
+	ret
+
+	PUBLIC	C_NAME(ml_gc_leaf)
+C_NAME(ml_gc_leaf):
+	EXTERN	C_NAME(ml_gc_leaf_die):NEAR
+	call	C_NAME(ml_gc_leaf_die)
+#if 0
+	mov	%o1, %o0
+#endif
+/*
+ * gc called from leaf function, a rarity for the intel.
+ *
+ * Stack stack is:-
+ * 0(ESP) return address to leaf function
+ * 4(ESP) return address from leaf function
+ * 8(ESP) frame pointer for caller of leaf function
+ *
+ */
+
+/* === FLUSH REGISTER WINDOWS ===
+ *
+ * This routine would invoke the window flushing trap on SPARC.  We
+ * have it for portability of interface.h.
+ */
+	PUBLIC	C_NAME(flush_windows)
+
+C_NAME(flush_windows):
+	ret
+
+/*
+ * === STACK OVERFLOW / ASYNCHRONOUS EVENT ===
+ *
+ * This code is called by ML when %sp-STACK_BUFFER < %g6 (unsigned).
+ * This condition is checked by ML on function entry to ensure that
+ * there is enough room for a frame, and is used by the asynchronous
+ * event handler to trip up ML at a `safe' moment.  The function
+ * jumps here with the following parameters:
+ *
+ *  %o0  function argument
+ *  %o1  function closure
+ *  %o2 - %o5 rest of arguments
+ *  %g7  minimum stack requirement of function
+ *       (not including safety zone of 2kb or the normal register save area)
+ *       (these are added in here)
+ *  %g4  link to continue function
+ *  %o7  link to functions caller
+ *  %g6  current stack area or -1 for asynchronous event
+ */
+	PUBLIC	C_NAME(ml_disturbance)
+
+C_NAME(ml_disturbance):
+	EXTERN	C_NAME(ml_disturbance_die):NEAR
+	call	C_NAME(ml_disturbance_die)
+#if 0
+	save	%sp, -0x40, %sp
+	mov	%g4, %o7		/* So gc can fix return link */
+	addcc	%g6, 1, %g0		/* Is %g6 -1? (events pending) */
+	beq,a	event_poll
+	nop
+	/* \/\/ fall through \/\/ */
+
+/* == Extend ML stack ==
+ *
+ * If a function is disturbed by lack of stack this code allocates a
+ * new stack area by calling make_stack() in the storage manager and
+ * linking to the new stack using a special stack frame.  It then calls
+ * the remainder of the disturbed function, deallocating the stack on
+ * its return.
+ */
+
+extend_stack:
+#ifdef COLLECT_STATS
+	sethi	%hi(C_NAME(stack_extension_count)), %o0
+	or	%o0, %lo(C_NAME(stack_extension_count)), %o0
+	ld	[%o0], %g4
+	add	%g4, 1, %g4
+	st	%g4, [%o0]
+#endif
+	add	%g7, STACK_BUFFER+DEFAULT_STACK_SIZE, %o1
+				! Minimum stack requirement is second arg
+	sub	%g6, STACK_BUFFER+DEFAULT_STACK_SIZE, %o0
+				! Current stack area is first arg
+	ML_to_C	C_NAME(make_stack)		! Allocate a new stack area
+	sethi	%hi(C_NAME(ml_state)), %o2
+	or	%o2, %lo(C_NAME(ml_state)), %o2
+	ld	[%o0+0x4], %g4		! Get top of new stack
+	add	%o0, STACK_BUFFER+DEFAULT_STACK_SIZE, %o0
+	st	%o0, [%o2+16]		! Install the new stack in ml_state
+	addcc	%g6, 1, %g0		! Was there an event while in C?
+	bne,a	ext0
+	mov	%o0, %g6		! Install the new stack in %g6
+ext0:	restore	
+	save	%g4, -0x40, %sp		! Link to new stack
+	mov	%i0, %o0		! Propagate arguments
+	mov	%i1, %o1
+	mov	%i2, %o2
+	mov	%i3, %o3
+	mov	%i4, %o4
+	mov	%i5, %o5
+	jmpl	%o7+8, %o7		! Call rest of disturbed function
+	mov	STACK_EXTENSION, %i1	! (Mark the extra frame)
+	! \/\/ fall through \/\/
+
+extend_return:
+	mov	%o0, %i0		! Propagate result to caller
+	restore				! Restore back to the old stack, since it is about to disappear
+	save	%sp, -0x40, %sp		! Make a frame on the old stack
+	addcc	%g6, 1, %g0		! Is an event flagged?
+	beq,a	ext1
+	sethi	%hi(C_NAME(ml_state)), %o2
+	sub	%g6, STACK_BUFFER+DEFAULT_STACK_SIZE, %o0
+	ML_to_C	C_NAME(unmake_stack)		! Deallocate the stack
+	add	%o0, STACK_BUFFER+DEFAULT_STACK_SIZE, %g6
+	ret
+	restore
+ext1:	or	%o2, %lo(C_NAME(ml_state)), %o2
+	ld	[%o2+16], %o0		! (Fetch real stack from _ml_state.)
+	ML_to_C	C_NAME(unmake_stack)		! Deallocate the stack
+	add	%o0, STACK_BUFFER+DEFAULT_STACK_SIZE, %o0
+	st	%o0, [%o2+16]		! Update _ml_state with older stack
+	ret
+	restore				! Return to functions caller
+
+/* == Poll asynchronous events ==
+ *
+ * If a function has been disturbed by having %g6 = -1 then poll the
+ * event handler.
+ */
+
+event_poll:
+	sethi	%hi(C_NAME(ml_state)), %o0
+	or	%o0, %lo(C_NAME(ml_state)), %o0
+	ld	[%o0+16], %g6		! Restore the real stack in %g6
+	st	%g0, [%g5+IMPLICIT_interrupt] ! Clear the interrupt flag
+	sub	%sp, %g7, %g4		! Does the stack really need extending?
+	cmp	%g4, %g6
+	bgeu	int1
+	sethi	%hi(C_NAME(ml_disturbance)), %o4
+	or	%o4, %lo(C_NAME(ml_disturbance)), %o4
+	jmpl	%o4, %o4		! Really extend the stack
+	nop
+int1:	save	%sp, -0x40, %sp		! NB %i7 contains disturbed function continuation
+	mov	STACK_EVENT, %i1
+	mov	0, %o7			! Ensure o7 not mistaken for a return to ML
+	ML_to_C	C_NAME(ev_poll)
+	restore
+	jmp	%o7+8			! Do the rest of the disturbed function
+	restore
+#endif
+
+/*
+ * === CHECK FOR AN ML EVENT ===
+ *
+ * We arrive here when g6 has been detected to be -1
+ *
+ * All registers potentially significant
+ * %o7 return address
+ * %i1 function closure
+ */
+	PUBLIC	C_NAME(ml_event_check)
+C_NAME(ml_event_check):
+	EXTERN	C_NAME(ml_event_check_die):NEAR
+	call	C_NAME(ml_event_check_die)
+#if 0
+	save	%sp, -0x40, %sp		! Create extra frame
+	sethi	%hi(C_NAME(ml_state)), %o0
+	or	%o0, %lo(C_NAME(ml_state)), %o0
+	ld	[%o0+16], %g6		! Restore the real stack in %g6
+	mov	STACK_EVENT, %i1
+	mov	0, %o7			! Ensure o7 not mistaken for a return to ML
+	ML_to_C	C_NAME(ev_poll)
+	restore
+	jmp	%o7+8			! Do the rest of the disturbed function
+	nop
+#endif
+/*
+ * %o1 function closure
+ * %o7 function return address
+ * %g4 return address from here
+ */
+	PUBLIC	C_NAME(ml_event_check_leaf)
+C_NAME(ml_event_check_leaf):
+	EXTERN	C_NAME(ml_event_check_leaf_die):NEAR
+	call	C_NAME(ml_event_check_leaf_die)
+#if 0
+	save	%sp, -0x40, %sp		! Create a frame, so %i1 = function closure
+	mov	%g4, %o7		! Save return address
+
+/* Poll code */
+
+	save	%sp, -0x40, %sp		! Create extra frame
+	sethi	%hi(C_NAME(ml_state)), %o0
+	or	%o0, %lo(C_NAME(ml_state)), %o0
+	ld	[%o0+16], %g6		! Restore the real stack in %g6
+	mov	STACK_EVENT, %i1
+	ML_to_C	C_NAME(ev_poll)
+	restore
+	jmp	%o7+8			! Do the rest of the disturbed function
+	restore
+#endif
+
+/* === RAISE AN EXCEPTION FROM C === */
+/* This is an entry point to ml_raise which may be called from C. */
+
+	PUBLIC	C_NAME(c_raise)
+
+C_NAME(c_raise):
+
+/*
+ * Cut back to last ml frame, as saved in stub_c
+ * Raise argument is at -4(ESP)
+ * Rewind to previous ml_state.sp
+ */
+	load_ML_state C_NAME(ml_state), ecx, edx
+	mov	fnarg, 4[esp]		/* Place exception argument in fnarg */
+	mov	esp, 24[ecx]		/* Restore ml_state.sp */
+/*
+ * Clean caller save register
+ */
+	xor	ebp, ebp
+	push	ebp			/* Dummy element on frame */
+	/* \/\/ fall through \/\/ */
+
+/* 
+ * === RAISE AN EXCEPTION ===
+ *
+ * When an exception is raised the first exception handler function on
+ * the handler chain is called to deal with it.	If the handler
+ * function returns then the exception was handled.  In the context of
+ * the function in which the handler was created (the `creator') must
+ * be restored and that function continued.  Restore instructions are
+ * executed repeatedly until the current stack pointer matches the
+ * pointer that was stored in the handler record.
+ *
+ * There are some subtleties.  The stack may be disjoint, so, after
+ * crawling our way back up it the C function unwind_stack is called
+ * to deallocate an extensions that are no longer required.
+ *
+ * If the handler record is zero then the next handler is the top-level
+ * handler, and the C function handle() is called.  This returns iff a
+ * debugger is installed, and passes some information about where to
+ * find it.  In this case, the debugger is called, and that in turn
+ * returns instructions for what to do next.
+ *
+ * Handler record format:
+ *   -1	Previous handler
+ *    3	Stack pointer of creator
+ *    7	Handler function closure
+ *   11	Offset within creator of continuation code
+ *
+ * Parameters:
+ *   fnarg		The exception packet to raise
+ *   EDI		Current function's closure
+ *   implicit		Implicit vector
+ *   0(ESP)		Return address for resumption (not used at present, and not true for leaf)
+ *   64(implicit)	Exception handler record
+ *
+ *
+ * Warning. This code assumes that all procedures containing handler
+ * continuations are non-leaf. This is currently true because handlers
+ * are stack allocated.
+ *
+ */
+	PUBLIC	C_NAME(ml_raise)
+	PUBLIC	C_NAME(ml_raise_leaf)
+
+C_NAME(ml_raise):
+#if 0
+#ifdef COLLECT_STATS
+	sethi	%hi(C_NAME(raise_count)), %o1
+	or	%o1, %lo(C_NAME(raise_count)), %o1
+	ld	[%o1], %g4
+	add	%g4, 1, %g4
+	st	%g4, [%o1]
+#endif
+#endif
+	add	esp, 4		/* Throw away return address */
+	mov	ebp, IMPLICIT_handler[implicit]
+	mov	ebp, 7[ebp]		/* Get handler closure */
+	mov	ecx, -1[edi]		/* Get code vector */
+	mov	ecx, -1[ecx]		/* Get ancillary word from it */
+	shr	ecx, CCODE_SAVES_SHIFT	/* Move required part down */
+	and	ecx, CCODE_MAX_SAVES	/* Find number of callee saves */
+	add	ecx, 4		/* Add two for this part of the frame */
+	push	eax
+	push	edx			/* and two for these registers */
+	mov	ebp, ecx
+	copy_down ecx, eax, edx	/* Copy down callee saves and linkage */
+	shl	ebp, 2		/* size * 4 */
+	add	ebp, esp		/* Point to where to save old handler */
+/*
+ * Some stuff to do with sorting out sp values in handlers needed here
+ * Or maybe not...
+ */
+	mov	ecx, IMPLICIT_handler[implicit]
+	mov	0[ebp], ecx		/* Store away old handler pointer */
+	mov	ebp, 7[ecx]		/* Closure of handling function */
+	mov	eax, -1[ecx]		/* Previous handler */
+	mov	IMPLICIT_handler[implicit], eax	/* Install it */
+	mov	ecx, -1[ebp]		/* Code pointer of handling function */
+	add	ecx, CODE_OFFSET	/* Plus offset */
+	pop	edx
+	pop	eax			/* Straighten the stack */
+	call	ecx			/* Call the handler function */
+	mov	ebp, IMPLICIT_handler[implicit]
+	mov	ebp, 7[ebp]		/* Get handler closure */
+	mov	ecx, -1[edi]		/* Get code vector */
+	mov	ecx, -1[ecx]		/* Get ancillary word from it */
+	shr	ecx, CCODE_SAVES_SHIFT	/* Move required part down */
+	and	ecx, CCODE_MAX_SAVES	/* Find number of callee saves */
+	add	ecx, 4		/* Add two for this part of the frame */
+	push	eax
+	push	edx			/* and two for these registers */
+	mov	ebp, ecx
+	shl	ebp, 2		/* size * 4 */
+	add	ebp, esp		/* Point to where old handler was saved */
+	mov	eax, 0[ebp]		/* Get previous handler */
+	mov	IMPLICIT_handler[implicit], eax	/* And make it the current one */
+	mov	ebp, eax		/* Remember current handler */
+	copy_up	ecx, eax, edx	/* Copy up callee saves and frame */
+	pop	edx
+	pop	eax
+	mov	ecx, 3[ebp]		/* sp of creator function */
+	mov	ecx, 0[ecx]		/* And get its fp */
+	unwind_stack	raise		/*  Wind back to that frame, propagating result */
+	mov	ebp, IMPLICIT_handler[implicit]
+	mov	ecx, 11[ebp]		/* Fetch the offset of the continuation... */
+	shr	ecx, 2		/* Convert from tagged representation */
+	add	ecx, -1[edi]		/* Add in start of creator function */
+	add	ecx, CODE_OFFSET	/* Plus tag */
+	jmp	ecx			/* Back we go */
+
+C_NAME(ml_raise_leaf):
+#if 0
+#ifdef COLLECT_STATS
+	sethi	%hi(C_NAME(raise_count)), %o1
+	or	%o1, %lo(C_NAME(raise_count)), %o1
+	ld	[%o1], %g4
+	add	%g4, 1, %g4
+	st	%g4, [%o1]
+#endif
+#endif
+
+/* New code for stack extending when needed for leaf raise */
+/* If we leave this out, we get a raise apparently from the calling procedure */
+/* This seems ok */
+	add	esp, 4		/* Throw away one return address */
+	jmp	C_NAME(ml_raise)
+#if 0
+
+	sub	%sp, STACK_BUFFER+0x40, %g4	! Extension needed test
+	cmp	%g4, %g6		! The test
+	bcc	C_NAME(ml_raise)	! Branch if ok
+	ld	[%g5+IMPLICIT_extend], %g4
+	jmpl	%g4, %g4		! Extend stack
+	mov	STACK_BUFFER+0x40, %g7	! Required size
+	save	%sp, -0x40, %sp		! New frame on new stack
+	mov	%i0, %o0		! Argument to raise
+	ba	C_NAME(ml_raise)	! And as before (note handler continuation
+	mov	STACK_RAISE, %i1	! will unwind the stack extension)
+#endif
+
+/* === CAUSE A FATAL ERROR ===
+ *
+ * Expects an error format string to follow the call instruction and
+ * delay slot.
+ */
+
+#if 0
+error:	add	%o7, 8, %o0
+	ML_to_C	C_NAME(error)
+	ta	1
+#endif
+
+/*
+ * === CODE VECTOR REPLACEMENT AND INTERCEPTION ===
+ *
+ *
+ * When compiled for debugging, code vectors contain a sequence of
+ * three nop operations which can be replaced with code to intercept or
+ * replace the flow of control.  This is used to implement tracing,
+ * profiling, etc.
+ *
+ *  ml_intercept (ml_intercept_leaf) is jumped to by the instructions
+ * inserted into a code vector when it is to be intercepted (see
+ * `intercept_on' below).  It calls the C function `intercept', passing
+ * its parameter and closure (see intercept.c).  When `intercept'
+ * returns, the intercepted function is continued.
+ * 
+ * The above comments hold (mutatis mutandis) for 'replace'; in that
+ * case the intercepted function is abandoned.
+ *
+ * These four routines all live on the implicit vector.
+ *
+ *  Parameters:
+ *    %o0	parameter } of intercepted function
+ *    %o1	closure   }
+ *
+ * Return address is in %o7, or %g4 for leaf versions.
+ *
+ */
+	PUBLIC	C_NAME(ml_replace)
+	PUBLIC	C_NAME(ml_replace_leaf)
+	PUBLIC	C_NAME(ml_intercept)
+	PUBLIC	C_NAME(ml_intercept_leaf)
+
+C_NAME(ml_replace):
+	EXTERN	C_NAME(ml_replace_die):NEAR
+	call	C_NAME(ml_replace_die)
+#if 0
+	mov	%sp, %o0		! Pass frame to replace()
+	ML_to_C	C_NAME(replace)
+	ret
+	restore				! Pop callers frame
+#endif
+
+C_NAME(ml_replace_leaf):
+	EXTERN	C_NAME(ml_replace_leaf_die):NEAR
+	call	C_NAME(ml_replace_leaf_die)
+#if 0
+	save	%sp, -0x40, %sp		! Dummy frame for function
+	mov	%sp, %o0		! Pass frame to replace()
+	ML_to_C	C_NAME(replace)
+	ret				! Return to function caller
+	restore				! Throw away dummy frame
+#endif
+
+C_NAME(ml_intercept):
+	EXTERN	C_NAME(ml_intercept_die):NEAR
+	call	C_NAME(ml_intercept_die)
+#if 0
+	save	%sp, -0x40, %sp		! Local frame
+	mov	STACK_INTERCEPT, %i1	! Mark it
+	mov	%fp, %o0		! Pass frame to intercept()
+	ML_to_C	C_NAME(intercept)
+	ret				! Return to intercepted code
+	restore
+#endif
+
+C_NAME(ml_intercept_leaf):
+	EXTERN	C_NAME(ml_intercept_leaf_die):NEAR
+	call	C_NAME(ml_intercept_leaf_die)
+#if 0
+	save	%sp, -0x40, %sp		! Dummy frame for function
+	mov	%g4, %o7		! Pretend it called here
+	save	%sp, -0x40, %sp		! Local frame
+	mov	STACK_INTERCEPT, %i1	! Mark it
+	mov	%fp, %o0		! Pass frame to intercept()
+	ML_to_C	C_NAME(intercept)
+	restore
+	jmpl	%o7+8, %g0		! Back to caller...
+	restore				! ...removing its frame
+#endif
+
+/* == Replacement code ==
+ *
+ * These are sections of code which are inserted at the start of a code
+ * vector and altered to implement interception.  They are
+ * INTERCEPT_LENGTH words long (from tags.h); three in the SPARC case.
+ * 
+ * There are four interception code segments; for intercepting and
+ * replacing, for leaf and non-leaf functions. They call the relevant
+ * bit of code above (ml_intercept_on calls ml_intercept, for
+ * instance). ml_nop is the sequence of three special nops which are
+ * replaced by the intercepts; they are here so we can undo
+ * interception.
+ */
+
+	PUBLIC	C_NAME(ml_replace_on)
+	PUBLIC	C_NAME(ml_replace_on_leaf)
+	PUBLIC	C_NAME(ml_intercept_on)
+	PUBLIC	C_NAME(ml_intercept_on_leaf)
+	PUBLIC	C_NAME(ml_nop)
+
+C_NAME(ml_replace_on):
+	EXTERN	C_NAME(ml_replace_on_die):NEAR
+	call	C_NAME(ml_replace_on_die)
+#if 0
+	ld	[%g5+IMPLICIT_replace], %g4
+	jmpl	%g4, %o7
+	nop
+#endif
+
+C_NAME(ml_replace_on_leaf):
+	EXTERN	C_NAME(ml_replace_on_leaf_die):NEAR
+	call	C_NAME(ml_replace_on_leaf_die)
+#if 0
+	ld	[%g5+IMPLICIT_replace_leaf], %g4
+	jmpl	%g4, %g4
+	nop
+#endif
+
+C_NAME(ml_intercept_on):
+	EXTERN	C_NAME(ml_intercept_on_die):NEAR
+	call	C_NAME(ml_intercept_on_die)
+#if 0
+	ld	[%g5+IMPLICIT_intercept], %g4
+	jmpl	%g4, %o7
+	nop
+#endif
+
+C_NAME(ml_intercept_on_leaf):
+	EXTERN	C_NAME(ml_intercept_on_leaf_die):NEAR
+	call	C_NAME(ml_intercept_on_leaf_die)
+#if 0
+	ld	[%g5+IMPLICIT_intercept_leaf], %g4
+	jmpl	%g4, %g4
+	nop
+#endif
+
+C_NAME(ml_nop):
+	EXTERN	C_NAME(ml_nop_die):NEAR
+	call	C_NAME(ml_nop_die)
+#if 0
+	sethi	0, %g0		! These nops are used in mach_cg so that
+	sethi	0, %g0		! the scheduler does not move them.
+	sethi	0, %g0
+#endif
+
+/* This generates a debugger trap. */
+
+	PUBLIC	C_NAME(generate_debugger_trap)
+
+C_NAME(generate_debugger_trap):
+	nop
+#if 0
+	ta	1
+	nop
+#endif
+
+/* == GARBAGE COLLECTION ENTRY POINTS ==
+
+ * When a garbage collection is required, we cause a trap. See
+ * signals.c for the trap handler, which sets up some state on the C
+ * side before 'returning' to either gc_trap_entry or
+ * gc_trap_entry_leaf:
+
+	gc_trap_return_address now contains the address to which we
+		should return after the GC.
+
+	gc_trap_ret_code points to code which tags the destination
+		register and returns (see gc_trap_ret_template, below).
+
+	gc_trap_bytes contains the number of bytes requested, or -1 if
+		the number is in register g4.
+
+ * The allocation attempt has not yet modified any registers.
+
+ * We have to fake an entry to the portable function gc(), the
+ * arguments being the number of bytes requested and the closure of
+ * the calling function. On entry to gc(), ml_state.heap_start should
+ * point to the current allocation point plus the number of requested
+ * bytes.
+*/
+
+#if 0
+	PUBLIC	C_NAME(gc_trap_entry)
+
+C_NAME(gc_trap_entry):
+	EXTERN	C_NAME(gc_trap_entry_die):NEAR
+	call	C_NAME(gc_trap_entry_die)
+#if 0
+
+	mov	%i1, %g1			/* save closure */
+	save	%sp, -64, %sp			/* make ML stack frame */
+
+/* get return address into i7 so the stack frame looks normal */
+
+	mov	%i7, %l0			/* Preserve link reg in l0 */
+	sethi	%hi(C_NAME(gc_trap_return_address)), %o0
+	or	%o0, %lo(C_NAME(gc_trap_return_address)), %o0
+	ld	[%o0],%i7
+
+/* get number of bytes requested */
+
+	sethi	%hi(C_NAME(gc_trap_bytes)), %o0
+	or	%o0, %lo(C_NAME(gc_trap_bytes)), %o0
+	ld	[%o0], %o0			/* get 'bytes requested' */
+	addcc	%o0, 1, %g0			/* is it -1? */
+	beq,a	got_bytes
+	mov	%g4, %o0			/* if so, use %g4 instead */
+got_bytes:
+	add	%g2, %o0, %g2			/* add to GC_HEAP_START */
+	mov	%g1, %o1			/* get closure back */
+
+	store_ML_state(ml_state,%o2)		/* save ML state */
+	st	%sp, [%o2 + 28]			/* Save last ML frame for GC */
+	st	%sp, [%o2 + 32]			/* Save base of ML stack */
+
+	address_C_globals(c_state,%o3)		/* load C state */
+	ld	[%o3 + 28], %o4
+	save	%o4, -216, %sp			/* Switch to C stack */
+	store_fps(%sp+88)			/* save FP registers */
+	mov	%i0, %o0			/* number of bytes */
+	call	C_NAME(gc)			/* call GC ... */
+	mov	%i1, %o1			/* with closure */
+
+/* On exit from gc(), ml_state.heap_start and ml_state.heap_limit have
+ * been updated to reflect the new creation space, and ml_state.global
+ * contains the address at which bytes have been allocated. */
+
+/* We now have a tricky sequence, split between here and
+ * gc_trap_ret_template (below). WE need to enter that code with one
+ * restore still to do and with g1, g2, and g4 set in particular ways:
+*/
+
+	load_fps(%sp+88)
+	address_C_globals(c_state, %o2)
+	load_ML_state(ml_state, %o3, %o4)
+	mov	%o3, %g2			/* address of ml_state in g2 */
+	restore
+	
+/* The template for the return code has been copied to
+ * *gc_trap_ret_code */
+
+	sethi	%hi(C_NAME(gc_trap_ret_code)), %g1
+	or	%g1, %lo(C_NAME(gc_trap_ret_code)), %g1
+	ld	[%g1], %g1			/* code address in g1 */
+	mov	%i7, %g4			/* return address in g4 */
+	jmpl	%g1, %g0
+	mov	%l0, %i7			/* restore link register */
+#endif
+
+/* -------- end of gc_trap_entry ----------- */
+
+/* Code to return to ML after a GC. Note that this code is copied into
+  the data segment and the instruction at gc_trap_ret_template_overwrite
+  is overwritten with a result-tagging instruction. This code is
+  called from gc_trap_entry, above.
+
+  We enter this code with
+	%g4 = the return address,
+	%g2 = ml_state
+	%g1 = this code
+
+  We need to get the GC return value from the ml_state into g1, do a
+  restore, do the tagging operation, load g1 and g2 from the ml_state,
+  and return to g4. This sequence is carefully chosen to make sure we
+  get back to ML with all the registers correctly set (except g4).
+  */
+	PUBLIC	C_NAME(gc_trap_ret_template)
+	PUBLIC	C_NAME(gc_trap_ret_template_end)
+	PUBLIC	C_NAME(gc_trap_ret_template_overwrite)
+
+C_NAME(gc_trap_ret_template):
+	EXTERN	C_NAME(gc_trap_ret_template_die):NEAR
+	call	C_NAME(gc_trap_ret_template_die)
+#if 0
+	ld	[%g2+8], %g1
+	restore
+#endif
+C_NAME(gc_trap_ret_template_overwrite):
+	EXTERN	C_NAME(gc_trap_ret_template_overwrite_die):NEAR
+	call	C_NAME(gc_trap_ret_template_overwrite_die)
+#if 0
+	nop			/* this instr to be overwritten */
+	ret
+	ld	[%g2+24],%g1
+	ld	[%g2],%g2	
+	jmpl	%g4+8, %g0
+	clean_windows
+#endif
+C_NAME(gc_trap_ret_template_end):
+	EXTERN	C_NAME(gc_trap_ret_template_end_die):NEAR
+	call	C_NAME(gc_trap_ret_template_end_die)
+#if 0
+	nop
+#endif
+
+/* gc_trap_entry_leaf is almost identical to gc_trap_entry
+  (above). This is entered on return from the trap handler after an
+  allocation trap in a leaf function. */
+
+	PUBLIC	C_NAME(gc_trap_entry_leaf)
+
+C_NAME(gc_trap_entry_leaf):
+	EXTERN	C_NAME(gc_trap_entry_leaf_die):NEAR
+	call	C_NAME(gc_trap_entry_leaf_die)
+#if 0
+
+	save	%sp, -64, %sp			/* make ML stack frame */
+	mov	%i1, %o1			/* save closure */
+
+/* get return address into o7 so the stack frame looks normal */
+
+	sethi	%hi(C_NAME(gc_trap_return_address)), %o0
+	or	%o0, %lo(C_NAME(gc_trap_return_address)), %o0
+	ld	[%o0],%o7
+
+/* get number of bytes requested */
+
+	sethi	%hi(C_NAME(gc_trap_bytes)), %o0
+	or	%o0, %lo(C_NAME(gc_trap_bytes)), %o0
+	ld	[%o0], %o0			/* get 'bytes requested' */
+	addcc	%o0, 1, %g0			/* is it -1? */
+	beq,a	leaf_got_bytes
+	mov	%g4, %o0			/* if so, use %g4 instead */
+leaf_got_bytes:
+	add	%g2, %o0, %g2			/* add to GC_HEAP_START */
+	add	%g1, %o0, %g1			/* add to GC_HEAP_LIMIT */
+
+	store_ML_state(ml_state,%o2)		/* save ML state */
+	st	%sp, [%o2 + 32]			/* Save base of ML stack */
+
+	address_C_globals(c_state,%o3)		/* load C state */
+	ld	[%o3 + 28], %o4
+	save	%o4, -216, %sp			/* Switch to C stack */
+	st	%sp, [%i2 + 28]			/* Save last ML frame for GC */
+	store_fps(%sp+88)			/* save FP registers */
+	mov	%i0, %o0			/* number of bytes */
+	call	C_NAME(gc)			/* call GC ... */
+	mov	%i1, %o1			/* with closure */
+	load_fps(%sp+88)
+	address_C_globals(c_state, %o2)
+	load_ML_state(ml_state, %o3, %o4)
+	mov	%o3, %g2			/* address of ml_state in g2 */
+	restore
+	
+	sethi	%hi(C_NAME(gc_trap_ret_leaf_code)), %g1
+	or	%g1, %lo(C_NAME(gc_trap_ret_leaf_code)), %g1
+	ld	[%g1], %g1			/* code address in g1 */
+	jmpl	%g1, %g0
+	mov	%o7, %g4			/* return address in g4 */
+#endif
+
+/* Code to return to an ML leaf procedure after GC. As for
+  gc_trap_ret_template (above). Actually these two routines are
+  identical now; they are distinct in case we want to change one of
+  them later. */
+
+	PUBLIC	C_NAME(gc_trap_ret_leaf_template)
+	PUBLIC	C_NAME(gc_trap_ret_leaf_template_end)
+	PUBLIC	C_NAME(gc_trap_ret_leaf_template_overwrite)
+
+C_NAME(gc_trap_ret_leaf_template):
+	EXTERN	C_NAME(gc_trap_ret_leaf_template_die):NEAR
+	call	C_NAME(gc_trap_ret_leaf_template_die)
+#if 0
+	ld	[%g2+8], %g1
+	restore
+#endif
+C_NAME(gc_trap_ret_leaf_template_overwrite):
+	EXTERN	C_NAME(gc_trap_ret_leaf_template_overwrite_die):NEAR
+	call	C_NAME(gc_trap_ret_leaf_template_overwrite_die)
+#if 0
+	nop			/* this instr to be overwritten */
+	ld	[%g2+24],%g1
+	ld	[%g2],%g2	
+	jmpl	%g4+8, %g0
+	clean_windows
+#endif
+C_NAME(gc_trap_ret_leaf_template_end):
+	EXTERN	C_NAME(gc_trap_ret_leaf_template_end_die):NEAR
+	call	C_NAME(gc_trap_ret_leaf_template_end_die)
+#if 0
+	nop
+#endif
+#endif
+
+	END
+@

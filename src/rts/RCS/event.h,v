@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	92.10.23.10.19.16;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.10.23.10.19.16;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Asynchronous event handler
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*  ==== EVENT HANDLER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  The event handler deals with asynchronous events such as signals and
+ *  turns them into synchronous events that ML can deal with.  (ML can't be
+ *  interrupted in the middle of an allocation, for example.)
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ */
+
+#ifndef event_h
+#define event_h
+
+#include "mltypes.h"
+#include "tags.h"
+
+
+/*  === INITIALISE ===
+ *
+ *  This must be called before any other function in this module.  It may
+ *  declare global roots.
+ */
+
+extern void ev_init(void);
+
+
+/*  === POLL EVENTS ===
+ *
+ *  This function may be called to clear pending events.  It is usually
+ *  called by the ML interface code when it detects a pending event.
+ */
+
+extern void ev_poll(void);
+
+
+/*  === REGISTER A SIGNAL EVENT HANDLER ===
+ *
+ *  An ML function may be registered to be called when a signal occurs.  (In
+ *  fact, it will be called at the next `safe' opportunity, so this isn't
+ *  much good for SIGBUS etc.).
+ *
+ *  ev_signal takes a signal number (from signal.h) and the closure of an ML
+ *  function (int -> unit) to call.  It returns the previous handler
+ *  closure, or MLUNIT if there was none.  It returns ERROR and sets errno
+ *  if there was a problem.  The default action can be restored by passing
+ *  MLUNIT as the handler.
+ */
+
+enum /* values for errno */
+{
+  EEVSIGNAL = 1		/* illegal signal number */
+};
+
+extern mlval ev_signal(int sig, mlval handler);
+
+
+#endif
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d13 1
+a13 4
+ *  $Log: event.h,v $
+ *  Revision 1.1  1992/10/23  10:19:16  richard
+ *  Initial revision
+ *
+@

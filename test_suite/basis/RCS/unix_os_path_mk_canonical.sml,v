@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.15.08.08;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.mkCanonical.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = mkCanonical "" = ".";
+
+val b = mkCanonical "./." = ".";
+
+val c = mkCanonical "/." = "/";
+
+val d = mkCanonical ".." = "..";
+
+val e = mkCanonical "../.." = "../..";
+
+val f = mkCanonical "b" = "b";
+
+val g = mkCanonical "a/b" = "a/b";
+
+val h = mkCanonical "/a/b" = "/a/b";
+
+val i = mkCanonical "a/b/" = "a/b";
+
+val j = mkCanonical "a/b//" = "a/b";
+
+val k = mkCanonical "a/../b" = "b";
+
+val l = mkCanonical "a/.." = ".";
+
+val m = mkCanonical "a/." = "a";
+
+val n = mkCanonical "a/" = "a";
+
+val p = mkCanonical "/a/../b/" = "/b";
+
+val q = mkCanonical "/.." = "/";
+
+val r = mkCanonical "/../../a/b/" = "/a/b";
+
+val s = mkCanonical "/./../../a/b/" = "/a/b";
+
+val t = mkCanonical "/./../.." = "/";
+
+val u = mkCanonical "a/../b" = "b";
+
+val v = mkCanonical "a/./b" = "a/b";
+
+val w = mkCanonical "a////b" = "a/b";
+
+val x = mkCanonical "foo1//../..//foo2/bar.sml" = "../foo2/bar.sml";
+
+val y = mkCanonical "foo1.ext/./foo2/../bar.sml/" = "foo1.ext/bar.sml";
+
+val z = mkCanonical "//foo1/../../foo2/bar.sml" = "/foo2/bar.sml";
+@

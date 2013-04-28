@@ -1,0 +1,146 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	99.03.01.15.00.02;	author mitchell;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.07.22.09.56.31;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.25.19.05.12;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Put ML-Yacc port under version control
+@
+
+
+1.3
+log
+@[Bug #190510]
+Remove redundant require statements
+@
+text
+@require "sigs";
+require "_utils";
+require "$.basis.__int";
+
+(* ML-Yacc Parser Generator (c) 1989 Andrew W. Appel, David R. Tarditi *)
+
+functor mkCore(structure IntGrammar : INTGRAMMAR) : CORE =
+	struct
+		open IntGrammar
+		open  Grammar
+		structure IntGrammar = IntGrammar
+		structure Grammar = Grammar
+
+		datatype item = ITEM of
+				{ rule : rule,
+				  dot : int,
+				  rhsAfter : symbol list
+				}
+
+		val eqItem = fn (ITEM{rule=RULE{num=n,...},dot=d,...},
+				 ITEM{rule=RULE{num=m,...},dot=e,...}) =>
+					n=m andalso d=e
+
+		val gtItem =  fn (ITEM{rule=RULE{num=n,...},dot=d,...},
+				  ITEM{rule=RULE{num=m,...},dot=e,...}) =>
+					n>m orelse (n=m andalso d>e)
+
+		structure ItemList = ListOrdSet
+			(struct
+				type elem = item
+				val eq = eqItem
+				val gt = gtItem
+			end)
+		
+		open ItemList
+		datatype core = CORE of item list * int
+
+		val gtCore = fn (CORE (a,_),CORE (b,_)) => ItemList.set_gt(a,b)
+		val eqCore = fn (CORE (a,_),CORE (b,_)) => ItemList.set_eq(a,b)
+
+		(* functions for printing and debugging *)
+
+		 val prItem = fn (symbolToString,nontermToString,print) =>
+		   let val printInt = print o (Int.toString : int -> string)
+		       val prSymbol = print o symbolToString
+		       val prNonterm = print o nontermToString
+		       fun showRest nil = ()
+			 | showRest (h::t) = (prSymbol h; print " "; showRest t)
+		       fun showRhs (l,0) = (print ". "; showRest l)
+			 | showRhs (nil,_) = ()
+			 | showRhs (h::t,n) = (prSymbol h;
+					       print " ";
+					       showRhs(t,n-1))
+		   in fn (ITEM {rule=RULE {lhs,rhs,rulenum,num,...},
+				dot,rhsAfter,...}) =>
+			(prNonterm lhs; print " : "; showRhs(rhs,dot);
+		 	 case rhsAfter 
+			 of nil => (print " (reduce by rule "; 
+				    printInt rulenum;
+				    print ")")
+			  | _ => ();
+			  if DEBUG then 
+			     (print " (num "; printInt num; print ")")
+			  else ())
+		   end
+
+	         val prCore = fn a as (_,_,print) =>
+		    let val prItem = prItem a
+		    in fn (CORE (items,state)) =>
+			  (print "state ";
+			   print (Int.toString state);
+		   	   print ":\n\n";
+		   	   app (fn i => (print "\t";
+					 prItem i; print "\n")) items;
+			   print "\n")
+		    end
+end;
+@
+
+
+1.2
+log
+@[Bug #30412]
+Require single utils file (as standard) now functors in same compilation
+unit problem is fixed
+@
+text
+@a1 1
+require "__grammar";
+@
+
+
+1.1
+log
+@new unit
+Put ML-Yacc port under version control
+@
+text
+@a2 1
+(*
+a3 4
+*)
+require "_utilsa";
+require "_utilsb";
+require "_utilsc";
+@

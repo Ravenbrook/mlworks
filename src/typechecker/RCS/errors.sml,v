@@ -1,0 +1,195 @@
+head	1.5;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.4
+	Ten15_release_19-11-91:1.2
+	Ten15_release_21-08-91:1.2
+	Ten15_release_19-08-91:1.2
+	ten15_release:1.2;
+locks; strict;
+
+
+1.5
+date	92.09.02.15.43.53;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.08.12.13.08.03;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.51.31;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.07.11.13.59.04;	author colin;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.44.11;	author colin;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.09.02.15.43.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The error handler
+@
+
+
+1.5
+log
+@Installed central error reporting mechanism.
+@
+text
+@(* errors.sml the signature *)
+(*
+$Log: errors.sml,v $
+Revision 1.4  1992/08/12  13:08:03  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.3  1991/11/21  16:51:31  jont
+Added copyright message
+
+Revision 1.2  91/07/11  13:59:04  colin
+Added functions reset_error_count and error_count
+
+Revision 1.1  91/06/07  11:44:11  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../typechecker/basis";
+
+THIS FILE IS NO LONGER USED
+
+(**** The error handler ****)
+
+signature ERRORS =
+sig
+  structure Basis     : BASIS
+
+  (*****
+   The max number of errors allowed before compilation is stopped 
+   *****)
+
+  val max_errors : int ref
+
+  val reset_error_count : unit -> unit
+  val error_count : unit -> int
+
+  (*****
+  This exception is raised when we want to stop compilation.
+  *****)
+
+  exception Stop_compilation
+
+  (*****
+  The actions we can perform on entering the debugger.
+  *****)
+
+  type 'a action
+
+  (*****
+  This action always returns a fresh type variable as its result.
+  *****)
+
+  val return_alpha : Basis.Funenv.Phi.Sigma.Nameset.Datatypes.Type action
+
+  (*****
+  This action always returns its argument as its result.
+  *****)
+
+  and return_val : 'a -> 'a action
+
+  val announce_error :
+    Basis.Context -> 'a action -> string list -> 'a
+
+end;
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.5  1992/09/02  15:43:53  richard
+Installed central error reporting mechanism.
+
+@
+
+
+1.4
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d21 2
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	errors.sml,v $
+d15 1
+a15 1
+require "../typechecker/datatypes";
+a21 1
+  structure Datatypes : DATATYPES
+a22 1
+  sharing Basis.Datatypes = Datatypes	
+d49 1
+a49 1
+  val return_alpha : Datatypes.Type action
+@
+
+
+1.2
+log
+@Added functions reset_error_count and error_count
+@
+text
+@d1 1
+d4 3
+d10 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log$
+d23 3
+@

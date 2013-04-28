@@ -1,0 +1,231 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.07.08.15.00.00;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.11.26.18.49.04;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30329]
+Test of MonoArray2 (indirectly).
+@
+
+
+1.2
+log
+@[Bug #70106]
+Avoid printing large word values, translate to large int
+@
+text
+@val allreg : 'a -> {base: 'a, col: int, ncols: 'b option, nrows: 'c option, row: int} = fn
+val iprint : Word32Array2.array -> unit = fn
+val maken : (int * int) -> Word32Array2.array = fn
+val mkreg : ('a * 'b * 'c * 'd * 'e) -> {base: 'a, col: 'c, ncols: 'e option, nrows: 'd option, row: 'b} = fn
+tabulate RowMajor
+
+  0   1   2   3   4   5 
+  6   7   8   9   A   B 
+  C   D   E   F  10  11 
+ 12  13  14  15  16  17 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+tabulate ColMajor 
+
+  0   4   8   C  10  14 
+  1   5   9   D  11  15 
+  2   6   A   E  12  16 
+  3   7   B   F  13  17 
+
+  0   0   0   0   0   0 
+  1   1   1   1   1   1 
+  2   2   2   2   2   2 
+  3   3   3   3   3   3 
+
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+  0   1   2   3   4   5 
+val copytest : (int * int * int * int * int * int) -> unit = fn
+copy test
+
+  0   1   2   3   4   5   6   7 
+  8   9   A   B   C   D   E   F 
+ 10  11  12  13   0   1  16  17 
+ 18  19  1A  1B   8   9  1E  1F 
+ 20  21  22  23  10  11  26  27 
+ 28  29  2A  2B  2C  2D  2E  2F 
+
+  0   1   2   3   4   5   6   7 
+  8   9   A   B   C   D   E   F 
+  0   1  12  13  14  15  16  17 
+  8   9  1A  1B  1C  1D  1E  1F 
+ 10  11  22  23  24  25  26  27 
+ 28  29  2A  2B  2C  2D  2E  2F 
+
+ 12  13   2   3   4   5   6   7 
+ 1A  1B   A   B   C   D   E   F 
+ 22  23  12  13  14  15  16  17 
+ 18  19  1A  1B  1C  1D  1E  1F 
+ 20  21  22  23  24  25  26  27 
+ 28  29  2A  2B  2C  2D  2E  2F 
+
+  0   1   2   3   4   5   6   7 
+  8   0   1   2   C   D   E   F 
+ 10   8   9   A  14  15  16  17 
+ 18  10  11  12  1C  1D  1E  1F 
+ 20  21  22  23  24  25  26  27 
+ 28  29  2A  2B  2C  2D  2E  2F 
+
+  9   A   B   3   4   5   6   7 
+ 11  12  13   B   C   D   E   F 
+ 19  1A  1B  13  14  15  16  17 
+ 18  19  1A  1B  1C  1D  1E  1F 
+ 20  21  22  23  24  25  26  27 
+ 28  29  2A  2B  2C  2D  2E  2F 
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val it : string = "OK"
+val copytest2 : (int * int * int * int * int * int) -> unit = fn
+copy test2
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   1   0   0   0   0 
+  0   0   0   0   8   9   0   0   0   0 
+  0   0   0   0  10  11   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   1   0   0   0   0   0   0   0   0 
+  8   9   0   0   0   0   0   0   0   0 
+ 10  11   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+ 12  13   0   0   0   0   0   0   0   0 
+ 1A  1B   0   0   0   0   0   0   0   0 
+ 22  23   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   1   2   0   0   0   0   0   0 
+  0   8   9   A   0   0   0   0   0   0 
+  0  10  11  12   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+
+  9   A   B   0   0   0   0   0   0   0 
+ 11  12  13   0   0   0   0   0   0   0 
+ 19  1A  1B   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+  0   0   0   0   0   0   0   0   0   0 
+val it : string = "OK"
+app test
+0 1 2 3 4 5 6 7 8 9 A B C D E F 10 11 12 13 14 15 16 17 
+0 6 C 12 1 7 D 13 2 8 E 14 3 9 F 15 4 A 10 16 5 B 11 17 
+0 7 E 15 
+0 7 E 15 
+8 9 D F 13 14 
+D 13 8 14 9 F 
+modify test
+val it : unit = ()
+
+  0   2   4   6   8   A 
+  C   0  10  12  14  16 
+ 18  1A   0  1E  20  22 
+ 24  26  28   0  2C  2E 
+
+  0   1   2   3   4   5 
+  6   0  10  12  14   B 
+  C  1A   0  1E  20  11 
+ 12  26  28   0  2C  17 
+modify RowMajor
+
+  0   1   2   3   4   5 
+  6   7   8   9   A   B 
+  C   D   E   F  10  11 
+ 12  13  14  15  16  17 
+modify ColMajor
+
+  0   4   8   C  10  14 
+  1   5   9   D  11  15 
+  2   6   A   E  12  16 
+  3   7   B   F  13  17 
+fold test
+val fold1 : Int32.int list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ..]
+val fold2 : Int32.int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+val fold3 : string = "OK"
+val fold4 : string = "OK"
+val fold5 : string = "OK"
+val fold6 : Int32.int list = [0, 4, 8, 12, 1, 5, 9, 13, 2, 6, ..]
+@
+
+
+1.1
+log
+@new unit
+[Bug #30329]
+Test of MonoArray2 (indirectly).
+@
+text
+@d168 2
+a169 2
+val fold1 : LargeWord.word list = [0w0, 0w1, 0w2, 0w3, 0w4, 0w5, 0w6, 0w7, 0w8, 0w9, ..]
+val fold2 : LargeWord.word list = [0w0, 0w4, 0w8, 0w12, 0w1, 0w5, 0w9, 0w13, 0w2, 0w6, ..]
+d173 1
+a173 1
+val fold6 : LargeWord.word list = [0w0, 0w4, 0w8, 0w12, 0w1, 0w5, 0w9, 0w13, 0w2, 0w6, ..]
+@

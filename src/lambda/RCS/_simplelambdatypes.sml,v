@@ -1,0 +1,712 @@
+head	1.10;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.10.3.1.1
+	MLWorks_gui_1996_12_18:1.10.4
+	MLWorks_1_0_Win32_1996_12_17:1.10.3
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.10.1.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.10.1.1
+	MLWorks_1_0_Irix_1996_11_28:1.10.1.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.10.2
+	MLWorks_1_0_Unix_1996_11_14:1.10.1
+	MLWorks_Open_Beta2_1996_10_11:1.8.3
+	MLWorks_License_dev:1.8.2
+	MLWorks_1_open_beta_1996_09_13:1.8.1
+	MLWorks_Open_Beta_1996_08_22:1.8
+	MLWorks_Beta_1996_07_02:1.8
+	MLWorks_Beta_1996_06_07:1.8
+	MLWorks_Beta_1996_06_06:1.8
+	MLWorks_Beta_1996_06_05:1.8
+	MLWorks_Beta_1996_06_03:1.8
+	MLWorks_Beta_1996_05_31:1.8
+	MLWorks_Beta_1996_05_30:1.8;
+locks; strict;
+comment	@ * @;
+
+
+1.10
+date	96.11.06.11.02.44;	author matthew;	state Exp;
+branches
+	1.10.1.1
+	1.10.2.1
+	1.10.3.1
+	1.10.4.1;
+next	1.9;
+
+1.9
+date	96.10.09.19.55.05;	author io;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.04.30.16.31.18;	author jont;	state Exp;
+branches
+	1.8.1.1
+	1.8.2.1
+	1.8.3.1;
+next	1.7;
+
+1.7
+date	96.04.29.16.22.56;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.03.28.10.23.16;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.08.11.12.07.49;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.07.19.15.41.57;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.02.28.11.46.20;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.01.10.10.50.46;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.10.12.10.08.48;	author matthew;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	96.09.13.11.17.34;	author hope;	state Exp;
+branches;
+next	;
+
+1.8.2.1
+date	96.10.07.16.07.19;	author hope;	state Exp;
+branches;
+next	;
+
+1.8.3.1
+date	96.10.17.11.25.37;	author hope;	state Exp;
+branches;
+next	;
+
+1.10.1.1
+date	96.11.14.12.50.39;	author hope;	state Exp;
+branches
+	1.10.1.1.1.1;
+next	;
+
+1.10.1.1.1.1
+date	96.11.28.15.01.46;	author hope;	state Exp;
+branches;
+next	;
+
+1.10.2.1
+date	96.11.22.18.10.03;	author hope;	state Exp;
+branches;
+next	;
+
+1.10.3.1
+date	96.12.17.17.48.41;	author hope;	state Exp;
+branches
+	1.10.3.1.1.1;
+next	;
+
+1.10.3.1.1.1
+date	97.02.24.11.38.41;	author hope;	state Exp;
+branches;
+next	;
+
+1.10.4.1
+date	96.12.18.09.42.43;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.10
+log
+@[Bug #1728]
+__integer becomes __int
+@
+text
+@(*
+ * $Log: _simplelambdatypes.sml,v $
+ * Revision 1.9  1996/10/09  19:55:05  io
+ * [Bug #1614]
+ * basifying String
+ *
+ * Revision 1.8  1996/04/30  16:31:18  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.7  1996/04/29  16:22:56  matthew
+ * Changes to Integer
+ *
+ * Revision 1.6  1996/03/28  10:23:16  matthew
+ * Adding where type clause
+ *
+ * Revision 1.5  1995/08/11  12:07:49  daveb
+ * Added new types for different sizes of ints, words, and reals.
+ *
+ * Revision 1.4  1995/07/19  15:41:57  jont
+ * Change Ident.scon_eqrep to Scons.scon_eqval
+ *
+ * Revision 1.3  1995/02/28  11:46:20  matthew
+ * Changes to FunInfo
+ *
+ * Revision 1.2  1995/01/10  10:50:46  matthew
+ * Adding strings to VCC_TAG and IMM_TAG
+ *
+ * Revision 1.1  1994/10/12  10:08:48  matthew
+ * new file
+ *
+ *)
+require "../basis/__int";
+
+require "../utils/lists";
+require "../utils/crash";
+require "../main/pervasives";
+require "../basics/scons";
+require "../basics/identprint";
+require "lambdatypes";
+
+require "simplelambdatypes";
+
+functor SimpleTypes (structure Lists : LISTS
+                     structure Crash : CRASH
+                     structure Pervasives : PERVASIVES
+                     structure LambdaTypes : LAMBDATYPES where type LVar = int
+                     structure Scons : SCONS
+                     structure IdentPrint : IDENTPRINT
+                     sharing LambdaTypes.Ident = IdentPrint.Ident
+                     sharing type Pervasives.pervasive = LambdaTypes.Primitive
+		     sharing type IdentPrint.Ident.SCon = Scons.SCon
+                       ) : SIMPLETYPES =
+  struct
+    structure Ident = IdentPrint.Ident
+    structure Pervasives = Pervasives
+    structure LambdaTypes = LambdaTypes
+
+    open MLWorks.Option
+
+    type Type = LambdaTypes.Type
+
+    val crash = Crash.impossible
+
+    (* The language *)
+      
+    type var = int;
+      
+    datatype Status = ENTRY | BODY | FUNC
+      
+    datatype StructType = STRUCTURE | TUPLE | CONSTRUCTOR
+
+    datatype tag = 
+      VCC_TAG of string * int |
+      IMM_TAG of string * int |
+      SCON_TAG of Ident.SCon * int option |
+      EXP_TAG of exp
+      
+    and exp = 
+      VAR of var |
+      FN of var list * exp * Status * string * LambdaTypes.Type * LambdaTypes.FunInfo |
+      LET of (var * LambdaTypes.VarInfo ref option * exp) * exp |
+      LETREC of (var * LambdaTypes.VarInfo ref option) list * exp list * exp |
+      APP of exp * exp list * LambdaTypes.Type ref option |
+      SCON of LambdaTypes.Ident.SCon * int option |
+      INT of int |
+      SWITCH of exp * {num_vccs:int,num_imms:int} option * (tag * exp) list * exp option |
+      STRUCT of exp list * StructType |
+      SELECT of {index: int,size: int,selecttype: StructType} * exp |
+      RAISE of exp |
+      HANDLE of exp * exp * string |
+      BUILTIN of LambdaTypes.Primitive |
+      MLVALUE of MLWorks.Internal.Value.ml_value |
+
+      (* These are new ones *)
+      BUILTINAPP of LambdaTypes.Primitive * exp list * LambdaTypes.Type ref option
+
+
+    datatype Dec = 
+      VAL of exp |
+      FUNCTOR of var * string * ((var * LambdaTypes.VarInfo ref option * Dec) list * exp)
+      
+    datatype program =
+      PROGRAM of (var * LambdaTypes.VarInfo ref option * Dec) list * exp
+
+    (* This is incomplete -- used for simple expressions *)
+    fun exp_eq (VAR v,VAR v') = v = v'
+      | exp_eq (APP (e1,el,_),APP (e1',el',_)) = exp_eq (e1,e1') andalso explist_eq (el,el')
+      | exp_eq (SCON (s, _), SCON (s', _)) = Scons.scon_eqval(s,s')
+      | exp_eq (INT n, INT n') = n = n'
+      | exp_eq (STRUCT (el,ty),STRUCT (el',ty')) = ty = ty' andalso explist_eq (el,el')
+      | exp_eq (SELECT ({index=i,size=j,selecttype=ty},e), SELECT ({index=i',size=j',selecttype=ty'},e')) = 
+        ty = ty' andalso i = i' andalso j = j' andalso exp_eq (e,e')
+      | exp_eq (BUILTIN b,BUILTIN b') = b = b'
+      | exp_eq (BUILTINAPP (b,el,_),BUILTINAPP (b',el',_)) =
+        b = b' andalso explist_eq (el,el')
+      | exp_eq _ = false
+    and explist_eq ([],[]) = true
+      | explist_eq (e::el,e'::el') = exp_eq (e,e') andalso explist_eq (el,el')
+      | explist_eq _ = false
+
+    fun telfun f (EXP_TAG e, e') = (EXP_TAG (f e), f e')
+      | telfun f (t,e) = (t,f e)
+
+    (* Dispensers of unique ids *)
+    val new_valid = LambdaTypes.new_LVar
+
+(* Printing *)
+
+exception PrintExp
+
+val N = Int.toString
+
+fun print_var v = "v" ^ N v
+
+fun print_varlist vl =
+  let
+    fun aux [] = ""
+      | aux [a]=print_var a
+      | aux (a::l) = print_var a^","^aux l
+  in
+    "("^aux vl^")"
+  end
+
+fun indent level =
+  let
+    fun aux (0,acc) = acc
+      | aux (n,acc) = aux (n-1, #" " :: #" "::acc)
+  in
+    implode (#"\n" :: aux (level,[]))
+  end
+
+exception ExpTag
+
+fun print_builtin b = "<" ^ Pervasives.print_pervasive b ^ ">"
+
+fun iprint_exp (e,level,acc) =
+  case e of 
+    (* Simple expressions *)
+    INT n => N n :: acc
+  | SCON (s, _) => IdentPrint.printSCon s :: acc
+  | BUILTIN b => print_builtin b :: acc
+  | VAR var => print_var var :: acc
+  | APP (e,el,_) => print_explist (el,level,iprint_exp (e,level,acc))
+  | BUILTINAPP(b,el,_) => print_explist (el,level," " :: print_builtin b::acc)
+  | STRUCT ([],_) => "1" :: acc
+  | STRUCT (el,STRUCTURE) => print_explist (el,level,"structure " :: acc)
+  | STRUCT (el,TUPLE) => print_explist (el,level,"tuple " :: acc)
+  | STRUCT (el,CONSTRUCTOR) => print_explist (el,level,"cons " :: acc)
+  | SWITCH (e,info,tel,oe) => print_opte (oe, level+1,
+                                     print_tel (tel,level+1,indent (level+1)::" of ":: iprint_exp (e,level+1,"case " :: acc)))
+  | HANDLE (e1,e2,_) => iprint_exp (e2,level," handle ":: indent (level+1) :: iprint_exp (e1,level+1,acc))
+  | RAISE e => iprint_exp (e,level+1,"raise " :: acc)
+  | FN (vl,e,functorp,name,_,_) => iprint_exp (e,level+1," => "::
+                                     "]" :: name :: "[" ::
+                                     print_varlist vl::"fn "::indent level :: acc)
+  | LETREC (fl, vel,e) =>
+      "end" :: indent level :: iprint_exp (e,level+1, indent (level+1) :: "in" :: indent level :: print_flist (Lists.zip (fl,vel),level+1,"let rec "::acc))
+  | SELECT ({index,selecttype=STRUCTURE,...},e) =>
+      ")" :: iprint_exp (e,level, ", " :: N index :: "sselect(" :: acc)
+  | SELECT ({index,...},e) => 
+      ")" :: iprint_exp (e,level, ", " :: N index :: "select(" :: acc)
+  | LET _ => print_let (e,level,acc)
+  | MLVALUE _ => "<mlvalue>" :: acc
+
+and print_opte (NONE,level,acc) = acc
+  | print_opte (SOME e,level,acc) = iprint_exp (e,level,"_ => " :: indent level :: " |":: acc)
+
+and print_tel (l,level,acc) =
+    let fun print_one ((t,e),acc) =
+      iprint_exp (e, level+1," => " :: print_tag (t,level+1,acc))
+    in
+      case l of
+        [] => acc
+      | [x] => print_one (x,acc)
+      | (x::y) => print_tel (y,level, indent level :: " |" :: print_one (x,acc))
+    end
+
+and print_tag (VCC_TAG (_,i),level,acc) = N i :: "vcc " :: acc
+  | print_tag (IMM_TAG (_,i),level,acc) = N i :: "imm " :: acc
+  | print_tag (SCON_TAG (s, _),level,acc) = IdentPrint.printSCon s :: "scon " :: acc
+  | print_tag (EXP_TAG e,level,acc) = iprint_exp (e,level, "exp " :: acc)
+
+and print_flist ([],level,acc) = acc
+  | print_flist (((f,_),(FN (vl,e,_,name,_,_)))::l,level,acc) =
+    print_flist (l,level," " :: iprint_exp (e,level," = "::"*)"::name::"(*"::print_varlist vl::print_var f::acc))
+  | print_flist ((f,_)::l,level,acc) = crash "Bad exp in letrec"
+
+and print_explist (el,level,acc) =
+  let
+    fun aux ([],acc) = ")"::acc
+      | aux ([e],acc) = ")"::iprint_exp (e,level,acc)
+      | aux (e::el,acc) = aux(el,","::iprint_exp(e,level,acc))
+  in
+    aux (el,"("::acc)
+  end
+
+and print_let (e,level,acc) =
+  let
+    fun aux (e,acc) =
+      case e of
+        LET ((v,_,FN (args,body,status,name,_,_)),e2) =>
+          aux (e2," " :: iprint_exp (body,
+                                     level+2,
+                                     " = "::"]"::name::"["::print_varlist args::" "::print_var v::(case status of FUNC => "functor " | _ => "fun ")
+                                     ::indent(level+1)::acc))
+      | LET ((v,_,e1),e2) =>
+          aux (e2," " :: iprint_exp (e1,level+2," = "::print_var v::"val "::indent(level+1)::acc))
+      | e => "end " :: indent level :: iprint_exp (e,level+2,indent (level+1)::"in"::indent level :: acc)
+  in
+    case e of
+      LET _ => aux (e,"let "::indent level :: acc)
+    | _ => iprint_exp (e,level,acc)
+  end
+
+fun print_exp e = concat (rev (iprint_exp (e,0,[])))
+
+fun to_expression ([],exp) = exp
+  | to_expression ((v,i,dec)::rest,exp) =
+    LET ((v,i,dec_to_expression dec),
+         to_expression (rest,exp))
+and dec_to_expression (VAL e) = e
+  | dec_to_expression (FUNCTOR (arg,name,body)) =
+    FN ([arg],to_expression body,FUNC,name,LambdaTypes.null_type_annotation,LambdaTypes.user_funinfo)
+  
+fun pds (PROGRAM p) = concat (rev (print_let (to_expression p,0,[])))
+fun pde e = concat (rev (print_let (e,0,[])))
+
+(* End of printing *)
+
+end
+@
+
+
+1.10.4.1
+log
+@branched from 1.10
+@
+text
+@a2 4
+ * Revision 1.10  1996/11/06  11:02:44  matthew
+ * [Bug #1728]
+ * __integer becomes __int
+ *
+@
+
+
+1.10.3.1
+log
+@branched from 1.10
+@
+text
+@a2 4
+ * Revision 1.10  1996/11/06  11:02:44  matthew
+ * [Bug #1728]
+ * __integer becomes __int
+ *
+@
+
+
+1.10.3.1.1.1
+log
+@branched from 1.10.3.1
+@
+text
+@a2 3
+ * Revision 1.10.3.1  1996/12/17  17:48:41  hope
+ * branched from 1.10
+ *
+@
+
+
+1.10.2.1
+log
+@branched from 1.10
+@
+text
+@a2 4
+ * Revision 1.10  1996/11/06  11:02:44  matthew
+ * [Bug #1728]
+ * __integer becomes __int
+ *
+@
+
+
+1.10.1.1
+log
+@branched from 1.10
+@
+text
+@a2 4
+ * Revision 1.10  1996/11/06  11:02:44  matthew
+ * [Bug #1728]
+ * __integer becomes __int
+ *
+@
+
+
+1.10.1.1.1.1
+log
+@branched from 1.10.1.1
+@
+text
+@a2 3
+ * Revision 1.10.1.1  1996/11/14  12:50:39  hope
+ * branched from 1.10
+ *
+@
+
+
+1.9
+log
+@[Bug #1614]
+basifying String
+@
+text
+@d3 4
+d35 1
+a35 1
+require "../basis/__integer";
+@
+
+
+1.8
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@d3 6
+d146 1
+a146 1
+      | aux (n,acc) = aux (n-1,"  "::acc)
+d148 1
+a148 1
+    String.implode ("\n" :: aux (level,[]))
+d234 1
+a234 1
+fun print_exp e = String.implode (rev (iprint_exp (e,0,[])))
+d244 2
+a245 2
+fun pds (PROGRAM p) = String.implode (rev (print_let (to_expression p,0,[])))
+fun pde e = String.implode (rev (print_let (e,0,[])))
+@
+
+
+1.8.3.1
+log
+@branched from 1.8
+@
+text
+@a2 6
+ * Revision 1.8  1996/04/30  16:31:18  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+@
+
+
+1.8.2.1
+log
+@branched from 1.8
+@
+text
+@a2 6
+ * Revision 1.8  1996/04/30  16:31:18  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+@
+
+
+1.8.1.1
+log
+@branched from 1.8
+@
+text
+@a2 6
+ * Revision 1.8  1996/04/30  16:31:18  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+@
+
+
+1.7
+log
+@Changes to Integer
+@
+text
+@d3 3
+d142 1
+a142 1
+    implode ("\n" :: aux (level,[]))
+d228 1
+a228 1
+fun print_exp e = implode (rev (iprint_exp (e,0,[])))
+d238 2
+a239 2
+fun pds (PROGRAM p) = implode (rev (print_let (to_expression p,0,[])))
+fun pde e = implode (rev (print_let (e,0,[])))
+@
+
+
+1.6
+log
+@Adding where type clause
+@
+text
+@d3 3
+d22 2
+a23 1
+require "../utils/integer";
+d33 1
+a33 2
+functor SimpleTypes (structure Integer : INTEGER
+                     structure Lists : LISTS
+d121 3
+a123 1
+fun print_var v = "v" ^ Integer.makestring v
+d149 1
+a149 1
+    INT n => Integer.makestring n :: acc
+d169 1
+a169 1
+      ")" :: iprint_exp (e,level, ", " :: Integer.makestring index :: "sselect(" :: acc)
+d171 1
+a171 1
+      ")" :: iprint_exp (e,level, ", " :: Integer.makestring index :: "select(" :: acc)
+d188 2
+a189 2
+and print_tag (VCC_TAG (_,i),level,acc) = Integer.makestring i :: "vcc " :: acc
+  | print_tag (IMM_TAG (_,i),level,acc) = Integer.makestring i :: "imm " :: acc
+@
+
+
+1.5
+log
+@Added new types for different sizes of ints, words, and reals.
+@
+text
+@d3 3
+d33 1
+a33 1
+                     structure LambdaTypes : LAMBDATYPES
+a37 1
+                     sharing type LambdaTypes.LVar = int
+@
+
+
+1.4
+log
+@Change Ident.scon_eqrep to Scons.scon_eqval
+@
+text
+@d3 3
+d60 1
+a60 1
+      SCON_TAG of Ident.SCon |
+d66 2
+a67 2
+      LET of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * exp) * exp |
+      LETREC of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt) list * exp list * exp |
+d69 1
+a69 1
+      SCON of LambdaTypes.Ident.SCon |
+d85 1
+a85 1
+      FUNCTOR of var * string * ((var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp)
+d88 1
+a88 1
+      PROGRAM of (var * LambdaTypes.VarInfo ref LambdaTypes.Option.opt * Dec) list * exp
+d93 1
+a93 1
+      | exp_eq (SCON s, SCON s') = Scons.scon_eqval(s,s')
+d143 1
+a143 1
+  | SCON s => IdentPrint.printSCon s :: acc
+d183 1
+a183 1
+  | print_tag (SCON_TAG s,level,acc) = IdentPrint.printSCon s :: "scon " :: acc
+@
+
+
+1.3
+log
+@Changes to FunInfo
+@
+text
+@d2 11
+a12 8
+$Log: _simplelambdatypes.sml,v $
+# Revision 1.2  1995/01/10  10:50:46  matthew
+# Adding strings to VCC_TAG and IMM_TAG
+#
+# Revision 1.1  1994/10/12  10:08:48  matthew
+# new file
+#
+*)
+d17 1
+d28 1
+d33 1
+d90 1
+a90 1
+      | exp_eq (SCON s, SCON s') = Ident.scon_eqrep (s,s')
+@
+
+
+1.2
+log
+@Adding strings to VCC_TAG and IMM_TAG
+@
+text
+@d3 3
+d56 1
+a56 1
+      FN of var list * exp * Status * string * LambdaTypes.Type * LambdaTypes.FunInfo LambdaTypes.Option.opt |
+d217 1
+a217 1
+    FN ([arg],to_expression body,FUNC,name,LambdaTypes.null_type_annotation,LambdaTypes.Option.ABSENT)
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d3 3
+d46 2
+a47 2
+      VCC_TAG of int |
+      IMM_TAG of int |
+d65 1
+d154 1
+d169 2
+a170 2
+and print_tag (VCC_TAG i,level,acc) = Integer.makestring i :: "vcc " :: acc
+  | print_tag (IMM_TAG i,level,acc) = Integer.makestring i :: "imm " :: acc
+@

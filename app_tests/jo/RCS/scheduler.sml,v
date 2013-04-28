@@ -1,0 +1,120 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	98.06.08.13.16.06;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.04.20.10.38;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(*		Jo: A Concurrent Constraint Programming Language
+			(Programming for the 1990s)
+
+			     Andrew Wilson
+
+
+			   Scheduler for Baby-Jo
+
+			    19th November 1990
+
+                              the signature
+
+Version of July 1996, modified to use Harlequin MLWorks separate
+compilation system.
+*)
+
+
+
+signature SCHEDULER =
+sig
+  type object
+  type constraint
+  type agent
+  type clause
+  type context
+  type condition
+  type word
+
+   (****************** PROCESS types **********************************)
+
+  datatype process = 
+	alternative of bool ref		(* ensure only one branch done*)
+		     * int ref		(* ensure at least one branch done*)
+		     * agent
+		     * context
+		     * bool ref		(* traced? *)
+
+      | guarded of condition * context * agent * bool ref
+      | selection of condition * context * agent * bool ref
+
+      | altGuard of bool ref * int ref * condition * context * agent
+		   * bool ref
+
+      | arithWait of object * object list ref * constraint * context
+		    * bool ref
+
+      | exec of agent * context * bool ref
+
+      | procAlt of   string * bool ref * int ref * object list
+		    * object list * int * agent * context * bool ref
+
+      | procGuard of string * bool ref * int ref * object list
+		    * object ref list * object list * object ref list
+		    * int * context * agent * bool ref
+
+  val processToWords: process -> word list
+
+
+
+   (***************** SCHEDULER manipulation functions *******************)
+  exception QueueEmpty
+
+  val take: unit -> process
+  val give: process -> unit
+  val wipeSchedule: unit -> unit
+  val suspend: process * int -> int
+  val awake: int -> unit
+  val suspended: unit -> process list list
+  val deSuspend: unit -> unit
+end;
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope
+@
+text
+@@

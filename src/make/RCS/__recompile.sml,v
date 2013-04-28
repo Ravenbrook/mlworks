@@ -1,0 +1,217 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.7
+date	94.12.08.17.46.17;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.02.01.16.36.13;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.08.16.11.38.21;	author daveb;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	93.03.11.12.50.26;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.10.29.15.45.46;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.08.10.11.44.56;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.22.14.38.12;	author jont;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	93.08.16.11.38.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Batch recompilation system
+@
+
+
+1.7
+log
+@Move OS specific stuff into a system link directory
+@
+text
+@(* __recompile.sml the structure *)
+(*
+$Log: __recompile.sml,v $
+Revision 1.6  1994/02/01  16:36:13  daveb
+Replaced UnixFileName_ with Module_.
+
+Revision 1.5  1993/08/16  11:38:21  daveb
+Added FileName and ModuleId parameters.
+
+Revision 1.4  1993/03/11  12:50:26  matthew
+Signature revisions
+
+Revision 1.3  1992/10/29  15:45:46  richard
+Added Diagnostic parameter.
+
+Revision 1.2  1992/08/10  11:44:56  davidt
+String structure is now pervasive.
+
+Revision 1.1  1992/07/22  14:38:12  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/__print";
+require "../utils/__btree";
+require "../utils/__lists";
+require "../utils/__crash";
+require "../utils/_diagnostic";
+require "../utils/__text";
+require "../basics/__module";
+require "../basics/__module_id";
+require "../lexer/__lexer";
+require "../system/__os";
+require "../main/__encapsulate";
+require "../main/__toplevel";
+require "../main/__io";
+require "_recompile";
+
+structure Recompile_ = Recompile(
+  structure Print = Print_
+  structure NewMap = BTree_
+  structure Lists = Lists_
+  structure Crash = Crash_
+  structure Lexer = Lexer_
+  structure Os = Os_
+  structure Module = Module_
+  structure ModuleId = ModuleId_
+  structure Encapsulate = Encapsulate_
+  structure TopLevel = TopLevel_
+  structure Io = Io_
+  structure Diagnostic = Diagnostic (structure Text = Text_)
+)
+@
+
+
+1.6
+log
+@Replaced UnixFileName_ with Module_.
+@
+text
+@d4 3
+d34 1
+a34 1
+require "../make/__unix";
+d46 1
+a46 1
+  structure Unix = Unix_
+@
+
+
+1.5
+log
+@Added FileName and ModuleId parameters.
+@
+text
+@d4 3
+d28 1
+a28 1
+require "../utils/__unixfilename";
+d44 1
+a44 1
+  structure FileName = UnixFileName_
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.5  1993/08/16  11:38:21  daveb
+Added FileName and ModuleId parameters.
+
+@
+
+
+1.4
+log
+@Signature revisions
+@
+text
+@d4 3
+d25 2
+d31 1
+a31 1
+require "../main/__io.sml";
+d41 2
+@
+
+
+1.3
+log
+@Added Diagnostic parameter.
+@
+text
+@d4 3
+d22 1
+d34 1
+@
+
+
+1.2
+log
+@String structure is now pervasive.
+@
+text
+@d4 3
+d17 2
+d34 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+a11 1
+require "../utils/__string";
+a22 1
+  structure String = String_
+@

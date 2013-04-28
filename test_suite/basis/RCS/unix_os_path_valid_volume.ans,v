@@ -1,0 +1,280 @@
+head	1.4;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.4
+	MLWorks_Beta_1996_06_06:1.4
+	MLWorks_Beta_1996_06_05:1.4
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	96.06.05.02.19.51;	author io;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.30.15.47.49;	author stephenb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.24.10.48.57;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.22.11.26.25;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.4
+log
+@stringcvt->string_cvt
+@
+text
+@val it : unit = ()
+Compiling basis.general
+Compiling basis.__general
+Compiling basis.toplevel
+Compiling basis.string_cvt
+Compiling basis.__pre_basis
+Compiling basis.__pre_string_cvt
+Compiling basis.__string_cvt
+Compiling basis.__preinteger
+Compiling basis.__preint32
+Compiling basis.integer
+Compiling basis.__integer
+Compiling basis.__position
+Compiling basis.char
+Compiling basis.__char
+Compiling basis.math
+Compiling basis.__math
+Compiling basis.ieeereal
+Compiling basis.__ieeereal
+Compiling basis.__prereal
+Compiling basis.real
+Compiling basis.__real
+Compiling basis.time
+Compiling unix.__time
+Compiling basis.os_file_sys
+Compiling basis.os_path
+Compiling basis.os_process
+Compiling basis.os_io
+Compiling basis.os
+Compiling basis.__preword32
+Compiling basis.__preword
+Compiling basis.word
+Compiling basis.__word32
+Compiling unix.unixos
+Compiling unix._os
+Compiling unix._unixos
+Compiling unix.__unixos
+Compiling basis.list
+Compiling basis.__list
+Compiling basis.string
+Compiling basis.__string
+Compiling unix.__os_path
+Compiling basis.__word
+Compiling unix._os_file_sys
+Compiling unix.__os_file_sys
+Compiling basis.__exit
+Compiling basis.exit
+Compiling basis._os_process
+Compiling basis.__os_process
+Compiling unix._os_io
+Compiling unix.__os_io
+Compiling unix.__os
+structure OS =
+  struct
+    structure FileSys =
+      struct
+        datatype access_mode =
+          A_EXEC |
+          A_READ |
+          A_WRITE
+        eqtype dirstream = dirstream
+        eqtype file_id = file_id
+        val A_EXEC : OS.FileSys.access_mode
+        val A_READ : OS.FileSys.access_mode
+        val A_WRITE : OS.FileSys.access_mode
+        val access : (string * OS.FileSys.access_mode list) -> bool = fn
+        val chDir : string -> unit = fn
+        val closeDir : OS.FileSys.dirstream -> unit = fn
+        val compare : (OS.FileSys.file_id * OS.FileSys.file_id) -> order(hidden) = fn
+        val fileId : string -> OS.FileSys.file_id = fn
+        val fileSize : string -> int = fn
+        val fullPath : string -> string = fn
+        val getDir : unit -> string = fn
+        val hash : OS.FileSys.file_id -> word = fn
+        val isDir : string -> bool = fn
+        val isLink : string -> bool = fn
+        val mkDir : string -> unit = fn
+        val modTime : string -> time(hidden) = fn
+        val openDir : string -> OS.FileSys.dirstream = fn
+        val readDir : OS.FileSys.dirstream -> string = fn
+        val readLink : string -> string = fn
+        val realPath : string -> string = fn
+        val remove : string -> unit = fn
+        val rename : {new: string, old: string} -> unit = fn
+        val rewindDir : OS.FileSys.dirstream -> unit = fn
+        val rmDir : string -> unit = fn
+        val setTime : (string * time(hidden) MLWorks.Option.option) -> unit = fn
+        val tmpName : unit -> string = fn
+      end
+    structure IO =
+      struct
+        structure Kind = struct ... end
+        eqtype io_desc = file_desc
+        eqtype io_desc_kind = io_desc_kind
+        eqtype poll_desc = poll_desc
+        eqtype poll_info = poll_info
+        exception Poll
+        val compare : (OS.IO.io_desc * OS.IO.io_desc) -> order(hidden) = fn
+        val hash : OS.IO.io_desc -> word = fn
+        val infoToPollDesc : OS.IO.poll_info -> OS.IO.poll_desc = fn
+        val isIn : OS.IO.poll_info -> bool = fn
+        val isOut : OS.IO.poll_info -> bool = fn
+        val isPri : OS.IO.poll_info -> bool = fn
+        val kind : OS.IO.io_desc -> OS.IO.io_desc_kind = fn
+        val poll : (OS.IO.poll_desc list * time(hidden) MLWorks.Option.option) -> OS.IO.poll_info list = fn
+        val pollDesc : OS.IO.io_desc -> OS.IO.poll_desc MLWorks.Option.option = fn
+        val pollIn : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollOut : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollPri : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+        val pollToIODesc : OS.IO.poll_desc -> OS.IO.io_desc = fn
+      end
+    structure Path =
+      struct
+        exception Path
+        val base : string -> string = fn
+        val concat : (string * string) -> string = fn
+        val currentArc : string = "."
+        val dir : string -> string = fn
+        val ext : string -> string MLWorks.Option.option = fn
+        val file : string -> string = fn
+        val fromString : string -> {arcs: string list, isAbs: bool, vol: string} = fn
+        val getParent : string -> string = fn
+        val getVolume : string -> string = fn
+        val isAbsolute : string -> bool = fn
+        val isCanonical : string -> bool = fn
+        val isRelative : string -> bool = fn
+        val isRoot : string -> bool = fn
+        val joinBaseExt : {base: string, ext: string MLWorks.Option.option} -> string = fn
+        val joinDirFile : {dir: string, file: string} -> string = fn
+        val mkAbsolute : (string * string) -> string = fn
+        val mkCanonical : string -> string = fn
+        val mkRelative : (string * string) -> string = fn
+        val parentArc : string = ".."
+        val splitBaseExt : string -> {base: string, ext: string MLWorks.Option.option} = fn
+        val splitDirFile : string -> {dir: string, file: string} = fn
+        val toString : {arcs: string list, isAbs: bool, vol: string} -> string = fn
+        val validVolume : {isAbs: bool, vol: string} -> bool = fn
+      end
+    structure Process =
+      struct
+        eqtype status = int
+        val atExit : (unit -> unit) -> unit = fn
+        val exit : int -> 'a = fn
+        val failure : int = 1
+        val getEnv : string -> string MLWorks.Option.option = fn
+        val success : int = 0
+        val system : string -> int = fn
+        val terminate : int -> 'a = fn
+      end
+    eqtype syserror = int
+    exception SysErr of (string * syserror option)
+    val errorMsg : int -> string = fn
+    val errorName : int -> string = fn
+    val syserror : string -> int MLWorks.Option.option = fn
+  end
+exception Path
+val base : string -> string = fn
+val concat : (string * string) -> string = fn
+val currentArc : string = "."
+val dir : string -> string = fn
+val ext : string -> string MLWorks.Option.option = fn
+val file : string -> string = fn
+val fromString : string -> {arcs: string list, isAbs: bool, vol: string} = fn
+val getParent : string -> string = fn
+val getVolume : string -> string = fn
+val isAbsolute : string -> bool = fn
+val isCanonical : string -> bool = fn
+val isRelative : string -> bool = fn
+val isRoot : string -> bool = fn
+val joinBaseExt : {base: string, ext: string MLWorks.Option.option} -> string = fn
+val joinDirFile : {dir: string, file: string} -> string = fn
+val mkAbsolute : (string * string) -> string = fn
+val mkCanonical : string -> string = fn
+val mkRelative : (string * string) -> string = fn
+val parentArc : string = ".."
+val splitBaseExt : string -> {base: string, ext: string MLWorks.Option.option} = fn
+val splitDirFile : string -> {dir: string, file: string} = fn
+val toString : {arcs: string list, isAbs: bool, vol: string} -> string = fn
+val validVolume : {isAbs: bool, vol: string} -> bool = fn
+val a : bool = true
+val b : bool = true
+val c : bool = true
+val d : bool = true
+val e : bool = true
+val f : bool = true
+val g : bool = true
+@
+
+
+1.3
+log
+@The list of files loaded has changed due to new Timer implementation.
+@
+text
+@d5 4
+a8 3
+Compiling basis.stringcvt
+Compiling basis.__pre_char
+Compiling basis.__stringcvt
+@
+
+
+1.2
+log
+@Output has changed due to change in OS.IO and TIME signature.
+@
+text
+@d13 9
+a38 2
+Compiling basis.char
+Compiling basis.__char
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@a27 3
+Compiling basis.__word
+Compiling unix._os_file_sys
+Compiling unix.__os_file_sys
+d35 3
+d86 1
+a86 1
+        eqtype iodesc_kind = iodesc_kind
+a92 1
+        val isErr : OS.IO.poll_info -> bool = fn
+d95 2
+a96 1
+        val kind : OS.IO.io_desc -> OS.IO.iodesc_kind = fn
+a98 1
+        val pollErr : OS.IO.poll_desc -> OS.IO.poll_desc = fn
+d101 1
+@

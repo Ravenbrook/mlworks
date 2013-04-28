@@ -1,0 +1,270 @@
+head	1.6;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.6.1
+	MLWorks_21c0_1999_03_25:1.6;
+locks; strict;
+comment	@# @;
+
+
+1.6
+date	99.03.09.15.02.58;	author clive;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	99.02.16.13.55.34;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	99.02.04.12.49.34;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	99.02.04.11.35.30;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	99.02.02.17.14.08;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	99.02.02.16.41.08;	author clive;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	99.04.01.17.52.58;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Lexer definitions for IDL
+@
+
+
+1.6
+log
+@[Bug #170104]
+Keep a record of pragma forms as we pass them
+@
+text
+@(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.5 1999/02/16 13:55:34 clive Exp $" *)
+
+type pos = int;
+type svalue = Tokens.svalue
+type ('a,'b) token = ('a,'b) Tokens.token
+type lexresult= (svalue,pos) token
+
+val linenum = ref (0);
+val eof = fn () => Tokens.EOF(!linenum,!linenum)
+
+exception IllegalChar of string;
+
+%%
+%s C L;
+%header (require "idl_grm"; 
+         functor IDLLexFun(structure Tokens: IDL_TOKENS));
+idstart=[a-zA-Z];
+idrest=[a-zA-Z0-9_];
+id={idstart}{idrest}*;
+ws=[\t\ ]*;
+num=[0-9]+;
+%%
+<INITIAL>{ws}	=> (lex());
+<INITIAL>\n	=> (linenum := !linenum + 1; lex());
+<INITIAL>\"([^\"]*)\" => (Tokens.STRING_LITERAL(yytext,!linenum, !linenum));
+<INITIAL>"abstract" => (Tokens.ABSTRACT(!linenum, !linenum));
+<INITIAL>"any" => (Tokens.ANY(!linenum, !linenum));
+<INITIAL>"attribute" => (Tokens.ATTRIBUTE(!linenum, !linenum));
+<INITIAL>"boolean" => (Tokens.BOOLEAN(!linenum, !linenum));
+<INITIAL>"case" => (Tokens.CASE(!linenum, !linenum));
+<INITIAL>"char" => (Tokens.CHAR(!linenum, !linenum));
+<INITIAL>"const" => (Tokens.CONST(!linenum, !linenum));
+<INITIAL>"context" => (Tokens.CONTEXT(!linenum, !linenum));
+<INITIAL>"custom" => (Tokens.CUSTOM(!linenum, !linenum));
+<INITIAL>"default" => (Tokens.DEFAULT(!linenum, !linenum));
+<INITIAL>"double" => (Tokens.DOUBLE(!linenum, !linenum));
+<INITIAL>"enum" => (Tokens.ENUM(!linenum, !linenum));
+<INITIAL>"exception" => (Tokens.EXCEPTION(!linenum, !linenum));
+<INITIAL>"FALSE" => (Tokens.FALSE(!linenum, !linenum));
+<INITIAL>"float" => (Tokens.FLOAT(!linenum, !linenum));
+<INITIAL>"in" => (Tokens.IN(!linenum, !linenum));
+<INITIAL>"init" => (Tokens.INIT(!linenum, !linenum));
+<INITIAL>"inout" => (Tokens.INOUT(!linenum, !linenum));
+<INITIAL>"interface" => (Tokens.INTERFACE(!linenum, !linenum));
+<INITIAL>"long" => (Tokens.LONG(!linenum, !linenum));
+<INITIAL>"module" => (Tokens.MODULE(!linenum, !linenum));
+<INITIAL>"Object" => (Tokens.OBJECT(!linenum, !linenum));
+<INITIAL>"octet" => (Tokens.OCTET(!linenum, !linenum));
+<INITIAL>"oneway" => (Tokens.ONEWAY(!linenum, !linenum));
+<INITIAL>"out" => (Tokens.OUT(!linenum, !linenum));
+<INITIAL>"private" => (Tokens.PRIVATE(!linenum, !linenum));
+<INITIAL>"public" => (Tokens.PUBLIC(!linenum, !linenum));
+<INITIAL>"raises" => (Tokens.RAISES(!linenum, !linenum));
+<INITIAL>"readonly" => (Tokens.READONLY(!linenum, !linenum));
+<INITIAL>"safe" => (Tokens.SAFE(!linenum, !linenum));
+<INITIAL>"sequence" => (Tokens.SEQUENCE(!linenum, !linenum));
+<INITIAL>"short" => (Tokens.SHORT(!linenum, !linenum));
+<INITIAL>"string" => (Tokens.STRING(!linenum, !linenum));
+<INITIAL>"struct" => (Tokens.STRUCT(!linenum, !linenum));
+<INITIAL>"supports" => (Tokens.SUPPORTS(!linenum, !linenum));
+<INITIAL>"switch" => (Tokens.SWITCH(!linenum, !linenum));
+<INITIAL>"TRUE" => (Tokens.TRUE(!linenum, !linenum));
+<INITIAL>"TypeCode" => (Tokens.TYPECODE(!linenum, !linenum));
+<INITIAL>"typedef" => (Tokens.TYPEDEF(!linenum, !linenum));
+<INITIAL>"union" => (Tokens.UNION(!linenum, !linenum));
+<INITIAL>"unsigned" => (Tokens.UNSIGNED(!linenum, !linenum));
+<INITIAL>"valuetype" => (Tokens.VALUETYPE(!linenum, !linenum));
+<INITIAL>"ValueBase" => (Tokens.VALUEBASE(!linenum, !linenum));
+<INITIAL>"void" => (Tokens.VOID(!linenum, !linenum));
+
+<INITIAL>"(" => (Tokens.LPAREN(!linenum, !linenum));
+<INITIAL>")" => (Tokens.RPAREN(!linenum, !linenum));
+<INITIAL>"{" => (Tokens.LBRACE(!linenum, !linenum));
+<INITIAL>"}" => (Tokens.RBRACE(!linenum, !linenum));
+<INITIAL>"[" => (Tokens.LBRA(!linenum, !linenum));
+<INITIAL>"]" => (Tokens.RBRA(!linenum, !linenum));
+<INITIAL>"," => (Tokens.COMMA(!linenum, !linenum));
+<INITIAL>";" => (Tokens.SEMICOLON(!linenum, !linenum));
+<INITIAL>":" => (Tokens.COLON(!linenum, !linenum));
+<INITIAL>"::" => (Tokens.COLON_COLON(!linenum, !linenum));
+<INITIAL>"<" => (Tokens.LESS(!linenum, !linenum));
+<INITIAL>"<<" => (Tokens.LSHIFT(!linenum, !linenum));
+<INITIAL>">" => (Tokens.GREATER(!linenum, !linenum));
+<INITIAL>">>" => (Tokens.RSHIFT(!linenum, !linenum));
+<INITIAL>"=" => (Tokens.EQUAL(!linenum, !linenum));
+<INITIAL>"|" => (Tokens.VBAR(!linenum, !linenum));
+<INITIAL>"^" => (Tokens.HAT(!linenum, !linenum));
+<INITIAL>"&" => (Tokens.AMPERSAND(!linenum, !linenum));
+<INITIAL>"+" => (Tokens.PLUS(!linenum, !linenum));
+<INITIAL>"-" => (Tokens.MINUS(!linenum, !linenum));
+<INITIAL>"*" => (Tokens.STAR(!linenum, !linenum));
+<INITIAL>"~" => (Tokens.TWIDDLE(!linenum, !linenum));
+<INITIAL>"/" => (Tokens.SLASH(!linenum, !linenum));
+<INITIAL>"%" => (Tokens.PERCENT(!linenum, !linenum));
+
+<INITIAL>#pragma ([^\n]*) => (YYBEGIN L; Tokens.PRAGMA(yytext,!linenum, !linenum));
+<INITIAL>"#include_begin" => (Tokens.INCLUDEBEGIN(!linenum, !linenum));
+<INITIAL>"#include_end" => (Tokens.INCLUDEEND(!linenum, !linenum));
+
+<INITIAL>"/*" =>   (YYBEGIN C; lex());
+<INITIAL>"//" => (YYBEGIN L; lex());
+<INITIAL>{id} => (Tokens.IDENTIFIER (yytext,!linenum, !linenum));
+<INITIAL>. => (raise IllegalChar yytext);
+
+<C>\n		=> (lex());
+<C>[^*/\n]+	=> (lex());
+<C>"*/"		=> (YYBEGIN INITIAL; lex());
+<C>[*/]		=> (lex());
+
+<L>\n		=> (YYBEGIN INITIAL; lex());
+<L>[^\n]	=> (lex());
+@
+
+
+1.6.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.6 1999/03/09 15:02:58 clive Exp $" *)
+@
+
+
+1.5
+log
+@[Bug #170104]
+Get the IDL processor to handle includes
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.4 1999/02/04 12:49:34 clive Exp $" *)
+d96 1
+a96 1
+<INITIAL>"#pragma" => (YYBEGIN L; Tokens.PRAGMA(!linenum, !linenum));
+@
+
+
+1.4
+log
+@Added pragma token and illegal char now carries the bad character
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.3 1999/02/04 11:35:30 clive Exp $" *)
+d25 1
+d97 2
+@
+
+
+1.3
+log
+@Now correctly lexing comments (/* */ and //)
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.2 1999/02/02 17:14:08 clive Exp $" *)
+d11 1
+a11 1
+exception IllegalChar;
+d95 2
+d100 1
+a100 1
+<INITIAL>. => (raise IllegalChar);
+@
+
+
+1.2
+log
+@Record line number for error message; fix incorrect syntax
+@
+text
+@d1 1
+a1 1
+(* "$Header: /hope/cam1/hope.1/compound/37/MLWcorba-idl-compiler/RCS/idl.lex,v 1.1 1999/02/02 16:41:08 clive Exp $" *)
+d95 1
+a95 1
+<INITIAL>"(*" =>   (YYBEGIN C; lex());
+d100 4
+a103 5
+<C>\n+		=> (lex());
+<C>[^()*\n]+	=> (lex());
+<C>"(*"		=> (lex());
+<C>"*)"		=> (YYBEGIN INITIAL; lex());
+<C>[*()]	=> (lex());
+d105 2
+a106 2
+<L>\n+		=> (lex());
+<L>[.*]	=> (lex());
+@
+
+
+1.1
+log
+@new unit
+Lexer definitions for IDL
+@
+text
+@d1 1
+a1 1
+(* "$Header$" *)
+d24 1
+a24 1
+<INITIAL>\n	=> (lex());
+d98 1
+a98 1
+<INITIAL>. => (raise IllegalChar;);
+@

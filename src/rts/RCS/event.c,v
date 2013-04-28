@@ -1,0 +1,403 @@
+head	1.4;
+access;
+symbols
+	Final_version_of_old_runtime:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	94.01.28.17.22.29;	author nickh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.04.26.11.46.58;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	92.11.10.11.35.06;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.11.04.14.23.30;	author richard;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	93.04.26.11.46.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Asynchronous event handler
+,
+@
+
+
+1.4
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== EVENT HANDLER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Implementation
+ *  --------------
+ *  When an asynchronous event occurs the running ML program is `tripped up'
+ *  by setting setting the stack limit register to -1.  This causes the
+ *  stack extension code in the ML interface to be called at a safe point in
+ *  the ML execution.  The stack extension code recogises this and calls the
+ *  event handler here.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: event.c,v $
+ *  Revision 1.3  1993/04/26  11:46:58  richard
+ *  Increased diagnostic level of various messages.
+ *
+ *  Revision 1.2  1992/11/10  11:35:06  clive
+ *  Modified to allow nested event polling
+ *
+ *  Revision 1.1  1992/11/04  14:23:30  richard
+ *  Initial revision
+ *
+ */
+
+#include <sys/signal.h>
+#include <errno.h>
+#include <sys/errno.h>
+#include <stdlib.h>
+
+#include "syscalls.h"
+#include "event.h"
+#include "global.h"
+#include "values.h"
+#include "allocator.h"
+#include "storeman.h"
+#include "diagnostic.h"
+#include "interface.h"
+#include "implicit.h"
+
+
+#define NR_SIGNALS	32
+#define SIGNAL_STACK_SIZE 	8192
+
+
+/*  == Event queue ==
+ *
+ *  If an asynchronous event occurs while another is pending, it is queued.
+ */
+
+struct event
+{
+  struct event *forward, *back;
+  enum {SENTINEL, SIGNAL} type;
+  union
+  {
+    int sentinel_count;
+    struct
+    {
+      int sig;
+      int code;
+      struct sigcontext sc;
+    } signal;
+  } the;
+};
+
+struct event queue;
+
+
+/*  == ML signal event handler table ==
+ *
+ *  This is an ML array of signal handler functions, indexed by signal
+ *  number.
+ */
+
+static mlval ml_handlers = MLUNIT;
+
+
+
+/*  == The C signal handler ==
+ *
+ *  This function converts a C signal into an ML signal event.
+ */
+
+static void signal_handler(int sig, int code, struct sigcontext *scp, char *addr)
+{
+  struct event *event = alloc(sizeof(struct event), "Couldn't allocate event");
+
+  event->type = SIGNAL;
+  event->the.signal.sig = sig;
+  event->the.signal.code = code;
+  event->the.signal.sc = *scp;
+
+  event->forward = &queue;
+  event->back = queue.back;
+  event->forward->back = event;
+  event->back->forward = event;
+  ++queue.the.sentinel_count;
+
+  DIAGNOSTIC(2, "signal_handler(sig = %d)  %d pending", sig, queue.the.sentinel_count);
+  
+  set_stack_underflow();
+  implicit_vector.interrupt = -1;
+}
+
+static int set_signal_handler(int sig)
+{
+  struct sigvec vec;
+
+  vec.sv_handler = signal_handler;
+  vec.sv_mask = 0;
+  vec.sv_flags = SV_ONSTACK;
+
+  return(sigvec(sig, &vec, NULL));
+}
+
+static int clear_signal_handler(int sig)
+{
+  struct sigvec vec;
+
+  vec.sv_handler = SIG_DFL;
+  vec.sv_mask = 0;
+  vec.sv_flags = SV_ONSTACK;
+
+  return(sigvec(sig, &vec, NULL));
+}
+
+
+/*  == Fix the signal event handler table ==
+ *
+ *  This routine is called by the global state handler when an image is
+ *  reloaded.  It runs through the ML signal handler table and sets up the
+ *  C signal handler for any declared handlers.
+ */
+
+static void fix_ml_handlers(mlval *root, mlval value)
+{
+  int i;
+
+  DIAGNOSTIC(4, "fix_ml_handlers(root = 0x%X, value = 0x%X)", root, value);
+
+  *root = value;
+
+  for(i=0; i<NR_SIGNALS; ++i)
+  {
+    mlval handler = MLSUB(value, i);
+
+    DIAGNOSTIC(4, "  handler for %d is 0x%X", i, handler);
+
+    if(handler != MLUNIT)
+      if(set_signal_handler(i))
+	error("Couldn't set signal handler for signal %d.  "
+	      "sigvec set errno to %d", i, errno);
+  }
+}
+
+
+/*  === POLL EVENTS ===  */
+
+void ev_poll()
+{
+  DIAGNOSTIC(2, "ev_poll()  %d pending events", queue.the.sentinel_count, 0);
+
+  /* Always check the start of the queue in case there are nested calls to */
+  /* ev_poll() or more events are introduced during a handler. */
+
+  while(queue.forward->type != SENTINEL)
+  {
+    struct event *current = queue.forward;
+    struct event event = *current;
+
+    DIAGNOSTIC(3, "  event 0x%X  type %d", event, event.type);
+
+    event.back->forward = event.forward;
+    event.forward->back = event.back;
+    --queue.the.sentinel_count;
+    free(current);
+
+    switch(event.type)
+    {
+      case SIGNAL:
+      DIAGNOSTIC(3, "    signal %d  code %d", event.the.signal.sig, event.the.signal.code);
+      callml(MLINT(event.the.signal.sig), MLSUB(ml_handlers, event.the.signal.sig));
+      break;
+
+      default:
+      error("Unknown event type %d found on event queue", event.type);
+    }
+  }
+}
+
+
+/*  === REGISTER A SIGNAL EVENT HANDLER ===  */
+
+mlval ev_signal(int sig, mlval handler)
+{
+  mlval old_handler;
+
+  DIAGNOSTIC(2, "ev_signal(sig = %d, handler = 0x%X", sig, handler);
+
+  if(handler == MLUNIT ? clear_signal_handler(sig) : set_signal_handler(sig))
+    switch(errno)
+    {
+      case EINVAL:
+      errno = EEVSIGNAL;
+      return(ERROR);
+
+      default:
+      error("sigvec returned an unexpected error code %d", errno);
+    }
+
+  old_handler = MLSUB(ml_handlers, sig);
+  MLUPDATE(ml_handlers, sig, handler);
+
+  return(old_handler);
+}
+
+
+/*  === INITIALISE ===  */
+
+void ev_init(void)
+{
+  int i;
+  struct sigstack ss;
+  char *signal_stack;
+
+  /* Empty the event queue */
+  queue.forward = queue.back = &queue;
+  queue.the.sentinel_count = 0;
+
+  /* Initialise the ML signal event handler table */
+  ml_handlers = allocate_array(NR_SIGNALS);
+  for(i=0; i<NR_SIGNALS; ++i)
+    MLUPDATE(ml_handlers, i, MLUNIT);
+  declare_global("signal event handler table", &ml_handlers, fix_ml_handlers);
+
+  /* Initialise the signal stack so that signals don't leave non-GC junk */
+  /* lying around. */
+
+  signal_stack =
+    (char *)alloc(SIGNAL_STACK_SIZE, "Unable to allocate signal stack in profiler.");
+
+  ss.ss_sp = signal_stack + SIGNAL_STACK_SIZE;
+  ss.ss_onstack = 0;
+
+  if(sigstack(&ss, NULL) == -1)
+    error("Unable to set up signal stack (sigstack set errno to %d).", errno);
+}
+@
+
+
+1.3
+log
+@Increased diagnostic level of various messages.
+@
+text
+@d16 3
+a27 2
+extern int sigvec(int, struct sigvec *, struct sigvec *);
+extern int sigstack(struct sigstack *, struct sigstack *);
+d32 1
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a15 3
+ *  Revision 1.3  1993/04/26  11:46:58  richard
+ *  Increased diagnostic level of various messages.
+ *
+@
+
+
+1.2
+log
+@Modified to allow nested event polling
+@
+text
+@d16 3
+d99 1
+a99 1
+  DIAGNOSTIC(1, "signal_handler(sig = %d)  %d pending", sig, queue.the.sentinel_count);
+d139 1
+a139 1
+  DIAGNOSTIC(1, "fix_ml_handlers(root = 0x%X, value = 0x%X)", root, value);
+d147 1
+a147 1
+    DIAGNOSTIC(2, "  handler for %d is 0x%X", i, handler);
+d161 1
+a161 1
+  DIAGNOSTIC(1, "ev_poll()  %d pending events", queue.the.sentinel_count, 0);
+d171 1
+a171 1
+    DIAGNOSTIC(2, "  event 0x%X  type %d", event, event.type);
+d181 1
+a181 1
+      DIAGNOSTIC(2, "    signal %d  code %d", event.the.signal.sig, event.the.signal.code);
+d198 1
+a198 1
+  DIAGNOSTIC(1, "ev_signal(sig = %d, handler = 0x%X", sig, handler);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d15 4
+a18 1
+ *  $Log$
+d158 1
+a158 1
+  struct event *event = queue.forward;
+d160 2
+a161 1
+  DIAGNOSTIC(1, "ev_poll()  %d pending events", queue.the.sentinel_count, 0);
+d163 1
+a163 1
+  while(event->type != SENTINEL)
+d165 4
+a168 1
+    struct event *next = event->forward;
+d170 4
+a173 1
+    DIAGNOSTIC(2, "  event 0x%X  type %d", event, event->type);
+d175 1
+a175 1
+    switch(event->type)
+d178 2
+a179 2
+      DIAGNOSTIC(2, "    signal %d  code %d", event->the.signal.sig, event->the.signal.code);
+      callml(MLINT(event->the.signal.sig), MLSUB(ml_handlers, event->the.signal.sig));
+d183 1
+a183 1
+      error("Unknown event type %d found on event queue", event->type);
+a184 7
+
+    event->back->forward = event->forward;
+    event->forward->back = event->back;
+    --queue.the.sentinel_count;
+    free(event);
+
+    event = next;
+@

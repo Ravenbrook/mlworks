@@ -1,0 +1,157 @@
+head	1.2;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.2.1
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_10r3:1.1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	98.05.06.15.19.28;	author jkbrook;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.09.09.10.17.18;	author jkbrook;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.09.09.10.17.19;	author jkbrook;	state Exp;
+branches;
+next	1.1.1.2;
+
+1.1.1.2
+date	97.09.12.11.13.37;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	99.04.01.17.54.52;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file on MLWorks_10r3
+@
+
+
+1.2
+log
+@new unit
+Merge from MLWorks_10r3:
+Port of old FI to Linux
+@
+text
+@# Example makefile (Linux variant)
+
+CC 		= gcc
+
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -g
+
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+LDFLAGS		= -G -Bdynamic 
+
+LIB		= -ldl -lelf
+
+PROGS		= hello.so random.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@@
+
+clean:
+	$(RM) *.so *.o
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@@
+
+
+1.1
+log
+@new file on MLWorks_10r3
+@
+text
+@d1 29
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_10r3
+@
+text
+@a0 32
+# Example makefile (Solaris variant)
+
+CC 		= gcc
+
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -g
+#CFLAGS		= -ansi -pedantic -g -Wall
+
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+#LDFLAGS		= -G -Bdynamic -lgen
+#LDFLAGS		= -rdynamic -Bdynamic 
+LDFLAGS		= -G -Bdynamic 
+
+LIB		= -ldl -lelf
+
+PROGS		= hello.so random.so
+
+all : $(PROGS)
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@@
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@@
+
+clean:
+	$(RM) *.so *.o
+@
+
+
+1.1.1.2
+log
+@[Bug #30262]
+Minor corrections
+@
+text
+@d1 1
+a1 1
+# Example makefile (Linux variant)
+d9 1
+d15 2
+@

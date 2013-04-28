@@ -1,0 +1,219 @@
+head	1.6;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	93.11.25.13.44.52;	author nosa;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.10.10.31.08;	author davida;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.06.30.10.20.05;	author davida;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.14.07.11;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.22.14.07.11;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.09.11.45.51;	author davida;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.07.10.10.31.08;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Optimisation on built-in expressions.
+@
+
+
+1.6
+log
+@Pass recipe-generation compiler option to optimiser.
+@
+text
+@
+(*
+ * Lambda-Calculus Optimisation: _optimise_builtin
+ * Constant Folding, Identity Rewrites,
+ * Algebraic Transformations.
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "lambdatypes";
+
+signature OPTIMISE_BUILTIN =
+  sig
+    structure LT : LAMBDATYPES
+	
+    val max_map_fold_length    : int ref
+    val min_concats_to_implode : int ref
+    val inline_during_map_fold : bool ref
+
+    val fold_constants       : bool -> (LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp) ->
+      LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+    val rearrange_arithmetic : bool -> LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+
+    val show_debug_info : bool ref
+  end;
+
+(* $Log: optimise_builtin.sml,v $
+Revision 1.5  1992/07/10  10:31:08  davida
+Added flag to control whether inlining during
+map folding is carried out.
+
+Revision 1.4  1992/06/30  10:20:05  davida
+Changed type of optimisation functions; added new
+variable.
+
+Revision 1.3  1991/10/22  14:07:11  clive
+Speed improvements
+
+Revision 1.2  1991/10/22  14:07:11  davidt
+Replaced impossible exception with Crash.impossible calls.
+
+Revision 1.1  91/09/09  11:45:51  davida
+Initial revision
+ *)
+@
+
+
+1.5
+log
+@Added flag to control whether inlining during
+map folding is carried out.
+@
+text
+@d20 3
+a22 3
+    val fold_constants       : (LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp)->
+      				 LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+    val rearrange_arithmetic : LT.LambdaInfo * LT.LambdaExp -> LT.LambdaExp
+d28 4
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a27 4
+Revision 1.5  1992/07/10  10:31:08  davida
+Added flag to control whether inlining during
+map folding is carried out.
+
+@
+
+
+1.4
+log
+@Changed type of optimisation functions; added new
+variable.
+@
+text
+@d18 1
+d28 4
+@
+
+
+1.3
+log
+@Speed improvements
+@
+text
+@d4 1
+a4 1
+ * Constant Folding, Identity Re-writes,
+d16 2
+a17 1
+    val max_map_fold_length : int ref
+d19 3
+a21 2
+    val fold_constants       : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+    val rearrange_arithmetic : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d27 3
+@
+
+
+1.2
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@d24 4
+a27 1
+(* $Log:	optimise_builtin.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+ (*  Lambda-Calculus Optimisation: _optimise_builtin  *)
+a9 7
+     (*  Constant Folding, Identity Re-writes,  *)
+     (*       Algebraic Transformations.        *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+d13 4
+a16 2
+   sig
+      structure LT : LAMBDATYPES
+d18 2
+a19 1
+      val max_map_fold_length : int ref
+d21 2
+a22 2
+      val fold_constants       : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+      val rearrange_arithmetic : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d24 4
+a27 7
+      exception impossible of string
+      val show_debug_info : bool ref
+   end
+
+
+
+(* $Log$ *)
+@

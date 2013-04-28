@@ -1,0 +1,227 @@
+head	1.3;
+access;
+symbols
+	ML_beta_release_12/08/94:1.3
+	ML_beta_release_03/08/94:1.3
+	ML_revised_beta_release_25/05/94:1.3
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	91.10.22.17.59.32;	author davidt;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	91.09.09.13.18.17;	author davida;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.05.14.49.37;	author davida;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	91.10.22.17.59.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Library for lambda-optimiser modules.
+@
+
+
+1.3
+log
+@Put in an explicit Lists structure instead of having it
+implicit opened in the LambdaSub structure.
+@
+text
+@
+(*
+ * Lambda Optimiser : _optimise_lib
+ * Library Functions
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/set";
+require "../utils/lists";
+require "lambdatypes";
+require "lambdasub";
+require "optimise_lib";
+
+functor OptimiseLib
+  (structure LambdaTypes : LAMBDATYPES
+   structure LambdaSub   : LAMBDASUB
+   structure Lists       : LISTS
+   sharing LambdaSub.LT = LambdaTypes) : OPTIMISE_LIB =
+struct
+   structure LT = LambdaTypes
+   structure LS = LambdaSub
+
+   (* Standard Functionals *)
+      
+   fun fst (x,_) = x
+   and snd (_,y) = y
+   fun swap f (x,y) = f (y,x)
+   fun curry f x y = f (x,y)
+   and uncurry f (x,y) = f x y
+   fun apfst f (x,y) = (f x, y)
+   and apsnd f (x,y) = (x, f y)
+
+   fun fixpoint eq (f,x) = 
+     let
+       fun iter x = 
+	 let
+	   val x' = f x
+	 in
+	   if eq(x,x') then x else iter x'
+	 end
+     in
+       iter x
+     end
+
+   (* Aliases for Set functions *)
+
+   structure Set = LambdaTypes.Set
+
+   val mem = Set.is_member
+   val ==  = Set.seteq
+   val ++  = swap Set.add_member
+   fun -- (S,a) = Set.setdiff (S, Set.singleton a)
+   val nullset  = Set.empty_set
+end;
+
+(* $Log:	_optimise_lib.sml,v $
+Revision 1.2  91/09/09  13:18:17  davida
+Library-routines for lambda-optimiser.
+
+Revision 1.1  91/09/05  14:49:37  davida
+Initial revision
+ *)
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@d57 1
+a57 5
+(* $Log: _optimise_lib.sml,v $
+Revision 1.3  1991/10/22  17:59:32  davidt
+Put in an explicit Lists structure instead of having it
+implicit opened in the LambdaSub structure.
+
+@
+
+
+1.2
+log
+@Library-routines for lambda-optimiser.
+@
+text
+@d2 6
+a7 1
+  (*  Lambda Optimiser :  _optimise_lib  *)
+a8 5
+         (*  Library Functions  *)
+
+  (*  Copyright (c) 1991 Harlequin Ltd.  *)
+
+
+d15 5
+a19 5
+
+functor OptimiseLib(structure LambdaTypes : LAMBDATYPES
+		          and LambdaSub   : LAMBDASUB
+			  and Lists       : LISTS
+		    sharing LambdaSub.LambdaTypes = LambdaTypes):OPTIMISE_LIB =
+d22 1
+a22 1
+         and LS = LambdaSub
+d35 10
+a44 10
+      let
+	 fun iter x = 
+	    let
+	       val x' = f x
+	    in
+	       if eq(x,x') then x else iter x'
+	    end
+      in
+	 iter x
+      end
+a45 1
+
+d50 4
+a53 6
+   infix mem == ++ --
+
+   val (op mem) = Set.is_member
+   val (op ==)  = Set.seteq
+   val (op ++)  = swap Set.add_member
+   fun S -- a   = Set.setdiff (S, Set.singleton a)
+d55 1
+a55 1
+      
+d57 3
+a59 1
+   (* List Functions *)
+a60 8
+   open Lists
+
+end
+
+      
+
+
+(* $Log:	_optimise_lib.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@a17 1
+                          and Set         : SET
+d19 1
+a19 2
+		    sharing LambdaSub.LambdaTypes = LambdaTypes
+		        and LambdaSub.Set = Set) : OPTIMISE_LIB =
+a23 12
+   (* Aliases for Set functions *)
+
+   structure Set = Set
+
+   infix mem == ++
+
+   val (op mem) = Set.is_member
+   val (op ==)  = Set.seteq
+   val (op ++)  = Set.add_member
+   val nullset  = Set.empty_set
+      
+
+d34 11
+d46 14
+d69 4
+a72 1
+(* $Log$ *)
+@

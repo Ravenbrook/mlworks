@@ -1,0 +1,61 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.03.27.15.48.27;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_HEADER ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+
+signature FOREIGN_HEADER =
+   sig
+
+     structure FData : FOREIGN_DATA
+
+     type 'lang_type data_port
+
+     sharing type data_port = FData.data_port
+
+     datatype 'lang_type sig_entry =
+	 Value of (string * 'lang_type) |
+	 Type  of (string * 'lang_type) |
+	 Code  of (string * ('lang_type) list * ('lang_type) list) |
+	 Const of (string * ('lang_type) data_port)
+
+     type 'lang_type foreign_signature
+
+     datatype mode = STATIC | DYNAMIC
+
+   end; (* signature FOREIGN_HEADER *)
+@

@@ -1,0 +1,47 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	95.07.04.13.17.21;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Std_in and std_out.
+@
+
+
+1.1
+log
+@new unit
+Std_in and std_out.
+@
+text
+@(*
+ * Copyright (c) 1995 Harlequin Ltd.
+ * 
+ *  $Log$
+ * 
+ *)
+
+signature CONSOLE =
+sig
+  type Widget
+  type user_preferences
+
+  val create:
+    Widget * string * user_preferences
+    -> {instream: instream,
+	outstream: outstream,
+	console_widget: Widget,
+	show_console: bool -> unit,
+	console_visible: unit -> bool,
+	clear_input: unit -> unit}
+end;
+@

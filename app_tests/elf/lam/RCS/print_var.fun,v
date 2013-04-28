@@ -1,0 +1,78 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.12.12.46;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.30.02;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* $Id: print_var.fun,v 1.1 1993/08/20 18:30:37 felty Exp $ *)
+(* Author: Amy Felty <felty@@research.att.com>           *)
+
+(* Printing of variables *)
+
+functor PrintVar (structure Basic : BASIC
+		  structure Term : TERM
+		  structure Naming : NAMING
+		     sharing Naming.Term = Term) : PRINT_VAR =
+struct
+
+structure Term = Term
+
+local open Term
+in
+
+  fun makestring_var conflict_fun (Bvar(x)) = x
+    | makestring_var conflict_fun
+                     (M as Evar(Varbind(x,A),stamp,uvars,ref NONE)) =
+         Naming.name_var conflict_fun M
+    | makestring_var conflict_fun (M as Uvar(Varbind(x,_),stamp)) =
+	 ("!" ^ (Naming.name_var conflict_fun M))
+    | makestring_var conflict_fun (Fvar(Varbind(x,_))) = ("^" ^ x)
+    | makestring_var conflict_fun _ =
+         raise Basic.Illegal("makestring_var: not a variable")
+
+end  (* local ... *)
+end  (* functor PrintVar *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

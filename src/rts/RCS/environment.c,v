@@ -1,0 +1,785 @@
+head	1.11;
+access;
+symbols
+	Final_version_of_old_runtime:1.11
+	ML_revised_beta_release_25/05/94:1.11
+	ML_final_beta_release_02/03/94:1.11
+	mlworks-28-01-1994:1.11
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-3-21/12/1992:1.9
+	MLWorks-1-0-2-15/12/1992:1.9
+	MLWorks-1-0-1-04/12/1992:1.9
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ *  @;
+
+
+1.11
+date	93.04.28.14.48.56;	author jont;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	93.02.01.14.36.35;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.10.26.13.51.30;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.26.15.44.50;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.08.04.16.14.51;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.31.08.10.53;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.30.17.07.01;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.30.11.51.47;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.29.14.26.12;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.29.12.16.06;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.27.16.18.28;	author richard;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.04.28.14.48.56;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Runtime environment management
+@
+
+
+1.11
+log
+@Changed env_function and env_asm_function to return the closure produced
+@
+text
+@/*  ==== RUNTIME ENVIRONMENT MANAGEMENT ====
+ *
+ *  Copyright (C) 1992 Harleqiun Ltd
+ *
+ *  Implementation
+ *  --------------
+ *  The runtime environment is an ML list of triples.  Entries are of the
+ *  form (name, type, value) where name is the bound ML string, type is one
+ *  of VALUE or STUB, and value is the ML value bound.  Values of type STUB
+ *  are the closures of special ML functions which interface ML to C.
+ *
+ *  When a C function is added to the environment a static code vector from
+ *  interface.h is closed over with the address of the C function to call,
+ *  as well as the addresses of the C and ML state vectors, and the
+ *  environment name of the C function.  When a the global state is unpacked
+ *  after an image is loaded the environment is scanned and all such stubs
+ *  have their closures fixed in case these C addresses have changed.  There
+ *  is a similar mechanism for assembly language code vectors.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: environment.c,v $
+ *  Revision 1.10  1993/02/01  14:36:35  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.9  1992/10/26  13:51:30  richard
+ *  env_lookup() now returns an error code rather than raising
+ *  and exception directly.  It is no longer called directly
+ *  from ML.  See pervasives.c.
+ *
+ *  Revision 1.8  1992/08/26  15:44:50  richard
+ *  Failure to find a binding in the runtime environment now
+ *  raises an exception instead of bombing.
+ *
+ *  Revision 1.7  1992/08/04  16:14:51  richard
+ *  Made sure that the stub code addresses are fixed as well as the actual
+ *  functions.
+ *
+ *  Revision 1.6  1992/07/31  08:10:53  richard
+ *  The C and assembler calling stubs are now single static routines.
+ *  (Too many problems were caused by replicating them.)
+ *
+ *  Revision 1.5  1992/07/30  17:07:01  richard
+ *  Commented out profile_new() until I can fix it.
+ *
+ *  Revision 1.4  1992/07/30  11:51:47  richard
+ *  Stub code vectors are now static strings.
+ *
+ *  Revision 1.3  1992/07/29  14:26:12  richard
+ *  New code vectors are declared to the profiler rather than the loader.
+ *
+ *  Revision 1.2  1992/07/29  12:16:06  richard
+ *  Changed the environment from a list of weak arrays to a simple
+ *  list of triples.  It shouldn't have been weak anyway!
+ *
+ *  Revision 1.1  1992/07/27  16:18:28  richard
+ *  Initial revision
+ *
+ */
+
+#include "environment.h"
+#include "global.h"
+#include "mltypes.h"
+#include "values.h"
+#include "allocator.h"
+#include "diagnostic.h"
+#include "interface.h"
+#include "profiler.h"
+#include "pervasives.h"
+
+#include <string.h>
+#include <stdlib.h>
+
+
+/*  === THE ENVIRONMENT ===  */
+
+#define ARRAY_SIZE	64
+#define VALUE		MLINT(0)
+#define C_STUB		MLINT(1)
+#define ASM_STUB	MLINT(2)
+static mlval environment;
+
+
+/*  === THE FUNCTION TABLE ===
+ *
+ *  The function table is a mapping from strings to C or assembler functions
+ *  and to ML stub code vectors to those functions, allocated statically.
+ *  It is used to fix the pointers in the closures of any stubs loaded with
+ *  a heap image in case the functions or stub code vectors have moved.
+ *
+ *  NOTE: The address of the C function could be hard-wired into each stub,
+ *  but it's fairly fiddly and difficult to do portably.
+ */
+
+static struct f_table_entry
+{
+  const char *name;
+  mlval (*f)(mlval);
+} *f_table = NULL;
+size_t f_table_used = 0, f_table_size = 16;
+
+
+/*  == Add a value to the environment ==
+ *
+ *  Binds value of type to name, adding extra weak arrays to the environment
+ *  as necessary.
+ */
+
+static void env_insert(mlval name, mlval type, mlval value)
+{
+  mlval triple = allocate_record(3);
+
+  FIELD(triple, 0) = name;
+  FIELD(triple, 1) = type;
+  FIELD(triple, 2) = value;
+
+  environment = cons(triple, environment);
+}
+
+
+/*  == Add a function to the function table ==
+ *
+ *  Adds a mapping from a name to a C function or assembler subroutine.
+ */
+
+static void f_table_insert(const char *name, mlval (*f)(mlval))
+{
+  if(f_table == NULL || f_table_used >= f_table_size)
+  {
+    f_table_size *= 2;
+    f_table = (struct f_table_entry *)realloc(f_table, sizeof(struct f_table_entry) * f_table_size);
+    if(f_table == NULL)
+      error("Unable to expand environment function table");
+  }
+
+  f_table[f_table_used].name = name;
+  f_table[f_table_used].f = f;
+  ++f_table_used;
+}
+
+
+/*  == Fix references to C or assembler on image load ==
+ *
+ *  An image from a slightly different runtime system may contain C or
+ *  assembler stubs which have the wrong addresses in their closures.  This
+ *  function is called when the global root `environment' is fixed after an
+ *  image is loaded.  It scans the environment looking for bindings of type
+ *  C_STUB or ASM_SUB and corrects their references using the function
+ *  table.
+ */
+
+static void fix_closures(mlval *root, mlval value)
+{
+  mlval list;
+
+  *root = value;
+
+  DIAGNOSTIC(2, "fix_closures(root = 0x%X, value = 0x%X)", root, value);
+
+  for(list = value; list != MLNIL; list = MLTAIL(list))
+  {
+    mlval triple = MLHEAD(list);
+    mlval type = FIELD(triple, 1);
+
+    if(type == C_STUB || type == ASM_STUB)
+    {
+      mlval closure = FIELD(triple, 2);
+      char *name = CSTRING(FIELD(closure, 2));
+      size_t i;
+
+      DIAGNOSTIC(2, "  closure 0x%X  name `%s'", closure, name);
+
+      for(i=0; i<f_table_used; ++i)
+	if(strcmp(f_table[i].name, name) == 0)
+	  goto found;
+
+      error("The runtime environment binding `%s' is a stub at 0x%X "
+	    "which references an unregistered function named `%s'",
+	    CSTRING(FIELD(triple, 0)), closure, name);
+
+      found:
+      DIAGNOSTIC(2, "    f 0x%X -> 0x%X", FIELD(closure, 1), f_table[i].f);
+      FIELD(closure, 1) = (mlval)f_table[i].f;
+      FIELD(closure, 0) = (mlval)(type == C_STUB ? stub_c : stub_asm);
+    }
+  }
+}
+
+
+
+/*  === INITIALISE THE ENVIRONMENT ===
+ *
+ *  Declares the environment as a global root which calls fix_closures and
+ *  initialises an empty function table.
+ */
+
+void env_init(void)
+{
+  environment = MLNIL;
+  declare_global("environment", &environment, fix_closures);
+
+  f_table = NULL;
+  f_table_used = 0;
+  f_table_size = 64;
+}
+
+
+
+/*  === BIND A VALUE ===  */
+
+void env_value(const char *name, mlval value)
+{
+  env_insert(ml_string(name), VALUE, value);
+}
+
+
+/*  == Create a new stub ==
+ *
+ *  Allocates and closes over a stub code vector with a C function and its
+ *  name, and then binds it in the function table and environment.
+ */
+
+mlval new_stub(const char *string, mlval (*f)(mlval), mlval type, mlval code)
+{
+  mlval closure, name;
+
+  name = ml_string(string);
+  declare_root(&name);
+  closure = allocate_record(3);
+  FIELD(closure, 0) = code;
+  FIELD(closure, 1) = (mlval)f;
+  FIELD(closure, 2) = name;
+  retract_root(&name);
+
+  f_table_insert(string, f);
+  env_insert(name, type, closure);
+  return closure;
+}  
+
+
+/*  === BIND A C FUNCTION ===  */
+
+mlval env_function(const char *c_name, mlval (*f)(mlval))
+{
+  return new_stub(c_name, f, C_STUB, stub_c);
+}
+
+
+/*  === BIND AN ASSEMBLER SUBROUTINE ===  */
+
+mlval env_asm_function(const char *c_name, mlval (*f)(mlval))
+{
+  return new_stub(c_name, f, ASM_STUB, stub_asm);
+}
+
+
+/*  === LOOK UP A VALUE === */
+
+mlval env_lookup(const char *name)
+{
+  mlval list;
+
+  for(list = environment; list != MLNIL; list = MLTAIL(list))
+  {
+    mlval triple = MLHEAD(list);
+
+    if(strcmp(CSTRING(FIELD(triple, 0)), name) == 0)
+      return(FIELD(triple, 2));
+  }
+
+  return(ERROR);
+}
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@a22 3
+ *  Revision 1.11  1993/04/28  14:48:56  jont
+ *  Changed env_function and env_asm_function to return the closure produced
+ *
+@
+
+
+1.10
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d23 3
+d223 1
+a223 1
+void new_stub(const char *string, mlval (*f)(mlval), mlval type, mlval code)
+d237 1
+d243 1
+a243 1
+void env_function(const char *c_name, mlval (*f)(mlval))
+d245 1
+a245 1
+  new_stub(c_name, f, C_STUB, stub_c);
+d251 1
+a251 1
+void env_asm_function(const char *c_name, mlval (*f)(mlval))
+d253 1
+a253 1
+  new_stub(c_name, f, ASM_STUB, stub_asm);
+@
+
+
+1.9
+log
+@env_lookup() now returns an error code rather than raising
+and exception directly.  It is no longer called directly
+from ML.  See pervasives.c.
+@
+text
+@d23 5
+d69 1
+d110 3
+a112 3
+  (void)SETFIELD(triple, 0, name);
+  (void)SETFIELD(triple, 1, type);
+  (void)SETFIELD(triple, 2, value);
+d160 1
+a160 1
+    mlval type = GETFIELD(triple, 1);
+d164 2
+a165 2
+      mlval closure = GETFIELD(triple, 2);
+      char *name = CSTRING(GETFIELD(closure, 2));
+d176 1
+a176 1
+	    CSTRING(GETFIELD(triple, 0)), closure, name);
+d179 3
+a181 3
+      DIAGNOSTIC(2, "    f 0x%X -> 0x%X", GETFIELD(closure, 1), f_table[i].f);
+      (void)SETFIELD(closure, 1, (mlval)f_table[i].f);
+      (void)SETFIELD(closure, 0, (mlval)(type == C_STUB ? stub_c : stub_asm));
+d227 3
+a229 3
+  (void)SETFIELD(closure, 0, code);
+  (void)SETFIELD(closure, 1, (mlval)f);
+  (void)SETFIELD(closure, 2, name);
+d263 2
+a264 2
+    if(strcmp(CSTRING(GETFIELD(triple, 0)), name) == 0)
+      return(GETFIELD(triple, 2));
+@
+
+
+1.8
+log
+@Failure to find a binding in the runtime environment now
+raises an exception instead of bombing.
+@
+text
+@d23 4
+d249 1
+a249 1
+mlval env_lookup(mlval name)
+d257 1
+a257 1
+    if(strcmp(CSTRING(GETFIELD(triple, 0)), CSTRING(name)) == 0)
+d261 1
+a261 1
+  c_raise(exn(GETFIELD(DEREF(exn_unbound), 0), name));
+@
+
+
+1.7
+log
+@Made sure that the stub code addresses are fixed as well as the actual
+functions.
+@
+text
+@d23 4
+d57 1
+d257 1
+a257 2
+  error("The runtime environment does not contain a binding for `%s'",
+	CSTRING(name));
+@
+
+
+1.6
+log
+@The C and assembler calling stubs are now single static routines.
+(Too many problems were caused by replicating them.)
+@
+text
+@d23 4
+d60 3
+a62 2
+#define VALUE	MLINT(0)
+#define STUB	MLINT(1)
+d130 2
+a131 1
+ *  STUB and corrects their references using the function table.
+d145 1
+d147 1
+a147 1
+    if(GETFIELD(triple, 1) == STUB)
+d166 1
+d205 1
+a205 1
+void new_stub(const char *string, mlval (*f)(mlval), mlval code)
+d218 1
+a218 1
+  env_insert(name, STUB, closure);
+d226 1
+a226 1
+  new_stub(c_name, f, stub_c);
+d234 1
+a234 1
+  new_stub(c_name, f, stub_asm);
+@
+
+
+1.5
+log
+@Commented out profile_new() until I can fix it.
+@
+text
+@d12 2
+a13 5
+ *  When a C function is added to the environment a new stub code vector is
+ *  created containing the C interfacing code.  This code vector is static
+ *  (on the C heap) because it must not be moved by the garbage collector.
+ *  (Return addresses to it cannot be fixed, you see.)  Anyway, this new
+ *  code vector is closed over with the address of the C function to call,
+d23 3
+a75 1
+  mlval stub;
+d103 1
+a103 1
+static void f_table_insert(const char *name, mlval (*f)(mlval), mlval stub)
+a114 1
+  f_table[f_table_used].stub = stub;
+d128 1
+a128 1
+static void fix_stubs(mlval *root, mlval value)
+d134 1
+a134 1
+  DIAGNOSTIC(2, "fix_stubs(root = 0x%X, value = 0x%X)", root, value);
+a156 1
+      DIAGNOSTIC(2, "    stub 0x%X -> 0x%X", GETFIELD(closure, 0), f_table[i].stub);
+a157 1
+      (void)SETFIELD(closure, 0, f_table[i].stub);
+d167 1
+a167 1
+ *  Declares the environment as a global root which calls fix_stubs and
+d174 1
+a174 1
+  declare_global("environment", &environment, fix_stubs);
+d193 2
+a194 2
+ *  Allocates and closes over a new stub code vector found at address
+ *  `stub', and then binds it in the function table and environment.
+d197 1
+a197 2
+void bind_stub(const char *string, mlval (*f)(mlval),
+	       const char *stub, size_t stub_length)
+d199 1
+a199 1
+  mlval closure, name, code;
+a202 5
+  code = static_string(stub_length + strlen(string) + 1);
+  memcpy(CSTRING(code), stub, stub_length);
+  strcpy(CSTRING(code) + stub_length, string);
+  declare_root(&code);
+/*  profile_new(code);*/
+a207 1
+  retract_root(&code);
+d209 1
+a209 1
+  f_table_insert(string, f, code);
+d218 1
+a218 1
+  bind_stub(c_name, f, callc_code, callc_length);
+d226 1
+a226 1
+  bind_stub(c_name, f, callasm_code, callasm_length);
+@
+
+
+1.4
+log
+@Stub code vectors are now static strings.
+@
+text
+@d26 3
+d212 1
+a212 1
+  profile_new(code);
+@
+
+
+1.3
+log
+@New code vectors are declared to the profiler rather than the loader.
+@
+text
+@d7 15
+d26 3
+d50 1
+a50 6
+/*  === THE ENVIRONMENT ===
+ *
+ *  The runtime environment is an ML list of triples.  Entries are of the
+ *  form (name, type, value) where name is the bound ML string, type is one
+ *  of VALUE or STUB, and value is the ML value bound.
+ */
+d60 7
+a66 3
+ *  The function table is a mapping from strings to C or assembler
+ *  functions.  It is used to fix the pointers in the closures of any stubs
+ *  loaded with a heap image in case the functions have moved.
+d73 1
+d101 1
+a101 1
+static void f_table_insert(const char *name, mlval (*f)(mlval))
+d113 1
+d133 2
+d156 3
+a158 1
+      DIAGNOSTIC(2, "  f 0x%X -> 0x%X", GETFIELD(closure, 1), f_table[i].f);
+d192 1
+a192 1
+/*  === BIND A C FUNCTION ===
+d194 2
+a195 3
+ *  To package a C function for calling from ML a piece of assembly code
+ *  from the runtime interface is copied into a new code vector and closed
+ *  over with the name and address of the C function it is to call.
+d198 2
+a199 1
+void env_function(const char *c_name, mlval (*f)(mlval))
+d203 1
+a203 1
+  name = ml_string(c_name);
+d205 3
+a207 3
+  code = allocate_string(callc_length + strlen(c_name) + 1);
+  memcpy(CSTRING(code), callc_code, callc_length);
+  strcpy(CSTRING(code) + callc_length, c_name);
+a210 2
+  retract_root(&name);
+  retract_root(&code);
+d214 2
+d217 1
+d219 8
+a226 1
+  f_table_insert(c_name, f);
+d230 1
+a230 6
+
+/*  === BIND AN ASSEMBLER SUBROUTINE ===
+ *
+ *  This is very similar to env_function() except that a different piece of
+ *  assembly code is used to package up the subroutine.
+ */
+d234 1
+a234 18
+  mlval closure, name, code;
+
+  name = ml_string(c_name);
+  declare_root(&name);
+  code = allocate_string(callasm_length + strlen(c_name) + 1);
+  memcpy(CSTRING(code), callasm_code, callasm_length);
+  strcpy(CSTRING(code) + callasm_length, c_name);
+  declare_root(&code);
+  profile_new(code);
+  closure = allocate_record(3);
+  retract_root(&name);
+  retract_root(&code);
+  (void)SETFIELD(closure, 0, code);
+  (void)SETFIELD(closure, 1, (mlval)f);
+  (void)SETFIELD(closure, 2, name);
+
+  env_insert(name, STUB, closure);
+  f_table_insert(c_name, f);
+a235 1
+
+@
+
+
+1.2
+log
+@Changed the environment from a list of weak arrays to a simple
+list of triples.  It shouldn't have been weak anyway!
+@
+text
+@d11 4
+d27 1
+a27 1
+#include "loader.h"
+d186 1
+a186 1
+  declare_code(code);
+d216 1
+a216 1
+  declare_code(code);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 4
+a13 1
+ *  $Log$
+d30 3
+a32 4
+ *  The runtime environment is an ML list of weak arrays.  Groups of three
+ *  entries in each array are grouped together into an entry of the form
+ *  (name, type, value) where name is the bound ML string, type is one of
+ *  VALUE or STUB, and value is the ML value bound.
+d64 1
+a64 20
+  mlval list, array;
+  size_t i;
+
+  for(list = environment; list != MLNIL; list = MLTAIL(list))
+  {
+    size_t length;
+
+    array = MLHEAD(list);
+    length = LENGTH(ARRAYHEADER(array));
+
+    for(i=0; i<length; i+=3)
+      if(MLSUB(array, i+2) == DEAD)
+      {
+	MLUPDATE(array, i, name);
+	MLUPDATE(array, i+1, type);
+	MLUPDATE(array, i+2, value);
+
+	return;
+      }
+  }
+d66 3
+a68 8
+  declare_root(&value);
+  array = allocate_weak_array(ARRAY_SIZE*3);
+  retract_root(&value);
+  MLUPDATE(array, 0, name);
+  MLUPDATE(array, 1, type);
+  MLUPDATE(array, 2, value);
+  for(i=3; i<ARRAY_SIZE*3; ++i)
+    MLUPDATE(array, i, DEAD);
+d70 1
+a70 1
+  environment = cons(array, environment);
+d112 1
+a112 2
+    mlval array = MLHEAD(list);
+    size_t length = LENGTH(ARRAYHEADER(array)), i;
+d114 1
+a114 1
+    for(i=0; i<length; i+=3)
+d116 17
+a132 20
+      if(MLSUB(array, i+1) == STUB && MLSUB(array, i+2) != DEAD)
+      {
+	mlval closure = MLSUB(array, i+2);
+	char *name = CSTRING(GETFIELD(closure, 2));
+	size_t j;
+
+	DIAGNOSTIC(2, "  closure 0x%X  name `%s'", closure, name);
+
+	for(j=0; j<f_table_used; ++j)
+	  if(strcmp(f_table[j].name, name) == 0)
+	    goto found;
+
+	error("The runtime environment binding `%s' is a stub at 0x%X "
+	      "which references an unregistered function named `%s'",
+	      CSTRING(MLSUB(array, i)), closure, name);
+
+	found:
+	DIAGNOSTIC(2, "  f 0x%X -> 0x%X", GETFIELD(closure, 1), f_table[j].f);
+	(void)SETFIELD(closure, 1, (mlval)f_table[j].f);
+      }
+d234 1
+a234 2
+    mlval array = MLHEAD(list);
+    size_t length = LENGTH(ARRAYHEADER(array)), i;
+d236 2
+a237 3
+    for(i=0; i<length; i+=3)
+      if(MLSUB(array, i+2) != DEAD && strcmp(CSTRING(MLSUB(array, i)), CSTRING(name)) == 0)
+	return(MLSUB(array, i+2));
+@

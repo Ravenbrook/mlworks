@@ -1,0 +1,182 @@
+head	1.6;
+access;
+symbols
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.3;
+locks; strict;
+
+
+1.6
+date	93.02.05.18.41.11;	author matthew;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	93.01.27.12.21.47;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.09.16.08.48.35;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.13.16.08.30;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.02.13.46.11;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.01.15.50.06;	author jont;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.02.05.18.41.11;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@structure printing for interpreter
+@
+
+
+1.6
+log
+@Typechecker structure changes
+@
+text
+@(* __str_print.sml the structure *)
+(*
+$Log: __str_print.sml,v $
+Revision 1.5  1993/01/27  12:21:47  matthew
+Changed functor parameter
+
+Revision 1.4  1992/09/16  08:48:35  daveb
+Type printing routines now require Valenv_ structure.
+
+Revision 1.3  1992/08/13  16:08:30  clive
+Changes to reflect lower level sharing changes
+
+Revision 1.2  1992/07/02  13:46:11  jont
+Lots more functionality
+
+Revision 1.1  1992/07/01  15:50:06  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/__crash";
+require "../utils/__integer";
+require "../basics/__ident";
+require "../basics/__identprint";
+require "../typechecker/__environment";
+require "../typechecker/__types";
+require "../typechecker/__basis";
+require "../typechecker/__valenv";
+require "_str_print";
+
+structure Str_Print_ = Str_Print(
+  structure Crash = Crash_
+  structure Integer = Integer_
+  structure Ident = Ident_
+  structure IdentPrint = IdentPrint_
+  structure Env = Environment_
+  structure Types = Types_
+  structure Basis = Basis_
+  structure Valenv = Valenv_
+)
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.6  1993/02/05  18:41:11  matthew
+Typechecker structure changes
+
+@
+
+
+1.5
+log
+@Changed functor parameter
+@
+text
+@d4 3
+a27 1
+require "../typechecker/__scheme";
+a38 1
+  structure Scheme = Scheme_
+@
+
+
+1.4
+log
+@Type printing routines now require Valenv_ structure.
+@
+text
+@d4 3
+d23 1
+a23 1
+require "../typechecker/__datatypes";
+d35 1
+a35 1
+  structure DataTypes = Datatypes_
+@
+
+
+1.3
+log
+@Changes to reflect lower level sharing changes
+@
+text
+@d4 3
+d24 1
+d36 1
+@
+
+
+1.2
+log
+@Lots more functionality
+@
+text
+@d4 3
+a12 1
+require "../utils/__map";
+a23 1
+  structure Map = Map_
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d12 1
+d17 1
+d24 1
+d29 1
+@

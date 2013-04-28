@@ -1,0 +1,387 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.05.28.15.28.31;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.16.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications/tests into hope
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ * $Log$
+ *)               
+                 (* Categories of Functors *)
+
+(* Describes the CATEGORY OF FUNCTORS between two categories and
+   COLIMITS and LIMITS (by duality) in such categories. Also the PRODUCT
+   of two categories. *)
+
+         (* Needs "basic" and "cat" *)
+
+(* module category_of_functors *)
+   (* uses category, ffunctor *)
+
+   datatype ('o,'m,'o1,'m1)Nat_transform  =   
+		nat_transform of ('o,'m,'o1,'m1)Functor *
+			         ('o->'m1) *
+			         ('o,'m,'o1,'m1)Functor ;
+
+   (*   component_at : ('o,'m,'o1,'m1)Nat_transform * 'o -> 'm1 *)
+   infix 5 component_at; 
+   fun (nat_transform(_,f,_)) component_at a = f a ;
+
+   (*   Fun_Nat_comp : ('o,'m,'o1,'m1)Functor*('o1,'m1,'o2,'m2)Nat_transform ->
+			('o,'m,'o2,'m2)Nat_transform *)
+   infix 4 Fun_Nat_comp;
+   fun F Fun_Nat_comp (nat_transform(G,alpha,H)) = 
+	nat_transform(F Fun_comp G, fn y => alpha(F ofo y) , F Fun_comp H);
+
+   (*  Nat_Fun_comp  : ('o,'m,'o1,'m1)Nat_transform*('o1,'m1,'o2,'m2)Functor ->
+		('o,'m,'o2,'m2)Nat_transform *)
+   infix 5 Nat_Fun_comp;
+   fun (nat_transform(G,alpha,H)) Nat_Fun_comp F =
+	nat_transform(G Fun_comp F, fn y => F ofm alpha(y) , H Fun_comp F);
+
+   (*   id : ('o,'m)Cat*('o1,'m1)Cat -> (('o,'m,'o1,'m1)Functor ->
+	   ('o,'m,'o1,'m1)Nat_transform) *)
+   (*   dotcomp : ('o,'m)Cat*('o1,'m1)Cat -> 
+	 ( ('o,'m,'o1,'m1)Nat_transform*('o,'m,'o1,'m1)Nat_transform -> 
+		   ('o,'m,'o1,'m1)Nat_transform) *)
+   (*   ringcomp : ('o2,'m2)Cat -> 
+	( ('o,'m,'o1,'m1)Nat_transform*('o1,'m1,'o2,'m2)Nat_transform -> 
+		   ('o,'m,'o2,'m2)Nat_transform) *)
+
+   fun id(A,cat(_,_,i,_)) F =
+	   nat_transform(F,fn a => i(F ofo a) ,F) ;
+   fun dotcomp(A,cat(_,_,_,comp)) =
+	 fn  (nat_transform(F,alpha,_), nat_transform(_,beta,H)) =>
+       nat_transform(F, fn a => comp(alpha(a),beta(a)) , H) ;
+   fun ringcomp(cat(_,_,_,comp)) =
+	 fn  (nat_transform(F,alpha,G), nat_transform(J,beta,L)) =>
+		 nat_transform(F Fun_comp J,
+			       fn a => 
+				 comp(beta(F ofo a),L ofm alpha(a)) ,
+			       G Fun_comp L)  ;
+
+   (*   cat_of_functors : ('o,'m)Cat*('o1,'m1)Cat ->
+		(('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Cat *)
+   fun cat_of_functors(A,B) =
+	   cat(fn nat_transform(s,_,_) => s ,	
+	       fn nat_transform(_,_,t) => t ,
+	       id(A,B),					
+	       dotcomp(A,B) );
+(* end *)
+
+
+(* module product_category *)
+   (* uses category, ffunctor *)
+
+   (*   product : ('o1,'m1)Cat * ('o2,'m2)Cat -> (('o1*'o2),('m1*'m2))Cat *)
+   fun product_Cat(A,B) =
+	cat( fn (f,g) => (source(A)(f),source(B)(g)) ,
+	     fn (f,g) => (target(A)(f),target(B)(g)) ,
+	     fn (a,b) => (identity(A)(a),identity(B)(b)) ,
+	     fn ((f,g),(f1,g1)) =>
+			(compose(A)(f,f1),compose(B)(g,g1))  );
+(* end *)
+
+(* module exponentials_in_CAT *)
+   (* uses category, ffunctor, product_category, category_of_functors *)
+
+   (*   eval : ('o1,'m1)Cat * ('o2,'m2)Cat ->
+		   ( ('o1*('o1,'m1,'o2,'m2)Functor),
+			    ('m1*('o1,'m1,'o2,'m2)Nat_transform),
+			    'o2,
+			    'm2 )Functor *)
+   fun eval(A,B) =
+		let val fcat = cat_of_functors(A,B)
+                in
+	   ffunctor( product_Cat(A,fcat),
+		    fn (a,F) => F ofo a ,
+		    fn (f,alpha) => 
+			compose(B)( source(fcat)(alpha) ofm f, 
+				    alpha component_at (target A f) ) ,
+		    B )
+                 end;
+
+   (*   curry : ('o1,'m1)Cat * ('o2,'m2)Cat ->
+	 (( ('o3,'m3)Cat * (('o3*'o1),('m3*'m1),'o2,'m2)Functor ) ->
+   ('o3,'m3,('o1,'m1,'o2,'m2)Functor,('o1,'m1,'o2,'m2)Nat_transform)Functor ) *)
+   fun curry(A,B)(C,F) =
+	let val object_function =
+	    fn c => 
+	       ffunctor( A,
+		        fn a => F ofo (c,a) ,
+			fn g => F ofm (identity(C)(c),g) ,
+			B )
+	    val morphism_function =
+	    fn f => 
+	       nat_transform
+		 ( object_function(source(C)(f)),
+		   fn a => F ofm (f,identity(A)(a)) ,
+		   object_function(target(C)(f)) )  
+       in
+       ffunctor( C,
+		object_function,
+		morphism_function,
+		cat_of_functors(A,B) )
+        end;
+(* end *)
+
+
+(* module category_of_diagrams *)
+   (* uses graphs_diagrams_cocones, category, basic, 
+	functor, graph_examples, category_of_functors *)
+
+   datatype Graph_Mor  =   
+	   graph_mor of Graph * (Node->Node) * (Edge->Edge) * Graph;
+
+   (*   cat_of_graphs : (Graph,Graph_Mor)Cat *)
+   val cat_of_graphs =
+	cat(fn graph_mor(g,_,_,_) => g ,
+	    fn graph_mor(_,_,_,g) => g ,
+	    fn g => graph_mor(g,identity_fn,identity_fn,g) ,
+	    fn (graph_mor(g,fN,fE,_),graph_mor(_,gN,gE,h)) =>
+		graph_mor(g,fN o gN,fE o gE,h) );
+
+   datatype ('o,'m)Diagram_Mor  =  
+	diagram_mor of ('o,'m)Diagram * Graph_Mor * (Node->'m) * ('o,'m)Diagram;
+
+   (*  cat_of_diagrams : ('o,'m)Cat -> (('o,'m)Diagram,('o,'m)Diagram_Mor)Cat *)
+   fun cat_of_diagrams(C) =
+	   let val G = cat_of_graphs 
+           in
+	cat(fn diagram_mor(d,_,_,_) => d ,
+	    fn diagram_mor(_,_,_,d) => d ,
+	    fn d as diagram(g,fo,_) => 
+		diagram_mor(d,identity(G)(g),fn n =>identity(C)(fo(n)) ,d) ,
+	    fn (diagram_mor(d,fg,fm,_),diagram_mor(_,gg,gm,e)) =>
+		   let val graph_mor(_,nm,_,_) = fg 
+                   in
+		diagram_mor( d,compose(G)(fg,gg),
+			     fn n =>compose(C)(fm(n),gm(nm(n))) , e) 
+                   end )
+           end;
+
+   (*   new_cocone : ('o,'m)Cat ->
+	(('o,'m)Diagram_Mor * ('o,'m)CoCone -> ('o,'m)CoCone) *)
+   fun new_cocone(C) (diagram_mor(d,gm,fm,_),c) =
+		let val graph_mor(_,nm,_,_) = gm
+                in
+	   cocone(co_apex(c),d,fn n => compose(C)(fm(n),sides(c)(nm(n))) )
+                end;
+
+   (*   apply_Nat_Diag :
+        ('o,'m,'o1,'m1)Nat_transform * ('o,'m)Diagram -> ('o1,'m1)Diagram_Mor *)
+   fun apply_Nat_Diag(alpha as nat_transform(F,e,G),D as diagram(g,fo,_)) =
+	   diagram_mor( apply_Fun_Diag(F,D),
+			identity(cat_of_graphs)(g),
+			fo o e,
+ 			apply_Fun_Diag(G,D) );
+(* end *)
+
+(* module unit_diagram *)
+   (* uses category, graph_examples, ffunctor, category_of_diagrams,
+	graphs_diagrams_cocones, basic, category_of_functors,
+	diagram_examples *)
+
+   (*   unit_diagram : ('o,'m)Cat -> 
+	   ('o,'m,('o,'m)Diagram,('o,'m)Diagram_Mor)Functor *)
+   fun unit_diagram(C) = 
+	let val morphism_function =
+	   fn f => 
+		diagram_mor(node_diagram C (source C  f), 
+			    identity(cat_of_graphs)
+				    (node_graph(word("solo"))),
+			    constant f, 
+			    node_diagram C (target C  f) )  
+       in
+	ffunctor(C,node_diagram C,morphism_function,cat_of_diagrams(C))
+       end;
+
+   (*   comma_cocone : ('o,'m)Cat ->
+	(('o,'m)CoCone -> (('o,'m)Diagram*('o,'m)Diagram_Mor*'o)) *)
+   fun comma_cocone(C)(cocone(a,d,f))  =
+	   let val diagram(g,_,_) = d
+           in
+	(d,
+	 diagram_mor(d,identity cat_of_graphs g,f,unit_diagram C ofo a),
+	 a )
+           end;
+
+(* end *)
+
+
+(* module cocomplete_functor_category *)
+   (* uses basic, category, cocomplete_category, category_of_functors, 
+	graphs_diagrams_cocones, ffunctor, category_of_diagrams, 
+	product_category, exponentials_in_CAT *)
+
+   (*   applydo : ('o,'m)Cat * ('o1,'m1)Cat ->
+	((('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Diagram * 'o 
+			 	-> ('o1,'m1)Diagram) *)
+   (*   applydm : ('o,'m)Cat * ('o1,'m1)Cat -> 
+	((('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Diagram * 'm 
+				-> ('o1,'m1)Diagram_Mor) *)
+   (*   applyco : ('o,'m)Cat * ('o1,'m1)Cat -> 
+	((('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)CoCone * 'o
+				-> ('o1,'m1)CoCone ) *)
+
+   fun applydo(A,B) (D,a)  =
+	   let val fcat = cat_of_functors(A,B) in
+       apply_Fun_Diag( (curry(fcat,B)(A,eval(A,B)) ofo a), D ) 
+           end;
+
+   fun applydm(A,B) (D,f)  =
+	   let val fcat = cat_of_functors(A,B) in
+       apply_Nat_Diag( (curry(fcat,B)(A,eval(A,B)) ofm f), D ) 
+           end;
+
+   fun applyco(A,B) (C,a)  =
+	   let val fcat = cat_of_functors(A,B) in
+       apply_Fun_CoCone( (curry(fcat,B)(A,eval(A,B)) ofo a), C ) 
+           end;
+
+   (*   colimit_obj : ('o,'m)Cat * ('o1,'m1)CoComplete_Cat -> 
+	( (('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Diagram
+			    -> ('o,'m,'o1,'m1)Functor ) *)
+   fun colimit_obj( A as cat(s,t,_,_), cB as cocomplete_cat(B,_)) ( D )  =
+	let val object_function = 			
+        	     fn a => colimit_object(cB)(applydo(A,B)(D,a))
+	    val morphism_function = 			
+	     fn f =>
+		let val suniv = 
+		     universal_part(cB)(applydo(A,B)(D,s(f)))
+		    val tc =
+		     colimit_cocone(cB)(applydo(A,B)(D,t(f)))
+		    val c1 =
+		     new_cocone(B)(applydm(A,B)(D,f),tc) 
+                in co_apex_morphism(suniv c1)
+                end
+        in ffunctor(A,object_function,morphism_function,B) 
+        end;
+
+   (*   lift_colimit : ('o,'m)Cat*('o1,'m1)CoComplete_Cat ->
+	     (('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Colimit *)
+   fun lift_colimit(A, cB as cocomplete_cat(B,_)) (D as diagram(_,Fo,Fm))  =
+	let val F = colimit_obj(A,cB)(D)
+	    val gamma = fn a => sides(colimit_cocone(cB)(applydo(A,B)(D,a)))
+	    val result_cocone =
+	        cocone( F,			
+		        D,			
+		        fn n => 
+	                  nat_transform( Fo n, fn a => gamma(a)(n) , F )  )
+   	    val univ = fn a => universal_part(cB)(applydo(A,B)(D,a))  
+	    val universal =			
+	    fn c1 =>
+	       cocone_mor( result_cocone,
+		 	   nat_transform
+			      ( F,
+				fn a => 
+				   co_apex_morphism
+				     (univ(a)(applyco(A,B)(c1,a))) ,
+				co_apex(c1) ),
+		          c1)
+       in (result_cocone,universal)
+       end;
+
+   (*   cocomplete_cat_of_functors :
+	      ('o,'m)Cat * ('o1,'m1)CoComplete_Cat ->
+	(('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)CoComplete_Cat *)
+   fun cocomplete_cat_of_functors(A,cB as cocomplete_cat(B,_)) =
+        cocomplete_cat(cat_of_functors(A,B),lift_colimit(A,cB));
+
+(* end *)
+
+          (* LIMITS IN FUNCTOR CATEGORIES BY DUALITY *)
+
+(* module complete_functor_category *)
+   (* uses dual_category, category, complete_category, 
+	category_of_functors, cocomplete_functor_category, 
+	cocomplete_category, ffunctor, cocontinuous_functor, 
+	graphs_diagrams_cocones, dual_of_colimits,
+	cocontinuous_functor_examples *)
+
+   local
+
+       (*   I1 : ('o,'m)Cat * ('o1,'m1)Cat ->
+              (('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform,
+               ('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform )Functor *)
+       (*   I2 : ('o,'m)Cat * ('o1,'m1)Cat ->
+	     (('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform,
+	      ('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform )Functor *)
+
+       fun I1(A,B) =
+	     ffunctor( cat_of_functors(dual_Cat(A),dual_Cat(B)) ,
+	     	      dual_Fun,
+		      fn (nat_transform(F,alpha,G)) => 
+		        	nat_transform( dual_Fun(F),
+				           alpha,
+				           dual_Fun(G) ) , 
+	              dual_Cat(cat_of_functors(A,B)) );
+
+       fun I2(A,B) =
+	     ffunctor(dual_Cat(cat_of_functors(A,B)),
+		     dual_Fun,
+		     fn (nat_transform(F,alpha,G)) => 
+		        	nat_transform( dual_Fun(F),
+				           alpha,
+				           dual_Fun(G) ) , 
+		     cat_of_functors(dual_Cat(A),dual_Cat(B)) )
+
+   in
+
+   (*   functor_isomorphism : ('o,'m)Cat * ('o1,'m1)Cat ->
+	(('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform,
+         ('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform )Isomorphism *)
+   fun functor_isomorphism(A,B) = isomorphism(I1(A,B),I2(A,B))
+   end;
+
+   (*   complete_cat_of_functors :
+	(('o,'m)Cat * ('o1,'m1)Complete_Cat) ->
+      (('o,'m,'o1,'m1)Functor,('o,'m,'o1,'m1)Nat_transform)Complete_Cat *)
+
+   fun complete_cat_of_functors(A,lB as complete_cat(B,lim)) =
+	   let val cC =
+                  cocomplete_cat_of_functors(dual_Cat(A),dual_Comp_Cat(lB)) 
+           in dual_via_Iso(cat_of_functors(A,B),functor_isomorphism(A,B),cC)
+           end;
+(* end *)
+
+
+@
+
+
+1.1
+log
+@new unit
+Adding applications/tests into hope
+@
+text
+@@

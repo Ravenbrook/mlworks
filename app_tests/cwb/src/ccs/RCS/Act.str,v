@@ -1,0 +1,140 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.37.32;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.36;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Act.str,v 1.5 1994/12/03 14:21:15 pxs Exp $";
+functor Act () : ACT =
+struct
+   exception Parse of string
+
+   datatype tau_act = None  |  Some of act
+
+   and act = Tau of tau_act
+           | Eps
+           | Step
+           | Act of Name.name
+           | Actinv of Name.name
+
+   val tau  = Tau None
+   val eps  = Eps
+   val step = Step
+
+(* I really don't know what I'm doing here. *)
+   fun hashval (Tau _) = (ord "t") - (ord "`")
+     | hashval (Eps) = (ord "t") - (ord "'")
+     | hashval (Step) = (ord "t") - (ord ",")
+     | hashval (Act a) = Name.hashOf a
+     | hashval (Actinv a) = Name.hashOf a
+
+   fun name (Actinv a) = Act a
+     | name x = x
+
+   fun inverse (Act a)    = Actinv a
+     | inverse (Actinv a) = Act a
+     | inverse a          = a
+
+   fun inverses (Act a,Actinv b) = Name.sameName (a,b)
+     | inverses (Actinv a,Act b) = Name.sameName (a,b)
+     | inverses _ = false
+
+   fun mkact s =
+       if s="tau" then Tau None
+       else if s="eps" then Eps
+       else if s="1" then Step
+       else let fun parse [] = raise Parse ""
+                  | parse ("'"::l) = inverse(mkact(implode l))
+                  | parse l = Act(Name.mkName (implode l))
+             in parse(explode s) handle Parse _ => raise Parse s
+            end
+
+   fun mktau a = Tau(Some(name a))
+
+   fun mkstr (Tau _)  = "tau"
+     | mkstr Eps  = "eps"
+     | mkstr Step = "1"
+     | mkstr (Act s) = Name.stringOf s
+     | mkstr (Actinv s) = "'"^(Name.stringOf s)
+
+   fun mkstr1 (Tau None)  = "tau"
+     | mkstr1 (Tau(Some a)) = "tau<"^(mkstr a)^">"
+     | mkstr1 Eps  = "eps"
+     | mkstr1 Step = "1"
+     | mkstr1 (Act s) = Name.stringOf s
+     | mkstr1 (Actinv s) = "'"^(Name.stringOf s)
+
+   fun mkstr2 (Tau _)  = "tau"
+     | mkstr2 Eps  = "eps"
+     | mkstr2 Step = "1"
+     | mkstr2 (Act s) = let val id = Name.stringOf s
+			in if id="in" then "inn!" else id^"!"
+			end
+     | mkstr2 (Actinv s) = let val id = Name.stringOf s
+			   in if id="in" then "inn?" else id^"?"
+			   end
+
+   fun eq (Tau _,Tau _) = true
+     | eq (a,b) = a=b
+
+   fun le (Tau _,_)           = true
+
+     | le (Eps,Tau _)         = false
+     | le (Eps,_)             = true
+
+     | le (Step,Tau _)        = false
+     | le (Step,Eps)          = false
+     | le (Step,_)            = true
+
+     | le (Act s,Act t)       = Name.stringOf s <= Name.stringOf t
+     | le (Act _,Actinv _)    = true
+     | le (Act _,_)           = false
+
+     | le (Actinv s,Actinv t) = Name.stringOf s <= Name.stringOf t
+     | le (Actinv _,_)        = false
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

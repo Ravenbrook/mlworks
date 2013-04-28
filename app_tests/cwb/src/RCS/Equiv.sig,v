@@ -1,0 +1,88 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.21.32;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Equiv.sig,v 1.3 1994/10/31 15:57:33 pxs Exp $";
+(*********************************** Equiv ***********************************)
+(*                                                                           *)
+(* This contains some operations on polymorphic graphs. The graphs are       *)
+(* exactly as in "PolyGraph", and the info field is not used (much). The     *)
+(* following functions are provided:                                         *)
+(*                                                                           *)
+(* equiv: Takes two graphs and returns "true" if there exists a bisimulation *)
+(*    containing the initial states.                                         *)
+(* min: Takes a graph and returns a "minimal" graph, i.e. a bisimilar graph  *)
+(*    where all bisimilar states are collapsed to single states. The result  *)
+(*     is not necessarily minimal w.r.t. transitions, but tau loops are out. *)
+(* bisim: Takes a graph and returns the largest bisimulation on it.          *)
+(*                                                                           *)
+(* For the three last functions above, an additional parameter of type       *)
+(* 'a*'a -> bool is required (where 'a is the type of the info field)        *)
+(* This function will be used to determine whether two states can be         *)
+(* admitted in the same block in a bisimulation.      Joachim Parrow June-88 *)
+(*                                                                           *)
+(*****************************************************************************)
+
+signature EQUIV =
+sig
+   structure PG : POLYGRAPH
+
+   val equiv : ('_a * '_a -> bool)
+               -> ('_a PG.state ref * '_a PG.state ref list) *
+                  ('_a PG.state ref * '_a PG.state ref list) -> bool
+
+   val bisim : ('_a * '_a -> bool)
+               -> '_a PG.state ref * '_a PG.state ref list
+               -> '_a PG.state ref list ref list
+
+   val min   : ('_a * '_a  -> bool)
+               -> '_a PG.state ref * '_a PG.state ref list
+               -> '_a PG.state ref * '_a PG.state ref list
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

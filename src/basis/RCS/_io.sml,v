@@ -1,0 +1,139 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.05.21.10.44.37;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.38.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@signature changes
+@
+text
+@(*  ==== INITIAL BASIS : streamio functor ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: _io.sml,v $
+ * Revision 1.1  1996/04/18  11:38:00  jont
+ * new unit
+ *
+ *  Revision 1.1  1995/04/13  16:42:19  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+require "stream_io";
+require "imperative_io";
+
+functor IO(structure S : STREAM_IO) : IMPERATIVE_IO = 
+  struct
+    structure StreamIO = S
+    type instream = S.instream ref
+    type outstream = S.outstream ref
+    type elem = S.elem
+    type vector = S.vector
+    val mkInstream = ref
+    val getInstream = !
+    val setInstream = op :=
+    val mkOutstream = ref
+    val getOutstream = !
+    val setOutstream = op :=
+    fun endOf f = if S.endOfStream f then f else endOf(#2(S.input f))
+
+    fun closeIn(r as ref f) = (S.closeIn f; r := endOf f)
+    fun inputN (r as ref f, n) = let val (v,f') = S.inputN(f,n) in r:=f'; v end
+    fun input (r as ref f) = let val (v,f') = S.input f in r:=f'; v end
+    fun input1 (r as ref f) =
+      let
+	val (v,f') = case S.input1 f of
+	  SOME foo => foo
+	| NONE => raise Bind (* This needs to change *)
+      in
+	r:=f'; SOME v
+      end
+    fun inputAll(r as ref f) =
+      let val v = S.inputAll f
+      in
+	r := endOf f; v
+      end
+    val endOfStream = S.endOfStream o !
+    fun lookahead(ref f) = case S.input1 f of
+      NONE => NONE
+    | SOME(e, _) => SOME e
+
+    val closeOut = S.closeOut o !
+    fun output(ref f, v) = S.output(f,v)
+    fun output1(ref f, x) = S.output1(f,x)
+    val flushOut = S.flushOut o !
+    fun canInput(ref instream, i) = case S.canInput(instream, i) of
+      SOME i => true
+    | NONE => false
+  end
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d21 2
+a22 2
+require "streamio";
+require "io";
+d24 1
+a24 1
+functor IO(structure S : STREAM_IO) : IO = 
+a30 1
+    type pos = S.pos
+a39 3
+    fun setPosIn(r as ref f, i) = r := S.setPosIn(f,i)
+    val getPosIn = S.getPosIn o !
+    val endPosIn = S.endPosIn o !
+d42 8
+a49 6
+    fun input1 (r as ref f) = let val (v,f') = S.input1 f in r:=f'; v end
+    fun inputNoBlock (r as ref f) = 
+      case S.inputNoBlock f
+        of SOME(v,f') => (r := f'; SOME v) 
+      | NONE => NONE
+
+d56 3
+a58 1
+    fun lookahead(ref f) = #1(S.input1 f)
+a62 3
+    val getPosOut = S.getPosOut o !
+    fun setPosOut(ref f, i) = S.setPosOut(f,i)
+    val endPosOut = S.endPosOut o !
+d64 3
+@

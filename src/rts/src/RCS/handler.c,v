@@ -1,0 +1,186 @@
+head	1.2;
+access;
+symbols
+	hope_poo:1.2.1
+	ML_beta_release_12/08/94:1.2.1.1
+	ML_beta_release_03/08/94:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	94.06.09.14.33.21;	author nickh;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	94.06.09.10.58.39;	author nickh;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	95.07.05.10.31.32;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@new file
+@
+text
+@/*  ==== TOP LEVEL EXCEPTION HANDLER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  At present the toplevel handler terminates the runtime system
+ *  after displaying the exception packet.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:handler.c,v $
+ * Revision 1.1  1994/06/09  10:58:39  nickh
+ * new file
+ *
+ *  Revision 1.24  1994/01/28  17:22:39  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.23  1993/06/22  11:13:58  richard
+ *  Moved the stack backtrace to a common place (utils).
+ *
+ *  Revision 1.22  1993/06/02  13:02:53  richard
+ *  Changed some print formats from %08X to %p.
+ *
+ *  Revision 1.21  1993/04/19  13:17:08  richard
+ *  New code vector organization and access macros.
+ *  Changed STACK_INTERRUPT to STACK_EVENT (more general).
+ *  Changed val_print() for new value printer.
+ *
+ *  Revision 1.20  1993/02/01  14:40:21  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.19  1992/10/26  14:09:18  richard
+ *  Removed debugger related stuff and tidied up the backtrace
+ *  format.
+ *
+ *  Revision 1.18  1992/10/02  09:32:55  richard
+ *  Added missing cast and const.
+ *
+ *  Revision 1.17  1992/07/29  14:10:32  clive
+ *  Changed now that we have callml so that C can do all of the work
+ *
+ *  Revision 1.16  1992/07/24  09:51:13  richard
+ *  Corrected and improved the stack backtrace.
+ *
+ *  Revision 1.15  1992/07/20  13:14:23  richard
+ *  Reimplemented the stack backtrace so that is doesn't depend on the
+ *  memory manager.  Changed non-ANSI assembler command to a call to
+ *  flush_windows().
+ *
+ *  Revision 1.14  1992/07/16  14:34:00  clive
+ *  Added the single_step hook
+ *
+ *  Revision 1.13  1992/07/07  16:14:47  clive
+ *  Made up to date with __pervasive_library
+ *
+ *  Revision 1.12  1992/07/03  09:24:10  richard
+ *  Some changes toward proper debugger installation.
+ *
+ *  Revision 1.11  1992/07/01  16:08:18  richard
+ *  Reformatting.  References to typemap[] and other storage manager
+ *  specific things need to be removed.
+ *
+ *  Revision 1.10  1992/06/23  15:05:56  clive
+ *  Added a flag to say if the interrupt is continuable
+ *
+ *  Revision 1.9  1992/06/22  15:45:38  clive
+ *  A few changes for the debugger
+ *
+ *  Revision 1.8  1992/06/11  11:45:00  clive
+ *  Adjusted to allow the call of the ML debugger via a hook
+ *
+ *  Revision 1.7  1992/05/05  15:47:45  clive
+ *  Take note of the maximum depth number specified in main
+ *
+ *  Revision 1.6  1992/04/13  16:45:45  clive
+ *  Added a stack backtrace now we have function names
+ *
+ *  Revision 1.5  1992/03/18  13:39:21  richard
+ *  Changed call to val_print().  See values.h.
+ *
+ *  Revision 1.4  1992/02/25  15:49:14  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.3  1992/01/08  14:06:55  richard
+ *  Switched off the register dump, as this hasn't been implemented yet.
+ *
+ *  Revision 1.2  1992/01/03  14:30:42  richard
+ *  Added debugging code to display the registers saved on raise.
+ *
+ * Revision 1.1  1992/01/02  13:55:34  richard
+ * Initial revision
+ *
+ */
+
+#include "ansi.h"
+#include "implicit.h"
+#include "handler.h"
+#include "mltypes.h"
+#include "values.h"
+#include "utils.h"
+#include "state.h"
+#include "diagnostic.h"
+#include "utils.h"
+#include "stacks.h"
+#include "allocator.h"
+#include "interface.h"
+#include "print.h"
+
+#include <stdio.h>
+#include <string.h>
+
+mlval handler(mlval packet)
+{
+  putc('\n', stderr);
+
+  backtrace(stderr, GC_SP, max_backtrace_depth);
+
+  fprintf(stderr, "\nUncaught exception \"%s\" of ",
+	  CSTRING(FIELD(FIELD(packet, 0), 1)));
+  print(NULL, stderr, FIELD(packet, 1));
+  fputc('\n', stderr);
+
+  error("Uncaught exception");
+}
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a12 3
+ * Revision 1.2  1994/06/09  14:33:21  nickh
+ * new file
+ *
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d12 4
+a15 1
+ *  $Log: handler.c,v $
+@

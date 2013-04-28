@@ -1,0 +1,423 @@
+head	1.4;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.4.1
+	MLWorks_21c0_1999_03_25:1.4
+	MLWorks_20c1_1998_08_20:1.4
+	MLWorks_20c0_1998_08_04:1.4
+	MLWorks_20b2c2_1998_06_19:1.4
+	MLWorks_20b2_Windows_1998_06_12:1.4
+	MLWorks_20b1c1_1998_05_07:1.4
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_11r1:1.1.1.1.1.1.1
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1
+	MLWorks_11c0_1997_09_09:1.1.1.1.1.1
+	MLWorks_10r3:1.1.1.1.3
+	MLWorks_10r2_551:1.1.1.1.2
+	MLWorks_11:1.1.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.1
+	MLWorks_20m0_1997_06_20:1.2
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	98.03.20.15.42.40;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	97.09.22.16.02.46;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.05.12.14.44.46;	author jont;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	97.01.06.13.18.05;	author matthew;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.10.36.44;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1
+	1.1.1.1.2.1
+	1.1.1.1.3.1;
+next	;
+
+1.1.1.1.1.1
+date	97.07.28.18.22.01;	author daveb;	state Exp;
+branches
+	1.1.1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1.1.1
+date	97.10.07.11.47.40;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.1.2.1
+date	97.09.08.17.15.23;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.1.3.1
+date	97.09.09.14.11.17;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.27.21;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.57.18;	author daveb;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	99.04.01.17.58.17;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New unit
+@
+
+
+1.4
+log
+@[Bug #30090]
+Modify to use TextIO instead of MLWorks.IO
+@
+text
+@(*
+ *  Copyright (C) 1996 The Harlequin Group Ltd
+ *
+ *  Description
+ *  -----------
+ *  This file defines a simple "make" system we can use for bootstrapping from
+ *  mlworks.  The code is highly grungy, but hopefully clear.
+ *  It is intended to be independent of any of the existing compiler internals. * 
+ *  It does, of course, limit the kinds of things we can do with the make
+ *  system and the compiler, but it should only affect the batch files.
+ * 
+ *  Revision Log
+ *  ------------
+ *  $Log: dummy_make.sml,v $
+ *  Revision 1.3  1997/09/22  16:02:46  jont
+ *  [Bug #70009]
+ *  Modify to cope with leading $ in module names
+ *
+ *  Revision 1.2  1997/05/12  14:44:46  jont
+ *  [Bug #20050]
+ *  main/io now exports MLWORKS_IO
+ *
+ *  Revision 1.1  1997/01/06  13:18:05  matthew
+ *  new unit
+ *  New unit
+ *
+*)
+
+Shell.Options.set (Shell.Options.Language.requireReservedWord,false);
+
+local
+  datatype Path = ABS of string list| REL of string list
+  fun strip (#"\t" :: rest) = strip rest
+    | strip (#" " :: rest) = strip rest
+    | strip l = l
+
+  (* This takes a line of text and returns SOME filename if the line of the *)
+  (* form "<whitespace>require<whitespace>"<filename>"<trailing stuff>" else *)
+  (* it returns NONE *)
+    
+  fun getrequire l =
+    let
+      val chars = explode l        
+      fun scan (#"r" :: #"e" :: #"q" :: #"u" :: #"i" :: #"r" :: #"e" :: rest) =
+        scan2 (strip rest)
+        | scan _ = NONE        
+      and scan2 (#"\""::rest) =
+                 scan3 (rest,[])
+        | scan2 _ = NONE
+      and scan3 ([],chars) = NONE
+        | scan3 (#"\""::rest,acc) = 
+                 SOME (implode (rev acc))
+        | scan3 (a::rest,acc) = scan3 (rest,a::acc)
+    in
+      scan (strip chars)
+    end
+
+  fun get_requires f =
+    let
+     val s = TextIO.openIn f
+     fun doline acc =
+                 let
+                   val line = TextIO.inputLine s
+                 in
+                   if line = "" then rev acc
+                   else case getrequire line of
+                     SOME r => doline (r ::acc)
+                   | _ => doline acc
+                 end
+     val res = doline []
+   in
+                 TextIO.closeIn s;
+                 res
+   end
+   handle e => (print ("get_requires for " ^ f ^ " failed\n"); raise e)
+
+  fun parsename s =
+  let
+    val chars = explode s
+    fun doit ([],[],acc) = acc
+      | doit ([],l,acc) = doit ([],[],implode (rev l) :: acc)
+      | doit ([#".",#"s",#"m",#"l"],l,acc) = doit ([],[],implode (rev l) :: acc)
+      | doit (#"."::rest,l,acc) = doit (rest,[],implode (rev l) :: acc)
+      | doit (#"/"::rest,l,acc) = doit (rest,[],implode (rev l) :: acc)
+      | doit (a::rest,l,acc) = doit (rest,a::l,acc)
+  in
+    case chars of
+      #"." :: #"." :: #"/" :: rest =>
+      ABS (doit (rest,[],[]))
+    | #"^" :: #"." :: rest =>
+      ABS (doit (rest,[],[]))
+    | #"$" :: #"." :: rest =>
+      ABS (doit (rest,[],[]))
+    | _ => REL (doit (chars,[],[]))
+  end
+
+  fun toString [] = ""
+    | toString [s] = s
+    | toString (a::b) = toString b ^ "/" ^ a
+
+  fun resolve_path dir file =
+    case parsename file of
+      ABS s => s
+    | REL s => (s @@ dir)
+
+  fun read_dependencies (here,file) =
+    let
+      val requires = get_requires file
+    in
+      map (resolve_path here) requires
+    end
+
+  fun member (a,[]) = false
+    | member (a,b::c) = a=b orelse member (a,c)
+    
+  fun iterate (f : 'a -> unit) [] = ()
+    | iterate f (a::b) = (f a; iterate f b)
+  exception Cdr
+  fun cdr [] = raise Cdr
+    | cdr (a::b) = b
+
+  fun scan file =
+  let
+    val seen = ref []
+    val result = ref []
+    fun one f =
+      let
+        val path = toString f ^ ".sml"
+      in
+        let
+          val name = OS.FileSys.realPath path
+        in
+          if member (name,!seen) then ()
+          else
+            (seen := name :: !seen;
+             let
+(*
+               val _ = print ("Doing dependencies for " ^ name ^ "\n")
+*)
+               val sub = read_dependencies (cdr f,name)
+             in
+               iterate one sub;
+               result := name :: !result
+             end)
+        end
+        handle e => (print ("scan for " ^ path ^ " failed\n"); raise e)
+      end
+  in
+    one file;
+    rev (!result)
+  end
+
+in
+  fun require _ = ()
+  fun make f =
+    case parsename f of
+      REL l => map use (scan l)
+    | ABS l => map use (scan l)
+end
+
+
+@
+
+
+1.4.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a14 4
+ *  Revision 1.4  1998/03/20  15:42:40  jont
+ *  [Bug #30090]
+ *  Modify to use TextIO instead of MLWorks.IO
+ *
+@
+
+
+1.3
+log
+@[Bug #70009]
+Modify to cope with leading $ in module names
+@
+text
+@d15 4
+a31 1
+  structure IO = MLWorks.IO
+d60 1
+a60 1
+     val s = IO.open_in f
+d63 1
+a63 1
+                   val line = IO.input_line s
+d72 1
+a72 1
+                 IO.close_in s;
+d116 1
+a116 1
+  fun iterate f [] = ()
+@
+
+
+1.2
+log
+@[Bug #20050]
+main/io now exports MLWORKS_IO
+@
+text
+@d15 4
+d88 2
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a14 4
+ *  Revision 1.2  1997/05/12  14:44:46  jont
+ *  [Bug #20050]
+ *  main/io now exports MLWORKS_IO
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@a14 4
+ *  Revision 1.2  1997/05/12  14:44:46  jont
+ *  [Bug #20050]
+ *  main/io now exports MLWORKS_IO
+ *
+@
+
+
+1.1
+log
+@new unit
+New unit
+@
+text
+@d15 4
+d128 1
+d130 1
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@a14 4
+ *  Revision 1.1  1997/01/06  13:18:05  matthew
+ *  new unit
+ *  New unit
+ *
+@
+
+
+1.1.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a14 3
+ *  Revision 1.1.1.1  1997/05/12  10:36:44  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a14 3
+ *  Revision 1.1.1.1  1997/05/12  10:36:44  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a14 3
+ *  Revision 1.1.1.1  1997/05/12  10:36:44  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a14 3
+ *  Revision 1.1.1.1.1.1  1997/07/28  18:22:01  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+@

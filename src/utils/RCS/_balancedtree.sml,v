@@ -1,0 +1,419 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.4
+date	92.08.07.14.46.33;	author davidt;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	91.10.29.16.11.00;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.17.13.37.55;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.09.17.53.02;	author davidt;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.08.07.14.46.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@> New super-efficient (ho-ho) implementation of balanced trees.
+@
+
+
+1.4
+log
+@THIS FILE IS NO LONGER IN USE!
+Commented out code so that any attempted use of this
+file causes a parse error.
+@
+text
+@(* balancedtree.sml the functor *)
+
+(* $Log: _balancedtree.sml,v $
+Revision 1.3  1991/10/29  16:11:00  richard
+Added delete and deletep with associated changes to the data structure.
+
+Revision 1.2  91/10/17  13:37:55  richard
+Added to_alist and from_alist, and a proper RCS header.
+
+Copyright (C) 1991 Harlequin Ltd.
+*)
+
+(* !!! THIS FILE IS NO LONGER IN USE !!! *)
+
+(*require "crash";*)
+(*require "lists";*)
+(*require "balancedtree";*)
+
+
+functor BalancedTree (*(
+
+  structure Lists	: LISTS
+  structure Crash	: CRASH
+
+) : BALANCEDTREE =
+
+  struct
+
+    datatype colour = RED | BLACK
+
+    datatype 'item element = PRESENT of 'item | DELETED
+
+    datatype ('key, 'item) tree =
+      EMPTY
+    | TREE of 'key * 'item element *
+              colour *
+	      ('key, 'item) tree * ('key, 'item) tree
+
+    datatype ordering = LT | EQ | GT
+
+    datatype ('key, 'item) btree =
+      BTREE of {ordering : 'key * 'key -> ordering,
+		tree : ('key, 'item) tree}
+
+    fun empty ordering =
+      BTREE {ordering = ordering, tree = EMPTY}
+
+    fun insert (BTREE {ordering, tree}, key, item) =
+      let
+	val item = PRESENT item
+
+	fun f EMPTY = TREE (key, item, RED, EMPTY, EMPTY)
+	  | f (TREE(k, i, BLACK, l, r)) =
+	    (case ordering (key, k) of
+	       GT =>
+		 (case f r of
+		    TREE(rk,ri,RED, rl as TREE(rlk,rli,RED,rll,rlr),rr) =>
+		      (case l of
+			 TREE(lk,li,RED,ll,lr) =>
+			   TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+				TREE(rk,ri,BLACK,rl,rr))
+		       | _ =>
+			   TREE(rlk,rli,BLACK,TREE(k,i,RED,l,rll),
+				TREE(rk,ri,RED,rlr,rr)))
+		  | TREE(rk,ri,RED,rl, rr as TREE(rrk,rri,RED,rrl,rrr)) =>
+		      (case l of
+			 TREE(lk,li,RED,ll,lr) =>
+			   TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+				TREE(rk,ri,BLACK,rl,rr))
+		       | _ =>
+			   TREE(rk,ri,BLACK,TREE(k,i,RED,l,rl),rr))
+		  | r =>
+		      TREE(k,i,BLACK,l,r))
+	     | LT =>
+		 (case f l of
+		    TREE(lk,li,RED,ll, lr as TREE(lrk,lri,RED,lrl,lrr)) =>
+		      (case r of
+			 TREE(rk,ri,RED,rl,rr) =>
+			   TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+				TREE(rk,ri,BLACK,rl,rr))
+		       | _ =>
+			   TREE(lrk,lri,BLACK,TREE(lk,li,RED,ll,lrl),
+				TREE(k,i,RED,lrr,r)))
+		  | TREE(lk,li,RED, ll as TREE(llk,lli,RED,lll,llr), lr) =>
+		      (case r of
+			 TREE(rk,ri,RED,rl,rr) =>
+			   TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+				TREE(rk,ri,BLACK,rl,rr))
+		       | _ =>
+			   TREE(lk,li,BLACK,ll,TREE(k,i,RED,lr,r)))
+		  | l =>
+		      TREE(k,i,BLACK,l,r))
+	     | EQ =>
+		 TREE(key,item,BLACK,l,r))
+	  | f (TREE(k,i,RED,l,r)) =
+	    (case ordering(key, k) of
+	       GT => TREE(k,i,RED,l,f r)
+	     | LT => TREE(k,i,RED,f l, r)
+	     | EQ => TREE(key,item,RED,l,r))
+	val new =
+	  case f tree of
+	    TREE(k,i,RED, l as TREE(_,_,RED,_,_), r) => TREE(k,i,BLACK,l,r)
+	  | TREE(k,i,RED, l, r as TREE(_,_,RED,_,_)) => TREE(k,i,BLACK,l,r)
+	  | t => t
+      in
+	BTREE {ordering = ordering, tree = new}
+      end
+
+    datatype 'a result = YES of 'a | NO
+
+    fun lookup (BTREE {ordering, tree}, key) =
+      let
+	fun look EMPTY = NO
+	  | look (TREE(key', element, _, left, right)) =
+	    (case ordering (key, key')
+	       of LT => look left
+		| GT => look right
+		| EQ => case element
+			  of PRESENT item => YES item
+			   | DELETED => NO)
+      in
+	look tree
+      end
+
+    fun delete (btree as BTREE {ordering, tree}, key) =
+      let
+	fun delete' EMPTY =
+	    (Crash.impossible ("BalancedTree: Missing element."); EMPTY)
+	  | delete' (TREE(key', item, colour, left, right)) =
+	    case ordering (key, key')
+	      of LT => TREE(key', item, colour, delete' left, right)
+	       | GT => TREE(key', item, colour, left, delete' right)
+	       | EQ => TREE(key', DELETED, colour, left, right)
+      in
+	case lookup (btree, key)
+	  of NO => NO
+	   | YES _ => YES (BTREE {ordering = ordering, tree = delete' tree})
+      end
+
+    fun from_alist ordering list =
+      Lists.reducel
+      (fn (tree, (key, item)) => insert (tree, key, item))
+      (empty ordering, list)
+
+    fun to_alist (BTREE {tree, ordering}) =
+      let
+	fun squirt (list, EMPTY) = list
+	  | squirt (list, TREE(key, PRESENT item, _, left, right)) =
+	    (key, item) ::(squirt (squirt (list, left), right))
+	  | squirt (list, TREE(key, DELETED, _, left, right)) =
+	    squirt (squirt (list, left), right)
+      in
+	squirt ([], tree)
+      end
+
+    fun deletep (BTREE {ordering, tree}, predicate) =
+      let
+	fun deletep' EMPTY = EMPTY
+	  | deletep' (TREE(key, DELETED, colour, left, right)) =
+	    TREE(key, DELETED, colour, deletep' left, deletep' right)
+	  | deletep' (TREE(key, PRESENT item, colour, left, right)) =
+	    if predicate (key, item) then
+	      TREE(key, DELETED, colour, deletep' left, deletep' right)
+	    else
+	      TREE(key, PRESENT item, colour,
+		   deletep' left, deletep' right)
+      in
+	BTREE {ordering = ordering,
+	       tree = deletep' tree}
+      end
+
+  end*)
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 5
+Revision 1.4  1992/08/07  14:46:33  davidt
+THIS FILE IS NO LONGER IN USE!
+Commented out code so that any attempted use of this
+file causes a parse error.
+
+@
+
+
+1.3
+log
+@Added delete and deletep with associated changes to the data structure.
+@
+text
+@d3 4
+a6 1
+(* $Log:	_balancedtree.sml,v $
+d13 5
+a17 3
+require "crash";
+require "lists";
+require "balancedtree";
+d20 1
+a20 1
+functor BalancedTree (
+d172 1
+a172 1
+  end
+@
+
+
+1.2
+log
+@Added to_alist and from_alist, and a proper RCS header.
+@
+text
+@d3 4
+a6 1
+(* $Log$
+d10 1
+d18 1
+d26 2
+d30 3
+a32 1
+    | TREE of 'key * 'item * colour * ('key, 'item) tree * ('key, 'item) tree
+d36 3
+a38 2
+    type ('key, 'item) btree =
+      {ordering : 'key * 'key -> ordering, tree : ('key, 'item) tree}
+d41 1
+a41 1
+      {ordering = ordering, tree = EMPTY}
+d43 1
+a43 1
+    fun insert ({ordering, tree}, key, item) =
+d45 2
+d101 1
+a101 1
+	{ordering = ordering, tree = new}
+d106 1
+a106 1
+    fun lookup ({ordering, tree},k) =
+d109 10
+a118 6
+	  | look (TREE(key, item, _, left, right)) =
+	    (case ordering (k, key) of
+	       LT => look left
+	     | GT => look right
+	     | EQ => YES item)
+      in look tree end
+d120 15
+d140 1
+a140 1
+    fun to_alist {tree, ordering} =
+d143 1
+a143 1
+	  | squirt (list, TREE(key, item, _, left, right)) =
+d145 2
+d149 16
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a9 3
+functor BalancedTree () : BALANCEDTREE =
+struct
+  datatype colour = RED | BLACK
+d11 1
+a11 3
+  datatype ('key, 'item) tree =
+    EMPTY
+  | TREE of 'key * 'item * colour * ('key, 'item) tree * ('key, 'item) tree
+d13 1
+a13 1
+  datatype ordering = LT | EQ | GT
+d15 1
+a15 2
+  type ('key, 'item) btree =
+    {ordering : 'key * 'key -> ordering, tree : ('key, 'item) tree}
+d17 1
+a17 2
+  fun empty ordering =
+    {ordering = ordering, tree = EMPTY}
+d19 1
+a19 58
+  fun insert ({ordering, tree}, key, item) =
+    let
+      fun f EMPTY = TREE (key, item, RED, EMPTY, EMPTY)
+	| f (TREE(k, i, BLACK, l, r)) =
+	  (case ordering (key, k) of
+	     GT =>
+	       (case f r of
+		  TREE(rk,ri,RED, rl as TREE(rlk,rli,RED,rll,rlr),rr) =>
+		    (case l of
+		       TREE(lk,li,RED,ll,lr) =>
+			 TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+			      TREE(rk,ri,BLACK,rl,rr))
+		     | _ =>
+			 TREE(rlk,rli,BLACK,TREE(k,i,RED,l,rll),
+			      TREE(rk,ri,RED,rlr,rr)))
+		| TREE(rk,ri,RED,rl, rr as TREE(rrk,rri,RED,rrl,rrr)) =>
+		    (case l of
+		       TREE(lk,li,RED,ll,lr) =>
+			 TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+			      TREE(rk,ri,BLACK,rl,rr))
+		     | _ =>
+			 TREE(rk,ri,BLACK,TREE(k,i,RED,l,rl),rr))
+		| r =>
+		    TREE(k,i,BLACK,l,r))
+	   | LT =>
+	       (case f l of
+		  TREE(lk,li,RED,ll, lr as TREE(lrk,lri,RED,lrl,lrr)) =>
+		    (case r of
+		       TREE(rk,ri,RED,rl,rr) =>
+			 TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+			      TREE(rk,ri,BLACK,rl,rr))
+		     | _ =>
+			 TREE(lrk,lri,BLACK,TREE(lk,li,RED,ll,lrl),
+			      TREE(k,i,RED,lrr,r)))
+		| TREE(lk,li,RED, ll as TREE(llk,lli,RED,lll,llr), lr) =>
+		    (case r of
+		       TREE(rk,ri,RED,rl,rr) =>
+			 TREE(k,i,RED,TREE(lk,li,BLACK,ll,lr),
+			      TREE(rk,ri,BLACK,rl,rr))
+		     | _ =>
+			 TREE(lk,li,BLACK,ll,TREE(k,i,RED,lr,r)))
+		| l =>
+		    TREE(k,i,BLACK,l,r))
+	   | EQ =>
+	       TREE(key,item,BLACK,l,r))
+	| f (TREE(k,i,RED,l,r)) =
+	  (case ordering(key, k) of
+	     GT => TREE(k,i,RED,l,f r)
+	   | LT => TREE(k,i,RED,f l, r)
+	   | EQ => TREE(key,item,RED,l,r))
+      val new =
+	case f tree of
+	  TREE(k,i,RED, l as TREE(_,_,RED,_,_), r) => TREE(k,i,BLACK,l,r)
+	| TREE(k,i,RED, l, r as TREE(_,_,RED,_,_)) => TREE(k,i,BLACK,l,r)
+	| t => t
+    in
+      {ordering = ordering, tree = new}
+    end
+d21 3
+a23 1
+  datatype 'a result = YES of 'a | NO
+d25 94
+a118 10
+  fun lookup ({ordering, tree},k) =
+    let
+      fun look EMPTY = NO
+	| look (TREE(key, item, _, left, right)) =
+	  (case ordering (k, key) of
+	     LT => look left
+	   | GT => look right
+	   | EQ => YES item)
+    in look tree end
+end;
+@

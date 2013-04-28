@@ -1,0 +1,68 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.11.20.40;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.concat.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = concat ("a", "b") = "a/b";
+
+val b = concat("a", "b/c") = "a/b/c";
+
+val c = concat("/", "b/c") = "/b/c";
+
+val d = concat ("", "b/c") = "b/c";
+
+val e = concat("/a", "b/c") = "/a/b/c";
+
+val f = concat("a/", "b/c") = "a/b/c";
+
+val g = concat("a//", "b/c") = "a//b/c";
+
+val h = concat(".", "b/c") = "./b/c";
+
+val i = concat("a/b", "..") = "a/b/..";
+
+val j = concat("a/b", "../c") = "a/b/../c";
+
+val k = (concat ("a", "/b"); false) handle Path => true;
+@

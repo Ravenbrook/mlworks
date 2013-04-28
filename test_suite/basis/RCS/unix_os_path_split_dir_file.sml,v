@@ -1,0 +1,69 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.13.23.12;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.splitDirFile.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = splitDirFile "" = {dir = "", file = ""};
+
+val b = splitDirFile "." = {dir = "", file = "."};
+
+val c = splitDirFile "b" = {dir = "", file = "b"};
+
+val d = splitDirFile "b/" = {dir = "b", file = ""};
+
+val e = splitDirFile "a/b" = {dir = "a", file = "b"};
+
+val f = splitDirFile "/a" = {dir = "/", file = "a"};
+
+val g = splitDirFile "/a/b" = {dir = "/a", file = "b"};
+
+val h = splitDirFile "/c/a/b" = {dir = "/c/a", file = "b"};
+
+val i = splitDirFile "/c/a/b/" = {dir = "/c/a/b", file = ""};
+
+val j = splitDirFile "/c/a/b.foo.bar" = {dir = "/c/a", file = "b.foo.bar"};
+
+val k = splitDirFile "/c/a/b.foo" = {dir = "/c/a", file = "b.foo"};
+@

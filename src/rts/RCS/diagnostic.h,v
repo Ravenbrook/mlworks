@@ -1,0 +1,230 @@
+head	1.6;
+access;
+symbols
+	Final_version_of_old_runtime:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	92.07.22.11.33.07;	author richard;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.07.17.10.43.14;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.03.25.15.02.54;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.03.12.13.08.57;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.20.16.05.08;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.20.16.56.03;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.07.22.11.33.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Diagnostic output macro.
+@
+
+
+1.6
+log
+@Changed include of utils.h to storeman.h, since that is where
+message() is defined now.  Added some extra documentation in the
+leader comment.
+@
+text
+@/*  === DIAGNOSTIC OUTPUT ===
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This header provides a macro which can be used in a program to
+ *  provide diagnostic output to stderr with different levels of
+ *  priority.  Output at level 0 is always displayed, but other levels
+ *  are only output if the external unsigned int diagnostic_level is
+ *  not less than that level.  In the MLWorks runtime system the
+ *  diagnostic_level is set by the `-d' option on the command line.
+ *
+ *  NOTE:  The macro DIAGNOSTICS must be defined elsewhere (preferably as an
+ *  argument to the compiler) in order to make the DIAGNOSTIC macro do
+ *  anything.
+ *
+ *  $Id: diagnostic.h,v 1.5 1992/07/17 10:43:14 richard Exp richard $
+ */
+
+
+#ifndef diagnostic_h
+#define diagnostic_h
+
+extern unsigned int diagnostic_level;
+
+#ifdef DIAGNOSTICS
+#include "storeman.h"
+#define DIAGNOSTIC(level, format, p1, p2) \
+{					  \
+  if((level) <= diagnostic_level)	  \
+  message(format, p1, p2);		  \
+}
+#else
+#define DIAGNOSTIC(level, format, p1, p2)  /* do nothing */
+#endif
+
+#endif
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@d18 1
+a18 1
+ *  $Id: diagnostic.h,v 1.6 1992/07/22 11:33:07 richard Exp jont $
+@
+
+
+1.5
+log
+@Removed the revision log, as we're going to distribute this one.
+@
+text
+@d11 2
+a12 1
+ *  not less than that level.
+d18 1
+a18 1
+ *  $Id$
+d28 1
+a28 1
+#include "utils.h"
+@
+
+
+1.4
+log
+@Removed definition of DIAGNOSTICS macro.  This is now defined by the
+Makefile.
+@
+text
+@d17 1
+a17 13
+ *  Revision Log
+ *  ------------
+ *  $Log: diagnostic.h,v $
+ * Revision 1.3  1992/03/12  13:08:57  richard
+ * Added null definition of DIAGNOSTIC macro so DIAGNOSTICS can be
+ * switched off.
+ *
+ * Revision 1.2  1992/01/20  16:05:08  richard
+ * Diagnostic output macro now calls message() in utils.
+ *
+ * Revision 1.1  1991/12/20  16:56:03  richard
+ * Initial revision
+ *
+d27 6
+a32 6
+#  include "utils.h"
+#  define DIAGNOSTIC(level, format, p1, p2) \
+   { \
+     if((level) <= diagnostic_level) \
+     message(format, p1, p2); \
+   }
+d34 1
+a34 1
+#  define DIAGNOSTIC(level, format, p1, p2)  /* do nothing */
+@
+
+
+1.3
+log
+@Added null definition of DIAGNOSTIC macro so DIAGNOSTICS can be
+switched off.
+@
+text
+@d13 3
+a15 2
+ *  Undefining the symbol DIAGNOSTICS prevents any diagnostic output
+ *  code being produced.
+d20 4
+a34 3
+
+
+#define DIAGNOSTICS /* Undefine this to prevent any diagnostics */
+@
+
+
+1.2
+log
+@Diagnostic output macro now calls message() in utils.
+@
+text
+@d19 3
+d34 1
+d37 8
+a44 11
+
+#include "utils.h"
+
+extern unsigned int diagnostic_level;
+
+#define DIAGNOSTIC(level, format, p1, p2) \
+  { \
+    if((level) <= diagnostic_level) \
+      message(format, p1, p2); \
+  }
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d18 4
+a21 1
+ *  $Log$
+d34 1
+a34 1
+#include <stdio.h>
+d41 1
+a41 5
+    { \
+      putc('[', stderr); \
+      fprintf(stderr, format, p1, p2); \
+      fputs("]\n", stderr); \
+    } \
+@

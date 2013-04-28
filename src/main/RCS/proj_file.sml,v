@@ -1,0 +1,741 @@
+head	1.11;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.11.1
+	MLWorks_21c0_1999_03_25:1.11
+	MLWorks_20c1_1998_08_20:1.10
+	MLWorks_20c0_1998_08_04:1.10
+	MLWorks_20b2c2_1998_06_19:1.9
+	MLWorks_20b2_Windows_1998_06_12:1.8
+	MLWorks_20b1c1_1998_05_07:1.6
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.11
+date	99.03.18.10.19.31;	author mitchell;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	98.07.29.08.37.08;	author johnh;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	98.06.16.10.55.36;	author mitchell;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	98.06.08.12.20.08;	author mitchell;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	98.05.28.17.02.50;	author johnh;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	98.05.01.11.21.52;	author mitchell;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	98.04.24.14.09.54;	author mitchell;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.03.12.16.23.58;	author johnh;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.02.23.14.36.34;	author johnh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.02.06.16.01.42;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.09.12.10.11.08;	author johnh;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.09.12.10.11.09;	author johnh;	state Exp;
+branches;
+next	1.1.1.2;
+
+1.1.1.2
+date	97.09.12.14.34.39;	author johnh;	state Exp;
+branches;
+next	1.1.1.3;
+
+1.1.1.3
+date	97.11.04.10.56.56;	author daveb;	state Exp;
+branches;
+next	1.1.1.4;
+
+1.1.1.4
+date	97.11.28.14.32.23;	author daveb;	state Exp;
+branches;
+next	1.1.1.5;
+
+1.1.1.5
+date	98.01.06.10.49.02;	author johnh;	state Exp;
+branches;
+next	1.1.1.6;
+
+1.1.1.6
+date	98.01.08.15.12.36;	author johnh;	state Exp;
+branches;
+next	1.1.1.7;
+
+1.1.1.7
+date	98.01.21.11.25.34;	author johnh;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	99.04.01.17.57.40;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file on MLWorks_workspace_97
+@
+
+
+1.11
+log
+@[Bug #190534]
+Ensure projects created by Shell.Project have Debug and Release modes as default
+@
+text
+@(* PROJ_FILE.  Operations for reading and writing project files.
+ *
+ * $Log: proj_file.sml,v $
+ *  Revision 1.10  1998/07/29  08:37:08  johnh
+ *  [Bug #30453]
+ *  Extra exceptions added to inform when consistency checks fail.
+ *
+ *  Revision 1.9  1998/06/16  10:55:36  mitchell
+ *  [Bug #30422]
+ *  Add setProjectDir
+ *
+ *  Revision 1.8  1998/06/08  12:20:08  mitchell
+ *  [Bug #30418]
+ *  Export InvalidProjectFile exception
+ *
+ *  Revision 1.7  1998/05/28  17:02:50  johnh
+ *  [Bug #30369]
+ *  Replace source path with a list of files.
+ *
+ *  Revision 1.6  1998/05/01  11:21:52  mitchell
+ *  [Bug #50071]
+ *  Extend interface to support close project, and fix parsing of description and version info
+ *
+ *  Revision 1.5  1998/04/24  14:09:54  mitchell
+ *  [Bug #30389]
+ *  Keep projects more in step with projfiles
+ *
+ *  Revision 1.4  1998/03/12  16:23:58  johnh
+ *  [Bug #30365]
+ *  Implement support for sub-projects.
+ *
+ *  Revision 1.3  1998/02/23  14:36:34  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *  Revision 1.1.1.7  1998/01/21  11:25:34  johnh
+ *  [Bug #30071]
+ *  Introducing subprojects.
+ *
+ *  Revision 1.1.1.6  1998/01/08  15:12:36  johnh
+ *  [Bug #30071]
+ *  Adding directory location for different modes.
+ *  Remove objects lcoation from configurations.
+ *
+ *  Revision 1.1.1.5  1998/01/06  10:49:02  johnh
+ *  [Bug #30071]
+ *  Add about information.
+ *
+ *  Revision 1.1.1.4  1997/11/28  14:32:23  daveb
+ *  [Bug #30071]
+ *  Made getProjectName return an option type; removed setProjectName;
+ *  removed old comments.
+ *  Added getProjectDir.
+ *
+ *  Revision 1.1.1.3  1997/11/04  10:56:56  daveb
+ *  [Bug #30071]
+ *  Added support for current configurations, modes and targets.
+ *
+ *  Revision 1.1.1.2  1997/09/12  14:34:39  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ * 
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ *)
+
+signature PROJ_FILE =
+sig
+  type error_info
+  type location
+  exception InvalidProjectFile of string
+
+  val  changed : unit -> bool
+
+  datatype target_type = IMAGE | OBJECT_FILE | EXECUTABLE | LIBRARY
+
+  type target_details = (string * target_type)
+  exception NoTargetDetailsFound of string
+  val getTargetDetails: string * target_details list -> target_details
+
+  type mode_details =
+    {name:                                      string,
+     location:					string ref,
+     generate_interruptable_code:               bool ref,
+     generate_interceptable_code:               bool ref,
+     generate_debug_info:                       bool ref,
+     generate_variable_debug_info:              bool ref,
+     optimize_leaf_fns:                         bool ref,
+     optimize_tail_calls:                       bool ref,
+     optimize_self_tail_calls:                  bool ref,
+     mips_r4000:                                bool ref,
+     sparc_v7:                                  bool ref}
+
+  exception NoModeDetailsFound of string
+  val getModeDetails: string * mode_details list -> mode_details
+
+  type config_details =
+    {name: string,
+     files: string list,
+     library: string list}
+
+  exception NoConfigDetailsFound of string
+  val getConfigDetails: string * config_details list -> config_details
+  val modifyConfigDetails:
+    config_details * config_details list -> config_details list
+
+  (* getProjectName returns the full path of the current project file,
+     if any.
+     getProjectDir returns the directory containing the current project
+     file, or the current directory if there is no open project.
+   *)
+  val getProjectName: unit -> string option
+  val getProjectDir: unit -> string
+  val getFiles: unit -> string list
+  val getSubprojects: unit -> string list
+  val getTargets: unit -> string list * string list * target_details list
+  val getModes: unit -> (string list * mode_details list *
+			 string option)
+  val getConfigurations: unit -> (string list * config_details list *
+  				  string option)
+  val getLocations: unit -> string list * string * string
+  val getAboutInfo: unit -> string * string
+
+  val setFiles: string list -> unit
+  val setSubprojects: string list -> unit
+
+  exception InvalidTarget of string
+  val setTargets: string list * string list * target_details list -> unit
+  val setModes: string list * mode_details list -> unit
+  val setInitialModes: unit -> unit 
+  val setConfigurations: string list * config_details list -> unit
+  val setLocations: string list * string * string -> unit
+  val setAboutInfo: string * string -> unit
+
+  (* setCurrentConfiguration and setCurrentMode set the current configuration
+     or mode to that specified by the string argument.  If no configuration
+     or mode exists with that name, an error is raised. *)
+  val setCurrentConfiguration: (error_info * location) -> string option -> unit
+  val setCurrentMode: (error_info * location) -> string -> unit
+
+  (* setCurrentTargets sets the current targets to those specified by the
+     string list argument.  All other targets are disabled.  If the list
+     contains a string that does not name a valid target, an error is
+     raised. *)
+  val setCurrentTargets: (error_info * location) -> string list -> unit
+
+  val new_proj: string -> unit
+  val open_proj: string -> unit
+  val save_proj: string -> unit
+  val close_proj: unit -> unit
+
+  val peek_project: string -> 
+	{name: string,
+	 files: string list,
+	 curTargets: string list,
+	 disTargets: string list, 
+	 subprojects: string list,
+	 libraryPath: string list,
+	 objectsLoc: string,
+	 binariesLoc: string,
+	 currentConfig: string option,
+	 configDetails: config_details list,
+	 currentMode: string option,
+	 modeDetails: mode_details list}
+
+
+  val getAllSubProjects: string -> string list
+  val getSubTargets: string -> string list
+end
+
+@
+
+
+1.11.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a3 4
+ *  Revision 1.11  1999/03/18  10:19:31  mitchell
+ *  [Bug #190534]
+ *  Ensure projects created by Shell.Project have Debug and Release modes as default
+ *
+@
+
+
+1.10
+log
+@[Bug #30453]
+Extra exceptions added to inform when consistency checks fail.
+@
+text
+@d4 4
+d131 1
+@
+
+
+1.9
+log
+@[Bug #30422]
+Add setProjectDir
+@
+text
+@d4 4
+d123 2
+@
+
+
+1.8
+log
+@[Bug #30418]
+Export InvalidProjectFile exception
+@
+text
+@d4 4
+d103 1
+a103 1
+     file, or the current directory if the project has not been saved.
+d137 1
+a137 3
+  (* initialize sets the project file information to be empty. *)
+  val initialize: unit -> unit
+
+@
+
+
+1.7
+log
+@[Bug #30369]
+Replace source path with a list of files.
+@
+text
+@d4 4
+d60 2
+@
+
+
+1.6
+log
+@[Bug #50071]
+Extend interface to support close project, and fix parsing of description and version info
+@
+text
+@d4 4
+d82 1
+a82 1
+     source: string list,
+d97 1
+a97 2
+
+  val getSourcePath: unit -> string list
+d107 1
+a107 1
+  val setSourcePath: string list -> unit
+d136 1
+a136 1
+	 sourcePath: string list,
+@
+
+
+1.5
+log
+@[Bug #30389]
+Keep projects more in step with projfiles
+@
+text
+@d4 4
+d115 1
+a115 1
+  val setCurrentConfiguration: (error_info * location) -> string -> unit
+d129 1
+@
+
+
+1.4
+log
+@[Bug #30365]
+Implement support for sub-projects.
+@
+text
+@d4 4
+d48 1
+@
+
+
+1.3
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d4 4
+d47 1
+a47 1
+  type target_details = (string * target_type * string * string)
+d122 1
+a122 1
+	{dir: string,
+d131 3
+a133 1
+	 configDetails: config_details list}
+d136 1
+a136 1
+  val getSubProjects: string -> string list
+@
+
+
+1.2
+log
+@new unit
+[Bug #30071]
+Stores project file information for the new Project Workspace.
+@
+text
+@@
+
+
+1.1
+log
+@new file on MLWorks_workspace_97
+@
+text
+@d1 133
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a0 89
+(* PROJ_FILE.  Operations for reading and writing project files.
+ *
+ * $Log$
+ * 
+ * Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+ *
+ *)
+
+signature PROJ_FILE =
+sig
+  datatype target_type = IMAGE | OBJECT_FILE | EXECUTABLE | LIBRARY
+
+  type target_details = (string * target_type * string * string)
+  exception NoTargetDetailsFound of string
+  val getTargetDetails: string * target_details list -> target_details
+
+  type Targets =
+    {curTargets:    string list ref,
+     disTargets:    string list ref,
+     targetDetails: target_details list ref}
+
+  type mode_details =
+    {name:                                      string,
+     generate_interruptable_code:               bool ref,
+     generate_interceptable_code:               bool ref,
+     generate_debug_info:                       bool ref,
+     generate_variable_debug_info:              bool ref,
+     optimize_leaf_fns:                         bool ref,
+     optimize_tail_calls:                       bool ref,
+     optimize_self_tail_calls:                  bool ref,
+     mips_r4000:                                bool ref,
+     sparc_v7:                                  bool ref}
+  exception NoModeDetailsFound of string
+  val getModeDetails: string * mode_details list -> mode_details
+
+  type Modes =
+    {modes:	  string list ref,
+     modeDetails: mode_details list ref}
+
+  type config_details =
+    {name: string,
+     source: string list,
+     library: string list,
+     objects: string,
+     bins: string}
+  exception NoConfigDetailsFound of string
+  val getConfigDetails: string * config_details list -> config_details
+  val modifyConfigDetails: config_details * config_details list -> config_details list
+
+  type Configurations =
+    {configs:		string list ref,
+     configDetails:	config_details list ref}
+
+  type Locations =
+    {libraryPath:	string list ref,
+     objectsLoc:	string ref,
+     binariesLoc:	string ref}
+
+  datatype ProjectFile = PROJECT_FILE of 
+    {projectName:	string ref,
+     sourcePath:	string list ref,
+     targets:		Targets,
+     modes:		Modes,
+     configs:		Configurations,
+     locations:		Locations}
+
+(* Shouldn't be in the signature  - not need *)
+(*   val project_file: ProjectFile *)
+
+  val getProjectName: unit -> string
+  val getSourcePath: unit -> string list
+  val getTargets: unit -> string list * string list * target_details list
+  val getModes: unit -> string list * mode_details list
+  val getConfigurations: unit -> string list * config_details list
+  val getLocations: unit -> string list * string * string
+
+  val setProjectName: string -> unit
+  val setSourcePath: string list -> unit
+  val setTargets: string list * string list * target_details list -> unit
+  val setModes: string list * mode_details list -> unit
+  val setConfigurations: string list * config_details list -> unit
+  val setLocations: string list * string * string -> unit
+
+  val initialize: unit -> unit
+
+  val open_proj: string -> unit
+  val save_proj: string -> unit
+end
+
+@
+
+
+1.1.1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@@
+
+
+1.1.1.3
+log
+@[Bug #30071]
+Added support for current configurations, modes and targets.
+@
+text
+@d3 1
+a3 5
+ * $Log: proj_file.sml,v $
+ *  Revision 1.1.1.2  1997/09/12  14:34:39  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+a10 3
+  type error_info
+  type location
+
+d17 1
+a17 2
+  (*
+  type targets =
+a20 1
+  *)
+d36 3
+a38 6
+  (*
+  type modes =
+    {modes:	  string list,
+     modeDetails: mode_details list,
+     currentMode: (string * mode_details) option}
+  *)
+a45 1
+
+d50 3
+a52 5
+  (*
+  type configurations =
+    {configs:		string list,
+     configDetails:	config_details list,
+     currentConfig:	(string * config_details) option}
+d55 3
+a57 3
+    {libraryPath:	string list,
+     objectsLoc:	string,
+     binariesLoc:	string}
+d66 3
+a68 1
+  *)
+d73 2
+a74 4
+  val getModes: unit -> (string list * mode_details list *
+			 string option)
+  val getConfigurations: unit -> (string list * config_details list *
+  				  string option)
+a83 13
+  (* setCurrentConfiguration and setCurrentMode set the current configuration
+     or mode to that specified by the string argument.  If no configuration
+     or mode exists with that name, an error is raised. *)
+  val setCurrentConfiguration: (error_info * location) -> string -> unit
+  val setCurrentMode: (error_info * location) -> string -> unit
+
+  (* setCurrentTargets sets the current targets to those specified by the
+     string list argument.  All other targets are disabled.  If the list
+     contains a string that does not name a valid target, an error is
+     raised. *)
+  val setCurrentTargets: (error_info * location) -> string list -> unit
+
+  (* initialize sets the project file information to be empty. *)
+@
+
+
+1.1.1.4
+log
+@[Bug #30071]
+Made getProjectName return an option type; removed setProjectName;
+removed old comments.
+Added getProjectDir.
+@
+text
+@a3 4
+ *  Revision 1.1.1.3  1997/11/04  10:56:56  daveb
+ *  [Bug #30071]
+ *  Added support for current configurations, modes and targets.
+ *
+d24 7
+a41 1
+
+d45 7
+d61 1
+a61 2
+  val modifyConfigDetails:
+    config_details * config_details list -> config_details list
+d63 19
+a81 7
+  (* getProjectName returns the full path of the current project file,
+     if any.
+     getProjectDir returns the directory containing the current project
+     file, or the current directory if the project has not been saved.
+   *)
+  val getProjectName: unit -> string option
+  val getProjectDir: unit -> string
+d83 1
+d92 1
+@
+
+
+1.1.1.5
+log
+@[Bug #30071]
+Add about information.
+@
+text
+@a3 6
+ *  Revision 1.1.1.4  1997/11/28  14:32:23  daveb
+ *  [Bug #30071]
+ *  Made getProjectName return an option type; removed setProjectName;
+ *  removed old comments.
+ *  Added getProjectDir.
+ *
+a69 1
+  val getAboutInfo: unit -> string * string
+a75 1
+  val setAboutInfo: string * string -> unit
+@
+
+
+1.1.1.6
+log
+@[Bug #30071]
+Adding directory location for different modes.
+Remove objects lcoation from configurations.
+@
+text
+@a3 4
+ *  Revision 1.1.1.5  1998/01/06  10:49:02  johnh
+ *  [Bug #30071]
+ *  Add about information.
+ *
+a35 1
+     location:					string ref,
+d52 3
+a54 1
+     library: string list}
+@
+
+
+1.1.1.7
+log
+@[Bug #30071]
+Introducing subprojects.
+@
+text
+@a3 5
+ *  Revision 1.1.1.6  1998/01/08  15:12:36  johnh
+ *  [Bug #30071]
+ *  Adding directory location for different modes.
+ *  Remove objects lcoation from configurations.
+ *
+a72 1
+  val getSubprojects: unit -> string list
+a81 1
+  val setSubprojects: string list -> unit
+a104 16
+
+  val peek_project: string -> 
+	{dir: string,
+	 sourcePath: string list,
+	 curTargets: string list,
+	 disTargets: string list, 
+	 subprojects: string list,
+	 libraryPath: string list,
+	 objectsLoc: string,
+	 binariesLoc: string,
+	 currentConfig: string option,
+	 configDetails: config_details list}
+
+
+  val getSubProjects: string -> string list
+  val getSubTargets: string -> string list
+@

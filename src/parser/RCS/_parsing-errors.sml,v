@@ -1,0 +1,141 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+
+
+1.2
+date	92.09.02.15.37.06;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.08.25.17.01.06;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.09.02.15.37.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Parsing Error Messages functor
+@
+
+
+1.2
+log
+@Installed central error reporting mechanism.
+@
+text
+@(* _parsing-errors.sml the functor *)
+(*
+$Log: _parsing-errors.sml,v $
+Revision 1.1  1992/08/25  17:01:06  matthew
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+THIS FILE IS NO LONGER USED
+
+require "../basics/absyn";
+require "../utils/integer";
+require "../utils/lists";
+require "parsing-errors";
+
+functor ParsingErrors (structure Absyn : ABSYN
+                       structure Lists : LISTS
+                       structure Integer : INTEGER
+                         ) : PARSINGERRORS =
+  struct
+    structure Absyn = Absyn
+    type Marks = Absyn.Source_marks
+    datatype Severity = WARNING | SIMPLE | SERIOUS
+
+    fun print_error (s,marks,WARNING) =
+      Absyn.Source_marks_to_string marks ^ ": Warning: " ^ s ^ "\n"
+      | print_error (s,marks,_) =
+        Absyn.Source_marks_to_string marks ^ ": Error: " ^ s ^ "\n"
+
+    local val print_errors_ref = ref true
+    in
+      fun get_print_errors() = ! print_errors_ref
+      fun set_print_errors b = print_errors_ref := b
+    end
+
+    local val errors_ref = ref [] : (string * Marks * Severity) list ref
+    in
+      fun reset_errors () = errors_ref := []
+      fun get_errors () = rev (!errors_ref)
+      fun report_error data =
+        (if get_print_errors() then output (std_out,print_error data) else ();
+         errors_ref := data :: (!errors_ref))
+      fun error_occurred () = case (!errors_ref) of [] => false | _ => true
+      fun serious_error_occurred () =
+        let
+          fun test [] = false
+            | test ((_,_,SERIOUS)::_) = true
+            | test (_::l) = test l
+        in
+          test (!errors_ref)
+        end
+    end
+    fun print_all_errors () =
+      let
+        fun aux [] = ()
+          | aux (data :: l) = (output(std_out,print_error data); aux l)
+      in
+        case get_errors() of
+          [] => ()
+        | l => (output(std_out,
+                       "\n" ^ 
+                       Integer.makestring(Lists.length l) ^
+                       (if  Lists.length l > 1
+                          then " Errors found:\n"
+                        else " Error found:\n"));
+                aux l)
+      end
+    fun with_errors_shown f =
+      (reset_errors();
+       let val result = f () handle x => (print_all_errors(); raise x)
+       in
+         print_all_errors ();
+         result
+       end)
+  end;
+
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/09/02  15:37:06  richard
+Installed central error reporting mechanism.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+d9 2
+@

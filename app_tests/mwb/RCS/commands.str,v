@@ -1,0 +1,97 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.13.40.28;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.10.17.12.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+functor Commands (structure A : SAGENT; structure F: SFORMULA) : COMMANDS = 
+struct
+    structure A = A
+    structure F = F
+    datatype SetCommand = Debug of int
+    			| Threshold of int
+    			| Rewrite of bool
+    			| Remember of bool
+    			| SetHelp
+    datatype ShowCommand = SDebug
+    			| SThreshold
+    			| SRewrite
+    			| SRemember
+    			| SVersion
+    			| STables
+    			| SHelp
+    			| SAll
+    datatype HelpCommand = HAll | HAgent
+    			| HClear | HDead | HEnv | HEq | HEqd | HInput | HSet | HShow
+    			| HStep | HZtep | HSize | HTraces | HTrans | HWtrans | HWeq
+    			| HWeqd | HHelp | HQuit | HTime | HNULL
+     datatype Command = Agent of (string * A.agent)
+      		     | Check of A.agent * F.formula
+      		     | Clear of string
+		     | Dead of A.agent
+      		     | Environment of string
+		     | Eq of A.agent * A.agent
+		     | EqD of A.agent * A.agent * (A.T.N.name list)
+		     | Input of string
+		     | Set of SetCommand
+		     | Show of ShowCommand
+		     | Step of A.agent
+		     | Ztep of A.agent
+		     | Size of A.agent
+		     | Traces of A.agent
+	             | Transitions of A.agent
+	             | Wtransitions of A.agent
+		     | Weq of A.agent * A.agent
+		     | WeqD of A.agent * A.agent * (A.T.N.name list)
+		     | Help of HelpCommand
+		     | Quit
+		     | NULL
+		     | Time of Command
+    datatype Parse =   ParseCMD of Command
+      		     | ParseAGENT of A.agent
+		     | ParseFORMULA of F.formula
+end
+@
+
+
+1.1
+log
+@new unit
+Adding applications into hope and daily
+@
+text
+@@

@@ -1,0 +1,406 @@
+head	1.4;
+access;
+symbols
+	MLWorks_10r3:1.1.5.1.3
+	MLWorks_10r2_551:1.1.5.1.2
+	MLWorks_11:1.1.5.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.5.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.5.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.5.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.5
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1
+	MM_ML_release_korma_1997_04_01:1.1
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.1.3.1.1
+	MLWorks_gui_1996_12_18:1.1.4
+	MLWorks_1_0_Win32_1996_12_17:1.1.3
+	JFHrts:1.1.2
+	MLWorks_1_0_Win32_1996_11_22:1.1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	97.08.01.16.37.22;	author jkbrook;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.08.01.13.35.41;	author jkbrook;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.07.24.16.44.31;	author jkbrook;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.11.19.13.25.08;	author jont;	state Exp;
+branches
+	1.1.1.1
+	1.1.2.1
+	1.1.3.1
+	1.1.4.1
+	1.1.5.1;
+next	;
+
+1.1.1.1
+date	96.11.22.18.17.14;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.2.1
+date	96.12.17.10.03.59;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.3.1
+date	96.12.17.17.55.35;	author hope;	state Exp;
+branches
+	1.1.3.1.1.1;
+next	;
+
+1.1.3.1.1.1
+date	97.02.24.11.47.02;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.4.1
+date	96.12.18.09.50.10;	author hope;	state Exp;
+branches;
+next	;
+
+1.1.5.1
+date	97.05.12.10.43.52;	author hope;	state Exp;
+branches
+	1.1.5.1.1.1
+	1.1.5.1.2.1
+	1.1.5.1.3.1;
+next	;
+
+1.1.5.1.1.1
+date	97.07.28.18.29.36;	author daveb;	state Exp;
+branches;
+next	1.1.5.1.1.2;
+
+1.1.5.1.1.2
+date	97.08.11.08.40.26;	author jkbrook;	state Exp;
+branches;
+next	1.1.5.1.1.3;
+
+1.1.5.1.1.3
+date	97.08.11.14.19.19;	author jkbrook;	state Exp;
+branches;
+next	1.1.5.1.1.4;
+
+1.1.5.1.1.4
+date	97.08.11.16.36.08;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.5.1.2.1
+date	97.09.08.17.22.35;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.5.1.3.1
+date	97.09.09.14.18.38;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+The license registerer is now platform specific
+@
+
+
+1.4
+log
+@[Bug #20072]
+Adding edition info (e.g., student, personal) to licensing
+@
+text
+@/* MLWorks Registration generator
+ *
+ * Copyright (c) Harlequin Ltd. 1996
+ *
+ *
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.3  1997/08/01  13:35:41  jkbrook
+ * [Bug #30223]
+ * Shorten license codes by removing number
+ *
+ * Revision 1.2  1997/07/24  16:44:31  jkbrook
+ * [Bug #20077]
+ * Adding an install-by date
+ *
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+ * Revision 1.3  1996/11/15  16:45:14  daveb
+ * Mapped name to lower case before encoding.
+ *
+ *  Revision 1.2  1996/11/12  17:42:08  daveb
+ *  Added an expiration date.
+ *  
+ *  Revision 1.1  1996/11/12  10:42:00  daveb
+ *  new unit
+ *  Program for generating registration-style licensing keys for MLWorks.
+ */
+
+#include <stdio.h>
+#include <string.h>
+#include "register.h"
+
+extern void print_license(const char *result, const char *edition, const char *inst_date, const char *exp_date)
+{
+  printf("The licence code is `%s%s%s%s'\n", result + strlen(result)-CHECK_CHARS, edition, inst_date, exp_date);
+}
+@
+
+
+1.3
+log
+@[Bug #30223]
+Shorten license codes by removing number
+@
+text
+@d7 4
+d34 1
+a34 1
+extern void print_license(const char *result, const char *inst_date, const char *exp_date)
+d36 1
+a36 2
+  printf("The licence code is `%s%s%s'\n", result + strlen(result)-CHECK_CHARS,
+	 inst_date, exp_date);
+@
+
+
+1.2
+log
+@[Bug #20077]
+Adding an install-by date
+@
+text
+@d7 4
+d30 1
+a30 1
+extern void print_license(const char *result, const char *number, const char *inst_date, const char *exp_date)
+d32 2
+a33 2
+  printf("The licence code is `%s%s%s%s'\n", result + strlen(result)-CHECK_CHARS,
+	 number, inst_date, exp_date);
+@
+
+
+1.1
+log
+@new unit
+The license registerer is now platform specific
+@
+text
+@d6 5
+a10 1
+ * $Log: src:sha:register.c,v $
+d26 1
+a26 1
+extern void print_license(const char *result, const char *number, const char *date)
+d28 2
+a29 2
+  printf("The licence code is `%s%s%s'\n", result + strlen(result)-CHECK_CHARS,
+	 number, date);
+@
+
+
+1.1.5.1
+log
+@branched from 1.1
+@
+text
+@d6 1
+a6 5
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+@
+
+
+1.1.5.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a6 3
+ * Revision 1.1.5.1  1997/05/12  10:43:52  hope
+ * branched from 1.1
+ *
+@
+
+
+1.1.5.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a6 3
+ * Revision 1.1.5.1  1997/05/12  10:43:52  hope
+ * branched from 1.1
+ *
+@
+
+
+1.1.5.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a6 3
+ * Revision 1.1.5.1  1997/05/12  10:43:52  hope
+ * branched from 1.1
+ *
+@
+
+
+1.1.5.1.1.2
+log
+@[Bug #20077]
+Merging into 1.1:
+Adding an install-by date
+@
+text
+@a6 3
+ * Revision 1.1.5.1.1.1  1997/07/28  18:29:36  daveb
+ * branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+d29 1
+a29 1
+extern void print_license(const char *result, const char *number, const char *inst_date, const char *exp_date)
+d31 2
+a32 2
+  printf("The licence code is `%s%s%s%s'\n", result + strlen(result)-CHECK_CHARS,
+	 number, inst_date, exp_date);
+@
+
+
+1.1.5.1.1.3
+log
+@[Bug #30223]
+Merging into 1.1:
+Shorten license codes by removing number
+@
+text
+@a6 5
+ * Revision 1.1.5.1.1.2  1997/08/11  08:40:26  jkbrook
+ * [Bug #20077]
+ * Merging into 1.1:
+ * Adding an install-by date
+ *
+d32 1
+a32 1
+extern void print_license(const char *result, const char *inst_date, const char *exp_date)
+d34 2
+a35 2
+  printf("The licence code is `%s%s%s'\n", result + strlen(result)-CHECK_CHARS,
+	 inst_date, exp_date);
+@
+
+
+1.1.5.1.1.4
+log
+@[Bug #20072]
+Merging into 1.1:
+Adding edition info
+@
+text
+@a6 5
+ * Revision 1.1.5.1.1.3  1997/08/11  14:19:19  jkbrook
+ * [Bug #30223]
+ * Merging into 1.1:
+ * Shorten license codes by removing number
+ *
+d37 1
+a37 1
+extern void print_license(const char *result, const char *edition, const char *inst_date, const char *exp_date)
+d39 2
+a40 1
+  printf("The licence code is `%s%s%s%s'\n", result + strlen(result)-CHECK_CHARS, edition, inst_date, exp_date);
+@
+
+
+1.1.4.1
+log
+@branched from 1.1
+@
+text
+@d6 1
+a6 5
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+@
+
+
+1.1.3.1
+log
+@branched from 1.1
+@
+text
+@d6 1
+a6 5
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+@
+
+
+1.1.3.1.1.1
+log
+@branched from 1.1.3.1
+@
+text
+@a6 3
+ * Revision 1.1.3.1  1996/12/17  17:55:35  hope
+ * branched from 1.1
+ *
+@
+
+
+1.1.2.1
+log
+@branched from 1.1
+@
+text
+@d6 1
+a6 5
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d6 1
+a6 5
+ * $Log: src:OS:Unix:register.c,v $
+ * Revision 1.1  1996/11/19  13:25:08  jont
+ * new unit
+ * The license registerer is now platform specific
+ *
+@

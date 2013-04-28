@@ -1,0 +1,613 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.5
+	ML_beta_release_03/08/94:1.5
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-4-29/01/1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.3
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	95.03.31.15.24.51;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.02.16.16.40.00;	author nickb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.10.01.11.24.08;	author clive;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.09.25.15.00.04;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.04.22.16.40.12;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.17.01.42;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.15.57.19;	author colin;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.10.01.11.24.08;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Polymorphic Finite Maps
+@
+
+
+1.7
+log
+@Don't need equality function in map anymore
+@
+text
+@(* _map.sml the functor *)
+(*
+$Log: _map.sml,v $
+Revision 1.6  1995/02/16  16:40:00  nickb
+Change compare to check the domains first.
+
+Revision 1.5  1992/10/01  11:24:08  clive
+Took out commented out code
+
+Revision 1.4  1992/09/25  15:00:04  jont
+Changed type of fold. rwrote mapit more sensibly
+
+Revision 1.3  1992/04/22  16:40:12  jont
+Improved implementations of various functions by not carting
+around so may parameters
+
+Revision 1.2  1991/11/21  17:01:42  jont
+Added copyright message
+
+Revision 1.1  91/06/07  15:57:19  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+require "map";
+
+functor Map () : MAP =
+
+    struct
+      type ('a,'b) Map = ('a * 'b) list
+
+      val empty_map = []
+
+      exception Lookup
+      
+      fun lookup (_,[]) = raise Lookup
+	| lookup (key,alist) = 
+	  let
+	    fun lsub [] = raise Lookup
+	      | lsub((key',aval) :: t) =
+		if key = key'
+		  then aval 
+		else
+		  lsub t
+	  in
+	    lsub alist
+	  end
+	    
+      fun add (item,[],_) = [item]
+	| add (item as (m,n),amap,orderfun) =
+	  let
+	    fun addsub [] = [item]
+	      | addsub(alist as ((elem as (m', n')) :: t)) =
+		if orderfun (m,m') then
+		  if orderfun (m',m) 
+		    then item :: t
+		  else
+		    item :: alist
+		else
+		  elem :: addsub t
+	  in
+	    addsub amap
+	  end
+
+      (* orderfun(x,x) = true *)
+	      
+      fun forall ([],_) = true
+	| forall(alist, apred) =
+	  let
+	    fun fsub [] = true
+	      | fsub((_,aval)::t) = apred aval andalso fsub t
+	  in
+	    fsub alist
+	  end
+
+      fun exists ([],_) = false
+	| exists(alist, apred) =
+	  let
+	    fun esub [] = false
+	      | esub((_, aval) :: t) = apred aval orelse esub t
+	  in
+	    esub alist
+	  end
+	  
+      fun mapit(amap, afun) =
+	map (fn (x, y) => (x, afun y)) amap
+
+      fun plus ([],amap,_) = amap
+	| plus (amap,[],_) = amap
+	| plus(map1, map2, orderfun) =
+	  let
+	    fun psub([], map) = map
+	      | psub(map, []) = map
+	      | psub(map1 as ((i as (m, n)) :: t),
+		     map2 as ((i' as (m', n')) :: t')) =
+		if orderfun (m,m') then
+		  if orderfun (m',m) then
+		    i' :: psub(t, t')
+		  else
+		    i :: psub(t, map2)
+		else
+		  i' :: psub(map1, t')
+	  in
+	    psub(map1, map2)
+	  end
+
+      fun eqmaps ([],[],_) = true
+	| eqmaps ([],_,_) = false
+	| eqmaps (_,[],_) = false
+	| eqmaps ((m,n)::t,(m',n')::t',eqfun) =
+	  m = m' andalso eqfun (n,n') andalso eqmaps (t,t',eqfun)
+	  
+      datatype map_result =
+	EQUAL | NOT_EQUAL | DIFFERENT_DOMAINS
+
+      fun compare (m, m', compfun) =
+	let
+	  fun equal_domains ((l, _)::t, (l', _)::t') =
+	    l = l' andalso equal_domains(t,t')
+	    | equal_domains ([],[]) = true
+	    | equal_domains _ = false (* different lengths *)
+
+	  fun equal_values ([], []) = true
+	    | equal_values ((_, v)::t, (_, v')::t') =
+	      compfun (v, v') andalso
+	      equal_values (t, t')
+	    | equal_values (_, _) = false (* should be impossible *)
+	in
+	  if equal_domains (m,m')
+	    then if equal_values (m, m')
+	      then EQUAL
+		 else NOT_EQUAL
+	  else DIFFERENT_DOMAINS
+	end
+	  
+      datatype size_result =
+	BIGGER | NOT_BIGGER | DIFFERENT_RANGE
+
+      fun size (m,m', ordering, compfun) =
+	let
+	  fun size' (_, []) = BIGGER
+	    | size' ([], _) = NOT_BIGGER
+	    | size' ((l, v) :: t, L as (l', v') :: t') =
+	      if l = l' then
+		if compfun (v, v') then
+		  size' (t, t')
+		else
+		  DIFFERENT_RANGE
+	      else if ordering (l, l') then
+		size' (t, L)
+	      else
+		NOT_BIGGER
+	in
+	  size' (m, m')
+	end
+		
+      fun splice_maps ([],[],_,_,_,_) = []
+	| splice_maps ([],(l,h)::t,x,rightfun,y,z) =
+	  (l,(rightfun h)) ::
+          splice_maps ([],t,x,rightfun,y,z)
+	| splice_maps ((l,h)::t,[],leftfun,x,y,z) =
+	  (l,(leftfun h)) ::
+          splice_maps (t,[],leftfun,x,y,z)
+	| splice_maps (x as ((l,h)::t),x' as ((l',h') :: t'),
+		       leftfun,rightfun,comfun,orderfun) =
+	  if l = l'
+	    then 
+	      (comfun (h,h');
+	       (l,h) ::
+               splice_maps (t,t',leftfun,rightfun,comfun,orderfun))
+	  else
+	    if orderfun (l,l')
+	      then
+		(l,leftfun h) ::
+                splice_maps (t,x',leftfun,rightfun,comfun,orderfun)
+	    else
+	      (l',rightfun h') ::
+              splice_maps (x,t',leftfun,rightfun,comfun,orderfun)
+	      
+      fun print_map ((k,v)::t,key_fun,val_fun,connector) =
+	key_fun k
+	^
+	connector
+	^
+	val_fun v
+	^
+	(print_map (t,key_fun,val_fun,connector))
+	| print_map ([],_,_,_) = ""
+	  
+      fun domain amap = map (fn (x,_) => x) amap
+	
+      fun range amap = map (fn (_,y) => y) amap
+	
+      fun assoc amap = amap
+
+      fun domain_member (key,[]) = false
+	| domain_member (key,(key',_)::t) = 
+	  key = key' orelse domain_member (key,t)
+	  
+      fun foldL f i [] = i
+	| foldL f i (h :: t) = foldL f (f h i) t
+	  
+      fun fold f (c, abmap) =
+	let
+	  fun red(i, []) = i
+	    | red(i, (_, x) :: xs) = red(f(i, x), xs)
+	in
+	  red(c, abmap)
+	end
+
+      fun Fold (f : 'a -> 'b -> 'c -> 'c) (i : 'c) (m:('a,'b) Map) =
+	(foldL (fn (a, b) => fn c => f a b c) i m) : 'c
+
+    end
+    
+@
+
+
+1.6
+log
+@Change compare to check the domains first.
+@
+text
+@d4 3
+d30 1
+a30 3
+      type ('a,'b) Map = (('a * 'b) list * (('a * 'a) -> bool))
+
+      val empty_map = ([],op =)
+d32 1
+a32 1
+      fun empty_eqfunmap (eqfun) = ([],eqfun)
+d36 2
+a37 2
+      fun lookup (_,([],_)) = raise Lookup
+	| lookup (key,(alist, eqfun)) = 
+d41 1
+a41 1
+		if eqfun (key,key') 
+d49 2
+a50 4
+      fun insert (item,(alist,eqfun)) = (item::alist,eqfun)
+	
+      fun add (item,([],eqfun),_) = ([item],eqfun)
+	| add (item as (m,n),(amap,eqfun),orderfun) =
+d62 1
+a62 1
+	    (addsub amap,eqfun)
+d64 1
+d67 2
+a68 2
+      fun forall (([],_),_) = true
+	| forall((alist, _), apred) =
+d76 2
+a77 2
+      fun exists (([],_),_) = false
+	| exists((alist, _), apred) =
+d85 2
+a86 11
+      fun mapit((amap, eqfun), afun) =
+	(map (fn (x, y) => (x, afun y)) amap, eqfun)
+
+      fun mapit2 (([],eqfun),x,y,afun) = (([],eqfun),x)
+	| mapit2 (((h,h')::t,eqfun),x,y,afun) = 
+	  let 
+	    val (h'',x') = afun (h',x,y)
+	    val (new_map,x'') = mapit2 ((t,eqfun),x',y,afun)
+	  in
+	    (insert ((h,h''),new_map),x'')
+	  end
+d88 3
+a90 10
+      fun cond_mapit (([],eqfun),_) = ([],eqfun)
+	| cond_mapit (((h,h')::t,eqfun),afun) = 
+	  insert ((h,afun (h,h')),cond_mapit((t,eqfun),afun))
+	  
+      (* eqfun and eqfun' are the same function, here and in other *)
+      (* similar places *)
+
+      fun plus (([],_),amap,_) = amap
+	| plus (amap,([],_),_) = amap
+	| plus((map1, eqfun), (map2, _), orderfun) =
+d104 1
+a104 1
+	    (psub(map1, map2), eqfun)
+d107 5
+a111 9
+      fun eqmaps (([],_),([],_),_) = true
+	| eqmaps (([],_),_,_) = false
+	| eqmaps (_,([],_),_) = false
+	| eqmaps (((m,n)::t,eqfun),((m',n')::t',eqfun'),eqfun'') =
+	  eqfun (m,m')
+	  andalso
+	  eqfun'' (n,n')
+	  andalso
+	  eqmaps ((t,eqfun),(t',eqfun'),eqfun'')
+d116 1
+a116 1
+      fun compare ((m, eqfun), (m', _), compfun) =
+d119 1
+a119 1
+	    eqfun(l,l') andalso equal_domains(t,t')
+d139 1
+a139 1
+      fun size ((m, eqfun), (m', _), ordering, compfun) =
+d144 1
+a144 1
+	      if eqfun (l, l') then
+d157 8
+a164 8
+      fun splice_maps (([],eqfun),([],_),_,_,_,_) = ([],eqfun)
+	| splice_maps (([],eqfun),((l,h)::t,eqfun'),x,rightfun,y,z) =
+	  insert ((l,(rightfun h)),
+		  splice_maps (([],eqfun),(t,eqfun'),x,rightfun,y,z))
+	| splice_maps (((l,h)::t,eqfun),([],eqfun'),leftfun,x,y,z) =
+	  insert ((l,(leftfun h)),
+		  splice_maps ((t,eqfun),([],eqfun'),leftfun,x,y,z))
+	| splice_maps (x as ((l,h)::t,eqfun),x' as ((l',h') :: t',eqfun'),
+d166 1
+a166 1
+	  if eqfun (l,l')
+d169 2
+a170 3
+	       insert ((l,h),
+		       splice_maps ((t,eqfun),(t',eqfun'),
+				    leftfun,rightfun,comfun,orderfun)))
+d174 2
+a175 2
+		insert ((l,leftfun h),splice_maps ((t,eqfun),x',leftfun,
+						   rightfun,comfun,orderfun))
+d177 2
+a178 3
+	      insert ((l',rightfun h'),
+		      splice_maps (x,(t',eqfun'),leftfun,
+				   rightfun,comfun,orderfun))
+d180 1
+a180 1
+      fun print_map (((k,v)::t,eqfun),key_fun,val_fun,connector) =
+d187 2
+a188 2
+	(print_map ((t,eqfun),key_fun,val_fun,connector))
+	| print_map (([],_),_,_,_) = ""
+d190 1
+a190 1
+      fun domain (amap,_) = map (fn (x,_) => x) amap
+d192 1
+a192 1
+      fun range (amap,_) = map (fn (_,y) => y) amap
+d194 1
+a194 1
+      fun assoc (amap,_) = amap
+d196 3
+a198 12
+      fun emptymap_p ([],_) = true
+	| emptymap_p _ = false
+	  
+      fun remove (_,([],eqfun)) = ([],eqfun)
+	| remove (key,((key',value)::t,eqfun)) = 
+	  if eqfun (key,key')
+	    then (t,eqfun)
+	  else insert ((key',value),remove (key,(t,eqfun)))
+	    
+      fun domain_member (key,([],_)) = false
+	| domain_member (key,((key',_)::t,eqfun)) = 
+	  eqfun (key,key') orelse domain_member (key,(t,eqfun))
+d203 1
+a203 1
+      fun fold f (c, (abmap, _)) =
+d211 1
+a211 1
+      fun Fold (f : 'a -> 'b -> 'c -> 'c) (i : 'c) ((m,_):('a,'b) Map) =
+@
+
+
+1.5
+log
+@Took out commented out code
+@
+text
+@d4 3
+d138 10
+a147 10
+	  fun compare' ([], []) = EQUAL
+	    | compare' ((l, v) :: t, (l', v') :: t') =
+	      if eqfun (l, l') then
+		if compfun (v, v') then
+		  compare' (t, t')
+		else
+		  NOT_EQUAL
+	      else
+		DIFFERENT_DOMAINS
+	    | compare' (_, _) = DIFFERENT_DOMAINS
+d149 5
+a153 1
+	  compare' (m, m')
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.5  1992/10/01  11:24:08  clive
+Took out commented out code
+
+@
+
+
+1.4
+log
+@Changed type of fold. rwrote mapit more sensibly
+@
+text
+@d4 3
+a31 1
+(*
+a32 7
+	| lookup (key,((key',aval)::t,eqfun)) = 
+	  if eqfun (key,key') 
+	    then aval 
+	  else
+	    lookup (key,(t,eqfun))
+*)
+      fun lookup (_,([],_)) = raise Lookup
+a46 1
+(*
+a47 11
+	| add (item as (m,n),(amap as (m',n')::t,eqfun),orderfun) =
+	    if orderfun (m,m') 
+	      then
+		if orderfun (m',m) 
+		  then ((m,n)::t,eqfun)
+		else
+		  ((m,n)::amap,eqfun)
+	    else
+	      insert((m',n'),(add (item,(t,eqfun),orderfun)))
+*)
+      fun add (item,([],eqfun),_) = ([item],eqfun)
+a63 5
+(*
+      fun forall (([],_),apred) = true
+	| forall (((key,aval)::t,eqfun),apred) =  
+	  (apred aval) andalso forall ((t,eqfun),apred) 
+*)
+a72 5
+(*
+      fun exists (([],_),apred) = false
+	| exists (((key,aval)::t,eqfun),apred) =  
+	  (apred aval) orelse exists ((t,eqfun),apred) 
+*)
+a81 5
+(*
+      fun mapit (([],eqfun),_) = ([],eqfun)
+	| mapit (((h,h')::t,eqfun),afun) = 
+	  insert ((h,afun h'),mapit ((t,eqfun),afun))
+*)
+d100 1
+a100 1
+(*
+a102 14
+	| plus (map1 as (((m,n)::t),eqfun),
+		map2 as (((m',n')::t'),eqfun'),orderfun) = 
+	  if orderfun (m,m')
+	    then
+	      if orderfun (m',m)
+		then
+		  insert ((m',n'),plus ((t,eqfun),(t',eqfun'),orderfun))
+	      else
+		insert ((m,n),plus ((t,eqfun),map2,orderfun))
+	  else
+	    insert ((m',n'),plus (map1,(t',eqfun'),orderfun))
+*)
+      fun plus (([],_),amap,_) = amap
+	| plus (amap,([],_),_) = amap
+a226 5
+(*
+      fun fold (f : 'b -> 'c -> 'c) (i : 'c) ((m,_) : ('a,'b) Map) = 
+	(foldL (fn (a, b) => fn c => f b c) i m) : 'c
+*)
+
+@
+
+
+1.3
+log
+@Improved implementations of various functions by not carting
+around so may parameters
+@
+text
+@d4 4
+d109 1
+d113 4
+a116 1
+	  
+d273 1
+d276 10
+a285 1
+	
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_map.sml,v $
+d25 1
+d32 13
+d48 1
+d59 16
+a74 1
+	      
+d77 1
+d81 9
+d91 1
+d95 9
+d124 1
+d138 20
+a157 1
+	    
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

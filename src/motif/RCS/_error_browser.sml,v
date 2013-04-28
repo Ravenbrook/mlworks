@@ -1,0 +1,496 @@
+head	1.7;
+access;
+symbols
+	ML_beta_release_12/08/94:1.4
+	ML_beta_release_03/08/94:1.4
+	ML_revised_beta_release_25/05/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	95.07.07.15.24.46;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.07.04.13.58.15;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.05.25.17.40.26;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.08.02.10.22.57;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.07.26.16.25.38;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.05.20.11.55.44;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.05.13.15.55.04;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.7
+log
+@Minor changes to layout.
+@
+text
+@(*
+ * Copyright (c) 1994 Harlequin Ltd.
+ * $Log: _error_browser.sml,v $
+ *  Revision 1.6  1995/07/04  13:58:15  matthew
+ *  Capification
+ *
+ *  Revision 1.5  1995/05/25  17:40:26  daveb
+ *  Separated user_options into tool-specific and context-specific parts.
+ *
+ *  Revision 1.4  1994/08/02  10:22:57  daveb
+ *  Added sensitivity to edit button on actions menu.
+ *
+ *  Revision 1.3  1994/07/26  16:25:38  daveb
+ *  Changed menu slightly.  Made first item be selected on startup.
+ * 
+ *  Revision 1.2  1994/05/20  11:55:44  daveb
+ *  Revised interface.
+ * 
+ *  Revision 1.1  1994/05/13  15:55:04  daveb
+ *  new file
+ * 
+ *)
+
+require "../utils/lists";
+require "../library/capi";
+require "../interpreter/shell_utils";
+require "motif_utils";
+require "menus";
+
+require "error_browser";
+
+functor ErrorBrowser(
+  structure Lists : LISTS
+  structure Capi : CAPI
+  structure Menus : MENUS
+  structure MotifUtils : MOTIF_UTILS
+  structure ShellUtils : SHELL_UTILS
+
+  sharing type Capi.Widget = Menus.Widget = MotifUtils.Widget
+  sharing type Menus.ButtonSpec = MotifUtils.ButtonSpec
+  sharing type MotifUtils.user_tool_options = ShellUtils.UserOptions
+               
+) : ERROR_BROWSER =
+  struct
+    structure Info = ShellUtils.Info
+    structure Location = Info.Location
+
+    type Widget = Capi.Widget
+    type Context = ShellUtils.Context
+    type options = ShellUtils.Options.options
+    type error = Info.error
+    type location = Location.T
+
+        fun first_line message =
+          let
+            fun aux ([],acc) = acc
+              | aux ("\n" :: _,acc) = acc
+              | aux (c::l,acc) = aux(l,c::acc)
+          in
+            implode (rev (aux (explode message,[])))
+          end
+        
+        fun location_line location =
+          case location of
+            Location.UNKNOWN => ""
+          | Location.FILE s => ""
+          | Location.LINE(_,l) => "Line " ^ MLWorks.Integer.makestring l
+          | Location.POSITION (_,l,_) => "Line " ^ MLWorks.Integer.makestring l
+          | Location.EXTENT {s_line,e_line,...} =>
+              if s_line = e_line
+                then "Line " ^ MLWorks.Integer.makestring s_line
+              else "Line " ^ MLWorks.Integer.makestring s_line ^ " to " ^ MLWorks.Integer.makestring e_line
+                
+        fun error_location (Info.ERROR(_,location,message)) = location
+
+        fun location_file location =
+          case location of
+            Location.UNKNOWN => ""
+          | Location.FILE f => f
+          | Location.LINE(f,l) => f
+          | Location.POSITION (f,l,_) => f
+          | Location.EXTENT {name,...} => name
+
+        fun error_to_string _ (Info.ERROR(severity,location,message)) =
+          (case location_line location of
+             "" => first_line message
+           | l => l ^ ": " ^ first_line message)
+
+        fun create
+	      {parent, errors, action_message, file_message,
+	       edit_action, redo_action} =
+          let 
+            val (shell,mainWindow,menuBar,_) =
+              Capi.make_main_window ("errorBrowser",
+                                     "ErrorBrowser",
+                                     parent, false)
+            val title = Capi.make_managed_widget ("errorBrowserTitle",Capi.Text,mainWindow,[])
+            val title2 = Capi.make_managed_widget ("errorBrowserTitle",Capi.Text,mainWindow,[])
+            val frame =
+	      Capi.make_managed_widget
+	        ("errorBrowserFrame", Capi.Paned, mainWindow,
+		 [Capi.PanedMargin true])
+
+            val (scroll,text) = Capi.make_scrolled_text("errorBrowserText",frame,[])
+
+            fun message_fun s = Capi.send_message (shell,s)
+            val quit_funs = ref []
+
+            fun do_quit_funs _ = Lists.iterate (fn f => f ()) (!quit_funs)
+
+            fun edit_error _ (Info.ERROR(_,location,_)) =
+              let
+                val quit_fun = edit_action location
+              in
+                quit_funs := quit_fun :: (!quit_funs)
+              end
+            handle ShellUtils.EditFailed s =>
+              message_fun ("Edit failed: " ^ s)
+
+            fun show_full_message _ (Info.ERROR(_,_,message)) =
+              Capi.Text.set_string(text,message)
+
+            val (scroll,list,set_items) =
+	      Capi.make_scrolllist
+		{parent = frame, name = "errorBrowser",
+		 select_fn = show_full_message,
+                 action_fn = edit_error,
+                 print_fn = error_to_string}
+
+            fun edit_fun _ =
+              let
+                val selected_items = Capi.List.get_selected_pos list
+              in
+                case Vector.length selected_items of
+                  0 => message_fun "No item selected"
+                | 1 =>
+                    let val index = Vector.sub(selected_items,0)
+                    in
+                      edit_error (scroll,list,set_items) 
+				 (Lists.nth (index-1,errors))
+                    end
+                | _ => message_fun "Multiple selections"
+              end
+
+	    fun editable _ =
+	      let
+                val selected_items = Capi.List.get_selected_pos list
+              in
+		if Vector.length selected_items = 1 then
+		  let
+		    val index = Vector.sub(selected_items,0)
+		  in
+		    case Lists.nth (index-1,errors) of
+		      Info.ERROR(_,location,_) => ShellUtils.editable location
+		  end
+		else
+		  false
+              end
+
+	    fun quit_fun _ =
+              (* Widget should be reused *)
+              (* Though we would like to have more than one at once *)
+	      (do_quit_funs();
+	       Capi.destroy shell);
+
+	    fun redo_fun _ =
+	      (quit_fun ();
+	       redo_action ())
+
+            val menuspec =
+	      Menus.CASCADE ("action",
+               		     [Menus.PUSH ("edit", edit_fun, editable),
+               		      Menus.PUSH ("redo", redo_fun, fn _ => true),
+			      Menus.SEPARATOR,
+              		      Menus.PUSH ("close", quit_fun, fn _ => true)],
+			     fn _ => true)
+          in
+            Capi.Layout.lay_out
+            [Capi.Layout.MENUBAR menuBar,
+             Capi.Layout.SPACE,
+             Capi.Layout.OTHER title,
+             Capi.Layout.OTHER title2,
+             Capi.Layout.SPACE,
+             Capi.Layout.PANED frame,
+             Capi.Layout.SPACE];
+             
+            Menus.make_submenus(menuBar,[menuspec]);
+            (* Note the destroy method is added to the parent of the popup shell *)
+            Capi.Callback.add (mainWindow, Capi.Callback.Unmap, do_quit_funs);
+            Capi.Callback.add (Capi.parent shell, Capi.Callback.Destroy,do_quit_funs);
+            set_items ShellUtils.Options.default_print_options errors;
+            Capi.manage text;
+            Capi.Text.set_string (title, action_message);
+            Capi.Text.set_string (title2,file_message);
+            Capi.manage shell;
+            Capi.realize shell;
+	    Capi.List.select_pos (list, 1, false);
+            show_full_message (scroll,list,set_items) (Lists.nth (0,errors))
+          end
+
+  end;
+@
+
+
+1.6
+log
+@Capification
+@
+text
+@d4 3
+d99 5
+a103 1
+            val frame = Capi.make_managed_widget ("errorBrowserFrame",Capi.Pane,mainWindow,[])
+d180 1
+d184 1
+a184 1
+             Capi.Layout.OTHER frame,
+@
+
+
+1.5
+log
+@Separated user_options into tool-specific and context-specific parts.
+@
+text
+@d4 3
+d22 1
+a22 1
+require "../library/xm";
+d31 1
+a31 1
+  structure Xm : XM
+d36 1
+a36 1
+  sharing type Xm.Widget = Menus.Widget = MotifUtils.Widget
+d45 1
+a45 1
+    type Widget = Xm.Widget
+d90 8
+a97 26
+            val shell = Xm.Widget.createPopupShell (Xm.Widget.NAME "errorBrowserShell",
+                                                    Xm.Widget.Class.TopLevelShell,
+                                                    parent, [])
+            val form = Xm.Widget.createManaged (Xm.Widget.NAME "errorBrowserForm",
+                                                Xm.Widget.Class.Form,
+                                                shell,[])
+
+            val menuBar = Xm.Widget.createManaged (Xm.Widget.NAME "menuBar",
+                                                   Xm.Widget.Class.RowColumn,
+                                                   form,[])
+
+            val title = Xm.Widget.createManaged (Xm.Widget.NAME "errorBrowserTitle",
+                                                Xm.Widget.Class.Text,form,[])
+
+            val title2 = Xm.Widget.createManaged (Xm.Widget.NAME "errorBrowserTitle",
+                                                Xm.Widget.Class.Text,form,[])
+
+            val frame = Xm.Widget.createManaged (Xm.Widget.NAME "errorBrowserFrame",
+                                                 Xm.Widget.Class.PanedWindow,
+                                                 form,[])
+
+            val separator = Xm.Widget.createManaged (Xm.Widget.NAME "errorBrowserSeparator",
+                                                     Xm.Widget.Class.Separator,
+                                                     form,[])
+
+            val text = Xm.Widget.createScrolledText(frame,Xm.Widget.NAME "errorBrowserText",[])
+d99 1
+a99 1
+            fun message_fun s = MotifUtils.send_message (shell,s)
+d114 1
+a114 1
+              Xm.Text.setString(text,message)
+d117 1
+a117 1
+	      MotifUtils.make_scrolllist
+d125 1
+a125 1
+                val selected_items = Xm.List.getSelectedPos list
+d140 1
+a140 1
+                val selected_items = Xm.List.getSelectedPos list
+d157 1
+a157 1
+	       Xm.Widget.destroy shell);
+d171 8
+a178 34
+            Xm.Widget.valuesSet
+ 	      (menuBar,
+               [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+            Xm.Widget.valuesSet
+ 	      (title,
+               [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+                (Xm.TopWidget, Xm.WIDGET menuBar),
+                (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+            Xm.Widget.valuesSet
+ 	      (title2,
+               [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+                (Xm.TopWidget, Xm.WIDGET title),
+                (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+            Xm.Widget.valuesSet
+	      (separator,
+               [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+                (Xm.TopWidget, Xm.WIDGET title2),
+                (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]);
+            Xm.Widget.valuesSet
+	      (frame,
+               [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+                (Xm.TopWidget, Xm.WIDGET separator),
+                (Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                (Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)]);
+d181 9
+a189 9
+            Xm.Widget.callbackAdd (form, Xm.Callback.Unmap, do_quit_funs);
+            Xm.Widget.callbackAdd (Xm.Widget.parent shell, Xm.Callback.Destroy,do_quit_funs);
+            set_items MotifUtils.Options.default_print_options errors;
+            Xm.Widget.manage text;
+            Xm.Text.setString (title, action_message);
+            Xm.Text.setString (title2,file_message);
+            Xm.Widget.manage shell;
+            Xm.Widget.realize shell;
+	    Xm.List.selectPos (list, 1, false);
+@
+
+
+1.4
+log
+@Added sensitivity to edit button on actions menu.
+@
+text
+@d3 14
+a16 10
+$Log: _error_browser.sml,v $
+# Revision 1.3  1994/07/26  16:25:38  daveb
+# Changed menu slightly.  Made first item be selected on startup.
+#
+# Revision 1.2  1994/05/20  11:55:44  daveb
+# Revised interface.
+#
+# Revision 1.1  1994/05/13  15:55:04  daveb
+# new file
+#
+a17 2
+*)
+
+d35 1
+a35 1
+  sharing type MotifUtils.UserOptions = ShellUtils.UserOptions
+@
+
+
+1.3
+log
+@Changed menu slightly.  Made first item be selected on startup.
+@
+text
+@d4 3
+d151 15
+d178 2
+a179 6
+               		     [Menus.PUSH ("edit",
+                           		   edit_fun,
+                           		   fn _ => true),
+               		      Menus.PUSH ("redo",
+                           		   redo_fun,
+                           		   fn _ => true),
+d181 1
+a181 3
+              		      Menus.PUSH ("close",
+                           		  quit_fun,
+                           		  fn _ => true)],
+@
+
+
+1.2
+log
+@Revised interface.
+@
+text
+@d4 3
+a42 2
+    (* This is some test code that should be combined with the listener *)
+          
+d160 3
+a162 3
+              		     [Menus.PUSH ("close",
+                           		  quit_fun,
+                           		  fn _ => true),
+d166 5
+a170 4
+               		      Menus.PUSH ("edit",
+                           		   edit_fun,
+                           		   fn _ => true)],
+			      fn _ => true)
+d216 2
+a217 1
+	    Xm.List.selectPos (list, 1, false)
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d3 4
+a6 1
+$Log$
+d31 2
+d37 2
+a38 4
+    type error = ShellUtils.Info.error
+
+    structure Info = ShellUtils.Info
+    structure Location = Info.Location
+a40 1
+
+d77 3
+a79 2
+        fun create (parent, error_list, action_message, file_message,
+                    context_fn, options_fn, redo_action) =
+d115 1
+a115 1
+                val quit_fun = ShellUtils.edit_source (location,context_fn(),options_fn())
+d142 1
+a142 1
+				 (Lists.nth (index-1,error_list))
+d208 1
+a208 1
+            set_items MotifUtils.Options.default_print_options error_list;
+@

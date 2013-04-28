@@ -1,0 +1,122 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	91.11.14.10.56.41;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.10.04.11.07.59;	author richard;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.11.14.10.56.41;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Machine independent register specifications. This is the signature.
+@
+
+
+1.2
+log
+@Removed references to fp_double registers.
+@
+text
+@(* machregisters.sml the signature *)
+
+(* $Log:	machregisters.sml,v $
+Revision 1.1  91/10/04  11:07:59  richard
+Initial revision
+
+Copyright (C) 1991 Harlequin Ltd.
+*)
+
+require "../utils/set";
+
+
+signature MACHREGISTERS =
+
+  sig
+
+    structure Set	: SET
+
+    eqtype T
+
+
+    (*  == General registers ==  *)
+
+    val gcs : T Set.Set		(* int/ptr visible to garbage collector *)
+    val non_gcs : T Set.Set	(* int/ptr not visible to garbage collector *)
+    val fps : T Set.Set		(* floating point registers *)
+
+
+    (*  == Special purpose reserved registers ==  *)
+
+    val fn_arg : T	(* function argument and return *)
+    val cl_arg : T	(* closure pointer *)
+    val fp : T		(* frame pointer *)
+    val sp : T		(* stack pointer *)
+    val lr : T		(* link register *)
+    val handler : T	(* pointer to exception handler code *)
+    val global : T	(* not affected by PRESERVE or RESTORE *)
+    val gc1 : T		(* reserved for garbage collector *)
+    val gc2 : T		(* reserved for garbage collector *)
+
+
+    (*  == Support for register windows ==
+     *
+     *  The SPARC in particular uses register windows which change the
+     *  effective names of the registers when PRESERVE and RESTORE are
+     *  used.
+     *)
+
+    val after_preserve : T -> T
+    val after_restore : T -> T
+
+  end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+(* $Log: machregisters.sml,v $
+Revision 1.2  1991/11/14  10:56:41  richard
+Removed references to fp_double registers.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+(* $Log$
+a26 1
+    val fp_doubles : T Set.Set	(* double floating point registers *)
+@

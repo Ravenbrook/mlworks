@@ -1,0 +1,877 @@
+head	1.22;
+access;
+symbols
+	Final_version_of_old_runtime:1.22
+	ML_revised_beta_release_25/05/94:1.22
+	ML_final_beta_release_02/03/94:1.22
+	mlworks-28-01-1994:1.21
+	Release:1.19
+	mlworks-beta-01-09-1993:1.19
+	MLWorks-1-0-3-21/12/1992:1.14
+	MLWorks-1-0-2-15/12/1992:1.14
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.8;
+locks; strict;
+
+
+1.22
+date	94.02.24.14.46.25;	author nickh;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.12.15.12.42.40;	author nickh;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.10.12.16.08.18;	author matthew;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.06.08.09.18.05;	author matthew;	state Exp;
+branches
+	1.19.1.1;
+next	1.18;
+
+1.18
+date	93.06.02.13.14.22;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.04.30.14.51.38;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.04.30.12.36.42;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.04.02.13.56.58;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.12.07.14.32.39;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.11.10.14.59.00;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.11.02.12.38.21;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.10.15.13.41.48;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.10.02.09.32.08;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.18.09.51.59;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.08.17.10.47.54;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.07.22.15.45.19;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.07.21.15.25.26;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.07.16.15.43.53;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.07.15.13.21.18;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.13.14.10.19;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.03.09.17.57;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.01.14.57.04;	author richard;	state Exp;
+branches;
+next	;
+
+1.19.1.1
+date	93.06.08.09.18.05;	author jont;	state Exp;
+branches;
+next	1.19.1.2;
+
+1.19.1.2
+date	93.10.12.12.30.06;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@Public declarations for the replaceable storage manager.
+@
+
+
+1.22
+log
+@Add a SM_COLLECT_ALL function code.
+@
+text
+@/*  ==== RUNTIME SYSTEM INTERFACE TO STORAGE MANAGER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *  This header file contains declarations of C objects which interface the
+ *  MLWorks runtime system to the storage manager and garbage collector.
+ *
+ *  $Id: storeman.h,v 1.21 1993/12/15 12:42:40 nickh Exp $
+ */
+
+
+#ifndef storeman_h
+#define storeman_h
+
+#include "extensions.h"
+#include "tags.h"
+#include "types.h"
+#include "mltypes.h"
+
+#include <stddef.h>
+#include <stdio.h>
+#include <time.h>
+
+
+/*  === PRIVATE DECLARATIONS ===
+ *
+ *  IMPORTANT: The following declarations are dependent on the target
+ *  architecture and on this particular version of the runtime system.  They
+ *  are subject to change without notice.  Please do not make use of them if
+ *  you want your code to work portably.
+ */
+
+#ifdef sparc
+extern struct ml_state
+{
+  mlval *heap_limit;			/* %g2  first non-allocatable word */
+  mlval handler;			/* %g3  current handler record */
+  mlval *global;			/* %g4  global scratch register */
+  struct implicit_vector *implicit;	/* %g5  the implicit vector */
+  struct stack *stack;			/* %g6  current stack area */
+  mlval g7;			        /* %g7  general purpose */
+  mlval *heap_start;			/* %g1  next allocatable word */
+  struct stack_frame *sp;	        /* %sp  last ML frame */
+  struct stack_frame *base;		/*      lowest frame in stack area */
+} ml_state;
+
+#else
+#error Unknown architecture -- cannot declare memory management structures
+#endif
+
+
+
+/*  === PUBLIC DECLARATIONS ===
+ *
+ *  The following declarations may be used in accordance with the MLWorks
+ *  documentation and are architecture independent.
+ */
+
+
+/*  == Runtime system functions ==
+ *
+ *  The following functions are provided by the runtime system and may be
+ *  used by the storage manager.
+ *
+ *  The functions message() and error() write a message to the standard
+ *  error stream in a manner similar to fprintf().  They should be used for
+ *  all information output from the storage manager.  The function error()
+ *  displays the message as a fatal error message and terminates the runtime
+ *  system.  It does not return.  Either function may call malloc() and
+ *  therefore should not be called before the C heap is allocated.
+ *
+ *  alloc() is a variation on malloc() which, if unable to allocate memory,
+ *  causes a fatal error in a manner similar to error().
+ *
+ *  user_clock() is like clock(3) except that it returns only the user
+ *  virtual time elapsed.  It should be used for calculating gc_clock (qv).
+ *
+ *  On the SPARC the register windows need to be flushed to memory before
+ *  the garbage collector can examine the stack state.  The function
+ *  flush_windows() performs this action.
+ */
+
+extern void message(const char *, ...);
+extern nonreturning void error(const char *, ...);
+extern void *alloc(size_t size, const char *, ...);
+extern clock_t user_clock(void);
+#ifdef sparc
+extern void flush_windows(void);
+#endif
+
+
+/*  == GC message control and interface ==
+ *
+ *  The garbage collector may print messages about its activities using the
+ *  message() function defined above.  The ML values gc_message_level is a
+ *  single-element array (ref cell) set to the value supplied to the `-c'
+ *  option on the runtime system command line, or set by the ML code.
+ *
+ *  The gc_interface is a ref cell which appears in the pervasive ML
+ *  environment, and which initially contains zero.  It may be initialised
+ *  to some useful value by the storage manager in order to facilitate
+ *  communication.
+ */
+
+extern mlval gc_message_level;
+extern mlval gc_interface;
+
+
+/*  == Storage manager parameters ==
+ *
+ */
+
+#define GC_SP			ml_state.sp
+#define GC_STACK		ml_state.stack
+#define GC_MODIFIED_LIST	ml_state.implicit->gc_modified_list
+#define GC_HEAP_START		ml_state.heap_start
+#define GC_HEAP_LIMIT		ml_state.heap_limit
+#define GC_RETURN		ml_state.global
+
+/*
+ * Stack overflow handling functions
+ */
+#define STACK_LIMIT(base) (struct stack *)(((int)(base))+STACK_BUFFER+DEFAULT_STACK_SIZE)
+
+#define STACK_BASE(limit) (struct stack *)(((int)(limit))-STACK_BUFFER-DEFAULT_STACK_SIZE)
+
+/*  === STORAGE MANAGER DECLARATIONS ===
+ *
+ *  These external declarations must be supplied by the storage manager.
+ */
+
+
+/*  == Initialise memory ==
+ *
+ *  The storage manager is passed the arguments specified by the user using
+ *  the `-storeman' option.  argv is a pointer to an array of arguments, and
+ *  argc is the number of arguments.  Unlike the parameters to main(),
+ *  argv[argc] does not exist.  If `-storeman' is not specified, argv is
+ *  NULL.
+ */
+
+extern void sm_init(int argc, const char *const *argv);
+
+
+/*  == Description of options ==
+ *
+ *  This should be a string describing the meaning of the parameters passed
+ *  to sm_init() for use in the runtime system help message.  It should be
+ *  less than eighty columns wide, and indented by ten spaces.  It should
+ *  end with a newline.
+ */
+
+extern const char *sm_help;
+
+
+/*  == Allocate / deallocate stack areas ==
+ *
+ *  See MLWorks documentation.
+ */
+
+extern struct stack *make_stack(struct stack *parent, size_t size);
+extern struct stack *unmake_stack(struct stack *stack);
+extern void unwind_stack(struct stack_frame *sp);
+
+
+/*  == Allocate / deallocate C heap ares ==
+ *
+ *  See MLWorks documentation.
+ */
+
+extern struct heap *make_heap(struct heap *parent, size_t size);
+extern struct heap *unmake_heap(struct heap *heap);
+
+
+/*  == Predicates on memory areas ==
+ *
+ *  See MLWorks documentation.
+ */
+
+extern int is_ml_stack(void *p);
+extern int is_ml_heap(void *p);
+
+
+/*  == Statistical output ==
+ *
+ *  If `gc_stat_stream' is not NULL it may be used as a stream to which
+ *  garabage collection statistics are written.  It is initialised by the
+ *  runtime system to be the file supplied to the `-gcstatfile' option.
+ */
+
+extern FILE *gc_stat_stream;
+
+
+/*  == GC running flag ==
+ *
+ *  This integer must be incremented when the GC is entered and decremeneted
+ *  when it returns.
+ */
+
+extern int in_GC;
+
+
+/*  == GC timing ==
+ *
+ *  The garbage collector should increment this variable by the number of
+ *  clock ticks (see user_clock()) considered to be spent `doing' garbage
+ *  collection.  It should not be initialised by the storage manager.
+ */
+
+extern clock_t gc_clock;
+
+
+/*  == C roots ==
+ *
+ *  ML objects allocated on the heap which are not visible to ML must be
+ *  declared as `roots' so that the garbage collector doesn't throw them
+ *  away.  A root is declared by passing declare_root() a pointer to the ML
+ *  value (which may point onto the heap).  If an object on the heap pointed
+ *  to by a root is moved the root is updated as well.
+ *
+ *  NOTE: Be careful not to cache roots in other variables as they may
+ *  change.  Be careful to retract roots which drop out of scope.
+ */
+
+extern void declare_root(mlval *root);
+extern void retract_root(mlval *root);
+
+
+/*  == Garbage collection / ML allocation ==
+ *
+ *  This function is called when ML requires space for a new object and
+ *  cannot allocate it directly using the heap start and heap limit
+ *  pointers.  See documentation for details.
+ */
+
+extern void gc(size_t space_required, mlval closure);
+
+
+/*  == Miscellaneous functions ==
+ *
+ *  This function is exposed in the pervasive ML environment in order that
+ *  storage managers can perform special functions.  Positive function codes
+ *  and error numbers are reserved for use by MLWorks.
+ */
+
+#define SM_IMAGE_SAVE		0
+#define SM_IMAGE_LOAD		10
+#define SM_COLLECT		20
+#define SM_IMAGE_TABLE		30
+#define SM_EXTEND_STACK_LIMIT   40
+#define SM_SET_STACK_LIMIT      50
+#define SM_GET_STACK_LIMIT      60
+#define SM_COLLECT_ALL		70
+
+enum /* errno */
+{
+  EIMPL = 1,		/* The operation requested is unimplemented. */
+  EIMAGEFORMAT,		/* The image is not in the correct format. */
+  EIMAGEWRITE,		/* An error occured writing the image. */
+  EIMAGEREAD,		/* An error occurred reading the image. */
+  EIMAGEOPEN,		/* Unable to open file. */
+  EIMAGEALLOC,		/* Unable to allocate memory. */
+  EIMAGEVERSION		/* The image doesn't match the load code. */
+};
+
+extern mlval sm_interface(int function, mlval argument);
+
+
+#endif /* storeman_h */
+@
+
+
+1.21
+log
+@Added SM_GET_STACK_LIMIT for symmetry.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.20 1993/10/12 16:08:18 matthew Exp nickh $
+d255 1
+@
+
+
+1.20
+log
+@Merging bug fixes
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.19 1993/06/08 09:18:05 matthew Exp matthew $
+d254 1
+@
+
+
+1.19
+log
+@Added SM_EXTEND_STACK_LIMIT
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.18 1993/06/02 13:14:22 richard Exp $
+d253 1
+@
+
+
+1.19.1.1
+log
+@Fork for bug fixing
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.19 1993/06/08 09:18:05 matthew Exp jont $
+@
+
+
+1.19.1.2
+log
+@Added SM_SET_STACK_LIMIT
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.19.1.1 1993/06/08 09:18:05 jont Exp $
+a252 1
+#define SM_SET_STACK_LIMIT      50
+@
+
+
+1.18
+log
+@Improved the use of const on the argv parameter type.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.17 1993/04/30 14:51:38 jont Exp richard $
+d252 1
+@
+
+
+1.17
+log
+@Changed to distinguish the real base of the stack from the stack limit pointer
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.16 1993/04/30 12:36:42 richard Exp jont $
+d144 1
+a144 1
+extern void sm_init(int argc, const char *argv[]);
+@
+
+
+1.16
+log
+@Multiple arguments can now be passed to the storage manager in a general
+way.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.15 1993/04/02 13:56:58 jont Exp richard $
+d122 6
+@
+
+
+1.15
+log
+@Added SM_IAGE_TABLE
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.14 1992/12/07 14:32:39 richard Exp jont $
+d131 5
+d138 1
+a138 1
+extern void sm_init(size_t size);
+d141 1
+a141 1
+/*  == Description of `-size' option ==
+d143 4
+a146 4
+ *  This should be a string describing the meaning of the `-size' option
+ *  (the `size' parameter passed to sm_init()) for use in the runtime system
+ *  help message.  It should be no more than four lines long, eighty columns
+ *  wide, and indented by ten spaces.  It should end with a newline.
+d149 1
+a149 1
+extern const char *sm_size_help;
+@
+
+
+1.14
+log
+@Added user_clock();
+;
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.13 1992/11/10 14:59:00 richard Exp richard $
+d240 1
+@
+
+
+1.13
+log
+@Removed unused function codes to sm_interface() prior to release.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.12 1992/11/02 12:38:21 richard Exp richard $
+d77 3
+d88 1
+d197 1
+a197 1
+ *  clock ticks (see clock()) considered to be spent `doing' garbage
+@
+
+
+1.12
+log
+@Image saving and loading are now `extension functions' reached
+through the extensible sm_interface function.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.11 1992/10/15 13:41:48 richard Exp richard $
+d229 2
+a230 1
+ *  storage managers can perform special functions.
+a233 2
+#define SM_IMAGE_SAVE_COLLECTED	1
+#define SM_IMAGE_SAVE_FORK	2
+@
+
+
+1.11
+log
+@Added sm_interface().  Not yet well defined.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.10 1992/10/02 09:32:08 richard Exp richard $
+d226 1
+a226 1
+/*  == Miscellaneous GC requests ==
+d229 1
+a229 1
+ *  collectors can perform special functions.
+d232 5
+a236 1
+extern mlval sm_interface(mlval argument);
+d238 1
+a238 18
+
+/*  == Heap image save and load ==
+ *
+ *  The image_save() function stores a representation of the heap in the
+ *  file named in a format suitable for image_load() to read later.  The
+ *  image saver must not destroy any live data, although it may cause a
+ *  garbage collection, whereas the image loader is at liberty to
+ *  re-initialise the memory.
+ *
+ *  The image_save() function takes an ML value as a parameter to be
+ *  returned, possibly moved though not altered, by a later image_load().
+ *
+ *  image_save() should return a non-zero value iff successful.
+ *  image_load() should return the value ERROR if it fails.
+ *  Both should set errno to one of the values below on failure.
+ */
+
+enum
+d240 2
+a241 2
+  EIMAGE = 1,		/* The image is not in the correct format. */
+  EIMAGEIMPL,		/* The operation requested is unimplemented. */
+d249 1
+a249 2
+int image_save(const char *filename, mlval root);
+mlval image_load(const char *filename);
+@
+
+
+1.10
+log
+@Made error nonreturning.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.9 1992/08/18 09:51:59 richard Exp richard $
+d224 9
+@
+
+
+1.9
+log
+@Changed the types of is_ml_stack and is_ml_heap.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.8 1992/08/17 10:47:54 richard Exp richard $
+d17 1
+d83 1
+a83 1
+extern void error(const char *, ...);
+@
+
+
+1.8
+log
+@Added gc_interface.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.7 1992/07/22 15:45:19 richard Exp richard $
+d166 2
+a167 2
+extern int is_ml_stack(struct stack_frame *sp);
+extern int is_ml_heap(mlval *p);
+@
+
+
+1.7
+log
+@Moved stack_frame structure to mltypes.h.  Changed the documentation for
+image_load() and added EIMAGEIMPL error code.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.6 1992/07/21 15:25:26 richard Exp richard $
+d89 1
+a89 1
+/*  == GC message control ==
+d95 5
+d103 1
+@
+
+
+1.6
+log
+@Abolished init_alloc() -- it it now done automatically by alloc.c.
+Added flush_windows() for the SPARC garbage collector.
+Changed gc_message_level to an ML value (a ref cell).
+Changed mem_init() to sm_init(), and added sm_size_help -- a help
+string for the runtime system usage message.
+Added is_ml_stack(), is_ml_heap(), and unwind_stack().
+Abolished declare_weak() and weak roots in general.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.5 1992/07/16 15:43:53 richard Exp richard $
+a34 1
+
+a47 8
+struct stack_frame
+{
+  word l0, l1, l2, l3, l4, l5, l6, l7;
+  word i0, closure, i2, i3, i4, i5;
+  struct stack_frame *fp;
+  word lr;
+};
+
+d138 1
+d148 1
+d157 1
+d231 1
+a231 1
+ *  image_load() should return the impossible heap value 1 if it fails.
+d238 1
+@
+
+
+1.5
+log
+@Added a base field to the ml_state to allow re-entrant ML.  Removed the
+in_ML flag.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.4 1992/07/15 13:21:18 richard Exp richard $
+d17 1
+d82 6
+a87 3
+ *  The function init_alloc() initialises the C heap, and should be supplied
+ *  with an area of memory not less than C_HEAP_MINIMUM bytes long by
+ *  mem_init().
+d92 15
+a106 1
+extern int init_alloc(void *start, size_t size);
+a112 2
+#define C_HEAP_MINIMUM		1024
+#define STACK_AREA_MINIMUM	8192
+d131 12
+a142 1
+extern void mem_init(size_t preallocate);
+d151 1
+a151 1
+extern mlval is_ml_frame(struct stack_frame *sp);
+d162 1
+a162 1
+/*  == GC message control ==
+a163 4
+ *  The garbage collector may print messages about its activities using the
+ *  message() function defined above.  The ML values gc_message_level is a
+ *  single-element array (ref cell) set to the value supplied to the `-c'
+ *  option on the runtime system command line, or set by the ML code.
+d166 2
+a167 1
+extern mlval gc_message_level;
+a206 9
+ *  A `weak' root is different in that the garbage collector is at liberty
+ *  to throw the object referred to away if it is not referred to by any
+ *  other live object.  In other words, the root is not sufficient to keep
+ *  the object alive and is retracted automatically when the object dies.
+ *  The function passed as a parameter when the root is declared, if not
+ *  NULL, is called with the root as its parameter immediately before the
+ *  object dies.  The function may not cause a garbage collection or declare
+ *  the root again.
+ *
+a212 1
+extern void declare_weak(mlval *root, void (*death)(mlval *root));
+@
+
+
+1.4
+log
+@gc_message_level is now a ref cell on the heap.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.3 1992/07/13 14:10:19 richard Exp richard $
+d37 9
+a45 8
+  mlval *heap_limit;
+  mlval handler;
+  mlval *global;
+  mlval *implicit;
+  struct stack *stack;
+  mlval g7;
+  mlval *heap_start;
+  struct stack_frame *sp;
+d99 1
+a99 1
+#define GC_MODIFIED_LIST	(*(union ml_array_header **)ml_state.implicit)
+a104 10
+/*  == ML running flag ==
+ *
+ *  This integer is incremented by the loader when it calls ML and
+ *  decremented on return.  Initially it is zero.
+ */
+
+extern int in_ML;
+
+
+
+d124 1
+@
+
+
+1.3
+log
+@Added gc_clock, in_GC, and in_ML.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.2 1992/07/03 09:17:57 richard Exp richard $
+d146 3
+a148 3
+ *  message() function defined above.  The integer gc_message_level is set
+ *  to the value supplied to the `-c' option on the runtime system command
+ *  line.
+d151 1
+a151 1
+extern int gc_message_level;
+@
+
+
+1.2
+log
+@Corrected type of g7.
+@
+text
+@d10 1
+a10 1
+ *  $Id: storeman.h,v 1.1 1992/07/01 14:57:04 richard Exp richard $
+d22 1
+d33 1
+a33 1
+#ifdef SPARC
+d104 10
+d164 19
+d216 1
+a216 1
+extern void gc(size_t space_required);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d10 1
+a10 1
+ *  $Id$
+d41 1
+a41 1
+  word g7;
+@

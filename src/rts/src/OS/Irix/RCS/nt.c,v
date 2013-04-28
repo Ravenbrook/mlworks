@@ -1,0 +1,924 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.01.15.16.10.04;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.01.13.15.43.30;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.16.44.29;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.3
+log
+@Adding directory functions
+@
+text
+@/*  ==== PERVASIVE NT FUNCTIONS ====
+ *
+ *  Copyright (C) 1994 Harlequin Ltd
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:Irix:nt.c,v $
+ * Revision 1.2  1995/01/13  15:43:30  jont
+ * Change some system names
+ *
+ * Revision 1.1  1994/12/09  16:44:29  jont
+ * new file
+ *
+ *
+ */
+
+#include "nt.h"
+#include "mltypes.h"
+#include "values.h"
+#include "allocator.h"
+#include "gc.h"
+#include "environment.h"
+#include "global.h"
+#include "mltime.h"
+#include "utils.h"
+#include "exceptions.h"
+
+#define OPEN_MODE_ARGUMENT 1
+#include "syscalls.h"
+
+#include <errno.h>
+#include <string.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <sys/errno.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/errno.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+
+static mlval perv_exn_ref_nt;
+static mlval perv_exn_ref_not_nt;
+
+#define SOCKADDR_BUFFER		sizeof(struct sockaddr_un)
+
+static mlval nt_environment(mlval unit)
+{
+#if 0
+  static mlval result = DEAD;
+  int i;
+
+  if(result == DEAD)
+  {
+    result = MLNIL;
+    declare_root(&result);
+
+    for(i=0; environ[i] != NULL; ++i)
+      result = cons(ml_string(environ[i]), result);
+  }
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_getwd(mlval unit)
+{
+#if 0
+  char buffer[MAXPATHLEN];
+  char *result = getwd(buffer);
+
+  if(result == NULL)
+    exn_raise_string(perv_exn_ref_io, buffer);
+
+  return(ml_string(buffer));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_realpath(mlval filename)
+{
+#if 0
+  char buffer[MAXPATHLEN];
+  char *result = realpath(CSTRING(filename),buffer);
+
+  if(result == NULL)
+    exn_raise_string(perv_exn_ref_io, buffer);
+
+  return(ml_string(buffer));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_find_first_file (mlval arg)
+{
+  exn_raise(perv_exn_ref_not_nt);
+  return MLUNIT;
+}
+
+static mlval nt_find_next_file (mlval arg)
+{
+  exn_raise(perv_exn_ref_not_nt);
+  return MLUNIT;
+}
+
+static mlval nt_find_close (mlval arg)
+{
+  exn_raise(perv_exn_ref_not_nt);
+  return (MLUNIT);
+}
+
+static mlval nt_setwd(mlval string)
+{
+#if 0
+  if(chdir(CSTRING(string)))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_rusage(mlval unit)
+{
+#if 0
+  struct rusage ru;
+  mlval utime, stime, result;
+
+  if(getrusage(RUSAGE_SELF, &ru))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  utime = ml_time(&ru.ru_utime);
+  declare_root(&utime);
+  stime = ml_time(&ru.ru_stime);
+  declare_root(&stime);
+  result = allocate_record(16);
+  retract_root(&stime);
+  retract_root(&utime);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * idrss	integral resident set size
+   * inblock	block input operations
+   * isrss	currently 0
+   * ixrss	currently 0
+   * majflt	page faults requiring physical I/O
+   * maxrss	maximum resident set size
+   * minflt	page faults not requiring physical I/O
+   * msgrcv	messages received
+   * msgsnd	messages sent
+   * nivcsw	involuntary context switches
+   * nsignals	signals received
+   * nswap	swaps voluntary
+   * nvcsw	context switches
+   * oublock	block output operations
+   * stime	system time used
+   * utime	user time used
+   */
+
+  FIELD(result,  0) = MLINT(ru.ru_idrss);
+  FIELD(result,  1) = MLINT(ru.ru_inblock);
+  FIELD(result,  2) = MLINT(ru.ru_isrss);
+  FIELD(result,  3) = MLINT(ru.ru_ixrss);
+  FIELD(result,  4) = MLINT(ru.ru_majflt);
+  FIELD(result,  5) = MLINT(ru.ru_maxrss);
+  FIELD(result,  6) = MLINT(ru.ru_minflt);
+  FIELD(result,  7) = MLINT(ru.ru_msgrcv);
+  FIELD(result,  8) = MLINT(ru.ru_msgsnd);
+  FIELD(result,  9) = MLINT(ru.ru_nivcsw);
+  FIELD(result, 10) = MLINT(ru.ru_nsignals);
+  FIELD(result, 11) = MLINT(ru.ru_nswap);
+  FIELD(result, 12) = MLINT(ru.ru_nvcsw);
+  FIELD(result, 13) = MLINT(ru.ru_oublock);
+  FIELD(result, 14) = stime;
+  FIELD(result, 15) = utime;
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_open(mlval arg)
+{
+#if 0
+  int fd = open(CSTRING(FIELD(arg, 0)),
+		CINT(FIELD(arg, 1)),
+		CINT(FIELD(arg, 2)));
+
+  if(fd == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLINT(fd));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_close(mlval arg)
+{
+#if 0
+  if(close(CINT(arg)) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_unlink(mlval arg)
+{
+#if 0
+  if(unlink(CSTRING(arg)) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_socket(mlval arg)
+{
+#if 0
+  int fd = socket(CINT(FIELD(arg, 0)),
+		
+		CINT(FIELD(arg, 1)),
+		
+		CINT(FIELD(arg, 2)));
+  if(fd == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLINT(fd));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_bind(mlval arg)
+{
+#if 0
+  size_t length;
+  struct sockaddr_un un;
+
+  length = strlen(CSTRING(FIELD(arg, 1)));
+  if(length > sizeof(un.sun_path))
+    exn_raise_int(perv_exn_ref_nt, EINVAL);
+
+  un.sun_family = AF_UNIX;
+  memcpy(&un.sun_path, CSTRING(FIELD(arg, 1)), length);
+
+  if(bind(CINT(FIELD(arg, 0)),
+	 (struct sockaddr *)&un,
+	 sizeof(un.sun_family)+length) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_connect(mlval arg)
+{
+#if 0
+  size_t length;
+  struct sockaddr_un un;
+
+  length = strlen(CSTRING(FIELD(arg, 1)));
+  if(length > sizeof(un.sun_path))
+    exn_raise_int(perv_exn_ref_nt, EINVAL);
+
+  un.sun_family = AF_UNIX;
+  memcpy(&un.sun_path, CSTRING(FIELD(arg, 1)), length);
+
+  if(connect(CINT(FIELD(arg, 0)),
+	    (struct sockaddr *)&un,
+	    sizeof(un.sun_family)+length) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_getsockname(mlval arg)
+{
+#if 0
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval result;
+  size_t length;
+
+  if(getsockname(CINT(arg), sa, &namelen))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  if(sa->sa_family != AF_UNIX)
+    exn_raise_int(perv_exn_ref_nt, EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  result = allocate_string(length+1);
+  memcpy(CSTRING(result), un->sun_path, length);
+  CSTRING(result)[length] = '\0';
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_getpeername(mlval arg)
+{
+#if 0
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval result;
+  size_t length;
+
+  if(getpeername(CINT(arg), sa, &namelen))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  if(sa->sa_family != AF_UNIX)
+    exn_raise_int(perv_exn_ref_nt, EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  result = allocate_string(length+1);
+  memcpy(CSTRING(result), un->sun_path, length);
+  CSTRING(result)[length] = '\0';
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_accept(mlval arg)
+{
+#if 0
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER, s;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval ml_sockaddr, result;
+  size_t length;
+
+  s = accept(CINT(arg), sa, &namelen);
+
+  if(s == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  if(sa->sa_family != AF_UNIX)
+    exn_raise_int(perv_exn_ref_nt, EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  ml_sockaddr = allocate_string(length+1);
+  memcpy(CSTRING(ml_sockaddr), un->sun_path, length);
+  CSTRING(ml_sockaddr)[length] = '\0';
+  declare_root(&ml_sockaddr);
+  result = allocate_record(2);
+  FIELD(result, 0) = MLINT(s);
+  FIELD(result, 1) = ml_sockaddr;
+  retract_root(&ml_sockaddr);
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_listen(mlval arg)
+{
+#if 0
+  if(listen(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1))))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_write(mlval arg)
+{
+#if 0
+  int w = write(CINT(FIELD(arg, 0)),
+		CSTRING(FIELD(arg, 1)),
+		strlen(CSTRING(FIELD(arg, 1))));
+
+  if(w == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLINT(w));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_read(mlval arg)
+{
+#if 0
+  int length = CINT(FIELD(arg, 1));
+  char *buffer = alloc((size_t) length, "nt_read"), *s;
+  int r = read(CINT(FIELD(arg, 0)), buffer, length);
+  mlval string;
+
+  if(r == -1)
+  {
+    int e = errno;
+    free(buffer);
+    exn_raise_int(perv_exn_ref_nt, e);
+  }
+
+  string = allocate_string((size_t) (r+1));
+  s = CSTRING(string);
+  memcpy(s, buffer, (size_t) r);
+  free(buffer);
+  s[r] = '\0';
+
+  return(string);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+#if 0
+static char **list_to_array(mlval list)
+{
+#if 0
+  size_t i;
+  mlval l;
+  char **array;
+
+  i = 0;
+  for(l=list; l!=MLNIL; l=MLTAIL(l))
+    ++i;
+
+  array = alloc(sizeof(char *)*(i+1), "list_to_array");
+
+  i = 0;
+  for(l=list; l!=MLNIL; l=MLTAIL(l))
+    array[i++] = CSTRING(MLHEAD(l));
+  array[i] = NULL;
+
+  return(array);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+#endif
+
+static mlval nt_execve(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  char **envp = list_to_array(FIELD(arg, 2));
+  int e;
+
+  execve(CSTRING(FIELD(arg, 0)), argv, envp);
+
+  e = errno;
+
+  free(argv);
+  free(envp);
+
+  exn_raise_int(perv_exn_ref_nt, errno);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+  
+static mlval nt_execv(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e;
+
+  execv(CSTRING(FIELD(arg, 0)), argv);
+
+  e = errno;
+
+  free(argv);
+
+  exn_raise_int(perv_exn_ref_nt, errno);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+  
+static mlval nt_execvp(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e;
+
+  execvp(CSTRING(FIELD(arg, 0)), argv);
+
+  e = errno;
+
+  free(argv);
+
+  exn_raise_int(perv_exn_ref_nt, errno);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+  
+static mlval nt_vfork_execve(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  char **envp = list_to_array(FIELD(arg, 2));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execve(CSTRING(FIELD(arg, 0)), argv, envp);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+  free(envp);
+
+  if(pid == -1)
+    exn_raise_int(perv_exn_ref_nt, e);
+  if(exec_errno != 0)
+    exn_raise_int(perv_exn_ref_nt, exec_errno);
+
+  return(MLINT(pid));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_vfork_execv(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execv(CSTRING(FIELD(arg, 0)), argv);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+
+  if(pid == -1)
+    exn_raise_int(perv_exn_ref_nt, e);
+  if(exec_errno != 0)
+    exn_raise_int(perv_exn_ref_nt, exec_errno);
+
+
+  return(MLINT(pid));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_vfork_execvp(mlval arg)
+{
+#if 0
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execvp(CSTRING(FIELD(arg, 0)), argv);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+
+  if(pid == -1)
+    exn_raise_int(perv_exn_ref_nt, e);
+  if(exec_errno != 0)
+    exn_raise_int(perv_exn_ref_nt, exec_errno);
+
+  return(MLINT(pid));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+#if 0
+static mlval ml_passwd(struct passwd *pw)
+{
+#if 0
+  mlval name, passwd, gecos, dir, shell, result;
+
+  /* Lexical ordering of passwd structure fields:
+   *
+   * dir
+   * gecos
+   * gid
+   * name
+   * passwd
+   * shell
+   * uid
+   */
+
+  name = ml_string(pw->pw_name);
+  declare_root(&name);
+  passwd = ml_string(pw->pw_passwd);
+  declare_root(&passwd);
+  gecos = ml_string(pw->pw_gecos);
+  declare_root(&gecos);
+  dir = ml_string(pw->pw_dir);
+  declare_root(&dir);
+  shell = ml_string(pw->pw_shell);
+  declare_root(&shell);
+  result = allocate_record(7);
+  FIELD(result, 0) = dir;
+  FIELD(result, 1) = gecos;
+  FIELD(result, 2) = MLINT(pw->pw_gid);
+  FIELD(result, 3) = name;
+  FIELD(result, 4) = passwd;
+  FIELD(result, 5) = shell;
+  FIELD(result, 6) = MLINT(pw->pw_uid);
+  retract_root(&shell);
+  retract_root(&dir);
+  retract_root(&gecos);
+  retract_root(&passwd);
+  retract_root(&name);
+
+  return(result);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+#endif
+
+static mlval nt_getpwent(mlval arg)
+{
+#if 0
+  struct passwd *pw = getpwent();
+
+  if(pw == NULL)
+    exn_raise_int(perv_exn_ref_nt, 0);
+
+  return(ml_passwd(pw));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_setpwent(mlval arg)
+{
+#if 0
+  setpwent();
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_endpwent(mlval arg)
+{
+#if 0
+  endpwent();
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_getpwuid(mlval arg)
+{
+#if 0
+  struct passwd *pw = getpwuid(CINT(arg));
+
+  if(pw == NULL)
+    exn_raise_int(perv_exn_ref_nt, 0);
+
+  return(ml_passwd(pw));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_getpwnam(mlval arg)
+{
+#if 0
+  struct passwd *pw = getpwnam(CSTRING(arg));
+
+  if(pw == NULL)
+    exn_raise_int(perv_exn_ref_nt, 0);
+
+  return(ml_passwd(pw));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_mkdir(mlval arg)
+{
+#if 0
+  if(mkdir(CSTRING(FIELD(arg, 0)),
+	   CINT(FIELD(arg, 1))) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_rmdir(mlval arg)
+{
+#if 0
+  if(rmdir(CSTRING(arg)) == -1)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_opendir(mlval arg)
+{
+#if 0
+  DIR *dir = opendir(CSTRING(arg));
+
+  if(dir == NULL)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return((mlval)dir);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_readdir(mlval arg)
+{
+#if 0
+  struct dirent *d;
+
+  errno = 0;
+
+  d = readdir((DIR *)arg);
+
+  if(errno)
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  if(d == NULL)			/* EOF */
+    return(ml_string(""));	/* by analogy with lookahead */
+
+  return(ml_string(d->d_name));
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_closedir(mlval arg)
+{
+#if 0
+  if(closedir((DIR *)arg))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+#if 0
+static mlval password_file_result = DEAD;
+#endif
+
+static mlval nt_password_file(mlval arg)
+{
+#if 0
+  if (password_file_result == DEAD) {
+    mlval result = MLNIL,
+          str1 = MLNIL,
+          str2 = MLNIL,
+          pair = MLNIL;
+    struct passwd *entry = getpwent();
+    password_file_result = MLNIL;
+    declare_root(&password_file_result);
+    declare_root(&result);
+    declare_root(&str1);
+    declare_root(&str2);
+    declare_root(&pair);
+    while (entry != NULL) {
+      str1 = ml_string(entry->pw_name);
+      str2 = ml_string(entry->pw_dir);
+      pair = allocate_record(2);
+      FIELD(pair, 0) = str1;
+      FIELD(pair, 1) = str2;
+      result = cons(pair, result);
+      entry = getpwent();
+    };
+    endpwent();
+    retract_root(&result);
+    retract_root(&str1);
+    retract_root(&str2);
+    retract_root(&pair);
+    password_file_result = result;
+  }
+  return password_file_result;
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+static mlval nt_kill(mlval arg)
+{
+#if 0
+  if(kill(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1))))
+    exn_raise_int(perv_exn_ref_nt, errno);
+
+  return(MLUNIT);
+#endif
+  exn_raise(perv_exn_ref_not_nt);
+}
+
+void nt_init(void)
+{
+  env_function("system os win_nt environment", nt_environment);
+  env_function("system os win_nt getcd", nt_getwd);
+  env_function("system os win_nt setwd", nt_setwd);
+  env_function("system os win_nt get_path_name", nt_realpath);
+  env_function("system os win_nt find_first_file", nt_find_first_file);
+  env_function("system os win_nt find_next_file", nt_find_next_file);
+  env_function("system os win_nt find_close", nt_find_close);
+  env_function("system os win_nt rusage", nt_rusage);
+  env_function("system os win_nt open", nt_open);
+  env_function("system os win_nt close", nt_close);
+  env_function("system os win_nt unlink", nt_unlink);
+  env_function("system os win_nt socket", nt_socket);
+  env_function("system os win_nt bind", nt_bind);
+  env_function("system os win_nt connect", nt_connect);
+  env_function("system os win_nt read", nt_read);
+  env_function("system os win_nt write", nt_write);
+  env_function("system os win_nt accept", nt_accept);
+  env_function("system os win_nt listen", nt_listen);
+  env_function("system os win_nt getsockname", nt_getsockname);
+  env_function("system os win_nt getpeername", nt_getpeername);
+  env_function("system os win_nt execve", nt_execve);
+  env_function("system os win_nt execv", nt_execv);
+  env_function("system os win_nt execvp", nt_execvp);
+  env_function("system os win_nt vfork_execve", nt_vfork_execve);
+  env_function("system os win_nt vfork_execv", nt_vfork_execv);
+  env_function("system os win_nt vfork_execvp", nt_vfork_execvp);
+  env_function("system os win_nt getpwent", nt_getpwent);
+  env_function("system os win_nt setpwent", nt_setpwent);
+  env_function("system os win_nt endpwent", nt_endpwent);
+  env_function("system os win_nt getpwuid", nt_getpwuid);
+  env_function("system os win_nt getpwnam", nt_getpwnam);
+  env_function("system os win_nt rmdir", nt_rmdir);
+  env_function("system os win_nt mkdir", nt_mkdir);
+  env_function("system os win_nt opendir", nt_opendir);
+  env_function("system os win_nt readdir", nt_readdir);
+  env_function("system os win_nt closedir", nt_closedir);
+  env_function("system os win_nt password_file", nt_password_file);
+  env_function("system os win_nt kill", nt_kill);
+
+  perv_exn_ref_nt = ref(exn_default);
+  perv_exn_ref_not_nt = ref(exn_default);
+  env_value("exception Nt", perv_exn_ref_nt);
+  env_value("exception NotNt", perv_exn_ref_not_nt);
+  declare_global("pervasive exception Nt", &perv_exn_ref_nt, NULL);
+  declare_global("pervasive exception Not Nt", &perv_exn_ref_not_nt, NULL);
+}
+@
+
+
+1.2
+log
+@Change some system names
+@
+text
+@d8 3
+d100 18
+d820 3
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d7 3
+a9 1
+ *  $Log$
+d11 1
+d796 1
+a796 1
+  env_function("system os win_nt getwd", nt_getwd);
+d798 1
+a798 1
+  env_function("system os win_nt realpath", nt_realpath);
+@

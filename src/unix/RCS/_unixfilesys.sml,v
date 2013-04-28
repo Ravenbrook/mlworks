@@ -1,0 +1,545 @@
+head	1.12;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.12
+date	96.05.16.14.10.01;	author stephenb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	96.05.08.12.15.31;	author stephenb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.05.03.15.35.19;	author stephenb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.04.18.15.24.22;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.04.01.11.01.10;	author stephenb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.03.12.14.50.57;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.01.18.09.50.02;	author stephenb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.12.04.16.28.01;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.04.21.16.36.25;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.04.20.17.31.33;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.04.12.13.29.16;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.25.17.17.16;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+The OS.FileSys structure from the basis.
+@
+
+
+1.12
+log
+@Add various missing items to bring it closer to the basis definition.
+@
+text
+@(* FILE SYSTEM INTERFACE *)
+(*
+ * This should be the version from the revised basis.
+ * For now it just contains the getDir and realPath functions.
+ *
+ * Copyright Harlequin Ltd. 1994.
+ *
+ * $Log: _unixfilesys.sml,v $
+ * Revision 1.11  1996/05/08  12:15:31  stephenb
+ * Rename filesys to be os_filesys in line with latest file naming conventions.
+ *
+ * Revision 1.10  1996/05/03  15:35:19  stephenb
+ * Add some more functions to bring it closer to the latest basis definition.
+ * Also updated wrt to continuing POSIXification of the UnixOS structure.
+ *
+ * Revision 1.9  1996/04/18  15:24:22  jont
+ * initbasis moves to basis
+ *
+ * Revision 1.8  1996/04/01  11:01:10  stephenb
+ * Update wrt to Unix->SysErr exception name change.
+ *
+ * Revision 1.7  1996/03/12  14:50:57  matthew
+ * Adding chDir and getDir
+ *
+ * Revision 1.6  1996/01/18  09:50:02  stephenb
+ * OS reorganisation: parameterise functor with UnixOS now that
+ * OS specific stuff is no longer in the pervasive library.
+ *
+ * Revision 1.5  1995/12/04  16:28:01  matthew
+ * Adding directory functions
+ *
+ * Revision 1.4  1995/04/21  16:36:25  daveb
+ * Removed BadHomeName exception.
+ *
+ * Revision 1.3  1995/04/20  17:31:33  daveb
+ * Renamed functions to match initial basis, and moved expansion of
+ * home dirs to getenv.sml.
+ *
+ * Revision 1.2  1995/04/12  13:29:16  jont
+ * Change FILESYS to FILE_SYS
+ *
+ * Revision 1.1  1995/01/25  17:17:16  daveb
+ * new unit
+ * The OS.FileSys structure from the basis.
+ *
+ *)
+
+require "^.basis.toplevel";
+require "^.basis.os_filesys";
+require "^.basis.__word";
+require "^.basis.__word32";
+require "^.basis.__position";
+require "__time";
+require "unixos";
+
+functor UnixFileSys (structure UnixOS: UNIXOS): OS_FILE_SYS =
+struct
+  val env = MLWorks.Internal.Runtime.environment
+
+  open UnixOS.FileSys
+
+  val openDir = opendir
+  val readDir = readdir
+  val rewindDir = rewinddir
+  val closeDir = closedir
+  val chDir = chdir
+  val getDir = getcwd
+
+  fun mkDir pathname = mkdir (pathname, S.irwxo)
+
+  val rmDir = rmdir
+
+  val isDir = ST.isDir o stat
+  val isLink = ST.isLink o stat
+
+
+  val readLink = readlink
+
+
+  val fullPath : string -> string = env "OS.FileSys.fullPath"
+
+
+  (* XXX: wrong but will have to do for now.
+   * When this is finally changed, make sure that you examine any
+   * existing calls to realPath to see if they should be changed to
+   * fullPath -- most will
+   *)
+  val realPath = fullPath
+
+
+  val modTime = ST.mtime o stat
+
+
+  val fileSize = ST.size o stat
+
+
+  fun setTime (fileName, NONE) =
+     utime (fileName, NONE)
+  |   setTime (fileName, SOME time) = 
+     utime (fileName, SOME {actime= time, modtime= time})
+  
+
+  val remove = unlink
+
+
+  val tmpName : unit -> string = env "OS.FileSys.tmpName"
+
+
+
+  datatype file_id = FILE_ID of dev * ino
+
+
+  fun fileId s =
+    let
+      val fileInfo = stat s
+    in
+      FILE_ID (ST.dev fileInfo, ST.ino fileInfo)
+    end
+
+
+  (* XXX: Replace by a better hash function *)
+  fun hash (FILE_ID (dev, ino)) = 
+    let
+      val devW= devToWord dev
+      val inoW= inoToWord ino
+    in
+      Word.fromLargeWord (SysWord.* (devW, inoW))
+    end
+
+
+  fun compare (FILE_ID (devA, inoA), FILE_ID (devB, inoB)) = 
+    let
+      val devAW = devToWord devA
+      val devBW = devToWord devB
+    in
+      if devAW < devBW then
+        LESS
+      else if devAW > devBW then
+        GREATER
+      else
+        let
+          val inoAW = inoToWord inoA
+          val inoBW = inoToWord inoB
+         in
+           if inoAW < inoBW then
+             LESS
+          else if inoAW > inoBW then
+             GREATER
+          else
+            EQUAL
+         end
+    end
+end
+@
+
+
+1.11
+log
+@Rename filesys to be os_filesys in line with latest file naming conventions.
+@
+text
+@d9 3
+d48 1
+d50 4
+d58 20
+a77 1
+  type dirstream = UnixOS.FileSys.dirstream
+a78 8
+  val openDir = UnixOS.FileSys.opendir
+  val readDir = UnixOS.FileSys.readdir
+  val rewindDir = UnixOS.FileSys.rewinddir
+  val closeDir = UnixOS.FileSys.closedir
+  val chDir = UnixOS.FileSys.chDir
+  val getDir = UnixOS.FileSys.getcwd
+  fun mkDir pathname = UnixOS.FileSys.mkdir (pathname, 511)
+  val rmDir = UnixOS.FileSys.rmdir
+d80 1
+a80 2
+  val isDir = UnixOS.FileSys.ST.isDir o UnixOS.FileSys.stat
+  val isLink = UnixOS.FileSys.ST.isLink o UnixOS.FileSys.stat
+a81 2
+  (* readLink *)
+  (* fullPath *)
+d83 6
+a88 1
+  val realPath = UnixOS.realpath
+a89 1
+  val modTime = UnixOS.FileSys.ST.mtime o UnixOS.FileSys.stat
+d91 1
+a91 1
+  val fileSize = UnixOS.FileSys.ST.size o UnixOS.FileSys.stat  (* should return Position.int *)
+d93 8
+a100 1
+  (* setTime *)
+a101 2
+  val remove = UnixOS.FileSys.unlink
+  val rename = UnixOS.FileSys.rename
+d103 8
+a110 1
+  datatype access_mode = A_READ | A_WRITE | A_EXEC
+a111 7
+  (* access_mode *)
+  (* access *)
+  (* tmpName *)
+  (* file_id *)
+  (* fileId *)
+  (* hash *)
+  (* compare *)
+d113 40
+@
+
+
+1.10
+log
+@Add some more functions to bring it closer to the latest basis definition.
+Also updated wrt to continuing POSIXification of the UnixOS structure.
+@
+text
+@d9 4
+d45 1
+a45 1
+require "^.basis.filesys";
+@
+
+
+1.9
+log
+@initbasis moves to basis
+@
+text
+@d9 3
+d41 1
+a41 1
+require "../basis/filesys";
+d46 1
+a46 15
+  exception Unimplemented of string
+
+  type dirstream = UnixOS.dir
+
+  val openDir = UnixOS.opendir
+  val readDir = UnixOS.readdir
+  val rewindDir = UnixOS.rewinddir
+  val closeDir = UnixOS.closedir
+
+
+  val chDir = UnixOS.setwd
+
+  val getDir = UnixOS.getwd
+
+  fun mkDir pathname = UnixOS.mkdir (pathname, 511)
+d48 8
+a55 1
+  val rmDir = UnixOS.rmdir
+d57 2
+a58 2
+  val isDir = UnixOS.ST.isDir o UnixOS.stat
+  val isLink = UnixOS.ST.isLink o UnixOS.stat
+d65 1
+a65 1
+  val modTime = UnixOS.ST.mtime o UnixOS.stat
+d67 1
+a67 1
+  val fileSize = UnixOS.ST.size o UnixOS.stat  (* should return Position.int *)
+d71 2
+a72 2
+  val remove = UnixOS.unlink
+  val rename = UnixOS.rename
+@
+
+
+1.8
+log
+@Update wrt to Unix->SysErr exception name change.
+@
+text
+@d9 3
+d38 1
+a38 1
+require "../initbasis/filesys";
+@
+
+
+1.7
+log
+@Adding chDir and getDir
+@
+text
+@d9 3
+d38 1
+a38 1
+functor UnixFileSys (structure UnixOS: UNIXOS): FILE_SYS =
+a40 6
+  fun realPath string =
+    UnixOS.realpath string
+    handle Io s => s
+
+  val getDir = UnixOS.getwd
+  val chDir = UnixOS.setwd
+d46 1
+a46 1
+  fun rewindDir d = raise Unimplemented "rewindDir"
+d49 36
+a84 10
+  (* A thoroughly nasty implementation *)
+  (* Also incorrect as the function should raise an exn when the file doesn't exist *)
+  fun isDir s =
+    let
+      val d = openDir s
+    in
+      closeDir d;
+      true
+    end
+    handle UnixOS.Unix _ => false
+@
+
+
+1.6
+log
+@OS reorganisation: parameterise functor with UnixOS now that
+OS specific stuff is no longer in the pervasive library.
+@
+text
+@d9 4
+d43 1
+@
+
+
+1.5
+log
+@Adding directory functions
+@
+text
+@d9 3
+d29 1
+d31 1
+a31 1
+functor UnixFileSys (): FILE_SYS =
+d35 1
+a35 1
+    MLWorks.OS.Unix.realpath string
+d38 1
+a38 1
+  val getDir = MLWorks.OS.Unix.getwd
+d40 1
+a40 1
+  type dirstream = MLWorks.OS.Unix.dir
+d42 2
+a43 2
+  val openDir = MLWorks.OS.Unix.opendir
+  val readDir = MLWorks.OS.Unix.readdir
+d45 1
+a45 1
+  val closeDir = MLWorks.OS.Unix.closedir
+d56 1
+a56 1
+    handle MLWorks.OS.Unix.Unix _ => false
+@
+
+
+1.4
+log
+@Removed BadHomeName exception.
+@
+text
+@d9 3
+d29 1
+d35 18
+@
+
+
+1.3
+log
+@Renamed functions to match initial basis, and moved expansion of
+home dirs to getenv.sml.
+@
+text
+@d9 4
+a25 3
+  exception BadHomeName of string
+
+  (* This now uses realpath to resolve symbolic links *)
+@
+
+
+1.2
+log
+@Change FILESYS to FILE_SYS
+@
+text
+@d4 1
+a4 1
+ * For now it just contains the expand_path function.
+d9 3
+d18 1
+a18 2
+require "../utils/getenv";
+require "../utils/filesys";
+d20 1
+a20 3
+functor UnixFileSys (
+  structure Getenv: GETENV
+): FILE_SYS =
+d25 3
+a27 42
+  fun expand_path string =
+    let
+      val len = size string
+
+      fun upto_slash n =
+        if n = len then
+          n
+        else if String.ordof (string, n) = ord "/" then
+	  n
+	else
+	  upto_slash (n+1)
+
+      val expanded =
+        if string = "." then
+          MLWorks.OS.Unix.getwd ()
+        else if len = 0 orelse String.ordof(string, 0) <> ord"~" then
+          string
+        else
+          let
+            val start = upto_slash 0
+
+            val name =
+              if start = 1 then
+                case Getenv.get_user_name() of
+                  MLWorks.Option.SOME s => s
+                | _ => raise BadHomeName string
+              else
+                String.substring(string, 1, start-1)
+
+            val rest = String.substring(string, start, len-start)
+
+            val MLWorks.OS.Unix.PASSWD {dir, ...} =
+              MLWorks.OS.Unix.getpwnam name
+              handle MLWorks.OS.Unix.Unix _ =>
+                raise BadHomeName string
+          in
+            dir ^ rest
+          end
+    in
+      MLWorks.OS.Unix.realpath expanded
+      handle Io _ => expanded
+    end
+d29 1
+a29 1
+  val getdir = MLWorks.OS.Unix.getwd
+@
+
+
+1.1
+log
+@new unit
+The OS.FileSys structure from the basis.
+@
+text
+@d8 4
+a11 1
+ * $Log$
+d20 1
+a20 1
+): FILESYS =
+@

@@ -1,0 +1,300 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.2
+date	92.08.27.18.28.42;	author davidt;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.04.21.17.03.09;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.08.27.18.28.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Hashing for types, strnames, tyfuns and tynames
+@
+
+
+1.2
+log
+@THIS FILE IS NO LONGER IN USE!
+@
+text
+@(* _newnameset.sml the functor *)
+(*
+$Log: _newnameset.sml,v $
+Revision 1.1  1992/04/21  17:03:09  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+(*
+require "../utils/set";
+require "../utils/hashset";
+require "../utils/print";
+require "../typechecker/ty_debug";
+require "../typechecker/datatypes";
+require "../typechecker/nameset";
+require "../typechecker/types";
+require "../typechecker/strnames";
+*)
+
+functor NewNameset(*(
+  structure Set : SET
+  structure TynameSet : HASHSET
+  structure StrnameSet : HASHSET
+  structure Debug :
+		sig
+		  val set_debug_level : int -> unit
+		  val debug_level : unit -> int
+		end
+  structure Print : PRINT
+  structure Ty_Debug : TY_DEBUG
+  structure Datatypes : DATATYPES
+  structure Types : TYPES
+  structure Strnames : STRNAMES
+  sharing Datatypes = Types.Datatypes = Strnames.Datatypes
+  sharing type TynameSet.element = Datatypes.Tyname
+  sharing type StrnameSet.element = Datatypes.Strname
+) : NAMESET =
+  struct
+
+    structure Datatypes = Datatypes
+
+    val do_debug = Ty_Debug.do_debug
+    open Datatypes
+
+    (****
+     Nameset is one of the semantic objects for the Modules.  In this
+     structure the type and the operations on it are defined.
+     ****)
+
+    type Nameset = (TynameSet.HashSet * StrnameSet.HashSet)
+
+    val set_size = 1024
+
+    val empty_nameset =
+      (TynameSet.empty_set(), StrnameSet.empty_set())
+
+    fun member_of_tynames (tyname,(tynames,_)) = 
+      TynameSet.is_member(tyname,tynames)
+
+    fun member_of_strnames (strname,(_,strnames)) = 
+      (if do_debug andalso Debug.debug_level () > 5 then 
+	 Print.print ("member_of_strnames " ^
+		      (Strnames.string_strname strname) ^"\n")
+       else ();
+      StrnameSet.is_member(strname,strnames))
+
+    fun union ((tynames,strnames),(tynames',strnames')) =
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Nameset.union");
+	  Print.print ("\n"))
+       else ();
+      (TynameSet.union(tynames,tynames'),
+       StrnameSet.union (strnames,strnames')))
+
+
+    fun intersection ((tynames,strnames),(tynames',strnames')) = 
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Nameset.intersection");
+	  Print.print ("\n"))
+       else ();
+      (TynameSet.intersection(tynames,tynames'),
+       StrnameSet.intersection (strnames,strnames')))
+
+    fun nameset_eq ((tynames,strnames),(tynames',strnames')) = 
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Nameset.nameset_eq");
+	  Print.print ("\n"))
+       else ();
+	 TynameSet.seteq(tynames,tynames')
+	 andalso
+	 StrnameSet.seteq(strnames,strnames')
+	 )
+
+    fun no_tynames (tynames,_) = TynameSet.empty_setp tynames
+
+    fun add_tyname (name,(tynames,strnames)) =
+      (TynameSet.add_member(name,tynames),strnames)
+
+    fun add_strname (name,(tynames,strnames)) = 
+      (tynames, StrnameSet.add_member(name,strnames))
+
+    fun tynames_in_nameset (tynames,(tynames',strnames)) = 
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Nameset.tynames_in_nameset");
+	  Print.print ("\n"))
+       else ();
+      (TynameSet.add_list(tynames,tynames'),strnames))
+
+    (****
+     local_setdiff removes all the elements of the second argument that are
+     members of the first argument from the first argument.
+     ****)
+
+    fun remove_tyname (name,(tynames,strnames)) = 
+      (TynameSet.remove_member(name, tynames),strnames)
+
+    fun diff ((tynames,strnames),(tynames',strnames')) =
+      (if do_debug andalso Debug.debug_level () > 10 then 
+	 (Print.print ("Nameset.diff");
+	  Print.print ("\n"))
+       else ();
+	 (TynameSet.setdiff(tynames,tynames'),
+	  StrnameSet.setdiff (strnames,strnames')))
+
+    val initial_nameset =
+      (TynameSet.list_to_set
+       [Types.bool_tyname,
+	Types.int_tyname,
+	Types.real_tyname,
+	Types.string_tyname,
+	Types.list_tyname,
+	Types.ref_tyname,
+	Types.exn_tyname],
+       StrnameSet.empty_set())
+
+    val initial_nameset_for_builtin_library =
+      initial_nameset
+
+    fun string_nameset (tynames,strnames) = 
+      "{" ^ (TynameSet.set_print(tynames, Types.print_name)) ^ "," ^
+      (StrnameSet.set_print(strnames, Strnames.string_strname)) ^ "}"
+
+    local
+
+      fun find_copy (name,[],_,stringfun) = 
+	(if do_debug andalso Debug.debug_level () > 10 then 
+	   (Print.print ("Nameset.find_copy name = " ^ (stringfun name)))
+	 else ();
+	   name)
+	| find_copy (name,(h,h')::t,afun,stringfun) = 
+	  if afun (name,h) then h'
+	  else find_copy (name,t,afun,stringfun)
+      fun collectCopies ([],copies,_,_) = copies
+	| collectCopies (h::t,copies,afun,copy_fun) = 
+	  let
+	    val (copy,copies') = afun (h,copies,copy_fun)
+	  in
+	    collectCopies (t,copies',afun,copy_fun)
+	  end
+      fun substCopies ([],copies,afun,_) = []
+	| substCopies (h::t,copies,afun,stringfun) = 
+	  find_copy (h,copies,afun,stringfun)::substCopies (t,copies,afun,
+							    stringfun)
+    in
+      fun nameset_copy ((tynames,strnames),strname_copies,tyname_copies) = 
+	let
+	  val tynames = TynameSet.set_to_list tynames
+	  val strnames = StrnameSet.set_to_list strnames
+	  val tyname_copies' =
+	    collectCopies (tynames,tyname_copies,Types.tyname_copy,
+			   Types.copy_metatyname)
+	  val strname_copies' =
+	    collectCopies (strnames,strname_copies,Strnames.strname_copy,
+			   Strnames.copy_metastrname)
+	  val tynames' = 
+	    substCopies (tynames,tyname_copies',Types.tyname_eq,
+			 Types.print_name)
+	  val strnames' = 
+	    substCopies (strnames,strname_copies',Strnames.strname_eq,
+			 Strnames.string_strname)
+	in
+	  ((TynameSet.list_to_set tynames',
+	    StrnameSet.list_to_set strnames'),
+	   strname_copies',tyname_copies')
+	end
+    
+      (****
+       new_names instantiate every flexible name to a new distinct 
+       name - used in rule 64.  Necessary for correct sharing.
+       See test t4.sml.
+       ****)
+
+      fun new_names ((tynames,strnames),new_strnames,new_tynames) = 
+	let
+	  val tynames = TynameSet.set_to_list tynames
+	  val strnames = StrnameSet.set_to_list strnames
+	  val new_tynames' =
+	    collectCopies (tynames,new_tynames,Types.tyname_copy,
+			   Types.new_metatyname)
+	  val new_strnames' =
+	    collectCopies (strnames,new_strnames,Strnames.strname_copy,
+			   Strnames.new_metastrname)
+	  val tynames' = 
+	    substCopies (tynames,new_tynames',Types.tyname_eq,
+			 Types.print_name)
+	  val strnames' = 
+	    substCopies (strnames,new_strnames',Strnames.strname_eq,
+			 Strnames.string_strname)
+	in
+	  ((TynameSet.list_to_set tynames',
+	    StrnameSet.list_to_set strnames'),
+	   new_strnames',new_tynames')
+	end
+    end
+
+    (* these next three functions added 6.6.91 by nickh to enable the
+     spec-encoding and decoding *)
+
+    fun tynames_of_nameset (tl,sl) = TynameSet.set_to_list tl
+    fun strnames_of_nameset (tl,sl) = StrnameSet.set_to_list sl
+    fun nameset_of_name_lists (tl,sl) =
+      (TynameSet.list_to_set tl,
+       StrnameSet.list_to_set sl)
+
+  end*)
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/08/27  18:28:42  davidt
+THIS FILE IS NO LONGER IN USE!
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d10 1
+d19 1
+d21 1
+a21 1
+functor NewNameset(
+d226 1
+a226 1
+  end
+@

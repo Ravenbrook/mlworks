@@ -1,0 +1,549 @@
+head	1.5;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.01.29.08.38.41;	author stephenb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.01.23.13.49.00;	author stephenb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.09.12.09.59.23;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.05.10.14.46.03;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.05.04.14.51.46;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Basic file operations for unix.
+@
+
+
+1.5
+log
+@Update wrt change in UnixOS_.write.
+@
+text
+@(*  ==== INITIAL BASIS : OS_PRIM_IO ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __unixprimio.sml,v $
+ *  Revision 1.4  1996/01/23  13:49:00  stephenb
+ *  OS reorganisation: since OS specific code is no longer in the
+ *  pervasive library, any use of MLWorks.OS.Unix changes to using
+ *  UnixOS structure.  Note that the UnixOS_ structure is being
+ *  hardwired in rather than turning UnixPrimIO into a functor.
+ *
+ *  Revision 1.3  1995/09/12  09:59:23  daveb
+ *  Word conversions are temporarily in abeyance.
+ *
+ *  Revision 1.2  1995/05/10  14:46:03  daveb
+ *  Added support for blocking, seek, stat, etc.
+ *
+ *
+ *)
+
+require "^.initbasis.__word8";
+require "^.initbasis.__word8array";
+require "^.initbasis.__word8vector";
+require "^.initbasis._primio";
+require "^.initbasis.osprimio";
+require "^.initbasis.toplevel";
+require "^.initbasis.__fileposint";
+require "__unixos";
+
+
+structure UnixPrimIO: OS_PRIM_IO =
+struct
+  structure TextPrimIO =
+    PrimIO (
+      structure A = Word8Array
+      structure V = Word8Vector
+      val someElem = 0w0: Word8.word
+      type pos = FilePosInt.int
+      val posLess = FilePosInt.<)
+
+  structure BinPrimIO = TextPrimIO
+
+  type file_desc = int
+
+  fun mkReader
+       {fd: file_desc, name: string, initialPos: BinPrimIO.pos,
+        initialBlockMode: bool} =
+    let
+      val blockMode = ref initialBlockMode
+      val pos = ref initialPos
+
+      fun ensureBlockMode b =
+	if !blockMode = b then
+	  ()
+	else
+	  (UnixOS_.set_block_mode (fd, b);
+	   blockMode := b)
+
+      val stringsize = size
+
+      val {size, blksize, ...} = UnixOS_.stat fd
+    in
+      BinPrimIO.augmentIn
+        (BinPrimIO.Rd
+	   {readBlock =
+	      SOME (fn i =>
+	              (ensureBlockMode true;
+	               let val result = UnixOS_.read (fd, i)
+		       in
+		         pos := !pos + Word8Vector.length result;
+			 result
+		       end)),
+            readNoBlock =
+	      SOME (fn i =>
+	              (ensureBlockMode false;
+	               let val result =
+			     UnixOS_.read (fd, i)
+		       in
+		         pos := !pos + stringsize result;
+			 SOME result
+		       end)
+	               handle
+	                 UnixOS_.WouldBlock => NONE),
+            readaBlock = NONE,
+            readaNoBlock = NONE,
+            block = NONE,
+            canInput = SOME (fn () => UnixOS_.can_input fd <> 0),
+            name = name,
+            chunkSize =  blksize,
+            close = fn () => UnixOS_.close fd,
+            getPos = fn () => !pos,
+            findPos = fn ({data, first, nelems}, pos) =>
+		        FilePosInt.+ (pos, (* FilePosInt.fromDefault *) nelems),
+            setPos = fn newPos =>
+		       (UnixOS_.seek (fd, newPos);
+		        pos := newPos),
+            endPos = fn () => size})
+    end
+
+  fun openRd filename =
+    mkReader
+      {fd = UnixOS_.open_ (filename, 0, 0),  (* 0 = O_RDONLY *)
+       name = filename,
+       initialPos = (* FilePosInt.fromDefault *) 0,
+       initialBlockMode = true}
+
+  fun mkWriter
+       {fd: file_desc, name: string, blocksize: int, size: int,
+        initialPos: BinPrimIO.pos, initialBlockMode: bool} =
+    let
+      val blockMode = ref initialBlockMode
+      val pos = ref initialPos
+
+      fun ensureBlockMode b =
+	if !blockMode = b then
+	  ()
+	else
+	  (UnixOS_.set_block_mode (fd, b);
+	   blockMode := b)
+    in
+      BinPrimIO.augmentOut
+        (BinPrimIO.Wr
+           {writeBlock =
+	      SOME (fn {data, first, nelems} => 
+	              (ensureBlockMode true;
+	               let val result = UnixOS_.write (fd, data, first, nelems)
+		       in
+		         pos := result;
+			 result
+		       end)),
+            writeNoBlock =
+	      SOME (fn {data, first, nelems} => 
+	              (ensureBlockMode false;
+	               let
+			 val result = UnixOS_.write (fd, data, first, nelems)
+		       in
+		         pos := result;
+			 SOME result
+		       end)
+	               handle
+	                 UnixOS_.WouldBlock => NONE),
+            writeaNoBlock = NONE,
+            writeaBlock = NONE,
+            block = NONE,
+            canOutput = NONE,
+            name = name,
+            chunkSize = blocksize,
+            close = fn () => UnixOS_.close fd,
+            getPos = fn () => !pos,
+            setPos = fn newPos =>
+		       (UnixOS_.seek (fd, newPos);
+		        pos := newPos),
+            endPos = fn () => size})
+    end
+   
+  fun openWr filename =
+    let 
+      val fd = UnixOS_.open_ (filename, 1537, 438)
+			(* 1537 = O_WRONLY|O_CREAT|O_TRUNC, 438 = 0666 *)
+      val {size, blksize, ...} = UnixOS_.stat fd
+    in
+      mkWriter
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* FilePosInt.fromDefault *) 0,
+         initialBlockMode = true}
+    end
+
+  fun openApp filename =
+    let 
+      val fd = UnixOS_.open_ (filename, 1033, 438)
+			(* 1033 = O_WRONLY|O_APPEND|O_CREAT, 438 = 0666 *)
+      val {size, blksize, ...} = UnixOS_.stat fd
+    in
+      mkWriter
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* FilePosInt.fromDefault *) size,
+         initialBlockMode = true}
+    end
+
+  val stdIn =
+    mkReader
+      {fd = 0,
+       name = "<stdIn>",
+       initialPos = 0,
+       initialBlockMode = true}
+
+  val stdOut =
+    let 
+      val fd = 1
+      val {blksize, ...} = UnixOS_.stat fd
+    in
+      mkWriter
+        {fd = fd,
+         name = "<stdOut>",
+         size = 0,
+         blocksize = blksize,
+         initialPos = 0,
+         initialBlockMode = true}
+    end
+
+  val stdErr =
+    let 
+      val fd = 1
+      val {blksize, ...} = UnixOS_.stat fd
+    in
+      mkWriter
+        {fd = fd,
+         name = "<stdErr>",
+         size = 0,
+         blocksize = 1,
+         initialPos = 0,
+         initialBlockMode = true}
+    end
+
+  (* On Unix, text is binary *)
+  fun translateIn x = x
+  fun translateOut x = x
+
+end
+@
+
+
+1.4
+log
+@OS reorganisation: since OS specific code is no longer in the
+pervasive library, any use of MLWorks.OS.Unix changes to using
+UnixOS structure.  Note that the UnixOS_ structure is being
+hardwired in rather than turning UnixPrimIO into a functor.
+@
+text
+@d12 6
+d132 1
+a132 3
+	               let val result =
+	                 UnixOS_.write
+		           (fd, Word8Vector.extract (data, first, nelems))
+d141 1
+a141 3
+			 val result =
+	                   UnixOS_.write
+		             (fd, Word8Vector.extract (data, first, nelems))
+@
+
+
+1.3
+log
+@Word conversions are temporarily in abeyance.
+@
+text
+@d12 3
+d28 2
+d56 1
+a56 1
+	  (MLWorks.OS.Unix.set_block_mode (fd, b);
+d61 1
+a61 1
+      val {size, blksize, ...} = MLWorks.OS.Unix.stat fd
+d68 1
+a68 1
+	               let val result = MLWorks.OS.Unix.read (fd, i)
+d77 1
+a77 1
+			     MLWorks.OS.Unix.read (fd, i)
+d83 1
+a83 1
+	                 MLWorks.OS.Unix.WouldBlock => NONE),
+d87 1
+a87 1
+            canInput = SOME (fn () => MLWorks.OS.Unix.can_input fd <> 0),
+d90 1
+a90 1
+            close = fn () => MLWorks.OS.Unix.close fd,
+d95 1
+a95 1
+		       (MLWorks.OS.Unix.seek (fd, newPos);
+d102 1
+a102 1
+      {fd = MLWorks.OS.Unix.open_ (filename, 0, 0),  (* 0 = O_RDONLY *)
+d118 1
+a118 1
+	  (MLWorks.OS.Unix.set_block_mode (fd, b);
+d127 1
+a127 1
+	                 MLWorks.OS.Unix.write
+d138 1
+a138 1
+	                   MLWorks.OS.Unix.write
+d145 1
+a145 1
+	                 MLWorks.OS.Unix.WouldBlock => NONE),
+d152 1
+a152 1
+            close = fn () => MLWorks.OS.Unix.close fd,
+d155 1
+a155 1
+		       (MLWorks.OS.Unix.seek (fd, newPos);
+d162 1
+a162 1
+      val fd = MLWorks.OS.Unix.open_ (filename, 1537, 438)
+d164 1
+a164 1
+      val {size, blksize, ...} = MLWorks.OS.Unix.stat fd
+d177 1
+a177 1
+      val fd = MLWorks.OS.Unix.open_ (filename, 1033, 438)
+d179 1
+a179 1
+      val {size, blksize, ...} = MLWorks.OS.Unix.stat fd
+d200 1
+a200 1
+      val {blksize, ...} = MLWorks.OS.Unix.stat fd
+d214 1
+a214 1
+      val {blksize, ...} = MLWorks.OS.Unix.stat fd
+@
+
+
+1.2
+log
+@Added support for blocking, seek, stat, etc.
+@
+text
+@d11 4
+a14 1
+ *  $Log$
+d32 1
+a32 1
+      val someElem = Word8.intToWord 0
+d88 1
+a88 1
+		        FilePosInt.+ (pos, FilePosInt.fromDefault nelems),
+d99 1
+a99 1
+       initialPos = FilePosInt.fromDefault 0,
+d166 1
+a166 1
+         initialPos = FilePosInt.fromDefault 0,
+d181 1
+a181 1
+         initialPos = FilePosInt.fromDefault size,
+@
+
+
+1.1
+log
+@new unit
+Basic file operations for unix.
+@
+text
+@d18 1
+d21 1
+d25 10
+a34 55
+  local
+    (* On Unix, text is binary *)
+    structure SharedPrimIO =
+    struct
+      type elem = Word8.word
+      type array = Word8Array.array
+      type vector = Word8Vector.vector
+      type pos = int
+
+      val posLess = op < : int * int -> bool
+  
+      datatype reader = Rd of 
+                {readBlock :   (int -> vector) option,
+                 readaBlock:   ({data: array, first: int, nelems: int} -> 
+                                 int) option,
+                 readNoBlock : (int -> vector option) option,
+                 readaNoBlock: ({data: array, first: int, nelems: int} -> 
+                                 int option) option,
+                 block     : (unit -> unit) option,
+                 canInput  : (unit -> bool) option,
+                 name      : string,
+                 chunkSize : int,
+                 close     : unit -> unit,
+                 getPos    : unit -> pos,
+                 findPos   : {data: vector, first: int, nelems: int}*pos -> pos,
+                 setPos    : pos -> unit,
+                 endPos    : unit -> pos
+                }
+  
+      datatype writer = Wr of 
+                {writeNoBlock: ({data: vector, first: int, nelems: int} -> 
+                                 int option) option,
+                 writeaNoBlock: ({data: array, first: int, nelems: int} -> 
+                                  int option) option,
+                 writeBlock: ({data: vector, first: int, nelems: int} -> 
+                               int) option,
+                 writeaBlock: ({data: array, first: int, nelems: int} -> 
+                                int) option,
+                 block: (unit->unit) option,
+                 canOutput: (unit->bool) option,
+                 name: string,
+                 chunkSize: int,
+                 close: unit -> unit,
+                 getPos : unit->pos,
+                 setPos : pos->unit,
+                 endPos : unit->pos}
+
+      fun augmentIn x = x  	(* dummy value *)
+      fun augmentOut x = x  	(* dummy value *)
+    end
+  in
+    structure TextPrimIO = SharedPrimIO
+    structure BinPrimIO = SharedPrimIO
+  end
+  
+d41 13
+a53 2
+      val chunkSize = 1024
+      exception BuggerIt
+d55 35
+a89 15
+      BinPrimIO.Rd
+	{readBlock = SOME (fn i => MLWorks.OS.Unix.read (fd, i)),
+         readaBlock = NONE,
+         readNoBlock = NONE,
+         readaNoBlock = NONE,
+         block = NONE,
+         canInput = NONE,
+         name = name,
+         chunkSize = chunkSize,
+         close = fn () => MLWorks.OS.Unix.close fd,
+         getPos = fn () => 0,
+         findPos = fn ({data, first, nelems}, pos) =>
+		     pos + nelems,
+         setPos = fn _ => raise BuggerIt,
+         endPos = fn () => 0}
+d96 1
+a96 1
+       initialPos = 0,
+d100 2
+a101 2
+       {fd: file_desc, name: string, initialPos: BinPrimIO.pos,
+        initialBlockMode: bool} =
+d103 9
+a111 2
+      val chunkSize = 1024
+      exception BuggerIt
+d113 37
+a149 15
+      BinPrimIO.Wr
+        {writeBlock = SOME (fn {data, first, nelems} => 
+			 MLWorks.OS.Unix.write
+			   (fd, Word8Vector.extract (data, first, nelems))),
+         writeaNoBlock = NONE,
+         writeNoBlock = NONE,
+         writeaBlock = NONE,
+         block = NONE,
+         canOutput = NONE,
+         name = name,
+         chunkSize = chunkSize,
+         close = fn () => MLWorks.OS.Unix.close fd,
+         getPos = fn () => 0,
+         setPos = fn _ => raise BuggerIt,
+         endPos = fn () => 0}
+d151 1
+a151 1
+
+d153 2
+a154 2
+    mkWriter
+      {fd = MLWorks.OS.Unix.open_ (filename, 1537, 511),
+d156 10
+a165 3
+       name = filename,
+       initialPos = 0,
+       initialBlockMode = true}
+d168 2
+a169 2
+    mkWriter
+      {fd = MLWorks.OS.Unix.open_ (filename, 1033, 0),
+d171 10
+a180 3
+       name = filename,
+       initialPos = 0,
+       initialBlockMode = true}
+d190 12
+a201 5
+    mkWriter
+      {fd = 1,
+       name = "<stdOut>",
+       initialPos = 0,
+       initialBlockMode = true}
+d204 12
+a215 5
+    mkWriter
+      {fd = 2,
+       name = "<stdErr>",
+       initialPos = 0,
+       initialBlockMode = true}
+@

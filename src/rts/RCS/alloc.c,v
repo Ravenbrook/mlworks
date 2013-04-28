@@ -1,0 +1,1401 @@
+head	1.16;
+access;
+symbols
+	Final_version_of_old_runtime:1.16
+	ML_revised_beta_release_25/05/94:1.16
+	ML_final_beta_release_02/03/94:1.16
+	mlworks-28-01-1994:1.15
+	Release:1.15
+	mlworks-beta-01-09-1993:1.15
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.12;
+locks; strict;
+comment	@ *  @;
+
+
+1.16
+date	94.01.28.17.21.56;	author nickh;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.04.26.11.47.55;	author richard;	state Exp;
+branches
+	1.15.1.1;
+next	1.14;
+
+1.14
+date	93.01.26.10.29.30;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.10.02.08.38.16;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.07.20.13.14.22;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.06.30.13.36.04;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.04.10.11.17.44;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.03.27.14.58.54;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.03.12.17.10.31;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.03.10.13.53.02;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.02.13.16.14.17;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.02.13.15.02.55;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.02.13.11.42.13;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.02.13.10.52.08;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.20.13.20.16;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.01.17.12.17.07;	author richard;	state Exp;
+branches;
+next	;
+
+1.15.1.1
+date	93.04.26.11.47.55;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Robust C heap allocator.
+@
+
+
+1.16
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== ROBUST MEMORY ALLOCATION ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  Simple first fit linked list.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: alloc.c,v $
+ *  Revision 1.15  1993/04/26  11:47:55  richard
+ *  Increased diagnostic level of messages from realloc().
+ *
+ *  Revision 1.14  1993/01/26  10:29:30  richard
+ *  A new version using a simple linked list scheme.  The old version has
+ *  bugs in it somewhere, and in any case was very slow.  We are now less
+ *  likely to have random memory scrawling bugs -- ML has been running
+ *  reliably for some time.
+ *
+ *  Revision 1.13  1992/10/02  08:38:16  richard
+ *  Changed types to become non-standard but compatable with GCC across
+ *  platforms.
+ *
+ *  Revision 1.12  1992/07/20  13:14:22  richard
+ *  Removed init_alloc(), and caused allocation to automatically request
+ *  an initial area when first called.  This simplifies the interface to
+ *  the memory manager.
+ *
+ *  Revision 1.11  1992/06/30  13:36:04  richard
+ *  New areas of C heap are now allocated using a special function to
+ *  avoid revealing anything about the memory configuration.
+ *
+ *  Revision 1.10  1992/04/10  11:17:44  clive
+ *  I realloc a call to malloc meant that the side of the object being
+ *  reallocated was calculated incorrectly
+ *
+ *  Revision 1.9  1992/03/27  14:58:54  richard
+ *  Corrected several bugs and tidied up.
+ *
+ *  Revision 1.8  1992/03/12  17:10:31  richard
+ *  Changed realloc() to deal with a NULL pointer properly.
+ *
+ *  Revision 1.7  1992/03/10  13:53:02  richard
+ *  Chaned call to allocate_blocks() as memory arrangement has changed.
+ *
+ *  Revision 1.6  1992/02/13  16:14:17  clive
+ *  Forgot to take out my debugging messages
+ *
+ *  Revision 1.4  1992/02/13  11:42:13  clive
+ *  Typo in find_space : (i-1) instead of -1
+ *
+ *  Revision 1.3  1992/02/13  10:52:08  clive
+ *  There was a typo += instead of -= in alloc
+ *
+ *  Revision 1.2  1992/01/20  13:20:16  richard
+ *  Shifted diagnostic level of debugging messages up to 4.
+ *
+ *  Revision 1.1  1992/01/17  12:17:07  richard
+ *  Initial revision
+ *
+ */
+
+
+#include "alloc.h"
+#include "storeman.h"
+#include "diagnostic.h"
+#include "extensions.h"
+
+#include <stddef.h>
+#include <memory.h>
+
+#define ALIGNMENT		3 		/* number of bits of alignment */
+#define ALIGN(x)		(((x) + (1<<ALIGNMENT) - 1) & ~((1<<ALIGNMENT)-1))
+
+#define MINIMUM_CHUNK_SIZE	0x10000		/* see extend() */
+#define FUDGE_FACTOR		ALIGN(0)	/* added to the end of all blocks */
+#define SMUDGE_FACTOR		ALIGN(0)	/* added to the beginning of all blocks */
+#define MINIMUM_BLOCK_SIZE	ALIGN(0x80)	/* aligned, includes header */
+#define BLOCK_TO_P(block)	((char *)(block+1) + SMUDGE_FACTOR)
+#define P_TO_BLOCK(p)		((struct header *)((char *)(p) - SMUDGE_FACTOR) - 1)
+
+
+/*  == Block header structure ==
+ *
+ *  This header is stored at the start of each block, allocated or
+ *  unallocated.  It must be of aligned length.
+ */
+
+struct header
+{
+  struct header *next;		/* pointer to next block on free list */
+  size_t size;			/* size of block including header */
+};
+
+static struct header *free_list = NULL;
+
+
+/*  == Extend C heap ==
+ *
+ *  Calls the storage manager to fetch a new chunk of memory, and
+ *  initialises it as one large free block.  It returns the address of that
+ *  block.
+ */
+
+static inline struct header *extend(size_t required)
+{
+  struct heap *heap;
+  struct header *start;
+
+  heap = make_heap(NULL, required > MINIMUM_CHUNK_SIZE ? required : MINIMUM_CHUNK_SIZE);
+
+  start = (struct header *)((char *)heap + ALIGN(sizeof(struct heap)));
+
+  DIAGNOSTIC(5, "alloc extend(required = 0x%X)", required, 0);
+  DIAGNOSTIC(5, "  new memory at 0x%X length 0x%X", heap, heap->size);
+
+  start->next = NULL;
+  start->size = heap->size - ALIGN(sizeof(struct heap));
+
+  return(start);
+}
+
+
+/*  == Calculate block length from request ==  */
+
+static inline size_t block_size(size_t request)
+{
+  size_t rounded = ALIGN(request + sizeof(struct header) + SMUDGE_FACTOR + FUDGE_FACTOR);
+
+  return(rounded < MINIMUM_BLOCK_SIZE ? MINIMUM_BLOCK_SIZE : rounded);
+}
+
+
+/*  === ALLOCATE MEMORY ===
+ *
+ *  Searches the free list for the first block large enough to satisfy the
+ *  request.  If the block is much larger than requested it is split into
+ *  two.  If the end of the list is reached the C heap is extended by
+ *  calling the storage manager.  Note that this version never returns NULL.
+ */
+
+char *malloc(size_t requested)
+{
+  struct header *block, **last;
+  size_t required = block_size(requested);
+
+  DIAGNOSTIC(5, "malloc(requested = 0x%X) requires 0x%X", requested, required);
+  DIAGNOSTIC(5, "  free_list = 0x%X", free_list, 0);
+
+  last = &free_list;
+  block = free_list;
+
+  for(;;)
+  {
+    while(block)
+    {
+      struct header *next = block->next;
+      size_t size = block->size;
+
+      if(size >= required)
+      {
+	DIAGNOSTIC(5, "  found block at 0x%X size 0x%X", block, size);
+	DIAGNOSTIC(5, "  last = 0x%X  next = 0x%X", last, next);
+
+	if(size < required + MINIMUM_BLOCK_SIZE)
+	  *last = next;
+	else
+	{
+	  struct header *new = (struct header *)((char *)block + required);
+
+	  DIAGNOSTIC(5, "  splitting at 0x%X", new, 0);
+
+	  block->size = required;
+	  *last = new;
+	  new->next = next;
+	  new->size = size - required;
+	}
+
+	DIAGNOSTIC(5, "  returning 0x%X", BLOCK_TO_P(block), 0);
+
+	return(BLOCK_TO_P(block));
+      }
+
+      last = &block->next;
+      block = next;
+    }
+
+    block = extend(required);
+
+    *last = block;
+  }
+}
+
+
+/*  === ALLOCATE AND CLEAR ===  */
+
+char *calloc(size_t number, size_t size)
+{
+  size_t total = number * size;
+  return(memset(malloc(total), 0, total));
+}
+
+
+/*  == Find nearest blocks on free list ==
+ *
+ *  Searches the free list for the block immediately preceeding the block
+ *  passed.  Returns NULL if there is no preceeding block.
+ */
+
+static inline struct header *find(struct header *block)
+{
+  struct header *b = free_list;
+
+  if(b && b < block)
+  {
+    while(b->next && b->next < block)
+      b = b->next;
+
+    return(b);
+  }
+
+  return(NULL);
+}
+
+
+/*  === FREE ALLOCATED BLOCK ===  */
+
+int free(void *p)
+{
+  struct header *block = P_TO_BLOCK(p);
+  struct header *prev = find(block);
+
+  DIAGNOSTIC(5, "free(0x%X) free_list = 0x%X", p, free_list);
+  DIAGNOSTIC(5, "  block 0x%X  size 0x%X", block, block->size);
+  
+  if(prev)
+  {
+    struct header *next = prev->next;
+
+    DIAGNOSTIC(5, "  prev 0x%X  size 0x%X", prev, prev->size);
+    DIAGNOSTIC(5, "  next 0x%X  size 0x%X", next, next ? next->size : 0);
+
+    /* Firstly, insert the block into the free list. */
+    prev->next = block;
+    block->next = next;
+
+    /* If the block touches the next free block, merge them. */
+    if((struct header *)((char *)block + block->size) == next)
+    {
+      block->size += next->size;
+      block->next = next->next; 
+      DIAGNOSTIC(5, "  merged block with next, size now 0x%X", block->size, 0);
+    }
+
+    /* If the block touches the previous free block, merge them. */
+    if((struct header *)((char *)prev + prev->size) == block)
+    {
+      prev->size += block->size;
+      prev->next = block->next;
+      DIAGNOSTIC(5, "  merged prev with block, size now 0x%X", prev->size, 0);
+    }
+  }
+  else
+  {
+    block->next = free_list;
+    free_list = block;
+  }
+
+  return(1);
+}
+
+
+/*  === REALLOCATE MEMORY ===
+ *
+ *  If the requested size is much smaller than the current size the block is
+ *  split, otherwise a simple policy of allocating and moving the contents
+ *  is followed.  This could be cleverer and steal memory from the following
+ *  block instead, but such cases are relatively rare and it's probably not
+ *  worth it.
+ */
+
+char *realloc(void *p, size_t requested)
+{
+  struct header *block;
+  size_t required = block_size(requested);
+  size_t size;
+
+  if(!p)
+    return(malloc(requested));
+
+  block = P_TO_BLOCK(p);
+  size = block->size;
+
+  DIAGNOSTIC(5, "realloc(p = 0x%X, requested = 0x%X)", p, requested);
+  DIAGNOSTIC(5, "  requires 0x%X", required, 0);
+  DIAGNOSTIC(5, "  block 0x%X current size 0x%X", block, size);
+
+  if(size >= required)
+  {
+    if(size >= required + MINIMUM_BLOCK_SIZE)
+    {
+      struct header *new = (struct header *)((char *)block + required);
+      struct header *prev = find(block);
+
+      DIAGNOSTIC(5, "  splitting at 0x%X", new, 0);
+
+      block->size = required;
+      new->size = size - required;
+
+      if(prev)
+      {
+	new->next = prev->next;
+	prev->next = new;
+      }
+      else
+      {
+	new->next = free_list;
+	free_list = new;
+      }
+    }
+
+    return(p);
+  }
+  else
+  {
+    char *new = malloc(requested);
+
+    memcpy(new, p, size - sizeof(struct header) - (SMUDGE_FACTOR + FUDGE_FACTOR));
+    free(p);
+
+    return(new);
+  }
+}  
+@
+
+
+1.15
+log
+@Increased diagnostic level of messages from realloc().
+@
+text
+@d12 3
+d101 1
+a101 1
+ *  Calls the storage managet to fetch a new chunk of memory, and
+d108 6
+a113 2
+  struct heap *heap = make_heap(NULL, required > MINIMUM_CHUNK_SIZE ? required : MINIMUM_CHUNK_SIZE);
+  struct header *start = (struct header *)((char *)heap + ALIGN(sizeof(struct heap)));
+@
+
+
+1.15.1.1
+log
+@Fork for bug fixing
+@
+text
+@a11 3
+ *  Revision 1.15  1993/04/26  11:47:55  richard
+ *  Increased diagnostic level of messages from realloc().
+ *
+@
+
+
+1.14
+log
+@A new version using a simple linked list scheme.  The old version has
+bugs in it somewhere, and in any case was very slow.  We are now less
+likely to have random memory scrawling bugs -- ML has been running
+reliably for some time.
+@
+text
+@d12 6
+d32 2
+a33 1
+ *  I realloc a call to malloc meant that the side of the object being reallocated was calculated incorrectly
+d288 3
+a290 3
+  DIAGNOSTIC(1, "realloc(p = 0x%X, requested = 0x%X)", p, requested);
+  DIAGNOSTIC(1, "  requires 0x%X", required, 0);
+  DIAGNOSTIC(1, "  block 0x%X current size 0x%X", block, size);
+d299 1
+a299 1
+      DIAGNOSTIC(1, "  splitting at 0x%X", new, 0);
+@
+
+
+1.13
+log
+@Changed types to become non-standard but compatable with GCC across
+platforms.
+@
+text
+@d7 1
+a7 2
+ *  An ordered table of block descriptors is maintained, and this table is
+ *  itself one of the blocks.
+d12 4
+a56 4
+#include "types.h"
+#include "mltypes.h"
+#include "utils.h"
+#include "string.h"
+d58 1
+d63 2
+a64 8
+#define INITIAL_HEAP		1024
+#define INITIAL_ENTRIES		128
+#define MINIMUM_BLOCK_SIZE	256
+
+#define ALIGN(x)    (((word)(x) + sizeof(double)-1) & ~(sizeof(double)-1))
+#define CHECKSUM(i) \
+  ((word)table[i].start ^ (word)table[i].size ^ \
+   (word)table[i].status ^ 0xF1A5C0E5)
+d66 6
+a71 1
+enum status {FREE, IN_USE, GAP};
+a72 7
+typedef struct
+{
+  char *start;		/* Aligned pointer to start of block */
+  size_t size;		/* Aligned size of block */
+  enum status status;
+  word check;		/* See macros above. */
+} descriptor;
+d74 5
+d80 5
+a84 2
+static descriptor *table = NULL;
+static size_t table_size, table_used;
+d86 1
+d89 1
+a89 1
+/*  == Initialise the heap ==
+d91 3
+a93 3
+ *  Calls the storage manager to set up an initial C heap area, and
+ *  initalises the block table.  The first entry in the table is the table
+ *  itself, the second is a free block which occupies the rest of the space.
+d96 1
+a96 1
+static void init(void)
+d98 2
+a99 2
+  struct heap *initial_heap = make_heap(NULL, INITIAL_HEAP);
+  size_t size = initial_heap->size - sizeof(struct heap);
+d101 2
+a102 2
+  table_size = INITIAL_ENTRIES;
+  table_used = 2;
+d104 2
+a105 1
+  DIAGNOSTIC(5, "initializing heap at 0x%lX size 0x%lX", initial_heap+1, size);
+d107 1
+a107 9
+  table = (descriptor *)(initial_heap+1);
+  table[0].start  = (char *)table;
+  table[0].size   = table_size * sizeof(descriptor);
+  table[0].status = IN_USE;
+  table[0].check  = CHECKSUM(0);
+  table[1].start  = table[0].start + table[0].size;
+  table[1].size   = size - table[0].size;
+  table[1].status = FREE;
+  table[1].check  = CHECKSUM(1);
+d111 1
+a111 6
+/*  == Find a block ==
+ *
+ *  Returns the table index of the block which starts at the address passed
+ *  as a parameter and has a particular status, or -1 if no such block
+ *  exists.
+ */
+d113 1
+a113 1
+static int find_block(char *block, enum status status)
+d115 1
+a115 22
+  int i;
+  char *check = table[0].start;
+
+  DIAGNOSTIC(5, "find_block(0x%lX, %d)", block, status);
+  DIAGNOSTIC(5, "  table 0x%X", table, 0);
+  DIAGNOSTIC(5, "  table used %d of %d", table_used, table_size);
+
+  for(i=0; i<table_used; ++i)
+  {
+    DIAGNOSTIC(5, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(5, "  size 0x%lX status %d", table[i].size, table[i].status);
+    DIAGNOSTIC(5, "  checksum 0x%X", table[i].check, 0);
+
+    if(table[i].status == GAP)
+      check = table[i].start;
+    else if(table[i].start != check)
+      error("alloc (find_block): Non-contiguous block table entry at 0x%X.  "
+	    "Block table corrupted.", &table[i]);
+
+    if(table[i].check != CHECKSUM(i))
+      error("alloc (find_block): Block table entry at 0x%X failed checksum.",
+	    &table[i]);
+d117 1
+a117 7
+    if(table[i].start == block && table[i].status == status)
+      return(i);
+
+    check += table[i].size;
+  }
+
+  return(-1);
+d121 1
+a121 1
+/*  == Find unoccupied space ==
+d123 4
+a126 2
+ *  Returns the table index of a block which is FREE and is not smaller than
+ *  the parameter `size', or -1 if no such block exists.
+d129 1
+a129 1
+static int find_space(size_t size)
+d131 2
+a132 2
+  int i;
+  char *check = table[0].start;
+d134 2
+a135 2
+  DIAGNOSTIC(5, "find_space(0x%lX) table 0x%lX", size, table);
+  DIAGNOSTIC(5, "  table used %d of %d", table_used, table_size);
+d137 4
+a140 1
+  for(i=0; i<table_used; ++i)
+d142 4
+a145 2
+    DIAGNOSTIC(5, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(5, "  size 0x%lX status 0x%lX", table[i].size, table[i].status);
+d147 18
+a164 9
+    if(table[i].status == GAP)
+      check = table[i].start;
+    else if(table[i].start != check)
+      error("alloc (find_space): Non-contiguous block table entry at 0x%X.  "
+	    "Block table corrupted.", &table[i]);
+
+    if(table[i].check != CHECKSUM(i))
+      error("alloc (find_space): Block table entry at 0x%X failed checksum.",
+	    &table[i]);
+d166 1
+a166 2
+    if(table[i].status == FREE && table[i].size >= size)
+      return(i);
+d168 2
+a169 2
+    check += table[i].size;
+  }
+d171 3
+a173 7
+  return(-1);
+}
+
+int free(void *p)
+{
+  int i, found = -1;
+  int down = 0, up = 0;
+d175 1
+a175 1
+  DIAGNOSTIC(5, "free(0x%lX)", p, 0);
+d177 3
+a179 2
+  if(table != NULL)
+    found = find_block((char *)p, IN_USE);
+a180 2
+  if(found<0)
+    error("alloc (free): Attempt to free unallocated block at 0x%X", p);
+d182 1
+a182 2
+  down = found>0            && table[found-1].status == FREE;
+  up   = found<table_used-1 && table[found+1].status == FREE;
+d184 5
+a188 3
+  if(up && down)
+  {
+    DIAGNOSTIC(5, "  merging both ways", 0, 0);
+a189 24
+    table[found-1].size += table[found].size + table[found+1].size;
+    table_used -= 2;
+    for(i=found; i<table_used; ++i)
+      table[i] = table[i+2];
+    table[found-1].status = FREE;
+    table[found-1].check = CHECKSUM(found-1);
+  }
+  else if(up || down)
+  {
+    DIAGNOSTIC(5, "  merging up %d down %d", up, down);
+    
+    found -= down;
+    table[found].size += table[found+1].size;
+    --table_used;
+    for(i=found+1; i<table_used; ++i)
+      table[i] = table[i+1];
+    table[found].status = FREE;
+    table[found].check = CHECKSUM(found);
+  }
+  else
+  {
+    table[found].status = FREE;
+    table[found].check = CHECKSUM(found);
+  }
+d191 5
+a195 2
+  return(1);
+}
+d197 1
+a197 1
+static char *allocate(size_t size)
+d199 1
+a199 4
+  int i, found;
+  struct heap *new_area;
+
+  DIAGNOSTIC(5, "allocate(0x%lX)", size, 0);
+d201 1
+a201 3
+  found = find_space(size);
+
+  if(found<0)
+d203 2
+a204 17
+    DIAGNOSTIC(5, "  Trying to extend C heap", 0, 0);
+
+    if(table_size <= table_used + 2)
+      error("alloc (allocate): Table full while trying to extend.");
+      
+    new_area = make_heap(NULL, size);
+
+    table[table_used].size   = 0 ;
+    table[table_used].start  = (void *)(new_area+1);
+    table[table_used].status = GAP;
+    table[table_used].check  = CHECKSUM(table_used);
+    ++table_used;
+
+    table[table_used].size   = new_area->size - sizeof(struct heap);
+    table[table_used].start  = (void *)(new_area+1);
+    table[table_used].status = FREE;
+    table[table_used].check  = CHECKSUM(table_used);
+d206 1
+a206 1
+    found = table_used++;
+d209 2
+a210 11
+  if(table[found].size >= size + MINIMUM_BLOCK_SIZE)
+  {
+    for(i=table_used; i>found; --i)
+      table[i] = table[i-1];
+    ++table_used;
+    table[found].size     = size;
+    table[found+1].start += size;
+    table[found+1].size  -= size;
+    table[found+1].status = FREE;
+    table[found+1].check  = CHECKSUM(found+1);
+  }
+a211 2
+  table[found].status   = IN_USE;
+  table[found].check    = CHECKSUM(found);
+d213 1
+a213 2
+  return(table[found].start);
+}
+d215 1
+a215 1
+char *realloc(void *p, size_t size)
+d217 2
+a218 3
+  size_t extra, aligned_size = ALIGN(size), cached_size;
+  int i, found;
+  void *new;
+d220 6
+a225 7
+  DIAGNOSTIC(5, "realloc(0x%lX, 0x%lX)", p, size);
+
+  if(p == NULL)
+    return(malloc(aligned_size));
+
+  if(table == NULL)
+    init();
+d227 2
+a228 1
+  DIAGNOSTIC(5, "realloc(0x%lX, 0x%lX)", p, size);  found = find_block((char *)p, IN_USE);
+d230 3
+a232 3
+  if(found<0)
+    error("alloc (realloc): Attempt to realloc an unallocated "
+	  "block at 0x%X.", p);
+d234 2
+a235 7
+  extra = aligned_size - table[found].size;
+
+  if(found < table_used-1 &&
+     table[found+1].status == FREE &&
+     table[found+1].size >= extra)
+  {
+    if(table[found+1].size >= extra + MINIMUM_BLOCK_SIZE)
+d237 3
+a239 5
+      table[found].size    += extra;
+      table[found].check    = CHECKSUM(found);
+      table[found+1].start += extra;
+      table[found+1].size  -= extra;
+      table[found+1].check  = CHECKSUM(found+1);
+d241 3
+a243 1
+    else
+d245 3
+a247 5
+      table[found].size  += table[found+1].size;
+      table[found].check  = CHECKSUM(found);
+      --table_used;
+      for(i=found+1; i<table_used; ++i)
+	table[i] = table[i+1];
+a248 2
+
+    return(table[found].start);
+d250 1
+a250 6
+
+/* cache the size, since the find may change the table */
+  cached_size = table[found].size ;
+  new = malloc(aligned_size);
+
+  if(new != NULL)
+d252 2
+a253 2
+    memcpy(new, p, cached_size);
+    free(p);
+d256 1
+a256 1
+  return(new);
+d259 11
+a269 1
+char *malloc(size_t size)
+d271 3
+a273 1
+  static int inside = 0;
+d275 2
+a276 1
+  DIAGNOSTIC(5, "malloc(0x%lX)", size, 0);
+d278 2
+a279 2
+  if(table == NULL)
+    init();
+d281 5
+a285 1
+  if(!inside && table_used >= table_size-3)
+d287 4
+a290 1
+    descriptor *new_table;
+d292 1
+a292 3
+    inside = 1;
+    new_table = (descriptor *)realloc(table, table_size * 2 * sizeof(descriptor));
+    inside = 0;
+d294 2
+a295 2
+    if(new_table == NULL)
+      return(NULL);
+d297 13
+a309 2
+    table = new_table;
+    table_size *= 2;
+d311 3
+d315 2
+a316 2
+  return(allocate(ALIGN(size)));
+}
+d318 3
+a320 12
+char *calloc(size_t number, size_t size)
+{
+  size_t total = number * size;
+  void *new = malloc(total);
+
+  DIAGNOSTIC(5, "calloc(%u, 0x%lX)", number, size);
+
+  if(new == NULL)
+    return(NULL);
+
+  return(memset(new, 0, total));
+}
+@
+
+
+1.12
+log
+@Removed init_alloc(), and caused allocation to automatically request
+an initial area when first called.  This simplifies the interface to
+the memory manager.
+@
+text
+@d13 5
+d61 1
+d76 1
+a76 1
+  byte *start;		/* Aligned pointer to start of block */
+d106 1
+a106 1
+  table[0].start  = (byte *)table;
+d124 1
+a124 1
+static int find_block(byte *block, enum status status)
+d127 1
+a127 1
+  byte *check = table[0].start;
+d168 1
+a168 1
+  byte *check = table[0].start;
+d205 1
+a205 1
+    found = find_block((byte *)p, IN_USE);
+d245 1
+a245 1
+static byte *allocate(size_t size)
+d295 1
+a295 1
+void *realloc(void *p, size_t size)
+d309 1
+a309 1
+  DIAGNOSTIC(5, "realloc(0x%lX, 0x%lX)", p, size);  found = find_block((byte *)p, IN_USE);
+d354 1
+a354 1
+void *malloc(size_t size)
+d368 1
+a368 1
+    new_table = realloc(table, table_size * 2 * sizeof(descriptor));
+d381 1
+a381 1
+void *calloc(size_t number, size_t size)
+@
+
+
+1.11
+log
+@New areas of C heap are now allocated using a special function to
+avoid revealing anything about the memory configuration.
+@
+text
+@d13 4
+d50 1
+d57 1
+a57 1
+
+d77 1
+a77 1
+static descriptor *table;
+d82 1
+a82 1
+/*  === INITIALISE THE HEAP ===
+d84 3
+a86 3
+ *  The area of memory passed is used as the location of the block table and
+ *  the heap.  The first entry in the table is the table itself, the second
+ *  is a free block which occupies the rest of the space.
+d89 1
+a89 1
+int init_alloc(void *initial_heap, size_t size)
+d91 3
+d97 1
+a97 1
+  DIAGNOSTIC(5, "initializing heap at 0x%lX size 0x%lX", initial_heap, size);
+d99 1
+a99 1
+  table = (descriptor *)initial_heap;
+a107 2
+
+  return(1);
+d193 1
+a193 1
+  int i, found;
+d198 2
+a199 1
+  found = find_block((byte *)p, IN_USE);
+d239 1
+a239 1
+static byte *alloc(size_t size)
+d244 1
+a244 1
+  DIAGNOSTIC(5, "alloc(0x%lX)", size, 0);
+d253 1
+a253 1
+      error("alloc (alloc): Table full while trying to extend.");
+d291 1
+a291 1
+  size_t extra, aligned_size = ALIGN(size),cached_size;
+d300 2
+a301 1
+  found = find_block((byte *)p, IN_USE);
+d303 2
+d354 3
+d372 1
+a372 1
+  return(alloc(ALIGN(size)));
+@
+
+
+1.10
+log
+@I realloc a call to malloc meant that the side of the object being reallocated was calculated incorrectly
+@
+text
+@d13 3
+d44 2
+a45 1
+#include "mem.h"
+d235 1
+a235 1
+  void *new_area;
+d248 1
+a248 2
+    new_area = 
+      allocate_blocks(BLKROUNDUP(size) >> BLKBITS, TEXTBLK, NULL);
+d251 1
+a251 1
+    table[table_used].start  = new_area;
+d256 2
+a257 2
+    table[table_used].size   = BLKROUNDUP(size);
+    table[table_used].start  = new_area;
+@
+
+
+1.9
+log
+@Corrected several bugs and tidied up.
+@
+text
+@d13 3
+d281 1
+a281 1
+  size_t extra, aligned_size = ALIGN(size);
+d322 2
+d328 1
+a328 1
+    memcpy(new, p, table[found].size);
+@
+
+
+1.8
+log
+@Changed realloc() to deal with a NULL pointer properly.
+@
+text
+@d13 3
+d36 1
+d45 1
+d49 4
+a52 1
+#define ALIGN(x)		(((word)(x) + sizeof(double)-1) & ~(sizeof(double)-1))
+d54 1
+a54 9
+#define COMPUTE_CHECKSUM(i)     (((word)table[i].start ^ (word)table[i].size ^ 0xF1A5C0E5) | 1)
+#define CHECKSUM(i,marker)	(( COMPUTE_CHECKSUM(i) << 2) | (marker))
+#define CHECK_CHECKSUM(i,value) (((value)&~3) == (COMPUTE_CHECKSUM(i) << 2))
+#define CHECKSUM_ALLOCATED      0
+#define CHECKSUM_FREE           1
+#define CHECKSUM_GAP            2
+#define CHECKSUM_IS_ALLOCATED(x)  (((word)table[x].status & 3) == 0)
+#define CHECKSUM_IS_FREE(x)       (((word)table[x].status & 3) == 1)
+#define CHECKSUM_IS_GAP(x)        (((word)table[x].status & 3) == 2)
+d60 2
+a61 1
+  word status;		/* Status: zero if free, sum of above if allocated */
+d64 1
+d68 9
+d82 1
+a82 1
+  DIAGNOSTIC(4, "initializing heap at 0x%lX size 0x%lX", initial_heap, size);
+d87 2
+a88 1
+  table[0].status = CHECKSUM(0,CHECKSUM_ALLOCATED);
+d91 2
+a92 1
+  table[1].status = CHECKSUM(1,CHECKSUM_FREE);
+d97 9
+a105 1
+static int find_block(byte *block)
+d110 3
+a112 2
+  DIAGNOSTIC(4, "find_block(0x%lX) table 0x%lX", block, table);
+  DIAGNOSTIC(4, "  table used %d of %d", table_used, table_size);
+d116 3
+a118 2
+    DIAGNOSTIC(4, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(4, "  size 0x%lX status 0x%lX", table[i].size, table[i].status);
+d120 1
+a120 1
+    if(CHECKSUM_IS_GAP(i))
+d122 3
+d126 3
+a128 2
+    if(table[i].start != check || !CHECK_CHECKSUM(i,table[i].status))
+      error("alloc: block table corrupted");
+d130 1
+a130 1
+    if(table[i].start == block)
+d139 7
+d151 2
+a152 2
+  DIAGNOSTIC(4, "find_space(0x%lX) table 0x%lX", size, table);
+  DIAGNOSTIC(4, "  table used %d of %d", table_used, table_size);
+d156 2
+a157 2
+    DIAGNOSTIC(4, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(4, "  size 0x%lX status 0x%lX", table[i].size, table[i].status);
+d159 1
+a159 1
+    if(CHECKSUM_IS_GAP(i))
+d161 3
+d165 3
+a167 2
+    if(table[i].start != check || !CHECK_CHECKSUM(i,table[i].status))
+      error("alloc: block table corrupted");
+d169 1
+a169 1
+    if(CHECKSUM_IS_FREE(i) && (table[i].size >= size))
+d183 1
+a183 1
+  DIAGNOSTIC(4, "free(0x%lX)", p, 0);
+d185 1
+a185 1
+  found = find_block((byte *)p);
+d188 1
+a188 1
+    error("alloc: attempt to free unallocated block");
+d190 2
+a191 2
+  down = found>0            && CHECKSUM_IS_FREE(found-1);
+  up   = found<table_used-1 && CHECKSUM_IS_FREE(found+1);
+d195 1
+a195 1
+    DIAGNOSTIC(4, "  merging both ways", 0, 0);
+d201 2
+a202 2
+    table[found-1].status = CHECKSUM(found,CHECKSUM_FREE);
+    return(1);
+d204 1
+a204 2
+
+  if(up || down)
+d206 1
+a206 1
+    DIAGNOSTIC(4, "  merging up %d down %d", up, down);
+d213 2
+a214 1
+    table[found].status = CHECKSUM(found,CHECKSUM_FREE);
+d216 5
+d228 1
+a228 1
+  void *start_address_of_new_space;
+d230 1
+a230 1
+  DIAGNOSTIC(4, "alloc(0x%lX)", size, 0);
+d236 1
+a236 1
+      DIAGNOSTIC(4,"Trying to extend heap",0,0);
+d238 2
+a239 2
+      if(table_size == table_used + 2)
+	error("alloc.c : table full while trying to extend");
+d241 2
+a242 2
+      start_address_of_new_space = 
+	allocate_blocks(BLKROUNDUP(size) >> BLKBITS, TEXTBLK, NULL);
+d244 5
+a248 4
+      table[table_used].size = 0 ;
+      table[table_used].start = start_address_of_new_space;
+      table[table_used].status = CHECKSUM(table_used,CHECKSUM_GAP);
+      table_used++;
+d250 6
+a255 5
+      table[table_used].size = BLKROUNDUP(size);
+      table[table_used].start = start_address_of_new_space;
+      table[table_used].status = CHECKSUM(table_used,CHECKSUM_FREE);
+      found = table_used ;
+      table_used++;
+d266 2
+d270 2
+a271 2
+  table[found].status   = CHECKSUM(found, CHECKSUM_ALLOCATED);
+  table[found+1].status = CHECKSUM(found+1, CHECKSUM_FREE);
+d282 1
+a282 1
+  DIAGNOSTIC(4, "realloc(0x%lX, 0x%lX)", p, size);
+d287 1
+a287 1
+  found = find_block((byte *)p);
+d290 2
+a291 1
+    error("alloc: attempt to realloc an unallocated block");
+d296 1
+a296 1
+     !table[found+1].status &&
+d302 1
+a302 1
+      table[found].status   = CHECKSUM(found,CHECKSUM_ALLOCATED);
+d305 1
+d310 1
+a310 1
+      table[found].status = CHECKSUM(found,CHECKSUM_ALLOCATED);
+d319 1
+a319 2
+  if((new = malloc(aligned_size)) == NULL)
+    return(NULL);
+d321 5
+a325 2
+  memcpy(new, p, table[found].size);
+  free(p);
+d334 1
+a334 1
+  DIAGNOSTIC(4, "malloc(0x%lX)", size, 0);
+d359 1
+a359 1
+  DIAGNOSTIC(4, "calloc(%u, 0x%lX)", number, size);
+@
+
+
+1.7
+log
+@Chaned call to allocate_blocks() as memory arrangement has changed.
+@
+text
+@d13 3
+d236 3
+@
+
+
+1.6
+log
+@Forgot to take out my debugging messages
+@
+text
+@d13 3
+d196 1
+a196 1
+	allocate_blocks(BLKROUNDUP(size)>>BLKBITS,TEXTBLK,0);
+@
+
+
+1.5
+log
+@First attempt at using allocate_blocks to get memory at loading time
+@
+text
+@d187 1
+a187 1
+      DIAGNOSTIC(0,"Trying to extend heap",0,0);
+@
+
+
+1.4
+log
+@Typo in find_space : (i-1) instead of -1
+@
+text
+@d13 3
+a38 1
+#define CHECKSUM(i)		(((word)table[i].start ^ (word)table[i].size ^ 0xF1A5C0E5) | 1)
+d40 10
+d70 1
+a70 1
+  table[0].status = CHECKSUM(0);
+d73 1
+a73 1
+  table[1].status = 0;
+d91 4
+a94 2
+    if(table[i].start != check ||
+       (table[i].status && table[i].status != CHECKSUM(i)))
+d119 4
+a122 2
+    if(table[i].start != check ||
+       (table[i].status && table[i].status != CHECKSUM(i)))
+d125 1
+a125 1
+    if(!table[i].status && table[i].size >= size)
+d146 2
+a147 2
+  down = found>0            && !table[found-1].status;
+  up   = found<table_used-1 && !table[found+1].status;
+d157 1
+d170 1
+a172 2
+  table[found].status = 0;
+
+d179 1
+d186 2
+a187 1
+    error("alloc: don't know how to extend heap");
+d189 18
+d217 2
+a218 1
+  table[found].status = CHECKSUM(found);
+d245 1
+a245 1
+      table[found].status   = CHECKSUM(found);
+d252 1
+a252 1
+      table[found].status = CHECKSUM(found);
+d276 1
+a276 1
+  if(!inside && table_used >= table_size-1)
+@
+
+
+1.3
+log
+@There was a typo += instead of -= in alloc
+@
+text
+@d13 3
+d115 1
+a115 1
+  return(i-1);
+@
+
+
+1.2
+log
+@Shifted diagnostic level of debugging messages up to 4.
+@
+text
+@d13 3
+d33 1
+a33 1
+#define CHECKSUM(i)		(((word)table[i].start ^ (word)table[i].size) | 1)
+d175 1
+a175 1
+    table[found+1].size  += size;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d47 1
+a47 1
+  DIAGNOSTIC(0, "initializing heap at 0x%lX size 0x%lX", initial_heap, size);
+d65 2
+a66 2
+  DIAGNOSTIC(0, "find_block(0x%lX) table 0x%lX", block, table);
+  DIAGNOSTIC(0, "  table used %d of %d", table_used, table_size);
+d70 2
+a71 2
+    DIAGNOSTIC(0, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(0, "  size 0x%lX status 0x%lX", table[i].size, table[i].status);
+d91 2
+a92 2
+  DIAGNOSTIC(0, "find_space(0x%lX) table 0x%lX", size, table);
+  DIAGNOSTIC(0, "  table used %d of %d", table_used, table_size);
+d96 2
+a97 2
+    DIAGNOSTIC(0, "  entry %d at 0x%lX", i, table[i].start);
+    DIAGNOSTIC(0, "  size 0x%lX status 0x%lX", table[i].size, table[i].status);
+d117 1
+a117 1
+  DIAGNOSTIC(0, "free(0x%lX)", p, 0);
+d129 1
+a129 1
+    DIAGNOSTIC(0, "  merging both ways", 0, 0);
+d140 1
+a140 1
+    DIAGNOSTIC(0, "  merging up %d down %d", up, down);
+d158 1
+a158 1
+  DIAGNOSTIC(0, "alloc(0x%lX)", size, 0);
+d186 1
+a186 1
+  DIAGNOSTIC(0, "realloc(0x%lX, 0x%lX)", p, size);
+d231 1
+a231 1
+  DIAGNOSTIC(0, "malloc(0x%lX)", size, 0);
+d256 1
+a256 1
+  DIAGNOSTIC(0, "calloc(%u, 0x%lX)", number, size);
+@

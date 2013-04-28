@@ -1,0 +1,1054 @@
+head	1.15;
+access;
+symbols
+	MLWorks_Beta_1996_07_02:1.13
+	MLWorks_Beta_1996_06_07:1.11
+	MLWorks_Beta_1996_06_06:1.11
+	MLWorks_Beta_1996_06_05:1.11
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.8;
+locks; strict;
+comment	@ *  @;
+
+
+1.15
+date	96.07.16.10.18.27;	author andreww;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	96.07.03.09.59.09;	author andreww;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	96.06.14.13.23.27;	author andreww;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	96.06.10.09.51.29;	author andreww;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	96.05.31.12.36.51;	author andreww;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.05.30.16.40.43;	author andreww;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.30.14.00.34;	author andreww;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.24.11.24.37;	author andreww;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.05.20.12.29.12;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.15.13.29.41;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.03.15.56.18;	author stephenb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.04.23.16.27.35;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.04.18.15.23.45;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.02.09.42.52;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.02.29.16.54.11;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Moved from __unixprimio.sml for common naming scheme with NT
+@
+
+
+1.15
+log
+@Simplifying standard in, out and err.
+@
+text
+@(*  ==== INITIAL BASIS : OS_PRIM_IO ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __primio.sml,v $
+ *  Revision 1.14  1996/07/03  09:59:09  andreww
+ *  Routing standard input/output/error through the listener.
+ *
+ *  Revision 1.13  1996/06/14  13:23:27  andreww
+ *  correcting sets to unix blocking mode.
+ *
+ *  Revision 1.12  1996/06/10  09:51:29  andreww
+ *  converting out-of-date IO magic numbers (which don't work under Solaris)
+ *  into appropriate sums of corresponding unix constants.
+ *
+ *  Revision 1.11  1996/05/31  12:36:51  andreww
+ *  removing text, bin structures.
+ *
+ *  Revision 1.10  1996/05/30  16:40:43  andreww
+ *  removing too-early modifications.
+ *
+ *  Revision 1.9  1996/05/30  14:00:34  andreww
+ *  removing TextPrimIO and BinPrimIO structures.
+ *
+ *  Revision 1.8  1996/05/24  11:24:37  andreww
+ *  expose TextPrimIO and BinPrimIO at top-level.
+ *
+ *  Revision 1.7  1996/05/20  12:29:12  jont
+ *  Update to latest primio signature
+ *
+ *  Revision 1.6  1996/05/15  13:29:41  jont
+ *  __fileposint moved to __position
+ *
+ *  Revision 1.5  1996/05/03  15:56:18  stephenb
+ *  UnixOS_.fstat has moved to UnixOS_.FileSys.fstat
+ *
+ *  Revision 1.4  1996/04/23  16:27:35  matthew
+ *  Changing some word8s to chars
+ *
+ *  Revision 1.3  1996/04/18  15:23:45  jont
+ *  initbasis moves to basis
+ *
+ *  Revision 1.2  1996/04/02  09:42:52  stephenb
+ *  Replace UnixOS_.stat by UnixOS_.fstat
+ *
+ *  Revision 1.1  1996/02/29  16:54:11  jont
+ *  new unit
+ *  Moved from __unixprimio.sml for common naming scheme with NT
+ *
+ *  Revision 1.5  1996/01/29  08:38:41  stephenb
+ *  Update wrt change in UnixOS_.write.
+ *
+ *  Revision 1.4  1996/01/23  13:49:00  stephenb
+ *  OS reorganisation: since OS specific code is no longer in the
+ *  pervasive library, any use of MLWorks.OS.Unix changes to using
+ *  UnixOS structure.  Note that the UnixOS_ structure is being
+ *  hardwired in rather than turning UnixPrimIO into a functor.
+ *
+ *  Revision 1.3  1995/09/12  09:59:23  daveb
+ *  Word conversions are temporarily in abeyance.
+ *
+ *  Revision 1.2  1995/05/10  14:46:03  daveb
+ *  Added support for blocking, seek, stat, etc.
+ *
+ *
+ *)
+
+require "^.basis.__word8";
+require "^.basis.__word8array";
+require "^.basis.__word8vector";
+require "^.basis.__chararray";
+require "^.basis.__charvector";
+require "^.basis.osprimio";
+require "^.basis.__bin_prim_io";
+require "^.basis.__text_prim_io";
+require "^.basis.toplevel";
+require "^.basis.__position";
+require "__unixos";
+
+
+structure OSPrimIO : OS_PRIM_IO =
+struct
+
+  type bin_reader = BinPrimIO.reader
+  type bin_writer = BinPrimIO.writer
+  type text_reader = TextPrimIO.reader
+  type text_writer = TextPrimIO.writer
+  type file_desc = UnixOS_.FileSys.file_desc
+
+
+  (*                                         *)
+  (* Readers and Writers for Unix filesystem *)
+  (*                                         *)
+
+  fun mkUnixReader
+       {fd: file_desc, name: string, initialPos: BinPrimIO.pos,
+        initialBlockMode: bool} =
+    let
+      val blockMode = ref initialBlockMode
+      val pos = ref initialPos
+
+      fun ensureBlockMode b =
+	if !blockMode = b then
+	  ()
+	else
+	  (UnixOS_.set_block_mode (fd, b);
+	   blockMode := b)
+
+      val stringsize = size
+
+      val {size, blksize, ...} = UnixOS_.FileSys.fstat fd
+    in
+      BinPrimIO.augmentReader
+        (BinPrimIO.RD
+	   {readVec =
+	      SOME (fn i =>
+	              (ensureBlockMode true;
+	               let val result = UnixOS_.read (fd, i)
+		       in
+		         pos := !pos + Word8Vector.length result;
+			 result
+		       end)),
+            readVecNB =
+	      SOME (fn i =>
+	              (ensureBlockMode false;
+	               let val result =
+			     UnixOS_.read (fd, i)
+		       in
+		         pos := !pos + stringsize result;
+			 SOME result
+		       end)
+	               handle
+	                 UnixOS_.WouldBlock => NONE),
+            readArr = NONE,
+            readArrNB = NONE,
+            block = NONE,
+            canInput = SOME (fn () => UnixOS_.can_input fd <> 0),
+            name = name,
+            chunkSize =  blksize,
+            close = fn () => UnixOS_.IO.close fd,
+            getPos = fn () => !pos,
+            setPos = fn newPos =>
+		       (UnixOS_.seek (fd, newPos);
+		        pos := newPos),
+            endPos = fn () => size,
+	    ioDesc=SOME fd})
+    end
+
+  fun openRd filename =
+    mkUnixReader
+      {fd = UnixOS_.open_ (filename, UnixOS_.o_rdonly, 0),
+       name = filename,
+       initialPos = (* Position.fromDefault *) 0,
+       initialBlockMode = true}
+
+
+
+
+
+
+  fun mkUnixWriter
+       {fd: file_desc, name: string, blocksize: int, size: int,
+        initialPos: BinPrimIO.pos, initialBlockMode: bool} =
+    let
+      val blockMode = ref initialBlockMode
+      val pos = ref initialPos
+
+      fun ensureBlockMode b =
+	if !blockMode = b then
+	  ()
+	else
+	  (UnixOS_.set_block_mode (fd, b);
+	   blockMode := b)
+    in
+      BinPrimIO.augmentWriter
+        (BinPrimIO.WR
+           {writeVec =
+	      SOME (fn {buf, i, sz} => 
+	              (ensureBlockMode true;
+	               let
+			 val nelems = case sz of
+			   SOME i => i
+			 | NONE => Word8Vector.length buf - i
+			 val result = UnixOS_.write (fd, buf, i, nelems)
+		       in
+		         pos := result;
+			 result
+		       end)),
+            writeVecNB =
+	      SOME (fn {buf, i, sz} => 
+	              (ensureBlockMode false;
+	               let
+			 val nelems = case sz of
+			   SOME i => i
+			 | NONE => Word8Vector.length buf - i
+			 val result = UnixOS_.write (fd, buf, i, nelems)
+		       in
+		         pos := result;
+			 SOME result
+		       end)
+	               handle
+	                 UnixOS_.WouldBlock => NONE),
+            writeArrNB = NONE,
+            writeArr = NONE,
+            block = NONE,
+            canOutput = NONE,
+            name = name,
+            chunkSize = blocksize,
+            close = fn () => UnixOS_.IO.close fd,
+            getPos = fn () => !pos,
+            setPos = fn newPos =>
+		       (UnixOS_.seek (fd, newPos);
+		        pos := newPos),
+            endPos = fn () => size,
+	    ioDesc=SOME fd})
+    end
+
+   
+  fun openWr filename =
+    let 
+      val fd = UnixOS_.open_ (filename, UnixOS_.o_wronly
+                                       +UnixOS_.o_creat
+                                       +UnixOS_.o_trunc, 438)
+			                           (* 438 = 0666 *)
+      val {size, blksize, ...} = UnixOS_.FileSys.fstat fd
+    in
+      mkUnixWriter
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* Position.fromDefault *) 0,
+         initialBlockMode = true}
+    end
+
+
+
+  fun openApp filename =
+    let 
+      val fd = UnixOS_.open_ (filename, UnixOS_.o_wronly
+                                       +UnixOS_.o_append
+                                       +UnixOS_.o_creat, 438)
+		                                   (* 438 = 0666 *)
+      val {size, blksize, ...} = UnixOS_.FileSys.fstat fd
+    in
+      mkUnixWriter
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* Position.fromDefault *) size,
+         initialBlockMode = true}
+    end
+
+
+
+  (* unix standard IO readers and writers. *)
+
+
+  val terminalOut = 
+    let 
+      val fd = UnixOS_.FileSys.stdout
+      val {blksize, ...} = UnixOS_.FileSys.fstat fd
+    in
+      mkUnixWriter
+      {fd = fd,
+       name = "<stdOut>",
+       size = 0,
+       blocksize = blksize,
+       initialPos = 0,
+       initialBlockMode = true}
+    end
+
+
+  val terminalErr =
+    let 
+      val fd = UnixOS_.FileSys.stderr
+      val {blksize, ...} = UnixOS_.FileSys.fstat fd
+    in
+      mkUnixWriter
+      {fd = fd,
+       name = "<stdErr>",
+       size = 0,
+       blocksize = 1,
+       initialPos = 0,
+       initialBlockMode = true}
+    end
+
+
+         (* note that in the following reader and writers, getPos and setPos
+          * have to handle SysErr --- this occurs when one tries to seek
+          * on redirected input (for example, when creating guib.img).  In
+          * this case, it is best to return default values. *)
+
+
+
+  local
+    open MLWorks.Internal.StandardIO
+  in
+    val stdIn =  BinPrimIO.augmentReader
+      (BinPrimIO.RD
+       {readVec = SOME (fn i => #get(#input(currentIO())) i),
+        readVecNB =NONE,
+        readArr = NONE,
+        readArrNB = NONE,
+        block = NONE,
+        canInput = SOME(fn ()=>valOf(#can_input(#input(currentIO()))) ()
+                       handle Option => raise Fail "RandomAccessNotSupported"),
+        name = "<stdIn>",
+        chunkSize =  1,                        (* arbitrary! *)
+        close = fn () => #close(#input(currentIO()))(),
+        getPos = fn ()=> valOf(#get_pos(#input(currentIO())))()
+                      handle Option => raise Fail "RandomAccessNotSupported"
+                           | MLWorks.Internal.SysErr _ => 0,
+        setPos = fn newPos => valOf(#set_pos(#input(currentIO()))) newPos
+                      handle Option => raise Fail "RandomAccessNotSupported"
+                           | MLWorks.Internal.SysErr _ => (),
+        endPos = fn()=> raise Fail "RandomAccessNotSupported",
+        ioDesc = NONE}) (* this value cannot be redirected dynamically*)
+      
+    val stdOut =
+      BinPrimIO.augmentWriter
+      (BinPrimIO.WR
+       {writeVec = SOME (fn s => #put(#output(currentIO())) s),
+       writeVecNB = NONE,
+       writeArrNB = NONE,
+       writeArr = NONE,
+       block = NONE,
+       canOutput = SOME(fn () => valOf(#can_output(#output(currentIO())))()
+                        handle Option => true),
+       name = "<stdOut>",
+       chunkSize = 1,               (* arbitrary! *)
+       close = fn() => #close(#output(currentIO()))(),
+       getPos = fn ()=> valOf(#get_pos(#output(currentIO())))()
+                 handle Option => raise Fail "RandomAccessNotSupported"
+                      | MLWorks.Internal.SysErr _ => 0,
+       setPos = fn newPos => valOf(#set_pos(#output(currentIO()))) newPos
+                     handle Option => raise Fail "RandomAccessNotSupported"
+                          | MLWorks.Internal.SysErr _ => (),
+       endPos = fn () => ~1,
+       ioDesc=NONE})   
+      
+    val stdErr =
+      BinPrimIO.augmentWriter
+      (BinPrimIO.WR
+       {writeVec = SOME (fn s => #put(#error(currentIO())) s),
+       writeVecNB = NONE,
+       writeArrNB = NONE,
+       writeArr = NONE,
+       block = NONE,
+       canOutput = SOME(fn ()=> valOf(#can_output(#error(currentIO())))()
+                       handle Option => raise Fail "RandomAccessNotSupported"),
+       name = "<stdOut>",
+       chunkSize = 1,               (* arbitrary! *)
+       close = fn () => #close(#error(currentIO()))(),
+       getPos = fn () => valOf(#get_pos(#error(currentIO()))) ()
+                       handle Option => raise Fail "RandomAccessNotSupported"
+                            | MLWorks.Internal.SysErr _ => 0,
+       setPos = fn newPos => valOf(#set_pos(#error(currentIO()))) newPos
+                       handle Option => raise Fail "RandomAccessNotSupported"
+                            | MLWorks.Internal.SysErr _ => (),
+       endPos = fn () => raise Fail "RandomAccessNotSupported",
+       ioDesc=NONE})   
+      
+  end
+
+
+
+    
+
+  (* On Unix, text is binary *) (* HACK !!!!! *)
+  (* We should do this properly *)
+  fun translateIn x = MLWorks.Internal.Value.cast x
+  fun translateOut x = MLWorks.Internal.Value.cast x
+
+end
+
+
+@
+
+
+1.14
+log
+@Routing standard input/output/error through the listener.
+@
+text
+@d12 3
+d152 1
+a152 1
+	    ioDesc=NONE})
+d221 1
+a221 1
+	    ioDesc=NONE})
+a265 5
+  val terminalIn =  mkUnixReader {fd = UnixOS_.FileSys.stdin,
+                                  name = "<stdIn>",
+                                  initialPos = 0,
+                                  initialBlockMode = true}
+
+d296 4
+a302 11
+  (*                                        *)
+  (* readers and writers for GUI windows    *)
+  (*                                        *)
+
+  (* note: these readers/writers do not     *)
+  (* implement getPos,setPos and endPos     *)
+  (* because they may refer to different    *)
+  (* windows at different times.   Another  *)
+  (* alternative would be to attach a "home"*)
+  (* window to each reader/writer.          *)
+
+d304 1
+a304 66
+
+    open MLWorks.Internal.GuiStandardIO
+
+
+    (* OUTPUT TO GUI WINDOW *********************************)
+    
+    fun output str = #output_fun (currentWindow ()) str
+      
+    (* INPUT FROM GUI WINDOW ********************************)
+      
+    fun buff_empty() = 
+      let val {buffer_pos,buffer_data,...} = currentWindow()
+      in  !buffer_pos>= size (!buffer_data)
+      end
+    
+    
+    fun refill_buff () =
+      let val {input_fun,buffer_pos,buffer_data,...} = 
+        currentWindow()
+          val new_string = input_fun ()
+            
+      in
+        buffer_pos := 0;
+        buffer_data := new_string
+      end
+    
+    fun get_input n =
+      let
+        val {buffer_pos,buffer_data,eof_flag,...} = currentWindow()
+        val string = !buffer_data
+        val pointer = !buffer_pos
+        val len = size string
+      in
+        if !eof_flag then
+          ""
+        else if pointer + n > len then
+          (refill_buff ();
+           String.substring (string,pointer,len-pointer) ^
+           get_input (n - len + pointer))
+             else
+               let val result = String.substring (string,pointer,n)
+               in
+                 buffer_pos := (!buffer_pos + n);
+                 result
+               end
+      end
+    
+    fun do_lookahead () =
+      let 
+        val {buffer_pos,buffer_data,eof_flag,...} = currentWindow()
+      in
+        (if !eof_flag then
+           ""
+        else if !buffer_pos >= size (!buffer_data) then
+           (refill_buff ();
+            do_lookahead ())
+             else 
+               String.substring (!buffer_data, !buffer_pos, 1))
+           
+      end
+    
+    fun close_in () =(#eof_flag o currentWindow) () := true
+    fun closed_in () = (! o #eof_flag o currentWindow) ()
+    fun clear_eof () = (#eof_flag o  currentWindow) ():= false
+      
+      
+d306 1
+a306 6
+
+    exception UnSafeGuiOp
+
+    fun mkGuiReader name =
+      
+      BinPrimIO.augmentReader
+d308 1
+a308 1
+       {readVec = SOME get_input,
+d313 3
+a315 2
+        canInput = SOME (not o buff_empty),
+        name = name,
+d317 9
+a325 11
+        close = close_in,
+        (* unsafe, as windows *)
+        (* may be switched    *)
+        (* surreptitiously    *)
+        getPos = ! o #buffer_pos o 
+        MLWorks.Internal.GuiStandardIO.currentWindow,
+        setPos = fn newPos => (#buffer_pos o
+                 MLWorks.Internal.GuiStandardIO.currentWindow) () := newPos,
+        endPos = size o ! o #buffer_data o
+        MLWorks.Internal.GuiStandardIO.currentWindow,
+        ioDesc=NONE})
+d327 21
+a347 7
+    (* unsafe versions are:
+     * getPos=#buffer_pos MLWorks.Internal.GuiStandardIO.currentWindow,
+     * setPos = fn newPos => 
+     *         (#buffer_pos GuiStandardIO.currentWindow) () := newPos,
+     * endPos=String.size o #buffer_data o
+     *                   MLWorks.Internal.GuiStandardIO.currentWindow,
+     *)
+d349 1
+a349 7
+
+   (* HACK: the following write functions always assume that *)
+   (* (a) the entire string was written to the GUI window,   *)
+   (* (b) that output can always be written.                 *)
+
+
+    fun mkGuiWriter name =
+d352 1
+a352 7
+       {writeVec = SOME (fn {buf,i,sz} =>
+                         let val s= (Word8Vector.extract) (buf,i,sz)
+                         in 
+                           #output_fun(
+                            MLWorks.Internal.GuiStandardIO.currentWindow ())s;
+                           Word8Vector.length s
+                         end),
+d357 3
+a359 2
+       canOutput = SOME(fn () => true),
+       name = name,
+d361 9
+a369 8
+       close = fn () => (),
+       getPos = fn () => (MLWorks.IO.output(MLWorks.IO.std_out,"4\n");
+                          raise UnSafeGuiOp),
+       setPos = fn newPos => (MLWorks.IO.output(MLWorks.IO.std_out,"5\n");
+                              raise UnSafeGuiOp),
+       endPos = fn () => (MLWorks.IO.output(MLWorks.IO.std_out,"6\n");
+                          raise UnSafeGuiOp),
+       ioDesc=NONE})
+a373 2
+  (* standard IO for the Gui *)
+
+a374 3
+  val guiIn = mkGuiReader "<stdIn>"
+  val guiOut = mkGuiWriter "<stdOut>"
+  val guiErr = mkGuiWriter "<stdErr>"
+@
+
+
+1.13
+log
+@correcting sets to unix blocking mode.
+@
+text
+@d12 3
+d76 1
+a76 1
+require "^.basis._primio";
+d84 1
+a84 2
+
+structure PrimIO  =
+d93 6
+a98 1
+  fun mkReader
+d153 1
+a153 1
+    mkReader
+d159 6
+a164 1
+  fun mkWriter
+d220 1
+d230 1
+a230 1
+      mkWriter
+d239 2
+d249 1
+a249 1
+      mkWriter
+a257 6
+  val stdIn =
+    mkReader
+      {fd = UnixOS_.FileSys.stdin,
+       name = "<stdIn>",
+       initialPos = 0,
+       initialBlockMode = true}
+d259 10
+a268 1
+  val stdOut =
+d273 7
+a279 7
+      mkWriter
+        {fd = fd,
+         name = "<stdOut>",
+         size = 0,
+         blocksize = blksize,
+         initialPos = 0,
+         initialBlockMode = true}
+d282 2
+a283 1
+  val stdErr =
+d288 7
+a294 7
+      mkWriter
+        {fd = fd,
+         name = "<stdErr>",
+         size = 0,
+         blocksize = 1,
+         initialPos = 0,
+         initialBlockMode = true}
+d297 161
+d464 2
+@
+
+
+1.12
+log
+@converting out-of-date IO magic numbers (which don't work under Solaris)
+into appropriate sums of corresponding unix constants.
+@
+text
+@d12 4
+d113 1
+a113 2
+	              ((*ensureBlockMode true;*)
+                       UnixOS_.set_block_mode (fd, true);
+d121 1
+a121 2
+	              ((*ensureBlockMode false;*)
+                       UnixOS_.set_block_mode (fd, false);
+@
+
+
+1.11
+log
+@removing text, bin structures.
+@
+text
+@d12 3
+d109 2
+a110 1
+	              (ensureBlockMode true;
+d118 2
+a119 1
+	              (ensureBlockMode false;
+d145 1
+a145 1
+      {fd = UnixOS_.open_ (filename, 0, 0),  (* 0 = O_RDONLY *)
+d209 4
+a212 2
+      val fd = UnixOS_.open_ (filename, 1537, 438)
+			(* 1537 = O_WRONLY|O_CREAT|O_TRUNC, 438 = 0666 *)
+d226 4
+a229 2
+      val fd = UnixOS_.open_ (filename, 1033, 438)
+			(* 1033 = O_WRONLY|O_APPEND|O_CREAT, 438 = 0666 *)
+@
+
+
+1.10
+log
+@removing too-early modifications.
+@
+text
+@d12 3
+a66 1
+(*
+a68 1
+*)
+a71 17
+
+
+structure TextPrimIO =
+  PrimIO (
+      structure A = CharArray
+      structure V = CharVector
+      val someElem = #"\000"
+      type pos = Position.int
+      val posLess = Position.<)
+
+structure BinPrimIO =
+  PrimIO (
+      structure A = Word8Array
+      structure V = Word8Vector
+      val someElem = 0w0 : Word8.word
+      type pos = Position.int
+      val posLess = Position.<)
+@
+
+
+1.9
+log
+@removing TextPrimIO and BinPrimIO structures.
+@
+text
+@d12 3
+d64 1
+d67 1
+d71 17
+@
+
+
+1.8
+log
+@expose TextPrimIO and BinPrimIO at top-level.
+@
+text
+@d12 3
+d61 2
+a65 17
+
+
+structure TextPrimIO =
+  PrimIO (
+      structure A = CharArray
+      structure V = CharVector
+      val someElem = #"\000"
+      type pos = Position.int
+      val posLess = Position.<)
+
+structure BinPrimIO =
+  PrimIO (
+      structure A = Word8Array
+      structure V = Word8Vector
+      val someElem = 0w0 : Word8.word
+      type pos = Position.int
+      val posLess = Position.<)
+@
+
+
+1.7
+log
+@Update to latest primio signature
+@
+text
+@d12 3
+a57 1
+require "^.basis.osprimio";
+d63 2
+a64 4
+structure PrimIO: OS_PRIM_IO =
+struct
+  structure TextPrimIO =
+    PrimIO (
+d71 2
+a72 2
+  structure BinPrimIO =
+    PrimIO (
+d79 9
+@
+
+
+1.6
+log
+@__fileposint moved to __position
+@
+text
+@d12 3
+d99 3
+a101 3
+      BinPrimIO.augmentIn
+        (BinPrimIO.Rd
+	   {readBlock =
+d109 1
+a109 1
+            readNoBlock =
+d120 2
+a121 2
+            readaBlock = NONE,
+            readaNoBlock = NONE,
+a127 2
+            findPos = fn ({data, first, nelems}, pos) =>
+		        Position.+ (pos, (* Position.fromDefault *) nelems),
+d131 2
+a132 1
+            endPos = fn () => size})
+d156 4
+a159 4
+      BinPrimIO.augmentOut
+        (BinPrimIO.Wr
+           {writeBlock =
+	      SOME (fn {data, first, nelems} => 
+d161 5
+a165 1
+	               let val result = UnixOS_.write (fd, data, first, nelems)
+d170 2
+a171 2
+            writeNoBlock =
+	      SOME (fn {data, first, nelems} => 
+d174 4
+a177 1
+			 val result = UnixOS_.write (fd, data, first, nelems)
+d184 2
+a185 2
+            writeaNoBlock = NONE,
+            writeaBlock = NONE,
+d195 2
+a196 1
+            endPos = fn () => size})
+@
+
+
+1.5
+log
+@UnixOS_.fstat has moved to UnixOS_.FileSys.fstat
+@
+text
+@d12 3
+d54 1
+a54 1
+require "^.basis.__fileposint";
+d65 2
+a66 2
+      type pos = FilePosInt.int
+      val posLess = FilePosInt.<)
+d73 2
+a74 2
+      type pos = FilePosInt.int
+      val posLess = FilePosInt.<)
+d126 1
+a126 1
+		        FilePosInt.+ (pos, (* FilePosInt.fromDefault *) nelems),
+d137 1
+a137 1
+       initialPos = (* FilePosInt.fromDefault *) 0,
+d200 1
+a200 1
+         initialPos = (* FilePosInt.fromDefault *) 0,
+d215 1
+a215 1
+         initialPos = (* FilePosInt.fromDefault *) size,
+@
+
+
+1.4
+log
+@Changing some word8s to chars
+@
+text
+@d12 3
+d73 1
+a73 1
+  type file_desc = int
+d91 1
+a91 1
+      val {size, blksize, ...} = UnixOS_.fstat fd
+d120 1
+a120 1
+            close = fn () => UnixOS_.close fd,
+d178 1
+a178 1
+            close = fn () => UnixOS_.close fd,
+d190 1
+a190 1
+      val {size, blksize, ...} = UnixOS_.fstat fd
+d205 1
+a205 1
+      val {size, blksize, ...} = UnixOS_.fstat fd
+d218 1
+a218 1
+      {fd = 0,
+d225 2
+a226 2
+      val fd = 1
+      val {blksize, ...} = UnixOS_.fstat fd
+d239 2
+a240 2
+      val fd = 1
+      val {blksize, ...} = UnixOS_.fstat fd
+@
+
+
+1.3
+log
+@initbasis moves to basis
+@
+text
+@d12 3
+d43 2
+d56 8
+d66 1
+a66 1
+      val someElem = 0w0: Word8.word
+a69 2
+  structure BinPrimIO = TextPrimIO
+
+d248 4
+a251 3
+  (* On Unix, text is binary *)
+  fun translateIn x = x
+  fun translateOut x = x
+@
+
+
+1.2
+log
+@Replace UnixOS_.stat by UnixOS_.fstat
+@
+text
+@d12 3
+d37 7
+a43 7
+require "^.initbasis.__word8";
+require "^.initbasis.__word8array";
+require "^.initbasis.__word8vector";
+require "^.initbasis._primio";
+require "^.initbasis.osprimio";
+require "^.initbasis.toplevel";
+require "^.initbasis.__fileposint";
+@
+
+
+1.1
+log
+@new unit
+Moved from __unixprimio.sml for common naming scheme with NT
+@
+text
+@d11 5
+a15 1
+ *  $Log: __unixprimio.sml,v $
+d74 1
+a74 1
+      val {size, blksize, ...} = UnixOS_.stat fd
+d173 1
+a173 1
+      val {size, blksize, ...} = UnixOS_.stat fd
+d188 1
+a188 1
+      val {size, blksize, ...} = UnixOS_.stat fd
+d209 1
+a209 1
+      val {blksize, ...} = UnixOS_.stat fd
+d223 1
+a223 1
+      val {blksize, ...} = UnixOS_.stat fd
+@

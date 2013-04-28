@@ -1,0 +1,128 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.2.1
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	97.07.01.10.58.36;	author stephenb;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.05.13.11.51.24;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.11.30.16.47.34;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #20035]
+@
+
+
+1.2
+log
+@[Bug #30029]
+Add a ";" to the "then" part of the final if test.
+@
+text
+@#!/bin/sh
+#
+# Copyright (C) 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# Make the TEST.ans file for a given test.
+#
+# Usage: make_foreign_answer.sh [ test-dir ] [ MLWorks-src-dir ]
+#
+# Example:
+#
+# Make an answer for the ndbm test :-
+#
+#   $ ./make_foreign_answer.sh ndbm
+#
+# Make an answer for the add test using the runtime, images ... etc. in 
+# /u/sml/MLW/src :-
+#
+#   $ ./make_foreign_answer.sh add /u/sml/MLW/src
+#
+# Revision Log
+# ------------
+# $Log: foreign:make_foreign_answer.sh,v $
+# Revision 1.1  1997/05/13  11:51:24  stephenb
+# new unit
+# [Bug #20035]
+#
+
+test_dir=$1
+src_dir=$2
+cd $test_dir
+answer_file=TEST.ans
+
+if test -f $answer_file -a ! -w $answer_file
+then
+  echo $test_dir: answer already exists but is not writable.
+  exit 1
+fi
+
+if { ./TEST.sh $src_dir > $answer_file 2>&1; }
+then
+  :
+else
+  echo $test_dir: problem generating output
+  exit 1
+fi
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a22 4
+# Revision 1.2  1997/07/01  10:58:36  stephenb
+# [Bug #30029]
+# Add a ";" to the "then" part of the final if test.
+#
+@
+
+
+1.1
+log
+@new unit
+[Bug #20035]
+@
+text
+@d3 1
+a3 1
+# Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+d22 5
+a26 1
+# $Log$
+d39 1
+a39 1
+if { ./TEST.sh $src_dir > $answer_file; }
+d41 1
+a41 1
+  # answer ok.
+@

@@ -1,0 +1,83 @@
+head	1.1;
+access;
+symbols
+	MLWorks_1_open_beta_1996_09_13:1.1.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1
+	ML_beta_release_12/08/94:1.1
+	ML_beta_release_03/08/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.07.01.15.15.27;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	96.09.13.11.35.43;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.1
+log
+@new file
+@
+text
+@(*
+Test that signature matching doesn't instantiate imperative type variables
+Result: FAIL
+ 
+$Log$
+
+Copyright (c) 1994 Harlequin Ltd.
+*)
+
+structure S =
+  struct
+    datatype 'a t = T
+  end;
+
+signature SIG =
+  sig
+    type t
+    sharing type t = S.t
+  end;
+signature SIG =
+  sig
+    val x : int list ref
+  end;
+
+structure S : SIG =
+  struct
+    val x = ref []
+  end
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d5 1
+a5 4
+$Log: impsig.sml,v $
+ * Revision 1.1  1994/07/01  15:15:27  jont
+ * new file
+ *
+@

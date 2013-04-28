@@ -1,0 +1,774 @@
+head	1.6;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.6
+	MLWorks_Beta_1996_06_06:1.6
+	MLWorks_Beta_1996_06_05:1.6
+	MLWorks_Beta_1996_06_03:1.6
+	MLWorks_Beta_1996_05_31:1.6
+	MLWorks_Beta_1996_05_30:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	96.05.22.11.46.04;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.01.16.26.32;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.21.10.35.50;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.02.08.11.29.24;	author io;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.06.16.40.23;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.26.14.58.26;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Test suite for Unix path names.
+@
+
+
+1.6
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Test suite for Unix path names.
+
+Result: OK
+  * $Log: basis:unixpath.sml,v $
+ * Revision 1.5  1996/05/01  16:26:32  jont
+ * Fixing up after changes to toplevel visible string and io stuff
+ *
+ * Revision 1.4  1996/03/21  10:35:50  matthew
+ * Updating
+ *
+ *  Revision 1.3  1996/02/08  11:29:24  io
+ *  update Shell.Make
+ *
+ *  Revision 1.2  1995/03/06  16:40:23  daveb
+ *  Removed the "last" component from exploded paths, and replaced
+ *  splitPath with splitExt and splitLast.
+ *
+ * Revision 1.1  1995/01/26  14:58:26  daveb
+ * new unit
+ * Test suite for Unix path names.
+ *
+ * Copyright (c) 1994 Harlequin Ltd.
+ *
+ *)
+
+Shell.Build.loadSource "unix.__path";
+Shell.Build.loadSource "basis.__integer";
+
+structure UnixPath = Path_;
+
+val dummyExplodedPath = {arcs=[], root= UnixPath.ABS "error"}
+
+val dummySplitPath = {dir="error", name="error", ext=UnixPath.EXT "error"}
+
+val tests =
+[
+(* 0 *)
+UnixPath.parent = "..",
+
+UnixPath.current = ".",
+
+UnixPath.isAbsolute "" = false,
+
+UnixPath.isAbsolute "/" = true,
+
+UnixPath.isAbsolute "~" = false,
+
+UnixPath.isAbsolute "." = false,
+
+UnixPath.isAbsolute "foo" = false,
+
+UnixPath.isRelative "" = true,
+
+UnixPath.isRelative "/" = false,
+
+UnixPath.isRelative "~" = true,
+
+(* 10 *)
+UnixPath.isRelative "." = true,
+
+UnixPath.isRelative "foo" = true,
+
+(UnixPath.explodePath "/foo//spong.ext/bar.sml"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "", "spong.ext", "bar.sml"], root=UnixPath.ABS "/"},
+
+(UnixPath.explodePath "foo/spong/"
+ handle _ => dummyExplodedPath) =
+  {arcs=["foo", "spong", ""], root=UnixPath.REL},
+
+(UnixPath.explodePath "~foo/spong"
+ handle _ => dummyExplodedPath) =
+  {arcs=["~foo", "spong"], root=UnixPath.REL},
+
+(UnixPath.explodePath ""
+ handle _ => dummyExplodedPath) =
+  {arcs=[], root=UnixPath.REL},
+
+(UnixPath.explodePath "/"
+ handle _ => dummyExplodedPath) =
+  {arcs=[], root=UnixPath.ABS "/"},
+
+(UnixPath.implodePath
+  {arcs=["foo", "", "spong", "bar.sml"], root=UnixPath.ABS "/"}
+   handle _ => "error") =
+  "/foo//spong/bar.sml",
+
+(UnixPath.implodePath
+  {arcs=["foo", "", "spong.ext", "bar.sml"], root=UnixPath.ABS "a:"}
+   handle _ => "error") =
+(*
+  "error"
+*)
+  "a:foo//spong.ext/bar.sml",
+
+(UnixPath.implodePath {arcs=["foo", "spong", ""], root=UnixPath.REL}
+ handle _ => "error") =
+  "foo/spong/",
+
+(* 20 *)
+(UnixPath.implodePath {arcs=[], root=UnixPath.REL}
+ handle _ => "error") =
+  ".",
+
+UnixPath.root "/foo" = UnixPath.ABS "/"
+handle _ => false,
+
+UnixPath.root "/" = UnixPath.ABS "/"
+handle _ => false,
+
+UnixPath.root "" = UnixPath.REL
+handle _ => false,
+
+UnixPath.root "~/foo" = UnixPath.REL
+handle _ => false,
+
+UnixPath.isValidPath "..//foo/.sml" = true
+handle _ => false,
+
+UnixPath.isValidPath "" = true
+handle _ => false,
+
+UnixPath.isValidPath "/" = true
+handle _ => false,
+
+UnixPath.isValidPath "~" = true
+handle _ => false,
+
+UnixPath.isValidPath "/foo\000/bar" = false
+handle _ => false,
+
+(* 30 *)
+UnixPath.isValidPath "*dL2\2487&.@@!.'\"|^~`#$%(){}<>,.;:+=-_\n\t x" = true
+handle _ => false,
+
+UnixPath.isValidPath "foo/12345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234567890123456789012345\
+\678901234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345/bar.sml" = true
+handle _ => true,
+
+UnixPath.isValidPath "foo/12345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234567890123456789012345\
+\678901234567890123456789012345678901234567890123456789012345678901234567890\
+\12345678901234567890123456789012345678901234567890123456/bar.sml" = false
+handle _ => false,
+
+UnixPath.isValidRoot "/" = true
+handle _ => false,
+
+UnixPath.isValidRoot "/foo" = false
+handle _ => false,
+
+UnixPath.isValidRoot "~" = false
+handle _ => false,
+
+UnixPath.isValidRoot "" = false
+handle _ => false,
+
+UnixPath.isValidRoot "\\" = false
+handle _ => false,
+
+UnixPath.isValidRoot "a:" = false
+handle _ => false,
+
+UnixPath.isValidArc "*dL2\2487&.@@!.'\"|^~`#$%(){}<>,.;:+=-_\n\t x" = true
+handle _ => false,
+
+(* 40 *)
+UnixPath.isValidArc "" = true
+handle _ => false,
+
+UnixPath.isValidArc "foo\000bazsd" = false
+handle _ => false,
+
+UnixPath.isValidArc "foo/bar" = false
+handle _ => false,
+
+UnixPath.isValidArc "12345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\12345678901234567890123456789012345678901234567890123456789012345" = true
+handle _ => false,
+
+UnixPath.isValidArc "12345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\1234567890123456789012345678901234567890123456789012345678901234567890\
+\123456789012345678901234567890123456789012345678901234567890123456" = false
+handle _ => false,
+
+UnixPath.isValidArc "/" = false
+handle _ => false,
+
+(UnixPath.getParent "/foo/bar.sml"
+ handle
+   UnixPath.Path => "No Parent"
+ | _ => "error") =
+  "/foo",
+
+(UnixPath.getParent "/foo/bar/"
+ handle
+   UnixPath.Path => "No Parent"
+ | _ => "error") =
+  "/foo/bar",
+
+(UnixPath.getParent "foo"
+ handle
+   UnixPath.Path => "No Parent"
+ | _ => "error") =
+  "No Parent",
+
+(UnixPath.getParent "/foo"
+ handle
+   UnixPath.Path => "No Parent"
+ | _ => "error") =
+  "/",
+
+(* 50 *)
+(UnixPath.getParent ""
+ handle
+   UnixPath.Path => "No Parent"
+ | _ => "error") =
+  "No Parent",
+
+(UnixPath.concatPath ("foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.concatPath ("/foo", "bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "/foo/bar",
+
+(UnixPath.concatPath ("/foo", "~bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "/foo/~bar",
+
+(UnixPath.concatPath ("", "bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "bar",
+
+(UnixPath.mkAbsolute ("/foo", "bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.mkAbsolute ("../foo", "bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.mkAbsolute ("foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "/bar/foo",
+
+(UnixPath.mkAbsolute ("~foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "/bar/~foo",
+
+(UnixPath.mkAbsolute ("/foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "/foo",
+
+(* 60 *)
+(UnixPath.mkRelative ("/foo", "bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.mkRelative ("foo", "../bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.mkRelative ("foo", "~bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "Invalid",
+
+(UnixPath.mkRelative ("foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(UnixPath.mkRelative ("/bar/foo", "/bar/")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(UnixPath.mkRelative ("/spong/foo", "/spong/bar/")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "../foo",
+
+(UnixPath.mkRelative ("/spong/foo", "/bar/")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "../spong/foo",
+
+(UnixPath.mkRelative ("/bar/foo", "/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "foo",
+
+(UnixPath.mkRelative ("/spong/foo", "/spong/bar")
+ handle
+   UnixPath.Path => "Invalid"
+ | _ => "error") =
+  "../foo",
+
+UnixPath.mkCanonical "" = "."
+handle _ => false,
+
+(* 70 *)
+UnixPath.mkCanonical "foo/.." = "."
+handle _ => false,
+
+UnixPath.mkCanonical "foo/." = "foo"
+handle _ => false,
+
+UnixPath.mkCanonical "foo1//../..//foo2/bar.sml" = "../foo2/bar.sml"
+handle _ => false,
+
+UnixPath.mkCanonical "foo1.ext/./foo2/../bar.sml/" = "foo1.ext/bar.sml"
+handle _ => false,
+
+UnixPath.mkCanonical "//foo1/../../foo2/bar.sml" = "/foo2/bar.sml"
+handle _ => false,
+
+UnixPath.splitExt "/foo/bar.sml" =
+  {name="/foo/bar", ext=UnixPath.EXT "sml"}
+handle _ => false,
+
+UnixPath.splitExt "foo.ext/bar" =
+  {name="foo.ext/bar", ext=UnixPath.NOEXT}
+handle _ => false,
+
+UnixPath.splitExt "/" =
+  {name="/", ext=UnixPath.NOEXT}
+handle _ => false,
+
+UnixPath.splitExt "." =
+  {name=".", ext=UnixPath.NOEXT}
+handle _ => false,
+
+UnixPath.splitExt "..." =
+  {name="...", ext=UnixPath.NOEXT}
+handle _ => false,
+
+(* 80 *)
+UnixPath.splitExt "" =
+  {name="", ext=UnixPath.NOEXT}
+handle _ => false,
+
+UnixPath.addExt {name="/foo/bar", ext=UnixPath.EXT "sml"} =
+  "/foo/bar.sml"
+handle _ => false,
+
+UnixPath.addExt {name="/foo/bar", ext=UnixPath.NOEXT} =
+  "/foo/bar"
+handle _ => false,
+
+UnixPath.splitLast "/foo/bar.sml" =
+  {dir="/foo", last="bar.sml"}
+handle _ => false,
+
+UnixPath.splitLast "/" =
+  {dir="/", last=""}
+handle _ => false,
+
+UnixPath.splitLast "." =
+  {dir="", last="."}
+handle _ => false,
+
+UnixPath.splitLast "..." =
+  {dir="", last="..."}
+handle _ => false,
+
+UnixPath.addLast {dir="/foo/", last="bar.sml"} =
+  "/foo/bar.sml"
+handle _ => false,
+
+UnixPath.addLast {dir="/foo/", last="bar/"} =
+  "/foo/bar/"
+handle _ => false,
+
+UnixPath.addLast {dir="/foo", last=""} = "/foo/"
+handle _ => false,
+
+(* 90 *)
+UnixPath.dir "/foo/bar.sml" = "/foo"
+handle _ => false,
+
+UnixPath.dir "/foo/" = "/foo"
+handle _ => false,
+
+UnixPath.dir "foo" = ""
+handle _ => false,
+
+UnixPath.dir "" = ""
+handle _ => false,
+
+UnixPath.last "/foo/bar.sml" = "bar.sml"
+handle _ => false,
+
+UnixPath.last "/foo/" = ""
+handle _ => false,
+
+UnixPath.last "" = ""
+handle _ => false,
+
+UnixPath.ext "/foo/bar.sml" = UnixPath.EXT "sml"
+handle _ => false,
+
+UnixPath.ext "/foo/.sml" = UnixPath.EXT "sml"
+handle _ => false,
+
+UnixPath.ext "/foo.ext/bar" = UnixPath.NOEXT
+handle _ => false,
+
+(* 100 *)
+UnixPath.ext "/foo/" = UnixPath.NOEXT
+handle _ => false,
+
+UnixPath.ext "" = UnixPath.NOEXT
+handle _ => false,
+
+UnixPath.name "/foo/bar.sml" = "/foo/bar"
+handle _ => false,
+
+UnixPath.name "/foo/.sml" = "/foo/"
+handle _ => false,
+
+UnixPath.name "/foo/bar" = "/foo/bar"
+handle _ => false,
+
+UnixPath.name "/foo/" = "/foo/"
+handle _ => false,
+
+UnixPath.name "" = ""
+handle _ => false
+];
+
+fun foldl f b [] = b
+|   foldl f b (h::t) = foldl f (f (h, b)) t
+
+fun check_result (true, (l, i)) = (l, i+1)
+|   check_result (false, (l, i)) = (i::l, i+1);
+
+fun print_list [] = ()
+|   print_list [i] =
+  MLWorks.IO.output (MLWorks.IO.std_out, Int.toString i ^ "\n")
+|   print_list (i::t) =
+  (MLWorks.IO.output (MLWorks.IO.std_out, Int.toString i ^ ", ");
+   print_list t);
+
+val failures =
+  rev (#1 (foldl check_result ([], 0) tests));
+
+val _ =
+  case failures of
+  [] => MLWorks.IO.output (MLWorks.IO.std_out, "All tests succeeded\n") |
+  l =>
+    (MLWorks.IO.output (MLWorks.IO.std_out, "The following tests failed:\n");
+     print_list l)
+
+@
+
+
+1.5
+log
+@Fixing up after changes to toplevel visible string and io stuff
+@
+text
+@d5 3
+d26 2
+a27 2
+Shell.Module.loadSource "unix.__path";
+Shell.Module.loadSource "basis.__integer";
+@
+
+
+1.4
+log
+@Updating
+@
+text
+@d4 4
+a7 2
+ 
+$Log: basis:unixpath.sml,v $
+d15 7
+a21 8
+# Revision 1.1  1995/01/26  14:58:26  daveb
+# new unit
+# Test suite for Unix path names.
+#
+
+Copyright (c) 1994 Harlequin Ltd.
+
+*)
+d24 1
+d472 1
+a472 1
+  output (std_out, MLWorks.Integer.makestring i ^ "\n")
+d474 1
+a474 1
+  (output (std_out, MLWorks.Integer.makestring i ^ ", ");
+d482 1
+a482 1
+  [] => output (std_out, "All tests succeeded\n") |
+d484 1
+a484 1
+    (output (std_out, "The following tests failed:\n");
+@
+
+
+1.3
+log
+@update Shell.Make
+@
+text
+@d6 3
+d22 1
+a22 1
+Shell.Module.load_source "unix.__path";
+@
+
+
+1.2
+log
+@Removed the "last" component from exploded paths, and replaced
+splitPath with splitExt and splitLast.
+@
+text
+@d6 4
+d19 1
+a19 1
+Shell.Make.make_module "unix.__path";
+@
+
+
+1.1
+log
+@new unit
+Test suite for Unix path names.
+@
+text
+@d5 5
+a9 1
+$Log$
+d19 1
+a19 1
+val dummyExplodedPath = {arcs=[], last="error", root= UnixPath.ABS "error"}
+d53 1
+a53 1
+  {arcs=["foo", "", "spong.ext"], last="bar.sml", root=UnixPath.ABS "/"},
+d57 1
+a57 1
+  {arcs=["foo", "spong"], last="", root=UnixPath.REL},
+d59 1
+a59 1
+(UnixPath.explodePath "~foo/spong/"
+d61 1
+a61 1
+  {arcs=["~foo", "spong"], last="", root=UnixPath.REL},
+d65 1
+a65 1
+  {arcs=[], last="", root=UnixPath.REL},
+d69 1
+a69 1
+  {arcs=[], last="", root=UnixPath.ABS "/"},
+d72 1
+a72 1
+  {arcs=["foo", "", "spong"], last="bar.sml", root=UnixPath.ABS "/"}
+d77 1
+a77 1
+  {arcs=["foo", "", "spong.ext"], last="bar.sml", root=UnixPath.ABS "a:"}
+d84 1
+a84 1
+(UnixPath.implodePath {arcs=["foo", "spong"], last="", root=UnixPath.REL}
+d89 1
+a89 1
+(UnixPath.implodePath {arcs=[], last="", root=UnixPath.REL}
+d91 1
+a91 1
+  "",
+d186 1
+a186 1
+  "/foo/",
+d192 1
+a192 1
+  "/foo/",
+d329 1
+a329 1
+UnixPath.mkCanonical "foo/." = "foo/"
+d335 1
+a335 1
+UnixPath.mkCanonical "foo1.ext/./foo2/../bar.sml" = "foo1.ext/bar.sml"
+d341 2
+a342 2
+UnixPath.splitPath "/foo/bar.sml" =
+  {dir="/foo/", ext=UnixPath.EXT "sml", name="bar"}
+d345 2
+a346 2
+UnixPath.splitPath "foo.ext/bar" =
+  {dir="foo.ext/", ext=UnixPath.NOEXT, name="bar"}
+d349 2
+a350 2
+UnixPath.splitPath "/" =
+  {dir="/", ext=UnixPath.NOEXT, name=""}
+d353 2
+a354 2
+UnixPath.splitPath "." =
+  {dir="", ext=UnixPath.NOEXT, name="."}
+d357 2
+a358 2
+UnixPath.splitPath "..." =
+  {dir="", ext=UnixPath.NOEXT, name="..."}
+d362 2
+a363 2
+UnixPath.splitPath "bar." =
+  {dir="", ext=UnixPath.NOEXT, name="bar."}
+d366 2
+a367 2
+UnixPath.splitPath "" =
+  {dir="", ext=UnixPath.NOEXT, name=""}
+d370 2
+a371 2
+UnixPath.makePath {dir="/foo/", ext=UnixPath.EXT "sml", name="bar"} =
+  "/foo/bar.sml"
+d374 2
+a375 2
+UnixPath.makePath {dir="/foo", ext=UnixPath.EXT "sml", name="bar"} =
+  "/foo/bar.sml"
+d378 2
+a379 1
+UnixPath.makePath {dir="/", ext=UnixPath.NOEXT, name=""} = "/"
+d382 2
+a383 1
+UnixPath.makePath {dir="", ext=UnixPath.NOEXT, name=""} = ""
+d386 2
+a387 1
+UnixPath.dir "/foo/bar.sml" = "/foo/"
+d390 2
+a391 1
+UnixPath.dir "/foo/" = "/foo/"
+d394 2
+a395 1
+UnixPath.dir "foo" = ""
+d398 1
+a398 1
+UnixPath.dir "" = ""
+d402 1
+a402 1
+UnixPath.last "/foo/bar.sml" = "bar.sml"
+d405 1
+a405 1
+UnixPath.last "/foo/" = ""
+d408 1
+a408 1
+UnixPath.last "" = ""
+d411 1
+a411 1
+UnixPath.name "/foo/bar.sml" = "bar"
+d414 1
+a414 1
+UnixPath.name "/foo/.sml" = ""
+d417 1
+a417 1
+UnixPath.name "/foo/bar" = "bar"
+d420 1
+a420 4
+UnixPath.name "/foo/" = ""
+handle _ => false,
+
+UnixPath.name "" = ""
+a428 1
+(* 100 *)
+d432 1
+d439 1
+a439 1
+UnixPath.base "/foo/bar.sml" = "/foo/bar"
+d442 1
+a442 1
+UnixPath.base "/foo/.sml" = "/foo/"
+d445 1
+a445 1
+UnixPath.base "/foo/bar" = "/foo/bar"
+d448 1
+a448 1
+UnixPath.base "/foo/" = "/foo/"
+d451 1
+a451 1
+UnixPath.base "" = ""
+@

@@ -1,0 +1,75 @@
+head	1.1;
+access;
+symbols
+	Final_version_of_old_runtime:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	92.01.08.12.12.44;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.01.08.12.12.44;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@AWK script to scan callc.c to produce __callc_codes.sml.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@BEGIN {
+	print "(*  ==== CALLC ROUTINE CODES ====";
+        print " *";
+        print " *  Machine generated from callc.c by __callc_codes.awk";
+        print " *  DO NOT ALTER";
+	print " *)";
+	print ("\nstructure CallCCodes_ =");
+	print ("  struct");
+	OFFSET = -2;
+      }
+
+/.*ml_externals\[\].*/ {
+	OFFSET = -1
+      }
+
+/};/  {
+	OFFSET = -2;
+      }
+
+      {
+	if (OFFSET >= 0) print("    val", $2, "=", OFFSET++);
+	if (OFFSET == -1) OFFSET++;
+      }
+
+END   {
+	print ("  end");
+      }
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@@

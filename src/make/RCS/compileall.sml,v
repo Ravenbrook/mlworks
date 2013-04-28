@@ -1,0 +1,602 @@
+head	1.8;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.8
+	mlworks-28-01-1994:1.8
+	Release:1.8
+	mlworks-beta-01-09-1993:1.8
+	MLWorks-1-0-4-29/01/1993:1.8
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.8;
+locks; strict;
+
+
+1.8
+date	92.03.31.11.49.21;	author jont;	state Exp;
+branches
+	1.8.1.1;
+next	1.7;
+
+1.7
+date	92.02.12.20.52.00;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.02.12.19.55.13;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.02.04.14.39.29;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.02.03.17.32.25;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.12.23.17.14.44;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.20.18.18.26;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.12.20.17.43.42;	author jont;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	92.03.31.11.49.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Calculate correct order for recompilation
+@
+
+
+1.8
+log
+@Changed load script to put the file names on separate lines
+@
+text
+@(* compileall.sml *)
+(*
+$Log: compileall.sml,v $
+Revision 1.7  1992/02/12  20:52:00  jont
+Fixed minor bug in is_fun
+
+Revision 1.6  1992/02/12  19:55:13  jont
+Added a makeall_ordered function to put the files out in order signature,
+functor, structure
+
+Revision 1.5  1992/02/04  14:39:29  jont
+Reordered to prevent rebuilding functions when not necessary
+
+Revision 1.4  1992/02/03  17:32:25  jont
+Modified so that loading scripts references .mo files
+
+Revision 1.3  1991/12/23  17:14:44  jont
+Minor modifications to make the mapprint function externally useful
+
+Revision 1.2  91/12/20  18:18:26  jont
+Changed to allow relative pathname working. Generally simplified and
+speeded up.
+
+Revision 1.1  91/12/20  17:43:42  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+(* Derived from the makeall function used for the ten15 project *)
+(* Used for bootstrapping the compiler in the right order *)
+(** From Anel, a function that works out dependencies
+    Last updated : Mon Jan 21 16:43:43 1991
+**)
+
+require "../utils/__lists.sml";
+require "../utils/__string.sml";
+
+fun stripSlash (nil, name) = (nil, name)
+| stripSlash (p as "/" :: rest, name) = (rev p, name)
+| stripSlash (ch :: rest, name) = stripSlash(rest, ch :: name)
+
+fun decompose_path filename =
+  let 
+    val revChars = rev (explode filename)
+    val (a,b) = stripSlash(revChars, nil)
+  in
+    (implode a, implode b)
+  end
+  
+fun root_name filename =
+  let
+    val len = size filename
+    val final_name =
+      if len >= 4 then
+	String_.substring(filename, len-4, 4)
+      else ""
+  in
+    case final_name of
+      ".sml" => String_.substring(filename, 0, len-4)
+    | _ => filename
+  end
+
+fun sml_name filename = root_name filename ^ ".sml"
+
+fun mo_name filename = root_name filename ^ ".mo"
+
+fun compilation_name filename = #2(decompose_path filename)
+
+fun compilation_path filename = #1(decompose_path filename)
+
+fun relative_names(path, name_list) =
+  let
+    fun join path name =
+      if size name < 3 orelse path = "" then path ^ name
+      else
+	case String_.substring(name, 0, 3) of
+	  "../" =>
+	    let
+	      val prepath =
+		compilation_path(String_.substring(path, 0, size path - 1))
+	    in
+	      join prepath (String_.substring(name, 3, size name - 3))
+	    end
+	| _ => path ^ name
+  in
+    map (join path) name_list
+  end
+
+fun strip ("\""::x) = x     (* Damn emacs messes up \" *)
+| strip (_::x) = strip x
+| strip [] = []
+
+fun extract_path line =   (* get part in quotes *)
+  implode (rev (strip (rev (strip (explode line)))))
+
+fun ignore_spaces [] = []
+| ignore_spaces(" " :: rest) = ignore_spaces rest
+| ignore_spaces x = x
+
+fun strip_to_quote [] = false
+| strip_to_quote("\"" :: _) = true
+| strip_to_quote(" " :: _) = false
+| strip_to_quote(_ :: rest) = strip_to_quote rest
+
+fun getImports (openfile,alist) =
+  if end_of_stream openfile
+    then
+      nil
+  else
+    let
+      val line = input_line openfile   (* all of string *)
+    in
+      if String_.size (line) > 7
+	then
+	  if String_.substring (line,0,7) = "require" andalso
+	    let
+	      val rest_line = explode(String_.substring(line, 7, size line - 7))
+	      val rest_line = ignore_spaces rest_line
+	      val starts_quote = case rest_line of
+		"\"" :: rest => true
+	      | _ => false
+	      val rest_line = if starts_quote then tl rest_line else rest_line
+	    in
+	      strip_to_quote rest_line
+	    end
+	    then                       (* go for it *)
+	      extract_path line :: getImports(openfile, alist)
+	  else
+	    getImports (openfile,alist)
+      else 
+	getImports (openfile,alist)
+    end
+
+fun member (m,[]) = false
+| member (m, x) =
+  let
+    val m_path = #2(decompose_path m)
+    fun mem_sub [] = false
+    | mem_sub(h :: t) = m_path = #2 (decompose_path h)
+      orelse mem_sub t
+  in
+    mem_sub x
+  end
+
+fun mkFilelist (filename, alist) = 
+  let 
+    val open_file = open_in filename
+    val topdir = compilation_path filename
+    val imports = getImports (open_file,[])
+    val imports = relative_names(topdir, imports)
+  in
+    case imports of
+      [] =>
+	(close_in open_file;
+	 if member (filename,alist)
+	   then alist
+	 else alist @@ [filename])
+    | _ =>
+	(close_in open_file;
+	 if member(filename, alist)
+	   then mkImportFilelist(imports,alist)
+	 else
+	   mkImportFilelist(imports,alist) @@ [filename])
+  end
+  
+and mkImportFilelist([], alist) = alist
+| mkImportFilelist(filename :: names, alist) = 
+  let 
+    exception Impossible
+    val fullname = sml_name filename
+  in
+    if member (fullname, alist) then
+      mkImportFilelist(names, alist)
+    else
+      mkImportFilelist(names, mkFilelist (fullname, alist))
+  end
+
+(** Print the filenames to a stream **)
+fun mapprint the_fn script rest =
+  let
+    val stream = open_out script
+  in
+    ((map (fn x => output(stream, the_fn x)) rest)
+     handle exn => (close_out stream; raise exn);
+       close_out stream)
+  end
+
+fun makeall (topfile, compile_script, load_script) =
+  let
+    val names = (mkFilelist (topfile, []))
+    fun fn1 x = "compile\"" ^ x ^ "\";\n"
+    fun fn2 x = mo_name x ^ "\n"
+  in
+    (mapprint fn1 compile_script names;
+     mapprint fn2 load_script names)
+  end
+
+fun is_sig chars =
+  let
+    val chars = compilation_name chars
+  in
+    case String_.substring(chars, 0, 1) of
+      "_" => false
+    | _ => true
+  end
+
+fun is_fun chars =
+  let
+    val chars = compilation_name chars
+  in
+    case (String_.substring(chars, 0, 1), String_.substring(chars, 1, 1)) of
+      ("_", "_") => false
+    | ("_", _) => true
+    | _ => false
+  end
+
+fun is_str chars =
+  let
+    val chars = compilation_name chars
+  in
+    case String_.substring(chars, 0, 2) of
+      "__" => true
+    | _ => false
+  end
+
+fun makeall_ordered (topfile, compile_script, load_script) =
+  let
+    val names = (mkFilelist (topfile, []))
+    val signames = Lists_.filterp is_sig names
+    val funnames = Lists_.filterp is_fun names
+    val strnames = Lists_.filterp is_str names
+    val names = signames @@ funnames @@ strnames
+    fun fn1 x = "compile\"" ^ x ^ "\";\n"
+    fun fn2 x = mo_name x ^ "\n"
+  in
+    (mapprint fn1 compile_script names;
+     mapprint fn2 load_script names)
+  end
+@
+
+
+1.8.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.8  1992/03/31  11:49:21  jont
+Changed load script to put the file names on separate lines
+
+@
+
+
+1.7
+log
+@Fixed minor bug in is_fun
+@
+text
+@d4 3
+d192 1
+a192 1
+    fun fn2 x = mo_name x ^ " "
+d234 1
+a234 1
+    fun fn2 x = mo_name x ^ " "
+@
+
+
+1.6
+log
+@Added a makeall_ordered function to put the files out in order signature,
+functor, structure
+@
+text
+@d4 4
+d208 1
+a208 1
+    case (String_.substring(chars, 0, 1), String_.substring(chars, 1, 2)) of
+@
+
+
+1.5
+log
+@Reordered to prevent rebuilding functions when not necessary
+@
+text
+@d4 3
+d28 7
+d36 6
+a41 10
+    let 
+      val revChars = rev (explode filename)
+
+      fun stripSlash (nil, name) = (nil, name)
+	| stripSlash (p as "/" :: rest, name) = (rev p, name)
+	| stripSlash (ch :: rest, name) = stripSlash(rest, ch :: name)
+      val (a,b) = stripSlash(revChars, nil)
+    in
+      (implode a, implode b)
+    end
+d48 1
+a48 1
+	String.substring(filename, len-4, 4)
+d52 1
+a52 1
+      ".sml" => String.substring(filename, 0, len-4)
+d69 1
+a69 1
+	case String.substring(name, 0, 3) of
+d73 1
+a73 1
+		compilation_path(String.substring(path, 0, size path - 1))
+d75 1
+a75 1
+	      join prepath (String.substring(name, 3, size name - 3))
+d106 1
+a106 1
+      if String.size (line) > 7
+d108 1
+a108 1
+	  if String.substring (line,0,7) = "require" andalso
+d110 1
+a110 1
+	      val rest_line = explode(String.substring(line, 7, size line - 7))
+d184 42
+@
+
+
+1.4
+log
+@Modified so that loading scripts references .mo files
+@
+text
+@d4 3
+d76 16
+a98 9
+      fun extract_path line =   (* get part in quotes *)
+	let
+	  (* a function which removes up 'til a quote *)
+	  fun strip ("\""::x) = x     (* Damn emacs messes up \" *)
+	    | strip (_::x) = strip x
+	    | strip [] = []
+	in
+	  implode (rev (strip (rev (strip (explode line)))))
+	end
+a104 3
+	      fun ignore_spaces [] = []
+	      | ignore_spaces(" " :: rest) = ignore_spaces rest
+	      | ignore_spaces x = x
+a109 4
+	      fun strip_to_quote [] = false
+	      | strip_to_quote("\"" :: _) = true
+	      | strip_to_quote(" " :: _) = false
+	      | strip_to_quote(_ :: rest) = strip_to_quote rest
+d133 19
+a151 19
+    let 
+      val open_file = open_in filename
+      val topdir = compilation_path filename
+      val imports = getImports (open_file,[])
+      val imports = relative_names(topdir, imports)
+    in
+      case imports of
+	[] =>
+	  (close_in open_file;
+	   if member (filename,alist)
+	     then alist
+	   else alist @@ [filename])
+      | _ =>
+	  (close_in open_file;
+	   if member(filename, alist)
+	     then mkImportFilelist(imports,alist)
+	   else
+	     mkImportFilelist(imports,alist) @@ [filename])
+    end
+d154 10
+a163 44
+  | mkImportFilelist(filename :: names, alist) = 
+    let 
+      exception Impossible
+(*
+      fun lastpart (dir) = hd (tl (rev (explode (dir))))
+      val new_dir = if lastpart (current_dir) = "src"
+		      then 
+			if not (dir = "")
+			  then 
+			    if String.substring (dir,0,3) = "../"
+			      then 
+				current_dir ^ 
+				String.substring (dir,3,
+						  (String.length dir)-3)
+			    else current_dir ^ dir
+			else raise Impossible
+		    else 
+		      if not (dir = "")
+			then 
+			  if String.substring (dir,0,3) = "../"
+			    then 
+			      String.substring (dir,3,(String.length dir)-3)
+			  else dir
+		      else topdir
+
+    val added =   (* what should we add to the filename? *)
+	  let
+	    val len = String.length filename
+	    val extent =
+		if (len < 4) then ""
+		else
+		  String.substring (filename, len - 4, 4)
+	  in
+	    if (extent = ".sml" orelse extent = ".str") then "" else ".sml"
+	  end
+  *)
+
+      val fullname = sml_name filename
+    in
+      if member (fullname, alist) then
+	mkImportFilelist(names, alist)
+      else
+	mkImportFilelist(names, mkFilelist (fullname, alist))
+    end
+@
+
+
+1.3
+log
+@Minor modifications to make the mapprint function externally useful
+@
+text
+@d3 4
+a6 1
+$Log:	compileall.sml,v $
+d49 2
+d210 1
+a210 1
+    fun fn2 x = x ^ " "
+@
+
+
+1.2
+log
+@Changed to allow relative pathname working. Generally simplified and
+speeded up.
+@
+text
+@d4 4
+d192 8
+a199 13
+fun mapprint (compile_script, load_script) rest =
+    let
+      val stream = open_out compile_script
+      val _ =
+	((map (fn x => output (stream, "compile \"" ^ x ^ "\";\n")) rest)
+	 handle exn => (close_out stream; raise exn);
+	   close_out stream)
+      val stream = open_out load_script
+    in
+      ((map (fn x => output (stream, " " ^ x)) rest)
+       handle exn => (close_out stream; raise exn);
+	 close_out stream)
+    end
+d202 8
+a209 1
+  mapprint (compile_script, load_script) (mkFilelist (topfile, []))
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d40 2
+d102 1
+a102 2
+	      decompose_path (extract_path (line))::getImports (openfile,
+								alist)
+d120 1
+a120 1
+fun mkFilelist (filename,alist,dir) = 
+d123 1
+a123 1
+      val (topdir,_) = decompose_path (filename)
+d125 1
+d127 2
+a128 2
+      if imports = []
+	then
+d133 6
+a138 6
+      else
+	(close_in open_file;
+	 if member (filename,alist)
+	   then mkImportFilelist (imports,alist,dir,topdir)
+	 else
+	   mkImportFilelist (imports,alist,dir,topdir) @@ [filename])
+d141 2
+a142 2
+and mkImportFilelist ([],alist,_,_) = alist
+  | mkImportFilelist ((dir,filename)::names,alist,current_dir,topdir) = 
+d145 1
+d167 1
+a167 1
+      val added =   (* what should we add to the filename? *)
+d177 1
+d179 1
+a179 1
+      val fullname = new_dir ^ filename ^ added
+d182 1
+a182 1
+	mkImportFilelist (names, alist, new_dir, topdir)
+d184 1
+a184 2
+	mkImportFilelist (names,mkFilelist (fullname,alist,new_dir),
+			  new_dir,topdir)
+d192 1
+a192 1
+	((map (fn x => output (stream, "compile \"" ^ x ^ ";\"\n")) rest)
+d203 1
+a203 6
+  mapprint (compile_script, load_script)
+  let 
+    val (path,_) = decompose_path (topfile)
+  in
+    mkFilelist (topfile,[],path)
+  end
+@

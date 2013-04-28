@@ -1,0 +1,94 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.11.09.36.24;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.11.09.33.18;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Puttings applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+   (* Example of a complete ML-Twig specification:        *)
+   (* Evaluation of expressions                           *)
+
+   node   Plus(2), Minus(2), Mul(2);
+   node   Const(0);
+
+   prologue (
+   
+   (* The type and function definitions                   *)
+
+      datatype tree = Tree of (tree * symbol * tree) | Leaf of int
+      type cost = int
+
+      fun get_subtrees(Leaf _) = []
+        | get_subtrees(Tree (t1,_,t2)) = [t1,t2]
+      fun node_value(Tree(_,ope,_))  = ope
+        | node_value (Leaf _) = Const
+      val cost_less : int * int -> bool = (op <)
+
+      fun constValue (Leaf i) = i
+	| constValue _ = raise Match
+      datatype instr = PUSH of int | PLUS | MINUS | MUL | PLUSMUL
+   );
+
+   label Expr of instr list;
+   
+   default_cost( fn subexprcost => fold (op +) subexprcost 0);
+
+   (* Rules                                               *)
+
+   Expr Const            =([PUSH (constValue $$)]);
+   
+   Expr Plus(Expr,Expr) :   (2+Expr1+Expr2) =(Expr1@@Expr2@@[PLUS]);
+   
+   Expr Minus(Expr,Expr) :  (2+Expr1+Expr2) =(Expr1@@Expr2@@[MINUS]);
+   
+   Expr Mul(Expr,Expr) :    (2+DC)          =(Expr1@@Expr2@@[MUL]);
+
+   Expr Mul(Expr,Plus(Expr,Expr)) : (3+DC)  =(Expr1@@Expr2@@Expr3@@[PLUSMUL]);
+
+   REWRITE Expr Mul(Plus(Expr,Expr),Expr) : (0)  =(Tree($2$,Mul,$1$));
+
+
+   (* End                                                 *)
+@
+
+
+1.1
+log
+@new unit
+Puttings applications into hope and daily
+@
+text
+@@

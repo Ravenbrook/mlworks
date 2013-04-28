@@ -1,0 +1,98 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.08.17.32.12;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.08.17.16.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* 
+
+ Provides routines for error handling 
+ 
+ very naive at the moment.
+
+MERILL  -  Equational Reasoning System in Standard ML.
+Brian Matthews				     27/07/90
+Glasgow University and Rutherford Appleton Laboratory.
+
+*)
+
+
+signature ERROR = 
+  sig 
+	exception MERILL_ERROR of string
+	val error_message : string -> unit
+	val warning_message : string -> unit
+	val system_error : string -> unit
+	val error_and_wait : string -> unit
+	val error_flush : string -> unit
+	val setErrorFlag : unit -> unit
+	val unsetErrorFlag : unit -> unit
+	val isErrorFlag : unit -> bool
+  end ; (* of signature ERROR *)
+
+
+structure Error:ERROR = 
+struct
+
+val ErrorFlag = ref false 		(* true if error has been reported but not acknowledged *)
+fun setErrorFlag () = ErrorFlag := true
+fun unsetErrorFlag () = ErrorFlag := false
+fun isErrorFlag () = !ErrorFlag
+
+exception MERILL_ERROR of string
+
+fun error_message s = (setErrorFlag () ; CommonIO.write_terminal ("\nERROR: "^s^"\n"))
+
+fun warning_message s = CommonIO.write_terminal ("\nWARNING: "^s^"\n") 
+
+fun system_error s = CommonIO.write_terminal ("\n SYSTEM ERROR: "^s^"\n")
+
+fun error_and_wait s = (error_message s ; Interface.wait_on_user () ; unsetErrorFlag ())
+
+fun error_flush s = (error_message s; flush_input ())
+
+end (* of structure Error *) ;
+@
+
+
+1.1
+log
+@new unit
+Putting applications into hope and daily
+@
+text
+@@

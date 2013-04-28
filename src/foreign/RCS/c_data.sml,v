@@ -1,0 +1,1019 @@
+head	1.8;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.8
+	MLWorks_Beta_1996_06_06:1.8
+	MLWorks_Beta_1996_06_05:1.8
+	MLWorks_Beta_1996_06_03:1.8
+	MLWorks_Beta_1996_05_31:1.8
+	MLWorks_Beta_1996_05_30:1.8;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	96.04.18.16.58.42;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.03.28.14.01.57;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.10.17.43.41;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.07.22.43.42;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.07.20.16.45.35;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.06.25.18.30.12;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.04.22.01.40.18;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.27.15.49.53;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.8
+log
+@initbasis becomes basis
+@
+text
+@(*  ==== FOREIGN INTERFACE : C DATA/TYPE STRUCTURES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  See foreign.doc for documentation.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: c_data.sml,v $
+ * Revision 1.7  1996/03/28  14:01:57  matthew
+ * Sharing changes
+ *
+ * Revision 1.6  1995/09/10  17:43:41  brianm
+ * Further modification for updates and general reorganisation.
+ *
+ * Revision 1.5  1995/09/07  22:43:42  brianm
+ * Modifications for reorganisation & documentation.
+ *
+ * Revision 1.4  1995/07/20  16:45:35  brianm
+ * adding new_pod.
+ *
+ * Revision 1.3  1995/06/25  18:30:12  brianm
+ * Adding remote access, diagnostics and other facilities.
+ *
+ * Revision 1.2  1995/04/22  01:40:18  brianm
+ * General updating to reach prototype level for ML FI.
+ *
+ * Revision 1.1  1995/03/27  15:49:53  brianm
+ * new unit
+ * New file.
+ *
+ *)
+
+require "../basis/__general";
+
+require "fi_types";
+
+require "c_hostel";
+
+signature C_DATA = 
+   sig
+
+     type 'a option = 'a General.option
+
+     structure CHostel : C_HOSTEL
+
+     structure FITypes : FOREIGN_TYPES
+     sharing FITypes = CHostel.FITypes
+
+     type 'a box = 'a FITypes.box
+     type bytearray  = FITypes.bytearray
+     type name       = FITypes.name
+     type address    = FITypes.address
+     type word32     = FITypes.word32
+
+     type hostel = CHostel.hostel 
+
+     (* C TYPE STRUCTURE *)
+
+     type field = string 
+     type member = string 
+     type enum_value = string
+     type tag = string
+
+     (* C TYPE INFORMATION *)
+ 
+     (* Pointer information may be interpreted in the following ways:
+        - LOCAL_PK     = Machine address pointing within the associated hostel
+        - REMOTE_PK    = Machine address pointing outside associated hostel
+        - RELATIVE_PK  = Index value accessing location within associated hostel
+      *)
+     datatype pointer_kind = LOCAL_PK | RELATIVE_PK | REMOTE_PK
+
+
+     (* The ML type c_type provides a representation of a C type descriptor
+        as an ML value.
+      *)
+     datatype c_type =
+        SIZE_OF of { size : int box, ctype : c_type }
+     |
+        VOID_CT
+     |
+        CHAR_CT           | UNSIGNED_CHAR_CT | SIGNED_CHAR_CT
+     |
+        SHORT_CT          | INT_CT           | LONG_CT
+     |
+        UNSIGNED_SHORT_CT | UNSIGNED_INT_CT  | UNSIGNED_LONG_CT
+     |
+        FLOAT_CT          | DOUBLE_CT        | LONG_DOUBLE_CT
+     |
+        STRING_CT   of { length : int }
+     |
+        TYPENAME_CT of { name : name,
+                        defn : c_type box,
+                        size : int box }
+     |
+        STAR_CT     of { ctype : c_type, mode : pointer_kind ref }
+     |
+        STRUCT_CT   of { tag    : tag option,
+                        fields : c_field list,
+                        size   : int box }
+     |
+        UNION_CT    of { tag      : tag option,
+                        variants : c_variant list ref,
+                        size     : int box,
+                        current  : c_variant box }
+     |
+        ARRAY_CT    of { length : int, ctype : c_type }
+     |
+        ENUM_CT     of { tag   : tag option,
+                        elems : enum_value list,
+                        card  : int box }
+
+     and  c_variant = CVNT of { name  : name,
+                                ctype : c_type,
+                                size  : int box }
+
+     and  c_field   = CFLD of { name    : name,
+                                ctype   : c_type,
+                                size    : int box,
+                                padding : int box,
+                                offset  : int box }
+
+     val dup_type   : c_type -> c_type
+
+     val size_of : c_type -> int
+
+     val equal_type : c_type * c_type -> bool
+
+     val mk_struct_t   : string * (string * c_type) list -> c_type
+     val mk_union_t    : string * (string * c_type) list -> c_type
+     val mk_star_t     : c_type -> c_type
+     val mk_typename   : string -> c_type
+     val mk_enum_t     : string * string list -> c_type
+
+
+  (* C VALUE STRUCTURE *)
+
+     exception ForeignType
+     exception StoreAccess
+
+     exception OutOfBounds
+     exception Currency
+
+     exception ReadOnly
+     exception WriteOnly
+
+     type 'a pod
+     type c_pod
+
+     datatype pod_mode = LOCAL_PM | REMOTE_PM
+
+     val pod_to_c_pod   :  c_type pod -> c_pod
+     val c_pod_to_pod   :  c_pod -> c_type pod
+
+     val pod_mode       :  c_pod -> pod_mode
+     val set_pod_mode   :  c_pod * pod_mode -> unit
+
+     val pod_type       :  c_pod -> c_type
+     val cast_pod_type  :  c_pod * c_type -> unit
+
+     val new_pod    : c_pod -> c_pod
+     val dup_pod    : c_pod -> c_pod
+     val tmp_pod    : c_pod -> c_pod
+
+     eqtype c_char
+
+     eqtype c_short_int
+     eqtype c_int
+     eqtype c_long_int
+
+     eqtype c_real
+     eqtype c_double
+     eqtype c_long_double
+
+     val pod : { ctype:c_type, hostel:hostel } -> c_pod
+
+     val set_char           : c_pod * c_char -> unit
+     val set_unsigned_char  : c_pod * c_char -> unit
+     val set_signed_char    : c_pod * c_char -> unit
+
+     val set_short          : c_pod * c_short_int -> unit
+     val set_int            : c_pod * c_int -> unit
+     val set_long           : c_pod * c_long_int -> unit
+
+     val set_unsigned_short : c_pod * c_short_int -> unit
+     val set_unsigned       : c_pod * c_int -> unit
+     val set_unsigned_long  : c_pod * c_long_int -> unit
+
+     val set_word32         : c_pod * word32 -> unit
+
+     val set_float          : c_pod * c_real -> unit
+     val set_double         : c_pod * c_double -> unit
+     val set_long_double    : c_pod * c_long_double -> unit
+
+     val set_string         : c_pod * string -> unit
+
+     val set_addr    : { obj:c_pod, addr:c_pod } -> unit
+
+     val set_ptr_addr       : { ptr:c_pod, addr:c_pod } -> unit
+     val set_ptr_addr_of    : { ptr:c_pod, data:c_pod } -> unit
+     val set_ptr_data       : { ptr:c_pod, data:c_pod } -> unit
+     val set_ptr_type       : { ptr:c_pod, data:c_pod } -> unit
+     val cast_ptr_type      : { ptr:c_pod, ctype:c_type } -> unit
+
+     val set_local_ptr      : c_pod -> unit
+     val set_relative_ptr   : c_pod -> unit
+     val set_remote_ptr     : c_pod -> unit
+
+     val set_struct  : c_pod * (c_pod list) -> unit
+     val set_field   : { record:c_pod, field:field, data:c_pod } -> unit 
+
+     val set_member  : { union:c_pod, member:member } -> unit
+     val set_union   : { union:c_pod, data:c_pod } -> unit
+
+     val set_array   : c_pod * (c_pod list) * int -> unit
+     val set_enum    : c_pod * int -> unit
+
+
+     (* Selectors ... *)
+
+     val index_pod   : { array:c_pod,  tgt:c_pod, index:int } -> unit
+     val deref_pod   : { ptr:c_pod,    tgt:c_pod } -> unit
+     val select_pod  : { record:c_pod, tgt:c_pod, field:field } -> unit
+     val coerce_pod  : { union:c_pod,  tgt:c_pod } -> unit
+
+     val copy_index_pod       : c_pod * int -> c_pod
+     val copy_deref_pod       : c_pod -> c_pod
+     val copy_select_pod      : c_pod * field -> c_pod
+     val copy_coerce_pod      : c_pod -> c_pod
+
+     val index_pod_location   : c_pod * int -> int 
+     val deref_pod_location   : c_pod -> int 
+     val select_pod_location  : c_pod * field -> int 
+     val coerce_pod_location  : c_pod -> int 
+
+     val index_pod_type       : c_pod -> c_type
+     val deref_pod_type       : c_pod -> c_type
+     val select_pod_type      : c_pod * field -> c_type
+     val coerce_pod_type      : c_pod -> c_type 
+
+     val index_pod_size       : c_pod -> int
+     val deref_pod_size       : c_pod -> int
+     val select_pod_size      : c_pod * field -> int
+     val coerce_pod_size      : c_pod -> int
+
+     val advance_pod          : c_pod -> unit
+     val retard_pod           : c_pod -> unit
+
+     (* Getters ... *)
+
+     val get_char           : c_pod -> c_char
+     val get_unsigned_char  : c_pod -> c_char
+     val get_signed_char    : c_pod -> c_char
+
+     val get_short          : c_pod -> c_short_int
+     val get_int            : c_pod -> c_int
+     val get_long           : c_pod -> c_long_int
+
+     val get_unsigned_short : c_pod -> c_short_int
+     val get_unsigned       : c_pod -> c_int
+     val get_unsigned_long  : c_pod -> c_long_int
+
+     val get_word32         : c_pod -> word32
+
+     val get_float          : c_pod -> c_real
+     val get_double         : c_pod -> c_double
+     val get_long_double    : c_pod -> c_long_double
+
+     val get_string         : c_pod -> string
+
+     val get_data           : c_pod -> c_pod
+         (* dereference pointer *)
+
+     val get_struct         : c_pod -> c_pod list
+         (* field components of a structure *)
+
+     val get_field          : c_pod * field -> c_pod
+         (* field of a structure *)
+
+     val get_union          : c_pod -> c_pod
+     val get_array          : c_pod -> c_pod list
+
+     val get_enum           : c_pod -> int
+
+
+     (* Diagnostic tools *)
+
+     val c_type_info : c_type -> string
+
+     val view_pod : c_pod -> string
+     val disp_pod : c_pod -> c_pod
+
+     val pod_info : c_pod ->
+		{ hostel    : hostel,
+		  status    : string,
+		  currency  : string,
+		  mode      : string,
+                  langtype  : string,
+                  size      : int,
+                  base      : address option,
+                  offset    : int
+                }
+
+     val pod_data         : c_pod -> int list
+     val pod_data_hex     : c_pod -> string
+     val pod_data_ascii   : c_pod -> string
+
+   end; (* signature C_DATA *)
+@
+
+
+1.7
+log
+@Sharing changes
+@
+text
+@d12 3
+d18 15
+a32 16
+# Revision 1.5  1995/09/07  22:43:42  brianm
+# Modifications for reorganisation & documentation.
+#
+# Revision 1.4  1995/07/20  16:45:35  brianm
+# adding new_pod.
+#
+# Revision 1.3  1995/06/25  18:30:12  brianm
+# Adding remote access, diagnostics and other facilities.
+#
+# Revision 1.2  1995/04/22  01:40:18  brianm
+# General updating to reach prototype level for ML FI.
+#
+# Revision 1.1  1995/03/27  15:49:53  brianm
+# new unit
+# New file.
+#
+d36 1
+a36 1
+require "../initbasis/__general";
+@
+
+
+1.6
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d12 3
+d43 1
+a43 2
+     type 'a option
+       sharing type option = General.option
+d48 1
+a48 1
+       sharing FITypes = CHostel.FITypes
+d50 5
+a54 13
+     type 'a box
+     type bytearray
+     type name
+     type address
+     type word32
+
+     type hostel
+
+       sharing type box   = FITypes.box
+       sharing type bytearray  = FITypes.bytearray
+       sharing type name       = FITypes.name
+       sharing type address    = FITypes.address
+       sharing type word32     = FITypes.word32
+d56 1
+a56 1
+       sharing type hostel = CHostel.hostel 
+d60 4
+a63 7
+     type field
+     type member
+     type enum_value
+     type tag
+
+     sharing type name = tag = field = member = enum_value = string
+
+d65 1
+a65 1
+  (* C TYPE INFORMATION *)
+@
+
+
+1.5
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d12 3
+a173 1
+     val is_tmp_pod : c_pod -> bool
+@
+
+
+1.4
+log
+@adding new_pod.
+@
+text
+@d12 3
+d45 1
+a45 1
+     type 'a deferred
+d53 1
+a53 1
+       sharing type deferred   = FITypes.deferred
+d74 3
+a76 3
+        - LOCAL_PTR     = Machine address pointing within the associated hostel
+        - REMOTE_PTR    = Machine address pointing outside associated hostel
+        - RELATIVE_PTR  = Index value accessing location within associated hostel
+d78 1
+a78 1
+     datatype pointer_mode = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+d85 1
+a85 1
+        SIZE_OF of { size : int deferred, ctype : c_type }
+d87 1
+a87 1
+        VOID_T
+d89 1
+a89 1
+        CHAR_T           | UNSIGNED_CHAR_T | SIGNED_CHAR_T
+d91 1
+a91 1
+        SHORT_T          | INT_T           | LONG_T
+d93 1
+a93 1
+        UNSIGNED_SHORT_T | UNSIGNED_INT_T  | UNSIGNED_LONG_T
+d95 1
+a95 1
+        FLOAT_T          | DOUBLE_T        | LONG_DOUBLE_T
+d97 1
+a97 1
+        STRING_T   of { length : int }
+d99 3
+a101 3
+        TYPENAME_T of { name : name,
+                        defn : c_type deferred,
+                        size : int deferred }
+d103 1
+a103 1
+        STAR_T     of { ctype : c_type, mode : pointer_mode ref }
+d105 1
+a105 1
+        STRUCT_T   of { tag    : tag option,
+d107 1
+a107 1
+                        size   : int deferred }
+d109 1
+a109 1
+        UNION_T    of { tag      : tag option,
+d111 2
+a112 2
+                        size     : int deferred,
+                        current  : c_variant deferred }
+d114 1
+a114 1
+        ARRAY_T    of { length : int, ctype : c_type }
+d116 1
+a116 1
+        ENUM_T     of { tag   : tag option,
+d118 1
+a118 1
+                        card  : int deferred }
+d122 1
+a122 1
+                                size  : int deferred }
+d126 3
+a128 3
+                                size    : int deferred,
+                                padding : int deferred,
+                                offset  : int deferred }
+d211 1
+@
+
+
+1.3
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d7 1
+a7 172
+ *  The signatures FOREIGN_DATA, FOREIGN_SIGNATURE define the general part of
+ *  the Foreign Interface (FI) for ML.  The C_DATA signature presented
+ *  below defines a sub-interface for an ANSI C data/type structures.  The
+ *  complete interface is obtained by taking the C specific structures
+ *  together with the general interface structures.
+ *  
+ *  This signature supplies an ML type that encodes C type expressions.
+ *  This type instantiates the generic data_port type to provide
+ *  C-specific data_ports.  These are then used to manipulate values.
+ *  
+ *  Also provided are structured ways of accessing and manipulating C
+ *  values, via setter getter functions.
+ *  
+ *  Setters ...
+ *  ===========
+ *  
+ *  The following set of functions provides a way of exporting
+ *  individually typed items of ML data via the dataport mechanism.  These
+ *  provide tools to build up setter functions for more complex data
+ *  types.
+ *  
+ *  set_star(dp1,dp2)
+ *     - Takes the address of the value pointed at by dp1 and
+ *       stores it in the value pointed at by dp2.
+ *  
+ *  set_struct(dp)
+ *     - Takes the type pointed at by dp and ensures that there is sufficient
+ *       space left to write a value of that type.  Fails if the type of
+ *       dp is not a `struct' type or if memory is insufficient or if the
+ *       required size cannot be determined.  Returns dp when successful.
+ *  
+ *       This is like this because fields have to be written individually,
+ *       not all at once (see earlier remarks).
+ *  
+ *  set_union(mbr,dp)
+ *     - The member component is a string naming one of the summands of the
+ *       union type in data port dp - this type is replaced by the
+ *       corresponding type from the union.  The value part of dp is
+ *       unchanged and dp is returned.  Fails if the type is not a union
+ *       or the given member does not belong to the union type.
+ *  
+ *  set_array(idx,dpl,dp)
+ *     - The numeric index idx specifies an offset to begin overwriting the
+ *       array specified by the value part of dp with the appropriate value
+ *       parts of the data ports in dpl.  If the size of the array isn't
+ *       already fixed, then this write will do so. Fails if the type part
+ *       of dp is not an array.
+ *  
+ *  set_enum(ev,dp)
+ *     - The enum_value string ev is translated (to a small integer)
+ *       according to the enum type associated with the dataport dp.
+ *       This returns the dataport dp.  Failure if the type is not an
+ *       enumerated type or the enum_value string is not associated
+ *       with the enumeration type.                      
+ *  
+ *  
+ *  Data accessing operators:
+ *  =========================
+ *  
+ *  To be able to access information as necessary means to be able to
+ *  selectively traverse an existing data structure, to read it, to
+ *  write to an existing structure and to create a new one.  All of this
+ *  should happen in such a way that the integrity of the structure is not
+ *  inadvertently corrupted.
+ *  
+ *  One way of doing this is to provide facilities for moving dataports
+ *  in a way that mimics the way that C allows data to be selected.  The
+ *  accessing tools provided take some selection data and a dataport and
+ *  yields an updated dataport as result. The resulting dataports point
+ *  at the selected data and have their type component suitably updated.
+ *  
+ *  index_port(i,dp)
+ *      - Yeilds the updated dataport dp pointing at the
+ *        i'th element of the array pointed at by dp.
+ *        Fails if the type of dp is not an array or if
+ *        the given index is not in range.
+ *  
+ *  deref_port(dp)
+ *      - Yeilds the updated dataport dp pointing at the
+ *        dereferenced value pointed at by dp.  Fails
+ *        if the type of dp is not a pointer type.
+ *  
+ *                     (more here ... NULL pointers)
+ *  
+ *  select_port(fld,dp)
+ *      - Yeilds the updated dataport dp pointing at the
+ *        component selected by the given field fld.  Fails if
+ *        the type is not a C struct type with field named fld.
+ *  
+ *  copy_index_port(i,dp)
+ *      - As for index_port(), but yielding a modified copy of the
+ *        given dataport.
+ *  
+ *  copy_deref_port(dp)
+ *      - As for deref_port(), but yielding a modified copy of the
+ *        given dataport.
+ *  
+ *  copy_select_port(fld,dp)
+ *      - As for select_port(), but yielding a modified copy of the
+ *        given dataport.
+ *  
+ *  index_port_addr(i,dp)
+ *      - Yeilds the address of the i'th element of the
+ *        array pointed at by dp. Fails if the type of dp
+ *        is not an array or if the given index is not in range.
+ *  
+ *  deref_port_addr(dp)
+ *      - Yeilds the address of the dereferenced value pointed
+ *        at by dp.  Fails if the type of dp is not a pointer type.
+ *  
+ *  select_port_addr(fld,dp)
+ *      - Yeilds the address of the component selected by the given
+ *        field fld.  Fails if the type is not a C struct type with
+ *        field named fld.
+ *  
+ *  index_port_type(i,dp)
+ *      - Yeilds the type of the indexed element.
+ *  
+ *  deref_port_type(dp)
+ *      - Yeilds the type of the dereferenced element.
+ *  
+ *  select_port_type(fld,dp)
+ *      - Yeilds the type of the selected element.
+ *  
+ *  advance_port(dp)
+ *      - This moves the given dataport to point at the
+ *        first (aligned) location beyond the value currently
+ *        pointed at by dp.  This operation sets the currency flag
+ *        to false (i.e. this cannot guarantee type preservation).
+ *  
+ *        If the associated hostel is Standard and if the
+ *        dataport dp is presently located inside the hostel,
+ *        but using advance_port() would move the dataport
+ *        outside the hostel, then an exception is raised.
+ *  
+ *        If the associated hostel is Extendable and if the
+ *        dataport dp is presently located inside the hostel,
+ *        but using advance_port() would move the dataport
+ *        outside the current hostel, then an attempt is made to
+ *        extend the hostel to accommodate the advanced
+ *        dataport.
+ *  
+ *        This is useful as it permits dataports to access
+ *        array-like structures which are arranged in
+ *        memory 
+ *  
+ *  
+ *  Number chunking and foreign number representations:
+ *  ---------------------------------------------------
+ *  
+ *  Since the range of ML numerical values may differ from those that
+ *  are naturally supplied via the foreign language compiler, it is
+ *  necessary to provide a way to fully express such values within ML.
+ *  
+ *  Since foreign numbers could (and in general will) be larger than ML's
+ *  internal numbers, we allow these values to be represented essentially
+ *  as the list of digits expressed according to some power-of-two basis,
+ *  where the exponent is specified by the ML value chunk_size.
+ *  
+ *     Example: Suppose that !chunk_size = 4 (i.e. hexadecimal). Then 32-bit
+ *     integer 46 is represented by the list [0,0,2,14] and ~46 =
+ *     [15,15,13,2] (twos compliment).  If negative digits are permitted,
+ *     then the sign of the number represented could be indicated by the sign
+ *     of the leading digit - [0,0,~2,14].
+ *  
+ *  Of course, this approach extends to the represention of (foreign)
+ *  floating point numbers, representing the bit pattern by appropriate
+ *  digits ...
+ *  
+ *  Need to look at the appropriate standards for number representation ...
+ *  
+ *  
+d12 3
+d127 2
+d165 1
+@
+
+
+1.2
+log
+@General updating to reach prototype level for ML FI.
+@
+text
+@d183 3
+d214 1
+d222 1
+d233 1
+a233 3
+     sharing type name = field = member = enum_value = string
+         and type tag = int
+
+a236 5
+
+     datatype 'a nameitem =
+         NI of { name   : name,
+                 item   : 'a,
+                 offset : int deferred }
+a237 4
+
+     datatype 'a itemlist = NL of 'a nameitem list
+
+
+d271 1
+a271 1
+                        fields : c_type itemlist,
+d275 1
+a275 1
+                        variants : c_type itemlist,
+d277 1
+a277 1
+                        current  : c_type nameitem deferred }
+d283 11
+a293 2
+                        card  : int deferred
+                      }
+d299 5
+d308 5
+d314 3
+d318 3
+d322 8
+a329 1
+     type c_pod
+d331 3
+a333 2
+     val pod_to_c_pod  :  c_type pod -> c_pod
+     val c_pod_to_pod  :  c_pod -> c_type pod
+d345 1
+a345 6
+     exception ForeignType
+     exception StoreAccess
+
+     val pod : { ctype    : c_type,
+                 currency : bool,
+                 hostel   : hostel } -> c_pod
+d359 2
+d367 1
+a367 1
+     val set_star           : { ptr:c_pod, value: c_pod } -> unit
+d369 5
+d378 5
+a382 3
+     val set_struct         : c_pod * (c_pod list) -> unit
+     val set_member         : { pod:c_pod, member:member } -> unit
+     val set_union          : { pod:c_pod, datum:c_pod } -> unit
+d384 2
+a385 2
+     val set_array          : c_pod * (c_pod list) * int -> unit
+     val set_enum           : c_pod * int -> unit
+d390 9
+a398 9
+     val index_pod   : { src:c_pod, tgt:c_pod, index:int } -> unit
+     val deref_pod   : { src:c_pod, tgt:c_pod } -> unit
+     val select_pod  : { src:c_pod, tgt:c_pod, field:field } -> unit
+     val coerce_pod  : { src:c_pod, tgt:c_pod } -> unit
+
+     val copy_index_pod     : c_pod * int -> c_pod
+     val copy_deref_pod     : c_pod -> c_pod
+     val copy_select_pod    : c_pod * field -> c_pod
+     val copy_coerce_pod    : c_pod -> c_pod
+d405 9
+a413 9
+     val index_pod_type     : c_pod -> c_type
+     val deref_pod_type     : c_pod -> c_type
+     val select_pod_type    : c_pod * field -> c_type
+     val coerce_pod_type    : c_pod -> c_type 
+
+     val index_pod_size     : c_pod -> int
+     val deref_pod_size     : c_pod -> int
+     val select_pod_size    : c_pod * field -> int
+     val coerce_pod_size    : c_pod -> int
+d415 2
+a416 2
+     val advance_pod        : c_pod -> unit
+     val retard_pod         : c_pod -> unit
+d432 2
+d440 1
+a440 1
+     val get_star           : c_pod -> c_pod
+d454 7
+a460 2
+     val pod_type       : c_pod -> c_type
+     val cast_pod_type  : c_pod * c_type -> unit
+d462 14
+a475 1
+     val dup_pod : c_pod -> c_pod
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d7 1
+a7 1
+ *  The signatures FOREIGN_DATA, FOREIGN_HEADER define the general part of
+d89 1
+a89 1
+ *  		       (more here ... NULL pointers)
+d182 5
+a186 1
+ *  $Log$
+d190 1
+a190 2
+   signature C_DATA = 
+      sig
+d192 1
+a192 1
+        (* C TYPE STRUCTURE *)
+d194 1
+a194 8
+        type name
+        type field
+        type member
+        type enum_value
+        type tag
+        
+        sharing type name = field = member = enum_value = string
+            and type tag = int
+d196 2
+a197 7
+        type 'a slot       (* equal to: field * `a     *)
+        type 'a variant    (* equal to: member * `a    *)
+        type array_size    (* equal to: int option ref *)
+        type enum_decl     (* equal to: enum_value * int option *)
+        type size_info     (* equal to: int ref        *)
+     
+   (* A representation of C type's in ML ...
+d199 2
+a200 2
+      The ML type T provides a representation of a C type descriptor
+      as an ML value.
+d202 1
+a202 14
+   *)
+        datatype T =
+           SizeOf of (size_info * T)                             |
+           Char_t           | Unsigned_char_t | Uigned_char_t    |
+           Short_t          | Int_t           | Long_t           |
+           Unsigned_short_t | Unsigned_int_t  | Unsigned_long_t  |
+           Float_t          | Double_t        | Long_double_t    |
+           String_t                                              |
+           The_type   of name                                    |
+           Star_t     of T                                       |
+           Struct_t   of tag * (T slot list)                     |
+           Union_t    of tag * (T variant list)                  |
+           Array_t    of (array_size * T)                        |
+           Enum_t     of tag * (enum_decl list)
+d204 2
+a205 1
+        val size_of : T -> (int)option
+d207 4
+d212 1
+a212 1
+        (* C VALUE STRUCTURE *)
+d214 4
+a217 1
+        structure FData : FOREIGN_DATA
+d219 1
+a219 2
+        type address
+        sharing type address = FData.address
+d221 1
+d223 4
+a226 2
+        type data_port
+             (* assume equal to: (T)FData.data_port *)
+d228 2
+a229 2
+        exception ForeignType
+        exception StoreAccess
+a230 4
+        val chunk_size : int ref   (* default: 16 bits *)
+        val set_char           : int * data_port -> data_port
+        val set_unsigned_char  : int * data_port -> data_port
+        val set_signed_char    : int * data_port -> data_port
+a231 3
+        val set_short          : int * data_port -> data_port
+        val set_int            : int list * data_port -> data_port
+        val set_long           : int list * data_port -> data_port
+d233 1
+a233 3
+        val set_unsigned_short : int * data_port -> data_port
+        val set_unsigned       : int list * data_port -> data_port
+        val set_unsigned_long  : int list * data_port -> data_port
+d235 5
+a239 3
+        val set_float          : real * data_port -> data_port
+        val set_double         : int list * int * data_port -> data_port
+        val set_long_double    : int list * int * data_port -> data_port
+d241 1
+a241 1
+        val set_string         : string * data_port -> data_port
+a242 5
+        val set_star           : data_port * data_port -> data_port
+        val set_struct         : data_port -> data_port
+        val set_union          : member * data_port -> data_port
+        val set_array          : int * (data_port list) * data_port -> data_port
+        val set_enum           : enum_value * data_port -> data_port
+d244 6
+a249 3
+        val index_port         : int * data_port -> data_port
+        val deref_port         : data_port -> data_port
+        val select_port        : field * data_port -> data_port
+a250 3
+        val copy_index_port         : int * data_port -> data_port
+        val copy_deref_port         : data_port -> data_port
+        val copy_select_port        : field * data_port -> data_port
+d252 39
+a290 3
+        val index_port_addr    : int * data_port -> address 
+        val deref_port_addr    : data_port -> address 
+        val select_port_addr   : field * data_port -> address 
+d292 1
+a292 3
+        val index_port_type    : int * data_port -> T
+        val deref_port_type    : data_port -> T
+        val select_port_type   : field * data_port -> T
+d294 1
+a294 3
+        val advance_port : data_port -> data_port
+     
+        (* Getters ... *)
+a295 3
+        val get_char           : data_port -> int
+        val get_unsigned_char  : data_port -> int
+        val get_signed_char    : data_port -> int
+a296 3
+        val get_short          : data_port -> int
+        val get_int            : data_port -> int list
+        val get_long           : data_port -> int list
+d298 1
+a298 3
+        val get_unsigned_short : data_port -> int
+        val get_unsigned       : data_port -> int list
+        val get_unsigned_long  : data_port -> int list
+a299 3
+        val get_float          : data_port -> real
+        val get_double         : data_port -> (int list * int)
+        val get_long_double    : data_port -> (int list * int)
+d301 1
+a301 1
+        val get_string         : data_port -> string
+d303 1
+a303 2
+        val get_star           : data_port -> data_port
+            (* dereference pointer *)
+d305 2
+a306 2
+        val get_struct         : data_port -> data_port list
+            (* components of the array *)
+d308 1
+a308 2
+        val get_union          : T * data_port -> data_port
+        val get_array          : data_port -> data_port list
+d310 3
+a312 1
+        val get_enum           : data_port -> enum_value
+d314 113
+a426 1
+      end; (* signature C_DATA *)
+@

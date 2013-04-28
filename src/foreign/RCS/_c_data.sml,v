@@ -1,0 +1,3071 @@
+head	1.11;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.11
+	MLWorks_Beta_1996_06_06:1.11
+	MLWorks_Beta_1996_06_05:1.11
+	MLWorks_Beta_1996_06_03:1.11
+	MLWorks_Beta_1996_05_31:1.11
+	MLWorks_Beta_1996_05_30:1.11;
+locks; strict;
+comment	@ * @;
+
+
+1.11
+date	96.05.01.11.48.18;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.04.30.15.03.06;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.04.18.16.56.02;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.02.15.12.29.19;	author brianm;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.09.10.17.46.44;	author brianm;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.10.17.46.44;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.07.22.43.38;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.07.20.23.07.25;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.07.18.12.17.12;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.06.26.10.40.45;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.28.19;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.11
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@(*  ==== FOREIGN INTERFACE : C DATA/TYPE STRUCTURES ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _c_data.sml,v $
+ * Revision 1.10  1996/04/30  15:03:06  matthew
+ * Removing MLWorks.Integer
+ *
+ * Revision 1.9  1996/04/18  16:56:02  jont
+ * initbasis becomes basis
+ *
+ * Revision 1.8  1996/02/15  12:29:19  brianm
+ * Modifications due to byte-ordering considerations.
+ *
+ *  Revision 1.7  1995/09/10  17:46:44  brianm
+ *  Further modification for updates and general reorganisation.
+ *
+ *  Revision 1.5  1995/09/07  22:43:38  brianm
+ *  Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.4  1995/07/20  23:07:25  brianm
+ *  adding new_pod.
+ *
+ *  Revision 1.3  1995/07/18  12:17:12  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.2  1995/06/26  10:40:45  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.1  1995/04/25  11:28:19  brianm
+ *  new unit
+ *  New file.
+ *
+ * Revision 1.1  1995/03/27  15:49:53  brianm
+ * new unit
+ * New file.
+ *
+ *)
+
+require "../basis/__integer";
+require "../basis/__general";
+
+require "../utils/lists";
+
+require "fi_types";
+require "fi_codeset";
+require "fi_data";
+require "fi_utils";
+
+require "c_hostel";
+require "c_data";
+
+
+functor CData(
+
+   structure FICodeSet : FOREIGN_CODESET
+   structure FIData   : FOREIGN_DATA
+   structure FIUtils  : FOREIGN_UTILS
+
+   structure CHostel  : C_HOSTEL
+
+   structure Lists    : LISTS
+
+   sharing type
+       CHostel.hostel = FIData.hostel 
+
+) : C_DATA = 
+   struct
+
+     open General
+     open FIData
+
+     structure CHostel = CHostel
+     structure FITypes = CHostel.FITypes
+
+     open CHostel
+     open FITypes
+
+   (* Mapping *)
+
+     (* Internal utilities *)
+
+     val MLWcast  =  MLWorks.Internal.Value.cast : 'a -> 'b
+
+     val to_real_repn    =  MLWorks.Internal.Value.real_to_string
+     val from_real_repn  =  MLWorks.Internal.Value.string_to_real
+
+     (* Internal ByteArray operators *)
+
+     structure ByteArray  = MLWorks.ByteArray
+
+     val bytearray    =  ByteArray.array
+ 
+     val sub_ba       =  ByteArray.sub
+     val update_ba    =  ByteArray.update
+     val find_ba      =  ByteArray.find_default
+     val subarray_ba  =  ByteArray.subarray
+
+     val from_string  =  ByteArray.from_string
+     val to_string    =  ByteArray.to_string
+
+     val unsafe_sub_ba      =  MLWorks.Internal.Value.unsafe_bytearray_sub
+     val unsafe_update_ba   =  MLWorks.Internal.Value.unsafe_bytearray_update
+
+     val int_to_bytearray     =  FIUtils.int_to_bytearray
+     val bytearray_to_int     =  FIUtils.bytearray_to_int
+
+     val word32_to_bytearray  =  FIUtils.word32_to_bytearray
+     val bytearray_to_word32  =  FIUtils.bytearray_to_word32
+
+     val string_to_bytearray  =  FIUtils.string_to_bytearray
+     val bytearray_to_string  =  FIUtils.bytearray_to_string
+
+     val disp                 =  FIUtils.disp
+     val word32_to_hex        =  FIUtils.word32_to_hex
+     val word32_to_bytearray  =  FIUtils.word32_to_bytearray
+     val bytearray_to_word32  =  FIUtils.bytearray_to_word32
+
+     val int_string   =  Int.toString
+
+
+     (* POD operators *)
+
+     val pod'               =    FIData.pod
+
+     val pod_address        =    FIData.pod_address
+     val pod_location       =    FIData.pod_location
+
+     val to_address         =    FIData.to_address
+     val to_location        =    FIData.to_location
+
+     val move_pod           =    FIData.move_pod
+     val offset_pod         =    FIData.offset_pod
+     val examine_pod        =    FIData.examine_pod
+
+     val set_pod_address'   =    FIData.set_pod_address'
+
+     val new_pod'           =    FIData.new_pod
+     val dup_pod'           =    FIData.dup_pod
+     val tmp_pod'           =    FIData.tmp_pod
+
+     val copy_pod_value     =    FIData.copy_pod_value
+     val copy_pod_value'    =    FIData.copy_pod_value'
+
+     val pod_type           =    FIData.pod_type
+     val set_pod_type'      =    FIData.set_pod_type
+
+     val pod_size           =    FIData.pod_size
+     val set_pod_size       =    FIData.set_pod_size'
+
+
+     (* Modified POD operators *)
+
+     val pod_value      =  FIData.pod_value
+     val pod_value'     =  FIData.pod_value'
+     val set_pod_value  =  FIData.set_pod_value 
+
+
+     (* Utilities mapping *)
+
+     val int_string   =    Int.toString
+
+     val extract      =    General.valOf
+
+     val reducel      =    Lists.reducel
+     val llength      =    Lists.length
+     val zip          =    Lists.zip   
+     val findp        =    Lists.findp
+     val check_order  =    Lists.check_order   
+     val sort         =    Lists.msort
+
+     val max          =    Int.max
+
+     (* Implementation Utilities *)
+
+     fun new(ref(x)) = ref(x)
+
+  (* C TYPE STRUCTURE *)
+
+     type name        = string
+     type field       = string
+     type member      = string
+     type enum_value  = string
+     type tag         = string
+
+     (* A representation of C type's in ML ...
+
+	The ML type c_type provides a representation of a C type descriptor
+	as an ML value.
+     *)
+
+     datatype pointer_kind  = LOCAL_PK | RELATIVE_PK | REMOTE_PK
+
+     datatype c_type =
+        SIZE_OF of { size : int box, ctype : c_type }
+     |
+        VOID_CT
+     |
+        CHAR_CT           | UNSIGNED_CHAR_CT | SIGNED_CHAR_CT
+     |
+        SHORT_CT          | INT_CT           | LONG_CT
+     |
+        UNSIGNED_SHORT_CT | UNSIGNED_INT_CT  | UNSIGNED_LONG_CT
+     |
+        FLOAT_CT          | DOUBLE_CT        | LONG_DOUBLE_CT
+     |
+        STRING_CT   of { length : int }
+     |
+        TYPENAME_CT of { name : name,
+                        defn : c_type box,
+                        size : int box }
+     |
+        STAR_CT     of { ctype : c_type, mode : pointer_kind ref }
+     |
+        STRUCT_CT   of { tag    : tag option,
+                        fields : c_field list,
+                        size   : int box }
+     |
+        UNION_CT    of { tag      : tag option,
+                        variants : c_variant list ref,
+                        size     : int box,
+                        current  : c_variant box }
+     |
+        ARRAY_CT    of { length : int, ctype : c_type }
+     |
+        ENUM_CT     of { tag   : tag option,
+                        elems : enum_value list,
+                        card  : int box }
+
+     and  c_variant = CVNT of { name  : name,
+                                ctype : c_type,
+                                size  : int box }
+
+     and  c_field =   CFLD of { name    : name,
+                                ctype   : c_type,
+                                size    : int box,
+                                padding : int box,
+                                offset  : int box }
+
+
+     local
+	fun lookup_itemlist p (ni_lst,nm) =  findp (p nm) ni_lst
+
+	fun find_field   nm (CFLD{name, ...}) =  (name = nm)
+
+	fun find_variant nm (CVNT{name, ...}) =  (name = nm)
+     in
+        val lookup_variant  = lookup_itemlist find_variant
+        val lookup_field    = lookup_itemlist find_field
+     end
+
+     fun variant_name (CVNT{name, ...}) = name
+     fun field_name   (CFLD{name, ...}) = name
+
+     local
+
+        fun dup_items (dup_itm_fn) =
+            let fun dup_itms(cur_itm::itms,seen_flag,sofar) =
+		    let val dup_itm = dup_itm_fn(cur_itm)
+			val (new_flag, new_itm) =
+			    case dup_itm of
+			      SOME(new_val) => (true,new_val)
+			    | NONE          => (seen_flag,cur_itm)
+		    in
+			dup_itms(itms,new_flag,new_itm::sofar)
+		    end
+
+		  | dup_itms([],seen_flag,sofar) =
+		    if seen_flag then SOME(rev(sofar)) else NONE
+            in
+                fn items => dup_itms(items,false,[])
+            end
+
+        fun new_variant (vnt_lst, current) =
+            case extractBOX(current) of
+              SOME(cur_vnt) =>
+                 let val name    = variant_name cur_vnt
+                     val new_vnt = lookup_variant(vnt_lst,name)
+                 in
+                     makeBOX(new_vnt)
+                 end
+            | NONE => voidBOX()
+
+       (*
+          Certain components of C types are stateful - they have dynamic
+	  structure.  Since different instances can change their structure
+  	  independently, we always copy them on update - ensuring that
+	  modifying these doesn't change other instances.
+        *)
+
+	fun dup_type(ctype) =
+            case dup_type'(ctype) of
+              SOME(ctype') => ctype'
+            | NONE         => ctype
+
+	and dup_type'(STAR_CT{ctype,mode}) =
+	    let val new_ctype = dup_type(ctype)
+		val new_ty    = STAR_CT{ ctype = new_ctype,
+				        mode  = new(mode)
+				      }
+	    in
+	       SOME(new_ty)
+	    end
+
+	  | dup_type'(UNION_CT{tag,variants,size,current}) =
+	    let val new_variants = dup_variants(!variants)
+                val new_current = new_variant(new_variants,current)
+                val new_ty = UNION_CT{ tag      = tag,
+				      variants = ref(new_variants),
+				      size     = size,
+				      current  = new_current }
+	    in
+	       SOME(new_ty)
+	    end
+
+          | dup_type'(SIZE_OF{size, ctype}) =
+            (case dup_type'(ctype) of
+               SOME(ctype') =>
+                 SOME(SIZE_OF{ size = newBOX(size), ctype = ctype' })
+             | _ => NONE
+            )
+
+          | dup_type'(ARRAY_CT{length, ctype}) =
+            (case dup_type'(ctype) of
+               SOME(ctype') =>
+                 SOME(ARRAY_CT{ length = length, ctype = ctype' })
+             | _ => NONE
+            )
+
+          | dup_type'(STRUCT_CT{tag,fields,size}) =
+            (case dup_fields'(fields) of
+               SOME(new_fields) =>
+                 SOME(STRUCT_CT
+			{ tag    = tag,
+			  fields = new_fields,
+			  size   = size }
+                     )
+             | _ => NONE
+            )
+
+	  | dup_type'(ty) = NONE
+
+        and dup_variants(variants) =
+            case dup_variants'(variants) of
+              SOME(new_variants) => new_variants
+            | NONE               => variants
+
+        and dup_variants'(variants) = dup_items(dup_variant')(variants)
+
+        and dup_variant'(CVNT{name,ctype,size}) =
+            case dup_type'(ctype) of
+              SOME(new_ctype) =>
+                SOME(CVNT
+                      { name  = name,
+		        ctype = new_ctype,
+		        size  = size }
+                    )
+            | _ => NONE
+
+        and dup_fields'(fields) = dup_items(dup_field')(fields)
+
+        and dup_field'(CFLD{name,ctype,size,padding,offset}) =
+            case dup_type'(ctype) of
+              SOME(new_ctype) =>
+                SOME(CFLD
+                      { name    = name,
+		        ctype   = new_ctype,
+		        size    = size,
+                        padding = padding,
+                        offset  = offset }
+                    )
+            | _ => NONE
+
+     in
+
+       val dup_type = dup_type
+
+     end
+
+
+     (* Size constants *)
+     val char_size                = 1
+     val short_int_size           = 2
+     val int_size                 = 4
+     val long_int_size            = 8
+     val real_size                = 8
+
+     local
+
+       val unsigned_short_int_size  = short_int_size
+       val unsigned_int_size        = int_size
+       val unsigned_long_int_size   = long_int_size
+
+       val double_size              = real_size
+       val long_double_size         = real_size
+
+       val pointer_size             = int_size
+       val enum_size                = int_size
+       val void_size                = 0
+
+       fun pad_size_of (CHAR_CT             ,_)   = int_size
+         | pad_size_of (UNSIGNED_CHAR_CT    ,_)   = int_size
+         | pad_size_of (SIGNED_CHAR_CT      ,_)   = int_size
+         | pad_size_of (SHORT_CT            ,_)   = int_size
+         | pad_size_of (UNSIGNED_SHORT_CT   ,_)   = int_size
+         | pad_size_of (_, size) = size
+
+       fun padding_adjustment(_,_,_) = 0
+
+       fun variant_leq (CVNT{name=nm1, ...}, CVNT{name=nm2, ...}) = (nm1 <= nm2)
+
+       fun norm_variants(vnt_l) =
+           if check_order variant_leq vnt_l then vnt_l
+           else sort variant_leq vnt_l
+
+     in
+
+       fun size_of(SIZE_OF{size=BOX(ref(SOME(size))), ...}) = size
+
+         | size_of(SIZE_OF{size, ctype}) =
+              let val i = size_of(ctype)
+              in
+                (setBOX size i);
+                i
+              end
+
+         | size_of(VOID_CT)             = void_size
+
+         | size_of(CHAR_CT)             = char_size
+         | size_of(UNSIGNED_CHAR_CT)    = char_size
+         | size_of(SIGNED_CHAR_CT)      = char_size
+
+         | size_of(SHORT_CT)            = short_int_size
+         | size_of(INT_CT)              = int_size
+         | size_of(LONG_CT)             = long_int_size
+
+         | size_of(UNSIGNED_SHORT_CT)   = unsigned_short_int_size
+         | size_of(UNSIGNED_INT_CT)     = unsigned_int_size
+         | size_of(UNSIGNED_LONG_CT)    = unsigned_long_int_size
+
+         | size_of(FLOAT_CT)            = real_size
+         | size_of(DOUBLE_CT)           = double_size
+         | size_of(LONG_DOUBLE_CT)      = long_double_size
+
+         | size_of(STRING_CT{length})   = length  (* includes null sentinel *)
+         
+         | size_of(TYPENAME_CT{size=BOX(ref(SOME(size))), ...}) = size          
+
+         | size_of(TYPENAME_CT{size, defn, ...}) =
+              let val i = size_of(getBOX(defn))
+              in
+                (setBOX size i);
+                i
+              end
+
+         | size_of(STAR_CT(_)) = pointer_size
+
+         | size_of(STRUCT_CT{size=BOX(ref(SOME(size))), ...}) = size
+
+         | size_of(STRUCT_CT{fields,size, ...}) =
+             let val i = size_of_struct(fields)
+             in
+               (setBOX size i);
+               i
+             end
+
+         | size_of(UNION_CT{size=BOX(ref(SOME(size))), ...}) = size
+
+         | size_of(UNION_CT{variants,size, ...}) =
+             let val vnts = !variants
+                 val i = size_of_union(vnts)
+             in
+                 variants := norm_variants(vnts);  (* sorted by name *)
+                 (setBOX size i);
+                 i
+             end
+
+         | size_of(ARRAY_CT { length, ctype }) = length * size_of(ctype)
+
+         | size_of(ENUM_CT {card=BOX(ref(SOME(_))), ...}) = enum_size
+
+         | size_of(ENUM_CT {card,elems, ...}) =
+             ( setBOX card (llength elems);
+               enum_size
+             )
+
+
+       and size_of_field(cur_offset,CFLD{size=BOX(ref(SOME(size))), ...}) =
+           size + cur_offset
+
+         | size_of_field(cur_offset,CFLD{ctype,size,offset,padding, ...}) =
+           let val new_size    = size_of (ctype)
+               val pad_size    = pad_size_of (ctype,new_size)
+               val pad_offset  = padding_adjustment(ctype,pad_size,new_size) 
+           in
+               setBOX size    pad_size;
+               setBOX padding pad_offset;
+               setBOX offset  (cur_offset + pad_offset);
+               pad_size + cur_offset
+           end
+
+
+       and size_of_struct(fld_lst) = reducel size_of_field (0,fld_lst)
+
+
+       and size_of_variant(cur_size,CVNT{size=BOX(ref(SOME(size))), ctype, ...}) =
+           max(size,cur_size)
+
+         | size_of_variant(cur_size,CVNT{size, ctype, ...}) =
+           let val obj_size = size_of(ctype)
+           in
+	       setBOX size obj_size;
+               max(obj_size,cur_size)
+           end
+
+
+       and size_of_union(vnt_lst) = reducel size_of_variant (0,vnt_lst)
+
+     end
+
+
+     local
+
+       fun equal_type'
+             ( SIZE_OF{ctype=cty1, ...}
+             , SIZE_OF{ctype=cty2, ...}
+             ) = equal_type'(cty1,cty2)
+
+         | equal_type'
+             ( TYPENAME_CT{name=nm1, ...}
+             , TYPENAME_CT{name=nm2, ...}
+             ) = (nm1 = nm2)
+
+         | equal_type'
+             ( STAR_CT{ctype=cty1, ...}
+             , STAR_CT{ctype=cty2, ...}
+             ) = equal_type'(cty1,cty2)
+
+         | equal_type'
+             ( STRUCT_CT{tag=SOME(tg1), ...}
+             , STRUCT_CT{tag=SOME(tg2), ...}
+             ) = (tg1 = tg2)
+
+         | equal_type'
+             ( STRUCT_CT{tag=NONE,fields=fld_lst1, ...}
+             , STRUCT_CT{tag=NONE,fields=fld_lst2, ...}
+             ) = equal_fields(fld_lst1,fld_lst2)
+
+         | equal_type'
+             ( UNION_CT{tag=SOME(tg1), ...}
+             , UNION_CT{tag=SOME(tg2), ...}
+             ) = (tg1 = tg2)
+
+         | equal_type'
+             ( UNION_CT{tag=NONE,variants=ref(vnt_lst1), ...}
+             , UNION_CT{tag=NONE,variants=ref(vnt_lst2), ...}
+             ) = equal_variants(vnt_lst1,vnt_lst2)
+
+         | equal_type'(cty1,cty2) = (cty1 = cty2)    
+
+       and equal_variants
+             ( CVNT{name=nm1, ctype=cty1, ...}::vnt_lst1
+             , CVNT{name=nm2, ctype=cty2, ...}::vnt_lst2
+             ) = (nm1 = nm2) andalso equal_type'(cty1,cty2)
+                             andalso equal_variants(vnt_lst1,vnt_lst2)
+
+         | equal_variants([],[])  = true
+
+         | equal_variants(_,_)    = false
+
+       and equal_fields
+             ( CFLD{name=nm1, ctype=cty1, ...}::fld_lst1
+             , CFLD{name=nm2, ctype=cty2, ...}::fld_lst2
+             ) = (nm1 = nm2) andalso equal_type'(cty1,cty2)
+                             andalso equal_fields(fld_lst1,fld_lst2)
+
+         | equal_fields([],[])  = true
+
+         | equal_fields(_,_)    = false
+
+     in
+
+       fun equal_type(cty1,cty2) =
+             (cty1 = cty2) orelse equal_type'(cty1,cty2)
+
+     end
+
+     local
+       fun mk_field (str,ty) =
+           CFLD { name    = str,
+                  ctype   = ty,
+                  size    = voidBOX(),
+                  padding = voidBOX(),
+                  offset  = voidBOX() }
+
+       fun mk_variant (str,ty) =
+           CVNT { name    = str,
+                  ctype   = ty,
+                  size    = voidBOX() }
+     in
+
+       fun mk_struct_t (nm,flds) =
+	   STRUCT_CT { tag    = SOME(nm),
+		      fields = map mk_field flds, 
+		      size   = voidBOX()
+		    }
+
+       fun mk_union_t (nm,vnts) =
+	   UNION_CT { tag      = SOME(nm),
+		     variants = ref(map mk_variant vnts),
+		     size     = voidBOX(),
+                     current  = voidBOX()
+		    }
+
+       fun mk_star_t (ty) =
+           STAR_CT { ctype = ty, mode = ref(LOCAL_PK) }
+
+       fun mk_typename (nm) =
+           TYPENAME_CT { name = nm,
+                        defn = voidBOX(),
+                        size = voidBOX()
+                      }
+
+       fun mk_enum_t (nm,elem_lst) =
+           ENUM_CT { tag = SOME(nm),
+                    elems = elem_lst,
+                    card  = makeBOX(llength elem_lst)
+                  }
+     end
+
+
+  (* C VALUE STRUCTURE *)
+
+     type 'a pod   =  'a FIData.pod
+
+     type c_pod    =  c_type pod
+
+     val pod_to_c_pod  :  c_type pod -> c_pod   = (fn x => x)
+     val c_pod_to_pod  :  c_pod -> c_type pod   = (fn x => x)
+
+     val pod_mode      : c_pod -> pod_mode         =  pod_mode
+     val set_pod_mode  : c_pod * pod_mode -> unit  =  set_pod_mode
+
+     type c_char   =  int
+
+     type c_short_int = int
+     type c_int       = int
+     type c_long_int  = int
+
+     type c_real         = real
+     type c_double       = real
+     type c_long_double  = real
+
+     exception ForeignType
+     exception StoreAccess
+
+     val set_pod_type  : (c_pod * c_type) -> unit =
+	 fn (pod,ctype) =>
+	   set_pod_type'(pod,dup_type(ctype))
+
+     val new_pod : c_pod -> c_pod =
+	 fn (pod) =>
+	   let val new_pod   =  new_pod'(pod)
+	       val new_ctype =  pod_type(pod)
+	   in
+	     set_pod_type(new_pod,new_ctype);
+	     new_pod
+	   end
+
+     val dup_pod : c_pod -> c_pod =
+	 fn (pod) =>
+	   let val new_pod   =  dup_pod'(pod)
+	       val new_ctype =  pod_type(pod)
+	   in
+	     set_pod_type(new_pod,new_ctype);
+	     new_pod
+	   end
+
+     val tmp_pod : c_pod -> c_pod =
+	 fn (pod) =>
+	   let val new_pod   =  tmp_pod'(pod)
+	       val new_ctype =  pod_type(pod)
+	   in
+	     set_pod_type(new_pod,new_ctype);
+	     new_pod
+	   end
+
+     fun pod{ctype,hostel} =
+	 let val pod_size = size_of(ctype)
+	 in
+	     pod'{ lang_type  =  dup_type(ctype),
+		   status     =  PERMANENT_PS,
+		   size       =  pod_size,
+		   mode       =  LOCAL_PM,
+		   currency   =  true,
+		   hostel     =  hostel }
+	 end
+
+     fun copy_pod_info{from=src_pd,to=tgt_pd} =
+         let val from_type = pod_type(src_pd)
+             val from_size = pod_size(src_pd)
+         in
+           set_pod_type(tgt_pd,from_type);
+           set_pod_size(tgt_pd,from_size);
+           copy_pod_value{from=src_pd,to=tgt_pd}
+         end
+
+
+     (* Data extraction/insertion utilities *)
+
+     val data_buffer = bytearray(size_of(LONG_DOUBLE_CT),0)
+     (* To cut down on allocation, a fixed data buffer is used
+        for passing small items such as characters, integers and
+        reals (of various standard sizes).
+
+        !! NOT THREAD-SAFE !!
+      *)
+
+     fun f_pod_value(pod) =
+           ( pod_value(pod,data_buffer,0);
+             data_buffer
+           )
+
+     fun f_pod_value'(pod) =
+           ( pod_value'(pod,data_buffer,0);
+             data_buffer
+           )
+
+     fun set_int'(pod,i) =
+       ( int_to_bytearray{len=int_size,arr=data_buffer,src=i,st=0};
+         set_pod_value(pod,data_buffer,0)
+       ) handle _ => raise StoreAccess
+
+     fun get_int'(pod)  =
+         bytearray_to_int{arr=f_pod_value(pod),st=0,len=int_size}
+
+     fun set_word32'(pod,wd) =
+       ( word32_to_bytearray{arr=data_buffer,src=wd,st=0};
+         set_pod_value(pod,data_buffer,0)
+       ) handle _ => raise StoreAccess
+
+     fun get_word32'(pod)  =  bytearray_to_word32{arr=f_pod_value(pod),st=0}
+
+     fun set_char'(pod,ch) =
+         if (0 <= ch) andalso (ch < 256)
+         then ( update_ba(data_buffer,0,ch);
+                set_pod_value(pod,data_buffer,0)
+              )
+         else raise StoreAccess
+
+     fun get_char'(pod) =
+         ( pod_value(pod,data_buffer,0);
+           sub_ba(data_buffer,0)
+         )
+
+     fun get_signed_char'(pod) =
+         let val ch = get_char'(pod)
+         in
+             if (ch < 128) then ch else (ch - 256)
+         end
+
+     fun address_to_bytearray(addr) =
+           ( word32_to_bytearray{arr=data_buffer,src=addr,st=0};
+             data_buffer
+           )
+
+     fun bytearray_to_address(ba)  =  bytearray_to_word32{arr=ba,st=0}
+
+     local
+        val real_size = size_of(LONG_DOUBLE_CT)
+     in
+        fun get_real'(pod) =
+            let val buffer   = f_pod_value(pod)
+                val repn_str = bytearray_to_string{arr=buffer,st=0,len=real_size}
+            in
+                from_real_repn(repn_str)
+            end
+     end
+
+     fun set_real'(pod,r) =
+         let val real_str = to_real_repn(r)
+         in
+             string_to_bytearray{arr=data_buffer,src=real_str,st=0};
+             set_pod_value(pod,data_buffer,0)
+         end
+
+
+     (* Setters ... *)
+
+     fun set_unsigned_char(pod,ch) =
+         case pod_type(pod) of
+           CHAR_CT          => set_char'(pod,ch)
+         |
+           UNSIGNED_CHAR_CT => set_char'(pod,ch)
+         |
+           _ => raise ForeignType
+
+     val set_char = set_unsigned_char
+
+     fun set_signed_char(pod,ch) =
+         case pod_type(pod) of
+           CHAR_CT        => set_char'(pod,(ch mod 256))
+         |
+           SIGNED_CHAR_CT => set_char'(pod,(ch mod 256))
+         |
+           _ => raise ForeignType
+
+     fun set_short(pod,i) =
+         case pod_type(pod) of
+           SHORT_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_int(pod,i) =
+         case pod_type(pod) of
+           INT_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_long(pod,i) =
+         case pod_type(pod) of
+           LONG_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned_short(pod,i) =
+         case pod_type(pod) of
+           UNSIGNED_SHORT_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned(pod,i) =
+         case pod_type(pod) of
+           UNSIGNED_INT_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_unsigned_long(pod,i) =
+         case pod_type(pod) of
+           UNSIGNED_LONG_CT  => set_int'(pod,i)
+         |
+           _ => raise ForeignType
+
+     fun set_word32(pod,wd) =
+         case pod_type(pod) of
+           UNSIGNED_INT_CT  => set_word32'(pod,wd)
+         |
+           _ => raise ForeignType
+
+     fun set_enum(pod,i) =
+         case pod_type(pod) of
+           ENUM_CT{card, ...} =>
+             (
+              (if (0 <= i) andalso (i < getBOX(card))
+               then set_int'(pod,i)
+               else raise ForeignType
+              ) handle Option => raise ForeignType
+             )
+         |
+           _ => raise ForeignType
+
+
+     fun set_float(pod,r) =
+         case pod_type(pod) of
+           FLOAT_CT  => set_real'(pod,r)
+         |
+           _ => raise ForeignType
+
+     fun set_double(pod,r) =
+         case pod_type(pod) of
+           DOUBLE_CT  => set_real'(pod,r)
+         |
+           _ => raise ForeignType
+
+     fun set_long_double(pod,r) =
+         case pod_type(pod) of
+           LONG_DOUBLE_CT  => set_real'(pod,r)
+         |
+           _ => raise ForeignType
+
+ 
+     fun set_string(pod, str) =
+         case pod_type(pod) of
+           STRING_CT{length}  =>
+              if (size(str) <= length)
+              then set_pod_value(pod,from_string(str),0)
+              else raise StoreAccess
+         |
+           _ => raise ForeignType
+
+
+     fun set_local_ptr(ptr_pod) =
+         case pod_type(ptr_pod) of
+           STAR_CT{mode=mode as ref(RELATIVE_PK), ...} =>
+              let val rel_ptr = f_pod_value(ptr_pod)
+                  val idx     = bytearray_to_int{arr=rel_ptr,st=0,len=int_size}
+                  val addr    = to_address(ptr_pod,idx)
+                  val ba      = address_to_bytearray(addr)          
+              in
+                  mode := LOCAL_PK;
+                  set_pod_value(ptr_pod,ba,0)
+              end
+         |
+           STAR_CT(_) => ()
+         |
+           _ => raise ForeignType
+
+
+     fun set_relative_ptr(ptr_pod) =
+         case pod_type(ptr_pod) of
+           STAR_CT{mode=mode as ref(LOCAL_PK), ...} =>
+              let val abs_ptr = f_pod_value(ptr_pod)
+                  val addr    = bytearray_to_address(abs_ptr)
+                  val idx     = to_location(ptr_pod,addr)
+              in
+                set_int'(ptr_pod,idx);
+                mode := RELATIVE_PK
+              end
+         |
+           STAR_CT(_) => ()
+         |
+           _ => raise ForeignType
+
+
+     fun set_remote_ptr(ptr_pod) =
+         case pod_type(ptr_pod) of
+           STAR_CT{mode=ref(REMOTE_PK), ...} => ()
+         |
+           STAR_CT{mode=mode as ref(LOCAL_PK), ...} =>
+             ( mode := REMOTE_PK )
+         |
+           STAR_CT{mode, ...} =>
+             ( set_local_ptr(ptr_pod);
+               mode:= REMOTE_PK
+             )
+         |
+           _ => raise ForeignType
+
+     local
+         fun set_array'(elem_pod,rel_offset,contents,buf) =
+             let fun doit([]) = ()
+                   | doit(p::pl) =
+                     ( pod_value(p,buf,0);
+                       set_pod_value(elem_pod,buf,0);
+                       offset_pod(elem_pod,rel_offset);
+                       doit(pl)
+                     )
+             in
+                doit(contents)
+             end
+     in
+         fun set_array(pod,contents,st) =
+             case pod_type(pod) of
+                ARRAY_CT{length,ctype} =>
+                  if (st + llength(contents) > length)
+                  then raise StoreAccess
+                  else let val elem_size   =  size_of ctype
+                           val elem_pod    =  dup_pod'(pod)
+                           val init_posn   =  st * elem_size
+                           val elem_buffer =  bytearray(elem_size,0)
+                       in
+                           set_pod_type(elem_pod,ctype);
+                           set_pod_size(elem_pod,elem_size);
+                           offset_pod(elem_pod,init_posn);
+                           set_array'(elem_pod,elem_size,contents,elem_buffer);
+                           set_pod_currency(pod,true)
+                       end
+             |
+                _ => raise ForeignType
+     end
+
+     local
+        fun set_struct'(fld_pod,fld_lst,pod_lst) =
+            let fun doit(offset,CFLD{size, ...}::fld_lst,p::pl) =
+                    ( offset_pod(fld_pod,offset);
+                      copy_pod_info{from=p,to=fld_pod};
+                      doit(getBOX(size),fld_lst,pl)
+                    )
+                  | doit(_,_::_,_) = raise ForeignType
+                  | doit(_,_,_)    = ()
+            in
+                doit(0,fld_lst,pod_lst)
+            end
+     in
+         fun set_struct(pod,items) =
+             case pod_type(pod) of
+               STRUCT_CT{fields, ...} =>
+                  if (llength(fields) <> llength(items))
+                  then raise StoreAccess
+                  else ( set_struct'(dup_pod'(pod),fields,items);
+			 set_pod_currency(pod,true)
+                       )
+             |
+                _ => raise ForeignType
+
+	 fun set_field{record=pod,field=name,data} =
+	     case pod_type(pod) of
+	       STRUCT_CT{fields, ...} =>
+		  let val CFLD{ctype, offset, ...} = lookup_field(fields,name)
+		  in
+		      if not(equal_type(pod_type(data),ctype))
+                      then raise StoreAccess
+                      else let val size   = size_of(ctype)
+			       val offset = getBOX(offset)
+			       val pod'   = dup_pod'(pod)
+			   in
+			       set_pod_type(pod',ctype);
+			       set_pod_size(pod',size);
+			       offset_pod(pod',offset);
+			       copy_pod_value{from=data,to=pod'}
+			   end
+		  end
+	     |
+		_ =>  raise ForeignType
+     end
+
+     fun set_union{union=pod,data} =
+         case pod_type(pod) of
+           UNION_CT{current=BOX(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+              in
+                  if not(equal_type(pod_type(data),ctype))
+                  then raise StoreAccess
+                  else copy_pod_value{from=data,to=pod}
+              end
+         |
+            _ => raise ForeignType
+
+     fun set_member{union=pod,member} =
+         case pod_type(pod) of
+           UNION_CT{variants, current, ...} =>
+              let val variant = lookup_variant(!variants,member)
+              in
+                  (setBOX current variant)
+              end
+         |
+            _ => raise ForeignType
+
+     fun index_pod{array=src_pd,tgt=tgt_pd,index=idx} =
+         case pod_type(src_pd) of
+           ARRAY_CT{length,ctype} =>
+              if (0 <= idx) andalso (idx < length)
+              then let val elem_size = size_of(ctype)
+                       val base_posn = pod_location(src_pd)
+                       val abs_posn  = base_posn + (idx * elem_size)
+                   in
+                       set_pod_type(tgt_pd,ctype);
+                       set_pod_size(tgt_pd,elem_size);          
+                       move_pod(tgt_pd,abs_posn);
+		       set_pod_currency(tgt_pd,true)
+                   end
+              else raise StoreAccess
+         |
+            _ => raise ForeignType
+
+     fun deref_pod{ptr=src_pd,tgt=tgt_pd} =
+         case pod_type(src_pd) of
+           STAR_CT{ctype, mode=ref(RELATIVE_PK)} =>
+              let val item_size = size_of(ctype)
+                  val rel_ptr   = f_pod_value(src_pd)
+                  val loc_posn  = bytearray_to_int{arr=rel_ptr,st=0,len=int_size}
+              in
+                  set_pod_type(tgt_pd,ctype);
+                  set_pod_size(tgt_pd,item_size);               
+                  move_pod(tgt_pd,loc_posn);
+		  set_pod_currency(tgt_pd,true)
+              end
+         |
+           STAR_CT{ctype, mode=ref(LOCAL_PK)} =>
+              let val item_size = size_of(ctype)
+                  val loc_ptr   = f_pod_value(src_pd)
+                  val addr      = bytearray_to_address(loc_ptr)
+                  val loc_posn  = to_location(src_pd,addr)
+              in
+                  set_pod_type(tgt_pd,ctype);
+                  set_pod_size(tgt_pd,item_size);               
+                  move_pod(tgt_pd,loc_posn);
+		  set_pod_currency(tgt_pd,true)
+              end
+         |
+           STAR_CT{ctype, mode=ref(REMOTE_PK)} =>
+              let val item_size = size_of(ctype)
+                  val far_ptr   = f_pod_value(src_pd)
+                  val addr      = bytearray_to_word32{arr=far_ptr,st=0}
+              in
+                  set_pod_type(tgt_pd,ctype);
+                  set_pod_size(tgt_pd,item_size);               
+                  examine_pod(tgt_pd,addr)
+              end
+         |
+            _ => raise ForeignType
+
+     fun select_pod{record=src_pd,tgt=tgt_pd,field=name} =
+	 case pod_type(src_pd) of
+	   STRUCT_CT{fields, ...} =>
+	     let val field  =  lookup_field(fields,name)
+		 val CFLD{offset,ctype, ...}  =  field
+		 val obj_size  =  size_of(ctype)
+		 val fld_posn  =  getBOX(offset)
+                 val src_posn  =  pod_location(src_pd)
+                 val abs_posn  =  fld_posn + src_posn
+	     in
+		 set_pod_type(tgt_pd,ctype);
+		 set_pod_size(tgt_pd,obj_size);
+		 move_pod(tgt_pd,abs_posn);
+		 set_pod_currency(tgt_pd,true)
+	     end
+	 |
+	    _ => raise ForeignType
+
+     fun coerce_pod{union=src_pd,tgt=tgt_pd} =
+         case pod_type(src_pd) of
+           UNION_CT{current=BOX(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+                  val new_size = size_of(ctype)
+              in
+                  set_pod_type(tgt_pd,ctype);
+                  set_pod_size(tgt_pd,new_size);
+		  set_pod_currency(tgt_pd,pod_currency(src_pd))
+              end
+         |
+            _ => raise ForeignType
+
+
+     fun copy_index_pod(pod,idx) =
+         let val new_pod = new_pod(pod)
+         in
+             index_pod{array=pod,tgt=new_pod,index=idx};
+             new_pod
+         end
+
+     fun copy_deref_pod(pod) =
+         let val new_pod = new_pod(pod)
+         in
+             deref_pod{ptr=pod,tgt=new_pod};
+             new_pod
+         end
+
+     fun copy_select_pod(pod,name) =
+         let val new_pod = new_pod(pod)
+         in
+             select_pod{record=pod,tgt=new_pod,field=name};
+             new_pod
+         end
+
+     fun copy_coerce_pod(pod) =
+         let val new_pod = new_pod(pod)
+         in
+             coerce_pod{union=pod,tgt=new_pod};
+             new_pod
+         end
+
+     fun set_addr {obj,addr} =
+         let val pod_addr = get_word32'(addr)
+         in
+             set_pod_address'(obj,pod_addr);
+	     set_pod_currency(obj,true)
+         end
+
+     local
+
+        fun set_addr(ptr_pod,addr_pod) =
+            if pod_size(addr_pod) = pod_size(ptr_pod)
+            then copy_pod_value'{from=addr_pod,to=ptr_pod}
+            else raise StoreAccess
+
+        fun set_addr_of(ptr_pod,val_pod) =
+            let val addr = pod_address(val_pod)
+                val ba   = address_to_bytearray(addr)
+            in
+                set_pod_value(ptr_pod,ba,0)
+            end
+
+     in
+
+       fun set_ptr_addr{ptr=ptr_pod,addr=addr_pod} =
+            case pod_type(ptr_pod) of
+              STAR_CT{mode=ref(LOCAL_PK), ...}  => set_addr(ptr_pod,addr_pod)
+            |
+              STAR_CT{mode=ref(REMOTE_PK), ...} => set_addr(ptr_pod,addr_pod)
+            |
+              _ => raise ForeignType
+
+        fun set_ptr_addr_of{ptr=ptr_pod,data=val_pod} =
+            case pod_type(ptr_pod) of
+              STAR_CT{mode=ref(LOCAL_PK), ...} => set_addr_of(ptr_pod,val_pod)
+            |
+              STAR_CT{mode=ref(REMOTE_PK), ...} => set_addr_of(ptr_pod,val_pod)
+            |
+              STAR_CT{mode=ref(RELATIVE_PK), ...} =>
+                 let val loc_posn = pod_location(val_pod)
+                 in
+                     set_int'(ptr_pod,loc_posn)
+                 end
+            |
+              _ => raise ForeignType
+     end
+
+     fun set_ptr_data{ptr=src_pod,data=from_pod} =
+         let val to_pod  = copy_deref_pod(src_pod)
+         in
+             copy_pod_info{from=from_pod,to=to_pod}
+         end
+
+     fun set_ptr_type{ptr=src_pod,data=from_pod} =
+         case pod_type(src_pod) of
+            STAR_CT{mode=ref(ptr_mode), ...} =>
+	       let val ty       = pod_type(from_pod)
+		   val ptr_type = STAR_CT{mode=ref(ptr_mode),ctype=ty}
+		   val ptr_size = size_of(ptr_type)
+	       in
+		   set_pod_type(src_pod,ptr_type);
+		   set_pod_size(src_pod,ptr_size)
+	       end
+          |
+            _ => raise ForeignType
+
+     fun cast_ptr_type{ptr=src_pod,ctype} =
+         case pod_type(src_pod) of
+            STAR_CT{mode=ref(ptr_mode), ...} =>
+	       let val ptr_type = STAR_CT{mode=ref(ptr_mode),ctype=ctype}
+		   val ptr_size = size_of(ptr_type)
+	       in
+		   set_pod_type(src_pod,ptr_type);
+		   set_pod_size(src_pod,ptr_size)
+	       end
+          |
+            _ => raise ForeignType
+
+     fun index_pod_location(pod,idx) =
+         case pod_type(pod) of
+           ARRAY_CT{length,ctype} =>
+              if (0 <= idx) andalso (idx < length)
+              then let val elem_size = size_of(ctype)
+                       val rel_posn  = idx * elem_size
+                   in
+                       pod_location(pod) + rel_posn
+                   end
+              else raise StoreAccess
+         |
+            _ => raise ForeignType
+
+     fun deref_pod_location(pod) =
+         case pod_type(pod) of
+           STAR_CT{mode=ref(RELATIVE_PK), ...} => get_int'(pod)
+         |
+           STAR_CT{mode=ref(LOCAL_PK), ...} =>
+              let val loc_ptr   = f_pod_value(pod)
+                  val addr      = bytearray_to_address(loc_ptr)
+                  val loc_posn  = to_location(pod,addr)
+              in
+                  loc_posn
+              end
+         |
+            _ => raise ForeignType
+
+     fun select_pod_location(pod,name) =
+         case pod_type(pod) of
+           STRUCT_CT{fields, ...} =>
+             let val field = lookup_field(fields,name)
+                 val CFLD{offset, ...} = field
+                 val rel_posn = getBOX(offset)
+             in
+                 pod_location(pod) + rel_posn
+             end
+         |
+            _ => raise ForeignType
+
+     val coerce_pod_location = pod_location
+
+
+     fun index_pod_type(pod) =
+         case pod_type(pod) of
+           ARRAY_CT{ctype, ...} => ctype 
+         |
+            _ => raise ForeignType
+
+     fun deref_pod_type(pod) =
+         case pod_type(pod) of
+           STAR_CT{ctype, ...} => ctype
+         |
+            _ => raise ForeignType
+
+     fun select_pod_type(pod,name) =
+         case pod_type(pod) of
+           STRUCT_CT{fields, ...} =>
+             let val CFLD{ctype, ...} = lookup_field(fields,name)
+             in
+                 ctype
+             end
+         |
+            _ => raise ForeignType
+
+     fun coerce_pod_type(pod) =
+         case pod_type(pod) of
+           UNION_CT{current=BOX(ref(SOME(variant))), ...} =>
+              let val CVNT{ctype, ...} = variant
+              in
+                  ctype
+              end
+         |
+            _ => raise ForeignType
+
+
+     fun index_pod_size(pod)        = size_of(index_pod_type(pod))
+     fun deref_pod_size(pod)        = size_of(deref_pod_type(pod))
+     fun select_pod_size(pod,name)  = size_of(select_pod_type(pod,name))
+     fun coerce_pod_size(pod)       = size_of(coerce_pod_type(pod))
+
+     fun advance_pod(pod) = offset_pod(pod,pod_size(pod))
+     fun retard_pod(pod)  = offset_pod(pod,~(pod_size(pod)))
+         
+
+     (* Getters ... *)
+
+     fun get_unsigned_char(pod) =
+         case pod_type(pod) of
+           CHAR_CT          => get_char'(pod)
+         |
+           UNSIGNED_CHAR_CT => get_char'(pod)
+         |
+           _ => raise ForeignType
+
+     val get_char = get_unsigned_char
+
+     fun get_signed_char(pod) =
+         case pod_type(pod) of
+           CHAR_CT        => get_signed_char'(pod)
+         |
+           SIGNED_CHAR_CT => get_signed_char'(pod)
+         |
+           _ => raise ForeignType
+
+
+     fun get_short(pod) =
+         case pod_type(pod) of
+           SHORT_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_int(pod) =
+         case pod_type(pod) of
+           INT_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_long(pod) =
+         case pod_type(pod) of
+           LONG_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned_short(pod) =
+         case pod_type(pod) of
+           UNSIGNED_SHORT_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned(pod) =
+         case pod_type(pod) of
+           UNSIGNED_INT_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_unsigned_long(pod) =
+         case pod_type(pod) of
+           UNSIGNED_LONG_CT  => get_int'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_word32(pod) =
+         case pod_type(pod) of
+           UNSIGNED_INT_CT  => get_word32'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_enum(pod) =
+         case pod_type(pod) of
+           ENUM_CT{card, ...} =>
+             let val i = get_int'(pod)
+             in
+                if (0 <= i) andalso (i < getBOX(card))
+                then i
+                else raise ForeignType
+             end
+         |
+           _ => raise ForeignType
+
+     fun get_float(pod) =
+         case pod_type(pod) of
+           FLOAT_CT  => get_real'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_double(pod) =
+         case pod_type(pod) of
+           DOUBLE_CT  => get_real'(pod)
+         |
+           _ => raise ForeignType
+
+     fun get_long_double(pod) =
+         case pod_type(pod) of
+           LONG_DOUBLE_CT  => get_real'(pod)
+         |
+           _ => raise ForeignType
+
+     local
+        fun zerop (i) = (i = 0)
+        fun find_string_end(length,buffer) = find_ba (zerop,length) buffer
+     in
+        fun get_string(pod) =
+            case pod_type(pod) of
+              STRING_CT{length}  =>
+                 let val buffer = bytearray(length,0)
+                 in
+                     pod_value(pod,buffer,0);
+                     let val end_idx = find_string_end(length,buffer)
+                         val str_buf = subarray_ba(buffer,0,end_idx)
+                     in
+                         to_string(str_buf)
+                     end
+                 end
+            |
+              _ => raise ForeignType
+     end
+
+     val get_data = copy_deref_pod
+
+     fun get_struct(pod) =
+         case pod_type(pod) of
+           STRUCT_CT{fields, ...} =>
+             let fun doit(fld::fld_lst,pl) =
+                     let val CFLD{offset,ctype, ...} = fld
+                         val new_pod   =  new_pod(pod)
+                         val rel_posn  =  getBOX(offset)
+                         val size      =  size_of(ctype)
+                     in
+                         set_pod_type(new_pod,ctype);
+                         set_pod_size(new_pod,size);
+                         offset_pod(new_pod,rel_posn);
+                         doit(fld_lst,new_pod::pl)
+                     end
+                   | doit([],pod_lst) = rev pod_lst
+             in
+                 doit(fields,[])
+             end
+         |
+            _ => raise ForeignType
+
+     val get_field = copy_select_pod
+
+     val get_union = copy_coerce_pod
+
+     local
+         fun get_array'(pod,len,rel_offset) =
+             let fun doit(k,rel_posn,pl) =
+                     if (k < 0) then rev pl else
+                     let val new_pod = new_pod(pod)
+                     in
+                       offset_pod(new_pod,rel_posn);
+                       doit(k-1,rel_posn + rel_offset,new_pod::pl)
+                     end
+             in
+                doit(len-1,pod_location(pod),[])
+             end
+     in
+         fun get_array(pod) =
+             case pod_type(pod) of
+                ARRAY_CT{length,ctype} =>
+                  let val elem_size   =  size_of ctype
+                      val elem_pod    =  dup_pod'(pod)
+                  in
+                      set_pod_type'(elem_pod,ctype);
+                      set_pod_size(elem_pod,elem_size);
+                      get_array'(elem_pod,length,elem_size)
+                  end
+             |
+                _ => raise ForeignType
+     end
+
+     val pod_type : c_pod -> c_type  =  pod_type
+
+     fun cast_pod_type(pod,ctype) =
+       ( set_pod_size(pod,size_of ctype);
+         set_pod_type(pod,ctype)
+       )
+
+     (* Diagnostic tools *)
+
+     local
+
+        fun str_ptr_mode(LOCAL_PK)     = "local"
+          | str_ptr_mode(RELATIVE_PK)  = "relative"
+          | str_ptr_mode(REMOTE_PK)    = "remote"
+
+        fun str_field_list (sep,CFLD{name=name', ...}::nml') =
+	    let fun doit(CFLD{name, ...}::nml,strl) = doit(nml,name::sep::strl)
+                  | doit(_,strl) = rev strl
+            in
+                String.implode(doit(nml',[name']))
+            end
+          | str_field_list (_,[]) = ""
+
+        fun str_current(BOX(ref(SOME(CVNT{name, ...})))) = name
+          | str_current(_) = "<none>"
+
+     in
+
+	fun c_type_info(SIZE_OF{ctype, ...}) = c_type_info(ctype)
+
+	  | c_type_info(VOID_CT)             = "VOID_CT" 
+
+	  | c_type_info(CHAR_CT)             = "CHAR_CT"
+	  | c_type_info(UNSIGNED_CHAR_CT)    = "UNSIGNED_CHAR_CT"
+	  | c_type_info(SIGNED_CHAR_CT)      = "SIGNED_CHAR_CT"
+
+	  | c_type_info(SHORT_CT)            = "SHORT_CT"
+	  | c_type_info(INT_CT)              = "INT_CT"
+	  | c_type_info(LONG_CT)             = "LONG_CT"
+
+	  | c_type_info(UNSIGNED_SHORT_CT)   = "UNSIGNED_SHORT_CT"
+	  | c_type_info(UNSIGNED_INT_CT)     = "UNSIGNED_INT_CT"
+	  | c_type_info(UNSIGNED_LONG_CT)    = "UNSIGNED_LONG_CT"
+
+	  | c_type_info(FLOAT_CT)            = "FLOAT_CT"
+	  | c_type_info(DOUBLE_CT)           = "DOUBLE_CT"
+	  | c_type_info(LONG_DOUBLE_CT)      = "LONG_DOUBLE_CT"
+
+	  | c_type_info(STRING_CT{length})   = "STRING_CT[" ^ int_string(length) ^ "]"
+
+	  | c_type_info(TYPENAME_CT{name, ...}) = "TYPENAME_CT[" ^ name ^ "]"
+
+	  | c_type_info(STAR_CT{ctype,mode}) =
+	    "STAR_CT[" ^ str_ptr_mode(!mode) ^ ";" ^ c_type_info(ctype) ^ "]"
+
+	  | c_type_info(STRUCT_CT{tag=NONE, fields, ...}) =
+	    "STRUCT_CT[<none>;" ^ str_field_list (",",fields) ^ "]"
+
+	  | c_type_info(STRUCT_CT{tag=SOME(name), fields, ...}) =
+	    "STRUCT_CT[" ^ name ^ ";" ^ str_field_list(",",fields) ^ "]"
+
+	  | c_type_info(UNION_CT{tag=NONE, current, ...}) =
+	    "UNION_CT[<none>;" ^ str_current(current) ^ "]"
+
+	  | c_type_info(UNION_CT{tag=SOME(name), current, ...}) =
+	    "UNION_CT[" ^ name ^ ";" ^ str_current(current) ^ "]"
+
+	  | c_type_info(ARRAY_CT { length, ctype }) =
+            "ARRAY_CT[" ^ c_type_info(ctype) ^ "," ^ int_string(length) ^ "]"
+
+	  | c_type_info(ENUM_CT{tag=NONE, ...}) =
+	    "ENUM_CT[<none>]"
+
+	  | c_type_info(ENUM_CT{tag=SOME(name), ...}) =
+	    "ENUM_CT[" ^ name ^ "]"
+
+        val pod_info = fn (pod : c_pod) => pod_info c_type_info pod
+
+	val pod_data         : c_pod -> int list  = pod_data
+	val pod_data_hex     : c_pod -> string    = pod_data_hex
+	val pod_data_ascii   : c_pod -> string    = pod_data_ascii
+
+        fun view_pod pod =
+            let val { hostel, status, currency, mode, langtype, size, base, offset } =
+                    pod_info pod
+
+                val data = pod_data_hex pod
+            in
+                String.implode   [ "\n\n",
+                            "   Pod (", mode, ", ", status, ", ", currency, ")\n",
+                            "       type      = ", langtype, "\n",
+                            "       size      = ", int_string(size), "\n",
+                (case base of
+                   NONE =>  ""
+                 | SOME(addr) =>
+                            "       position  = " ^  word32_to_hex(addr) ^ "\n"),
+                            "       offset    = ", int_string(offset), "\n",
+                            "       data      = 0x[", data, "]\n",
+                            "\n\n" ]
+            end
+
+	val disp_pod = disp view_pod
+
+     end
+
+
+   end; (* signature C_DATA *)
+@
+
+
+1.10
+log
+@Removing MLWorks.Integer
+@
+text
+@d12 3
+d1506 1
+a1506 1
+                implode(doit(nml',[name']))
+d1575 1
+a1575 1
+                implode   [ "\n\n",
+@
+
+
+1.9
+log
+@initbasis becomes basis
+@
+text
+@d12 3
+d43 1
+a46 1
+require "../utils/integer";
+a66 2
+   structure Integer  : INTEGER
+
+d122 1
+a122 1
+     val int_string   =  MLWorks.Integer.makestring
+d164 1
+a164 1
+     val int_string   =    MLWorks.Integer.makestring
+d175 1
+a175 1
+     val max          =    Integer.max
+@
+
+
+1.8
+log
+@Modifications due to byte-ordering considerations.
+@
+text
+@d12 3
+d34 3
+a36 4
+# Revision 1.1  1995/03/27  15:49:53  brianm
+# new unit
+# New file.
+#
+d40 1
+a40 1
+require "../initbasis/__general";
+@
+
+
+1.7
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d12 3
+a379 1
+     local
+d381 6
+a386 1
+       val char_size                = 1
+d388 1
+a388 3
+       val short_int_size           = 2
+       val int_size                 = 4
+       val long_int_size            = 8
+d390 1
+a390 1
+       val unsigned_short_int_size  = 2
+d392 1
+a392 1
+       val unsigned_long_int_size   = 8
+d394 2
+a395 3
+       val real_size                = 8
+       val double_size              = 8
+       val long_double_size         = 8
+d730 1
+a730 1
+       ( int_to_bytearray{arr=data_buffer,src=i,st=0};
+d734 2
+a735 1
+     fun get_int'(pod)  =  bytearray_to_int{arr=f_pod_value(pod),st=0}
+d896 1
+a896 1
+                  val idx     = bytearray_to_int{arr=rel_ptr,st=0}
+d1061 1
+a1061 1
+                  val loc_posn  = bytearray_to_int{arr=rel_ptr,st=0}
+@
+
+
+1.6
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@@
+
+
+1.5
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d12 3
+a683 2
+     fun is_tmp_pod(pod) = ( pod_status(pod) = TEMPORARY_PS )
+
+d728 1
+a728 1
+       ) handle _ => raise ForeignType
+d735 1
+a735 1
+       ) handle _ => raise ForeignType
+d744 1
+a744 1
+         else raise ForeignType
+d791 1
+a791 1
+           _ => raise StoreAccess
+d801 1
+a801 1
+           _ => raise StoreAccess
+d807 1
+a807 1
+           _ => raise StoreAccess
+d813 1
+a813 1
+           _ => raise StoreAccess
+d819 1
+a819 1
+           _ => raise StoreAccess
+d825 1
+a825 1
+           _ => raise StoreAccess
+d831 1
+a831 1
+           _ => raise StoreAccess
+d837 1
+a837 1
+           _ => raise StoreAccess
+d843 1
+a843 1
+           _ => raise StoreAccess
+d851 2
+a852 2
+               else raise StoreAccess
+              ) handle Option => raise StoreAccess
+d855 1
+a855 1
+           _ => raise StoreAccess
+d862 1
+a862 1
+           _ => raise StoreAccess
+d868 1
+a868 1
+           _ => raise StoreAccess
+d874 1
+a874 1
+           _ => raise StoreAccess
+d882 1
+a882 1
+              else raise ForeignType
+d884 1
+a884 1
+           _ => raise StoreAccess
+d901 1
+a901 1
+           _ => raise StoreAccess
+d917 1
+a917 1
+           _ => raise StoreAccess
+d932 1
+a932 1
+           _ => raise StoreAccess
+d951 1
+a951 1
+                  then raise ForeignType
+d964 1
+a964 1
+                _ => raise StoreAccess
+d974 1
+a974 1
+                  | doit(_,_::_,_) = raise StoreAccess
+d984 1
+a984 1
+                  then raise ForeignType
+d989 1
+a989 1
+                _ => raise StoreAccess
+d997 1
+a997 1
+                      then raise ForeignType
+d1009 1
+a1009 1
+		_ =>  raise StoreAccess
+d1018 1
+a1018 1
+                  then raise ForeignType
+d1022 1
+a1022 1
+            _ => raise StoreAccess
+d1032 1
+a1032 1
+            _ => raise StoreAccess
+d1047 1
+a1047 1
+              else raise ForeignType
+d1049 1
+a1049 1
+            _ => raise StoreAccess
+d1086 1
+a1086 1
+            _ => raise StoreAccess
+d1104 1
+a1104 1
+	    _ => raise StoreAccess
+d1117 1
+a1117 1
+            _ => raise StoreAccess
+d1160 1
+a1160 1
+            else raise ForeignType
+d1177 1
+a1177 1
+              _ => raise StoreAccess
+d1191 1
+a1191 1
+              _ => raise StoreAccess
+d1211 1
+a1211 1
+            _ => raise StoreAccess
+d1223 1
+a1223 1
+            _ => raise StoreAccess
+d1234 1
+a1234 1
+              else raise ForeignType
+d1236 1
+a1236 1
+            _ => raise StoreAccess
+d1250 1
+a1250 1
+            _ => raise StoreAccess
+d1262 1
+a1262 1
+            _ => raise StoreAccess
+d1271 1
+a1271 1
+            _ => raise StoreAccess
+d1277 1
+a1277 1
+            _ => raise StoreAccess
+d1287 1
+a1287 1
+            _ => raise StoreAccess
+d1297 1
+a1297 1
+            _ => raise StoreAccess
+d1317 1
+a1317 1
+           _ => raise StoreAccess
+d1327 1
+a1327 1
+           _ => raise StoreAccess
+d1334 1
+a1334 1
+           _ => raise StoreAccess
+d1340 1
+a1340 1
+           _ => raise StoreAccess
+d1346 1
+a1346 1
+           _ => raise StoreAccess
+d1352 1
+a1352 1
+           _ => raise StoreAccess
+d1358 1
+a1358 1
+           _ => raise StoreAccess
+d1364 1
+a1364 1
+           _ => raise StoreAccess
+d1370 1
+a1370 1
+           _ => raise StoreAccess
+d1379 1
+a1379 1
+                else raise StoreAccess
+d1382 1
+a1382 1
+           _ => raise StoreAccess
+d1388 1
+a1388 1
+           _ => raise StoreAccess
+d1394 1
+a1394 1
+           _ => raise StoreAccess
+d1400 1
+a1400 1
+           _ => raise StoreAccess
+d1419 1
+a1419 1
+              _ => raise StoreAccess
+d1443 1
+a1443 1
+            _ => raise StoreAccess
+d1473 1
+a1473 1
+                _ => raise StoreAccess
+@
+
+
+1.4
+log
+@adding new_pod.
+@
+text
+@d12 3
+d38 1
+a38 1
+require "fi_struct";
+d48 1
+a48 1
+   structure FIStruct : FOREIGN_STRUCTURE
+d186 1
+a186 1
+     datatype pointer_mode  = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+d189 1
+a189 1
+        SIZE_OF of { size : int deferred, ctype : c_type }
+d191 1
+a191 1
+        VOID_T
+d193 1
+a193 1
+        CHAR_T           | UNSIGNED_CHAR_T | SIGNED_CHAR_T
+d195 1
+a195 1
+        SHORT_T          | INT_T           | LONG_T
+d197 1
+a197 1
+        UNSIGNED_SHORT_T | UNSIGNED_INT_T  | UNSIGNED_LONG_T
+d199 1
+a199 1
+        FLOAT_T          | DOUBLE_T        | LONG_DOUBLE_T
+d201 1
+a201 1
+        STRING_T   of { length : int }
+d203 3
+a205 3
+        TYPENAME_T of { name : name,
+                        defn : c_type deferred,
+                        size : int deferred }
+d207 1
+a207 1
+        STAR_T     of { ctype : c_type, mode : pointer_mode ref }
+d209 1
+a209 1
+        STRUCT_T   of { tag    : tag option,
+d211 1
+a211 1
+                        size   : int deferred }
+d213 1
+a213 1
+        UNION_T    of { tag      : tag option,
+d215 2
+a216 2
+                        size     : int deferred,
+                        current  : c_variant deferred }
+d218 1
+a218 1
+        ARRAY_T    of { length : int, ctype : c_type }
+d220 1
+a220 1
+        ENUM_T     of { tag   : tag option,
+d222 1
+a222 1
+                        card  : int deferred }
+d226 1
+a226 1
+                                size  : int deferred }
+d230 3
+a232 3
+                                size    : int deferred,
+                                padding : int deferred,
+                                offset  : int deferred }
+d269 1
+a269 1
+            case extractDF(current) of
+d274 1
+a274 1
+                     makeDF(new_vnt)
+d276 1
+a276 1
+            | NONE => voidDF()
+d290 1
+a290 1
+	and dup_type'(STAR_T{ctype,mode}) =
+d292 1
+a292 1
+		val new_ty    = STAR_T{ ctype = new_ctype,
+d299 1
+a299 1
+	  | dup_type'(UNION_T{tag,variants,size,current}) =
+d302 1
+a302 1
+                val new_ty = UNION_T{ tag      = tag,
+d313 1
+a313 1
+                 SOME(SIZE_OF{ size = newDF(size), ctype = ctype' })
+d317 1
+a317 1
+          | dup_type'(ARRAY_T{length, ctype}) =
+d320 1
+a320 1
+                 SOME(ARRAY_T{ length = length, ctype = ctype' })
+d324 1
+a324 1
+          | dup_type'(STRUCT_T{tag,fields,size}) =
+d327 1
+a327 1
+                 SOME(STRUCT_T
+d394 5
+a398 5
+       fun pad_size_of (CHAR_T             ,_)   = int_size
+         | pad_size_of (UNSIGNED_CHAR_T    ,_)   = int_size
+         | pad_size_of (SIGNED_CHAR_T      ,_)   = int_size
+         | pad_size_of (SHORT_T            ,_)   = int_size
+         | pad_size_of (UNSIGNED_SHORT_T   ,_)   = int_size
+d411 1
+a411 1
+       fun size_of(SIZE_OF{size=DF(ref(SOME(size))), ...}) = size
+d416 1
+a416 1
+                (setDF size i);
+d420 1
+a420 1
+         | size_of(VOID_T)             = void_size
+d422 3
+a424 3
+         | size_of(CHAR_T)             = char_size
+         | size_of(UNSIGNED_CHAR_T)    = char_size
+         | size_of(SIGNED_CHAR_T)      = char_size
+d426 3
+a428 3
+         | size_of(SHORT_T)            = short_int_size
+         | size_of(INT_T)              = int_size
+         | size_of(LONG_T)             = long_int_size
+d430 3
+a432 3
+         | size_of(UNSIGNED_SHORT_T)   = unsigned_short_int_size
+         | size_of(UNSIGNED_INT_T)     = unsigned_int_size
+         | size_of(UNSIGNED_LONG_T)    = unsigned_long_int_size
+d434 3
+a436 3
+         | size_of(FLOAT_T)            = real_size
+         | size_of(DOUBLE_T)           = double_size
+         | size_of(LONG_DOUBLE_T)      = long_double_size
+d438 1
+a438 1
+         | size_of(STRING_T{length})   = length  (* includes null sentinel *)
+d440 1
+a440 1
+         | size_of(TYPENAME_T{size=DF(ref(SOME(size))), ...}) = size          
+d442 2
+a443 2
+         | size_of(TYPENAME_T{size, defn, ...}) =
+              let val i = size_of(getDF(defn))
+d445 1
+a445 1
+                (setDF size i);
+d449 1
+a449 1
+         | size_of(STAR_T(_)) = pointer_size
+d451 1
+a451 1
+         | size_of(STRUCT_T{size=DF(ref(SOME(size))), ...}) = size
+d453 1
+a453 1
+         | size_of(STRUCT_T{fields,size, ...}) =
+d456 1
+a456 1
+               (setDF size i);
+d460 1
+a460 1
+         | size_of(UNION_T{size=DF(ref(SOME(size))), ...}) = size
+d462 1
+a462 1
+         | size_of(UNION_T{variants,size, ...}) =
+d467 1
+a467 1
+                 (setDF size i);
+d471 1
+a471 1
+         | size_of(ARRAY_T { length, ctype }) = length * size_of(ctype)
+d473 1
+a473 1
+         | size_of(ENUM_T {card=DF(ref(SOME(_))), ...}) = enum_size
+d475 2
+a476 2
+         | size_of(ENUM_T {card,elems, ...}) =
+             ( setDF card (llength elems);
+d481 1
+a481 1
+       and size_of_field(cur_offset,CFLD{size=DF(ref(SOME(size))), ...}) =
+d489 3
+a491 3
+               setDF size    pad_size;
+               setDF padding pad_offset;
+               setDF offset  (cur_offset + pad_offset);
+d499 1
+a499 1
+       and size_of_variant(cur_size,CVNT{size=DF(ref(SOME(size))), ctype, ...}) =
+d505 1
+a505 1
+	       setDF size obj_size;
+d523 2
+a524 2
+             ( TYPENAME_T{name=nm1, ...}
+             , TYPENAME_T{name=nm2, ...}
+d528 2
+a529 2
+             ( STAR_T{ctype=cty1, ...}
+             , STAR_T{ctype=cty2, ...}
+d533 2
+a534 2
+             ( STRUCT_T{tag=SOME(tg1), ...}
+             , STRUCT_T{tag=SOME(tg2), ...}
+d538 2
+a539 2
+             ( STRUCT_T{tag=NONE,fields=fld_lst1, ...}
+             , STRUCT_T{tag=NONE,fields=fld_lst2, ...}
+d543 2
+a544 2
+             ( UNION_T{tag=SOME(tg1), ...}
+             , UNION_T{tag=SOME(tg2), ...}
+d548 2
+a549 2
+             ( UNION_T{tag=NONE,variants=ref(vnt_lst1), ...}
+             , UNION_T{tag=NONE,variants=ref(vnt_lst2), ...}
+d585 3
+a587 3
+                  size    = voidDF(),
+                  padding = voidDF(),
+                  offset  = voidDF() }
+d592 1
+a592 1
+                  size    = voidDF() }
+d596 1
+a596 1
+	   STRUCT_T { tag    = SOME(nm),
+d598 1
+a598 1
+		      size   = voidDF()
+d602 1
+a602 1
+	   UNION_T { tag      = SOME(nm),
+d604 2
+a605 2
+		     size     = voidDF(),
+                     current  = voidDF()
+d609 1
+a609 1
+           STAR_T { ctype = ty, mode = ref(LOCAL_PTR) }
+d612 3
+a614 3
+           TYPENAME_T { name = nm,
+                        defn = voidDF(),
+                        size = voidDF()
+d618 1
+a618 1
+           ENUM_T { tag = SOME(nm),
+d620 1
+a620 1
+                    card  = makeDF(llength elem_lst)
+d706 1
+a706 1
+     val data_buffer = bytearray(size_of(LONG_DOUBLE_T),0)
+d764 1
+a764 1
+        val real_size = size_of(LONG_DOUBLE_T)
+d786 1
+a786 1
+           CHAR_T          => set_char'(pod,ch)
+d788 1
+a788 1
+           UNSIGNED_CHAR_T => set_char'(pod,ch)
+d796 1
+a796 1
+           CHAR_T        => set_char'(pod,(ch mod 256))
+d798 1
+a798 1
+           SIGNED_CHAR_T => set_char'(pod,(ch mod 256))
+d804 1
+a804 1
+           SHORT_T  => set_int'(pod,i)
+d810 1
+a810 1
+           INT_T  => set_int'(pod,i)
+d816 1
+a816 1
+           LONG_T  => set_int'(pod,i)
+d822 1
+a822 1
+           UNSIGNED_SHORT_T  => set_int'(pod,i)
+d828 1
+a828 1
+           UNSIGNED_INT_T  => set_int'(pod,i)
+d834 1
+a834 1
+           UNSIGNED_LONG_T  => set_int'(pod,i)
+d840 1
+a840 1
+           UNSIGNED_INT_T  => set_word32'(pod,wd)
+d846 1
+a846 1
+           ENUM_T{card, ...} =>
+d848 1
+a848 1
+              (if (0 <= i) andalso (i < getDF(card))
+d859 1
+a859 1
+           FLOAT_T  => set_real'(pod,r)
+d865 1
+a865 1
+           DOUBLE_T  => set_real'(pod,r)
+d871 1
+a871 1
+           LONG_DOUBLE_T  => set_real'(pod,r)
+d878 1
+a878 1
+           STRING_T{length}  =>
+d888 1
+a888 1
+           STAR_T{mode=mode as ref(RELATIVE_PTR), ...} =>
+d894 1
+a894 1
+                  mode := LOCAL_PTR;
+d898 1
+a898 1
+           STAR_T(_) => ()
+d905 1
+a905 1
+           STAR_T{mode=mode as ref(LOCAL_PTR), ...} =>
+d911 1
+a911 1
+                mode := RELATIVE_PTR
+d914 1
+a914 1
+           STAR_T(_) => ()
+d921 1
+a921 1
+           STAR_T{mode=ref(REMOTE_PTR), ...} => ()
+d923 2
+a924 2
+           STAR_T{mode=mode as ref(LOCAL_PTR), ...} =>
+             ( mode := REMOTE_PTR )
+d926 1
+a926 1
+           STAR_T{mode, ...} =>
+d928 1
+a928 1
+               mode:= REMOTE_PTR
+d948 1
+a948 1
+                ARRAY_T{length,ctype} =>
+d971 1
+a971 1
+                      doit(getDF(size),fld_lst,pl)
+d981 1
+a981 1
+               STRUCT_T{fields, ...} =>
+d992 1
+a992 1
+	       STRUCT_T{fields, ...} =>
+d998 1
+a998 1
+			       val offset = getDF(offset)
+d1013 1
+a1013 1
+           UNION_T{current=DF(ref(SOME(variant))), ...} =>
+d1025 1
+a1025 1
+           UNION_T{variants, current, ...} =>
+d1028 1
+a1028 1
+                  (setDF current variant)
+d1035 1
+a1035 1
+           ARRAY_T{length,ctype} =>
+d1052 1
+a1052 1
+           STAR_T{ctype, mode=ref(RELATIVE_PTR)} =>
+d1063 1
+a1063 1
+           STAR_T{ctype, mode=ref(LOCAL_PTR)} =>
+d1075 1
+a1075 1
+           STAR_T{ctype, mode=ref(REMOTE_PTR)} =>
+d1089 1
+a1089 1
+	   STRUCT_T{fields, ...} =>
+d1093 1
+a1093 1
+		 val fld_posn  =  getDF(offset)
+d1107 1
+a1107 1
+           UNION_T{current=DF(ref(SOME(variant))), ...} =>
+d1172 1
+a1172 1
+              STAR_T{mode=ref(LOCAL_PTR), ...}  => set_addr(ptr_pod,addr_pod)
+d1174 1
+a1174 1
+              STAR_T{mode=ref(REMOTE_PTR), ...} => set_addr(ptr_pod,addr_pod)
+d1180 1
+a1180 1
+              STAR_T{mode=ref(LOCAL_PTR), ...} => set_addr_of(ptr_pod,val_pod)
+d1182 1
+a1182 1
+              STAR_T{mode=ref(REMOTE_PTR), ...} => set_addr_of(ptr_pod,val_pod)
+d1184 1
+a1184 1
+              STAR_T{mode=ref(RELATIVE_PTR), ...} =>
+d1200 23
+a1222 7
+         let val ty       = pod_type(from_pod)
+             val ptr_type = mk_star_t(ty)
+             val ptr_size = size_of(ptr_type)
+         in
+ 	     set_pod_type(src_pod,ptr_type);
+             set_pod_size(src_pod,ptr_size)
+         end
+d1226 1
+a1226 1
+           ARRAY_T{length,ctype} =>
+d1239 1
+a1239 1
+           STAR_T{mode=ref(RELATIVE_PTR), ...} => get_int'(pod)
+d1241 1
+a1241 1
+           STAR_T{mode=ref(LOCAL_PTR), ...} =>
+d1253 1
+a1253 1
+           STRUCT_T{fields, ...} =>
+d1256 1
+a1256 1
+                 val rel_posn = getDF(offset)
+d1268 1
+a1268 1
+           ARRAY_T{ctype, ...} => ctype 
+d1274 1
+a1274 1
+           STAR_T{ctype, ...} => ctype
+d1280 1
+a1280 1
+           STRUCT_T{fields, ...} =>
+d1290 1
+a1290 1
+           UNION_T{current=DF(ref(SOME(variant))), ...} =>
+d1312 1
+a1312 1
+           CHAR_T          => get_char'(pod)
+d1314 1
+a1314 1
+           UNSIGNED_CHAR_T => get_char'(pod)
+d1322 1
+a1322 1
+           CHAR_T        => get_signed_char'(pod)
+d1324 1
+a1324 1
+           SIGNED_CHAR_T => get_signed_char'(pod)
+d1331 1
+a1331 1
+           SHORT_T  => get_int'(pod)
+d1337 1
+a1337 1
+           INT_T  => get_int'(pod)
+d1343 1
+a1343 1
+           LONG_T  => get_int'(pod)
+d1349 1
+a1349 1
+           UNSIGNED_SHORT_T  => get_int'(pod)
+d1355 1
+a1355 1
+           UNSIGNED_INT_T  => get_int'(pod)
+d1361 1
+a1361 1
+           UNSIGNED_LONG_T  => get_int'(pod)
+d1367 1
+a1367 1
+           UNSIGNED_INT_T  => get_word32'(pod)
+d1373 1
+a1373 1
+           ENUM_T{card, ...} =>
+d1376 1
+a1376 1
+                if (0 <= i) andalso (i < getDF(card))
+d1385 1
+a1385 1
+           FLOAT_T  => get_real'(pod)
+d1391 1
+a1391 1
+           DOUBLE_T  => get_real'(pod)
+d1397 1
+a1397 1
+           LONG_DOUBLE_T  => get_real'(pod)
+d1407 1
+a1407 1
+              STRING_T{length}  =>
+d1425 1
+a1425 1
+           STRUCT_T{fields, ...} =>
+d1429 1
+a1429 1
+                         val rel_posn  =  getDF(offset)
+d1463 1
+a1463 1
+                ARRAY_T{length,ctype} =>
+d1486 3
+a1488 3
+        fun str_ptr_mode(LOCAL_PTR)     = "local"
+          | str_ptr_mode(RELATIVE_PTR)  = "relative"
+          | str_ptr_mode(REMOTE_PTR)    = "remote"
+d1498 1
+a1498 1
+        fun str_current(DF(ref(SOME(CVNT{name, ...})))) = name
+d1505 1
+a1505 1
+	  | c_type_info(VOID_T)             = "VOID_T" 
+d1507 3
+a1509 3
+	  | c_type_info(CHAR_T)             = "CHAR_T"
+	  | c_type_info(UNSIGNED_CHAR_T)    = "UNSIGNED_CHAR_T"
+	  | c_type_info(SIGNED_CHAR_T)      = "SIGNED_CHAR_T"
+d1511 3
+a1513 3
+	  | c_type_info(SHORT_T)            = "SHORT_T"
+	  | c_type_info(INT_T)              = "INT_T"
+	  | c_type_info(LONG_T)             = "LONG_T"
+d1515 3
+a1517 3
+	  | c_type_info(UNSIGNED_SHORT_T)   = "UNSIGNED_SHORT_T"
+	  | c_type_info(UNSIGNED_INT_T)     = "UNSIGNED_INT_T"
+	  | c_type_info(UNSIGNED_LONG_T)    = "UNSIGNED_LONG_T"
+d1519 3
+a1521 3
+	  | c_type_info(FLOAT_T)            = "FLOAT_T"
+	  | c_type_info(DOUBLE_T)           = "DOUBLE_T"
+	  | c_type_info(LONG_DOUBLE_T)      = "LONG_DOUBLE_T"
+d1523 1
+a1523 1
+	  | c_type_info(STRING_T{length})   = "STRING_T[" ^ int_string(length) ^ "]"
+d1525 1
+a1525 1
+	  | c_type_info(TYPENAME_T{name, ...}) = "TYPENAME_T[" ^ name ^ "]"
+d1527 2
+a1528 2
+	  | c_type_info(STAR_T{ctype,mode}) =
+	    "STAR_T[" ^ str_ptr_mode(!mode) ^ ";" ^ c_type_info(ctype) ^ "]"
+d1530 2
+a1531 2
+	  | c_type_info(STRUCT_T{tag=NONE, fields, ...}) =
+	    "STRUCT_T[<none>;" ^ str_field_list (",",fields) ^ "]"
+d1533 2
+a1534 2
+	  | c_type_info(STRUCT_T{tag=SOME(name), fields, ...}) =
+	    "STRUCT_T[" ^ name ^ ";" ^ str_field_list(",",fields) ^ "]"
+d1536 2
+a1537 2
+	  | c_type_info(UNION_T{tag=NONE, current, ...}) =
+	    "UNION_T[<none>;" ^ str_current(current) ^ "]"
+d1539 2
+a1540 2
+	  | c_type_info(UNION_T{tag=SOME(name), current, ...}) =
+	    "UNION_T[" ^ name ^ ";" ^ str_current(current) ^ "]"
+d1542 2
+a1543 2
+	  | c_type_info(ARRAY_T { length, ctype }) =
+            "ARRAY_T[" ^ c_type_info(ctype) ^ "," ^ int_string(length) ^ "]"
+d1545 2
+a1546 2
+	  | c_type_info(ENUM_T{tag=NONE, ...}) =
+	    "ENUM_T[<none>]"
+d1548 2
+a1549 2
+	  | c_type_info(ENUM_T{tag=SOME(name), ...}) =
+	    "ENUM_T[" ^ name ^ "]"
+@
+
+
+1.3
+log
+@Changing names of deferred data-type operators (stream-edit)
+@
+text
+@d12 3
+d243 127
+d647 43
+a689 67
+     local
+
+        (* Certain components of C types are stateful - they have dynamic
+           structure.  Since different instances can change their structure
+           independently, we always copy them on update - ensuring that
+           modifying these doesn't change other instances.
+         *)
+
+        fun dup_type(STAR_T{ctype,mode}) =
+              STAR_T{ ctype = ctype,
+                      mode  = new(mode) }
+
+          | dup_type(UNION_T{tag,variants,size,current}) =
+              UNION_T{ tag      = tag,
+                       variants = new(variants),
+                       size     = size,
+                       current  = newDF(current) }
+
+          | dup_type(ty) = ty
+
+     in
+
+        val set_pod_type  : (c_pod * c_type) -> unit =
+            fn (pod,ctype) =>
+              set_pod_type'(pod,dup_type(ctype))
+
+
+        val new_pod : c_pod -> c_pod =
+            fn (pod) =>
+              let val new_pod   =  new_pod'(pod)
+                  val new_ctype =  pod_type(pod)
+              in
+                set_pod_type(new_pod,new_ctype);
+                new_pod
+              end
+
+        val dup_pod : c_pod -> c_pod =
+            fn (pod) =>
+              let val new_pod   =  dup_pod'(pod)
+                  val new_ctype =  pod_type(pod)
+              in
+                set_pod_type(new_pod,new_ctype);
+                new_pod
+              end
+
+        val tmp_pod : c_pod -> c_pod =
+            fn (pod) =>
+              let val new_pod   =  tmp_pod'(pod)
+                  val new_ctype =  pod_type(pod)
+              in
+                set_pod_type(new_pod,new_ctype);
+                new_pod
+              end
+
+        fun is_tmp_pod(pod) = ( pod_status(pod) = TEMPORARY_PS )
+
+        fun pod{ctype,hostel} =
+            let val pod_size = size_of(ctype)
+            in
+                pod'{ lang_type  =  dup_type(ctype),
+                      status     =  PERMANENT_PS,
+                      size       =  pod_size,
+                      mode       =  LOCAL_PM,
+                      currency   =  true,
+                      hostel     =  hostel }
+            end
+     end
+@
+
+
+1.2
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d12 3
+d310 1
+a310 1
+              let val i = size_of(extractDF(defn))
+d739 1
+a739 1
+              (if (0 <= i) andalso (i < extractDF(card))
+d862 1
+a862 1
+                      doit(extractDF(size),fld_lst,pl)
+d889 1
+a889 1
+			       val offset = extractDF(offset)
+d984 1
+a984 1
+		 val fld_posn  =  extractDF(offset)
+d1131 1
+a1131 1
+                 val rel_posn = extractDF(offset)
+d1251 1
+a1251 1
+                if (0 <= i) andalso (i < extractDF(card))
+d1304 1
+a1304 1
+                         val rel_posn  =  extractDF(offset)
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@a6 1
+ *  
+d8 1
+d11 5
+a15 1
+ *  $Log: c_data.sml,v $
+d56 1
+a63 1
+
+d68 1
+a68 1
+     val MLWcast  =  MLWorks.Internal.Value.cast (fn x => x) : 'a -> 'b
+a71 1
+     
+d90 5
+a94 2
+     val int_to_bytearray  =  FIUtils.int_to_bytearray
+     val bytearray_to_int  =  FIUtils.bytearray_to_int
+d99 2
+d103 2
+a104 1
+     
+d106 1
+d119 3
+a121 1
+     val snapshot_pod       =    FIData.snapshot_pod
+d123 1
+d125 2
+d128 1
+d134 1
+a134 1
+     val set_pod_size       =    FIData.set_pod_size
+a138 1
+
+d140 1
+d146 10
+a155 6
+     val extract    =    General.valOf
+     val reducel    =    Lists.reducel
+     val llength    =    Lists.length
+     val zip        =    Lists.zip   
+     val findp      =    Lists.findp   
+     val max        =    Integer.max
+d157 1
+d159 4
+d169 1
+a169 20
+     type tag         = int
+
+     datatype 'a nameitem =
+         NI of { name   : name,
+                 item   : 'a,
+                 offset : int deferred }
+ 
+     datatype 'a itemlist = NL of 'a nameitem list
+
+     local
+         fun lookup_itemlist(NL(ni_lst),nm) =
+             let fun find_entry(NI{name, ...}) = (name = nm)
+             in
+                 findp find_entry ni_lst
+             end
+     in
+         val lookup_variant = lookup_itemlist
+         val lookup_field = lookup_itemlist
+     end
+
+d177 1
+a177 1
+     datatype pointer_mode = LOCAL_PTR | RELATIVE_PTR | REMOTE_PTR
+d201 1
+a201 1
+                        fields : c_type itemlist,
+d205 1
+a205 1
+                        variants : c_type itemlist,
+d207 1
+a207 1
+                        current  : c_type nameitem deferred }
+d213 24
+a236 2
+                        card  : int deferred
+                      }
+d242 1
+a242 1
+       val short_int_size           = 4
+d244 1
+a244 1
+       val long_int_size            = 4
+d246 3
+a248 3
+       val unsigned_short_int_size  = 4
+       val unsigned_int_size        = 4
+       val unsigned_long_int_size   = 4
+a254 1
+
+d256 1
+d258 14
+a271 1
+       val void_size                = int_size
+d274 1
+d327 2
+a328 1
+             let val i = size_of_union(variants)
+d330 3
+a332 2
+               (setDF size i);
+               i
+d344 28
+a371 4
+       and size_of_field(cur_offset,NI{item=ctype,offset, ...}) =
+           ( setDF offset (cur_offset);
+             size_of(ctype) + cur_offset
+           )
+a372 1
+       and size_of_struct(NL(fld_lst)) = reducel size_of_field (0,fld_lst)
+d374 1
+a374 4
+       and size_of_variant(cur_offset,NI{item=ctype,offset, ...}) =
+           ( resetDF(offset);
+             max(size_of(ctype),cur_offset)
+           )
+a375 1
+       and size_of_union(NL(vnt_lst)) = reducel size_of_variant (0,vnt_lst)
+d404 1
+a404 1
+             ) = equal_itemlist(fld_lst1,fld_lst2)
+d412 3
+a414 3
+             ( UNION_T{tag=NONE,variants=vnt_lst1, ...}
+             , UNION_T{tag=NONE,variants=vnt_lst2, ...}
+             ) = equal_itemlist(vnt_lst1,vnt_lst2)
+d418 9
+a426 2
+       and equal_itemlist(NL(ty_lst1),NL(ty_lst2)) =
+             equal_typelist(ty_lst1,ty_lst2)
+d428 3
+a430 3
+       and equal_typelist
+             ( NI{name=nm1, item=cty1, ...}::ty_lst1
+             , NI{name=nm2, item=cty2, ...}::ty_lst2
+d432 1
+a432 1
+                             andalso equal_typelist(ty_lst1,ty_lst2)
+d434 1
+a434 1
+         | equal_typelist([],[])  = true
+d436 1
+a436 1
+         | equal_typelist(_,_)    = false
+d445 43
+d498 3
+d522 1
+a522 1
+        fun dup_type(STAR_T{ctype,mode=ref(ptr_mode)}) =
+d524 1
+a524 1
+                      mode  = ref(ptr_mode) }
+d527 4
+a530 4
+              UNION_T{ tag = tag,
+                       variants = variants,
+                       size = size,
+                       current = newDF(current) }
+d540 10
+d559 12
+a570 1
+        fun pod{ctype,currency,hostel} =
+d574 1
+d576 2
+a577 1
+                      currency   =  currency,
+d607 5
+d619 7
+d726 6
+a773 23
+     local
+        fun set_addr(ptr_pod,val_pod) =
+            let val addr = pod_address(val_pod)
+                val ba   = address_to_bytearray(addr)
+            in
+                set_pod_value(ptr_pod,ba,0)
+            end
+     in
+        fun set_star{ptr=ptr_pod,value=val_pod} =
+            case pod_type(ptr_pod) of
+              STAR_T{mode=ref(LOCAL_PTR), ...} => set_addr(ptr_pod,val_pod)
+            |
+              STAR_T{mode=ref(REMOTE_PTR), ...} => set_addr(ptr_pod,val_pod)
+            |
+              STAR_T{mode=ref(RELATIVE_PTR), ...} =>
+                 let val loc_posn = pod_location(val_pod)
+                 in
+                     set_int'(ptr_pod,loc_posn)
+                 end
+            |
+              _ => raise StoreAccess
+     end
+
+d822 1
+a822 1
+         fun set_array'(pod,rel_offset,contents,buf) =
+d826 2
+a827 2
+                       set_pod_value(pod,buf,0);
+                       offset_pod(pod,rel_offset);
+d840 1
+a840 1
+                           val pod'        =  dup_pod'(pod)
+d844 5
+a848 4
+                           set_pod_type(pod',ctype);
+                           set_pod_size(pod',elem_size);
+                           offset_pod(pod',init_posn);
+                           set_array'(pod',elem_size,contents,elem_buffer)
+d855 5
+a859 5
+        fun set_struct'(pod,fld_lst,pod_lst) =
+            let fun doit(NI{offset=DF(ref(SOME(offset))), ...}::fld_lst,p::pl) =
+                    ( offset_pod(pod,offset);
+                      copy_pod_info{from=p,to=pod};
+                      doit(fld_lst,pl)
+d861 2
+a862 2
+                  | doit(_::_,_) = raise StoreAccess
+                  | doit(_,_)    = ()
+d864 1
+a864 1
+                doit(fld_lst,pod_lst)
+d869 1
+a869 1
+               STRUCT_T{fields=NL(fields), ...} =>
+d872 3
+a874 1
+                  else set_struct'(dup_pod'(pod),fields,items)
+d877 20
+d899 1
+a899 1
+     fun set_union{pod,datum} =
+d902 1
+a902 1
+              let val NI{item=ctype, ...} = variant
+d904 1
+a904 1
+                  if (pod_type(datum) <> ctype)
+d906 1
+a906 1
+                  else copy_pod_value{from=datum,to=pod}
+d911 1
+a911 1
+     fun set_member{pod,member} =
+d914 1
+a914 1
+              let val variant = lookup_variant(variants,member)
+d921 1
+a921 19
+     fun set_field(pod,name,datum) =
+         case pod_type(pod) of
+           STRUCT_T{fields, ...} =>
+              let val NI{item=ctype, offset, ...}  =  lookup_field(fields,name)
+              in
+                  if (pod_type(datum) <> ctype) then raise ForeignType else
+                  let val size   = size_of(ctype)
+                      val offset = extractDF(offset)
+                  in
+                      set_pod_type(pod,ctype);
+                      set_pod_size(pod,size);
+                      offset_pod(pod,offset);
+                      copy_pod_value{from=datum,to=pod}
+                  end
+              end
+         |
+            _ => raise StoreAccess
+
+     fun index_pod{src=src_pd,tgt=tgt_pd,index=idx} =
+d931 2
+a932 1
+                       move_pod(tgt_pd,abs_posn)
+d938 1
+a938 1
+     fun deref_pod{src=src_pd,tgt=tgt_pd} =
+d947 2
+a948 1
+                  move_pod(tgt_pd,loc_posn)
+d959 2
+a960 1
+                  move_pod(tgt_pd,loc_posn)
+d970 1
+a970 1
+                  snapshot_pod(tgt_pd,addr)
+d975 17
+a991 15
+     fun select_pod{src=src_pd,tgt=tgt_pd,field=name} =
+         case pod_type(src_pd) of
+           STRUCT_T{fields, ...} =>
+             let val field  =  lookup_field(fields,name)
+                 val NI{offset,item=ctype, ...}  =  field
+                 val field_size  =  size_of(ctype)
+                 val rel_posn    =  extractDF(offset)
+             in
+                 set_pod_type(tgt_pd,ctype);
+                 set_pod_size(tgt_pd,field_size);
+                 offset_pod(tgt_pd,rel_posn)
+             end
+         |
+            _ => raise StoreAccess
+
+d993 1
+a993 1
+     fun coerce_pod{src=src_pd,tgt=tgt_pd} =
+d996 1
+a996 1
+              let val NI{item=ctype, ...} = variant
+d1000 2
+a1001 1
+                  set_pod_size(tgt_pd,new_size)
+d1008 1
+a1008 1
+         let val new_pod = dup_pod'(pod)
+d1010 1
+a1010 1
+             index_pod{src=pod,tgt=new_pod,index=idx};
+d1015 1
+a1015 1
+         let val new_pod = dup_pod'(pod)
+d1017 1
+a1017 1
+             deref_pod{src=pod,tgt=new_pod};
+d1022 1
+a1022 1
+         let val new_pod = dup_pod'(pod)
+d1024 1
+a1024 1
+             select_pod{src=pod,tgt=new_pod,field=name};
+d1029 1
+a1029 1
+         let val new_pod = dup_pod'(pod)
+d1031 1
+a1031 1
+             coerce_pod{src=pod,tgt=new_pod};
+d1035 61
+d1127 1
+a1127 1
+                 val NI{offset, ...} = field
+d1153 1
+a1153 1
+             let val NI{item=ctype, ...} = lookup_field(fields,name)
+d1163 1
+a1163 1
+              let val NI{item=ctype, ...} = variant
+d1237 6
+d1293 1
+a1293 1
+     val get_star = copy_deref_pod
+d1297 1
+a1297 1
+           STRUCT_T{fields=NL(fields), ...} =>
+d1299 2
+a1300 2
+                     let val NI{offset,item=ctype, ...} = fld
+                         val new_pod   =  dup_pod'(pod)
+d1324 1
+a1324 1
+                     let val new_pod = dup_pod(pod)
+d1337 1
+a1337 1
+                      val pod'        =  dup_pod'(pod)
+d1339 3
+a1341 3
+                      set_pod_type'(pod',ctype);
+                      set_pod_size(pod',elem_size);
+                      get_array'(pod',length,elem_size)
+d1353 99
+@

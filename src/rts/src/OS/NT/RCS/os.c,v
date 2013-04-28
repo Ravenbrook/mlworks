@@ -1,0 +1,177 @@
+head	1.6;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	96.01.22.15.43.24;	author stephenb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.01.18.14.26.22;	author stephenb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.08.02.15.20.27;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.04.24.14.10.45;	author nickb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.01.16.41.00;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.12.14.27.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.6
+log
+@change nt_init to win32_init.
+@
+text
+@/*  ==== OPERATING SYSTEM INTERFACE ====
+ *
+ *  Copyright (C) 1994 Harlequin Ltd
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:NT:os.c,v $
+ * Revision 1.5  1996/01/18  14:26:22  stephenb
+ * OS reorganisation: remove any reference to UNIX since this
+ * is no longer in the pervasive library.
+ *
+ * Revision 1.4  1995/08/02  15:20:27  jont
+ * Remove dependence on winmain.h
+ *
+ * Revision 1.3  1995/04/24  14:10:45  nickb
+ * Add os_update_windows().
+ *
+ * Revision 1.2  1995/03/01  16:41:00  jont
+ * Add winmain initialisation
+ *
+ * Revision 1.1  1994/12/12  14:27:06  jont
+ * new file
+ *
+ * Revision 1.1  1994/10/04  16:27:57  jont
+ * new file
+ *
+ * Revision 1.2  1994/06/09  14:28:33  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:52:56  nickh
+ * new file
+ *
+ *
+ */
+
+#include <stdio.h>
+
+#include "os.h"
+#include "win32.h"
+#include "syscalls.h"
+
+extern void os_init(void)
+{
+  win32_init();
+  winmain_init();
+}
+
+/* On Solbournes, need a call to fsync between flushing and closing,
+otherwise the wrong modification time may be obtained subsequently */
+
+extern void os_filesync(FILE *f)
+{
+/*
+  fsync(fileno(f));
+*/
+}
+
+/* this gets called 'every so often'. We could use it to handle expose
+ * events, but I don't know whether that's appropriate in NT */
+
+extern void os_update_windows(void)
+{
+/* the non-NT ports have this here:
+   x_handle_expose_events();
+*/
+}
+@
+
+
+1.5
+log
+@OS reorganisation: remove any reference to UNIX since this
+is no longer in the pervasive library.
+@
+text
+@d8 4
+d44 1
+a44 1
+  nt_init();
+@
+
+
+1.4
+log
+@Remove dependence on winmain.h
+@
+text
+@d8 3
+d35 1
+a35 2
+#include "unix.h"
+#include "nt.h"
+a39 1
+  unix_init();
+@
+
+
+1.3
+log
+@Add os_update_windows().
+@
+text
+@d8 3
+a33 1
+#include "winmain.h"
+@
+
+
+1.2
+log
+@Add winmain initialisation
+@
+text
+@d8 3
+d48 10
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d7 4
+a10 1
+ *  $Log: src:OS:Linux:os.c,v $
+d28 1
+d35 1
+@

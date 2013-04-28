@@ -1,0 +1,165 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.05.07.12.03.45;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.38.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Array moving to MLWorks.Array
+@
+text
+@(*  ==== INITIAL BASIS : MONO ARRAYS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *  
+ *  Implementation
+ *  --------------
+ *  The functor MonoArrays is implemented genericlly using standard MLWorks
+ *  arrays.
+ *
+ *  This is part of the extended Initial Basis.
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _mono_arrays.sml,v $
+ * Revision 1.1  1996/04/18  11:38:06  jont
+ * new unit
+ *
+ *  Revision 1.2  1996/03/20  14:57:28  matthew
+ *  Changes for new language definition
+ *
+ *  Revision 1.1  1995/03/22  20:23:25  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+
+require "mono_arrays";
+require "mono_vectors";
+require "general";
+
+
+functor MonoArrays(
+   structure MonoVector : MONO_VECTOR
+   structure General    : GENERAL
+) : MONO_ARRAY =
+   struct
+
+    fun pow2(n) = Bits.lshift(1,n)
+
+    val array_arr        = MLWorks.Internal.Array.array
+    val sub_arr          = MLWorks.Internal.Array.sub
+    val update_arr       = MLWorks.Internal.Array.update
+    val length_arr       = MLWorks.Internal.Array.length
+    val tabulate_arr     = MLWorks.Internal.Array.tabulate
+    val arrayoflist_arr  = MLWorks.Internal.Array.arrayoflist
+
+    val vector_vec       = MonoVector.vector
+    val length_vec       = MonoVector.length
+    val extract_vec      = MonoVector.extract
+
+    type elem   = MonoVector.elem
+    type vector = MonoVector.vector
+
+    type array  = elem MLWorks.Internal.Array.array
+
+    exception Subscript = General.Subscript
+
+    val maxlen : int = pow2(28)
+
+  (* array creation functions *)
+    val array       : (int * elem) -> array            = array_arr
+    val tabulate    : (int * (int -> elem)) -> array   = tabulate_arr
+    val arrayOfList : elem list -> array               = arrayoflist_arr
+
+    val length      : array -> int                     = length_arr
+    val sub         : (array * int) -> elem            = sub_arr
+    val update      : (array * int * elem) -> unit     = update_arr
+
+    local
+
+       val MLWcast = MLWorks.Internal.Value.cast
+       val unsafe_array_sub     = MLWorks.Internal.Value.unsafe_array_sub
+       val unsafe_array_update  = MLWorks.Internal.Value.unsafe_array_update
+
+       val unsafe_vector_sub : (vector * int) -> elem =
+           MLWcast(unsafe_array_sub)
+
+       fun copyv'(src_vec : vector, si, len, dst_arr : array, di) =
+           let fun upd_arr(si,di) =
+	           let val new_elt = unsafe_vector_sub(src_vec,si)
+                   in
+                       unsafe_array_update(dst_arr,di,new_elt)
+                   end
+               fun do_upd(0,_,_) = ()
+                 | do_upd(i,a,b) = ( upd_arr(a,b) ; do_upd(i-1,a+1,b+1) ) 
+           in
+              do_upd(len,si,di)
+           end
+    in
+
+       val extract : (array * int * int) -> vector = MLWcast(extract_vec)
+
+       fun copyv { src=src_vec : vector, si, len, dst=dst_arr : array, di } =
+	   let val src_size = length_vec(src_vec)
+               val dst_size = length(dst_arr)
+	   in
+	       if ((0 <= si)             andalso
+		   (0 <= len)            andalso
+		   (si + len < src_size) andalso
+                   (0 <= di)             andalso
+                   (di <= dst_size)
+		  )
+	       then copyv'(src_vec,si,len,dst_arr,di)
+	       else raise Subscript
+	   end
+
+       val copy : { src : array, si : int, len : int,
+                    dst : array, di : int } -> unit      = MLWcast(copyv)
+
+    end
+  end
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d15 4
+a18 1
+ *  $Log$
+d43 6
+a48 6
+    val array_arr        = Array.array
+    val sub_arr          = Array.sub
+    val update_arr       = Array.update
+    val length_arr       = Array.length
+    val tabulate_arr     = Array.tabulate
+    val arrayoflist_arr  = Array.arrayoflist
+d57 1
+a57 1
+    type array  = elem Array.array
+@

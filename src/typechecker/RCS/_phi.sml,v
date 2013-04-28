@@ -1,0 +1,473 @@
+head	1.13;
+access;
+symbols
+	ML_beta_release_12/08/94:1.13
+	ML_beta_release_03/08/94:1.13
+	ML_revised_beta_release_25/05/94:1.13
+	ML_final_beta_release_02/03/94:1.13
+	mlworks-28-01-1994:1.13
+	Release:1.13
+	mlworks-beta-01-09-1993:1.13
+	MLWorks-1-0-4-29/01/1993:1.8
+	MLWorks-1-0-3-21/12/1992:1.8
+	MLWorks-1-0-2-15/12/1992:1.8
+	MLWorks-1-0-1-04/12/1992:1.8
+	checkpoint_17_08_92:1.4
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.13
+date	93.05.21.15.09.06;	author matthew;	state Exp;
+branches
+	1.13.1.1;
+next	1.12;
+
+1.12
+date	93.03.17.18.43.12;	author matthew;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.03.04.10.47.53;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.02.19.15.38.09;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.02.08.17.56.57;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.11.26.16.58.17;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.10.30.16.15.27;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.27.21.32.57;	author davidt;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.27.18.53.15;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.11.18.10.28;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.07.17.10.31.38;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.21.16.46.43;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.36.59;	author colin;	state Exp;
+branches;
+next	;
+
+1.13.1.1
+date	93.05.21.15.09.06;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor Signature (N)(S,(N'),S') Datatype and associated functions
+> See p31 of The Definition
+@
+
+
+1.13
+log
+@Diddling.
+@
+text
+@(* _phi.sml the functor *)
+(*
+$Log: _phi.sml,v $
+Revision 1.12  1993/03/17  18:43:12  matthew
+Nameset changes
+
+Revision 1.11  1993/03/04  10:47:53  matthew
+Options & Info changes
+
+Revision 1.10  1993/02/19  15:38:09  matthew
+Removed names_of_phi function
+
+Revision 1.9  1993/02/08  17:56:57  matthew
+Changes for BASISTYPES signature
+
+Revision 1.8  1992/11/26  16:58:17  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.7  1992/10/30  16:15:27  jont
+Added special maps for tyfun_id, tyname_id, strname_id
+
+Revision 1.6  1992/08/27  21:32:57  davidt
+Oops, the original code for copying functor signatures
+copied the result first. This doesn't work with the new scheme.
+
+Revision 1.5  1992/08/27  18:53:15  davidt
+Made various changes so that structure copying can be
+done more efficiently.
+
+Revision 1.4  1992/08/11  18:10:28  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.3  1992/07/17  10:31:38  jont
+Changed to use btrees for renaming of tynames and strnames
+
+Revision 1.2  1991/11/21  16:46:43  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:36:59  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "phi";
+require "sigma";
+require "nameset";
+require "environment";
+  
+functor Phi
+  (structure Sigma : SIGMA
+   structure Nameset : NAMESET
+   structure Env : ENVIRONMENT
+
+  sharing Sigma.Options = Nameset.Options
+  sharing Sigma.BasisTypes.Datatypes = Env.Datatypes = Nameset.Datatypes
+
+  sharing type Sigma.BasisTypes.Nameset = Nameset.Nameset
+
+     ) : PHI =
+  struct
+    structure BasisTypes = Sigma.BasisTypes
+    structure Datatypes = BasisTypes.Datatypes
+    structure Options = Sigma.Options
+
+    fun string_phi options (BasisTypes.PHI (nameset,(str,sigma))) =
+      "(" ^ Nameset.string_nameset options nameset ^ ")" ^ 
+      "(" ^ Env.string_str str ^ "," ^ Sigma.string_sigma options sigma ^ ")"
+
+    fun phi_copy (phi as BasisTypes.PHI (names,(str,sigma))) =
+      let
+	val (BasisTypes.SIGMA (names',str'), strname_copies, tyname_copies) =
+	  Sigma.sig_copy_return
+	  (BasisTypes.SIGMA (names, str),
+           Datatypes.Strname_id.Map.empty,
+	   Datatypes.Tyfun_id.Map.empty)
+        val (sigma',strname_copies',tyname_copies') =
+          Sigma.sig_copy_return (sigma, strname_copies, tyname_copies)
+        val phi' = BasisTypes.PHI (names', (str', sigma'))
+      in
+	phi'
+      end
+  end;
+@
+
+
+1.13.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.13  1993/05/21  15:09:06  matthew
+Diddling.
+
+@
+
+
+1.12
+log
+@Nameset changes
+@
+text
+@d4 3
+d72 1
+a72 1
+    fun phi_copy (BasisTypes.PHI (names,(str,sigma))) =
+d76 2
+a77 1
+	  (BasisTypes.SIGMA (names, str), Datatypes.Strname_id.Map.empty,
+d79 3
+d83 1
+a83 1
+	BasisTypes.PHI (names', (str', #1(Sigma.sig_copy_return (sigma, strname_copies, tyname_copies))))
+@
+
+
+1.11
+log
+@Options & Info changes
+@
+text
+@d4 3
+d55 4
+a58 2
+   sharing Sigma.BasisTypes = Nameset.BasisTypes
+   sharing Sigma.BasisTypes.Datatypes = Env.Datatypes
+@
+
+
+1.10
+log
+@Removed names_of_phi function
+@
+text
+@d4 3
+d50 2
+d58 1
+a58 1
+    structure Info = BasisTypes.Info
+@
+
+
+1.9
+log
+@Changes for BASISTYPES signature
+@
+text
+@d4 3
+a57 3
+
+    fun names_of_phi (BasisTypes.PHI (names,(_,BasisTypes.SIGMA (names',_)))) = 
+      Nameset.union (names,names')
+@
+
+
+1.8
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d37 1
+d42 1
+d44 2
+a45 1
+   sharing Sigma.Nameset.Datatypes = Env.Datatypes
+d48 3
+a50 11
+    structure Sigma = Sigma
+    structure Nameset = Sigma.Nameset
+    structure Datatypes = Nameset.Datatypes
+    structure NewMap = Datatypes.NewMap
+    structure Info = Nameset.Info
+
+    (****
+     Datatype declaration for functor signatures and operations on it.
+     ****)
+
+    datatype Phi = PHI of (Nameset.Nameset * (Datatypes.Str * Sigma.Sigma))
+d52 1
+a52 1
+    fun string_phi options (PHI (nameset,(str,sigma))) =
+d56 1
+a56 1
+    fun names_of_phi (PHI (names,(_,Sigma.SIGMA (names',_)))) = 
+d59 1
+a59 1
+    fun phi_copy (PHI (names,(str,sigma))) =
+d61 1
+a61 1
+	val (Sigma.SIGMA (names',str'), strname_copies, tyname_copies) =
+d63 1
+a63 1
+	  (Sigma.SIGMA (names, str), Datatypes.Strname_id.Map.empty,
+d66 1
+a66 1
+	PHI (names', (str', #1(Sigma.sig_copy_return (sigma, strname_copies, tyname_copies))))
+@
+
+
+1.7
+log
+@Added special maps for tyfun_id, tyname_id, strname_id
+@
+text
+@d4 3
+d45 1
+d53 3
+a55 3
+    fun string_phi (PHI (nameset,(str,sigma))) =
+      "(" ^ Nameset.string_nameset nameset ^ ")" ^ 
+      "(" ^ Env.string_str str ^ "," ^ Sigma.string_sigma sigma ^ ")"
+@
+
+
+1.6
+log
+@Oops, the original code for copying functor signatures
+copied the result first. This doesn't work with the new scheme.
+@
+text
+@d4 4
+d60 2
+a61 2
+	  (Sigma.SIGMA (names, str), NewMap.empty' Datatypes.Strname_id.strname_id_lt,
+	   NewMap.empty' Datatypes.Tyfun_id.tyfun_id_lt)
+@
+
+
+1.5
+log
+@Made various changes so that structure copying can be
+done more efficiently.
+@
+text
+@d4 4
+d54 1
+a54 1
+	val (sigma',strname_copies,tyname_copies) =
+d56 1
+a56 1
+	  (sigma, NewMap.empty' Datatypes.Strname_id.strname_id_lt,
+a57 2
+	val Sigma.SIGMA (names',str') =
+	  #1(Sigma.sig_copy_return (Sigma.SIGMA (names, str), strname_copies, tyname_copies))
+d59 1
+a59 1
+	PHI (names', (str', sigma'))
+@
+
+
+1.4
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d19 1
+a21 1
+require "nameset";
+d24 5
+a28 6
+functor Phi (structure Sigma : SIGMA
+	     structure Nameset : NAMESET
+	     structure Env : ENVIRONMENT
+	     sharing Nameset.Datatypes = Env.Datatypes
+	     sharing Sigma.Nameset = Nameset) : PHI =
+
+d30 2
+d33 1
+a33 2
+    structure Sigma = Sigma
+    structure Nameset = Nameset
+a34 2
+    open Datatypes
+
+d39 1
+a39 1
+    datatype Phi = PHI of (Nameset.Nameset * (Str * Sigma.Sigma))
+d42 2
+a43 2
+      "(" ^ (Nameset.string_nameset nameset) ^ ")" ^ 
+      "(" ^ (Env.string_str str) ^ "," ^ (Sigma.string_sigma sigma) ^ ")"
+a47 3
+    fun tyfun_lt (id, id') =
+      Tyfun_id.tyfun_id id < Tyfun_id.tyfun_id id'
+
+d51 5
+a55 6
+	  Sigma.sig_copy_return(sigma,NewMap.empty'
+				Strname_id.strname_id_lt,
+				NewMap.empty' tyfun_lt)
+	val (Sigma.SIGMA (names',str'),_,_) =
+	  Sigma.sig_copy_return (Sigma.SIGMA (names,str),strname_copies,
+				 tyname_copies)
+d57 1
+a57 1
+	PHI (names',(str',sigma'))
+d59 1
+a59 4
+
+  end
+
+
+@
+
+
+1.3
+log
+@Changed to use btrees for renaming of tynames and strnames
+@
+text
+@d4 3
+a15 1
+require "datatypes";
+d20 1
+a20 2
+functor Phi (structure Datatypes : DATATYPES
+	     structure Sigma : SIGMA
+d23 1
+a23 2
+	     sharing Datatypes = Sigma.Datatypes = Nameset.Datatypes
+	       = Env.Datatypes
+d27 1
+a27 1
+    structure Datatypes = Datatypes
+d52 1
+a52 1
+	  Sigma.sig_copy_return(sigma,Nameset.NewMap.empty'
+d54 1
+a54 1
+				Nameset.NewMap.empty' tyfun_lt)
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	_phi.sml,v $
+d46 4
+a49 1
+    fun phi_copy (PHI (names,(str,sigma))) = 
+d51 4
+a54 2
+	val (sigma',strname_copies,tyname_copies) = 
+	  Sigma.sig_copy_return (sigma,[],[])
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

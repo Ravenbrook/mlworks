@@ -1,0 +1,107 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.11.55.07;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.29.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+
+(* Printing *)
+
+signature PRINT_VAR =
+sig
+
+   structure Term : TERM
+   val makestring_var : (string -> bool) -> Term.term -> string
+
+end  (* signature PRINT_VAR *)
+
+
+signature PRINT_TERM =
+sig
+
+   structure Term : TERM
+   structure F : FORMATTER
+   structure S : SYMBOLS   sharing S.F = F
+
+   val makeformat_term : Term.term -> F.format
+   val makeformat_const : Term.term -> F.format
+
+   val printDepth : int option ref
+   val printLength : int option ref 
+
+end  (* signature PRINT_TERM *)
+
+
+signature PRINT =
+sig
+
+   structure Term : TERM
+   structure F : FORMATTER
+   structure S : SYMBOLS    sharing S.F = F
+
+   val makeformat_term : Term.term -> F.format
+   val makeformat_const : Term.term -> F.format
+   val makeformat_varbind : Term.varbind -> F.format
+   val makeformat_conbind : Term.varbind -> F.format
+
+   val makestring_term : Term.term -> string
+   val makestring_const : Term.term -> string
+   val makestring_varbind : Term.varbind -> string
+   val makestring_conbind : Term.varbind -> string
+
+   val makestring_vartermlist : (Term.term * Term.term) list -> string
+   val makestring_substitution : Term.term list -> string
+
+   (* raise this to signal subtype violations *)
+   val subtype : string * Term.term * string -> exn
+
+   val printDepth : int option ref
+   val printLength : int option ref 
+
+end  (* signature PRINT *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

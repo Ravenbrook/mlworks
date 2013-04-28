@@ -1,0 +1,217 @@
+head	1.7;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.7
+	mlworks-28-01-1994:1.7
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.6
+	Ten15_release_19-11-91:1.2
+	Ten15_release_21-08-91:1.2
+	Ten15_release_19-08-91:1.2
+	ten15_release:1.2;
+locks; strict;
+
+
+1.7
+date	92.08.18.18.17.13;	author davidt;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	92.04.10.12.25.51;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.26.16.55.06;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.03.25.15.52.33;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.35.41;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.06.27.13.58.28;	author colin;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.16.17.01;	author colin;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	92.08.18.18.17.13;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Main code for the parser
+@
+
+
+1.7
+log
+@Added the Crash structure.
+@
+text
+@(* __parser.sml the structure *)
+(*
+$Log: __parser.sml,v $
+Revision 1.6  1992/04/10  12:25:51  jont
+Added print parameter to functor for use when debugging
+
+Revision 1.5  1992/03/26  16:55:06  matthew
+Changed pathname for require ../basics/integer
+
+Revision 1.4  1992/03/25  15:52:33  matthew
+Included integer structure in functor
+
+Revision 1.3  1991/11/21  16:35:41  jont
+Added copyright message
+
+Revision 1.2  91/06/27  13:58:28  colin
+changed to handle Interface annotations in signature expressions
+
+Revision 1.1  91/06/07  16:17:01  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+require "_parser";
+require "../typechecker/__datatypes";
+require "../typechecker/__nameset";
+require "../typechecker/__interface";
+require "../lexer/__lexer";
+require "../basics/__ident";
+require "../basics/__absyn";
+require "../utils/__integer";
+require "../utils/__crash";
+require "../utils/__print";
+require "__parserenv";
+require "__derived";
+require "../utils/__set";
+
+structure Parser_ =
+  Parser (structure Crash     = Crash_
+	  structure Datatypes = Datatypes_
+	  structure Nameset   = Nameset_
+	  structure Interface = Interface_
+	  structure Lexer     = Lexer_
+	  structure Ident     = Ident_
+	  structure Absyn     = Absyn_
+	  structure ParserEnv = ParserEnv_
+	  structure Derived   = Derived_
+	  structure Set       = Set_
+          structure Integer   = Integer_
+          structure Print   = Print_);
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: __oldparser.sml,v $
+Revision 1.7  1992/08/18  18:17:13  davidt
+Added the Crash structure.
+
+@
+
+
+1.6
+log
+@Added print parameter to functor for use when debugging
+@
+text
+@d4 3
+d32 1
+d39 2
+a40 1
+  Parser (structure Datatypes = Datatypes_
+d50 1
+a50 2
+          structure Print   = Print_
+)
+@
+
+
+1.5
+log
+@Changed pathname for require ../basics/integer
+@
+text
+@d4 3
+d29 1
+d44 3
+a46 1
+          structure Integer   = Integer_)
+@
+
+
+1.4
+log
+@Included integer structure in functor
+@
+text
+@d4 3
+d25 1
+a25 1
+require "../basics/__integer";
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	__parser.sml,v $
+d22 1
+d36 2
+a37 1
+	  structure Set       = Set_);
+@
+
+
+1.2
+log
+@changed to handle Interface annotations in signature expressions
+@
+text
+@d1 1
+d4 3
+d10 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 1
+$Log$
+d10 1
+d21 1
+@

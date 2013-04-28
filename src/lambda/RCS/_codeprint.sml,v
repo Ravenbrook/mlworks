@@ -1,0 +1,108 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2
+	Ten15_release_21-08-91:1.2
+	Ten15_release_19-08-91:1.2
+	ten15_release:1.2;
+locks; strict;
+
+
+1.2
+date	91.07.10.09.45.18;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.07.09.18.01.48;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.07.10.09.45.18;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Higher level lambda printing
+@
+
+
+1.2
+log
+@Missing require codeprint added
+@
+text
+@(* _codeprint.sml the functor *)
+(*
+$Log:	_codeprint.sml,v $
+Revision 1.1  91/07/09  18:01:48  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+require "../utils/sexpr";
+require "lambdatypes";
+require "lambdaprint";
+require "codeprint";
+
+functor CodePrint(
+  structure Sexpr : SEXPR
+  structure LambdaTypes: LAMBDATYPES
+  structure LambdaPrint: LAMBDAPRINT
+
+  sharing LambdaTypes = LambdaPrint.LambdaTypes
+  sharing type Sexpr.Sexpr = LambdaPrint.Sexpr
+		    ) : CODEPRINT =
+struct
+  structure LambdaTypes = LambdaTypes
+
+  type 'a Sexpr = 'a Sexpr.Sexpr
+  val printSexpr = Sexpr.pprintSexpr (fn x => x)
+
+  fun decodelambdalist[] = Sexpr.NIL
+  | decodelambdalist((lvar, lambda) :: code_list) =
+    Sexpr.list[Sexpr.ATOM(LambdaTypes.printLVar lvar), Sexpr.ATOM(", "),
+      LambdaPrint.decodelambda lambda, Sexpr.ATOM("; "),
+	decodelambdalist code_list]
+
+  fun printlambdalist x = printSexpr(decodelambdalist x)
+end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d3 1
+a3 4
+$Log: _codeprint.sml,v $
+Revision 1.2  1991/07/10  09:45:18  jont
+Missing require codeprint added
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 3
+a5 1
+$Log$
+d13 1
+@

@@ -1,0 +1,413 @@
+head	1.11;
+access;
+symbols
+	ML_beta_release_12/08/94:1.9
+	ML_beta_release_03/08/94:1.9
+	ML_revised_beta_release_25/05/94:1.9
+	ML_final_beta_release_02/03/94:1.9
+	mlworks-28-01-1994:1.8
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.11
+date	95.01.18.13.50.31;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.01.13.15.26.19;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.02.02.11.23.15;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.11.15.15.31.48;	author nickh;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.09.27.14.43.51;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.08.28.13.41.21;	author daveb;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	93.08.25.17.57.17;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.08.13.17.22.28;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.06.01.22.13.01;	author nosa;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.12.08.15.36.11;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.10.08.13.23.33;	author richard;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	93.08.28.13.41.21;	author jont;	state Exp;
+branches;
+next	1.6.1.2;
+
+1.6.1.2
+date	93.09.27.11.13.56;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@General FileName signature.
+@
+
+
+1.11
+log
+@Export a realpath function
+@
+text
+@(*  ==== FILE NAMING UTILITIES ====
+ *            SIGNATURE
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The aim of this module is to deal with file naming PROPERLY and abstract
+ *  away the UNIX dependent ideas of paths and slashes as much as possible.
+ *  Please do not expose UNIX specific things.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: filename.sml,v $
+ *  Revision 1.10  1995/01/13  15:26:19  jont
+ *  Export separator from filename interface
+ *
+ *  Revision 1.9  1994/02/02  11:23:15  daveb
+ *  Module names are now in the Module module.  The functionality of
+ *  Io.trans_home_name is not in FileName.expand_path.  Minor tidying up.
+ *
+ *  Revision 1.8  1993/11/15  15:31:48  nickh
+ *  New pervasive time structure.
+ *
+ *  Revision 1.7  1993/09/27  14:43:51  jont
+ *  Merging in bug fixes
+ *
+ *  Revision 1.6.1.2  1993/09/27  11:13:56  jont
+ *  Added find_pervasive_mo for looking up pervasive mo time stamps
+ *
+ *  Revision 1.6.1.1  1993/08/28  13:41:21  jont
+ *  Fork for bug fixing
+ *
+ *  Revision 1.6  1993/08/28  13:41:21  daveb
+ *  Added cache to find_file.
+ *
+ *  Revision 1.5  1993/08/25  17:57:17  daveb
+ *  Made find_sml and find_mo similar.
+ *
+ *  Revision 1.4  1993/08/13  17:22:28  daveb
+ *  Added Module type and associated functions.
+ *  Added find_file and find_mo.
+ *
+ *  Revision 1.3  1993/06/01  22:13:01  nosa
+ *  Changed Option.T to Option.opt.
+ *
+ *  Revision 1.2  1992/12/08  15:36:11  clive
+ *  Added a conversion from location back to string
+ *
+ *  Revision 1.1  1992/10/08  13:23:33  richard
+ *  Initial revision
+ *
+ *)
+
+require "option";
+
+signature FILENAME =
+  sig
+    structure Option : OPTION
+
+    type Directory
+    type Route
+
+    val separator : string (* The path component separator *)
+
+    val realpath : string -> string (* On unix, realpath, on NT, getFullPathName *)
+
+    datatype Absolute = ABSOLUTE of Directory * string * string Option.opt
+    datatype Relative = RELATIVE of Route * string * string Option.opt
+
+    exception Parse of string
+    exception BadHomeName of string
+
+    (* Strings may contain either full path names or relative names.
+       parse_absolute takes a full path name as read, and prepends the current
+       directory to a relative pathname.  parse_relative takes either as read.
+       On Unix systems, a leading ~ is expanded as per unix conventions.  *)
+    val parse_absolute	: string -> Absolute
+    val parse_relative	: string -> Relative
+
+    (* expand_path performs any OS-specific expansion of pathnames.  On UNIX,
+       it does ~ expansion and replaces "." with the current directory. *)
+    val expand_path	: string -> string
+
+    (* Directories and routes are parsed in the same way as the path components
+       of Absolute filenames and Relative filenames. *)
+    val parse_directory	: string -> Directory
+    val parse_route	: string -> Route
+    val getwd		: unit -> Directory
+
+    val concat_route   	: Route * Route -> Route
+    val follow		: Directory * Route -> Directory
+    val prefix_route	: Route * Relative -> Relative
+    val rel_to_abs	: Directory * Relative -> Absolute
+
+    val absolute_name	: Absolute -> string
+    val relative_name	: Relative -> string
+    val directory_name  : Directory -> string
+    val route_name      : Route -> string
+  end;
+@
+
+
+1.10
+log
+@Export separator from filename interface
+@
+text
+@d15 3
+d65 2
+@
+
+
+1.9
+log
+@Module names are now in the Module module.  The functionality of
+Io.trans_home_name is not in FileName.expand_path.  Minor tidying up.
+@
+text
+@d15 4
+d60 2
+@
+
+
+1.8
+log
+@New pervasive time structure.
+@
+text
+@d15 3
+a55 4
+    type ModuleId
+
+    type Cache
+    (* Caches map of moduleids to filenames and timestamps. *)
+a58 1
+    datatype Module = MODULE of Directory * ModuleId
+d61 1
+d63 4
+d70 14
+a83 3
+    val module_id	: Module -> ModuleId
+    val module_dir	: Module -> Directory
+    val dir_string      : Directory -> string
+d87 2
+a88 19
+
+    val sml_name	: Module -> string
+    val mo_name		: Module -> string
+    val relative_mo 	: Directory * ModuleId -> string
+
+    val follow	   	: Directory * Route -> Directory
+    val add	   	: Route * Route -> Route
+
+    val find_sml   	: ModuleId * Cache ->
+			    (Module * MLWorks.Time.time) Option.opt * Cache
+    val find_mo	   	: ModuleId * Cache ->
+			    (Module * MLWorks.Time.time) Option.opt * Cache
+    val find_pervasive_mo   	: ModuleId * Cache ->
+			    (Module * MLWorks.Time.time) Option.opt * Cache
+    val empty_cache	: Cache
+    val update_cache	: Cache * ModuleId * (Module * MLWorks.Time.time) ->
+			    Cache
+    val cache_size : Cache -> int
+    val cache_list : Cache -> ModuleId list
+@
+
+
+1.7
+log
+@Merging in bug fixes
+@
+text
+@d15 3
+d82 1
+a82 1
+			    (Module * MLWorks.Time.Real.T) Option.opt * Cache
+d84 1
+a84 1
+			    (Module * MLWorks.Time.Real.T) Option.opt * Cache
+d86 1
+a86 1
+			    (Module * MLWorks.Time.Real.T) Option.opt * Cache
+d88 1
+a88 1
+    val update_cache	: Cache * ModuleId * (Module * MLWorks.Time.Real.T) ->
+@
+
+
+1.6
+log
+@Added cache to find_file.
+@
+text
+@d15 9
+d82 2
+d87 2
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a14 3
+ *  Revision 1.6  1993/08/28  13:41:21  daveb
+ *  Added cache to find_file.
+ *
+@
+
+
+1.6.1.2
+log
+@Added find_pervasive_mo for looking up pervasive mo time stamps
+@
+text
+@a14 3
+ *  Revision 1.6.1.1  1993/08/28  13:41:21  jont
+ *  Fork for bug fixing
+ *
+a75 2
+    val find_pervasive_mo   	: ModuleId * Cache ->
+			    (Module * MLWorks.Time.Real.T) Option.opt * Cache
+a78 2
+    val cache_size : Cache -> int
+    val cache_list : Cache -> ModuleId list
+@
+
+
+1.5
+log
+@Made find_sml and find_mo similar.
+@
+text
+@d15 3
+d43 3
+d66 2
+a67 2
+    val follow	   : Directory * Route -> Directory
+    val add	   : Route * Route -> Route
+d69 7
+a75 2
+    val find_sml   : ModuleId -> (Module * MLWorks.Time.Real.T) Option.opt
+    val find_mo	   : ModuleId -> (Module * MLWorks.Time.Real.T) Option.opt
+@
+
+
+1.4
+log
+@Added Module type and associated functions.
+Added find_file and find_mo.
+@
+text
+@d15 4
+a38 1
+    type ModulePath
+d63 2
+a64 4
+    val find_file  : ModuleId -> Module Option.opt
+    val find_mo	   : ModulePath * ModuleId * Directory ->
+		       (string * MLWorks.Time.Real.T * ModulePath) Option.opt
+
+@
+
+
+1.3
+log
+@Changed Option.T to Option.opt.
+@
+text
+@d15 3
+d32 8
+a39 5
+    type location
+    type route
+
+    datatype absolute = ABSOLUTE of location * string * string Option.opt
+    datatype relative = RELATIVE of route * string * string Option.opt
+d43 2
+a44 8
+    val parse_absolute	: string -> absolute
+    val parse_relative	: string -> relative
+
+    val absolute_name	: absolute -> string
+    val relative_name	: relative -> string
+
+    val follow		: location * route -> location
+    val add		: route * route -> route
+d46 17
+a62 1
+    val path_to_file    : location -> string
+@
+
+
+1.2
+log
+@Added a conversion from location back to string
+@
+text
+@d15 3
+d32 2
+a33 2
+    datatype absolute = ABSOLUTE of location * string * string Option.T
+    datatype relative = RELATIVE of route * string * string Option.T
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d14 4
+a17 1
+ *  $Log$
+d42 2
+@

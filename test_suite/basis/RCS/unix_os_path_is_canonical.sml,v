@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.16.24.47;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.isCanonical.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = isCanonical "" = false;
+
+val b = isCanonical "./." = false;
+
+val c = isCanonical "/." = false;
+
+val d = isCanonical "..";
+
+val e = isCanonical "../..";
+
+val f = isCanonical "b";
+
+val g = isCanonical "a/b";
+
+val h = isCanonical "/a/b";
+
+val i = isCanonical "a/b/" = false;
+
+val j = isCanonical "a/b//" = false;
+
+val k = isCanonical "a/../b" = false;
+
+val l = isCanonical "a/.." = false;
+
+val m = isCanonical "a/." = false;
+
+val n = isCanonical "a/" = false;
+
+val p = isCanonical "/a/../b/" = false;
+
+val q = isCanonical "/.." = false;
+
+val r = isCanonical "/../../a/b/" = false;
+
+val s = isCanonical "/./../../a/b/" = false;
+
+val t = isCanonical "/./../.." = false;
+
+val u = isCanonical "a/../b" = false;
+
+val v = isCanonical "a/./b" = false;
+
+val w = isCanonical "a////b" = false;
+
+val x = isCanonical "foo1//../..//foo2/bar.sml" = false;
+
+val y = isCanonical "foo1.ext/./foo2/../bar.sml/" = false;
+
+val z = isCanonical "//foo1/../../foo2/bar.sml" = false;
+@

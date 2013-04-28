@@ -1,0 +1,139 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.08.02.14.43.46;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.17.15.43.23;	author nickb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.12.14.28.59;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.3
+log
+@Remove windows.h in favour of syscalls.h
+@
+text
+@/*  ==== TIME ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd
+ *
+ *  Description
+ *  -----------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:NT:mltime.h,v $
+ * Revision 1.2  1995/07/17  15:43:23  nickb
+ * Add ml_time_microseconds()
+ *
+ * Revision 1.1  1994/12/12  14:28:59  jont
+ * new file
+ *
+ * Revision 1.1  1994/10/04  16:33:39  jont
+ * new file
+ *
+ * Revision 1.2  1994/06/09  14:25:53  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:50:34  nickh
+ * new file
+ *
+ *  Revision 1.3  1993/11/22  17:47:35  jont
+ *  Changed to expose time_decode and time_encode for use by runtime system
+ *  consistency checking
+ *
+ *  Revision 1.2  1993/11/12  16:55:48  nickh
+ *  remove ml_virtual_time (we don't have virtual times any more).
+ *
+ *  Revision 1.1  1992/11/03  11:22:06  richard
+ *  Initial revision
+ *
+ */
+
+#ifndef time_h
+#define time_h
+
+#include "mltypes.h"
+
+#include "syscalls.h"
+
+extern mlval ml_stat(const char *filename);
+
+extern int ml_time_eq(mlval t1, mlval t2);
+
+extern mlval time_encode(mlval arg);
+
+extern mlval time_decode(mlval arg);
+
+extern void time_init(void);
+
+extern mlval ml_time_microseconds(double t);
+
+/* This is the only function here whose prototype is non-portable. */
+
+extern mlval ml_time(FILETIME *t);
+
+/* user_clock() returns the number of microseconds of user virtual
+ * time elapsed since MLWorks was started. It uses a double because
+ * longs have insufficient precision (32 bits gives only just over an
+ * hour, doubles give years) */
+
+extern double user_clock(void);
+
+#endif
+@
+
+
+1.2
+log
+@Add ml_time_microseconds()
+@
+text
+@d11 3
+d43 1
+a43 11
+#ifdef OS_NT
+#undef ERROR
+#undef ISPTR
+#include <windows.h>
+#undef ERROR
+#undef ISPTR
+#define ERROR 5
+#define ISPTR(x)	((mlval)(x) & 1)
+#else
+#include <sys/time.h>
+#endif
+d64 1
+a64 1
+ * hour, doubles give years */
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d10 4
+a13 1
+ *  $Log: src:OS:Linux:time.h,v $
+d61 2
+@

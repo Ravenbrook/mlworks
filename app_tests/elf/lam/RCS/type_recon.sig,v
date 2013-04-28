@@ -1,0 +1,82 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.11.59.37;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.29.59;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+
+(* Type and object reconstruction *)
+
+signature TYPE_RECON =
+sig
+
+  structure Term : TERM
+  structure Sb : SB  sharing Sb.Term = Term
+  structure Constraints : CONSTRAINTS  sharing Constraints.Term = Term 
+
+  exception TypeCheckFail of (int * int) option * string
+
+  type env
+
+  val empty_env : env
+  val abst_over_evars : string list -> env -> Term.term -> env * Term.term
+  val env_to_pis : env -> Term.term -> Term.term -> (Term.term * Term.term)
+  val env_to_absts : env -> Term.term -> Term.term
+
+  val env_to_quant : Term.term -> env -> Term.term -> Term.term
+
+  val type_recon : Term.term -> Term.term * Term.term * Constraints.constraint
+
+  val type_recon_as :
+         Term.term -> Term.term
+	    -> Term.term * Term.term * Constraints.constraint
+
+  structure Switch : SWITCH
+
+end  (* signature TYPE_RECON *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

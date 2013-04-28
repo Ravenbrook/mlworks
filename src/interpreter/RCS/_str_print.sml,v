@@ -1,0 +1,621 @@
+head	1.9;
+access;
+symbols
+	mlworks-28-01-1994:1.9
+	Release:1.9
+	mlworks-beta-01-09-1993:1.9
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.3;
+locks; strict;
+
+
+1.9
+date	93.03.02.16.29.45;	author matthew;	state Exp;
+branches
+	1.9.1.1;
+next	1.8;
+
+1.8
+date	93.02.05.18.43.17;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.02.04.15.41.44;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.11.24.15.02.57;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.10.12.15.54.43;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.09.16.08.49.04;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.13.16.15.53;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.03.17.53.51;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.01.15.47.53;	author jont;	state Exp;
+branches;
+next	;
+
+1.9.1.1
+date	93.03.02.16.29.45;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@structure printing for interpreter
+@
+
+
+1.9
+log
+@Removed redundant require
+@
+text
+@(* _str_print.sml the functor *)
+(*
+$Log: _str_print.sml,v $
+Revision 1.8  1993/02/05  18:43:17  matthew
+*** empty log message ***
+
+Revision 1.7  1993/02/04  15:41:44  matthew
+Cope with COPYSTR's
+
+Revision 1.6  1992/11/24  15:02:57  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.5  1992/10/12  15:54:43  clive
+Tynames now have a slot recording their definition point
+
+Revision 1.4  1992/09/16  08:49:04  daveb
+Improved printing of types, including choice of datatype, type or eqtype.
+
+Revision 1.3  1992/08/13  16:15:53  clive
+Changes to reflect lower level sharing changes
+
+Revision 1.2  1992/07/03  17:53:51  jont
+Lots more functionality
+
+Revision 1.1  1992/07/01  15:47:53  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../utils/crash";
+require "../utils/integer";
+require "../basics/ident";
+require "../basics/identprint";
+require "../typechecker/environment";
+require "../typechecker/types";
+require "../typechecker/basis";
+require "../typechecker/valenv";
+require "str_print";
+
+functor Str_Print(
+  structure Crash : CRASH
+  structure Integer : INTEGER
+  structure Ident : IDENT
+  structure IdentPrint : IDENTPRINT
+  structure Env : ENVIRONMENT
+  structure Types : TYPES
+  structure Basis : BASIS
+  structure Valenv : VALENV
+
+  sharing Env.DataTypes = Types.Datatypes = 
+    Basis.Tyvarenv.Datatypes = Valenv.Datatypes
+  sharing IdentPrint.Ident = Ident = DataTypes.Ident
+) : STR_PRINT =
+  struct
+    structure Datatypes = Env.Datatypes
+    structure NewMap = DataTypes.NewMap
+    structure Ident = Ident
+    structure Basis = Basis
+    structure Symbol = Ident.Symbol
+
+    fun sub_print_str(indent, strid) =
+      implode[indent, "structure ", IdentPrint.printStrId strid,
+	      " : sig ... end\n"]
+
+    fun makestring n =
+      if n < 0 then
+	Crash.impossible"makestring negative"
+      else
+	if n >= 26 then
+	  makestring (n div 26) ^ chr(n + ord"a")
+	else
+	  chr(n + ord"a")
+
+    fun make_tyvar n =
+      DataTypes.TYVAR(ref 0,
+		      Ident.TYVAR(Symbol.find_symbol("'" ^ makestring n),
+				  true, true))
+      
+    fun print_typescheme options (bound_tyvars, scheme as DataTypes.SCHEME(i, ty)) =
+      let
+	val the_type = Types.apply(DataTypes.TYFUN(ty, i), bound_tyvars)
+      in
+	Types.print_type  options the_type
+      end
+      | print_typescheme(_, DataTypes.UNBOUND_SCHEME ty) =
+	Types.print_type  options ty
+      | print_typescheme _ =
+	Crash.impossible"bad scheme"
+
+    fun print_valenv_element options (indent, bound_types, (ident, scheme)) =
+      let
+	val id_str = IdentPrint.printValId options ident
+      in
+	implode[indent, id_str, " : ", print_typescheme options (bound_types, scheme),
+		"\n"]
+      end
+
+    fun print_valenv options (indent, bound_types, DataTypes.VE(_, valenv)) =
+      let
+	val valenv_assoc = NewMap.to_list valenv
+      in
+	implode(map (fn ve => print_valenv_element options (indent, bound_types, ve))
+		valenv_assoc)
+      end
+
+    fun make_bound_tyvars(acc, 0) = acc
+      | make_bound_tyvars(acc, n) =
+	make_bound_tyvars(make_tyvar(n-1) :: acc, n-1)
+
+    fun print_bound_types [] = ""
+      | print_bound_types options  [x] = Types.print_type options x ^ " "
+      | print_bound_types options (x :: xs) =
+	let
+	  val rest = map (fn x => ", " ^ Types.print_type options x) xs
+	  val first = Types.print_type options x
+	in
+	  implode("(" :: first :: (rest @@ [") "]))
+	end
+
+    fun print_tyenv_element options
+		(indent, (tycon, DataTypes.TYSTR(tyfun, valenv)), full_names) =
+      case tyfun of
+	DataTypes.ETA_TYFUN tyname =>
+	  let
+	    val bounds = case tyname of
+	      DataTypes.TYNAME{3=i, ...} => i
+	    | DataTypes.METATYNAME{3=i, ...} => i
+	    val new_indent = indent ^ "  val "
+	    val bound_tyvars = make_bound_tyvars([], bounds)
+	    val valenv_str = print_valenv options (new_indent, bound_tyvars, valenv)
+	    val eq = Types.eq_attrib tyname
+	    val keyword = if Valenv.empty_valenvp(valenv) then
+			    if eq then "eqtype " else "type "
+			  else "datatype "
+	  in
+	    implode[indent, keyword, print_bound_types bound_tyvars,
+		    IdentPrint.printTyCon tycon,
+		    valenv_str]
+	  end
+      | tyfun as DataTypes.TYFUN(ty, i) =>
+	  let
+	    val bound_tyvars = make_bound_tyvars([], i)
+	  in
+	    if full_names then
+	      implode
+	      [indent,
+	       "type ",
+	       print_bound_types bound_tyvars,
+	       IdentPrint.printTyCon tycon,
+	       Types.print_type options (Types.apply(tyfun, bound_tyvars)), "\n"]
+	    else
+	      let val eq = Types.type_equalityp ty
+	      in
+	         implode
+	         [indent,
+	          if eq then "eqtype " else "type ",
+		  print_bound_types bound_tyvars,
+		  IdentPrint.printTyCon tycon,
+		  "\n"]
+	      end
+	  end
+      | DataTypes.NULL_TYFUN _ => Crash.impossible"structure gives null_tyfun"
+
+    fun print_exnenv options (indent, exnenv) =
+      print_valenv options (indent ^ "exception ", [], exnenv)
+
+    fun print_typescheme_without_bound options (scheme as DataTypes.SCHEME(i, ty)) =
+      let
+	val bound_tyvars = make_bound_tyvars([], i)
+	val the_type = Types.apply(DataTypes.TYFUN(ty, i), bound_tyvars)
+      in
+	Types.print_type options the_type
+      end
+      | print_typescheme_without_bound options (DataTypes.UNBOUND_SCHEME ty) =
+	Types.print_type options ty
+      | print_typescheme_without_bound _ =
+	Crash.impossible "bad scheme"
+
+    fun print_valenv_element_without_bound options (indent, (ident, scheme)) =
+      let
+	val id_str = IdentPrint.printValId options ident
+      in
+	implode[indent, id_str, " : ",
+		print_typescheme_without_bound options scheme, "\n"]
+      end
+
+    fun print_valenv_without_bound options (indent, DataTypes.VE(_, valenv)) =
+      let
+	val valenv_assoc = NewMap.to_list valenv
+      in
+	implode
+	(map (fn (ve as (Ident.VAR _, _)) =>
+	      print_valenv_element_without_bound options (indent, ve)
+	       | _ => "")
+	 valenv_assoc)
+      end
+
+    fun print_tyenv options (indent, DataTypes.TE tyenv, full_names) =
+      let
+	val ty_assoc = NewMap.to_list tyenv
+      in
+	map (fn x => print_tyenv_element options (indent, x, full_names)) ty_assoc
+      end
+
+    fun print_str options (strid,
+		  Basis.BASIS(_, _, _,
+			      DataTypes.ENV(DataTypes.SE strenv, _, _, _))) =
+      (let
+	val indent = "    "
+	val tail = ["  end\n"]
+	val DataTypes.STR(strname,_,env as
+			  DataTypes.ENV(DataTypes.SE strenv, tyenv,
+					valenv, exnenv)) =
+	  Env.resolve_top_level (NewMap.apply'(strenv,strid))
+	val str_assoc = NewMap.to_list strenv
+	val strs =
+	  map (fn (strid, _) => sub_print_str(indent, strid)) str_assoc
+	val tys = print_tyenv(indent, tyenv, false)
+	val exns = print_exnenv options (indent, exnenv)
+	val vals = print_valenv_without_bound options (indent ^ "val ", valenv)
+	val tail = strs @@ tys @@ (exns :: vals :: tail)
+      in
+	implode
+	("structure " :: IdentPrint.printStrId strid :: " :\n  sig\n" :: tail)
+      end)
+
+    val print_exnenv = fn options => fn exnenv => print_exnenv options ("", exnenv)
+
+    val print_tyenv = fn tyenv => implode(print_tyenv("", tyenv, true))
+
+    val make_bound_tyvars = fn n => make_bound_tyvars([], n)
+  end
+@
+
+
+1.9.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.9  1993/03/02  16:29:45  matthew
+Removed redundant require
+
+@
+
+
+1.8
+log
+@*** empty log message ***
+@
+text
+@d4 3
+a31 1
+require "../utils/map";
+@
+
+
+1.7
+log
+@Cope with COPYSTR's
+@
+text
+@d4 3
+a35 1
+require "../typechecker/scheme";
+a46 1
+  structure Scheme : SCHEME
+d51 1
+a51 1
+    Scheme.Datatypes = Basis.Tyvarenv.Datatypes = Valenv.Datatypes
+d119 1
+a119 1
+	
+@
+
+
+1.6
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d31 1
+a31 1
+require "../typechecker/datatypes";
+d43 1
+a43 1
+  structure DataTypes : DATATYPES
+d49 2
+a50 1
+  sharing DataTypes = Types.Datatypes = Scheme.Datatypes = Basis.Tyvarenv.Datatypes = Valenv.Datatypes
+d54 1
+a58 1
+    structure Datatypes = DataTypes 
+d207 1
+a207 1
+      let
+d210 1
+a210 1
+	val DataTypes.STR(strname, env as
+d213 1
+a213 1
+	  NewMap.apply'(strenv,strid)
+d224 1
+a224 1
+      end
+@
+
+
+1.5
+log
+@Tynames now have a slot recording their definition point
+@
+text
+@d4 3
+d73 1
+a73 1
+    fun print_typescheme(bound_tyvars, scheme as DataTypes.SCHEME(i, ty)) =
+d77 1
+a77 1
+	Types.print_type the_type
+d80 1
+a80 1
+	Types.print_type ty
+d84 1
+a84 1
+    fun print_valenv_element(indent, bound_types, (ident, scheme)) =
+d86 1
+a86 1
+	val id_str = IdentPrint.printValId ident
+d88 1
+a88 1
+	implode[indent, id_str, " : ", print_typescheme(bound_types, scheme),
+d92 1
+a92 1
+    fun print_valenv(indent, bound_types, DataTypes.VE(_, valenv)) =
+d96 1
+a96 1
+	implode(map (fn ve => print_valenv_element(indent, bound_types, ve))
+d105 2
+a106 2
+      | print_bound_types [x] = Types.print_type x ^ " "
+      | print_bound_types(x :: xs) =
+d108 2
+a109 2
+	  val rest = map (fn x => ", " ^ Types.print_type x) xs
+	  val first = Types.print_type x
+d114 2
+a115 2
+    fun print_tyenv_element(indent, (tycon, DataTypes.TYSTR(tyfun, valenv)),
+			    full_names) =
+d124 1
+a124 1
+	    val valenv_str = print_valenv(new_indent, bound_tyvars, valenv)
+d144 1
+a144 1
+	       Types.print_type(Types.apply(tyfun, bound_tyvars)), "\n"]
+d158 2
+a159 2
+    fun print_exnenv(indent, exnenv) =
+      print_valenv(indent ^ "exception ", [], exnenv)
+d161 1
+a161 1
+    fun print_typescheme_without_bound(scheme as DataTypes.SCHEME(i, ty)) =
+d166 1
+a166 1
+	Types.print_type the_type
+d168 2
+a169 2
+      | print_typescheme_without_bound(DataTypes.UNBOUND_SCHEME ty) =
+	Types.print_type ty
+d171 1
+a171 1
+	Crash.impossible"bad scheme"
+d173 1
+a173 1
+    fun print_valenv_element_without_bound(indent, (ident, scheme)) =
+d175 1
+a175 1
+	val id_str = IdentPrint.printValId ident
+d178 1
+a178 1
+		print_typescheme_without_bound scheme, "\n"]
+d181 1
+a181 1
+    fun print_valenv_without_bound(indent, DataTypes.VE(_, valenv)) =
+d187 1
+a187 1
+	      print_valenv_element_without_bound(indent, ve)
+d192 1
+a192 1
+    fun print_tyenv(indent, DataTypes.TE tyenv, full_names) =
+d196 1
+a196 1
+	map (fn x => print_tyenv_element(indent, x, full_names)) ty_assoc
+d199 1
+a199 1
+    fun print_str(strid,
+d213 2
+a214 2
+	val exns = print_exnenv(indent, exnenv)
+	val vals = print_valenv_without_bound(indent ^ "val ", valenv)
+d221 1
+a221 1
+    val print_exnenv = fn exnenv => print_exnenv("", exnenv)
+@
+
+
+1.4
+log
+@Improved printing of types, including choice of datatype, type or eqtype.
+@
+text
+@d4 3
+a128 3
+		    if !Types.show_eq_info then
+		      if eq then "[t]\n" else "[f]\n"
+		    else "\n",
+a140 3
+	       if !Types.show_eq_info then
+		 if Types.type_equalityp ty then "[t] = " else "[f] = "
+	       else " = ",
+d150 1
+a150 3
+		  if !Types.show_eq_info then
+		    if eq then "[t]\n" else "[f]\n"
+		  else "\n"]
+@
+
+
+1.3
+log
+@Changes to reflect lower level sharing changes
+@
+text
+@d4 3
+d25 1
+d37 1
+d39 1
+a39 1
+  sharing DataTypes = Types.Datatypes = Scheme.Datatypes = Basis.Tyvarenv.Datatypes
+d116 1
+a116 1
+	    val new_indent = indent ^ "  con "
+d119 4
+d124 5
+a128 2
+	    implode[indent, "datatype ", print_bound_types bound_tyvars,
+		    IdentPrint.printTyCon tycon, "\n",
+d140 4
+a143 1
+	       IdentPrint.printTyCon tycon, " = ",
+d146 5
+a150 4
+	      implode
+	      [indent,
+	       (if Types.type_equalityp ty then "eqtype "
+		else "type "),
+d152 5
+a156 1
+		  IdentPrint.printTyCon tycon, "\n"]
+@
+
+
+1.2
+log
+@Lots more functionality
+@
+text
+@d4 3
+a24 1
+  structure Map : MAP
+d34 1
+a34 2
+  sharing Map = DataTypes.Mapping
+  sharing Basis.Datatypes = DataTypes = Types.Datatypes = Scheme.Datatypes
+d38 1
+d42 1
+d83 1
+a83 1
+	val valenv_assoc = Map.assoc valenv
+d165 1
+a165 1
+	val valenv_assoc = Map.assoc valenv
+d176 1
+a176 1
+	val ty_assoc = Map.assoc tyenv
+d190 2
+a191 2
+	  Map.lookup(strid, strenv)
+	val str_assoc = Map.assoc strenv
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d12 1
+d17 1
+d24 1
+d29 1
+d33 1
+a33 1
+  sharing Basis.Datatypes = DataTypes = Types.Datatypes
+d39 2
+d45 57
+a101 1
+    fun print_tyenv(indent, (tycon, DataTypes.TYSTR(tyfun, valenv))) =
+d104 31
+a134 7
+	  implode[indent, "datatype ", IdentPrint.printTyCon tycon, "\n"]
+      | DataTypes.TYFUN(ty, i) =>
+	  implode
+	  [indent,
+	   (if Types.type_equalityp ty then "eqtype "
+	    else "type "),
+	      IdentPrint.printTyCon tycon, "\n"]
+d137 41
+d180 1
+a180 3
+			      DataTypes.ENV(DataTypes.SE strenv,
+					    DataTypes.TE tyenv, valenv,
+					    exnenv))) =
+d182 1
+d184 4
+d190 5
+a194 4
+	  map (fn (strid, _) => sub_print_str("    ", strid)) str_assoc
+	val ty_assoc = Map.assoc tyenv
+	val tys = map (fn x => print_tyenv("    ", x)) ty_assoc
+	val tail = strs @@ tys @@ tail
+d200 1
+a200 1
+    val sub_print_str = fn (strid, _) => sub_print_str("", strid)
+d202 3
+@

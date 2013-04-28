@@ -1,0 +1,3447 @@
+head	1.8;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	95.09.19.16.02.01;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.09.04.15.11.02;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.08.31.10.11.34;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.08.25.10.21.46;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.08.15.14.08.19;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.08.11.13.16.02;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.14.14.06.54;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.01.16.40.16;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+No reason given
+@
+
+
+1.8
+log
+@Adding DeleteMenu and RemoveMenu
+@
+text
+@/* INTERFACE to NT, plus startup code
+ *
+ * $Log: src:OS:NT:winmain.c,v $
+ * Revision 1.7  1995/09/04  15:11:02  matthew
+ * More stuff
+ *
+ * Revision 1.6  1995/08/31  10:11:34  matthew
+ * Adding extra menu functions
+ *
+ * Revision 1.5  1995/08/25  10:21:46  matthew
+ * more work (dialog boxes and window procedures)
+ *
+ * Revision 1.4  1995/08/15  14:08:19  matthew
+ * More work
+ *
+ * Revision 1.3  1995/08/11  13:16:02  matthew
+ * Extending for capi stuff
+ *
+ * Revision 1.2  1995/03/14  14:06:54  jont
+ * More code
+ *
+ * Revision 1.1  1995/03/01  16:40:16  jont
+ * new unit
+ * No reason given
+ *
+ *
+ * Copyright (C) 1995 Harlequin Ltd
+ *
+ */
+
+/******************************************************************************
+
+        InitApplication() - initializes window data and registers window
+        InitInstance() - saves instance handle and creates main window
+        WndProc() - processes messages for the podium
+        CenterWindow() - used to center the "About" box over application window
+        About() - processes messages for "About" dialog box
+
+****************************************************************************/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "ansi.h"
+#include "mltypes.h"
+#include "main.h"
+#include "utils.h"
+#include "values.h"
+#include "global.h"
+#include "exceptions.h"
+#include "environment.h"
+#include "interface.h"
+#include "gc.h"
+#include "allocator.h"
+#include "diagnostic.h"
+
+#include <windows.h>   /* required for all Windows applications */
+#if !defined(_WIN32) && !defined(WIN32)
+#include <ver.h>
+#endif
+#include "winmain.h"   /* specific to this program */
+
+/* Some utilities */
+
+static inline mlval box(UINT x)
+{
+  mlval b = allocate_string(sizeof(x));
+  memcpy(CSTRING(b), (char *)&x, sizeof(x));
+  return(b);
+}
+
+static inline UINT unbox(mlval b)
+{
+  UINT x;
+  memcpy((char *)&x, CSTRING(b), sizeof(x));
+  return(x);
+}
+
+/* Now some convenient macros */
+
+#define CHWND(x) ((HWND)unbox (x))
+#define MLHWND(x) ((mlval)box ((UINT)x))
+
+#define CHMENU(x) ((HMENU)unbox (x))
+#define MLHMENU(x) ((mlval)box ((UINT)x))
+
+#define MLBOOL(x) ((x) ? MLTRUE : MLFALSE)
+
+static HINSTANCE hInst;          /* current instance */
+
+char szAppName[] = "MLWorks";   /* The name of this application */
+char szTitle[]   = "MLWorks"; /* The title bar text */
+char szList[] = "Toplevel";
+char szFrame[] = "Frame";
+static mlval perv_exn_ref_win;
+
+static HANDLE hAccelTable;
+
+static HWND window = NULL;
+
+static mlval menu_table;
+static mlval add_menu_command (mlval arg)
+{
+  mlval cell = allocate_record (2);
+  /* printf ("add_menu_command %u\n",unbox (FIELD (arg,0))); */
+  FIELD (cell,0) = arg;
+  FIELD (cell,1) = MLSUB (menu_table,0);
+  MLUPDATE (menu_table,0,cell);
+  return (MLUNIT);
+}
+
+static BOOL apply_menu_command (UINT cmd,UINT event,HWND hwnd)
+{
+  mlval list = MLSUB (menu_table,0);
+  /* printf ("apply_menu_command cmd: %u event: %u list: %p\n",cmd,event,list); */
+  while (list != MLNIL)
+    {
+      mlval item = FIELD (list,0);
+      UINT c = unbox (FIELD (item,0));
+      if (cmd == c)
+	{
+	  mlval arg;
+	  mlval mlhwnd;
+
+	  mlhwnd = MLHWND (hwnd);
+	  declare_root (&mlhwnd);
+
+	  arg = allocate_record (2);
+	  declare_root (&arg);
+
+	  FIELD (arg,0) = mlhwnd;
+	  FIELD (arg,1) = MLINT (event);
+
+	  callml (arg,FIELD (item,1));
+
+	  retract_root (&arg);
+	  retract_root (&mlhwnd);
+
+	  return (TRUE);
+	}
+      list = FIELD (list,1);
+    }
+  /* printf ("exiting apply_menu_command, no action found\n"); */
+  return (FALSE);
+}
+
+#define INITIAL_CALLBACK_TABLE_SIZE	1024 /* *** IMPROVE THIS MECHANISM */
+					     /* One possibility would be to
+						re-use callbacks.  They would
+						have to be freed manually
+						though. Better still would be
+						a proper FFI. */
+static unsigned int callback_table_size = INITIAL_CALLBACK_TABLE_SIZE;
+static mlval callback_table; /* This table holds the closures */
+typedef struct {HWND hwnd; int event;} callback_struct;
+static callback_struct *callback_window_handle; /* This table holds the window handles */
+
+static void fix_callback_table(mlval *root, mlval value)
+{
+  unsigned int i;
+
+  callback_table = value;
+
+  MLUPDATE(callback_table, 0, MLINT(0));
+  for(i=1; i<callback_table_size; ++i)
+    MLUPDATE(callback_table, i, MLUNIT);
+  callback_window_handle =
+    (callback_struct *)malloc(callback_table_size * sizeof (HWND));
+}
+
+static BOOL event_enable(HMENU menu, int event)
+{
+  int count = GetMenuItemCount(menu);
+  int i;
+  if (count == -1) return FALSE;
+  for (i = 0; i < count; i++) {
+    unsigned int id = GetMenuItemID(menu, i);
+    if (id == 0xFFFFFFFF) {
+      /* This is a popup submenu */
+      HMENU sub_menu = GetSubMenu(menu, i); /* Get the ith submenu */
+      if (event_enable(sub_menu, event) == TRUE) return TRUE;
+    } else {
+      if ((unsigned int)event == id) {
+	EnableMenuItem(menu, event, MF_BYCOMMAND | MF_ENABLED);
+	return TRUE;
+      };
+    };
+  };
+  return FALSE;
+}
+
+static void menu_enable(HWND window, int event)
+{
+  HMENU menu = GetMenu(window); /* Get the menu bar handle */
+  (void)event_enable(menu, event);
+}
+
+static mlval window_callback_add(mlval argument)
+{
+  size_t callback_nr = CINT(MLSUB(callback_table, 0));
+  HWND window = CHWND (FIELD(argument, 0));
+  int event = CINT(FIELD(argument, 1));
+  DIAGNOSTIC(0, "window_callback_add(window = 0x%X, event = %d,",
+	     window, event);
+  DIAGNOSTIC(0, "                    f = 0x%X)", FIELD(argument, 2), 0);
+
+  /* Element 0 of the table gives the number of callbacks stored.  Callback
+     i is stored in element i+1.  Therefore the old value of element 0 gives
+     the id number of the new callback.  If the table is full, then
+     number of callbacks (i.e. element 0) = size of table - 1. */
+  if(callback_nr >= callback_table_size - 1) {
+    unsigned int i;
+    unsigned int new_table_size = callback_table_size * 2;
+    mlval new_table;
+    callback_struct *new_window_table;
+
+    declare_root(&argument);
+    DIAGNOSTIC(2, "Resizing callback table to %d, callback_nr = %d",
+	       new_table_size, callback_nr);
+    new_table = allocate_array(new_table_size);
+    retract_root(&argument);
+    new_window_table =
+      (callback_struct *)malloc(new_table_size * sizeof(callback_struct));
+
+    for(i=0; i<callback_table_size; ++i) {
+      MLUPDATE(new_table, i, MLSUB(callback_table, i));
+      new_window_table[i] = callback_window_handle[i];
+    };
+    for(; i<new_table_size; ++i)
+      MLUPDATE(new_table, i, MLUNIT);
+    callback_table = new_table;
+    callback_window_handle = new_window_table;
+    callback_table_size = new_table_size;
+    callback_nr = CINT(MLSUB(callback_table, 0));
+  }
+
+  MLUPDATE(callback_table, callback_nr+1, FIELD(argument, 2));
+  MLUPDATE(callback_table, 0, MLINT(callback_nr+1));
+
+#if 0 /* Tricky bit, we don't have ths stuff */
+  XtAddCallback((Widget)FIELD(argument, 0),
+		CSTRING(FIELD(argument, 1)),
+		callback_dispatch,
+		(XtPointer)callback_nr);
+#endif
+  callback_window_handle[callback_nr+1].hwnd = window;
+  callback_window_handle[callback_nr+1].event = event;
+  menu_enable(window, event); /* Temporary */
+  DIAGNOSTIC(0, "  callback_nr = %d", callback_nr, 0);
+
+  return(MLUNIT);
+}
+
+static mlval callback_lookup(HWND hwnd, int event)
+/* Find the right closure to call for the callback given window and event */
+{
+  int callbacks = CINT(MLSUB(callback_table, 0)); /* The number in the table */
+  int i;
+  for (i = 1; i <= callbacks; i++) {
+    if (callback_window_handle[i].hwnd == hwnd && callback_window_handle[i].event == event)
+      return MLSUB(callback_table, i);
+  };
+  return MLUNIT;
+}
+
+static mlval ml_window_proc;
+
+static mlval set_ml_window_proc (mlval arg)
+{
+  ml_window_proc = arg;
+  return (MLUNIT);
+}
+
+static mlval call_ml_window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+/* we have to be careful not to violate any GC assumptions */
+{
+  mlval result;
+  mlval arg;
+  mlval mlhwnd;
+  mlval mlmessage;
+  mlval mlwparam;
+  mlval mllparam;
+
+  mlhwnd = MLHWND (hWnd);
+  declare_root (&mlhwnd);
+  mlmessage = box (message);
+  declare_root (&mlmessage);
+  mlwparam = box (wParam);
+  declare_root (&mlwparam);
+  mllparam = box (lParam);
+  declare_root (&mllparam);
+  arg = allocate_record (4);
+  declare_root (&arg);
+
+  FIELD (arg,0) = mlhwnd;
+  retract_root (&mlhwnd);
+  FIELD (arg,1) = mlmessage;
+  retract_root (&mlmessage);
+  FIELD (arg,2) = mlwparam;
+  retract_root (&mlwparam);
+  FIELD (arg,3) = mllparam;
+  retract_root (&mllparam);
+
+  result = callml (arg,ml_window_proc);
+
+  retract_root (&arg);
+
+  return (result);
+}
+
+LRESULT CALLBACK MLWndProc(
+                HWND hWnd,         /* window handle */
+                UINT message,      /* type of message */
+                WPARAM wParam,     /* additional information */
+                LPARAM lParam)     /* additional information */
+{
+  FARPROC lpProcAbout; /* pointer to the "About" function */
+  int wmId, wmEvent;
+
+  /* Try calling the ml window procedure first */
+  if (ml_window_proc != MLUNIT)
+    {
+      mlval result = call_ml_window_proc (hWnd,message,wParam,lParam);
+      if (result != MLINT (0))
+	return (unbox (FIELD (result,1))); /* Should be some mechanism for returning a value */
+    }
+
+  switch (message) {
+
+  case WM_COMMAND:  /* message: command from application menu */
+
+/* Message packing of wParam and lParam have changed for Win32, let us */
+/* handle the differences in a conditional compilation: */
+#if defined (_WIN32) || defined(WIN32)
+    wmId    = LOWORD(wParam);
+    wmEvent = HIWORD(wParam);
+#else
+    wmId    = wParam;
+    wmEvent = HIWORD(lParam);
+#endif
+
+    /* Handle help messages here */
+
+    switch (wmId) {
+    case IDM_ABOUT:
+      lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+      DialogBox(hInst,           /* current instance */
+		"AboutBox",            /* dlg resource to use */
+		hWnd,                  /* parent handle */
+		(DLGPROC)lpProcAbout); /* About() instance address */
+      FreeProcInstance(lpProcAbout);
+      break;
+
+    case IDM_HELPCONTENTS:
+      if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPSEARCH:
+      if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPHELP:
+      if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    default:
+      /* printf ("Command %u, event %u received in MLWndProc\n", wmId, wmEvent); */
+      if (apply_menu_command (wmId,wmEvent,hWnd))
+	return (0);
+      else
+	return (DefWindowProc(hWnd, message, wParam, lParam));
+      break;
+    }
+  default:          /* Passes it on if unproccessed */
+    return (DefWindowProc(hWnd, message, wParam, lParam));
+  }
+  return (0);
+}
+
+/****************************************************************************
+
+        FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+
+        PURPOSE:  Processes messages
+
+        MESSAGES:
+
+        WM_COMMAND    - application menu (About dialog box)
+        WM_DESTROY    - destroy window
+
+        COMMENTS:
+
+        To process the IDM_ABOUT message, call MakeProcInstance() to get the
+        current instance address of the About() function.  Then call Dialog
+        box which will create the box according to the information in your
+        generic.rc file and turn control over to the About() function.  When
+        it returns, free the instance address.
+
+****************************************************************************/
+
+/* This is for entirely ML window procedures */
+LRESULT APIENTRY SimpleWndProc(HWND hWnd,         /* window handle */
+			       UINT message,      /* type of message */
+			       WPARAM wParam,     /* additional information */
+			       LPARAM lParam)     /* additional information */
+{
+  /* Just call the ml window procedure */
+  if (ml_window_proc != MLUNIT)
+    {
+      mlval result = call_ml_window_proc (hWnd,message,wParam,lParam);
+
+      if (result == MLINT (0))
+	return (0);
+      else
+	return (unbox (FIELD (result,1)));
+    }
+  return (0);
+}
+
+LRESULT CALLBACK AppWndProc(
+                HWND hWnd,         /* window handle */
+                UINT message,      /* type of message */
+                WPARAM wParam,     /* additional information */
+                LPARAM lParam)     /* additional information */
+{
+  FARPROC lpProcAbout; /* pointer to the "About" function */
+  int wmId, wmEvent;
+
+  /* printf ("In AppWndProc\n"); */
+  /* Try calling the ml window procedure first */
+  if (ml_window_proc != MLUNIT)
+    {
+      mlval result = call_ml_window_proc (hWnd,message,wParam,lParam);
+
+      if (result != MLINT (0))
+	return (unbox (FIELD (result,1)));
+    }
+
+  switch (message) {
+
+  case WM_COMMAND:  /* message: command from application menu */
+
+    /* Message packing of wParam and lParam have changed for Win32, let us */
+    /* handle the differences in a conditional compilation: */
+#if defined (_WIN32) || defined(WIN32)
+    wmId    = LOWORD(wParam);
+    wmEvent = HIWORD(wParam);
+#else
+    wmId    = wParam;
+    wmEvent = HIWORD(lParam);
+#endif
+
+    /* Handle help messages here */
+
+    switch (wmId) {
+    case IDM_ABOUT:
+      lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+      DialogBox(hInst,           /* current instance */
+		"AboutBox",            /* dlg resource to use */
+		hWnd,                  /* parent handle */
+		(DLGPROC)lpProcAbout); /* About() instance address */
+      FreeProcInstance(lpProcAbout);
+      break;
+
+    case IDM_HELPCONTENTS:
+      if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPSEARCH:
+      if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPHELP:
+      if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    default:
+      /* printf ("Command %u, event %u received in AppWndProc\n", wmId, wmEvent); */
+      if (apply_menu_command (wmId,wmEvent,hWnd))
+	return (0);
+      else
+	return (DefWindowProc(hWnd, message, wParam, lParam));
+    }
+    break;
+
+    /* message: window being destroyed */
+    /* only do this for the top level message */
+  case WM_DESTROY:  
+    PostQuitMessage(0);
+    printf ("WM_DESTROY: quit message posted\n");
+    break;
+
+  default:          /* Passes it on if unproccessed */
+    return (DefWindowProc(hWnd, message, wParam, lParam));
+  }
+  return (0);
+}
+
+/****************************************************************************
+
+        FUNCTION: InitApplication(HINSTANCE)
+
+        PURPOSE: Initializes window data and registers window class
+
+        COMMENTS:
+
+                This function is called at initialization time only if no other
+                instances of the application are running.  This function performs
+                initialization tasks that can be done once for any number of running
+                instances.
+
+                In this case, we initialize a window class by filling out a data
+                structure of type WNDCLASS and calling the Windows RegisterClass()
+                function.  Since all instances of this application use the same window
+                class, we only need to do this when the first instance is initialized.
+
+
+****************************************************************************/
+
+BOOL InitApplication(HINSTANCE hInstance)
+{
+  WNDCLASS wc, toplevel, frame;
+
+  /* Fill in window class structure with parameters that describe the */
+  /* main window. */
+
+  wc.style         = CS_HREDRAW | CS_VREDRAW;/* Class style(s) */
+  wc.lpfnWndProc   = (WNDPROC)AppWndProc;       /* Window Procedure */
+  wc.cbClsExtra    = 0;                      /* No per-class extra data. */
+  wc.cbWndExtra    = 0;                      /* No per-window extra data. */
+  wc.hInstance     = hInstance;              /* Owner of this class */
+  wc.hIcon         = LoadIcon (hInstance, szAppName); /* Icon name from .RC */
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);/* Cursor */
+  wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);/* Default color */
+  wc.lpszMenuName  = NULL /* szAppName */;
+  wc.lpszClassName = szAppName;              /* Name to register as */
+  if (!RegisterClass(&wc)) return FALSE;
+
+  /* Now create a toplevel window */
+  toplevel.style         = CS_HREDRAW | CS_VREDRAW;/* Class style(s) */
+  toplevel.lpfnWndProc   = (WNDPROC)MLWndProc;       /* Window Procedure */
+  toplevel.cbClsExtra    = 0;                      /* No per-class extra data. */
+  toplevel.cbWndExtra    = 0;                      /* No per-window extra data. */
+  toplevel.hInstance     = hInstance;              /* Owner of this class */
+  toplevel.hIcon         = LoadIcon (hInstance, szAppName); /* Icon name from .RC */
+  toplevel.hCursor       = LoadCursor(NULL, IDC_ARROW);/* Cursor */
+  toplevel.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);/* Default color */
+  toplevel.lpszMenuName  = NULL /* szAppName */;
+  toplevel.lpszClassName = szList;                 /* Name to register as */
+  if (!RegisterClass(&toplevel)) return FALSE;
+
+  /* Now create a "generic" subwindow window class */
+  frame.style         = CS_HREDRAW | CS_VREDRAW;/* Class style(s) */
+  frame.lpfnWndProc   = (WNDPROC)MLWndProc; /*  */
+  frame.cbClsExtra    = 0;                      /* No per-class extra data. */
+  frame.cbWndExtra    = 0;                      /* No per-window extra data. */
+  frame.hInstance     = hInstance;              /* Owner of this class */
+  frame.hIcon         = NULL;
+  frame.hCursor       = LoadCursor(NULL, IDC_ARROW);/* Cursor */
+  frame.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);/* Default color */
+  frame.lpszMenuName  = NULL;
+  frame.lpszClassName = szFrame;                 /* Name to register as */
+  return (RegisterClass(&frame));
+}
+
+
+/****************************************************************************
+
+        FUNCTION:  InitInstance(HINSTANCE, int)
+
+        PURPOSE:  Saves instance handle and creates main window
+
+        COMMENTS:
+
+                This function is called at initialization time for every instance of
+                this application.  This function performs initialization tasks that
+                cannot be shared by multiple instances.
+
+                In this case, we save the instance handle in a static variable and
+                create and display the main program window.
+
+****************************************************************************/
+
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND *window)
+{
+        HWND            hWnd; /* Main window handle. */
+
+        /* Save the instance handle in static variable, which will be used in */
+        /* many subsequence calls from this application to Windows. */
+
+        hInst = hInstance; /* Store instance handle in our global variable */
+
+        /* Create a main window for this application instance. */
+
+        hWnd = CreateWindow(
+                szAppName,           /* See RegisterClass() call. */
+                szTitle,             /* Text for window title bar. */
+                WS_OVERLAPPEDWINDOW, /* Window style. */
+                CW_USEDEFAULT,       /* Horizontal default position */
+                0,                   /* Ignored since x = CW_USEDEFAULT */
+                /*CW_USEDEFAULT*/300,/* Horizontal width */
+                300,                 /* Vertical height */
+                                     /* Use default positioning */
+                NULL,                /* Overlapped windows have no parent. */
+                NULL,                /* Use the window class menu. */
+                hInstance,           /* This instance owns this window. */
+                NULL                 /* We don't use any data in our WM_CREATE */
+        );
+
+        /* If window could not be created, return "failure" */
+        if (!hWnd) {
+                return (FALSE);
+        }
+	*window = hWnd;
+
+        /* Make the window visible; update its client area; and return "success" */
+/*
+        ShowWindow(hWnd, nCmdShow);
+        UpdateWindow(hWnd);
+*/
+
+        return (TRUE);              /* We succeeded... */
+
+}
+
+
+/****************************************************************************
+
+        FUNCTION: CenterWindow (HWND, HWND)
+
+        PURPOSE:  Center one window over another
+
+        COMMENTS:
+
+        Dialog boxes take on the screen position that they were designed at,
+        which is not always appropriate. Centering the dialog over a particular
+        window usually results in a better position.
+
+****************************************************************************/
+
+BOOL CenterWindow (HWND hwndChild, HWND hwndParent)
+{
+        RECT    rChild, rParent;
+        int     wChild, hChild, wParent, hParent;
+        int     wScreen, hScreen, xNew, yNew;
+        HDC     hdc;
+
+        /* Get the Height and Width of the child window */
+        GetWindowRect (hwndChild, &rChild);
+        wChild = rChild.right - rChild.left;
+        hChild = rChild.bottom - rChild.top;
+
+        /* Get the Height and Width of the parent window */
+        GetWindowRect (hwndParent, &rParent);
+        wParent = rParent.right - rParent.left;
+        hParent = rParent.bottom - rParent.top;
+
+        /* Get the display limits */
+        hdc = GetDC (hwndChild);
+        wScreen = GetDeviceCaps (hdc, HORZRES);
+        hScreen = GetDeviceCaps (hdc, VERTRES);
+        ReleaseDC (hwndChild, hdc);
+
+        /* Calculate new X position, then adjust for screen */
+        xNew = rParent.left + ((wParent - wChild) /2);
+        if (xNew < 0) {
+                xNew = 0;
+        } else if ((xNew+wChild) > wScreen) {
+                xNew = wScreen - wChild;
+        }
+
+        /* Calculate new Y position, then adjust for screen */
+        yNew = rParent.top  + ((hParent - hChild) /2);
+        if (yNew < 0) {
+                yNew = 0;
+        } else if ((yNew+hChild) > hScreen) {
+                yNew = hScreen - hChild;
+        }
+
+        /* Set it, and return */
+        return SetWindowPos (hwndChild, NULL,
+                xNew, yNew, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+}
+
+
+/****************************************************************************
+
+        FUNCTION: About(HWND, UINT, WPARAM, LPARAM)
+
+        PURPOSE:  Processes messages for "About" dialog box
+
+        MESSAGES:
+
+        WM_INITDIALOG - initialize dialog box
+        WM_COMMAND    - Input received
+
+        COMMENTS:
+
+        Display version information from the version section of the
+        application resource.
+
+        Wait for user to click on "Ok" button, then close the dialog box.
+
+****************************************************************************/
+
+LRESULT CALLBACK About(
+                HWND hDlg,           /* window handle of the dialog box */
+                UINT message,        /* type of message */
+                WPARAM wParam,       /* message-specific information */
+                LPARAM lParam)
+{
+        static  HFONT hfontDlg;
+        LPSTR   lpVersion;       
+        DWORD   dwVerInfoSize;
+        DWORD   dwVerHnd;
+        UINT    uVersionLen;
+        WORD    wRootLen;
+        BOOL    bRetCode;
+        int     i;
+        char    szFullPath[256];
+        char    szResult[256];
+        char    szGetName[256];
+
+        switch (message) {
+                case WM_INITDIALOG:  /* message: initialize dialog box */
+                        /* Create a font to use */
+                        hfontDlg = CreateFont(14, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, 0, 0,
+                                VARIABLE_PITCH | FF_SWISS, "");
+
+                        /* Center the dialog over the application window */
+                        CenterWindow (hDlg, GetWindow (hDlg, GW_OWNER));
+
+                        /* Get version information from the application */
+                        GetModuleFileName (hInst, szFullPath, sizeof(szFullPath));
+                        dwVerInfoSize = GetFileVersionInfoSize(szFullPath, &dwVerHnd);
+                        if (dwVerInfoSize) {
+                                /* If we were able to get the information, process it: */
+                                LPSTR   lpstrVffInfo;
+                                HANDLE  hMem;
+                                hMem = GlobalAlloc(GMEM_MOVEABLE, dwVerInfoSize);
+                                lpstrVffInfo  = GlobalLock(hMem);
+                                GetFileVersionInfo(szFullPath, dwVerHnd, dwVerInfoSize, lpstrVffInfo);
+                                lstrcpy(szGetName, "\\StringFileInfo\\040904E4\\");
+                                wRootLen = lstrlen(szGetName);
+
+                                /* Walk through the dialog items that we want to replace: */
+                                for (i = DLG_VERFIRST; i <= DLG_VERLAST; i++) {
+                                        GetDlgItemText(hDlg, i, szResult, sizeof(szResult));
+                                        szGetName[wRootLen] = (char)0;
+                                        lstrcat (szGetName, szResult);
+                                        uVersionLen   = 0;
+                                        lpVersion     = NULL;
+                                        bRetCode      =  VerQueryValue((LPVOID)lpstrVffInfo,
+                                                (LPSTR)szGetName,
+                                                (LPVOID)&lpVersion,
+#if defined (_WIN32) || defined(WIN32)
+                                                (LPDWORD)&uVersionLen); /* For MIPS strictness */
+#else
+                                                (UINT *)&uVersionLen);
+#endif
+
+                                        if ( bRetCode && uVersionLen && lpVersion) {
+                                                /* Replace dialog item text with version info */
+                                                lstrcpy(szResult, lpVersion);
+                                                SetDlgItemText(hDlg, i, szResult);
+                                                SendMessage (GetDlgItem (hDlg, i), WM_SETFONT, (UINT)hfontDlg, TRUE);
+                                        }
+                                } /* for (i = DLG_VERFIRST; i <= DLG_VERLAST; i++) */
+
+                                GlobalUnlock(hMem);
+                                GlobalFree(hMem);
+                        } /* if (dwVerInfoSize) */
+
+                        return (TRUE);
+
+                case WM_COMMAND:                      /* message: received a command */
+                        if (LOWORD(wParam) == IDOK        /* "OK" box selected? */
+                        || LOWORD(wParam) == IDCANCEL) {  /* System menu close command? */
+                                EndDialog(hDlg, TRUE);        /* Exit the dialog */
+                                DeleteObject (hfontDlg);
+                                return (TRUE);
+                        }
+                        break;
+        }
+        return (FALSE); /* Didn't process the message */
+
+        lParam; /* This will prevent 'unused formal parameter' warnings */
+}
+
+static mlval call_window_proc (mlval arg)
+{
+  WNDPROC wndproc = (WNDPROC)unbox (FIELD (arg,0));
+  mlval params = FIELD (arg,1);
+  HWND hwnd = CHWND (FIELD (params,0));
+  UINT message = unbox (FIELD (params,1));
+  WPARAM wparam = (WPARAM) unbox (FIELD (params,2));
+  LPARAM lparam = (LPARAM) unbox (FIELD (params,3));
+  /* printf ("Calling window proc: %d %d %d\n",wndproc,hwnd,message); */
+  return (box (CallWindowProc (wndproc,hwnd,message,wparam,lparam)));
+}
+
+static mlval get_simple_window_proc (mlval arg) 
+{
+  return (box ((UINT)SimpleWndProc));
+}
+
+static mlval main_init(mlval argument)
+{
+  HWND window;
+  if (!InitInstance(hInst, SW_SHOWDEFAULT, &window)) {
+    error("Unable to initialise instance");
+  }
+  return (MLHWND (window));
+}
+
+static mlval main_loop(mlval argument)
+{
+  MSG msg;
+
+  /* Acquire and dispatch messages until a WM_QUIT message is received. */
+
+  while (GetMessage(&msg, /* message structure */
+         (HWND) NULL,   /* handle of window receiving the message */
+         0,             /* lowest message to examine */
+         0))            /* highest message to examine */
+    {
+      if (!TranslateAccelerator (msg.hwnd, hAccelTable, &msg)) 
+	/* if (!IsDialogMessage (msg.hwnd, &msg)) */ /* not much use! */ {
+	  TranslateMessage(&msg);/* Translates virtual key codes */
+	  DispatchMessage(&msg); /* Dispatches message to window */
+	}
+    }
+  return MLUNIT;
+}
+
+static mlval do_input (mlval argument)
+{
+  MSG msg;
+
+  /* Acquire and dispatch a single message unless a WM_QUIT message is received. */
+
+  if (GetMessage(&msg, /* message structure */
+		 (HWND) NULL,   /* handle of window receiving the message */
+		 0,             /* lowest message to examine */
+		 0))            /* highest message to examine */
+    {
+      if (!TranslateAccelerator (msg.hwnd, hAccelTable, &msg)) {
+        TranslateMessage(&msg);/* Translates virtual key codes */
+        DispatchMessage(&msg); /* Dispatches message to window */
+      }
+      return MLFALSE;
+    }
+  else
+    return MLTRUE;
+}
+
+  
+/* this should use some sort of predefined type */    
+static UINT convert_flags (mlval list, UINT values[])
+{
+  UINT result = 0L;
+  while (list != MLNIL)
+    {
+      result |= values [CINT (FIELD (list,0))];
+      list = FIELD (list,1);
+    }
+  return (result);
+}
+
+/* An enumeration of the supported messages */
+/* this should be in ASCII lexicographic order and be consistent with *windows.sml */
+/* It would be nice to auto generate this lot */
+
+static UINT message_values[] =
+{
+  (UINT)BM_GETCHECK,
+  (UINT)BM_GETSTATE,
+  (UINT)BM_SETCHECK,
+  (UINT)BM_SETSTATE,
+  (UINT)BM_SETSTYLE,
+
+  (UINT)BN_CLICKED,
+  (UINT)BN_DISABLE,
+  (UINT)BN_DOUBLECLICKED,
+  (UINT)BN_HILITE,
+  (UINT)BN_PAINT,
+  (UINT)BN_UNHILITE,
+  
+  (UINT)DM_GETDEFID,
+  (UINT)DM_SETDEFID,
+
+  (UINT)EM_CANUNDO,
+  (UINT)EM_EMPTYUNDOBUFFER,
+  (UINT)EM_FMTLINES,
+  (UINT)EM_GETFIRSTVISIBLELINE,
+  (UINT)EM_GETHANDLE,
+  (UINT)EM_GETLINE,
+  (UINT)EM_GETLINECOUNT,
+  (UINT)EM_GETMODIFY,
+  (UINT)EM_GETPASSWORDCHAR,
+  (UINT)EM_GETRECT,
+  (UINT)EM_GETSEL,
+  (UINT)EM_GETWORDBREAKPROC,
+  (UINT)EM_LIMITTEXT,
+  (UINT)EM_LINEFROMCHAR,
+  (UINT)EM_LINEINDEX,
+  (UINT)EM_LINELENGTH,
+  (UINT)EM_LINESCROLL,
+  (UINT)EM_REPLACESEL,
+  (UINT)EM_SCROLL,
+  (UINT)EM_SCROLLCARET,
+  (UINT)EM_SETHANDLE,
+  (UINT)EM_SETMODIFY,
+  (UINT)EM_SETPASSWORDCHAR,
+  (UINT)EM_SETREADONLY,
+  (UINT)EM_SETRECT,
+  (UINT)EM_SETRECTNP,
+  (UINT)EM_SETSEL,
+  (UINT)EM_SETTABSTOPS,
+  (UINT)EM_SETWORDBREAKPROC,
+  (UINT)EM_UNDO,
+  (UINT)EN_CHANGE,
+  (UINT)EN_ERRSPACE,
+  (UINT)EN_HSCROLL,
+  (UINT)EN_KILLFOCUS,
+  (UINT)EN_MAXTEXT,
+  (UINT)EN_SETFOCUS,
+  (UINT)EN_UPDATE,
+  (UINT)EN_VSCROLL,
+
+  /* NB: N < _ < n in ascii ordering */
+  (UINT)LBN_DBLCLK,
+  (UINT)LBN_ERRSPACE,
+  (UINT)LBN_KILLFOCUS,
+  (UINT)LBN_SELCANCEL,
+  (UINT)LBN_SELCHANGE,
+  (UINT)LBN_SETFOCUS,
+
+  (UINT)LB_ADDFILE,
+  (UINT)LB_ADDSTRING,
+  (UINT)LB_DELETESTRING,
+  (UINT)LB_DIR,
+  (UINT)LB_FINDSTRING,
+  (UINT)LB_FINDSTRINGEXACT,
+  (UINT)LB_GETANCHORINDEX,
+  (UINT)LB_GETCARETINDEX,
+  (UINT)LB_GETCOUNT,
+  (UINT)LB_GETCURSEL,
+  (UINT)LB_GETHORIZONTALEXTENT,
+  (UINT)LB_GETITEMDATA,
+  (UINT)LB_GETITEMHEIGHT,
+  (UINT)LB_GETITEMRECT,
+  (UINT)LB_GETLOCALE,
+  (UINT)LB_GETSEL,
+  (UINT)LB_GETSELCOUNT,
+  (UINT)LB_GETSELITEMS,
+  (UINT)LB_GETTEXT,
+  (UINT)LB_GETTEXTLEN,
+  (UINT)LB_GETTOPINDEX,
+  (UINT)LB_INSERTSTRING,
+  (UINT)LB_RESETCONTENT,
+  (UINT)LB_SELECTSTRING,
+  (UINT)LB_SELITEMRANGE,
+  (UINT)LB_SELITEMRANGEEX,
+  (UINT)LB_SETANCHORINDEX,
+  (UINT)LB_SETCARETINDEX,
+  (UINT)LB_SETCOLUMNWIDTH,
+  (UINT)LB_SETCOUNT,
+  (UINT)LB_SETCURSEL,
+  (UINT)LB_SETHORIZONTALEXTENT,
+  (UINT)LB_SETITEMDATA,
+  (UINT)LB_SETITEMHEIGHT,
+  (UINT)LB_SETLOCALE,
+  (UINT)LB_SETSEL,
+  (UINT)LB_SETTABSTOPS,
+  (UINT)LB_SETTOPINDEX,
+  
+  (UINT)WM_ACTIVATE,
+  (UINT)WM_ACTIVATEAPP,
+  (UINT)WM_CANCELMODE,
+  (UINT)WM_CHAR,
+  (UINT)WM_CHARTOITEM,
+  (UINT)WM_CHILDACTIVATE,
+  (UINT)WM_CLOSE,
+  (UINT)WM_COMMAND,
+  (UINT)WM_COPY,
+  (UINT)WM_COPYDATA,
+  (UINT)WM_CUT,
+  (UINT)WM_CREATE,
+  (UINT)WM_CTLCOLORBTN,
+  (UINT)WM_CTLCOLOREDIT,
+  (UINT)WM_DEADCHAR,
+  (UINT)WM_DESTROY,
+  (UINT)WM_ENABLE,
+  (UINT)WM_ENDSESSION,
+  (UINT)WM_GETFONT,
+  (UINT)WM_GETMINMAXINFO,
+  (UINT)WM_GETTEXT,
+  (UINT)WM_GETTEXTLENGTH,
+  (UINT)WM_HOTKEY,
+  (UINT)WM_INITMENU,
+  (UINT)WM_KEYDOWN,
+  (UINT)WM_KEYUP,
+  (UINT)WM_KILLFOCUS,
+  (UINT)WM_LBUTTONDBLCLK,
+  (UINT)WM_LBUTTONDOWN,
+  (UINT)WM_LBUTTONUP,
+  (UINT)WM_MBUTTONDBLCLK,
+  (UINT)WM_MBUTTONDOWN,
+  (UINT)WM_MBUTTONUP,
+  (UINT)WM_MOUSEACTIVATE,
+  (UINT)WM_MOUSEMOVE,
+  (UINT)WM_MOVE,
+  (UINT)WM_NCACTIVATE,
+  (UINT)WM_NCCALCSIZE,
+  (UINT)WM_NCCREATE,
+  (UINT)WM_NCDESTROY,
+  (UINT)WM_NCHITTEST,
+  (UINT)WM_NCLBUTTONDBLCLK,
+  (UINT)WM_NCLBUTTONDOWN,
+  (UINT)WM_NCLBUTTONUP,
+  (UINT)WM_NCMBUTTONDBLCLK,
+  (UINT)WM_NCMBUTTONDOWN,
+  (UINT)WM_NCMBUTTONUP,
+  (UINT)WM_NCMOUSEMOVE,
+  (UINT)WM_NCRBUTTONDBLCLK,
+  (UINT)WM_NCRBUTTONDOWN,
+  (UINT)WM_NCRBUTTONUP,
+  /* In the book but not defined! */
+  /* (UINT)WM_OPENICON, */
+  (UINT)WM_PARENTNOTIFY,
+  (UINT)WM_PASTE,
+  (UINT)WM_POWER,
+  (UINT)WM_QUERYENDSESSION,
+  (UINT)WM_QUERYOPEN,
+  (UINT)WM_QUEUESYNC,
+  (UINT)WM_QUIT,
+  (UINT)WM_RBUTTONDBLCLK,
+  (UINT)WM_RBUTTONDOWN,
+  (UINT)WM_RBUTTONUP,
+  (UINT)WM_SETFOCUS,
+  (UINT)WM_SETFONT,
+  (UINT)WM_SETTEXT,
+  (UINT)WM_SHOWWINDOW,
+  (UINT)WM_SIZE,
+  (UINT)WM_SYSCHAR,
+  (UINT)WM_SYSDEADCHAR,
+  (UINT)WM_SYSKEYDOWN,
+  (UINT)WM_SYSKEYUP,
+  (UINT)WM_UNDO,
+  (UINT)WM_WINDOWPOSCHANGED,
+  (UINT)WM_WINDOWPOSCHANGING
+
+/* In the book but not defined! */
+/*
+  (UINT)WN_DELETEITEM,
+  (UINT)WN_VKEYTOITEM
+*/
+  };
+
+static UINT convert_message (mlval arg)
+{
+  return (message_values[CINT (arg)]);
+}
+
+static mlval ml_convert_message (mlval arg)
+{
+  return (box (convert_message (arg)));
+}
+
+/* it's important for this to be in lexical ordering */
+static UINT style_values[] =
+{ 
+  BS_3STATE,
+  BS_AUTO3STATE,
+  BS_AUTOCHECKBOX,
+  BS_AUTORADIOBUTTON,
+  BS_CHECKBOX,
+  BS_DEFPUSHBUTTON,
+  BS_GROUPBOX,
+  BS_LEFTTEXT,
+  BS_OWNERDRAW,
+  BS_PUSHBUTTON,
+  BS_RADIOBUTTON,
+
+  CBS_AUTOHSCROLL,
+  CBS_DISABLENOSCROLL,
+  CBS_HASSTRINGS,
+  CBS_NOINTEGRALHEIGHT,
+  CBS_OEMCONVERT,
+  CBS_OWNERDRAWFIXED,
+  CBS_OWNERDRAWVARIABLE,
+  CBS_SORT,
+
+  ES_AUTOHSCROLL,
+  ES_AUTOVSCROLL,
+  ES_CENTER,
+  ES_LEFT,
+  ES_LOWERCASE,
+  ES_MULTILINE,
+  ES_NOHIDESEL,
+  ES_OEMCONVERT,
+  ES_PASSWORD,
+  ES_READONLY,
+  ES_RIGHT,
+  ES_UPPERCASE,
+  ES_WANTRETURN,
+
+  LBS_DISABLENOSCROLL,
+  LBS_EXTENDEDSEL,
+  LBS_HASSTRINGS,
+  LBS_MULTICOLUMN,
+  LBS_MULTIPLESEL,
+  LBS_NODATA,
+  LBS_NOINTEGRALHEIGHT,
+  LBS_NOREDRAW,
+  LBS_NOTIFY,
+  LBS_OWNERDRAWFIXED,
+  LBS_OWNERDRAWVARIABLE,
+  LBS_SORT,
+  LBS_STANDARD,
+  LBS_USETABSTOPS,
+  LBS_WANTKEYBOARDINPUT,
+
+  SBS_BOTTOMALIGN,
+  SBS_HORZ,
+  SBS_LEFTALIGN,
+  SBS_RIGHTALIGN,
+  SBS_TOPALIGN,
+  SBS_VERT,
+
+  SS_BLACKFRAME,
+  SS_BLACKRECT,
+  SS_CENTER,
+  SS_GRAYFRAME,
+  SS_GRAYRECT,
+  SS_ICON,
+  SS_LEFT,
+  SS_LEFTNOWORDWRAP,
+  SS_NOPREFIX,
+  SS_RIGHT,
+  SS_SIMPLE,
+  SS_WHITEFRAME,
+  SS_WHITERECT,
+
+  WS_BORDER,
+  WS_CAPTION,
+  WS_CHILD,
+  WS_CLIPCHILDREN,
+  WS_CLIPSIBLINGS,
+  WS_DISABLED,
+  WS_DLGFRAME,
+  WS_GROUP,
+  WS_HSCROLL,
+  WS_MAXIMIZE,
+  WS_MAXIMIZEBOX,
+  WS_MINIMIZE,
+  WS_MINIMIZEBOX,
+  WS_OVERLAPPED,
+  WS_OVERLAPPEDWINDOW,
+  WS_POPUP,
+  WS_POPUPWINDOW,
+  WS_SYSMENU,
+  WS_TABSTOP,
+  WS_THICKFRAME,
+  WS_VISIBLE,
+  WS_VSCROLL
+  };
+
+static UINT convert_styles (mlval styles)
+{
+  return (convert_flags (styles,style_values));
+}
+
+
+static UINT menu_flag_values[] =
+{
+  MF_BITMAP,
+  MF_BYCOMMAND,
+  MF_BYPOSITION,
+  MF_CHECKED,
+  MF_DISABLED,
+  MF_ENABLED,
+  MF_GRAYED,
+  MF_MENUBARBREAK,
+  MF_MENUBREAK,
+  MF_OWNERDRAW,
+  MF_POPUP,
+  MF_SEPARATOR,
+  MF_STRING,
+  MF_UNCHECKED
+};
+
+static UINT convert_menu_flags (mlval menu_flags)
+{
+  return (convert_flags (menu_flags,menu_flag_values));
+}
+
+static UINT convert_menu_flag (mlval menu_flag)
+{
+  return (menu_flag_values[CINT(menu_flag)]);
+}
+
+/* This seems to be the best we can do */
+static void win32_error (char* message)
+{
+  DWORD dw = GetLastError();
+  printf ("Win32 problem: %u\n",dw);
+  exn_raise_string(perv_exn_ref_win, message);
+}
+
+static mlval create_window(mlval arg)
+{
+  HWND            hWnd; /* Main window handle. */
+  /* params are in order {class,height,menu,name,parent,styles,width} */
+  char* class = CSTRING (FIELD (arg,0));
+  int height = CINT (FIELD (arg,1));
+  HMENU hmenu = CHMENU (FIELD (arg,2));
+  char* name = CSTRING (FIELD (arg,3));
+  HWND parent = CHWND(FIELD (arg,4));
+  mlval styles = FIELD (arg,5);
+  int width = CINT (FIELD (arg,6));
+
+  /* printf ("Creating window; class: %s, name: %s, parent: %p\n", class, name, parent); */
+
+  /* Create a child window */
+
+  hWnd = CreateWindow(class,              /* See RegisterClass() call. */
+		      name,                /* Text for window title bar. */
+		      convert_styles (styles), /* Window style. */
+		      CW_USEDEFAULT,       /* Horizontal default position */
+		      0,                   /* Ignored since x = CW_USEDEFAULT */
+		      width,               /* Horizontal width */
+		      height,              /* Vertical height */
+		      parent,
+		      hmenu,                /* Use the window class menu. */
+		      hInst,               /* This instance owns this window. */
+		      NULL                 /* We don't use any data in our WM_CREATE */
+		      );
+
+  /* If window could not be created, fail */
+  if (!hWnd)
+    win32_error ("Failed to create window");
+
+  return (MLHWND(hWnd));
+}
+
+static mlval move_window (mlval arg)
+{
+  HWND window = CHWND(FIELD (arg,0));
+  int x = CINT (FIELD (arg,1));
+  int y = CINT (FIELD (arg,2));
+  int width = CINT (FIELD (arg,3));
+  int height = CINT (FIELD (arg,4));
+  int foo = FIELD (arg,5) != MLFALSE;
+  MoveWindow (window,x,y,width,height,foo);
+  return (MLUNIT);
+}
+
+static UINT sw_values[] =
+{
+  SW_HIDE,
+  SW_MAXIMIZE,
+  SW_MINIMIZE,
+  SW_SHOW,
+  SW_SHOWDEFAULT
+  };
+
+static UINT convert_sw_arg (mlval arg)
+{
+  return (sw_values[CINT (arg)]);
+}
+
+/* This should take a SW_* argument also */
+static mlval show_window (mlval arg)
+{
+  /* printf ("Show Window ...%x\n",CHWND(FIELD (arg,0))); */
+  ShowWindow (CHWND(FIELD (arg,0)),convert_sw_arg (FIELD (arg,1)));
+  /* printf ("..done\n"); */
+  return (MLUNIT);
+}
+
+static mlval bring_window_to_top (mlval arg)
+{
+  BringWindowToTop (CHWND (arg));
+  return (MLUNIT);
+}
+
+static mlval close_window (mlval arg)
+{
+  CloseWindow (CHWND (arg));
+  return (MLUNIT);
+}
+
+static mlval destroy_window (mlval arg)
+{
+  DestroyWindow (CHWND (arg));
+  return (MLUNIT);
+}
+
+static mlval get_parent (mlval arg)
+{
+  return (MLHWND (GetParent (CHWND (arg))));
+}
+
+static mlval update_window (mlval arg)
+{
+  /* printf ("Update window...%x\n",CHWND (arg)); */
+  UpdateWindow (CHWND(arg));
+  /* printf ("...done\n"); */
+  return (MLUNIT);
+}
+
+static mlval enable_window (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  BOOL enabled = (FIELD (arg,1) == MLTRUE);
+  return (EnableWindow (hwnd,enabled) ? MLTRUE : MLFALSE);
+}
+
+static mlval is_window (mlval arg)
+{
+  if (IsWindow (CHWND (arg)))
+    return (MLTRUE);
+  else return (MLFALSE);
+}
+
+static BOOL CALLBACK MLEnumProc (HWND hwndChild,LPARAM lParam)
+{
+  /* printf ("MLEnumProc on %u\n",hwndChild); */
+  callml (MLHWND (hwndChild),*(mlval *)lParam);
+  return TRUE;
+}
+
+static mlval enum_windows (mlval callback)
+{
+  declare_root (&callback);
+  if (!EnumWindows (MLEnumProc,(LPARAM)(&callback)))
+    win32_error ("EnumWindows failed");
+  retract_root (&callback);
+  return (MLUNIT);
+}
+
+static mlval enum_child_windows (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  mlval callback = FIELD (arg,1);
+  declare_root (&callback);
+  if (!EnumChildWindows (hwnd,MLEnumProc,(LPARAM)(&callback)))
+    win32_error ("EnumChildWindows failed");
+  retract_root (&callback);
+  return (MLUNIT);
+}
+
+static mlval get_window_rect (mlval arg)
+{
+  HWND hwnd = CHWND (arg);
+  RECT rect;
+  mlval result;
+  GetWindowRect (hwnd,&rect);
+  result = allocate_record (4);
+  /* order is bottom,left,right,top */
+  FIELD (result,0) = MLINT (rect.bottom);
+  FIELD (result,1) = MLINT (rect.left);
+  FIELD (result,2) = MLINT (rect.right);
+  FIELD (result,3) = MLINT (rect.top);
+  return (result);
+}
+
+static mlval get_client_rect (mlval arg)
+{
+  HWND hwnd = CHWND (arg);
+  RECT rect;
+  mlval result;
+  GetClientRect (hwnd,&rect);
+  result = allocate_record (4);
+  /* order is bottom,left,right,top */
+  FIELD (result,0) = MLINT (rect.bottom);
+  FIELD (result,1) = MLINT (rect.left);
+  FIELD (result,2) = MLINT (rect.right);
+  FIELD (result,3) = MLINT (rect.top);
+  return (result);
+}
+
+static mlval screen_to_client (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  mlval p = FIELD (arg,1);
+  LONG x = CINT (FIELD (p,0));
+  LONG y = CINT (FIELD (p,1));
+  POINT point;
+  mlval result;
+  point.x = x;
+  point.y = y;
+  ScreenToClient (hwnd,&point);
+  result = allocate_record (2);
+  FIELD (result,0) = MLINT(point.x);
+  FIELD (result,1) = MLINT(point.y);
+  return (result);
+}
+
+static mlval client_to_screen (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  mlval p = FIELD (arg,1);
+  LONG x = CINT (FIELD (p,0));
+  LONG y = CINT (FIELD (p,1));
+  POINT point;
+  mlval result;
+  point.x = x;
+  point.y = y;
+  ClientToScreen (hwnd,&point);
+  result = allocate_record (2);
+  FIELD (result,0) = MLINT(point.x);
+  FIELD (result,1) = MLINT(point.y);
+  return (result);
+}
+
+static mlval get_window_long (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  int offset = CINT (FIELD (arg,1));
+  return (box ((UINT)GetWindowLong (hwnd,offset)));
+}
+
+static mlval set_window_long (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  int offset = CINT (FIELD (arg,1));
+  int value = (LONG) (unbox (FIELD (arg,2)));
+  UINT result;
+  result = (UINT)SetWindowLong (hwnd,offset,value);
+  /* printf ("set_window_long %d[%d] to %d, returns %d\n", hwnd,offset,value,result); */
+  /* printf ("BTW, SimpleWndProc is %d\n",(UINT)SimpleWndProc); */
+  return (box (result));
+}
+
+static int gwl_values[] =
+{
+  DWL_DLGPROC,
+  DWL_MSGRESULT,
+  DWL_USER,
+
+  GWL_EXSTYLE,
+  GWL_HINSTANCE,
+  GWL_HWNDPARENT,
+  GWL_ID,
+  GWL_USERDATA,
+  GWL_WNDPROC
+  };
+
+static mlval convert_gwl_value (mlval arg)
+{
+  int result = gwl_values [CINT (arg)];
+  /* printf ("convert_gwl_value: %d -> %d\n", CINT (arg), result); */
+  /* printf ("BTW, GWL_WNDPROC is %d\n",GWL_WNDPROC); */
+  return (MLINT (result));
+}
+
+static mlval get_focus (mlval arg)
+{
+  return (MLHWND (GetFocus ()));
+}
+
+static mlval set_focus (mlval arg)
+{
+  return (MLHWND (SetFocus (CHWND (arg))));
+}
+
+/* MENUS */
+
+static mlval get_menu (mlval arg)
+{
+  HMENU hmenu = GetMenu (CHWND (arg));
+  if (hmenu == NULL) win32_error ("GetMenu failed");
+  return (MLHMENU (hmenu));
+}
+
+static mlval get_submenu (mlval arg)
+{
+  HMENU hmenu = GetSubMenu (CHMENU (FIELD (arg,0)),CINT (FIELD (arg,1)));
+  if (hmenu == NULL) win32_error ("GetSubMenu failed");
+  return (MLHMENU (hmenu));
+}
+
+static mlval set_menu (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  HMENU hmenu = CHMENU (FIELD (arg,1));
+  if (!SetMenu (hwnd,hmenu))
+    win32_error ("SetMenu failed");
+  return (MLUNIT);
+}
+
+static mlval create_menu (mlval arg)
+{
+  HMENU hmenu;
+  hmenu = CreateMenu ();
+  if (hmenu == NULL) win32_error ("CreateMenu failed");
+  return (MLHMENU (hmenu));
+}
+
+static mlval create_popup_menu (mlval arg)
+{
+  HMENU hmenu;
+  hmenu = CreatePopupMenu ();
+  if (hmenu == NULL)
+    win32_error ("CreateMenu failed");
+  return (MLHMENU (hmenu));
+}
+
+static mlval append_menu (mlval arg)
+{
+  HMENU hmenu = CHMENU (FIELD (arg,0));
+  UINT menu_flags = convert_menu_flags (FIELD (arg,1));
+  UINT value = unbox (FIELD (arg,2));
+  LPCTSTR item = CSTRING (FIELD (arg,3));
+  if (!AppendMenu (hmenu,menu_flags,value,item))
+    win32_error ("AppendMenu failed");
+  return (MLUNIT);
+}
+
+static mlval delete_menu (mlval arg)
+{
+  HMENU hmenu = CHMENU (FIELD (arg,0));
+  UINT item = unbox (FIELD (arg,1));
+  UINT flag = convert_menu_flag (FIELD (arg,2));
+  if (!DeleteMenu (hmenu,item,flag))
+    win32_error("DeleteMenu failed");
+  return (MLUNIT);
+}
+
+static mlval remove_menu (mlval arg)
+{
+  HMENU hmenu = CHMENU (FIELD (arg,0));
+  UINT item = unbox (FIELD (arg,1));
+  UINT flag = convert_menu_flag (FIELD (arg,2));
+  if (!RemoveMenu (hmenu,item,flag))
+    win32_error("RemoveMenu failed");
+  return (MLUNIT);
+}
+
+static mlval check_menu_item (mlval arg)
+{
+  HMENU hmenu = CHMENU (FIELD (arg,0));
+  UINT item = unbox (FIELD (arg,1));
+  UINT flags = convert_menu_flags (FIELD (arg,2));
+  return (box (CheckMenuItem (hmenu,item,flags)));
+}
+
+static mlval enable_menu_item (mlval arg)
+{
+  HMENU hmenu = CHMENU (FIELD (arg,0));
+  UINT item = unbox (FIELD (arg,1));
+  UINT flags = convert_menu_flags (FIELD (arg,2));
+  return (box (EnableMenuItem (hmenu,item,flags)));
+}
+
+/*
+static mlval get_system_menu (mlval arg)
+{
+}
+
+static mlval get_menu_state (mlval arg)
+{
+}
+
+static mlval insert_menu (mlval arg)
+{
+}
+
+static mlval modify_menu (mlval arg)
+{
+}
+*/
+
+/* messages */
+
+static mlval get_input_state (mlval arg)
+{
+  return (MLBOOL (GetInputState()));
+}
+
+static mlval get_message_pos (mlval arg)
+{
+  long pos = GetMessagePos();
+  mlval result = allocate_record (2);
+  FIELD (result,0) = MLINT (LOWORD (pos));
+  FIELD (result,1) = MLINT (HIWORD (pos));
+  return (result);
+}
+  
+static mlval get_message_time (mlval arg)
+
+{
+  return (CINT (GetMessageTime()));
+}
+
+static mlval in_send_message (mlval arg)
+{
+  return (MLBOOL (InSendMessage()));
+}
+
+static mlval post_message (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  UINT message = convert_message (FIELD (arg,1));
+  WPARAM wparam = (WPARAM)unbox (FIELD (arg,2));
+  LPARAM lparam = (LPARAM)unbox (FIELD (arg,3));
+  if (!PostMessage (hwnd,message,wparam,lparam))
+    win32_error ("PostMessage failed");
+  return (MLUNIT);
+}
+
+static mlval send_message (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  UINT message = convert_message (FIELD (arg,1));
+  WPARAM wparam = (WPARAM)unbox(FIELD (arg,2));
+  LPARAM lparam = (LPARAM)unbox(FIELD (arg,3));
+  LRESULT lresult;
+  /* printf ("Sending message %u to %u\n",message,hwnd); */
+  lresult = SendMessage (hwnd,message,wparam,lparam);
+  return (box (lresult));
+}
+
+/* DIALOGS */
+static UINT mb_style_values[] =
+{
+  MB_ABORTRETRYIGNORE,
+  MB_APPLMODAL,
+  MB_ICONASTERISK,
+  MB_ICONEXCLAMATION,
+  MB_ICONHAND,
+  MB_ICONINFORMATION,
+  MB_ICONQUESTION,
+  MB_ICONSTOP,
+  MB_OK,
+  MB_OKCANCEL,
+  MB_RETRYCANCEL,
+  MB_YESNO,
+  MB_YESNOCANCEL
+  };
+
+static UINT convert_mb_styles (mlval mb_styles)
+{
+  return (convert_flags (mb_styles,mb_style_values));
+}
+
+static mlval message_box (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  LPCTSTR message = CSTRING (FIELD (arg,1));
+  LPCTSTR caption = CSTRING (FIELD (arg,2));
+  UINT styles = convert_mb_styles (FIELD (arg,3));
+  int result = MessageBox (hwnd,message,caption,styles);
+  if (result == 0)
+    win32_error ("MessageBox failed");
+  return (MLINT (result));
+}
+
+static mlval message_beep (mlval arg)
+{
+  UINT value = mb_style_values [CINT (arg)];
+  MessageBeep (value);
+  return MLUNIT;
+}
+
+static mlval create_dialog (mlval arg)
+{
+  return MLUNIT;
+}
+
+int CALLBACK MLDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+  int wmId, wmEvent;
+
+  switch (message) {
+
+  case WM_INITDIALOG:
+    return (1);
+    break;
+  case WM_COMMAND:  /* message: command from application menu */
+
+/* Message packing of wParam and lParam have changed for Win32, let us */
+/* handle the differences in a conditional compilation: */
+#if defined (_WIN32) || defined(WIN32)
+    wmId    = LOWORD(wParam);
+    wmEvent = HIWORD(wParam);
+#else
+    wmId    = wParam;
+    wmEvent = HIWORD(lParam);
+#endif
+
+    /* printf ("Command %u, event %u received in MLWndProc\n", wmId, wmEvent); */
+    if (apply_menu_command (wmId,wmEvent,hwnd))
+      return (1);
+  }
+  return (0);
+}
+
+#define WBUFFLEN 512
+
+static HGLOBAL make_dialog_template (mlval template)
+{
+  /* extract the TEMPLATE fields */
+  /* record components are height,items,nitems,styles,title,width,x,y */
+  int height = CINT (FIELD (template,0));
+  mlval items = FIELD (template,1);
+  int nitems = CINT (FIELD (template,2));
+  mlval styles = FIELD (template,3);
+  char *title = CSTRING (FIELD (template,4));
+  int width = CINT (FIELD (template,5));
+  int x = CINT (FIELD (template,6));
+  int y = CINT (FIELD (template,7));
+  HGLOBAL hgbl;
+  LPDLGTEMPLATE lpdt;
+  LPDLGITEMTEMPLATE lpdit;
+  LPWORD lpw;
+  LPWSTR lpwsz;
+
+  LPWSTR wbuffer;
+
+  hgbl = GlobalAlloc (GMEM_ZEROINIT,4048); /* Loads of room */
+  if (!hgbl) win32_error ("GlobalAlloc failed");
+
+  wbuffer = (LPWSTR)malloc(WBUFFLEN + WBUFFLEN);
+  
+  lpdt = (LPDLGTEMPLATE) GlobalLock (hgbl);
+
+  /* printf ("%x\n",lpdt); */
+  /* printf ("Making box %s, %d subitems\n", title, nitems); */
+
+  /* Define main dialog box components */
+  lpdt->style = convert_styles (styles);
+  lpdt->cdit = nitems;
+  lpdt->x = x; lpdt->y = y;
+  lpdt->cx = width; lpdt->cy = height;
+
+  lpw = (LPWORD) (lpdt + 1); /* point to after the TEMPLATE object */
+  *lpw++ = 0; /* no menu */
+  *lpw++ = 0; /* default dialog box class */
+  lpwsz = (LPWSTR) lpw;
+  MultiByteToWideChar (CP_ACP,MB_PRECOMPOSED,title,-1,wbuffer,WBUFFLEN);
+  /* printf ("Converted title %s to %S\n",title,wbuffer); */
+  lstrcpyW (lpwsz,wbuffer); /* copy title */
+  lpw = (LPWORD)(lpwsz + lstrlenW (lpwsz) + 1); /* increment pointer */
+  /* printf ("Doing subitems\n"); */
+  /* and now do the dialog items */
+  while (items != MLNIL)
+    {
+      mlval item = FIELD (items,0);
+      /* fields are class,height,id,styles,text,width,x,y */
+      char *class = CSTRING (FIELD (item,0));
+      int height = CINT (FIELD (item,1));
+      UINT id = unbox (FIELD (item,2));
+      UINT styles = convert_styles (FIELD (item,3));
+      char *text = CSTRING (FIELD (item,4));
+      int width = CINT (FIELD (item,5));
+      int x = CINT (FIELD (item,6));
+      int y = CINT (FIELD (item,7));
+
+      /* printf ("Making item %s, %s at %d, %d, %d, %d\n", class,text,x,y,width,height); */
+      /* first word align lpw */
+      lpw = (LPWORD)word_align (lpw);
+      /* Now fill in the item template */
+      lpdit = (LPDLGITEMTEMPLATE) lpw;
+      /* printf ("%x\n",lpdit); */
+      lpdit->x = x; lpdit->y = y;
+      lpdit->cx = width; lpdit->cy = height;
+      lpdit->id = id;
+      lpdit->style = styles;
+
+      lpwsz = (LPWSTR) (lpdit + 1); /* make a string pointer */
+      MultiByteToWideChar (CP_ACP,MB_PRECOMPOSED,class,-1,wbuffer,WBUFFLEN);
+      /* printf ("Converted class %s to %S\n",class,wbuffer); */
+      lstrcpyW (lpwsz,wbuffer);
+      lpwsz = (LPWSTR)(lpwsz + lstrlenW (lpwsz) + 1); /* move pointer to next string */
+      MultiByteToWideChar (CP_ACP,MB_PRECOMPOSED,text,-1,wbuffer,WBUFFLEN);
+      /* printf ("Converted text %s to %S\n",text,wbuffer); */
+      lstrcpyW (lpwsz,wbuffer);
+      lpw = (LPWORD)(lpwsz + lstrlenW (lpwsz) + 1); /* set up word pointer */
+      *lpw++ = 0; /* no creation data */
+      items = FIELD (items,1);
+    } /* phew */
+  GlobalUnlock (hgbl);
+  free ((char *) wbuffer);
+  return (hgbl);
+}
+
+/* Takes an ML template object and a parent window */
+static mlval create_dialog_indirect (mlval arg)
+{
+  mlval template = FIELD (arg,0);
+  HWND owner = CHWND (FIELD (arg,1));
+  HGLOBAL hgbl;
+  HWND dbox;
+  hgbl = make_dialog_template (template);
+
+  /* printf ("Creating dialog\n"); */
+  dbox = CreateDialogIndirect (hInst,(LPDLGTEMPLATE)hgbl,owner,(DLGPROC)MLDlgProc);
+  if (!dbox)
+    win32_error ("CreateDialogIndirect failed");
+  GlobalFree (hgbl);
+  return (MLHWND (dbox));
+}
+
+static mlval dialog_box (mlval arg)
+{
+  return MLUNIT;
+}
+
+static mlval dialog_box_indirect (mlval arg)
+{
+  mlval template = FIELD (arg,0);
+  HWND owner = CHWND (FIELD (arg,1));
+  HGLOBAL hgbl;
+  int result;
+  hgbl = make_dialog_template (template);
+
+  printf ("Creating modal dialog\n");
+  result = DialogBoxIndirect (hInst,(LPDLGTEMPLATE)hgbl,owner,(DLGPROC)MLDlgProc);
+  GlobalFree (hgbl);
+  return (MLINT (result));
+}
+
+static mlval end_dialog (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  int result = CINT (FIELD (arg,1));
+  if (!EndDialog (hwnd,result))
+    win32_error ("EndDialog failed");
+  return MLUNIT;
+}
+
+static mlval get_dlg_item (mlval arg)
+{
+  HWND hwnd = CHWND (FIELD (arg,0));
+  int id = unbox (FIELD (arg,1));
+  return (MLHWND (GetDlgItem (hwnd,id)));
+}
+
+/* BUTTON CONTROLS */
+
+static mlval check_dlg_button (mlval arg)
+{
+  HWND dialog = CHWND (FIELD (arg,0));
+  int id = unbox (FIELD (arg,1));
+  int value = CINT (FIELD (arg,2));
+  if (!CheckDlgButton(dialog,id,value))
+    win32_error ("CheckDlgButton failed");
+  return (MLUNIT);
+}
+
+static mlval check_radio_button (mlval arg)
+{
+  HWND dialog = CHWND (FIELD (arg,0));
+  int firstid = unbox (FIELD (arg,1));
+  int lastid = unbox (FIELD (arg,2));
+  int checkid = unbox (FIELD (arg,3));
+  if (!CheckRadioButton(dialog,firstid,lastid,checkid))
+    win32_error ("CheckRadioButton failed");
+  return (MLUNIT);
+}
+
+static mlval is_dlg_button_checked (mlval arg)
+{
+  HWND dialog = CHWND (FIELD (arg,0));
+  int id = unbox (FIELD (arg,1));
+  return (MLINT (IsDlgButtonChecked(dialog,id)));
+}
+
+/* MISCELLANEOUS STUFF */
+
+static mlval ml_malloc (mlval arg)
+{
+  return (box ((UINT)malloc (CINT (arg))));
+}
+
+static mlval ml_free (mlval arg)
+{
+  free ((char *)unbox (arg));
+  return (MLUNIT);
+}
+
+static mlval word_to_string (mlval arg)
+{
+  return (ml_string ((char *)unbox(arg)));
+}
+
+static mlval set_byte (mlval arg)
+{
+  char *ptr = (char *)unbox(FIELD (arg,0));
+  int offset = CINT (FIELD (arg,1));
+  char value = (char) CINT (FIELD(arg,2));
+  *(ptr+offset) = value;
+  return (MLUNIT);
+}
+
+/* need to free the returned value from this */
+static mlval make_c_string (mlval arg)
+{
+  char *string = CSTRING (arg);
+  int len = strlen(string) + 1;
+  char *buff = malloc (len);
+  strcpy (buff,string);
+  return (box ((UINT)buff));
+}
+
+/* MESSAGE WINDOWS */
+/* This is accessed directly from the Capi */
+
+static HWND message_widget;
+
+static void message_widget_output(const char *message)
+{
+  printf ("%s",message);
+  /* now we need to put in carriage-return/linefeeds */
+  
+  /* This is only safe if the window procedure doesn't call ML */
+/*
+  SendMessage (message_widget,
+	       EM_REPLACESEL,
+	       (WPARAM)NULL,
+	       (LPARAM)message);
+*/
+}
+
+static void message_widget_flush(void)
+{
+}
+
+static mlval set_message_widget (mlval arg)
+{
+  message_widget = CHWND(arg);
+
+  messager_function = message_widget_output;
+  message_flusher = message_widget_flush;
+  return (MLUNIT);
+}
+
+static mlval no_message_widget (mlval unit)
+{
+  messager_function = NULL;
+  return (MLUNIT);
+}
+
+/* Initialization */
+void winmain_init(void)
+{
+  int i;
+  hInst = (HINSTANCE)GetModuleHandle(NULL);
+  if (!InitApplication(hInst)) { /* Initialize shared thing */
+    error("Unable to initialise application");     /* Exits if unable to initialize */
+  };
+  hAccelTable = LoadAccelerators (hInst, szAppName);
+  callback_table = allocate_array(INITIAL_CALLBACK_TABLE_SIZE);
+  menu_table = allocate_array (1);
+  ml_window_proc = MLUNIT;
+  MLUPDATE(menu_table,0,MLNIL);
+  MLUPDATE(callback_table, 0, MLINT(0));
+  for(i=1; i<INITIAL_CALLBACK_TABLE_SIZE; ++i)
+    MLUPDATE(callback_table, i, MLUNIT);
+  declare_global("nt callback table", &callback_table, fix_callback_table);
+  declare_global("nt menu table", &menu_table,NULL);
+  declare_global("nt ml window proc", &ml_window_proc,NULL);
+
+  callback_window_handle =
+    (callback_struct *)malloc(callback_table_size * sizeof(callback_struct));
+
+  env_function("nt add menu command", add_menu_command);
+  env_function("nt main loop", main_loop);
+  env_function("nt do input", do_input);
+  env_function("nt main init", main_init);
+
+  env_function("nt add callback", window_callback_add);
+
+  /* General windows functions */
+  env_function("nt create window", create_window);
+  env_function("nt move window", move_window);
+  env_function("nt show window", show_window);
+  env_function("nt update window", update_window);
+  env_function("nt enable window", enable_window);
+  env_function("nt is window", is_window);
+  env_function("nt bring window to top", bring_window_to_top);
+  env_function("nt close window", close_window);
+  env_function("nt destroy window", destroy_window);
+  env_function("nt get parent", get_parent);
+  env_function("nt enum child windows", enum_child_windows);
+  env_function("nt enum windows", enum_windows);
+  env_function("nt get client rect", get_client_rect);
+  env_function("nt get window rect", get_window_rect);
+  env_function("nt screen to client", screen_to_client);
+  env_function("nt client to screen", client_to_screen);
+
+  env_function("nt get window long", get_window_long);
+  env_function("nt set window long", set_window_long);
+  env_function("nt convert gwl value",convert_gwl_value);
+
+  env_function("nt get focus", get_focus);
+  env_function("nt set focus", set_focus);
+
+  /* window procedures */
+  env_function("nt set ml window proc", set_ml_window_proc);
+  env_function("nt call window proc", call_window_proc);
+  env_function("nt get simple window proc", get_simple_window_proc);
+
+  /* menus */
+  env_function("nt get menu", get_menu);
+  env_function("nt get submenu", get_submenu);
+  env_function("nt set menu", set_menu);
+  env_function("nt create menu", create_menu);
+  env_function("nt create popup menu", create_popup_menu);
+  env_function("nt append menu", append_menu);
+  env_function("nt delete menu", delete_menu);
+  env_function("nt remove menu", remove_menu);
+  env_function("nt check menu item", check_menu_item);
+  env_function("nt enable menu item", enable_menu_item);
+
+  /* messages */
+  env_function("nt get input state",get_input_state);
+  env_function("nt get message pos",get_message_pos);
+  env_function("nt get message time", get_message_time);
+  env_function("nt in send message", in_send_message);
+  env_function("nt post message", post_message);
+  env_function("nt send message", send_message);
+  env_function("nt convert message",ml_convert_message);
+
+  /* dialogs */
+  env_function("nt message box",message_box);
+  env_function("nt message beep",message_beep);
+  env_function("nt create dialog",create_dialog);
+  env_function("nt create dialog indirect",create_dialog_indirect);
+  env_function("nt dialog box",dialog_box);
+  env_function("nt dialog box indirect",dialog_box_indirect);
+  env_function("nt end dialog",end_dialog);
+  env_function("nt get dlg item",get_dlg_item);
+
+  /* button controls */
+  env_function ("nt check dlg button",check_dlg_button);
+  env_function ("nt check radio button",check_radio_button);
+  env_function ("nt is dlg button checked",is_dlg_button_checked);
+
+  /* miscellaneous */
+  env_function("nt ml malloc", ml_malloc);
+  env_function("nt make c string", make_c_string);
+  env_function("nt ml free",ml_free);
+  env_function("nt word to string",word_to_string);
+  env_function("nt set byte",set_byte);
+
+  env_function("nt set message widget", set_message_widget);
+  env_function("nt no message widget", no_message_widget);
+
+  perv_exn_ref_win = ref(exn_default);
+  env_value("exception win", perv_exn_ref_win);
+  declare_global("pervasive exception win", &perv_exn_ref_win, NULL);
+}
+@
+
+
+1.7
+log
+@More stuff
+@
+text
+@d4 3
+d123 7
+a129 1
+	  mlval arg = allocate_record (2);
+d131 2
+a132 1
+	  FIELD (arg,0) = MLHWND (hwnd);
+d134 1
+a134 1
+	  /* printf ("Found action for %u\n", cmd); */
+d136 1
+d138 2
+d275 37
+d324 1
+a324 9
+      mlval result;
+      mlval arg = allocate_record (4);
+      declare_root (&arg);
+      FIELD (arg,0) = MLHWND (hWnd);
+      FIELD (arg,1) = box (message);
+      FIELD (arg,2) = box (wParam);
+      FIELD (arg,3) = box (lParam);
+      result = callml (arg,ml_window_proc);
+      retract_root (&arg);
+d424 2
+a425 10
+      mlval result;
+      mlval arg = allocate_record (4);
+      /* printf ("SimpleWndProc: %d %d\n",hWnd,message); */
+      declare_root (&arg);
+      FIELD (arg,0) = MLHWND (hWnd);
+      FIELD (arg,1) = box (message);
+      FIELD (arg,2) = box (wParam);
+      FIELD (arg,3) = box (lParam);
+      result = callml (arg,ml_window_proc);
+      retract_root (&arg);
+d447 2
+a448 9
+      mlval result;
+      mlval arg = allocate_record (4);
+      declare_root (&arg);
+      FIELD (arg,0) = MLHWND (hWnd);
+      FIELD (arg,1) = box (message);
+      FIELD (arg,2) = box (wParam);
+      FIELD (arg,3) = box (lParam);
+      result = callml (arg,ml_window_proc);
+      retract_root (&arg);
+d1207 2
+d1227 4
+d1551 20
+d2043 2
+@
+
+
+1.6
+log
+@Adding extra menu functions
+@
+text
+@d4 3
+d1892 5
+d1899 1
+a1899 1
+	       (WPARAM) NULL,
+d1901 1
+@
+
+
+1.5
+log
+@more work (dialog boxes and window procedures)
+@
+text
+@d4 3
+d107 1
+a107 1
+static BOOL apply_menu_command (UINT cmd,UINT event)
+d117 4
+d122 2
+a123 1
+	  callml (MLINT (event),FIELD (item,1));
+d308 1
+a308 2
+
+		  FreeProcInstance(lpProcAbout);
+d337 1
+a337 1
+      if (apply_menu_command (wmId,wmEvent))
+d476 1
+a476 1
+      if (apply_menu_command (wmId,wmEvent))
+d487 1
+d614 4
+a617 2
+        ShowWindow(hWnd, nCmdShow); /* Show the window */
+        UpdateWindow(hWnd);         /* Sends WM_PAINT message */
+d999 1
+d1269 1
+d1271 1
+d1300 1
+d1302 1
+d1515 9
+a1523 2
+/*
+static mlval get_system_menu (mlval arg)
+d1525 4
+d1531 2
+a1532 1
+static mlval check_menu_item (mlval arg)
+d1668 1
+a1668 1
+    if (apply_menu_command (wmId,wmEvent))
+d1981 2
+@
+
+
+1.4
+log
+@More work
+@
+text
+@d4 3
+d114 1
+a114 1
+	  printf ("Found action for %u\n", cmd);
+d243 8
+d260 16
+d329 1
+a329 1
+      printf ("Command %u, event %u received in MLWndProc\n", wmId, wmEvent);
+d363 27
+d399 17
+d468 1
+a468 1
+      printf ("Command %u, event %u received in AppWndProc\n", wmId, wmEvent);
+d778 17
+d800 1
+a800 1
+  };
+d815 20
+d839 4
+a842 2
+    };
+  return MLUNIT;
+d845 1
+d1291 14
+d1408 27
+a1434 1
+  return (box ((UINT)SetWindowLong (hwnd,offset,value)));
+a1548 28
+static WPARAM convert_wparam (mlval arg)
+{
+  if (FIELD (arg,0) == MLINT (0))
+    {
+      /* printf ("Converting string wparam \"%s\"\n",CSTRING (FIELD (arg,1))); */
+      return ((WPARAM)(CSTRING (FIELD (arg,1))));
+    }
+  else
+    {
+      /* printf ("Converting box wparam\n"); */
+      return ((WPARAM)(unbox (FIELD (arg,1))));
+    }
+}
+
+static LPARAM convert_lparam (mlval arg)
+{
+  if (FIELD (arg,0) == MLINT (0))
+    {
+      /* printf ("Converting string lparam \"%s\"\n",CSTRING (FIELD (arg,1))); */
+      return ((LPARAM)(CSTRING (FIELD (arg,1))));
+    }
+  else
+    {
+      /* printf ("Converting box lparam\n"); */
+      return ((LPARAM)(unbox (FIELD (arg,1))));
+    }
+}
+
+d1553 2
+a1554 2
+  WPARAM wparam = convert_wparam (FIELD (arg,2));
+  LPARAM lparam = convert_lparam (FIELD (arg,3));
+d1564 2
+a1565 2
+  WPARAM wparam = convert_wparam (FIELD (arg,2));
+  LPARAM lparam = convert_lparam (FIELD (arg,3));
+d1614 204
+d1845 10
+d1892 1
+a1892 1
+  if (!InitApplication(hInst)) { /* Initialize shared things */
+d1898 1
+d1905 2
+d1912 1
+d1922 2
+d1937 2
+d1942 5
+d1967 11
+d1981 1
+@
+
+
+1.3
+log
+@Extending for capi stuff
+@
+text
+@d4 3
+d101 1
+a101 1
+static BOOL apply_menu_command (UINT cmd)
+d104 1
+a104 1
+  /* printf ("apply_menu_command cmd: %u list: %p\n",cmd,list); */
+d111 2
+a112 2
+	  /* printf ("Found action for %u\n", cmd); */
+	  callml (MLUNIT,FIELD (item,1));
+d243 1
+a243 1
+                WPARAM uParam,     /* additional information */
+d246 1
+a246 1
+  /* FARPROC lpProcAbout; */ /* pointer to the "About" function */
+d253 1
+a253 1
+/* Message packing of uParam and lParam have changed for Win32, let us */
+d256 2
+a257 2
+  wmId    = LOWORD(uParam);
+    wmEvent = HIWORD(uParam);
+d259 1
+a259 1
+    wmId    = uParam;
+d263 37
+a299 6
+    /* printf ("Command %u received in MLWndProc\n", wmId); */
+    if (apply_menu_command (wmId))
+      return (0);
+    else
+      return (DefWindowProc(hWnd, message, uParam, lParam));
+    break;
+d301 8
+d310 1
+a310 1
+    return (DefWindowProc(hWnd, message, uParam, lParam));
+d339 1
+a339 1
+                WPARAM uParam,     /* additional information */
+d342 1
+a342 1
+  /* FARPROC lpProcAbout; */ /* pointer to the "About" function */
+d349 2
+a350 2
+/* Message packing of uParam and lParam have changed for Win32, let us */
+/* handle the differences in a conditional compilation: */
+d352 2
+a353 2
+  wmId    = LOWORD(uParam);
+    wmEvent = HIWORD(uParam);
+d355 1
+a355 1
+    wmId    = uParam;
+d359 44
+a402 5
+    /* printf ("Command %u received in WndProc\n", wmId); */
+    if (apply_menu_command (wmId))
+      return (0);
+    else
+      return (DefWindowProc(hWnd, message, uParam, lParam));
+d405 2
+a406 2
+  /* message: window being destroyed */
+  /* only do this for the top level message */
+d412 1
+a412 1
+    return (DefWindowProc(hWnd, message, uParam, lParam));
+d472 1
+a472 1
+  frame.lpfnWndProc   = (WNDPROC)DefWindowProc; /* No extra behaviour yet */
+d625 1
+a625 1
+                WPARAM uParam,       /* message-specific information */
+d694 2
+a695 2
+                        if (LOWORD(uParam) == IDOK        /* "OK" box selected? */
+                        || LOWORD(uParam) == IDCANCEL) {  /* System menu close command? */
+d1055 7
+d1063 3
+a1065 1
+  MF_STRING
+d1078 1
+a1078 1
+  printf ("Win32 problem: %d\n");
+d1085 1
+a1085 1
+  /* params are in order {class,height,name,parent,styles,width} */
+d1088 5
+a1092 4
+  char* name = CSTRING (FIELD (arg,2));
+  HWND parent = CHWND(FIELD (arg,3));
+  mlval styles = FIELD (arg,4);
+  int width = CINT (FIELD (arg,5));
+d1106 1
+a1106 1
+		      NULL,                /* Use the window class menu. */
+d1518 32
+d1623 3
+@
+
+
+1.2
+log
+@More code
+@
+text
+@d4 3
+d15 1
+d49 26
+d79 2
+a80 1
+char szList[] = "Listener";
+d87 31
+d172 1
+a172 1
+  HWND window = (HWND)(FIELD(argument, 0));
+d174 1
+a174 1
+  DIAGNOSTIC(3, "window_callback_add(window = 0x%X, event = %d,",
+d176 1
+a176 1
+  DIAGNOSTIC(3, "                    f = 0x%X)", FIELD(argument, 2), 0);
+d220 1
+a220 1
+  DIAGNOSTIC(3, "  callback_nr = %d", callback_nr, 0);
+d237 1
+a237 1
+LRESULT CALLBACK WndProc2(
+d243 2
+a244 2
+  FARPROC lpProcAbout;  /* pointer to the "About" function */
+    int wmId, wmEvent;
+a247 21
+  case WM_CHAR:
+    {
+      char out[90];
+      RECT rectangle;
+      (void)GetClientRect(hWnd, &rectangle);
+      if (uParam == 0xa || uParam == 0xd) {
+	sprintf(out, "Listener received end of line\n\0");
+      } else {
+	sprintf(out, "Listener received '%x'\n\0", uParam);
+      };
+      (void)DrawText(GetDC(hWnd), out, -1, &rectangle, DT_LEFT | DT_NOPREFIX);
+      {
+	mlval closure = callback_lookup(hWnd, IDM_CHAR);
+	int ch = (uParam == 0xd) ? 0xa : uParam; /* Translate all line terminators */
+	if (closure != MLUNIT) {
+	  callml(MLINT(ch), closure);
+	};
+	break;
+      };
+      break;
+    }
+d260 42
+a301 23
+    switch (wmId) {
+    case IDM_ABOUT:
+      lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+      DialogBox(hInst,           /* current instance */
+		"AboutBox",            /* dlg resource to use */
+		hWnd,                  /* parent handle */
+		(DLGPROC)lpProcAbout); /* About() instance address */
+
+		  FreeProcInstance(lpProcAbout);
+      break;
+
+    case IDM_EXIT:
+      DestroyWindow (hWnd);
+      break;
+
+    case IDM_HELPCONTENTS:
+      if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+d303 1
+a303 7
+    case IDM_HELPSEARCH:
+      if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+d305 1
+a305 7
+    case IDM_HELPHELP:
+      if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+d307 9
+a315 34
+      /* Here are all the other possible menu options, */
+    case IDM_NEW:
+    case IDM_OPEN:
+    case IDM_SAVE:
+    case IDM_SAVEAS:
+    case IDM_UNDO:
+    case IDM_CUT:
+    case IDM_COPY:
+    case IDM_PASTE:
+    case IDM_LINK:
+    case IDM_LINKS:
+    case IDM_LISTENER:
+      {
+	mlval closure = callback_lookup(hWnd, wmId);
+	if (closure != MLUNIT) {
+	  callml(MLUNIT, closure);
+	};
+	break;
+      };
+    case IDM_EVALUATOR:
+    case IDM_FILETOOL:
+    case IDM_CONTEXT:
+    case IDM_INSPECTOR:
+    case IDM_EDITOR:
+      {
+	mlval closure = callback_lookup(hWnd, wmId);
+	if (closure != MLUNIT) {
+	  callml(MLUNIT, closure);
+	};
+	break;
+      };
+    case IDM_MISC:
+    case IDM_MODE:
+    case IDM_VALUE:
+d317 4
+a320 1
+    default:
+a321 1
+    }
+d324 3
+a326 1
+  case WM_DESTROY:  /* message: window being destroyed */
+d359 1
+a359 1
+  WNDCLASS wc, listener;
+d365 1
+a365 1
+  wc.lpfnWndProc   = (WNDPROC)WndProc;       /* Window Procedure */
+d372 1
+a372 1
+  wc.lpszMenuName  = szAppName;              /* Menu name from .RC */
+d374 1
+a374 1
+  if (RegisterClass(&wc) == NULL) return NULL;
+d376 25
+a400 12
+  /* Now create a listener type window */
+  listener.style         = CS_HREDRAW | CS_VREDRAW;/* Class style(s) */
+  listener.lpfnWndProc   = (WNDPROC)WndProc2;       /* Window Procedure */
+  listener.cbClsExtra    = 0;                      /* No per-class extra data. */
+  listener.cbWndExtra    = 0;                      /* No per-window extra data. */
+  listener.hInstance     = hInstance;              /* Owner of this class */
+  listener.hIcon         = LoadIcon (hInstance, szAppName); /* Icon name from .RC */
+  listener.hCursor       = LoadCursor(NULL, IDC_ARROW);/* Cursor */
+  listener.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);/* Default color */
+  listener.lpszMenuName  = szAppName;              /* Menu name from .RC */
+  listener.lpszClassName = szList;                 /* Name to register as */
+  return (RegisterClass(&listener));
+a463 148
+        FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
+
+        PURPOSE:  Processes messages
+
+        MESSAGES:
+
+        WM_COMMAND    - application menu (About dialog box)
+        WM_DESTROY    - destroy window
+
+        COMMENTS:
+
+        To process the IDM_ABOUT message, call MakeProcInstance() to get the
+        current instance address of the About() function.  Then call Dialog
+        box which will create the box according to the information in your
+        generic.rc file and turn control over to the About() function.  When
+        it returns, free the instance address.
+
+****************************************************************************/
+
+LRESULT CALLBACK WndProc(
+                HWND hWnd,         /* window handle */
+                UINT message,      /* type of message */
+                WPARAM uParam,     /* additional information */
+                LPARAM lParam)     /* additional information */
+{
+  FARPROC lpProcAbout;  /* pointer to the "About" function */
+    int wmId, wmEvent;
+
+  switch (message) {
+
+  case WM_CHAR:
+    {
+      char out[90];
+      RECT rectangle;
+      (void)GetClientRect(hWnd, &rectangle);
+      if (uParam == 0xa || uParam == 0xd) {
+	sprintf(out, "Received end of line\n\0");
+      } else {
+	sprintf(out, "Received '%x'\n\0", uParam);
+      };
+      (void)DrawText(GetDC(hWnd), out, -1, &rectangle, DT_LEFT | DT_NOPREFIX);
+      break;
+    }
+  case WM_COMMAND:  /* message: command from application menu */
+
+/* Message packing of uParam and lParam have changed for Win32, let us */
+/* handle the differences in a conditional compilation: */
+#if defined (_WIN32) || defined(WIN32)
+  wmId    = LOWORD(uParam);
+    wmEvent = HIWORD(uParam);
+#else
+    wmId    = uParam;
+    wmEvent = HIWORD(lParam);
+#endif
+
+    switch (wmId) {
+    case IDM_ABOUT:
+      lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+      DialogBox(hInst,           /* current instance */
+		"AboutBox",            /* dlg resource to use */
+		hWnd,                  /* parent handle */
+		(DLGPROC)lpProcAbout); /* About() instance address */
+
+		  FreeProcInstance(lpProcAbout);
+      break;
+
+    case IDM_EXIT:
+      DestroyWindow (hWnd);
+      break;
+
+    case IDM_HELPCONTENTS:
+      if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPSEARCH:
+      if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+    case IDM_HELPHELP:
+      if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+	MessageBox (GetFocus(),
+		    "Unable to activate help",
+		    szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+      }
+      break;
+
+      /* Here are all the other possible menu options, */
+      /* all of these are currently disabled: */
+    case IDM_NEW:
+    case IDM_OPEN:
+    case IDM_SAVE:
+    case IDM_SAVEAS:
+    case IDM_UNDO:
+    case IDM_CUT:
+    case IDM_COPY:
+    case IDM_PASTE:
+    case IDM_LINK:
+    case IDM_LINKS:
+    case IDM_LISTENER:
+      {
+	mlval closure = callback_lookup(hWnd, wmId);
+	if (closure != MLUNIT) {
+	  callml(MLUNIT, closure);
+	};
+	break;
+      };
+    case IDM_EVALUATOR:
+    case IDM_FILETOOL:
+    case IDM_CONTEXT:
+    case IDM_INSPECTOR:
+    case IDM_EDITOR:
+      {
+	mlval closure = callback_lookup(hWnd, wmId);
+	if (closure != MLUNIT) {
+	  callml(MLUNIT, closure);
+	};
+	break;
+      };
+    case IDM_MISC:
+    case IDM_MODE:
+    case IDM_VALUE:
+
+    default:
+      return (DefWindowProc(hWnd, message, uParam, lParam));
+    }
+    break;
+
+  case WM_DESTROY:  /* message: window being destroyed */
+    PostQuitMessage(0);
+    break;
+
+  default:          /* Passes it on if unproccessed */
+    return (DefWindowProc(hWnd, message, uParam, lParam));
+  }
+  return (0);
+}
+
+/****************************************************************************
+
+d632 1
+a632 1
+  return (mlval)window;
+d654 339
+a992 1
+static mlval make_window(mlval arg)
+d995 10
+d1007 12
+a1018 14
+  hWnd = CreateWindow(
+          szList,              /* See RegisterClass() call. */
+          CSTRING(arg),        /* Text for window title bar. */
+          WS_OVERLAPPEDWINDOW, /* Window style. */
+          CW_USEDEFAULT,       /* Horizontal default position */
+          0,                   /* Ignored since x = CW_USEDEFAULT */
+          /*CW_USEDEFAULT*/300,/* Horizontal width */
+          300,                 /* Vertical height */
+                               /* Use default positioning */
+          NULL,                /* Overlapped windows have no parent. */
+          NULL,                /* Use the window class menu. */
+          hInst,               /* This instance owns this window. */
+          NULL                 /* We don't use any data in our WM_CREATE */
+  );
+d1021 391
+a1411 3
+  if (!hWnd) {
+    exn_raise_string(perv_exn_ref_win, "Failed to create window");
+  }
+d1413 4
+a1416 3
+  /* Make the window visible; update its client area; and return "success" */
+  ShowWindow(hWnd, SW_SHOWDEFAULT); /* Show the window */
+  UpdateWindow(hWnd);         /* Sends WM_PAINT message */
+d1418 7
+a1424 1
+  return (mlval)hWnd;
+d1427 1
+d1437 2
+d1442 2
+a1443 1
+  declare_global("x callback table", &callback_table, fix_callback_table);
+d1447 1
+d1450 1
+a1450 1
+  env_function("nt create window", make_window);
+d1452 49
+@
+
+
+1.1
+log
+@new unit
+No reason given
+@
+text
+@d3 4
+a6 1
+ * $Log$
+d8 1
+a13 1
+        WinMain() - calls initialization function, processes message loop
+d16 1
+a16 1
+        WndProc() - processes messages
+d36 2
+d39 1
+a39 1
+#include <windows.h>   // required for all Windows applications
+d43 1
+a43 5
+#include "winmain.h"   // specific to this program
+
+#if !defined (APIENTRY) // Windows NT defines APIENTRY, but 3.x doesn't
+#define APIENTRY far pascal
+#endif
+d45 1
+a45 5
+#if !defined(_WIN32) && !defined(WIN32) // Windows 3.x uses a FARPROC for dialogs
+#define DLGPROC FARPROC
+#endif
+
+static HINSTANCE hInst;          // current instance
+d47 2
+a48 2
+char szAppName[] = "MLWorks";   // The name of this application
+char szTitle[]   = "MLWorks"; // The title bar text
+d52 1
+a52 1
+static mlval Call_Back = MLUNIT;
+d56 44
+a99 3
+/****************************************************************************
+
+        FUNCTION: WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+d101 1
+a101 18
+        PURPOSE: calls initialization function, processes message loop
+
+        COMMENTS:
+
+                Windows recognizes this function by name as the initial entry point
+                for the program.  This function calls the application initialization
+                routine, if no other instance of the program is running, and always
+                calls the instance initialization routine.  It then executes a message
+                retrieval and dispatch loop that is the top-level control structure
+                for the remainder of execution.  The loop is terminated when a WM_QUIT
+                message is received, at which time this function exits the application
+                instance by returning the value passed by PostQuitMessage().
+
+                If this function must abort before entering the message loop, it
+                returns the conventional value NULL.
+
+****************************************************************************/
+static unsigned int count_arguments(char *argline)
+d103 2
+a104 14
+  unsigned int i = 0;
+  while (1) {
+    while (*argline == ' ') argline++; /* Skip leading spaces */
+    if (*argline != '\0') {
+      /* We have a parameter */
+      while (*argline != '\0') {
+	if (*(argline++) == ' ') {
+	  break;
+	}
+      };
+      i++;
+    } else break;
+  }
+  return i;
+d107 1
+a107 1
+static void assign_args(char *argv[], char *argline)
+d109 35
+a143 20
+  char *arg_start = argline;
+  unsigned int i = 1;
+  while (1) {
+    while (*argline == ' ') argline++; /* Skip leading spaces */
+    arg_start = argline;
+    if (*argline != '\0') {
+      /* We have a parameter */
+      while (*argline != '\0') {
+	if (*(argline) == ' ') {
+	  break;
+	} else argline++;
+      }
+      {
+	unsigned int len = argline - arg_start;
+	argv[i] = malloc(1 + len); /* Allocate string */
+	memcpy(argv[i], arg_start,  len);
+	argv[i][len] = '\0';
+	i++;
+      }
+    } else break;
+a144 22
+}
+
+static HANDLE hAccelTable;
+
+#if 0
+int APIENTRY WinMain(
+        HINSTANCE hInstance,
+        HINSTANCE hPrevInstance,
+        LPSTR lpCmdLine,
+        int nCmdShow)
+{
+        MSG msg;
+
+/*
+        HANDLE hAccelTable;
+*/
+
+        if (!hPrevInstance) {       // Other instances of app running?
+                        if (!InitApplication(hInstance)) { // Initialize shared things
+                        return (FALSE);     // Exits if unable to initialize
+                }
+        }
+d146 2
+a147 1
+        /* Perform initializations that apply to a specific instance */
+d149 5
+a153 19
+        if (!InitInstance(hInstance, nCmdShow)) {
+                return (FALSE);
+        }
+
+        hAccelTable = LoadAccelerators (hInstance, szAppName);
+#if 0 /* Moved to main_loop */
+
+        /* Acquire and dispatch messages until a WM_QUIT message is received. */
+
+        while (GetMessage(&msg, // message structure
+           (HWND) NULL,   // handle of window receiving the message
+           0,             // lowest message to examine
+           0))            // highest message to examine
+        {
+                if (!TranslateAccelerator (msg.hwnd, hAccelTable, &msg)) {
+                        TranslateMessage(&msg);// Translates virtual key codes
+                        DispatchMessage(&msg); // Dispatches message to window
+                }
+        }
+d155 18
+a172 10
+  {
+ret_val =
+    main(argc, argv);
+  }
+
+(void) main_loop(MLUNIT);
+
+        return (msg.wParam); // Returns the value from PostQuitMessage
+
+        lpCmdLine; // This will prevent 'unused formal parameter' warnings
+a173 1
+#endif
+d176 4
+a179 4
+                HWND hWnd,         // window handle
+                UINT message,      // type of message
+                WPARAM uParam,     // additional information
+                LPARAM lParam)     // additional information
+d181 2
+a182 2
+        FARPROC lpProcAbout;  // pointer to the "About" function
+        int wmId, wmEvent;
+d184 1
+a184 1
+        switch (message) {
+d186 22
+a207 10
+		case WM_CHAR:
+			{
+				char out[90];
+				RECT rectangle;
+				(void)GetClientRect(hWnd, &rectangle);
+				sprintf(out, "Listener received '%x'\n\0", uParam);
+				(void)DrawText(GetDC(hWnd), out, -1, &rectangle, DT_LEFT | DT_NOPREFIX);
+				break;
+			}
+                case WM_COMMAND:  // message: command from application menu
+d209 2
+a210 2
+// Message packing of uParam and lParam have changed for Win32, let us
+// handle the differences in a conditional compilation:
+d212 2
+a213 2
+                        wmId    = LOWORD(uParam);
+                        wmEvent = HIWORD(uParam);
+d215 2
+a216 2
+                        wmId    = uParam;
+                        wmEvent = HIWORD(lParam);
+d219 23
+a241 23
+                        switch (wmId) {
+                                case IDM_ABOUT:
+                                        lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+                                        DialogBox(hInst,           // current instance
+                                                "AboutBox",            // dlg resource to use
+                                                hWnd,                  // parent handle
+                                                (DLGPROC)lpProcAbout); // About() instance address
+
+                                        FreeProcInstance(lpProcAbout);
+                                        break;
+
+                                case IDM_EXIT:
+                                        DestroyWindow (hWnd);
+                                        break;
+
+                                case IDM_HELPCONTENTS:
+                                        if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d243 7
+a249 7
+                                case IDM_HELPSEARCH:
+                                        if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d251 7
+a257 7
+                                case IDM_HELPHELP:
+                                        if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d259 43
+a301 26
+                                // Here are all the other possible menu options,
+                                // all of these are currently disabled:
+                                case IDM_NEW:
+                                case IDM_OPEN:
+                                case IDM_SAVE:
+                                case IDM_SAVEAS:
+                                case IDM_UNDO:
+                                case IDM_CUT:
+                                case IDM_COPY:
+                                case IDM_PASTE:
+                                case IDM_LINK:
+                                case IDM_LINKS:
+				case IDM_LISTENER:
+				  fprintf(stderr, "Callback requested\n");
+				  if (Call_Back != MLUNIT) {
+				    callml(MLUNIT, Call_Back);
+				  };
+				  break;
+				case IDM_EVALUATOR:
+				case IDM_FILETOOL:
+				case IDM_CONTEXT:
+				case IDM_INSPECTOR:
+				case IDM_EDITOR:
+				case IDM_MISC:
+				case IDM_MODE:
+				case IDM_VALUE:
+d303 4
+a306 13
+                                default:
+                                        return (DefWindowProc(hWnd, message, uParam, lParam));
+                        }
+                        break;
+
+                case WM_DESTROY:  // message: window being destroyed
+                        PostQuitMessage(0);
+                        break;
+
+                default:          // Passes it on if unproccessed
+                        return (DefWindowProc(hWnd, message, uParam, lParam));
+        }
+        return (0);
+d334 2
+a335 2
+  // Fill in window class structure with parameters that describe the
+  // main window.
+d337 10
+a346 10
+  wc.style         = CS_HREDRAW | CS_VREDRAW;// Class style(s)
+  wc.lpfnWndProc   = (WNDPROC)WndProc;       // Window Procedure
+  wc.cbClsExtra    = 0;                      // No per-class extra data.
+  wc.cbWndExtra    = 0;                      // No per-window extra data.
+  wc.hInstance     = hInstance;              // Owner of this class
+  wc.hIcon         = LoadIcon (hInstance, szAppName); // Icon name from .RC
+  wc.hCursor       = LoadCursor(NULL, IDC_ARROW);// Cursor
+  wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);// Default color
+  wc.lpszMenuName  = szAppName;              // Menu name from .RC
+  wc.lpszClassName = szAppName;              // Name to register as
+d350 10
+a359 10
+  listener.style         = CS_HREDRAW | CS_VREDRAW;// Class style(s)
+  listener.lpfnWndProc   = (WNDPROC)WndProc2;       // Window Procedure
+  listener.cbClsExtra    = 0;                      // No per-class extra data.
+  listener.cbWndExtra    = 0;                      // No per-window extra data.
+  listener.hInstance     = hInstance;              // Owner of this class
+  listener.hIcon         = LoadIcon (hInstance, szAppName); // Icon name from .RC
+  listener.hCursor       = LoadCursor(NULL, IDC_ARROW);// Cursor
+  listener.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);// Default color
+  listener.lpszMenuName  = szAppName;              // Menu name from .RC
+  listener.lpszClassName = szList;                 // Name to register as
+d381 1
+a381 3
+BOOL InitInstance(
+        HINSTANCE          hInstance,
+        int             nCmdShow)
+d383 1
+a383 1
+        HWND            hWnd; // Main window handle.
+d385 2
+a386 2
+        // Save the instance handle in static variable, which will be used in
+        // many subsequence calls from this application to Windows.
+d388 1
+a388 1
+        hInst = hInstance; // Store instance handle in our global variable
+d390 1
+a390 1
+        // Create a main window for this application instance.
+d393 12
+a404 12
+                szAppName,           // See RegisterClass() call.
+                szTitle,             // Text for window title bar.
+                WS_OVERLAPPEDWINDOW, // Window style.
+                CW_USEDEFAULT,       // Horizontal default position
+                0,                   // Ignored since x = CW_USEDEFAULT
+                /*CW_USEDEFAULT*/300,// Horizontal width
+                300,                 // Vertical height
+                                     // Use default positioning
+                NULL,                // Overlapped windows have no parent.
+                NULL,                // Use the window class menu.
+                hInstance,           // This instance owns this window.
+                NULL                 // We don't use any data in our WM_CREATE
+d407 1
+a407 1
+        // If window could not be created, return "failure"
+d411 1
+a411 1
+	window = hWnd;
+d413 3
+a415 3
+        // Make the window visible; update its client area; and return "success"
+        ShowWindow(hWnd, nCmdShow); // Show the window
+        UpdateWindow(hWnd);         // Sends WM_PAINT message
+d417 1
+a417 1
+        return (TRUE);              // We succeeded...
+d444 4
+a447 4
+                HWND hWnd,         // window handle
+                UINT message,      // type of message
+                WPARAM uParam,     // additional information
+                LPARAM lParam)     // additional information
+d449 2
+a450 2
+        FARPROC lpProcAbout;  // pointer to the "About" function
+        int wmId, wmEvent;
+d452 1
+a452 1
+        switch (message) {
+d454 14
+a467 10
+		case WM_CHAR:
+			{
+				char out[90];
+				RECT rectangle;
+				(void)GetClientRect(hWnd, &rectangle);
+				sprintf(out, "Received '%x'\n\0", uParam);
+				(void)DrawText(GetDC(hWnd), out, -1, &rectangle, DT_LEFT | DT_NOPREFIX);
+				break;
+			}
+                case WM_COMMAND:  // message: command from application menu
+d469 2
+a470 2
+// Message packing of uParam and lParam have changed for Win32, let us
+// handle the differences in a conditional compilation:
+d472 2
+a473 2
+                        wmId    = LOWORD(uParam);
+                        wmEvent = HIWORD(uParam);
+d475 2
+a476 2
+                        wmId    = uParam;
+                        wmEvent = HIWORD(lParam);
+d479 23
+a501 23
+                        switch (wmId) {
+                                case IDM_ABOUT:
+                                        lpProcAbout = MakeProcInstance((FARPROC)About, hInst);
+
+                                        DialogBox(hInst,           // current instance
+                                                "AboutBox",            // dlg resource to use
+                                                hWnd,                  // parent handle
+                                                (DLGPROC)lpProcAbout); // About() instance address
+
+                                        FreeProcInstance(lpProcAbout);
+                                        break;
+
+                                case IDM_EXIT:
+                                        DestroyWindow (hWnd);
+                                        break;
+
+                                case IDM_HELPCONTENTS:
+                                        if (!WinHelp (hWnd, "runtime.HLP", HELP_KEY,(DWORD)(LPSTR)"CONTENTS")) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d503 7
+a509 7
+                                case IDM_HELPSEARCH:
+                                        if (!WinHelp(hWnd, "GENERIC.HLP", HELP_PARTIALKEY, (DWORD)(LPSTR)"")) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d511 7
+a517 7
+                                case IDM_HELPHELP:
+                                        if(!WinHelp(hWnd, (LPSTR)NULL, HELP_HELPONHELP, 0)) {
+                                                MessageBox (GetFocus(),
+                                                        "Unable to activate help",
+                                                        szAppName, MB_SYSTEMMODAL|MB_OK|MB_ICONHAND);
+                                        }
+                                        break;
+d519 44
+a562 26
+                                // Here are all the other possible menu options,
+                                // all of these are currently disabled:
+                                case IDM_NEW:
+                                case IDM_OPEN:
+                                case IDM_SAVE:
+                                case IDM_SAVEAS:
+                                case IDM_UNDO:
+                                case IDM_CUT:
+                                case IDM_COPY:
+                                case IDM_PASTE:
+                                case IDM_LINK:
+                                case IDM_LINKS:
+				case IDM_LISTENER:
+				  fprintf(stderr, "Callback requested\n");
+				  if (Call_Back != MLUNIT) {
+				    callml(MLUNIT, Call_Back);
+				  };
+				  break;
+				case IDM_EVALUATOR:
+				case IDM_FILETOOL:
+				case IDM_CONTEXT:
+				case IDM_INSPECTOR:
+				case IDM_EDITOR:
+				case IDM_MISC:
+				case IDM_MODE:
+				case IDM_VALUE:
+d564 4
+a567 13
+                                default:
+                                        return (DefWindowProc(hWnd, message, uParam, lParam));
+                        }
+                        break;
+
+                case WM_DESTROY:  // message: window being destroyed
+                        PostQuitMessage(0);
+                        break;
+
+                default:          // Passes it on if unproccessed
+                        return (DefWindowProc(hWnd, message, uParam, lParam));
+        }
+        return (0);
+d591 1
+a591 1
+        // Get the Height and Width of the child window
+d596 1
+a596 1
+        // Get the Height and Width of the parent window
+d601 1
+a601 1
+        // Get the display limits
+d607 1
+a607 1
+        // Calculate new X position, then adjust for screen
+d615 1
+a615 1
+        // Calculate new Y position, then adjust for screen
+d623 1
+a623 1
+        // Set it, and return
+d650 3
+a652 3
+                HWND hDlg,           // window handle of the dialog box
+                UINT message,        // type of message
+                WPARAM uParam,       // message-specific information
+d668 2
+a669 2
+                case WM_INITDIALOG:  // message: initialize dialog box
+                        // Create a font to use
+d674 1
+a674 1
+                        // Center the dialog over the application window
+d677 1
+a677 1
+                        // Get version information from the application
+d681 1
+a681 1
+                                // If we were able to get the information, process it:
+d690 1
+a690 1
+                                // Walk through the dialog items that we want to replace:
+d701 1
+a701 1
+                                                (LPDWORD)&uVersionLen); // For MIPS strictness
+d707 1
+a707 1
+                                                // Replace dialog item text with version info
+d712 1
+a712 1
+                                } // for (i = DLG_VERFIRST; i <= DLG_VERLAST; i++)
+d716 1
+a716 1
+                        } // if (dwVerInfoSize)
+d720 4
+a723 4
+                case WM_COMMAND:                      // message: received a command
+                        if (LOWORD(uParam) == IDOK        // "OK" box selected?
+                        || LOWORD(uParam) == IDCANCEL) {  // System menu close command?
+                                EndDialog(hDlg, TRUE);        // Exit the dialog
+d729 1
+a729 1
+        return (FALSE); // Didn't process the message
+d731 1
+a731 1
+        lParam; // This will prevent 'unused formal parameter' warnings
+d736 2
+a737 1
+  if (!InitInstance(hInst, SW_SHOWDEFAULT)) {
+d740 1
+a740 1
+  return MLUNIT;
+d749 4
+a752 4
+  while (GetMessage(&msg, // message structure
+         (HWND) NULL,   // handle of window receiving the message
+         0,             // lowest message to examine
+         0))            // highest message to examine
+d755 2
+a756 2
+        TranslateMessage(&msg);// Translates virtual key codes
+        DispatchMessage(&msg); // Dispatches message to window
+d764 2
+a765 2
+  HWND            hWnd; // Main window handle.
+  // Create a child window
+a766 1
+  fprintf(stderr, "Attempting to create window\n");
+d768 12
+a779 12
+          szList,              // See RegisterClass() call.
+          CSTRING(arg),        // Text for window title bar.
+          WS_OVERLAPPEDWINDOW, // Window style.
+          CW_USEDEFAULT,       // Horizontal default position
+          0,                   // Ignored since x = CW_USEDEFAULT
+          /*CW_USEDEFAULT*/300,// Horizontal width
+          300,                 // Vertical height
+                               // Use default positioning
+          NULL,                // Overlapped windows have no parent.
+          NULL,                // Use the window class menu.
+          hInst,               // This instance owns this window.
+          NULL                 // We don't use any data in our WM_CREATE
+d782 1
+a782 1
+  // If window could not be created, fail
+d787 3
+a789 13
+  // Make the window visible; update its client area; and return "success"
+  ShowWindow(hWnd, SW_SHOWDEFAULT); // Show the window
+  UpdateWindow(hWnd);         // Sends WM_PAINT message
+
+  return MLUNIT;
+}
+
+static mlval callback_add(mlval closure)
+{
+  HMENU menu = GetMenu(window); /* Get the menu bar handle */
+  HMENU sub_menu = GetSubMenu(menu, 0); /* Item zero, the tool menu */
+  Call_Back = closure;
+  /* Now ungrey the menu item */
+d791 1
+a791 2
+  EnableMenuItem(sub_menu, 0, MF_BYPOSITION | MF_ENABLED);
+  return MLUNIT;
+d796 1
+d798 2
+a799 2
+  if (!InitApplication(hInst)) { // Initialize shared things
+    error("Unable to initialise application");     // Exits if unable to initialize
+d802 8
+a809 1
+  declare_root(&Call_Back);
+d813 1
+a813 1
+  env_function("nt add callback", callback_add);
+@

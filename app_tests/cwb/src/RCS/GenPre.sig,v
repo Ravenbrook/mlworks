@@ -1,0 +1,109 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.22.17;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.32;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: GenPre.sig,v 1.3 1994/10/31 17:06:28 pxs Exp $";
+(********************************** GenPre ***********************************)
+(*                                                                           *)
+(*             Signature for Preorder Checking                               *)
+(*                                                                           *)
+(*  Modified to run under Bell ML compiler - April 1989 - Jo Blishen         *)
+(*                                                                           *)
+(*****************************************************************************)
+
+signature GENPRE =
+sig
+   structure DivC : DIVCOMP
+
+(****************************************************************************)
+(*                                                                          *)
+(* genpreord: (relaxpred,initpred) -> (lefttranssyst,righttranssyst)        *)
+(*                                                                -> bool   *)
+(* relaxpred: it relaxes the check of the second condition for bisimulation *)
+(*     If this predicate is set to true then we only check for simulation   *)
+(*     rather than for bisimulation.                                        *)
+(*       -In the case of the testing preorder, we can use relaxpred to      *)
+(*        switch to the simulation modus, because all we need about the     *)
+(*        second condition is a consequence of the first condition and a    *)
+(*        frame condition, which is checked already in the initialization   *)
+(*        process via the predicate initpred. Thus for an application to    *)
+(*        testing equivalence you have to use the trivial predicate:        *)
+(*        trivpred: 'a state ->  bool     (state  ->  true)                 *)
+(*       -In the case of the divergence preorder this predicate is to avoid *)
+(*        the check of the second condition whenever the left hand state is *)
+(*        known to be globally divergence. Therefore we need to use         *)
+(*        globdivpred (see DivergenceComputations) in this case.            *)
+(* initpre: it serves for a first approximation of the "greater set"        *)
+(*     (represented in the component state.inf.appref).                     *)
+(*       -In case of the testing preorder initpred should guarantee for     *)
+(*        well behaving acceptance sets (represented in accsetref). The     *)
+(*        ongoing main analysis always assumes that the acceptance sets     *)
+(*        behave well. It is not checked there.                             *)
+(*       -In case of the divergence preorder initpred guarantees that only  *)
+(*        "more convergent" state are regarded as possible upper approxima- *)
+(*        tions. So we never have to check (left state converges implies    *)
+(*        right state converges) during the main analysis.                  *)
+(* lefttranssyst: it gives just the left hand state with its environment    *)
+(*     a list of states.                                                    *)
+(* righttranssyst: it gives just the left hand state with its environment   *)
+(*     a list of states.                                                    *)
+(*                                                                          *)
+(* genpreord results in true iff leftrtranssyst < righttranssyst            *)
+(*                                                                          *)
+(****************************************************************************)
+
+val genpreord : (DivC.Elem.Preinf DivC.Elem.PG.state ref -> bool) *
+                  ((DivC.Elem.Preinf DivC.Elem.PG.state ref *
+                    DivC.Elem.Preinf DivC.Elem.PG.state ref) -> bool)
+                -> (DivC.Elem.Preinf DivC.Elem.PG.state ref *
+                    DivC.Elem.Preinf DivC.Elem.PG.state ref list) *
+                   (DivC.Elem.Preinf DivC.Elem.PG.state ref *
+                    DivC.Elem.Preinf DivC.Elem.PG.state ref list) -> bool
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

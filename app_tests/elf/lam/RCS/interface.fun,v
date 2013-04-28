@@ -1,0 +1,92 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.12.16.49;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.30.04;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+
+(* Externally visible aspects of the lexer and parser *)
+
+functor Interface () : INTERFACE =
+struct
+
+  type pos = int
+  datatype region = Region of {from : int * int, to : int * int}
+
+  local 
+      val line = ref 1   (* number of line currently scanned *)
+      val newlines = ref (nil:pos list)  (* list of positions of newlines *)
+      (* invariant: length (!bols) + 1 = !line *)
+  in
+    fun init_line (iline) = ( line := iline ; newlines := nil )
+    fun next_line (pos) = ( line := !line + 1 ; 
+			    newlines := pos :: !newlines )
+    fun last_newline () =
+	   (case (!newlines)
+	      of nil => 0
+               | (pos::_) => pos)
+    val dummy_pos = 0
+    fun search_pos (pos:pos, line, nil) = (line, pos)
+      | search_pos (pos:pos, line, newline_pos::rest) =
+	  if pos > newline_pos
+	     then (line, pos-newline_pos)
+	     else search_pos (pos, line-1, rest)
+    fun region (lpos,rpos) =
+	  Region {from = search_pos (lpos,!line,!newlines),
+		  to = search_pos (rpos,!line,!newlines)}
+    fun makestring_region (Region {from = (lline,lcol), to = (rline,rcol)}) =
+	  (makestring lline) ^ "." ^ (makestring lcol)
+	  ^ "-" ^ (makestring rline) ^ "." ^ (makestring rcol)
+	   
+    fun error (errmsg,lrpos) =
+      print ("Line " ^ (makestring_region (region lrpos)) ^ ": "
+	     ^ errmsg ^ "\n")
+  end
+
+end  (* functor Interface *)
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

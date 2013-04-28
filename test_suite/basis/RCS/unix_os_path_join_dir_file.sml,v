@@ -1,0 +1,91 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.05.22.10.19.40;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.21.13.17.04;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.joinDirFile.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log: basis:unix_os_path_join_dir_file.sml,v $
+ *  Revision 1.1  1996/05/21  13:17:04  stephenb
+ *  new unit
+ *
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = joinDirFile {dir = "", file = ""} = "";
+
+val b = joinDirFile {dir = "", file = "."} = ".";
+
+val c = joinDirFile {dir = "", file = "b"} = "b";
+
+val d = joinDirFile {dir = "b", file = ""} = "b/";
+
+val e = joinDirFile {dir = "a", file = "b"} = "a/b";
+
+val f = joinDirFile {dir = "/", file = "a"} = "/a";
+
+val g = joinDirFile {dir = "/a", file = "b"} = "/a/b";
+
+val h = joinDirFile {dir = "/c/a", file = "b"} = "/c/a/b";
+
+val i = joinDirFile {dir = "/c/a/b", file = ""} = "/c/a/b/";
+
+val j = joinDirFile {dir = "/c/a", file = "b.foo.bar"} = "/c/a/b.foo.bar";
+
+val k = joinDirFile {dir = "/c/a", file = "b.foo"} = "/c/a/b.foo";
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ * $Log$
+d18 1
+a18 1
+Shell.Module.loadSource "unix.__os";
+@

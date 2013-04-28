@@ -1,0 +1,252 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_workspace_97:1.3.1
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_20m0_1997_06_20:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	99.03.12.11.50.53;	author johnh;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.10.26.17.37.24;	author jkbrook;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.06.27.14.25.10;	author stephenb;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	97.05.15.08.14.56;	author stephenb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	97.05.13.15.44.28;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	97.11.30.16.49.24;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #20035]
+@
+
+
+1.5
+log
+@[Bug #190506]
+Fix pointer to .lib file.
+@
+text
+@#!/bin/sh
+#
+# Copyright 1997 The Harlequin Group Limited.  All rights reserved.
+#
+# Test the add sample
+#
+# Revision Log
+# ------------
+# $Log: foreign:add:TEST.sh,v $
+# Revision 1.4  1998/10/26  17:37:24  jkbrook
+# [Bug #70184]
+# Update for projects, particularly configurations
+#
+# Revision 1.3  1997/06/27  14:25:10  stephenb
+# [Bug #30029]
+# Remove the perl stuff now that 20033 has been implemented.
+#
+# Revision 1.2  1997/05/15  08:14:56  stephenb
+# [Bug #20035]
+# Some Win32 specific things: use NUL instead of /dev/null; don't
+# use {} in trap command.
+#
+# Revision 1.1  1997/05/13  15:44:28  stephenb
+# new unit
+# [Bug #20035]
+#
+#
+
+
+mlw_src=${1:-../../../src}
+mlw_rts_dir=${mlw_src}/rts/bin/$ARCH/$OS
+mlw_rts=${mlw_rts_dir}/main
+mlw_image=${mlw_src}/images/$ARCH/$OS/gui.img
+mlw_pervasive=${mlw_src}/pervasive
+mlw_include=${mlw_src}/rts/src
+
+LD_LIBRARY_PATH=.${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+
+if { ../platform_win32.sh ; }
+then
+  mlw_null=NUL
+  mlw_os_type=Win32
+  mlw_make_type=Win32
+  mlw_sep=";"
+  mlw_lib=${mlw_rts_dir}/libmlw.lib
+else
+  mlw_null=/dev/null
+  mlw_os_type=Unix
+  mlw_make_type=$OS
+  mlw_sep=":"
+  mlw_lib=${mlw_rts_dir}/main.lib
+fi
+
+
+#
+# Make sure the script cleans up after itself.
+#
+
+trap "make -s -f Makefile.${mlw_make_type} clean;" 0 1
+
+#
+# Build the .so/.dll.  Redirecting to $mlw_null is done because
+# VC++ insists on outputing info as it is compiling and I can't
+# find the switches to turn it off.
+#
+
+if { make -s -f Makefile.${mlw_make_type} MLWORKS_INCLUDE=${mlw_include} MLWORKS_LIB=${mlw_lib} clean all > $mlw_null ;}
+then
+  echo "make ok" 
+else
+  echo "make failed"
+  exit 1
+fi
+
+#
+# Create a .sml file for the current configuration
+#
+
+rm -f TEST.sml
+sed -e "s?ARCH_OS?$ARCH/$OS?" TEST.sml.in > TEST.sml
+
+# 
+# Run the demo. 
+#
+
+${mlw_rts} -MLWpass args -batch -load ${mlw_image} args -silent -tty -no-banner -pervasive-dir ${mlw_pervasive} < TEST.sml 2> $mlw_null 
+
+
+@
+
+
+1.4
+log
+@[Bug #70184]
+Update for projects, particularly configurations
+@
+text
+@d10 4
+d31 2
+a32 1
+mlw_rts=${mlw_src}/rts/bin/$ARCH/$OS/main
+a35 1
+mlw_lib=${mlw_rts}.lib
+d46 1
+d52 1
+@
+
+
+1.3
+log
+@[Bug #30029]
+Remove the perl stuff now that 20033 has been implemented.
+@
+text
+@d10 4
+d70 6
+d77 2
+a78 2
+#
+# Run the test.
+d81 3
+a83 1
+${mlw_rts} -batch -load ${mlw_image} -pass args -silent -tty -pervasive-dir ${mlw_pervasive} -source-path ${mlw_os_type}${mlw_sep}.${mlw_sep}${mlw_src} args < TEST.sml 2> $mlw_null
+@
+
+
+1.3.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a9 4
+# Revision 1.3  1997/06/27  14:25:10  stephenb
+# [Bug #30029]
+# Remove the perl stuff now that 20033 has been implemented.
+#
+@
+
+
+1.2
+log
+@[Bug #20035]
+Some Win32 specific things: use NUL instead of /dev/null; don't
+use {} in trap command.
+@
+text
+@d10 5
+d29 1
+a29 1
+LD_LIBRARY_PATH="."
+d71 1
+a71 5
+${mlw_rts} -batch -load ${mlw_image} -pass args -silent -tty -pervasive-dir ${mlw_pervasive} -source-path ${mlw_os_type}${mlw_sep}.${mlw_sep}${mlw_src} args < TEST.sml 2> $mlw_null | perl ../../../test_suite/perl_script
+
+#
+# The perl stuff can go away when Request #20033 is implemented.
+#
+@
+
+
+1.1
+log
+@new unit
+[Bug #20035]
+@
+text
+@d9 5
+a13 1
+# $Log$
+d27 12
+a38 4
+case $OS in
+  NT|Win95) mlw_os_type=Win32; mlw_make_type=Win32; mlw_sep=";";;
+  *)        mlw_os_type=Unix; mlw_make_type=$OS; mlw_sep=":" ;;
+esac
+d45 1
+a45 1
+trap "{ make -s -f Makefile.${mlw_make_type} clean; }" 0 1
+d48 3
+a50 1
+# Build the .so/.dll ...
+d53 1
+a53 1
+if { make -s -f Makefile.${mlw_make_type} MLWORKS_INCLUDE=${mlw_include} MLWORKS_LIB=${mlw_lib} clean all;}
+d66 1
+a66 1
+${mlw_rts} -batch -load ${mlw_image} -pass args -silent -tty -pervasive-dir ${mlw_pervasive} -source-path ${mlw_os_type}${mlw_sep}.${mlw_sep}${mlw_src} args < TEST.sml 2> /dev/null | perl ../../../test_suite/perl_script
+@

@@ -1,0 +1,151 @@
+head	1.4;
+access;
+symbols
+	Final_version_of_old_runtime:1.4
+	ML_revised_beta_release_25/05/94:1.4
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.4
+date	92.07.09.09.03.53;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.07.03.08.09.53;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.08.12.10.09;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.24.16.45.41;	author davidt;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.07.09.09.03.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Awk file to generate the file __implicit.sml from implicit.c
+@
+
+
+1.4
+log
+@Corrected the regular expressions matched.
+@
+text
+@BEGIN {
+	print "(*  ==== IMPLICIT VECTOR OFFSETS ====";
+        print " *";
+        print " *  Machine generated from implicit.c by __implicit.awk";
+        print " *  DO NOT ALTER";
+	print " *)";
+	print ("\nstructure ImplicitVector_ =");
+	print ("  struct");
+      }
+
+/^.*struct  *implicit_vector *$/ {
+        START = 1;
+      }
+
+/} .*; *$/  {
+	START = 0;
+      }
+
+      {
+	if (START > 2) print("    val", $2, "=", START-3);
+	if (START > 0) ++START;
+      }
+
+END   {
+	print ("  end");
+      }
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@@
+
+
+1.3
+log
+@Changed to read implicit.h.
+@
+text
+@d11 1
+a11 1
+/^struct  *implicit_vector *$/ {
+d15 1
+a15 1
+/};/  {
+@
+
+
+1.2
+log
+@Changed the name of the structure generated to ImplicitVector_ and
+improved the documentation.
+@
+text
+@a8 1
+	OFFSET = -2;
+d11 2
+a12 2
+/.*implicit_vector\[\].*/ {
+	OFFSET = -1
+d16 1
+a16 1
+	OFFSET = -2;
+d20 2
+a21 2
+	if (OFFSET >= 0) print("    val", $2, "=", OFFSET++);
+	if (OFFSET == -1) OFFSET++;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 4
+a5 4
+	print "\n(*";
+	print " * Implicit vector offsets";
+	print " * Machine generated file : DO NOT ALTER";
+	print " * Generated from : implicit.c";
+d7 2
+a8 2
+	print ("\nstructure IMPLICIT_VECTOR =");
+	print ("struct");
+d12 1
+a12 1
+/.*implicit_vector.*/ {
+d21 1
+a21 1
+	if (OFFSET >= 0) print("  val", $2, "=", OFFSET++);
+d26 1
+a26 1
+	print ("end;");
+@

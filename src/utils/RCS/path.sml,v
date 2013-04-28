@@ -1,0 +1,139 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.02.28.15.45.40;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.02.28.12.16.42;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.25.17.01.24;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+The OS.Path structure from the basis.
+@
+
+
+1.3
+log
+@Removed the "last" component from exploded paths, and replaced
+splitPath with splitExt and splitLast.
+@
+text
+@(*  FILE PATH NAME MANIPULATION 
+ *
+ *  Copyright (C) 1994 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is the definition from the revised standard basis.
+ *
+ *  isValidRoot has the type string -> bool here, not path_root -> bool.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: path.sml,v $
+# Revision 1.2  1995/02/28  12:16:42  daveb
+# Removed suffix function.
+#
+# Revision 1.1  1995/01/25  17:01:24  daveb
+# new unit
+# The OS.Path structure from the basis.
+#
+ *
+ *)
+
+signature PATH =
+sig
+  datatype path_root = REL | ABS of string
+
+  exception Path
+
+  val explodePath : string -> {root : path_root, arcs: string list}
+  val implodePath : {root : path_root, arcs: string list} -> string
+
+  val parent: string
+  val current: string
+
+  val isValidPath: string -> bool
+  val isValidRoot: string -> bool
+  val isValidArc: string -> bool
+  val isAbsolute: string -> bool
+  val isRelative: string -> bool
+
+  val getParent: string -> string
+  val concatPath: (string * string) -> string
+  val mkAbsolute: (string * string) -> string
+  val mkRelative: (string * string) -> string
+  val mkCanonical: string -> string
+
+  val root: string -> path_root
+
+  val addLast: {dir: string, last: string} -> string
+  val splitLast: string -> {dir: string, last: string}
+
+  val dir: string -> string
+  val last: string -> string
+
+  datatype path_ext = NOEXT | EXT of string
+
+  val addExt: {name: string, ext: path_ext} -> string
+  val splitExt: string -> {name: string, ext: path_ext}
+
+  val ext: string -> path_ext
+  val name: string -> string
+end;
+@
+
+
+1.2
+log
+@Removed suffix function.
+@
+text
+@d14 3
+d30 2
+a31 4
+  val explodePath :
+    string -> {root : path_root, arcs: string list, last: string}
+  val implodePath :
+    {root : path_root, arcs: string list, last: string} -> string
+d49 5
+d58 2
+a59 2
+  val makePath: {dir: string, name: string, ext: path_ext} -> string
+  val splitPath: string -> {dir: string, name: string, ext: path_ext}
+d61 1
+a61 1
+  val dir: string -> string
+a62 2
+  val ext: string -> path_ext
+  val base: string -> string
+@
+
+
+1.1
+log
+@new unit
+The OS.Path structure from the basis.
+@
+text
+@d13 5
+a17 1
+ *  $Log$
+a45 1
+  val suffix: (string * string) -> int MLWorks.Option.option
+@

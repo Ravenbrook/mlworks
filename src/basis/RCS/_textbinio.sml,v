@@ -1,0 +1,325 @@
+head	1.5;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.05.24.11.20.52;	author andreww;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.22.09.15.28;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.20.16.43.19;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.15.13.24.45;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.38.47;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.5
+log
+@exposing BinPrimIO and TextPrimIO structures.
+@
+text
+@(*  ==== INITIAL BASIS : textbinio functor ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: _textbinio.sml,v $
+ * Revision 1.4  1996/05/22  09:15:28  matthew
+ * Vector changes
+ *
+ * Revision 1.3  1996/05/20  16:43:19  jont
+ * signature changes
+ *
+ * Revision 1.2  1996/05/15  13:24:45  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.1  1996/04/18  11:38:47  jont
+ * new unit
+ *
+ *  Revision 1.4  1996/03/28  12:52:19  matthew
+ *  New language definition
+ *
+ *  Revision 1.3  1995/09/12  09:52:54  daveb
+ *  words.sml replaced with word.sml.
+ *
+ *  Revision 1.2  1995/05/03  12:14:53  daveb
+ *  chars are now Word8.words, not integers.
+ *
+ *  Revision 1.1  1995/04/13  13:42:52  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "toplevel";
+require "__word8vector";
+require "__word8array";
+require "__word8";
+require "__chararray";
+require "__charvector";
+require "__char";
+require "__position";
+require "_streamio";
+require "_io";
+require "osprimio";
+require "textbin";
+require "__io";
+require "prim_io";
+
+functor PackageIO
+  (include sig
+    structure BinPrimIO: PRIM_IO
+    structure TextPrimIO: PRIM_IO
+    structure OSPrimIO: OS_PRIM_IO
+   end
+   where type OSPrimIO.bin_reader = BinPrimIO.reader
+           and OSPrimIO.bin_writer = BinPrimIO.writer
+           and OSPrimIO.text_reader = TextPrimIO.reader
+           and OSPrimIO.text_writer = TextPrimIO.writer
+           and BinPrimIO.elem = Word8.word
+           and TextPrimIO.elem = Char.char
+           and BinPrimIO.array = Word8Array.array
+           and TextPrimIO.array = CharArray.array
+           and BinPrimIO.vector = Word8Array.Vector.vector
+           and TextPrimIO.vector = CharVector.vector
+           and BinPrimIO.pos = int
+           and TextPrimIO.pos = int) =
+
+     struct
+
+       structure BinIO : BIN_IO =
+	 struct
+
+	   structure BinStreamIO = 
+	     StreamIO(structure PrimIO = BinPrimIO
+		      structure Vec = Word8Vector
+		      structure Arr = Word8Array
+		      val someElem = 0w0: Word8.word
+		      val posLess = Position.<
+		      val posDiff = SOME(fn {hi,lo} => Position.-(hi,lo)))
+
+	   structure BinIO' = IO(structure S = BinStreamIO)
+
+	   val openIn =
+	     fn x =>
+	     BinIO'.mkInstream(BinIO'.StreamIO.mkInstream(OSPrimIO.openRd x, ""))
+	   val openOut =
+	     fn x =>
+	     BinIO'.mkOutstream(BinIO'.StreamIO.mkOutstream(OSPrimIO.openWr x,
+							    IO.NO_BUF))
+	   val openAppend =
+	     fn x =>
+	     BinIO'.mkOutstream(BinIO'.StreamIO.mkOutstream(OSPrimIO.openApp x,
+							    IO.NO_BUF))
+
+	   val stdIn =
+	     BinIO'.mkInstream(BinIO'.StreamIO.mkInstream(OSPrimIO.stdIn, ""))
+	   val stdOut =
+	     BinIO'.mkOutstream(BinIO'.StreamIO.mkOutstream(OSPrimIO.stdOut,
+							    IO.NO_BUF))
+	   val stdErr =
+	     BinIO'.mkOutstream(BinIO'.StreamIO.mkOutstream(OSPrimIO.stdErr,
+							    IO.NO_BUF))
+	   open BinIO'
+	   structure Position = Position
+
+	 end
+
+       structure TextIO : TEXT_IO =
+	 struct
+   
+	   structure TextStreamIO = 
+	     StreamIO(structure PrimIO = TextPrimIO
+		      structure Vec = CharVector
+		      structure Arr = CharArray
+		      val someElem = Char.chr 0
+		      val posLess = Position.<
+		      val posDiff = SOME(fn {hi,lo} => Position.-(hi,lo)))
+
+	   structure TextIO' = IO(structure S = TextStreamIO)
+
+	   structure BinIO = BinIO
+
+	   val translateIn = OSPrimIO.translateIn
+	   val translateOut = OSPrimIO.translateOut
+
+	   val openIn =
+	     fn x => TextIO'.mkInstream
+	     (TextIO'.StreamIO.mkInstream
+	      (translateIn(OSPrimIO.openRd x), ""))
+	   val openOut =
+	     fn x => TextIO'.mkOutstream
+	     (TextIO'.StreamIO.mkOutstream
+	      (translateOut(OSPrimIO.openWr x), IO.NO_BUF))
+	   val openAppend =
+	     fn x => TextIO'.mkOutstream
+	     (TextIO'.StreamIO.mkOutstream
+	      (translateOut(OSPrimIO.openApp x), IO.NO_BUF))
+
+	   val stdIn =
+	     TextIO'.mkInstream(TextIO'.StreamIO.mkInstream
+				(translateIn OSPrimIO.stdIn, ""))
+	   val stdOut =
+	     TextIO'.mkOutstream(TextIO'.StreamIO.mkOutstream
+				 (translateOut OSPrimIO.stdOut, IO.NO_BUF))
+	   val stdErr =
+	     TextIO'.mkOutstream(TextIO'.StreamIO.mkOutstream
+				 (translateOut OSPrimIO.stdErr, IO.NO_BUF))
+
+	   fun inputLine (f: TextIO'.instream) =
+	     let
+	       val g0 = TextIO'.getInstream f
+	       fun loop(i,g) = case TextIO'.StreamIO.input1 g of
+		 SOME(c, g') => if c = Char.chr 10 then i+1 else loop(i+1,g')
+	       | NONE => i
+	     in
+	       TextIO'.inputN(f, loop(0,g0))
+	     end
+
+	   open TextIO'
+	   structure Position = Position
+
+	 end
+     end
+@
+
+
+1.4
+log
+@Vector changes
+@
+text
+@d10 3
+d51 1
+d54 12
+a65 2
+  (structure OSPrimIO: OS_PRIM_IO
+     where type BinPrimIO.array = Word8Array.array
+d78 1
+a78 1
+	     StreamIO(structure PrimIO = OSPrimIO.BinPrimIO
+d116 1
+a116 1
+	     StreamIO(structure PrimIO = OSPrimIO.TextPrimIO
+@
+
+
+1.3
+log
+@signature changes
+@
+text
+@d10 3
+d53 1
+a53 1
+           and BinPrimIO.vector = Word8Array.vector
+@
+
+
+1.2
+log
+@pack_words moved to pack_word
+@
+text
+@d10 3
+d44 1
+d71 2
+a72 1
+	     BinIO'.mkInstream o BinIO'.StreamIO.mkInstream o OSPrimIO.openRd
+d74 3
+a76 1
+	     BinIO'.mkOutstream o BinIO'.StreamIO.mkOutstream o OSPrimIO.openWr
+d78 3
+a80 1
+	     BinIO'.mkOutstream o BinIO'.StreamIO.mkOutstream o OSPrimIO.openApp
+d83 1
+a83 1
+	     (BinIO'.mkInstream o BinIO'.StreamIO.mkInstream) OSPrimIO.stdIn
+d85 2
+a86 1
+	     (BinIO'.mkOutstream o BinIO'.StreamIO.mkOutstream) OSPrimIO.stdOut
+d88 2
+a89 2
+	     (BinIO'.mkOutstream o BinIO'.StreamIO.mkOutstream) OSPrimIO.stdErr
+
+d113 22
+a134 13
+	   val openIn = TextIO'.mkInstream o TextIO'.StreamIO.mkInstream o 
+	     translateIn o OSPrimIO.openRd
+	   val openOut= TextIO'.mkOutstream o TextIO'.StreamIO.mkOutstream o 
+	     translateOut o OSPrimIO.openWr
+	   val openAppend= TextIO'.mkOutstream o TextIO'.StreamIO.mkOutstream o 
+	     translateOut o OSPrimIO.openApp
+
+	   val stdIn = (TextIO'.mkInstream o TextIO'.StreamIO.mkInstream o 
+	     translateIn) OSPrimIO.stdIn
+	   val stdOut = (TextIO'.mkOutstream o TextIO'.StreamIO.mkOutstream o 
+	     translateOut) OSPrimIO.stdOut
+	   val stdErr = (TextIO'.mkOutstream o TextIO'.StreamIO.mkOutstream o 
+	     translateOut) OSPrimIO.stdErr
+d137 5
+a141 4
+	     let val g0 = TextIO'.getInstream f
+	       fun loop(i,g) = case TextIO'.StreamIO.input1 g
+	       of (SOME c, g') => if c = Char.chr 10 then i+1 else loop(i+1,g')
+	       |  (NONE,_) => i
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d35 2
+a36 2
+require "__chars";
+require "__fileposint";
+d61 2
+a62 2
+		      val posLess = FilePosInt.<
+		      val posDiff = SOME(fn {hi,lo} => FilePosInt.-(hi,lo)))
+d81 1
+a81 1
+	   structure FilePosInt = FilePosInt
+d93 2
+a94 2
+		      val posLess = FilePosInt.<
+		      val posDiff = SOME(fn {hi,lo} => FilePosInt.-(hi,lo)))
+d127 1
+a127 1
+	   structure FilePosInt = FilePosInt
+@

@@ -1,0 +1,65 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.22.11.17.59;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test Unix OS.Path.file.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = file "b" = "b";
+
+val b = file "a/b" = "b";
+
+val c = file "/" = "";
+
+val d = file "/b" = "b";
+
+val e = file "/a/b" = "b";
+
+val f = file "/c/a/b" = "b";
+
+val g = file "/c/a/b/" = "";
+
+val h = file "/c/a/b.foo.bar" = "b.foo.bar";
+
+val i = file "/c/a/b.foo" = "b.foo";
+@

@@ -1,0 +1,102 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.37.56;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.36;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: Agent.sig,v 1.4 1994/12/03 14:22:38 pxs Exp $";
+(*********************************** Agent ***********************************)
+(*                                                                           *)
+(*  This is the definitions of "Agents".                                     *)
+(*                                                                           *)
+(*****************************************************************************)
+
+signature AGENT =
+sig
+   structure A  : ACT
+   structure V  : VAR
+
+   datatype actlist = Actlist    of A.act list
+                    | Actlistvar of V.var
+
+   datatype relabelling = Relabellist of (A.act * A.act) list
+                        | Relabelvar  of V.var
+
+   datatype param = Actparam   of A.act
+   | Actlistparam of actlist		(* experimental *)
+   | Timeparam  of int
+   | Agentparam of agent
+
+        and agent = Nil
+                  | DNil
+                  | Bottom
+                  | Var      of V.var * param list
+                  | Prefix   of A.act list * agent
+                  | Delta    of A.act * agent
+                  | Time     of int * agent
+                  | WSum     of agent list
+                  | SSum     of agent list
+                  | Parallel of agent list
+                  | SMerge   of (agent * actlist) list
+                  | Restrict of agent * actlist
+                  | Relabel  of agent * relabelling
+
+   val hashval  : agent -> int
+     
+   val parameq : param * param -> bool
+   val paramle : param * param -> bool
+
+   val actlisteq : actlist * actlist -> bool
+   val actlistle : actlist * actlist -> bool
+
+   val relabeleq : relabelling * relabelling -> bool
+   val relabelle : relabelling * relabelling -> bool
+
+   val eq : agent * agent -> bool
+   val le : agent * agent -> bool
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,528 @@
+head	1.10;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3;
+locks; strict;
+comment	@ *  @;
+
+
+1.10
+date	95.02.10.15.58.50;	author matthew;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.11.18.11.09.16;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.10.10.10.15.58;	author matthew;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.09.19.13.30.27;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.07.19.14.06.51;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.11.03.15.36.03;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.09.06.08.51.06;	author nosa;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.08.25.09.37.42;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	93.08.24.11.46.59;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.08.23.15.20.18;	author richard;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	93.08.25.09.37.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Lambda Code I/O
+functor
+@
+
+
+1.10
+log
+@Adding debugger pervasives
+@
+text
+@(*  ==== LAMBDA CODE I/O ====
+ *           FUNCTOR
+ *
+ *  Copyright (C) 1993 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _lambdaio.sml,v $
+ *  Revision 1.9  1994/11/18  11:09:16  matthew
+ *  Adding new pervasives
+ *
+ *  Revision 1.8  1994/10/10  10:15:58  matthew
+ *  Lambdatypes changes
+ *
+ *  Revision 1.7  1994/09/19  13:30:27  matthew
+ *  Abstraction of debug information in lambdatypes
+ *
+ *  Revision 1.6  1994/07/19  14:06:51  matthew
+ *  \n
+ *  Functions take a list of parameters
+ *
+ *  Revision 1.5  1993/11/03  15:36:03  richard
+ *  Changed Pervasives.encode to encode.  Oops.
+ *
+ *  Revision 1.4  1993/09/06  08:51:06  nosa
+ *  FNs now passed closed-over type variables and
+ *  stack frame-offset for runtime-instance for polymorphic debugger.
+ *
+ *  Revision 1.3  1993/08/25  09:37:42  richard
+ *  Changed require to old-style for the sake of NJ.
+ *
+ *  Revision 1.2  1993/08/24  11:46:59  richard
+ *  Changed the encoding of pervasive to use the order of the declared
+ *  datatype.  This is the encoding used by Chris in the COMPARE decoder.
+ *
+ *  Revision 1.1  1993/08/23  15:20:18  richard
+ *  Initial revision
+ *)
+
+require "../utils/lists";
+require "../main/pervasives";
+require "lambdatypes";
+require "lambdaio";
+
+functor LambdaIO (
+                   structure LambdaTypes : LAMBDATYPES
+                   structure Pervasives : PERVASIVES
+                   structure Lists : LISTS
+
+                   sharing type LambdaTypes.Primitive = Pervasives.pervasive
+                 ) : LAMBDAIO =
+  struct
+    structure LambdaTypes = LambdaTypes
+
+    local
+      open Pervasives
+    in
+
+      fun encode REF			=   0
+        | encode EXABS			=   1
+        | encode EXORD			=   2
+        | encode EXCHR			=   3
+        | encode EXDIV			=   4
+        | encode EXMOD			=   5
+        | encode EXQUOT			=   6
+        | encode EXPROD			=   7
+        | encode EXNEG			=   8
+        | encode EXSUM			=   9
+        | encode EXDIFF			=  10
+        | encode EXFLOOR		=  11
+        | encode EXSQRT			=  12
+        | encode EXEXP			=  13
+        | encode EXLN			=  14
+        | encode EXIO			=  15
+        | encode EXMATCH		=  16
+        | encode EXBIND			=  17
+        | encode EXINTERRUPT		=  18
+        | encode EXRANGE		=  19
+        | encode MAP			=  20
+        | encode REV			=  21
+        | encode NOT			=  22
+        | encode ABS			=  23
+        | encode FLOOR			=  24
+        | encode REAL			=  25
+        | encode SQRT			=  26
+        | encode SIN			=  27
+        | encode COS			=  28
+        | encode ARCTAN			=  29
+        | encode EXP			=  30
+        | encode LN			=  31
+        | encode SIZE			=  32
+        | encode CHR			=  33
+        | encode ORD			=  34
+        | encode ORDOF			=  35
+        | encode EXPLODE		=  36
+        | encode IMPLODE		=  37
+        | encode DEREF			=  38
+        | encode FDIV			=  39
+        | encode DIV			=  40
+        | encode MOD			=  41
+        | encode PLUS			=  42
+        | encode STAR			=  43
+        | encode MINUS			=  44
+        | encode HAT			=  45
+        | encode AT			=  46
+        | encode NE			=  47
+        | encode LESS			=  48
+        | encode GREATER		=  49
+        | encode LESSEQ			=  50
+        | encode GREATEREQ		=  51
+        | encode BECOMES		=  52
+        | encode O			=  53
+        | encode UMINUS			=  54
+        | encode EQ			=  55
+        | encode EQFUN			=  56
+        | encode LOAD_STRING		=  57
+        | encode REALPLUS		=  58
+        | encode INTPLUS		=  59
+        | encode UNSAFEINTPLUS		=  60
+        | encode REALSTAR		=  61
+        | encode INTSTAR		=  62
+        | encode REALMINUS		=  63
+        | encode INTMINUS		=  64
+        | encode REALUMINUS		=  65
+        | encode INTUMINUS		=  66
+        | encode INTLESS		=  67
+        | encode REALLESS		=  68
+        | encode INTGREATER		=  69
+        | encode REALGREATER		=  70
+        | encode INTLESSEQ		=  71
+        | encode REALLESSEQ		=  72
+        | encode INTGREATEREQ		=  73
+        | encode REALGREATEREQ		=  74
+        | encode INTEQ			=  75
+        | encode INTNE			=  76
+        | encode REALEQ			=  77
+        | encode REALNE			=  78
+        | encode STRINGEQ		=  79
+        | encode STRINGNE		=  80
+        | encode STRINGLT		=  81
+        | encode STRINGLE		=  82
+        | encode STRINGGT		=  83
+        | encode STRINGGE		=  84
+        | encode INTABS			=  85
+        | encode REALABS		=  86
+        | encode CALL_C			=  87
+        | encode ARRAY_FN		=  88
+        | encode LENGTH			=  89
+        | encode SUB			=  90
+        | encode UNSAFE_SUB		=  91
+        | encode UPDATE			=  92
+        | encode UNSAFE_UPDATE		=  93
+        | encode BYTEARRAY		=  94
+        | encode BYTEARRAY_LENGTH	=  95
+        | encode BYTEARRAY_SUB		=  96
+        | encode BYTEARRAY_UNSAFE_SUB	=  97
+        | encode BYTEARRAY_UPDATE	=  98
+        | encode BYTEARRAY_UNSAFE_UPDATE=  99
+        | encode VECTOR			= 100
+        | encode VECTOR_LENGTH		= 101
+        | encode VECTOR_SUB		= 102
+        | encode EXSIZE			= 103
+        | encode EXSUBSCRIPT		= 104
+        | encode ANDB			= 105
+        | encode LSHIFT			= 106
+        | encode NOTB			= 107
+        | encode ORB			= 108
+        | encode RSHIFT			= 109
+        | encode ARSHIFT		= 110
+        | encode XORB			= 111
+        | encode IDENT_FN		= 112
+        | encode ML_OFFSET		= 113
+        | encode ENTUPLE		= 114
+        | encode ML_CALL		= 115
+        | encode ML_REQUIRE		= 116
+        | encode LOAD_VAR		= 117
+        | encode LOAD_EXN		= 118
+        | encode LOAD_STRUCT		= 119
+        | encode LOAD_FUNCT		= 120
+        | encode UNSAFEINTMINUS 	= 121
+        | encode ALLOC_STRING 		= 122
+        | encode ALLOC_VECTOR 		= 123
+        | encode ALLOC_PAIR 		= 124
+        | encode RECORD_UNSAFE_SUB 	= 125
+        | encode RECORD_UNSAFE_UPDATE	= 126
+        | encode STRING_UNSAFE_SUB 	= 127
+        | encode STRING_UNSAFE_UPDATE	= 128
+        | encode GET_IMPLICIT		= 129
+    end
+
+    local
+      open LambdaTypes
+    in
+
+      exception Output of string
+
+      fun output (stream, exp) =
+        let
+          fun output_byte b = MLWorks.IO.output (stream, chr b)
+          fun output_bytes bs = MLWorks.IO.output (stream, implode (map chr bs))
+
+          fun output_int i =
+            output_bytes
+            [MLWorks.Bits.andb (MLWorks.Bits.rshift (i, 24), 255),
+             MLWorks.Bits.andb (MLWorks.Bits.rshift (i, 16), 255),
+             MLWorks.Bits.andb (MLWorks.Bits.rshift (i,  8), 255),
+             MLWorks.Bits.andb (i, 255)]
+
+          fun output_string s =
+            (output_int (size s);
+             MLWorks.IO.output (stream, s))
+
+          fun output_scon (Ident.INT (s, _))    = (output_byte 0; output_string s)
+            | output_scon (Ident.REAL (s, _))   = (output_byte 1; output_string s)
+            | output_scon (Ident.STRING s) = (output_byte 2; output_string s)
+
+          fun output_lvar lvar = output_int (int_of_LVar lvar)
+
+          fun output_lvar_option (Option.SOME1 lvar) = output_lvar lvar
+            | output_lvar_option (Option.SOME2 (lvar, _)) = output_lvar lvar
+
+          fun output_primitive primitive = output_int (encode primitive)
+
+          fun output_option out Option.ABSENT = output_byte 0
+            | output_option out (Option.PRESENT x) = (output_byte 1; out x)
+
+          fun output_tag (VCC_TAG (_, i)) = (output_byte 0; output_int i)
+            | output_tag (IMM_TAG (_, i)) = (output_byte 1; output_int i)
+            | output_tag (SCON_TAG scon)  = (output_byte 2; output_scon scon)
+            | output_tag (EXP_TAG exp)	  = (output_byte 3; output_exp exp)
+
+          and output_exp (VAR lvar) = (output_byte 0; output_lvar lvar)
+            | output_exp (FN ([bound], body, _, _, _)) =
+              (output_byte 1;
+               output_lvar bound;
+               output_exp body)
+            | output_exp (FN (boundlist, body, _, _, _)) = raise Output "FN has varlist"
+            | output_exp (LET ((lvar,_,value), body)) =
+              (output_byte 2;
+               output_lvar lvar;
+               output_exp value;
+               output_exp body)
+            | output_exp (LETREC (lvar_options, values, body)) =
+              (output_byte 3;
+               output_int (Lists.length lvar_options);
+               let
+                 fun iterate_zip f ([], []) = ()
+                   | iterate_zip f (x::xs, y::ys) =
+                     (f (x, y);
+                      iterate_zip f (xs, ys))
+                   | iterate_zip _ _ =
+                     raise Output "LETREC: lvars don't match values"
+               in
+                 iterate_zip
+                 (fn (lvar_info, value) =>
+                  (output_lvar (#1 (lvar_info));
+                   output_exp value))
+                 (lvar_options, values)
+               end;
+               output_exp body)
+            | output_exp (APP (rator, [rand], _)) =
+              (output_byte 4;
+               output_exp rator;
+               output_exp rand)
+            | output_exp (APP (rator, randlist, _)) =
+              raise Output "Arglist: not supported"
+            | output_exp (SCON scon) = (output_byte 5; output_scon scon)
+            | output_exp (MLVALUE _) = raise Output "MLVALUE: not supported"
+            | output_exp (INT i) = (output_byte 6; output_int i)
+            | output_exp (SWITCH (value, _, branches, default)) =
+              (output_byte 7;
+               output_exp value;
+               output_int (Lists.length branches);
+               Lists.iterate
+                 (fn (tag, body) => (output_tag tag; output_exp body))
+                 branches;
+               output_option output_exp default)
+            | output_exp (STRUCT (elements,_)) =
+              (output_byte 8;
+               output_int (Lists.length elements);
+               Lists.iterate output_exp elements)
+            | output_exp (SELECT ({index, ...}, exp)) =
+              (output_byte 9;
+               output_int index;
+               output_exp exp)
+            | output_exp (RAISE packet) =
+              (output_byte 10;
+               output_exp packet)
+            | output_exp (HANDLE (body, handler, _)) =
+              (output_byte 11;
+               output_exp body;
+               output_exp handler)
+            | output_exp (BUILTIN primitive) =
+              (output_byte 12;
+               output_primitive primitive)
+        in
+          output_exp exp
+        end
+
+    end (* local *)
+
+  end; (* struct *)
+@
+
+
+1.9
+log
+@Adding new pervasives
+@
+text
+@d9 3
+d188 1
+a188 1
+
+@
+
+
+1.8
+log
+@Lambdatypes changes
+@
+text
+@d9 3
+d177 8
+@
+
+
+1.7
+log
+@Abstraction of debug information in lambdatypes
+@
+text
+@d9 3
+d224 1
+a224 1
+            | output_exp (LET (lvar,_,value, body)) =
+d264 1
+a264 1
+            | output_exp (STRUCT elements) =
+@
+
+
+1.6
+log
+@\n
+Functions take a list of parameters
+@
+text
+@d9 4
+d203 1
+a203 1
+            | output_lvar_option (Option.SOME2 (ref (lvar, _))) = output_lvar lvar
+d221 1
+a221 1
+            | output_exp (LET (lvar_option, value, body)) =
+d223 1
+a223 1
+               output_lvar_option lvar_option;
+d238 2
+a239 2
+                 (fn (lvar_option, value) =>
+                  (output_lvar_option lvar_option;
+@
+
+
+1.5
+log
+@Changed Pervasives.encode to encode.  Oops.
+@
+text
+@d9 3
+d212 1
+a212 1
+            | output_exp (FN (bound, body, _, _, _)) =
+d216 1
+d240 1
+a240 1
+            | output_exp (APP (rator, rand, _)) =
+d244 2
+@
+
+
+1.4
+log
+@FNs now passed closed-over type variables and
+stack frame-offset for runtime-instance for polymorphic debugger.
+@
+text
+@d9 4
+d198 1
+a198 1
+          fun output_primitive primitive = output_int (Pervasives.encode primitive)
+@
+
+
+1.3
+log
+@Changed require to old-style for the sake of NJ.
+@
+text
+@d9 3
+d205 1
+a205 1
+            | output_exp (FN (bound, body, _, _)) =
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 3
+ *  Revision 1.3  1993/08/25  09:37:42  richard
+ *  Changed require to old-style for the sake of NJ.
+ *
+@
+
+
+1.2
+log
+@Changed the encoding of pervasive to use the order of the declared
+datatype.  This is the encoding used by Chris in the COMPARE decoder.
+@
+text
+@d9 4
+d17 4
+a20 4
+require utils.lists;
+require main.pervasives;
+require lambdatypes;
+require lambdaio;
+d238 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d8 3
+a10 1
+ *  $Log$
+d27 128
+@

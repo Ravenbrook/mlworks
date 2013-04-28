@@ -1,0 +1,65 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	95.03.27.15.51.05;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C HEADERS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+signature C_HEADER =
+  sig
+
+    structure FStruct : FOREIGN_STRUCT
+    structure FHeader : FOREIGN_HEADER
+
+    type mode
+    type filename
+
+    sharing type mode = FHeader.mode
+    sharing type filename = FStruct.filename
+
+    structure CData : C_DATA
+
+    type c_type
+
+    sharing type c_type = CData.T
+
+    type foreign_signature
+	 (* assume equal to: (c_type)FHeader.foreign_signature *)
+
+    val load : filename * mode -> foreign_signature
+
+  end; (* signature C_HEADER *)
+xf
+@

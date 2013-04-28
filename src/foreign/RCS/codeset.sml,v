@@ -1,0 +1,88 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.19.13.59.09;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Renamed file.
+@
+
+
+1.1
+log
+@new unit
+Renamed file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_CODESET ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: codeset.sml,v $
+ * Revision 1.2  1996/03/28  12:58:55  matthew
+ * New sharing syntax etc.
+ *
+ * Revision 1.1  1995/09/07  22:47:17  brianm
+ * new unit
+ * Rename due to reorganisation & documentation of FI.
+ *
+# Revision 1.2  1995/04/19  23:37:57  brianm
+# General updating to reach prototype level for ML FI.
+#
+# Revision 1.1  1995/03/27  15:48:58  brianm
+# new unit
+# New file.
+#
+ *
+ *)
+
+require "types";
+
+signature FOREIGN_CODESET =
+   sig
+
+     structure FITypes : FOREIGN_TYPES
+
+     type name = FITypes.name  
+     type filename = FITypes.filename
+
+     type foreign_module
+     type foreign_codeset
+
+     datatype load_mode = IMMEDIATE_LOAD | DEFERRED_LOAD
+
+     val load_codeset : filename * load_mode -> foreign_codeset
+     val file_info : foreign_codeset -> (filename * load_mode)
+
+     val files_loaded : unit -> filename list
+     val symbols      : foreign_codeset -> name list
+
+     datatype value_type = CODE_VALUE | VAR_VALUE | UNKNOWN_VALUE
+
+     val symbol_info : foreign_codeset * name -> value_type
+
+     val module : foreign_codeset -> foreign_module
+
+   end;
+@

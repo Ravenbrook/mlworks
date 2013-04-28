@@ -1,0 +1,176 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.32.59;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: SortedList.str,v 1.2 1994/12/03 14:55:52 pxs Exp $";
+functor SL () : SORTEDLIST =
+struct
+   exception Retrieve
+
+   fun member le (a,l) =
+       let fun mem [] = false
+             | mem (b::t) = le(b,a) andalso (le(a,b) orelse mem t)
+        in mem l
+       end
+
+   fun sublist le =
+       let fun sl ([],_) = true
+             | sl (_,[]) = false
+             | sl (l as (a::s),b::t) =
+               if le(a,b) then le(b,a) andalso sl(s,t) else sl(l,t)
+        in sl
+       end
+
+   fun le elt_le =
+       let fun leq ([],_) = true
+             | leq (_,[]) = false
+             | leq (a::s,b::t) =
+               elt_le(a,b) andalso (not(elt_le(b,a)) orelse leq(s,t))
+        in leq
+       end
+
+   fun sort le del_dup =
+       let fun sr []  = []
+             | sr [a] = [a]
+             | sr (h::t) =
+               let fun part [] pivot = ([],[],[])
+                     | part (h::t) pivot =
+                       let val (A,B,C) = part t pivot
+                        in if le(h,pivot) then
+                              if le(pivot,h) then (A,h::B,C) else (h::A,B,C)
+                           else (A,B,h::C)
+                       end
+                   val (A,B,C) = part t h
+                in if del_dup then (sr A)@@(h::(sr C)) else (sr A)@@(h::B)@@(sr C)
+               end
+        in sr
+       end
+
+   fun add le del_dup =
+       let fun ins (a,[]) = [a]
+             | ins (a,l as (b::t)) =
+               if le(a,b) then if del_dup andalso le(b,a) then a::t
+                               else a::l
+               else b::(ins(a,t))
+        in ins
+       end
+
+   fun merge le del_dup =
+       let fun ml ([],l2) = l2
+             | ml (l1,[]) = l1
+             | ml (l1 as (a::s),l2 as (b::t)) =
+               if le(a,b) then
+                  if le(b,a) andalso del_dup then a::(ml(s,t))
+                  else a::(ml(s,l2))
+               else b::(ml(l1,t))
+        in ml
+       end
+
+   fun bigmerge le del_dup [] = []
+     | bigmerge le del_dup l =
+       let val mer = merge le del_dup
+           fun bigm []  = []
+             | bigm [l] = [l]
+             | bigm (l1::l2::t) =
+               bigm (mer(l1,l2)::(bigm t))
+        in hd(bigm l)
+       end
+
+   fun inter le =
+       let fun inters ([],_) = []
+             | inters (_,[]) = []
+             | inters (L1 as (a::s),L2 as (b::t)) =
+               if le(a,b) then if le(b,a) then a::(inters(s,t))
+                               else inters(s,L2)
+               else inters(L1,t)
+        in inters
+       end
+
+   fun retrieve key le (k,L) =
+       let fun ret [] = raise Retrieve
+             | ret (h::t) =
+               let val keyh = key h
+                in if le(keyh,k) then if le(k,keyh) then h else ret t
+                   else raise Retrieve
+               end
+        in ret L
+       end
+
+   fun remove key le (k,L) =
+       let fun rm [] = []
+             | rm (h::t) =
+               let val keyh = key h
+                in if le(keyh,k) then if le(k,keyh) then rm t else h::(rm t)
+                   else h::t
+               end
+        in rm L
+       end
+
+   fun del_dups le =
+       let fun dd [] = []
+             | dd [a] = [a]
+             | dd (a::b::t) = let val dt = dd (b::t)
+                               in if le(b,a) then dt else a::dt
+                              end
+        in dd
+       end
+
+   fun minus key le =
+       let fun rm (l,[]) = l
+             | rm ([],l) = []
+             | rm (l1 as (h::t),l2 as (k::l)) =
+               let val keyh = key h
+                in if le(keyh,k) then if le(k,keyh) then rm(t,l2)
+                                      else h::(rm(t,l2))
+                   else rm(l1,l)
+               end
+        in rm
+       end
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,172 @@
+head	1.4;
+access;
+symbols
+	MLWorks_Open_Beta2_1996_10_11:1.2.3
+	MLWorks_License_dev:1.2.2
+	MLWorks_1_open_beta_1996_09_13:1.2.1
+	MLWorks_Open_Beta_1996_08_22:1.1
+	MLWorks_Beta_1996_07_02:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	96.11.03.17.49.22;	author io;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.10.16.16.50.06;	author io;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.08.30.10.49.36;	author davids;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1
+	1.2.3.1;
+next	1.1;
+
+1.1
+date	96.05.24.16.32.22;	author brianm;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	96.09.13.11.12.39;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	96.10.07.16.03.22;	author hope;	state Exp;
+branches;
+next	;
+
+1.2.3.1
+date	96.10.17.11.21.38;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.4
+log
+@add xtst.so
+@
+text
+@# Example makefile (SunOS variant)
+
+CC 		= gcc
+# for cc case, use:
+#CC		= cc
+
+CFLAGS		= -ansi -pedantic -g -Wall
+# for cc case, use:
+#CFLAGS		= -ansiposix -g
+
+LD              = ld
+LDFLAGS		= -Bdynamic
+
+PROGS		= hello.so random.so regexp.so xtst.so
+
+all : $(PROGS)
+
+%.o : %.c
+	$(CC) $(CFLAGS) -c $< -o $@@
+
+%.so : %.o
+	$(LD) $(LDFLAGS) $< -o $@@
+
+clean:
+	$(RM) *.so *.o@
+
+
+1.3
+log
+@[Bug #1547]
+update to avoid having to specify target by default
+@
+text
+@d14 1
+a14 1
+PROGS		= hello.so random.so regexp.so
+@
+
+
+1.2
+log
+@Adding entries for random and regexp.
+@
+text
+@d4 3
+d8 2
+d12 1
+a12 8
+RM              = /bin/rm -f
+
+
+hello.o: hello.c
+	$(CC) $(CFLAGS) -c hello.c -o hello.o
+
+hello.so: hello.o
+	$(LD) -Bdynamic hello.o -o hello.so
+d14 1
+a14 2
+random.o: random.c
+	$(CC) $(CFLAGS) -c random.c -o random.o
+d16 1
+a16 2
+random.so: random.o
+	$(LD) -Bdynamic random.o -o random.so
+d18 2
+a19 2
+regexp.o: regexp.c
+	$(CC) $(CFLAGS) -c regexp.c -o regexp.o
+d21 2
+a22 2
+regexp.so: regexp.o
+	$(LD) -Bdynamic regexp.o -o regexp.so
+@
+
+
+1.2.3.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.2.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d1 1
+a1 1
+# Hello example makefile (SunOS variant)
+d15 12
+@

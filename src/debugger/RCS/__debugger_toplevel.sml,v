@@ -1,0 +1,227 @@
+head	1.8;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.8
+	mlworks-28-01-1994:1.8
+	Release:1.7
+	mlworks-beta-01-09-1993:1.7
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.4;
+locks; strict;
+
+
+1.8
+date	93.12.09.19.25.43;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.09.08.16.02.18;	author clive;	state Exp;
+branches
+	1.7.1.1;
+next	1.6;
+
+1.6
+date	92.08.26.14.49.18;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.08.22.12.47.29;	author clive;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.08.14.10.18.02;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.12.08.32.19;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.07.14.14.49.19;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.06.22.15.22.20;	author clive;	state Exp;
+branches;
+next	;
+
+1.7.1.1
+date	92.09.08.16.02.18;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@First version
+@
+
+
+1.8
+log
+@Added copyright message
+@
+text
+@(* __debugger_toplevel the installation *)
+(*
+$Log: __debugger_toplevel.sml,v $
+Revision 1.7  1992/09/08  16:02:18  clive
+Updated now that the ml_debugger function has changed
+
+Revision 1.6  1992/08/26  14:49:18  richard
+Rationalisation of the MLWorks structure.
+
+Revision 1.5  1992/08/22  12:47:29  clive
+Added details about leafness to the debug information
+
+Revision 1.4  1992/08/14  10:18:02  clive
+Changes to reflect lower level structure changes
+
+Revision 1.3  1992/08/12  08:32:19  clive
+Neatening up, plus changes due to lower level sharing changes
+
+Revision 1.2  1992/07/14  14:49:19  clive
+install_debugger takes different parameters now
+
+Revision 1.1  1992/06/22  15:22:20  clive
+Initial revision
+
+ * Copyright (c) 1993 Harlequin Ltd.
+*)
+
+require "__ml_debugger";
+
+val _ = MLWorks.Internal.Debugger.install_debugger 
+  (Ml_Debugger_.ml_debugger
+   (fn _ => ())
+   (fn () => (Ml_Debugger_.Debugger_Types.Datatypes.NewMap.empty(fn (x,y) => 
+                                    if x=y
+                                      then Ml_Debugger_.Debugger_Types.Datatypes.NewMap.EQUAL
+                                    else if String.< (x,y) 
+                                           then Ml_Debugger_.Debugger_Types.Datatypes.NewMap.LESS
+                                         else Ml_Debugger_.Debugger_Types.Datatypes.NewMap.GREATER)))
+   (fn () => Ml_Debugger_.Parser.empty_pB,
+    fn () => Ml_Debugger_.Basis.empty_basis)
+   (fn _ => output(std_out,"Command not recognised - use 'help' for help\n")))
+   
+@
+
+
+1.7
+log
+@Updated now that the ml_debugger function has changed
+@
+text
+@d4 3
+d25 1
+@
+
+
+1.7.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.7  1992/09/08  16:02:18  clive
+Updated now that the ml_debugger function has changed
+
+@
+
+
+1.6
+log
+@Rationalisation of the MLWorks structure.
+@
+text
+@d4 3
+d28 2
+a29 1
+   (fn () => (Ml_Debugger_.Debugger_Types.Map.empty(fn (x,y) => 
+d31 1
+a31 1
+                                      then Ml_Debugger_.Debugger_Types.Map.EQUAL
+d33 2
+a34 2
+                                           then Ml_Debugger_.Debugger_Types.Map.LESS
+                                         else Ml_Debugger_.Debugger_Types.Map.GREATER)))
+@
+
+
+1.5
+log
+@Added details about leafness to the debug information
+@
+text
+@d4 3
+d23 1
+a23 1
+val _ = MLWorks.Debugger.install_debugger 
+@
+
+
+1.4
+log
+@Changes to reflect lower level structure changes
+@
+text
+@d4 3
+d29 2
+a30 1
+    fn () => Ml_Debugger_.Basis.empty_basis))
+@
+
+
+1.3
+log
+@Neatening up, plus changes due to lower level sharing changes
+@
+text
+@d4 3
+d17 1
+a17 1
+val _ = Debugger.install_debugger 
+d19 1
+a19 1
+   (ref (Ml_Debugger_.Debugger_Types.Map.empty(fn (x,y) => 
+d22 1
+a22 1
+                                    else if String_.< (x,y) 
+d25 2
+a26 1
+   (ref Ml_Debugger_.Parser.empty_pB,ref Ml_Debugger_.Basis.empty_basis))
+@
+
+
+1.2
+log
+@install_debugger takes different parameters now
+@
+text
+@d4 3
+a11 1
+require "../utils/__string";
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d9 1
+d12 10
+a21 1
+val _ = Debugger.install_debugger Ml_Debugger_.ml_debugger
+@

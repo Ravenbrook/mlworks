@@ -1,0 +1,585 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+
+
+1.2
+date	92.08.19.18.10.15;	author davidt;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.04.24.15.53.40;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.08.19.18.10.15;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Register reduction to reduce size of clash matrices
+@
+
+
+1.2
+log
+@THIS FILE IS NO LONGER IN USE!
+@
+text
+@(* _mir_data.sml the functor *)
+(*
+$Log: _mir_data.sml,v $
+Revision 1.1  1992/04/24  15:53:40  jont
+Initial revision
+
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+(*
+require "../utils/balancedtree";
+require "../utils/map";
+require "../utils/crash";
+require "../utils/lists";
+require "../machine/machspec";
+require "mirtypes";
+require "mirregisters";
+require "mir_data";
+*)
+
+functor Mir_Data(*(
+  structure Map : MAP
+  structure BalancedTree : BALANCEDTREE
+  structure Crash : CRASH
+  structure Lists : LISTS
+  structure MachSpec : MACHSPEC
+  structure MirTypes : MIRTYPES
+  structure MirRegisters : MIRREGISTERS
+  sharing MirRegisters.MirTypes = MirTypes
+) : MIR_DATA =
+struct
+  structure MirTypes = MirTypes
+  structure BalancedTree = BalancedTree
+  structure Set = MirRegisters.Set
+
+  fun get_reg(MirTypes.GP_GC_REG reg) = reg
+  | get_reg _ = Crash.impossible"Non-GP_GC_REG to get_reg"
+
+  fun reg_order(reg, reg') =
+    if reg = reg' then BalancedTree.EQ
+    else
+      if MirTypes.GC.order(reg, reg') then
+	BalancedTree.LT
+      else
+	BalancedTree.GT
+
+  datatype ref_type =
+    EXT_REF |
+    MULT_REF |
+    SEV_REF of int |
+    NO_REF
+(*
+  datatype ref_type =
+    EXT_REF of MirTypes.GC.T |
+    MULT_REF of MirTypes.GC.T |
+    ONE_REF of MirTypes.GC.T |
+    NO_REF of MirTypes.GC.T
+*)
+
+  fun new_reg_use(tree, MirTypes.GC_REG reg) =
+    BalancedTree.insert(tree, reg, 0)
+    | new_reg_use(tree, _) = tree
+
+  fun new_gp_use(tree, MirTypes.GP_GC_REG reg) =
+    BalancedTree.insert(tree, reg, 0)
+    | new_gp_use(tree, _) = tree
+
+  fun uses(tree,MirTypes.TBINARY(_, _, _, gp_op, gp_op')) =
+    let
+      val tree = new_gp_use(tree, gp_op)
+    in
+      new_gp_use(tree, gp_op')
+    end
+  | uses(tree, MirTypes.BINARY(_, _, gp_op, gp_op')) =
+    let
+      val tree = new_gp_use(tree, gp_op)
+    in
+      new_gp_use(tree, gp_op')
+    end
+  | uses(tree, MirTypes.UNARY(_, _, MirTypes.GP_GC_REG reg)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.STACKOP(MirTypes.PUSH, MirTypes.GC_REG reg, _)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.STOREOP(store_op, reg_op, reg_op', gp_op)) =
+    let
+      val tree = new_gp_use(tree, gp_op)
+      val tree = new_reg_use(tree, reg_op')
+    in
+      case reg_op of
+	MirTypes.GC_REG reg =>
+	  (case store_op of
+	     MirTypes.ST =>
+	       BalancedTree.insert(tree, reg, 0)
+	   | MirTypes.STREF =>
+	       BalancedTree.insert(tree, reg, 0)
+	   | MirTypes.STB =>
+	       BalancedTree.insert(tree, reg, 0)
+	   | _ => tree)
+      | _ => tree
+    end
+  | uses(tree, MirTypes.REAL(_, _, MirTypes.GP_GC_REG reg)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.BRANCH(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.TEST(_, _, gp_op, gp_op')) =
+    let
+      val tree = new_gp_use(tree, gp_op)
+    in
+      new_gp_use(tree, gp_op')
+    end
+  | uses(tree,
+	 MirTypes.BRANCH_AND_LINK(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.TAIL_CALL(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.SWITCH(_, MirTypes.GC_REG reg, _)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.ALLOCATE(_, _, gp_op)) =
+    new_gp_use(tree, gp_op)
+  | uses(tree, MirTypes.ADR(_, MirTypes.GC_REG reg, _)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, MirTypes.PROFILER(MirTypes.GC_REG reg)) =
+    BalancedTree.insert(tree, reg, 0)
+  | uses(tree, _) = tree
+    
+  val uses =
+    fn (MirTypes.BLOCK(_, opcode_list)) =>
+    Lists.reducel
+    uses
+    (BalancedTree.empty reg_order, opcode_list)
+
+  fun new_def(tree, reg) =
+    BalancedTree.insert(tree, reg, 
+			case BalancedTree.lookup(tree, reg) of
+			  BalancedTree.YES _ => EXT_REF
+			| _ => NO_REF)
+
+  val max_ref = 3
+
+  fun new_ref(tree, reg) =
+    case BalancedTree.lookup(tree, reg) of
+      BalancedTree.YES EXT_REF => tree
+    | BalancedTree.YES MULT_REF => tree
+    | BalancedTree.YES(SEV_REF i) =>
+	BalancedTree.insert(tree, reg,
+			    if i >= max_ref then MULT_REF else SEV_REF(i+1))
+    | BalancedTree.YES NO_REF => BalancedTree.insert(tree, reg, SEV_REF 1)
+    | _ => BalancedTree.insert(tree, reg, EXT_REF)
+
+  fun new_reg_def(tree, MirTypes.GC_REG reg) = new_def(tree, reg)
+    | new_reg_def(tree, _) = tree
+
+  fun new_reg_ref(tree, MirTypes.GC_REG reg) = new_ref(tree, reg)
+    | new_reg_ref(tree, _) = tree
+
+  fun new_gp_def(tree, MirTypes.GP_GC_REG reg) = new_def(tree, reg)
+    | new_gp_def(tree, _) = tree
+
+  fun new_gp_ref(tree, MirTypes.GP_GC_REG reg) = new_ref(tree, reg)
+    | new_gp_ref(tree, _) = tree
+
+  fun defs_and_uses(tree, MirTypes.TBINARY(_, _, reg_op, gp_op, gp_op')) =
+    let
+      val tree = new_reg_def(tree, reg_op)
+      val tree = new_gp_ref(tree, gp_op)
+    in
+      new_gp_ref(tree, gp_op')
+    end
+  | defs_and_uses(tree, MirTypes.BINARY(_, reg_op, gp_op, gp_op')) =
+    let
+      val tree = new_gp_ref(tree, gp_op')
+      val tree = new_gp_ref(tree, gp_op)
+    in
+      new_reg_def(tree, reg_op)
+    end
+  | defs_and_uses(tree, MirTypes.UNARY(_, reg_op, gp_op)) =
+    let
+      val tree = new_gp_ref(tree, gp_op)
+    in
+      new_reg_def(tree, reg_op)
+    end
+  | defs_and_uses(tree, MirTypes.STACKOP(stack_op, reg_op, _)) =
+    (case stack_op of
+       MirTypes.PUSH => new_reg_ref(tree, reg_op)
+     | MirTypes.POP => new_reg_def(tree, reg_op))
+  | defs_and_uses(tree, MirTypes.STOREOP(store_op, reg_op, reg_op', gp_op)) =
+    let
+      val tree = new_gp_ref(tree, gp_op)
+      val tree = new_reg_ref(tree, reg_op')
+    in
+      case store_op of
+	MirTypes.LD => new_reg_def(tree, reg_op)
+      | MirTypes.LDB => new_reg_def(tree, reg_op)
+      | MirTypes.LDREF => new_reg_def(tree, reg_op)
+      | MirTypes.ST => new_reg_ref(tree, reg_op)
+      | MirTypes.STB => new_reg_ref(tree, reg_op)
+      | MirTypes.STREF => new_reg_ref(tree, reg_op)
+    end
+  | defs_and_uses(tree, MirTypes.REAL(_, _, gp_op)) =
+    new_gp_ref(tree, gp_op)
+  | defs_and_uses(tree, MirTypes.FLOOR(_, _, reg_op, _)) =
+    new_reg_ref(tree, reg_op)
+  | defs_and_uses(tree,
+		  MirTypes.BRANCH(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree, MirTypes.TEST(_, _, gp_op, gp_op')) =
+    let
+      val tree = new_gp_ref(tree, gp_op)
+    in
+      new_gp_ref(tree, gp_op')
+    end
+  | defs_and_uses(tree, 
+		  MirTypes.BRANCH_AND_LINK(_, MirTypes.REG(MirTypes.GC_REG
+							   reg))) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree,
+		  MirTypes.TAIL_CALL(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree, MirTypes.SWITCH(_, MirTypes.GC_REG reg, _)) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree, MirTypes.ALLOCATE(_, reg_op, gp_op)) =
+    let
+      val tree = new_reg_def(tree, reg_op)
+    in
+      new_gp_ref(tree, gp_op)
+    end
+  | defs_and_uses(tree, MirTypes.ALLOCATE_STACK(_, MirTypes.GC_REG reg, _,
+						_)) =
+    new_def(tree, reg)
+  | defs_and_uses(tree, MirTypes.ADR(_, MirTypes.GC_REG reg, _)) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree, MirTypes.PROFILER(MirTypes.GC_REG reg)) =
+    new_ref(tree, reg)
+  | defs_and_uses(tree, _) = tree
+
+  val defs_and_uses =
+    fn (MirTypes.BLOCK(_, opcode_list)) =>
+    Lists.reducel
+    defs_and_uses
+    (BalancedTree.empty reg_order, opcode_list)
+
+  fun new_reg(list, MirTypes.GC_REG reg) = reg :: list
+    | new_reg(list, _) = list
+
+  fun new_gp(list, MirTypes.GP_GC_REG reg) = reg :: list
+    | new_gp(list, _) = list
+
+  fun op_defs_and_uses(MirTypes.TBINARY(_, _, reg_op, gp_op, gp_op')) =
+    (new_reg([], reg_op), new_gp(new_gp([], gp_op), gp_op'))
+  | op_defs_and_uses(MirTypes.BINARY(_, reg_op, gp_op, gp_op')) =
+    (new_reg([], reg_op), new_gp(new_gp([], gp_op), gp_op'))
+  | op_defs_and_uses(MirTypes.UNARY(_, reg_op, gp_op)) =
+    (new_reg([], reg_op), new_gp([], gp_op))
+  | op_defs_and_uses(MirTypes.STACKOP(stack_op, reg_op, _)) =
+    (case stack_op of
+       MirTypes.PUSH => ([], new_reg([], reg_op))
+     | MirTypes.POP => (new_reg([], reg_op), []))
+  | op_defs_and_uses(MirTypes.STOREOP(store_op, reg_op, reg_op', gp_op)) =
+    let
+      val uses = new_reg(new_gp([], gp_op), reg_op')
+    in
+      case store_op of
+	MirTypes.LD => (new_reg([], reg_op), uses)
+      | MirTypes.LDB => (new_reg([], reg_op), uses)
+      | MirTypes.LDREF => (new_reg([], reg_op), uses)
+      | MirTypes.ST => ([], new_reg(uses, reg_op))
+      | MirTypes.STB => ([], new_reg(uses, reg_op))
+      | MirTypes.STREF => ([], new_reg(uses, reg_op))
+    end
+  | op_defs_and_uses(MirTypes.REAL(_, _, gp_op)) =
+    ([], new_gp([], gp_op))
+  | op_defs_and_uses(MirTypes.FLOOR(_, _, reg_op, _)) =
+    (new_reg([], reg_op), [])
+  | op_defs_and_uses(MirTypes.BRANCH(_, MirTypes.REG(MirTypes.GC_REG reg))) =
+    ([], [reg])
+  | op_defs_and_uses(MirTypes.TEST(_, _, gp_op, gp_op')) =
+    ([], new_gp(new_gp([], gp_op), gp_op'))
+  | op_defs_and_uses(
+		  MirTypes.BRANCH_AND_LINK(_, MirTypes.REG(MirTypes.GC_REG
+							   reg))) =
+    ([], [reg])
+  | op_defs_and_uses(MirTypes.TAIL_CALL(_,
+					MirTypes.REG(MirTypes.GC_REG reg))) =
+    ([], [reg])
+  | op_defs_and_uses(MirTypes.SWITCH(_, MirTypes.GC_REG reg, _)) =
+    ([], [reg])
+  | op_defs_and_uses(MirTypes.ALLOCATE(_, reg_op, gp_op)) =
+    (new_reg([], reg_op), new_gp([], gp_op))
+  | op_defs_and_uses(MirTypes.ALLOCATE_STACK(_, MirTypes.GC_REG reg, _,
+						_)) =
+    ([reg], [])
+  | op_defs_and_uses(MirTypes.ADR(_, MirTypes.GC_REG reg, _)) =
+    ([], [reg])
+  | op_defs_and_uses(MirTypes.PROFILER(MirTypes.GC_REG reg)) =
+    ([], [reg])
+  | op_defs_and_uses _ = ([], [])
+
+  val reserved =
+    Set.union(Set.list_to_set[MirRegisters.caller_arg,
+			      MirRegisters.callee_arg,
+			      MirRegisters.caller_closure],
+	      #gc MirRegisters.reserved)
+
+  fun ignore_reserved reg =
+    not(MirRegisters.Set.is_member(reg, reserved))
+
+  val op_defs_and_uses =
+    fn opcode =>
+    let
+      val (def_list, use_list) = op_defs_and_uses opcode
+    in
+      (Lists.filterp ignore_reserved def_list,
+       Lists.filterp ignore_reserved use_list)
+    end
+
+  fun subst_reg_op(reg_tree, reg_op as MirTypes.GC_REG reg) =
+    (case BalancedTree.lookup(reg_tree, reg) of
+       BalancedTree.YES reg' => MirTypes.GC_REG reg'
+     | _ => reg_op)
+    | subst_reg_op(_, reg_op) = reg_op
+
+  fun subst_gp_op(reg_tree, gp_op as MirTypes.GP_GC_REG reg) =
+    (case BalancedTree.lookup(reg_tree, reg) of
+      BalancedTree.YES reg' => MirTypes.GP_GC_REG reg'
+    | _ => gp_op)
+    | subst_gp_op(_, gp_op) = gp_op
+
+  fun subst(reg_tree, MirTypes.TBINARY(oper, tag, reg_op, gp_op, gp_op')) =
+    MirTypes.TBINARY(oper, tag, subst_reg_op(reg_tree, reg_op),
+		     subst_gp_op(reg_tree, gp_op),
+		     subst_gp_op(reg_tree, gp_op'))
+  | subst(reg_tree, MirTypes.BINARY(oper, reg_op, gp_op, gp_op')) =
+    MirTypes.BINARY(oper, subst_reg_op(reg_tree, reg_op),
+		    subst_gp_op(reg_tree, gp_op),
+		    subst_gp_op(reg_tree, gp_op'))
+  | subst(reg_tree, MirTypes.UNARY(oper, reg_op, gp_op)) =
+    MirTypes.UNARY(oper, subst_reg_op(reg_tree, reg_op),
+		   subst_gp_op(reg_tree, gp_op))
+  | subst(reg_tree, MirTypes.STACKOP(stack_op, reg_op, opt)) =
+    MirTypes.STACKOP(stack_op, subst_reg_op(reg_tree, reg_op), opt)
+  | subst(reg_tree, MirTypes.STOREOP(store_op, reg_op, reg_op', gp_op)) =
+    MirTypes.STOREOP(store_op, subst_reg_op(reg_tree, reg_op),
+		     subst_reg_op(reg_tree, reg_op'),
+		     subst_gp_op(reg_tree, gp_op))
+  | subst(reg_tree, MirTypes.REAL(oper, fp, gp_op)) =
+    MirTypes.REAL(oper, fp, subst_gp_op(reg_tree, gp_op))
+  | subst(reg_tree, MirTypes.FLOOR(oper, tag, reg_op, fp)) =
+    MirTypes.FLOOR(oper, tag, subst_reg_op(reg_tree, reg_op), fp)
+  | subst(reg_tree, MirTypes.BRANCH(branch, MirTypes.REG reg_op)) =
+    MirTypes.BRANCH(branch, MirTypes.REG(subst_reg_op(reg_tree, reg_op)))
+  | subst(reg_tree, MirTypes.TEST(test, tag, gp_op, gp_op')) =
+    MirTypes.TEST(test, tag, subst_gp_op(reg_tree, gp_op),
+		  subst_gp_op(reg_tree, gp_op'))
+  | subst(reg_tree, MirTypes.BRANCH_AND_LINK(bal, MirTypes.REG reg_op)) =
+    MirTypes.BRANCH_AND_LINK(bal, MirTypes.REG(subst_reg_op(reg_tree, reg_op)))
+  | subst(reg_tree, MirTypes.TAIL_CALL(tail, MirTypes.REG reg_op)) =
+    MirTypes.TAIL_CALL(tail, MirTypes.REG(subst_reg_op(reg_tree, reg_op)))
+  | subst(reg_tree, MirTypes.SWITCH(oper, reg_op, tags)) =
+    MirTypes.SWITCH(oper, subst_reg_op(reg_tree, reg_op), tags)
+  | subst(reg_tree, MirTypes.ALLOCATE(oper, reg_op, gp_op)) =
+    MirTypes.ALLOCATE(oper, subst_reg_op(reg_tree, reg_op),
+		      subst_gp_op(reg_tree, gp_op))
+  | subst(reg_tree, MirTypes.ALLOCATE_STACK(oper, reg_op, i, i')) =
+    MirTypes.ALLOCATE_STACK(oper, subst_reg_op(reg_tree, reg_op), i, i')
+  | subst(reg_tree, MirTypes.ADR(adr, reg_op, tag)) =
+    MirTypes.ADR(adr, subst_reg_op(reg_tree, reg_op), tag)
+  | subst(reg_tree, MirTypes.PROFILER reg_op) =
+    MirTypes.PROFILER(subst_reg_op(reg_tree, reg_op))
+  | subst(_, opcode) = opcode
+
+  fun reduce_registers proc_list_list =
+    map
+    (fn proc_list =>
+     map
+     (fn (proc as MirTypes.PROC(string, tag, params, block_list)) =>
+      let
+	val lengths =
+	  map
+	  (fn (MirTypes.BLOCK(tag, opcodes)) => Lists.length opcodes)
+	  block_list
+	val min_regs = Lists.length MachSpec.gcs
+	val min_len = 4 * min_regs
+      in
+	if Lists.exists (fn x => x >= min_len) lengths then
+	  (let
+	     val ref_trees =
+	       map
+	       (fn (block as (MirTypes.BLOCK(tag, _))) =>
+		(tag, uses block))
+	       block_list
+	     fun do_block(block as MirTypes.BLOCK(tag, opcode_list)) =
+	       let
+		 val tree = defs_and_uses block
+		 val assoc_tree = BalancedTree.to_alist tree
+		 fun used_elsewhere(_, []) = false
+		   | used_elsewhere(reg, (tag', tree) :: rest) =
+		     if tag = tag' then
+		       used_elsewhere(reg, rest)
+		     else
+		       case BalancedTree.lookup(tree, reg) of
+			 BalancedTree.YES _ => true
+		       | _ => used_elsewhere(reg, rest)
+		 val tree' =
+		   BalancedTree.deletep
+		   (tree,
+		    fn (parm as (reg, state)) =>
+		    case state of
+		      SEV_REF i => used_elsewhere(reg, ref_trees)
+		    | _ => true)
+		 val assoc_tree = BalancedTree.to_alist tree'
+		 val len = Lists.length assoc_tree
+		 (* Throw out all elements referenced elsewhere *)
+		 fun map_reg_order(reg, reg') =
+		   reg = reg' orelse MirTypes.GC.order(reg, reg')
+		 fun do_defs([], res) = res
+		   | do_defs(reg :: rest,
+			     res as (dead_list, live_map, reg_tree)) =
+		     case BalancedTree.lookup(tree', reg) of
+		       BalancedTree.YES(SEV_REF i) =>
+			 let
+			   val live_map =
+			     Map.add((reg, 0), live_map, map_reg_order)
+			 in
+			   case dead_list of
+			     [] => do_defs(rest, ([], live_map, reg_tree))
+			   | reg' :: dead_list =>
+			       do_defs(rest, (dead_list, live_map,
+					      BalancedTree.insert
+					      (reg_tree, reg, reg')))
+			 end
+		     | _ => do_defs(rest, res)
+		 fun do_refs([], res) = res
+		   | do_refs(reg :: rest,
+			     res as (dead_list, live_map, reg_tree)) =
+		     case BalancedTree.lookup(tree', reg) of
+		       BalancedTree.YES(SEV_REF i) =>
+			 let
+			   val count = Map.lookup(reg, live_map)
+			     handle Map.Lookup =>
+			       Crash.impossible
+			       "Referenced register is not in live map"
+			   val reg' =
+			     case BalancedTree.lookup
+			       (reg_tree, reg) of
+			       BalancedTree.YES reg' => reg'
+			     | _ => reg
+			 in
+			   if count + 1 = i then
+			     (* Expires this instruction *)
+			     do_refs(rest, (reg' :: dead_list,
+					    Map.remove(reg, live_map),
+					    reg_tree))
+			   else
+			     do_refs(rest, (dead_list,
+					    Map.add((reg, count+1),
+						    live_map, map_reg_order),
+					    reg_tree))
+			 end
+		     | _ => do_refs(rest, res)
+
+		 fun do_opcodes(_, _, _, []) = []
+		   | do_opcodes(dead_list, live_map, reg_tree,
+				opcode :: rest) =
+		     let
+		       val (defs, uses) = op_defs_and_uses opcode
+		       val (dead_list, live_map, reg_tree) =
+			 do_refs(uses,
+				 do_defs(defs,
+					 (dead_list, live_map, reg_tree)))
+		       fun reg_exists reg =
+			 case BalancedTree.lookup(reg_tree, reg) of
+			   BalancedTree.YES _ => true
+			 | _ => false
+		     in
+		       (if Lists.exists reg_exists (defs @@ uses) then
+			  subst(reg_tree, opcode)
+			else opcode) ::
+			  do_opcodes(dead_list, live_map, reg_tree, rest)
+		     end
+	       in
+		 if len >= min_regs then
+		   (MirTypes.BLOCK
+		    (tag,
+		     do_opcodes
+		     ([], Map.empty_map,
+		      BalancedTree.empty reg_order,
+		      opcode_list)))
+		 else
+		   block
+	       end
+	   in
+	     MirTypes.PROC
+	     (string, tag, params, 
+	      map
+	      (fn (block as MirTypes.BLOCK(_, opcode_list)) =>
+	       if Lists.length opcode_list >= min_len then
+		 do_block block
+	       else
+		 block)
+	      block_list)
+	   end
+	 )
+	else
+	  proc
+      end
+    )
+     proc_list)
+    proc_list_list
+end*)
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/08/19  18:10:15  davidt
+THIS FILE IS NO LONGER IN USE!
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 3
+a5 1
+$Log$
+d7 1
+d11 1
+d20 1
+d22 1
+a22 1
+functor Mir_Data(
+d510 1
+a510 1
+end
+@

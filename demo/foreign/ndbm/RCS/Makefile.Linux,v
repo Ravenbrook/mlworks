@@ -1,0 +1,60 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.10.26.17.42.30;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #70184]
+Port FI demos to Linux
+@
+
+
+1.1
+log
+@new unit
+[Bug #70184]
+Port FI demos to Linux
+@
+text
+@# Copyright 1998 Harlequin Group plc.  All rights reserved.
+#
+# Linux makefile
+#
+# Revision Log
+# ------------
+# $Log: foreign:ndbm:Makefile.Linux,v $
+#
+
+# As default, mlw_ci.h lives in the enclosing (..) directory.
+# Alter this if mlw_ci.h is somewhere else.
+#
+MLWORKS_INCLUDE=../../../src/rts/src
+
+CC=gcc
+#CC=acc
+CFLAGS=-I$(MLWORKS_INCLUDE)
+
+MAKE_MLWorks_LIB= ld -shared -lgdbm
+
+OBJ= ndbm_stub.o
+
+.PHONEY: all clean
+
+all: ndbm_stub.so
+
+ndbm_stub.so:	$(OBJ)
+	$(MAKE_MLWorks_LIB) -o $@@ $(OBJ)
+
+clean:
+	rm -f ndbm_stub.so $(OBJ)
+@

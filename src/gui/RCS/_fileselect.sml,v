@@ -1,0 +1,1629 @@
+head	1.13;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.13
+date	95.12.05.14.30.51;	author daveb;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.12.04.11.50.18;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.11.15.14.01.11;	author matthew;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.10.20.10.09.36;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.10.04.13.26.03;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.10.04.10.22.57;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.09.22.11.20.36;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.11.15.30.05;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.08.30.13.23.39;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.08.10.12.20.40;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.07.28.16.19.03;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.27.10.56.26;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.07.26.14.47.04;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New unit
+@
+
+
+1.13
+log
+@Reinstated commented-out compile commands, using new ActionQueue functions.
+@
+text
+@(*
+ * Copyright (c) 1993 Harlequin Ltd.
+ *  $Log: _fileselect.sml,v $
+ * Revision 1.12  1995/12/04  11:50:18  daveb
+ * Removed no_execute.
+ *
+ * Revision 1.11  1995/11/15  14:01:11  matthew
+ * Adding windows menu
+ *
+ * Revision 1.10  1995/10/20  10:09:36  daveb
+ * Renamed ShellUtils.edit_source to ShellUtils.edit_location.
+ *
+ * Revision 1.9  1995/10/04  13:26:03  daveb
+ * Type of context_menu has changed.
+ *
+ * Revision 1.8  1995/10/04  10:22:57  daveb
+ * Made compile commands visible in menus even if -full_menus not chosen.
+ *
+ * Revision 1.7  1995/09/22  11:20:36  daveb
+ * Type of ErrorBrowser.create has changed.
+ *
+ * Revision 1.6  1995/09/11  15:30:05  matthew
+ * Changing top level window initialization
+ *
+ * Revision 1.5  1995/08/30  13:23:39  matthew
+ * Renaming layout constructors
+ *
+ * Revision 1.4  1995/08/10  12:20:40  matthew
+ * Adding make_buttons function to capi
+ *
+ * Revision 1.3  1995/07/28  16:19:03  matthew
+ * Improving message on finishing file load
+ *
+ * Revision 1.2  1995/07/27  10:56:26  matthew
+ * Moved capi etc. to gui
+ *
+ * Revision 1.1  1995/07/26  14:47:04  matthew
+ * new unit
+ * New unit
+ *
+ *  Revision 1.93  1995/07/12  14:30:58  matthew
+ *  Removing Incremental from Ml_Debugger
+ *
+ *  Revision 1.92  1995/07/07  15:32:06  daveb
+ *  Minor changes to layout.
+ *
+ *  Revision 1.91  1995/07/04  15:40:22  matthew
+ *  Capification
+ *
+ *  Revision 1.90  1995/07/04  12:50:18  daveb
+ *  Replaced input and output windows with a single console window.
+ *
+ *  Revision 1.89  1995/06/15  13:00:27  daveb
+ *  Hid details of WINDOWING type in ml_debugger.
+ *
+ *  Revision 1.88  1995/06/14  13:29:36  daveb
+ *  Type of Ml_Debugger.ml_debugger has changed.
+ *  ShellUtils.edit_* functions no longer require a context argument.
+ *
+ *  Revision 1.87  1995/06/13  16:38:06  daveb
+ *  Added an input tool.
+ *
+ *  Revision 1.86  1995/06/09  09:43:16  daveb
+ *  ensure_output is now done by the output widget.
+ *
+ *  Revision 1.85  1995/06/05  13:23:47  daveb
+ *  Changed sensitivity argument of view_options to NO_SENSE_SELECTION,
+ *  because the shell functions now set the current selection.
+ *
+ *  Revision 1.84  1995/06/01  10:32:54  daveb
+ *  Separated user_options into tool-specific and context-specific parts.
+ *
+ *  Revision 1.83  1995/05/23  09:10:10  daveb
+ *  Made contexts only visible if full_menus set.
+ *
+ *  Revision 1.82  1995/05/16  09:20:05  matthew
+ *  Removing Toplevel structure
+ *
+ *  Revision 1.81  1995/05/04  09:46:35  matthew
+ *  Removed script from ml_debugger
+ *
+ *  Revision 1.80  1995/04/28  16:53:29  daveb
+ *  Moved all the user_context stuff from ShellTypes into a separate file.
+ *
+ *  Revision 1.79  1995/04/20  15:51:46  daveb
+ *  filesys and path moved from utils to initbasis.
+ *  
+ *  Revision 1.78  1995/04/19  10:58:43  daveb
+ *  Changes to context_menu.
+ *  
+ *  Revision 1.77  1995/03/17  12:28:00  daveb
+ *  Merged ShellTypes.get_context_name and ShellTypes.string_context_name.
+ *  
+ *  Revision 1.76  1995/03/16  14:32:30  daveb
+ *  Removed context_function from register when closing the window.
+ *  
+ *  Revision 1.75  1995/03/15  16:33:06  daveb
+ *  Changed to share current context with other tools..
+ *  
+ *  Revision 1.74  1995/03/10  15:38:01  daveb
+ *  GuiUtils.options_menu now takes an extra argument.
+ *  
+ *  Revision 1.73  1995/02/20  14:53:48  daveb
+ *  ActionQueue.do_actions now takes an output function argument.
+ *  
+ *  Revision 1.72  1995/01/16  14:22:47  daveb
+ *  Replaced Option structure with references to MLWorks.Option.
+ *  Replaced FileName parameter with Path.
+ *  Removed obsolete sharing constraints.
+ *  
+ *  Revision 1.71  1994/11/30  15:27:13  daveb
+ *  Fixed bug in form layout code for MIPS.  Also simplified this code
+ *  by replacing separator widgets with Xm.*Offset values.
+ *  
+ *  Revision 1.70  1994/08/17  17:32:36  daveb
+ *  Removed unused Module and Crash arguments of functor.
+ *  
+ *  Revision 1.69  1994/08/17  16:13:49  daveb
+ *  Ensured that paths are expanded before being added to source path.
+ *  
+ *  Revision 1.68  1994/08/01  11:21:28  daveb
+ *  Moved preferences to a separate structure.
+ *  
+ *  Revision 1.67  1994/07/27  16:20:32  daveb
+ *  Cut-down menus for novices.  Also reorganised the make and compile
+ *  menus into submenus of an action menu in the full_menus case.
+ *  
+ *  Revision 1.66  1994/07/12  15:57:13  daveb
+ *  ToolData.works_menu takes different arguments.
+ *  
+ *  Revision 1.65  1994/07/11  11:51:33  daveb
+ *  Replaced TextString with DirSpec.
+ *  
+ *  Revision 1.64  1994/06/30  17:41:24  daveb
+ *  Added a comment about the buttons in the file selection box (old code).
+ *  
+ *  Revision 1.63  1994/06/21  15:13:13  daveb
+ *  Moved output window code into separate file.
+ *  Types of ActionQueue.Error, ErrorBrowser.create and ActionQueue.do_actions
+ *  have changed.
+ *  
+ *  Revision 1.62  1994/05/13  15:37:07  daveb
+ *  Moved error browser to separate file.
+ *  
+ *  Revision 1.61  1994/03/30  17:39:58  daveb
+ *  Implemented touch_compile_{module,file}.
+ *  
+ *  Revision 1.60  1994/03/28  15:40:16  daveb
+ *  Replaced Actions menu with Make and Compile menus.
+ *  
+ *  Revision 1.59  1994/03/17  17:47:28  matthew
+ *  Added check make dependencies
+ *  
+ *  Revision 1.58  1994/03/15  16:40:17  matthew
+ *  Changed printing of locations
+ *  Split title into two parts, one the file being made, the other the file in which the error occurred.
+ *  Fixed problem with redo action
+ *  Cleaned up error_handler function
+ *  
+ *  Revision 1.57  1994/02/23  17:03:02  nosa
+ *  Debugger scripts for tracing tool using debugger.
+ *  
+ *  Revision 1.56  1994/02/08  18:08:59  daveb
+ *  IO.get_source_path can no longer raise an exception.
+ *  
+ *  Revision 1.55  1994/02/02  11:47:36  daveb
+ *  MOved check_search_path to Module, and stopped using it here anyway.
+ *  
+ *  Revision 1.54  1994/01/26  18:09:54  matthew
+ *  Protect change to no_execute with handler
+ *  
+ *  Revision 1.53  1993/12/22  10:59:43  daveb
+ *  Changed quit message for debugger, since it no longer raises Interrupt.
+ *  
+ *  Revision 1.52  1993/12/20  12:48:43  matthew
+ *  Changed output and error browser to be toplevel shells
+ *  Started putting in warning browser stuff
+ *  
+ *  Revision 1.51  1993/12/10  16:00:11  daveb
+ *  Added context menu, ensured that changes do the right thing, ensured that
+ *  new selection is passed on to child tools.
+ *  
+ *  Revision 1.50  1993/12/09  19:34:38  jont
+ *  Added copyright message
+ *  
+ *  Revision 1.49  1993/12/08  14:28:26  daveb
+ *  Changed class of Output window shell to DialogShell, so that the Motif close
+ *  button unmanges it rather than destroying it.  Explicitly managed its form
+ *  widget, 'cos otherwise it doesn't work.  Added Unmap callbacks to the
+ *  output window and the error browser.
+ *  
+ *  Revision 1.48  1993/12/06  12:58:44  daveb
+ *  Changed "Recompile" command to "compile", losing the old "compile" command.
+ *  Changed remake to force_make in history, and also in internal datatype.
+ *  
+ *  Revision 1.47  1993/11/26  12:13:23  matthew
+ *  Improvements to debugger calling.
+ *  
+ *  Revision 1.46  1993/11/18  17:59:00  daveb
+ *  The argument to Ml_Debugger.with_debugger_type now takesa frame argument
+ *  instead of unit.
+ *  
+ *  Revision 1.45  1993/11/04  19:02:20  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.44  1993/11/04  17:41:18  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.43  1993/11/02  16:33:50  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.42  1993/11/02  15:27:22  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.38.1.8  1993/11/04  18:55:20  daveb
+ *  Disabled menu items when they are inappropriate.  Also selected the
+ *  first entry in the error browser when it is mapped.
+ *  
+ *  Revision 1.38.1.7  1993/11/04  17:29:50  daveb
+ *  Redo was invoking the action from the top of the history, but the history
+ *  can be extended in the meantime.  This version redoes the action that
+ *  caused the error.  The implementation is slightly simpler too.
+ *  
+ *  Revision 1.38.1.6  1993/11/02  16:28:09  daveb
+ *  Fixed bug in delete_from_source_path.
+ *  
+ *  Revision 1.38.1.5  1993/11/01  15:16:30  daveb
+ *  Added redo action to error browser.
+ *  
+ *  Revision 1.38.1.4  1993/10/27  16:24:06  daveb
+ *  Merged bug fix into the bug fixing branch.
+ *  
+ *  Revision 1.41  1993/10/27  12:52:21  daveb
+ *  Prevented duplicate or null entries in source path.
+ *  Allowed selected directory to be added to source path without having
+ *  to move into that directory.
+ *  
+ *  Revision 1.40  1993/10/22  16:58:09  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.39  1993/10/08  16:30:04  matthew
+ *  Merging in bug fixes
+ *  
+ *  Revision 1.38.1.3  1993/10/21  14:03:38  daveb
+ *  Changed ToolData.works_menu to take a (unit -> bool) function that
+ *  controls whether the Close menu option is enabled.
+ *  
+ *  Revision 1.38.1.2  1993/10/07  16:36:54  matthew
+ *  Added destroy callback to do quit functions
+ *  
+ *  Revision 1.38.1.1  1993/08/31  15:44:34  jont
+ *  Fork for bug fixing
+ *  
+ *  Revision 1.38  1993/08/31  15:44:34  matthew
+ *  Added Context label widget
+ *  
+ *  Revision 1.37  1993/08/29  20:33:52  daveb
+ *  Removed filter button.  Added source path pane.  Tidied up a bit.
+ *  Source path isn't properly integrated with compilation yet.
+ *  
+ *  Revision 1.36  1993/08/28  17:06:27  daveb
+ *  Recompile.recompile and TopLevel.compile_file now take list arguments.
+ *  
+ *  Revision 1.35  1993/08/27  16:36:11  matthew
+ *  Improved messages
+ *  Renamed message to message_fun.
+ *  
+ *  Revision 1.34  1993/08/20  10:41:23  daveb
+ *  Improved layout of error browser.
+ *  
+ *  Revision 1.33  1993/08/20  08:08:34  daveb
+ *  Added "Check dependencies" action.
+ *  
+ *  Revision 1.32  1993/08/17  18:38:41  daveb
+ *  Make, remake, compile and recompile check whether the file is on the
+ *  search path.
+ *  
+ *  Revision 1.31  1993/08/11  11:24:54  matthew
+ *  Changes to user options
+ *  Removed preferences menu
+ *  Options update
+ *  
+ *  Revision 1.30  1993/08/10  14:46:06  nosa
+ *  tooldata passed to make_debugger_window for inspector invocation
+ *  in debugger-window.
+ *  
+ *  Revision 1.29  1993/08/10  14:02:23  matthew
+ *  Changed name to File Tool
+ *  Get maximum history length from options
+ *  Auto popup of output windows
+ *  
+ *  Revision 1.28  1993/08/03  16:47:56  matthew
+ *  Operation to bring output window to front
+ *  Added "Line" to error output
+ *  
+ *  Revision 1.27  1993/07/29  16:08:45  matthew
+ *  Changed printing of Location.FILE in error browser
+ *  Added Interrupt handler to mk_action
+ *  Added call to GuiUtils.with_message, this actually uses a busy cursor
+ *  Changed Info.default_options to Info.make_default_options
+ *  
+ *  Revision 1.26  1993/06/16  13:04:14  matthew
+ *  Added remake function
+ *  
+ *  Revision 1.25  1993/06/04  15:21:24  daveb
+ *  edit functions now return a single string in the errorneous case.
+ *  
+ *  Revision 1.24  1993/06/03  15:51:40  matthew
+ *  More informative messages
+ *  
+ *  Revision 1.23  1993/05/28  16:17:54  matthew
+ *  Added tty_ok value to WINDOWINF
+ *  
+ *  Revision 1.22  1993/05/27  10:13:15  matthew
+ *  Changed error handling for make, use etc.
+ *  
+ *  Revision 1.21  1993/05/25  16:41:52  matthew
+ *  Added history and removed some of the buttons
+ *  
+ *  Revision 1.20  1993/05/18  17:28:06  jont
+ *  Removed integer parameter
+ *  
+ *  Revision 1.19  1993/05/13  14:22:30  daveb
+ *  All tools now set their own titles and pass them to their options menus.
+ *  
+ *  Revision 1.18  1993/05/12  16:14:02  matthew
+ *  Added use.  Changed make.  Uses ShellUtils more.
+ *  
+ *  Revision 1.17  1993/05/11  17:03:55  matthew
+ *  Added make command
+ *  
+ *  Revision 1.16  1993/05/06  14:10:08  daveb
+ *  Changed to use GuiUtils.make_outstream
+ *  
+ *  Revision 1.15  1993/05/05  12:10:51  daveb
+ *  Added tools argument to works_menu(),
+ *  removed exitApplication from TOOLDATA (works_menu now accesses it directly).
+ *  
+ *  Revision 1.14  1993/05/04  15:47:43  matthew
+ *  Fixed bug with options used by error browser.
+ *  
+ *  Revision 1.13  1993/05/04  12:26:50  matthew
+ *  Added facility to show and hide output widget.
+ *  
+ *  Revision 1.12  1993/04/30  16:03:45  daveb
+ *  Reorganised menus.
+ *  
+ *  Revision 1.11  1993/04/28  10:44:36  daveb
+ *  Now uses GuiUtils.scrolllist.
+ *  
+ *  Revision 1.10  1993/04/27  14:43:28  daveb
+ *  Moved options menu code to _GUI_UTILS.
+ *  
+ *  Revision 1.9  1993/04/22  13:30:57  richard
+ *  The editor interface is now implemented directly through
+ *  Unix system calls, and is not part of the pervasive library
+ *  or the runtime system.
+ *  
+ *  Revision 1.8  1993/04/20  16:12:02  richard
+ *  Incorrect use of ordof().
+ *  
+ *  Revision 1.7  1993/04/19  17:00:51  matthew
+ *  Added error selection dialog
+ *  Start of "Default action" stuff
+ *  
+ *  Revision 1.6  1993/04/16  17:05:35  matthew
+ *  Changed to ToolData interface
+ *  
+ *  Revision 1.5  1993/04/15  16:13:59  matthew
+ *  Added proper interface to editor
+ *  and an output window.  Much code duplicated from _listener.
+ *  
+ *  Revision 1.4  1993/04/14  17:23:01  matthew
+ *  Much changed.  Added options and proper recompile etc. function.
+ *  
+ *  Revision 1.3  1993/04/08  18:42:34  matthew
+ *  More hackery, still doesn't work
+ *  
+ *  Revision 1.2  1993/04/05  14:50:21  daveb
+ *  Names of Callbacks have changed.
+ *  
+ *  Revision 1.1  1993/04/01  17:18:05  matthew
+ *  Initial revision
+ *  
+ *)
+
+require "../utils/lists";
+require "../initbasis/path";
+require "../main/io";
+require "../editor/editor";
+require "../main/user_options";
+require "../main/preferences";
+require "../debugger/ml_debugger";
+require "../interpreter/shell_utils";
+require "../interpreter/action_queue";
+require "capi";
+require "menus";
+require "gui_utils";
+require "console";
+require "debugger_window";
+require "tooldata";
+require "error_browser";
+
+require "fileselect";
+
+functor FileSelect(
+  structure DebuggerWindow : DEBUGGERWINDOW
+  structure Ml_Debugger : ML_DEBUGGER
+  structure ErrorBrowser : ERROR_BROWSER
+  structure Lists : LISTS
+  structure Capi : CAPI
+  structure Menus : MENUS
+  structure Editor : EDITOR
+  structure UserOptions : USER_OPTIONS
+  structure Preferences : PREFERENCES
+  structure ToolData : TOOL_DATA
+  structure GuiUtils : GUI_UTILS
+  structure ShellUtils : SHELL_UTILS
+  structure ActionQueue : ACTION_QUEUE
+  structure Io: IO
+  structure Path: PATH
+  structure Console: CONSOLE
+
+  sharing ShellUtils.Info = ActionQueue.Info
+  sharing UserOptions.Options = ShellUtils.Options =
+	  ToolData.ShellTypes.Options = Ml_Debugger.ValuePrinter.Options
+
+  sharing type Preferences.user_preferences = GuiUtils.user_preferences =
+	       ToolData.ShellTypes.user_preferences = Console.user_preferences
+  sharing type UserOptions.user_context_options =
+	       ToolData.UserContext.user_context_options =
+	       GuiUtils.user_context_options
+  sharing type ToolData.ShellTypes.Context = ShellUtils.Context
+  sharing type Menus.Widget = ToolData.Widget =
+	       GuiUtils.Widget = DebuggerWindow.Widget =
+	       ErrorBrowser.Widget = Capi.Widget = Console.Widget
+  sharing type Menus.ButtonSpec = GuiUtils.ButtonSpec = ToolData.ButtonSpec
+  sharing type UserOptions.user_tool_options = ShellUtils.UserOptions =
+	       ToolData.ShellTypes.user_options =
+	       GuiUtils.user_tool_options = ActionQueue.UserOptions
+  sharing type ToolData.ToolData = DebuggerWindow.ToolData
+  sharing type GuiUtils.user_context = ToolData.ShellTypes.user_context =
+	       ActionQueue.user_context
+  sharing type Ml_Debugger.preferences = ShellUtils.preferences =
+	       Editor.preferences = Preferences.preferences
+  sharing type GuiUtils.MotifContext = ToolData.MotifContext            
+  sharing type Ml_Debugger.debugger_window = DebuggerWindow.debugger_window
+  sharing type ShellUtils.Info.Location.T = ErrorBrowser.location
+  sharing type ShellUtils.Info.error = ErrorBrowser.error
+) : FILE_SELECT =
+  struct
+
+    type Widget = Capi.Widget
+
+    structure ShellTypes = ToolData.ShellTypes
+    structure UserContext = ToolData.UserContext
+    structure Options = UserOptions.Options
+    structure Info = ShellUtils.Info
+    structure Location = Info.Location
+
+    structure Integer = MLWorks.Integer
+
+    (* This is some test code that should be combined with the listener *)
+
+    type ToolData = ToolData.ToolData
+
+    (* This should be a utility *)
+    local
+    fun first_line message =
+      let
+        fun aux ([],acc) = acc
+          | aux ("\n" :: _,acc) = acc
+          | aux (c::l,acc) = aux(l,c::acc)
+      in
+        implode (rev (aux (explode message,[])))
+      end
+        
+    fun location_line location =
+      case location of
+        Location.UNKNOWN => ""
+      | Location.FILE s => ""
+      | Location.LINE(_,l) => "Line " ^ MLWorks.Integer.makestring l
+      | Location.POSITION (_,l,_) => "Line " ^ MLWorks.Integer.makestring l
+      | Location.EXTENT {s_line,e_line,...} =>
+          if s_line = e_line
+            then "Line " ^ MLWorks.Integer.makestring s_line
+          else "Line " ^ MLWorks.Integer.makestring s_line ^ " to " ^ MLWorks.Integer.makestring e_line
+                
+    in
+
+    fun error_to_string _ (Info.ERROR(severity,location,message)) =
+      (case location_line location of
+         "" => first_line message
+       | l => l ^ ": " ^ first_line message)
+
+    end
+
+    (* Should be a util *)
+    fun location_file (Info.ERROR(_,location,message)) =
+      case location of
+        Location.UNKNOWN => MLWorks.Option.NONE
+      | Location.FILE f => MLWorks.Option.SOME f
+      | Location.LINE(f,l) => MLWorks.Option.SOME f
+      | Location.POSITION (f,l,_) => MLWorks.Option.SOME f
+      | Location.EXTENT {name,...} => MLWorks.Option.SOME name
+
+    val browser_number = ref 1
+
+    fun create (tooldata as ToolData.TOOLDATA
+		  {args, appdata, current_context, motif_context, tools}) =
+      let
+        val ShellTypes.LISTENER_ARGS
+	      {user_options, user_preferences,
+	       mk_xinterface_fn, prompter, ...} = args
+
+        val (full_menus, update_fns) =
+	  case user_preferences
+	  of Preferences.USER_PREFERENCES ({full_menus,...}, update_fns) =>
+	    (!full_menus, update_fns)
+
+        val title =
+          let
+            val n = !browser_number
+          in
+            browser_number := n+1;
+            "File Tool #" ^ Integer.makestring n
+        end
+
+	val local_context = ref motif_context
+
+        val ToolData.APPLICATIONDATA {applicationShell,...} = appdata
+
+        val name = "compilationTool"
+
+        (*** Make the windows ***)
+        val (shell,form,menuBar,contextLabel) =
+          Capi.make_main_window (name,title,applicationShell,full_menus)
+
+	fun set_context_label c =
+	  case contextLabel
+	  of MLWorks.Option.SOME w =>
+            let
+              val context_name = GuiUtils.get_context_name c
+
+              val string = "Context: " ^ context_name
+            in
+              Capi.set_label_string (w, string)
+	    end
+	  |  MLWorks.Option.NONE => ()
+
+	val _ = set_context_label (!local_context)
+	  
+	fun set_context c =
+	  (set_context_label c;
+	   local_context := c)
+
+	fun get_user_options () = user_options
+
+        val context_key =
+	  ToolData.add_context_fn
+            (current_context,
+	     (set_context, get_user_options, ToolData.WRITABLE))
+
+	val quit_funs = ref [];
+
+	fun do_quit_funs _ = Lists.iterate (fn f => f ()) (!quit_funs)
+
+	val _ =
+	  quit_funs :=
+	    (fn _ => ToolData.remove_context_fn (current_context, context_key))
+	    :: !quit_funs
+
+        fun select_context c =
+          (set_context c;
+	   ToolData.set_current
+	     (current_context, context_key, user_options, c))
+
+        val (box,{get_file,get_directory,set_directory,set_mask,...}) =
+          Capi.make_file_selection_box ("selectionBox",form,[])
+
+        val pathLabel = Capi.make_managed_widget ("pathLabel",Capi.Label,form,[])
+
+	fun disable_commands _ = ()
+	fun enable_commands _ = ()
+
+	fun number_entries ([], _) = []
+	|   number_entries (h::t, n) = (h, n) :: number_entries (t, n + 1)
+	  
+	val entries = ref (number_entries (Io.get_source_path (), 1))
+
+	val current_pos = ref (if !entries = [] then 0 else 1)
+
+	val current_entry_selected = ref true;
+
+	fun print_entry print_options (s, _) = s;
+
+	fun select_fn _ (_, n) =
+	  if !current_pos <> n then
+	    (current_pos := n;
+	     current_entry_selected := false)
+	  else
+	    ()
+
+	fun action_fn _ (s, _) =
+          (set_directory s;
+	   current_entry_selected := true;
+	   enable_commands ())
+
+	val (scroll, list, set_items) =
+	  Capi.make_scrolllist 
+	    {parent = form, name = "sourcePath", select_fn = select_fn,
+	     action_fn = action_fn, print_fn = print_entry}
+
+	val _ =
+	  let val init_dir =
+		    case !entries
+		    of [] => MLWorks.OS.Unix.getwd()
+		    |  ((dir, _) :: _) => dir
+	  in
+	    set_items ShellUtils.Options.default_print_options (!entries);
+	    if !current_pos <> 0 then
+	      Capi.List.select_pos (list, 1, false)
+	    else ();
+            set_mask (init_dir ^ "/*.sml")
+	  end
+
+	fun renumber_up (s, n) = (s, n + 1)
+
+	fun renumber_down (s, n) = (s, n - 1)
+
+	fun is_in (n:string, []) = false
+	|   is_in (n, (n', _)::t) = n = n' orelse is_in (n, t)
+	infix is_in
+
+	fun add_nth ([], s, n) = [(s, n)] 
+	|   add_nth (l as h::t, s, n) =
+	  if n = #2 h then
+	    (s, n) :: map renumber_up l
+	  else
+	    h :: add_nth (t, s, n) 
+
+	fun remove_nth ([], _) = []
+	|   remove_nth (h::t, n) =
+	  if n = #2 h then
+	    map renumber_down t
+	  else
+	    h :: remove_nth (t, n)
+
+        fun crash s =
+	  Info.error' Info.default_options (Info.FAULT,Location.UNKNOWN,s)
+
+        fun get_directory_path () =
+          Path.dir (get_directory ())
+
+	fun delete_from_source_path _ =
+	  let val new_entries =
+		remove_nth (!entries, !current_pos)
+	      val new_source_path = map #1 new_entries
+	  in
+	    if !current_entry_selected then
+	      disable_commands()
+	    else ();
+	    entries := new_entries;
+	    Io.set_source_path new_source_path;
+	    current_entry_selected := false;
+	    set_items ShellUtils.Options.default_print_options new_entries;
+	    if !current_pos > Lists.length new_entries then
+	      current_pos := Lists.length new_entries
+	    else ();
+	    if !current_pos <> 0 then
+	      Capi.List.select_pos (list, !current_pos, false)
+	    else ()
+	  end
+
+	fun insert_into_source_path _ =
+	  let val dir = get_directory_path ()
+	  in
+	    if dir = "" orelse dir is_in !entries then
+	      ()
+	    else let
+	      val new_entries =
+		add_nth
+		  (!entries, dir, if !current_pos = 0 then 1 else !current_pos)
+	      val new_source_path = map #1 new_entries
+	    in
+	      current_pos := !current_pos + 1;
+	      entries := new_entries;
+	      Io.set_source_path new_source_path;
+	      set_items ShellUtils.Options.default_print_options new_entries;
+	      Capi.List.select_pos (list, !current_pos, false)
+	    end
+	  end
+
+	fun append_into_source_path _ =
+	  let val dir = get_directory_path ()
+	  in
+	    if dir = "" orelse dir is_in !entries then
+	      ()
+	    else let
+	      val new_entries =
+		add_nth (!entries, dir, !current_pos + 1)
+	      val new_source_path = map #1 new_entries
+	    in
+	      if !current_pos = 0 then current_pos := 1 else ();
+	      Io.set_source_path new_source_path;
+	      entries := new_entries;
+	      set_items ShellUtils.Options.default_print_options new_entries;
+	      Capi.List.select_pos (list, !current_pos, false)
+	    end
+	  end
+
+	fun cd_to_source_path _ =
+	  (set_directory (#1 (Lists.nth (!current_pos - 1, !entries)));
+	   current_entry_selected := true;
+	   enable_commands ())
+
+        val {instream, outstream, console_widget, console_visible,
+             show_console, clear_input} =
+          Console.create (shell, title, user_preferences)
+
+        fun message_fun s = Capi.send_message(shell,s)
+
+        (* This creates the debugger window when the inspector is being created *)
+        (* Strange things happen if done at debugger entry time *)
+        val debugger_type = 
+          Ml_Debugger.WINDOWING
+	    (DebuggerWindow.make_debugger_window (shell, title ^ " Debugger", tooldata),
+	     message_fun,
+	     false)
+
+        fun debugger_function f x =
+          Ml_Debugger.with_start_frame
+            (fn base_frame =>
+               (f x)
+               handle
+		 exn as Capi.SubLoopTerminated => raise exn
+               | exn as ShellTypes.DebuggerTrapped => raise exn
+               | exn as Interrupt => raise exn
+               | exn as Info.Stop _ => raise exn
+               | exn =>
+                  (Ml_Debugger.ml_debugger
+                     (debugger_type,
+                      ShellTypes.new_options
+			(user_options,
+			 GuiUtils.get_user_context (!local_context)),
+                      Preferences.new_preferences user_preferences)
+                     (base_frame,
+                      Ml_Debugger.EXCEPTION exn,
+                      Ml_Debugger.POSSIBLE
+                        ("quit (return to file tool)",
+                         Ml_Debugger.DO_RAISE ShellTypes.DebuggerTrapped),
+                      Ml_Debugger.NOT_POSSIBLE);
+                   raise ShellTypes.DebuggerTrapped))
+
+	fun is_file_name s =
+	  MLWorks.String.ordof (s, size s - 1) <> ord "/"
+		
+        fun mk_action f filename =
+	  if is_file_name filename then
+	    (clear_input ();
+             MLWorks.IO.with_standard_input
+               instream
+	       (fn () =>
+                MLWorks.IO.with_standard_output
+                  outstream
+                  (fn () =>
+                   MLWorks.IO.with_standard_error
+                   outstream
+                   (fn () =>
+                    (Ml_Debugger.with_debugger_type
+                     debugger_type
+                     (fn _ => f filename)))))
+	     handle
+               Interrupt => ())
+	  else
+	    message_fun "Normal file not selected"
+
+        val edit_file =
+          mk_action
+          (fn s =>
+           (case Editor.edit
+		   (Preferences.new_preferences user_preferences)
+		   (s,0)
+	    of (MLWorks.Option.NONE,_) => ()
+            |  (MLWorks.Option.SOME s,_) => message_fun s))
+
+        fun error_handler
+	      (filename, error, error_list, header,
+	       preferences_fn, redo_action) =
+          let
+            val action_message =
+              header ^ ": " ^ filename
+
+            val file_message =
+              case location_file error of
+                MLWorks.Option.NONE => ""
+              | MLWorks.Option.SOME s => 
+                  "Error in: " ^ s
+
+	    fun edit_action location =
+	      {quit_fn = ShellUtils.edit_location (location, preferences_fn()),
+	       clean_fn = fn () => ()}
+          in
+            (output(std_out,header ^ ": " ^ file_message ^ "\n");
+	     ErrorBrowser.create
+               {parent = shell, errors = rev error_list,
+		action_message = action_message, file_message = file_message,
+		editable = fn _ => true,
+                edit_action = edit_action, redo_action = redo_action})
+          end
+
+        val compile_file =
+	  let fun f s =
+            let val options =
+		  ShellTypes.new_options
+		    (get_user_options(),
+		     GuiUtils.get_user_context (!local_context))
+
+                val error_info = Info.make_default_options()
+
+                val str = "Compiling " ^ s
+            in
+              (output(std_out,str ^ "\n");
+               Capi.with_message 
+                 (shell,str)
+                 (fn () => 
+                   (ActionQueue.add_compile_module (s,error_info);
+                    ActionQueue.do_actions
+                      (GuiUtils.get_user_context (!local_context),
+                       user_options, debugger_function,
+                       fn s => output(std_out, s),
+                       fn s => output(std_out, "Compiling " ^ s))));
+               message_fun ("Compilation of " ^ s ^ " finished"))
+              handle Info.Stop (error,error_list) =>
+                error_handler 
+                (s,
+                 error,
+                 error_list,
+                 "Compile",
+                 fn () => Preferences.new_preferences user_preferences,
+                 fn () => mk_action f s)
+            end
+	  in
+            mk_action f
+	  end
+
+	val check_compile_file =
+	  let
+	    fun f s =
+	      let
+                val error_info = Info.make_default_options()
+
+		val user_context_options =
+		  UserContext.get_user_options
+		    (GuiUtils.get_user_context (!local_context))
+
+	        val options =
+		  UserOptions.new_options (user_options, user_context_options)
+
+                val str = "Checking dependencies for " ^ s
+              in
+                (output(std_out,str ^ "\n");
+                 Capi.with_message 
+                  (shell,str)
+                  (fn () => 
+                     (ActionQueue.add_check_compile_module (s,error_info);
+                      ActionQueue.do_actions
+                        (GuiUtils.get_user_context (!local_context),
+                         user_options, debugger_function,
+                         fn s => output(std_out, s),
+                         fn s => output(std_out,"Compile: checking " ^ s))));
+                 message_fun ("All dependencies of " ^ s ^ " checked"))
+                handle Info.Stop (error,error_list) =>
+	          (* I'm not sure that this can actually happen *)
+                  error_handler 
+                  (s,
+                   error,
+                   error_list,
+                   "Check Compile",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+              end
+	  in
+	    mk_action f
+	  end
+
+        val touch_compile_file =
+	  let
+            fun f s =
+	      (MLWorks.IO.set_file_modified (s, MLWorks.IO.NOW);
+               Capi.send_message (shell, "Touched " ^ s))
+	      handle Io _ =>
+		message_fun ("Can't touch " ^ s)
+	  in
+            mk_action f
+	  end
+
+        val make_file =
+	  let
+            fun f s =
+              let
+                val error_info = Info.make_default_options()
+              in
+                Capi.with_message (shell,"Making " ^ s)
+                  (fn () =>
+                     (ActionQueue.add_load_source_file (s,error_info);
+                      ActionQueue.do_actions
+			(GuiUtils.get_user_context (!local_context),
+			 user_options, debugger_function,
+			 fn s => output(std_out, s),
+                         fn s => output(std_out,"Make: compiling " ^ s))));
+                message_fun ("Make of " ^ s ^ " finished")
+              end
+              handle
+                ActionQueue.Error (_,error,error_list) =>
+                  error_handler
+                  (s,
+                   error,
+                   error_list,
+                   "Make",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+              | ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+
+        val check_make_file =
+	  let
+            fun f s =
+              let
+                val error_info = Info.make_default_options()
+              in
+                Capi.with_message (shell,"Making " ^ s)
+                  (fn () =>
+                     (ActionQueue.add_check_load_source_file (s,error_info);
+                      ActionQueue.do_actions
+			(GuiUtils.get_user_context (!local_context),
+			 user_options, debugger_function,
+			 fn s => output(std_out, s),
+                         fn s => output(std_out,"Make: compiling " ^ s))));
+                message_fun ("Check Make Dependencies of " ^ s ^ " finished")
+              end
+              handle
+                ActionQueue.Error (_,error,error_list) =>
+                  error_handler
+                  (s,
+                   error,
+                   error_list,
+                   "Check Make",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+              | ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+
+        val touch_make_file =
+	  let
+            fun f s =
+              let
+                val error_info = Info.make_default_options()
+              in
+                ActionQueue.add_touch_loaded_file (s,error_info);
+                ActionQueue.do_actions
+		  (GuiUtils.get_user_context (!local_context),
+		   user_options, debugger_function,
+		   fn s => output(std_out, s),
+                   fn s => output(std_out, "Make: touching " ^ s))
+              end
+              handle
+                ActionQueue.Error (_,error,error_list) =>
+                  error_handler
+		    (s, error, error_list, "Touch Make",
+                     fn () => Preferences.new_preferences user_preferences,
+                     fn () => mk_action f s)
+              | ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+
+        val load_file =
+	  let
+            fun f s =
+              let
+                val error_info = Info.make_default_options()
+              in
+                Capi.with_message (shell,"Loading " ^ s)
+                  (fn () =>
+                     (ActionQueue.add_load_file (s,error_info);
+                      ActionQueue.do_actions
+			(GuiUtils.get_user_context (!local_context),
+			 user_options, debugger_function,
+			 fn s => output(std_out, s),
+                         fn s => output(std_out,"Loading: " ^ s))));
+                message_fun ("Load of " ^ s ^ " finished")
+              end
+              handle
+                ActionQueue.Error (_,error,error_list) =>
+                  error_handler
+                  (s,
+                   error,
+                   error_list,
+                   "Load",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+              | ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+
+(* This version attempts to do something sensible with warnings *)
+(*  
+        val use_file =
+	  let
+            fun f filename =
+              let
+                fun do_error (error,error_list) =
+                  error_handler
+                  (filename,
+                  error,
+                  error_list,
+                   "Use",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+                val error_info = Info.make_default_options ()
+              in
+                (case 
+                  Info.with_error_list
+                  (Capi.with_message (shell,"Using " ^ filename))
+                  (fn () =>
+                     (ActionQueue.add_use (filename,error_info);
+                      ActionQueue.do_actions
+			(GuiUtils.get_user_context (!local_context),
+			 user_options, debugger_function,
+			 fn s => output(std_out, s),
+                         fn s => output(std_out,"Use: compiling " ^ s))))
+                  of
+                    (_,[]) => message_fun ("Use of " ^ filename ^ " finished")
+                  | (_,error_list as (error::_)) => do_error (error,error_list))
+                 handle
+                 ActionQueue.Error (_,error,error_list) => do_error (error,error_list)
+              end
+            handle ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+*)
+        val use_file =
+	  let
+            fun f s =
+              let
+                fun do_error (error,error_list) =
+                  error_handler
+                  (s,
+                   error,
+                   error_list,
+                   "Use",
+                   fn () => Preferences.new_preferences user_preferences,
+                   fn () => mk_action f s)
+                val error_info = Info.make_default_options ()
+              in
+                (Capi.with_message 
+                 (shell,"Using " ^ s)
+                 (fn () =>
+                  (ActionQueue.add_use (s,error_info);
+                   ActionQueue.do_actions
+                   (GuiUtils.get_user_context (!local_context),
+		    user_options, debugger_function,
+		    fn s => output(std_out, s),
+                    fn s => output(std_out, "Use: compiling " ^ s))));
+                 message_fun ("Use of " ^ s ^ " finished"))
+                handle
+                ActionQueue.Error (_,error,error_list) =>
+		  do_error (error,error_list)
+              end
+            handle ActionQueue.Handled => ()
+	  in
+            mk_action f
+	  end
+
+        val history = ref []
+          
+        datatype action =
+	  EDIT | MAKE | CHECK_MAKE | TOUCH_MAKE | USE | COMPILE |
+	  CHECK_COMPILE | TOUCH_COMPILE | LOAD
+
+        fun get_action EDIT = edit_file
+          | get_action MAKE = make_file
+          | get_action CHECK_MAKE = check_make_file
+          | get_action TOUCH_MAKE = touch_make_file
+          | get_action LOAD = load_file
+          | get_action USE = use_file
+          | get_action COMPILE = compile_file
+          | get_action TOUCH_COMPILE = touch_compile_file
+          | get_action CHECK_COMPILE = check_compile_file
+
+        (* There is no need to go through an options structure for this. *)
+        fun get_max_history () =
+          let
+            val Preferences.USER_PREFERENCES ({history_length,...},_) =
+	      user_preferences
+          in
+            !history_length
+          end
+          
+
+        fun ministry_of_truth ([], _, _) = []
+          | ministry_of_truth (s::l, new_factoid, finish) =
+            if finish > 0
+              then
+                if s = new_factoid then
+                  l
+                else
+                  s :: ministry_of_truth (l, new_factoid, finish - 1)
+            else []
+
+        fun add_action a =
+          history := a :: (ministry_of_truth (!history,a,get_max_history()))
+
+        fun do_action (action,filename) =
+          (add_action (action,filename);
+           (get_action action) filename)
+
+        fun make_callback action _ =
+          let val filename = get_file ()
+          in
+            do_action(action,filename)
+          end
+
+        fun string_action action =
+          case action of
+            EDIT => "Edit"
+          | MAKE => "Make"
+          | CHECK_MAKE => "Make.Check"
+          | TOUCH_MAKE => "Make.Touch"
+          | LOAD => "Load"
+          | USE => "Use"
+          | COMPILE => "Compile"
+          | TOUCH_COMPILE => "Compile.Touch"
+          | CHECK_COMPILE => "Compile.Check"
+
+        fun get_history_menu () =
+          map
+          (fn (action,filename) =>
+           Menus.PUSH (string_action action ^ " " ^ filename,
+                       fn _ => do_action(action,filename),
+                       fn _ => true))
+          (!history)
+
+	fun mk_tooldata () =
+          ToolData.TOOLDATA
+            {args = ShellTypes.LISTENER_ARGS
+                      {user_options = user_options,
+		       user_preferences = user_preferences,
+                       user_context =
+			 GuiUtils.get_user_context (!local_context),
+                       prompter = prompter,
+                       mk_xinterface_fn = mk_xinterface_fn},
+             appdata = appdata,
+	     motif_context = !local_context,
+	     current_context = current_context,
+             tools = tools}
+
+	fun close_window _ =
+	  (do_quit_funs ();
+	   Capi.destroy shell)
+
+        val view_options =
+          GuiUtils.view_options
+            {parent = shell, title = title, user_options = user_options,
+	     user_preferences = user_preferences,
+             caller_update_fn = fn _ => (),
+	     sensitivity = GuiUtils.NO_SENSE_SELECTION,
+	     view_type = GuiUtils.VIEW_ALL}
+
+        val view_menu =
+          Menus.CASCADE
+            ("view",
+             view_options
+             @@ [Menus.TOGGLE
+                  ("console", console_visible, show_console, fn () => true)],
+             fn _ => true)
+
+        val menuspec =
+          [ToolData.works_menu
+	     (mk_tooldata, close_window, fn () => true,
+	      fn () => GuiUtils.get_user_context (!local_context)),
+ 	   view_menu,
+	   Menus.CASCADE ("sourcepath",
+			  let
+			    fun on_source_path () =
+ 			      let val dir = get_directory_path ()
+          		      in dir = "" orelse dir is_in !entries
+          		      end
+ 			  in
+			    [Menus.PUSH ("moveto",
+				         cd_to_source_path,
+				         fn _ => !current_pos <> 0),
+                             Menus.PUSH ("insert",
+				         insert_into_source_path,
+				         fn _ => not (on_source_path ())),
+                             Menus.PUSH ("append",
+				         append_into_source_path,
+				         fn _ => not (on_source_path ())),
+                             Menus.PUSH ("delete",
+				         delete_from_source_path,
+				         fn _ => !current_pos <> 0)]
+			  end,
+                          fn _ => true),
+           Menus.CASCADE
+	     ("action",
+              let
+		val make_buttons =
+                  [Menus.PUSH ("make",
+                               make_callback MAKE,
+                               fn _ => is_file_name (get_file ())),
+                   Menus.PUSH ("check",
+                               make_callback CHECK_MAKE,
+                               fn _ => is_file_name (get_file ())),
+                   Menus.PUSH ("touch",
+                               make_callback TOUCH_MAKE,
+                               fn _ => is_file_name (get_file ()))]
+              in
+               [Menus.CASCADE
+	          ("makefull",
+		   make_buttons,
+                   fn _ => is_file_name (get_file ())),
+                Menus.CASCADE
+		  ("compile",
+                   [Menus.PUSH ("compile",
+                                make_callback COMPILE,
+                                fn _ => is_file_name (get_file ())),
+                    Menus.PUSH ("check",
+                                make_callback CHECK_COMPILE,
+                                fn _ => is_file_name (get_file ())),
+                    Menus.PUSH ("touch",
+                                make_callback TOUCH_COMPILE,
+                                fn _ => is_file_name (get_file ()))],
+                   fn _ => is_file_name (get_file ())),
+		Menus.PUSH ("load",
+                            make_callback LOAD,
+                            fn _ => is_file_name (get_file ())),
+                Menus.PUSH ("edit",
+                            make_callback EDIT,
+                            fn _ => is_file_name (get_file ())),
+                Menus.PUSH ("use",
+                            make_callback USE,
+                            fn _ => is_file_name (get_file ()))]
+	      end,
+              fn _ => true),
+	   Menus.DYNAMIC ("history", get_history_menu, fn _ => true)]
+
+	val sep_size = 10
+      in
+          Menus.make_submenus (menuBar,menuspec);
+          Capi.Layout.lay_out
+          (form,
+           [Capi.Layout.MENUBAR menuBar] @@
+           (case contextLabel of 
+              MLWorks.Option.SOME w => [Capi.Layout.FIXED w]
+            | _ => [Capi.Layout.SPACE]) @@
+           [Capi.Layout.FIXED pathLabel,
+            Capi.Layout.FIXED scroll,
+	    Capi.Layout.PANED box,
+            Capi.Layout.SPACE]);
+          Capi.Callback.add (shell, Capi.Callback.Destroy,do_quit_funs);
+          Capi.initialize_toplevel shell
+      end
+
+  end;
+@
+
+
+1.12
+log
+@Removed no_execute.
+@
+text
+@d4 3
+a811 1
+	(*
+d818 3
+d827 6
+a832 2
+                    Recompile.recompile_files
+		      (Info.make_default_options()) options [s]);
+d851 2
+d863 1
+a863 1
+                 (Capi.with_message 
+d866 6
+a871 2
+                   Recompile.recompile_files
+                   (Info.make_default_options()) options [s]));
+a885 1
+	  *)
+a1093 1
+	  (*
+a1094 1
+	  *)
+a1095 1
+	  (*
+a1096 1
+	  *)
+d1231 1
+a1231 2
+                   [(*
+		    Menus.PUSH ("compile",
+a1236 1
+		    *)
+@
+
+
+1.11
+log
+@Adding windows menu
+@
+text
+@d4 3
+a385 1
+require "../make/recompile";
+a410 1
+  structure Recompile : RECOMPILE
+d421 2
+a422 3
+  sharing Recompile.Info = ShellUtils.Info = ActionQueue.Info
+  sharing UserOptions.Options = Recompile.Options =
+          ShellUtils.Options =
+a423 1
+  sharing Recompile.Info.Location = Editor.Location
+a440 2
+  sharing type ErrorBrowser.error = Recompile.Info.error
+  sharing type ErrorBrowser.location = Recompile.Info.Location.T
+d445 2
+d455 1
+a455 1
+    structure Info = Recompile.Info
+d809 1
+a845 5
+	        val UserOptions.USER_CONTEXT_OPTIONS ({no_execute,...},_) =
+		  user_context_options
+
+	        val _ = no_execute := true;
+
+d856 2
+a857 4
+                   (Info.make_default_options()) options [s]))
+                 handle exn => (no_execute := false;raise exn);
+                 message_fun ("All dependencies of " ^ s ^ " checked");
+	         no_execute := false)
+d871 1
+d892 1
+a892 1
+                     (ActionQueue.add_make_file (s,error_info);
+d922 1
+a922 1
+                     (ActionQueue.add_check_file (s,error_info);
+d950 1
+a950 1
+                ActionQueue.add_touch_file (s,error_info);
+d1080 1
+d1082 1
+d1084 1
+d1086 1
+a1178 1
+           ToolData.windows_menu (),
+d1221 2
+a1222 1
+                   [Menus.PUSH ("compile",
+d1228 1
+@
+
+
+1.10
+log
+@Renamed ShellUtils.edit_source to ShellUtils.edit_location.
+@
+text
+@d4 3
+d1181 1
+@
+
+
+1.9
+log
+@Type of context_menu has changed.
+@
+text
+@d4 3
+d796 1
+a796 1
+	      {quit_fn = ShellUtils.edit_source (location, preferences_fn()),
+@
+
+
+1.8
+log
+@Made compile commands visible in menus even if -full_menus not chosen.
+@
+text
+@d4 3
+a1237 6
+           GuiUtils.context_menu
+	     {set_state = select_context,
+	      get_context = fn _ => !local_context,
+	      writable = GuiUtils.WRITABLE,
+	      applicationShell = applicationShell,
+	      user_preferences = user_preferences},
+@
+
+
+1.7
+log
+@Type of ErrorBrowser.create has changed.
+@
+text
+@d4 3
+d1208 25
+a1232 28
+		(if full_menus then
+                  [Menus.CASCADE
+		     ("makefull",
+		      make_buttons,
+                      fn _ => is_file_name (get_file ())),
+                   Menus.CASCADE
+		     ("compile",
+                      [Menus.PUSH ("compile",
+                                   make_callback COMPILE,
+                                   fn _ => is_file_name (get_file ())),
+                       Menus.PUSH ("check",
+                                   make_callback CHECK_COMPILE,
+                                   fn _ => is_file_name (get_file ())),
+                       Menus.PUSH ("touch",
+                                   make_callback TOUCH_COMPILE,
+                                   fn _ => is_file_name (get_file ()))],
+                      fn _ => is_file_name (get_file ()))]
+		else
+		  make_buttons)
+		@@ [Menus.PUSH ("load",
+                               make_callback LOAD,
+                               fn _ => is_file_name (get_file ())),
+                   Menus.PUSH ("edit",
+                               make_callback EDIT,
+                               fn _ => is_file_name (get_file ())),
+                   Menus.PUSH ("use",
+                               make_callback USE,
+                               fn _ => is_file_name (get_file ()))]
+@
+
+
+1.6
+log
+@Changing top level window initialization
+@
+text
+@d4 3
+d787 2
+a788 1
+	       ShellUtils.edit_source (location, preferences_fn())
+d794 1
+@
+
+
+1.5
+log
+@Renaming layout constructors
+@
+text
+@d4 3
+d750 6
+a755 3
+                     (Ml_Debugger.with_debugger_type
+                        debugger_type
+                        (fn _ => f filename))))
+d788 1
+a788 1
+               {parent = applicationShell, errors = rev error_list,
+d1252 1
+a1252 2
+          Capi.reveal shell;
+          Capi.initialize shell
+@
+
+
+1.4
+log
+@Adding make_buttons function to capi
+@
+text
+@d4 3
+d707 1
+a707 1
+	    (DebuggerWindow.make_debugger_window (shell, "debugger", tooldata),
+d1239 1
+a1239 1
+              MLWorks.Option.SOME w => [Capi.Layout.OTHER w]
+d1241 2
+a1242 2
+           [Capi.Layout.OTHER pathLabel,
+            Capi.Layout.OTHER scroll,
+d1246 2
+a1247 3
+          Capi.manage shell;
+          Capi.realize shell;
+          Capi.realize console_widget
+@
+
+
+1.3
+log
+@Improving message on finishing file load
+@
+text
+@d4 3
+d1233 2
+a1234 1
+          ([Capi.Layout.MENUBAR menuBar] @@
+@
+
+
+1.2
+log
+@Moved capi etc. to gui
+@
+text
+@d4 3
+d959 1
+a959 1
+                message_fun ("Make of " ^ s ^ " finished")
+@
+
+
+1.1
+log
+@new unit
+New unit
+@
+text
+@d4 4
+a360 2
+require "../library/capi";
+require "../library/menus";
+d364 2
+@

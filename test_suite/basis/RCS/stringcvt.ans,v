@@ -1,0 +1,209 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	96.05.28.13.15.49;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.24.09.22.55;	author io;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Inlining auxil.sml
+@
+text
+@val it : unit = ()
+Compiling basis.general
+Compiling basis.__general
+Compiling basis.toplevel
+Compiling basis.stringcvt
+Compiling basis.__pre_char
+Compiling basis.__stringcvt
+Compiling basis.__preinteger
+Compiling basis.__preint32
+Compiling basis.integer
+Compiling basis.__integer
+Compiling basis.char
+Compiling basis.__char
+structure Char =
+  struct
+    eqtype char = char
+    eqtype string = string
+    val < : (char * char) -> bool = fn
+    val <= : (char * char) -> bool = fn
+    val > : (char * char) -> bool = fn
+    val >= : (char * char) -> bool = fn
+    val chr : int -> char = fn
+    val compare : (char * char) -> order(hidden) = fn
+    val contains : string -> char -> bool = fn
+    val fromCString : string -> char MLWorks.Option.option = fn
+    val fromString : string -> char MLWorks.Option.option = fn
+    val isAlpha : char -> bool = fn
+    val isAlphaNum : char -> bool = fn
+    val isAscii : char -> bool = fn
+    val isCntrl : char -> bool = fn
+    val isDigit : char -> bool = fn
+    val isGraph : char -> bool = fn
+    val isHexDigit : char -> bool = fn
+    val isLower : char -> bool = fn
+    val isPrint : char -> bool = fn
+    val isPunct : char -> bool = fn
+    val isSpace : char -> bool = fn
+    val isUpper : char -> bool = fn
+    val maxChar : char = #"\255"
+    val maxOrd : int = 255
+    val minChar : char = #"\000"
+    val notContains : string -> char -> bool = fn
+    val ord : char -> int = fn
+    val pred : char -> char = fn
+    val scan : ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> (char * 'a) MLWorks.Option.option = fn
+    val succ : char -> char = fn
+    val toCString : char -> string MLWorks.Option.option = fn
+    val toLower : char -> char = fn
+    val toString : char -> string = fn
+    val toUpper : char -> char = fn
+  end
+val it : unit = ()
+structure StringCvt =
+  struct
+    eqtype cs = int
+    datatype radix =
+      BIN |
+      DEC |
+      HEX |
+      OCT
+    type ('a, 'b) reader = 'b -> ('a * 'b) option
+    datatype realfmt =
+      FIX of int option |
+      GEN of int option |
+      SCI of int option
+    val BIN : StringCvt.radix
+    val DEC : StringCvt.radix
+    val FIX : int MLWorks.Option.option -> StringCvt.realfmt
+    val GEN : int MLWorks.Option.option -> StringCvt.realfmt
+    val HEX : StringCvt.radix
+    val OCT : StringCvt.radix
+    val SCI : int MLWorks.Option.option -> StringCvt.realfmt
+    val dropl : (char -> bool) -> ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> 'a = fn
+    val padLeft : char -> int -> string -> string = fn
+    val padRight : char -> int -> string -> string = fn
+    val scanList : ((char list -> (char * char list) MLWorks.Option.option) -> char list -> ('a * 'b) MLWorks.Option.option) -> char list -> 'a MLWorks.Option.option = fn
+    val scanString : ((int -> (char * int) MLWorks.Option.option) -> int -> ('a * int) MLWorks.Option.option) -> string -> 'a MLWorks.Option.option = fn
+    val skipWS : ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> 'a = fn
+    val splitl : (char -> bool) -> ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> (string * 'a) = fn
+    val takel : (char -> bool) -> ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> string = fn
+  end
+val it : unit = ()
+structure TopLevel =
+  struct
+    datatype 'a option =
+      NONE |
+      SOME of 'a
+    datatype order =
+      EQUAL |
+      GREATER |
+      LESS
+    exception Domain
+    val EQUAL : order
+    exception Fail of string
+    val GREATER : order
+    val LESS : order
+    val NONE : 'a option
+    val SOME : 'a -> 'a option
+  end
+datatype 'a option =
+  NONE |
+  SOME of 'a
+datatype order =
+  EQUAL |
+  GREATER |
+  LESS
+exception Domain
+val EQUAL : order
+exception Fail of string
+val GREATER : order
+val LESS : order
+val NONE : 'a option
+val SOME : 'a -> 'a option
+val it : unit = ()
+structure Int =
+  struct
+    eqtype int = int
+    val * : (int * int) -> int = fn
+    val + : (int * int) -> int = fn
+    val - : (int * int) -> int = fn
+    val < : (int * int) -> bool = fn
+    val <= : (int * int) -> bool = fn
+    val > : (int * int) -> bool = fn
+    val >= : (int * int) -> bool = fn
+    val abs : int -> int = fn
+    val compare : (int * int) -> order = fn
+    val div : (int * int) -> int = fn
+    val fmt : StringCvt.radix -> int -> string = fn
+    val fromInt : int -> int = fn
+    val fromLarge : MLWorks.Internal.Types.int32 -> int = fn
+    val fromString : string -> int option = fn
+    val max : (int * int) -> int = fn
+    val maxInt : int option = SOME 536870911
+    val min : (int * int) -> int = fn
+    val minInt : int option = SOME ~536870912
+    val mod : (int * int) -> int = fn
+    val precision : int option = SOME 30
+    val quot : (int * int) -> int = fn
+    val rem : (int * int) -> int = fn
+    val sameSign : (int * int) -> bool = fn
+    val scan : StringCvt.radix -> ('a -> (char * 'a) option) -> 'a -> (int * 'a) option = fn
+    val sign : int -> int = fn
+    val toInt : int -> int = fn
+    val toLarge : int -> MLWorks.Internal.Types.int32 = fn
+    val toString : int -> string = fn
+    val ~ : int -> int = fn
+  end
+val it : unit = ()
+infix 1 seq
+val flush_out : MLWorks.IO.outstream -> unit = fn
+val output : (MLWorks.IO.outstream * string) -> unit = fn
+val seq : ('a * 'b) -> 'b = fn
+val std_out : MLWorks.IO.outstream = FLEXOUT(FLEXOUTSTREAM(ref(RIGIDOUTSTREAM {close_out=fn, closed_out=fn, flush_out=fn, output=fn})))
+val say : string -> unit = fn
+val check : bool -> string = fn
+val check' : (unit -> bool) -> string = fn
+val range : (int * int) -> (int -> bool) -> bool = fn
+val checkrange : (int * int) -> (int -> bool) -> string = fn
+val test1 : string = "OK"
+val test2 : string = "OK"
+val test3 : string = "OK"
+val test4 : string = "OK"
+val test5 : string = "OK"
+val test6 : string = "OK"
+val test7 : string = "OK"
+val test8 : string = "OK"
+val test9 : string = "OK"
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@a82 1
+val it : unit = ()
+@

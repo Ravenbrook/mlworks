@@ -1,0 +1,249 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.01.18.13.54.19;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.01.13.15.28.15;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.12.09.13.35.30;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.3
+log
+@Add realpath function
+@
+text
+@(*  ==== FILE NAMING UTILITIES ====
+ *          UNIX FUNCTOR
+ *
+ *  Copyright (C) 1994 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _unixfilename.sml,v $
+ * Revision 1.2  1995/01/13  15:28:15  jont
+ * Export separator from filename interface
+ *
+ * Revision 1.1  1994/12/09  13:35:30  jont
+ * new file
+ *
+ *
+ *)
+
+require "../utils/getenv";
+require "../utils/filename";
+
+functor UnixFileName
+  (structure Getenv : GETENV
+  ): FILENAME =
+struct
+    structure Option = Getenv.Option
+
+    type Directory = string
+    type Route = string
+
+    datatype Absolute = ABSOLUTE of Directory * string * string Option.opt
+    datatype Relative = RELATIVE of Route * string * string Option.opt
+
+    exception Parse of string
+    exception BadHomeName of string
+
+    val getwd = MLWorks.OS.Unix.getwd
+
+    val separator = "/"
+
+    val realpath = MLWorks.OS.Unix.realpath
+
+    fun upto_slash(n, []) = n
+      | upto_slash(n, "/" :: _) = n
+      | upto_slash(n, _ :: rest) = upto_slash(n+1, rest)
+       
+    (* This now uses realpath to resolve symbolic links *)
+    fun expand_path string =
+      let
+        val len = size string
+
+	val expanded =
+          if string = "." then
+            MLWorks.OS.Unix.getwd ()
+          else if len = 0 orelse String.ordof(string, 0) <> ord"~" then
+            string
+          else
+            let
+              val start = upto_slash(0, explode string)
+              val name =
+                if start = 1 then
+                  case Getenv.get_user_name() of
+                    Option.PRESENT s => s
+                  | _ => raise BadHomeName string
+                else
+                  String.substring(string, 1, start-1)
+              val rest = String.substring(string, start, len-start)
+              val MLWorks.OS.Unix.PASSWD {dir, ...} =
+                MLWorks.OS.Unix.getpwnam name
+                handle MLWorks.OS.Unix.Unix _ =>
+                  raise BadHomeName string
+            in
+              dir ^ rest
+            end
+          val expanded = MLWorks.OS.Unix.realpath expanded handle (Io _) => expanded
+      in
+        if String.ordof (expanded, size expanded - 1) = ord separator then
+	  expanded
+	else
+	  expanded ^ separator
+      end
+
+    fun parse_file file =
+      let
+        fun find 0 = (file, Option.ABSENT)
+          | find n =
+            if String.ordof (file, n-1) = ord "." then
+              (String.substring (file, 0, n-1),
+               Option.PRESENT (String.substring (file, n, size file - n)))
+            else
+              find (n-1)
+      in
+        find (size file)
+      end
+
+    fun parse_path path =
+      let
+        fun find 0 = ("", path)
+        |   find n =
+          if String.ordof (path, n-1) = ord separator then
+            (expand_path (String.substring (path, 0, n)),
+             String.substring (path, n, size path - n))
+          else
+            find (n-1)
+      in
+        case find (size path) of
+          (_, "") => raise Parse path
+        | other => other
+      end
+
+    fun is_full_path "" = false
+    |   is_full_path s = String.ordof (s, 0) = ord separator
+
+    fun parse_absolute path =
+      let
+        val (location, file) = parse_path path
+        val (base, kind_opt) = parse_file file
+	val directory =
+	  if is_full_path location then location else getwd () ^ separator ^ location
+      in
+        ABSOLUTE (directory, base, kind_opt)
+      end
+
+    fun parse_relative path =
+      let
+        val (route, file) = parse_path path
+        val (base, kind_opt) = parse_file file
+      in
+        RELATIVE (route, base, kind_opt)
+      end
+
+    fun parse_route s = expand_path s
+
+    fun parse_directory s = 
+      let val route = parse_route s
+      in 
+        if is_full_path route then route else getwd () ^ separator ^ route
+      end
+
+    local
+      fun print (directory, base, kind_opt) =
+        implode (directory :: base ::
+                 (case kind_opt of
+                    Option.ABSENT => nil
+                  | Option.PRESENT extension => [".", extension]))
+    in
+      fun absolute_name (ABSOLUTE triple) = print triple
+      fun relative_name (RELATIVE triple) = print triple
+    end
+
+    fun directory_name s = s
+    val route_name = directory_name
+
+    fun concat_route (r1, r2) =
+      if is_full_path r2 then r2 else r1 ^ r2
+
+    (* Both Directory and Route are string, so we can re-use concat_route. *)
+    val follow = concat_route
+
+    fun prefix_route (prefix, rel as RELATIVE (route, name, ext)) =
+      if is_full_path route then
+	rel
+      else
+        RELATIVE (prefix ^ route, name, ext)
+
+    fun rel_to_abs (dir, RELATIVE (triple as (route, name, ext))) =
+      if is_full_path route then
+	ABSOLUTE triple
+      else
+        ABSOLUTE (dir ^ route, name, ext)
+
+  end;
+@
+
+
+1.2
+log
+@Export separator from filename interface
+@
+text
+@d9 3
+d36 1
+a36 1
+    val getwd = MLWorks.OS.Unix.getwd;
+d39 2
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d8 3
+a10 1
+ *  $Log$
+d12 1
+d35 2
+d71 1
+a71 1
+        if String.ordof (expanded, size expanded - 1) = ord "/" then
+d74 1
+a74 1
+	  expanded ^ "/"
+d94 1
+a94 1
+          if String.ordof (path, n-1) = ord "/" then
+d106 1
+a106 1
+    |   is_full_path s = String.ordof (s, 0) = ord "/"
+d113 1
+a113 1
+	  if is_full_path location then location else getwd () ^ "/" ^ location
+d131 1
+a131 1
+        if is_full_path route then route else getwd () ^ "/" ^ route
+@

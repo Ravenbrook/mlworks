@@ -1,0 +1,556 @@
+head	1.5;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.5
+	MLWorks_Beta_1996_06_06:1.5
+	MLWorks_Beta_1996_06_05:1.5
+	MLWorks_Beta_1996_06_03:1.5
+	MLWorks_Beta_1996_05_31:1.5
+	MLWorks_Beta_1996_05_30:1.5;
+locks; strict;
+comment	@ * @;
+
+
+1.5
+date	96.04.18.16.56.20;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.03.07.11.48.56;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.09.07.22.43.40;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.07.18.12.17.13;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.33.35;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.5
+log
+@initbasis becomes basis
+@
+text
+@(*  ==== FOREIGN INTERFACE : ALIENS INTERFACE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _fi_aliens.sml,v $
+ * Revision 1.4  1996/03/07  11:48:56  jont
+ * Changing newmap to map, NEWMAP to MAP, T to map
+ *
+ * Revision 1.3  1995/09/07  22:43:40  brianm
+ * Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.2  1995/07/18  12:17:13  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.1  1995/04/25  11:33:35  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__general";
+
+require "../utils/stringlib";
+require "../utils/map";
+require "../utils/lists";
+
+require "fi_types";
+require "fi_core";
+require "fi_aliens";
+
+functor ForeignAliens(
+
+   structure StringLib : STRING_LIB
+   structure Map       : MAP
+   structure Lists     : LISTS
+   structure FICore    : FOREIGN_CORE
+
+     structure FITypes : FOREIGN_TYPES
+
+) : FOREIGN_ALIENS =
+   struct
+
+      structure FITypes = FITypes
+      open FITypes
+      open General
+
+   (* Mapping *)
+
+      type ('a,'b)Map    = ('a,'b)Map.map
+
+      type foreign_object = FICore.foreign_object
+      type foreign_value  = FICore.foreign_value
+
+      type info      = string
+
+      val str_lt          = String.<
+
+      exception Option    = General.Option
+      val extract         = General.valOf
+      val extract_default = fn (a) => fn (x) => General.getOpt(x,a)
+
+      val iterate         = Lists.iterate
+
+      val load_object       = fn s => FICore.load_object(s,FICore.LOAD_NOW)
+      val find_value        = FICore.find_value
+      val list_content      = FICore.list_content
+      val call_foreign_fun  = FICore.call_foreign_fun
+
+      val empty_map       = Map.empty'(str_lt) : (string,string)Map
+      val from_list       = Map.from_list'(str_lt)
+
+      val memstr          = StringLib.memstr
+      val trim_left       = StringLib.trim_left
+      val leading         = StringLib.leading
+      val leading_split   = StringLib.leading_split
+
+
+   (* Implementation auxiliaries *)
+
+      val is_sp = memstr " "
+
+      fun prefix s = leading(is_sp,s)
+
+      fun prefix_split s =
+          let val (sl,sr) = leading_split(is_sp,s)
+          in
+             (sl, trim_left(is_sp,sr))
+          end
+
+      fun make_info_map sl = from_list (map prefix_split sl)
+
+
+   (* Definitions *)
+
+      abstype foreign_module =
+              FMODULE of
+                 { filename   : string,
+                   object     : ( foreign_object      )box,
+                   item_names : ( (string)list        )box,
+                   info_map   : ( (string, string)Map )box
+                 }
+
+      with
+
+      (* Implementations : auxilliaries *)
+
+         val FI_module_register = ref([] : foreign_module list)
+
+         fun fetch_module(f_mod as
+                          FMODULE{filename,object,item_names,info_map}) =
+             let val f_obj = load_object(filename)
+             in
+                 setBOX object f_obj;
+                 resetBOX(item_names);   (* Reset these `cached' values *)
+                 resetBOX(info_map);     (* Reset these `cached' values *)
+                 f_mod
+             end
+
+         fun extract_foreign_object(FMODULE{object, ...}) = getBOX(object)
+
+      (* Exported Definitions *)
+
+         fun ensure_module(f_mod as FMODULE{object, ...}) =
+             case extractBOX(object) of
+               NONE    => fetch_module(f_mod)
+             |
+               SOME(_) => f_mod
+
+         fun reset_module(f_mod as
+                          FMODULE{filename,object,item_names,info_map}) =
+             (
+               resetBOX(object);
+               resetBOX(item_names);
+               resetBOX(info_map);
+               f_mod
+             )
+
+         fun get_module_later(str) =
+             let val f_mod =
+                     FMODULE { filename   = str,
+                               object     = voidBOX(),
+                               item_names = voidBOX(),
+                               info_map   = voidBOX()
+                             }
+             in
+                 FI_module_register := f_mod :: !FI_module_register;
+                 f_mod
+             end
+
+         fun get_module_now(str) =
+             let val f_mod = get_module_later(str)
+             in
+                 ensure_module(f_mod)
+             end;
+             
+
+         fun get_item_names(FMODULE{item_names, object, ...}) =
+             case extractBOX(item_names) of
+               NONE =>
+                 (
+                    case extractBOX(object) of
+                       NONE        => []
+                    |
+                       SOME(f_obj) =>
+                          let val names = map prefix (list_content(f_obj))
+                          in
+                            (
+                             setBOX item_names names;
+                             names
+                            )
+                          end
+                 )
+             |
+               SOME(names) => names
+
+         fun get_item_info(FMODULE{info_map, object, ...}) =
+             case extractBOX(info_map) of
+               NONE =>
+                 (
+                    case extractBOX(object) of
+                      NONE        => empty_map
+                    |
+                      SOME(f_obj) =>
+                         let val info = make_info_map (list_content(f_obj))
+                         in
+                           setBOX (info_map) (info);
+                           info
+                         end
+                 )
+             |
+               SOME(info) => info
+      end
+
+
+      abstype foreign_item =
+              FITEM of
+                 { name    : string,
+                   value   : ( foreign_value  )box,
+                   module  : ( foreign_module )box
+                 }
+      with
+
+      (* Implementation auxiliaries *)
+
+         val FI_item_register = ref([] : foreign_item list)
+
+         local
+             fun fetch_item'(f_item as FITEM{name,value,module}) =
+                 let val f_mod = getBOX(module)
+                     val f_obj = extract_foreign_object(f_mod)
+                     val f_val = find_value(f_obj,name)
+                 in
+                     setBOX(value)(f_val);
+                     f_item
+                 end
+
+             fun fetch_item''(f_item as FITEM{name,value,module}) =
+                 let val f_mod = ensure_module(getBOX(module))
+                     val f_obj = extract_foreign_object(f_mod)
+                     val f_val = find_value(f_obj,name)
+                 in
+                     setBOX(module)(f_mod);
+                     setBOX(value)(f_val);
+                     f_item
+                 end
+         in
+             fun fetch_item(f_item) =
+                 case f_item of
+                    FITEM{module=BOX(ref(SOME(_))), value=BOX(ref(NONE)), ...} =>
+                      fetch_item'(f_item)
+                 |   
+                    FITEM{module=BOX(ref(NONE)), ...} =>
+                      fetch_item''(f_item)
+                 |
+                   _ => f_item
+         end
+
+         fun extract_foreign_value(FITEM{value, ...}) = getBOX(value)
+
+
+      (* Exported Definitions *) 
+
+         fun ensure_item(f_item as FITEM{name,value,module}) =
+             case extractBOX(value) of
+               NONE    => fetch_item(f_item)
+             |
+               SOME(_) => f_item
+
+         fun reset_item(f_item as FITEM{value, ...}) =
+             (
+ 	       resetBOX(value);
+               (* Note that the module component isn't reset - this would
+                  make the item useless (since it could not be reestablished)
+                *)
+               f_item
+             )
+
+         fun get_item_later(f_mod, name) =
+             let val f_item =
+                     FITEM { name   = name,
+                             value  = voidBOX(),
+                             module = makeBOX(f_mod)
+                           }
+             in
+                 FI_item_register := f_item :: !FI_item_register;
+                 f_item
+             end
+
+         fun get_item_now(f_mod, name) =
+             let val f_item = get_item_later(f_mod, name)
+             in
+                 ensure_item(f_item)
+             end
+         end
+
+
+
+      fun ensure_alien_modules () =
+          iterate ensure_module (!FI_module_register)
+
+      fun ensure_alien_items () =
+          iterate ensure_item (!FI_item_register)
+
+      fun ensure_aliens () =
+          (
+             ensure_alien_modules();
+             ensure_alien_items()
+          )
+
+
+      fun refresh_module (f_mod) =
+          let val f_mod' = reset_module(f_mod)
+          in
+              ensure_module(f_mod')
+          end
+
+
+      fun refresh_item (f_item) =
+          let val f_item' = reset_item(f_item)
+          in
+              ensure_item(f_item')
+          end
+
+      fun refresh_alien_modules () =
+          iterate refresh_module (!FI_module_register)
+
+      fun refresh_alien_items () =
+          iterate refresh_item (!FI_item_register)
+
+      fun refresh_aliens () =
+          (
+             refresh_alien_modules();
+             refresh_alien_items()
+          )
+
+
+      fun reset_alien_modules () =
+          iterate reset_module (!FI_module_register)
+
+      fun reset_alien_items () =
+          iterate reset_item (!FI_item_register)
+
+      fun reset_aliens () =
+          (
+             reset_alien_modules();
+             reset_alien_items()
+          )
+
+
+   (* FOREIGN FUNCTION CALLING *)
+
+      fun call_alien_code(item,args,arity,res) =
+          let val ffun = extract_foreign_value(ensure_item(item))
+          in
+              call_foreign_fun(ffun,args,arity,res)
+          end
+   end;
+@
+
+
+1.4
+log
+@Changing newmap to map, NEWMAP to MAP, T to map
+@
+text
+@d11 3
+d27 1
+a27 1
+require "../initbasis/__general";
+@
+
+
+1.3
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d11 3
+d27 1
+a27 1
+require "../utils/newmap";
+d37 1
+a37 1
+   structure Map       : NEWMAP
+d52 1
+a52 1
+      type ('a,'b)Map    = ('a,'b)Map.T
+@
+
+
+1.2
+log
+@Changing names of deferred data-type operators (stream-edit)
+@
+text
+@d11 3
+d98 3
+a100 3
+                   object     : ( foreign_object      )deferred,
+                   item_names : ( (string)list        )deferred,
+                   info_map   : ( (string, string)Map )deferred
+d113 3
+a115 3
+                 setDF object f_obj;
+                 resetDF(item_names);   (* Reset these `cached' values *)
+                 resetDF(info_map);     (* Reset these `cached' values *)
+d119 1
+a119 1
+         fun extract_foreign_object(FMODULE{object, ...}) = getDF(object)
+d124 1
+a124 1
+             case extractDF(object) of
+d132 3
+a134 3
+               resetDF(object);
+               resetDF(item_names);
+               resetDF(info_map);
+d141 3
+a143 3
+                               object     = voidDF(),
+                               item_names = voidDF(),
+                               info_map   = voidDF()
+d158 1
+a158 1
+             case extractDF(item_names) of
+d161 1
+a161 1
+                    case extractDF(object) of
+d168 1
+a168 1
+                             setDF item_names names;
+d177 1
+a177 1
+             case extractDF(info_map) of
+d180 1
+a180 1
+                    case extractDF(object) of
+d186 1
+a186 1
+                           setDF (info_map) (info);
+d198 2
+a199 2
+                   value   : ( foreign_value  )deferred,
+                   module  : ( foreign_module )deferred
+d209 1
+a209 1
+                 let val f_mod = getDF(module)
+d213 1
+a213 1
+                     setDF(value)(f_val);
+d218 1
+a218 1
+                 let val f_mod = ensure_module(getDF(module))
+d222 2
+a223 2
+                     setDF(module)(f_mod);
+                     setDF(value)(f_val);
+d229 1
+a229 1
+                    FITEM{module=DF(ref(SOME(_))), value=DF(ref(NONE)), ...} =>
+d232 1
+a232 1
+                    FITEM{module=DF(ref(NONE)), ...} =>
+d238 1
+a238 1
+         fun extract_foreign_value(FITEM{value, ...}) = getDF(value)
+d244 1
+a244 1
+             case extractDF(value) of
+d251 1
+a251 1
+ 	       resetDF(value);
+d261 2
+a262 2
+                             value  = voidDF(),
+                             module = makeDF(f_mod)
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d10 4
+a13 1
+ *  $Log$
+d15 1
+d116 1
+a116 1
+         fun extract_foreign_object(FMODULE{object, ...}) = extractDF(object)
+d121 1
+a121 1
+             case getDF(object) of
+d155 1
+a155 1
+             case getDF(item_names) of
+d158 1
+a158 1
+                    case getDF(object) of
+d174 1
+a174 1
+             case getDF(info_map) of
+d177 1
+a177 1
+                    case getDF(object) of
+d206 1
+a206 1
+                 let val f_mod = extractDF(module)
+d215 1
+a215 1
+                 let val f_mod = ensure_module(extractDF(module))
+d235 1
+a235 1
+         fun extract_foreign_value(FITEM{value, ...}) = extractDF(value)
+d241 1
+a241 1
+             case getDF(value) of
+@

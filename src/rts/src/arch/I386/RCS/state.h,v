@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	94.10.04.16.54.55;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.1
+log
+@new file
+@
+text
+@/*
+ * state.h
+ * The ML and C states are stored here.
+ * $Log$
+ *
+ * Copyright (c) 1994 Harlequin Ltd.
+ */
+
+#ifndef state_h
+#define state_h
+
+#include "extensions.h"
+
+struct c_state
+{
+  word gc_limit, handler, temp, implicit, limit, nothing, gc_base;
+  word sp;
+} data_aligned(c_state,8);
+
+/* heap limit register has different values depending on whether we're
+   in ML or in C:
+
+   in ML, it contains (0x7ffffffc - number of bytes until next GC)
+   in C, it contains the address of the first non-allocatable word
+*/
+
+extern struct ml_state
+{
+  mlval *heap_start;			/*   next allocatable word */
+  mlval handler;			/*   current handler record */
+  mlval *global;			/*   global scratch register */
+  struct implicit_vector *implicit;	/*   the implicit vector */
+  struct stack *stack;			/*   current stack area */
+  mlval *heap_limit;			/*   heap limit register */
+  struct stack_frame *sp;	        /*   last ML frame */
+  struct stack_frame *base;		/*   lowest frame in stack area (unused) */
+  mlval closure;			/*   the current function's closure */
+} data_aligned(ml_state,8);
+
+#define GC_SP			ml_state.sp
+#define GC_STACK		ml_state.stack
+#define GC_MODIFIED_LIST	ml_state.implicit->gc_modified_list
+#define GC_HEAP_START		ml_state.heap_start
+#define GC_HEAP_LIMIT		ml_state.heap_limit
+#define GC_RETURN		ml_state.global
+#define GC_CLOSURE		ml_state.closure
+/* Statistics collected by interface.m4s */
+
+extern unsigned int stack_extension_count;
+extern unsigned int raise_count;
+
+extern void state_initialise(struct stack *initial_stack);
+
+#endif
+@

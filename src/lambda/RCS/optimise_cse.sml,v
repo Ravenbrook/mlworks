@@ -1,0 +1,194 @@
+head	1.6;
+access;
+symbols
+	ML_beta_release_12/08/94:1.6
+	ML_beta_release_03/08/94:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+comment	@ * @;
+
+
+1.6
+date	92.07.24.13.23.22;	author clive;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.07.08.15.17.06;	author davida;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.04.22.12.52.11;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.14.14.16;	author clive;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.22.14.14.16;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.06.12.45.35;	author davida;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.07.24.13.23.22;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Common-subexpression elimination
+@
+
+
+1.6
+log
+@Modified to use the new hashtables
+@
+text
+@
+(*
+ * Lambda-Calculus Optimisation: optimise_cse
+ * Common-subexpression Elimination
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "lambdatypes";
+
+signature OPTIMISE_CSE =
+  sig
+    structure LT : LAMBDATYPES
+
+    val eliminate_common_subexprs :
+      LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+
+    val show_debug_info : bool ref
+    val show_result_info : bool ref
+  end;
+
+(* $Log: optimise_cse.sml,v $
+Revision 1.5  1992/07/08  15:17:06  davida
+Added flag for printing of result summary.
+
+Revision 1.4  1992/04/22  12:52:11  clive
+Speed improvements
+
+Revision 1.3  1991/10/22  14:14:16  clive
+Speed improvements
+
+Revision 1.2  1991/10/22  14:14:16  davidt
+Replaced impossible exception with Crash.impossible calls.
+
+Revision 1.1  91/09/06  12:45:35  davida
+Initial revision
+ *)
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a22 3
+Revision 1.6  1992/07/24  13:23:22  clive
+Modified to use the new hashtables
+
+@
+
+
+1.5
+log
+@Added flag for printing of result summary.
+@
+text
+@a19 1
+    val print_hash_table_stats : bool ref
+d23 3
+@
+
+
+1.4
+log
+@Speed improvements
+@
+text
+@d19 1
+d24 3
+@
+
+
+1.3
+log
+@Speed improvements
+@
+text
+@d19 1
+d23 3
+@
+
+
+1.2
+log
+@Replaced impossible exception with Crash.impossible calls.
+@
+text
+@d21 4
+a24 1
+(* $Log:	optimise_cse.sml,v $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 6
+a7 1
+ (*  Lambda-Calculus Optimisation:   optimise_cse  *)
+a8 6
+      (*  Common-subexpression Elimination  *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+a10 1
+
+d12 2
+a13 2
+ sig
+  structure LT : LAMBDATYPES
+d15 2
+a16 1
+  val eliminate_common_subexprs : LT.LambdaInfo -> LT.LambdaExp -> LT.LambdaExp
+d18 2
+a19 3
+  exception impossible of string
+  val show_debug_info : bool ref
+ end
+d21 4
+a24 2
+
+(* $Log$ *)
+@

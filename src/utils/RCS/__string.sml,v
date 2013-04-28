@@ -1,0 +1,256 @@
+head	1.6;
+access;
+symbols
+	mlworks-28-01-1994:1.6
+	Release:1.6
+	mlworks-beta-01-09-1993:1.6
+	MLWorks-1-0-4-29/01/1993:1.6
+	MLWorks-1-0-3-21/12/1992:1.6
+	MLWorks-1-0-2-15/12/1992:1.6
+	MLWorks-1-0-1-04/12/1992:1.6
+	checkpoint_17_08_92:1.6;
+locks; strict;
+
+
+1.6
+date	92.08.07.14.44.53;	author davidt;	state Exp;
+branches
+	1.6.1.1;
+next	1.5;
+
+1.5
+date	92.02.18.17.24.45;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.10.14.50.50;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.09.18.32.32;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.09.15.56.57;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.08.16.54.06;	author jont;	state Exp;
+branches;
+next	;
+
+1.6.1.1
+date	92.08.07.14.44.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Temporary implementation of the string signature until we get a better one
+@
+
+
+1.6
+log
+@THIS FILE IS NO LONGER IN USE!
+Commented out code so that any attempted use of this
+file causes a parse error.
+@
+text
+@(* __string.sml the structure *)
+(* Currently this uses the NJ strings. We should have our own *)
+(*
+$Log: __string.sml,v $
+Revision 1.5  1992/02/18  17:24:45  jont
+Changed back into using New Jersey structure, of which we have a mirror
+image of the relevant parts
+
+Revision 1.4  1992/01/10  14:50:50  richard
+Added a SUBSTRING pervasive as a temporary measure so that the same code
+can be compiled under under both New Jersey and MLWorks.
+
+Revision 1.3  1992/01/09  18:32:32  jont
+A better still attempt at this in sml only
+
+Revision 1.2  1992/01/09  15:56:57  jont
+Rewrote in standard ml to allow compilation by our compiler
+
+Revision 1.1  1991/11/08  16:54:06  jont
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(* !!! THIS FILE IS NO LONGER IN USE !!! *)
+
+(*require"string";*)
+
+structure String_ (*: STRING =
+struct
+  exception Ord = Ord
+  exception Substring
+  exception Chr = Chr
+  val print = fn x => output(std_out, x)
+  val substring = NewJersey.String.substring
+  fun ordof(x, i) =
+    if i < 0 orelse i >= size x then raise Ord
+    else
+      ord(substring(x, i, 1))
+  nonfix <
+  nonfix <=
+  nonfix >
+  nonfix >=
+  nonfix ^
+  val < = NewJersey.String.<
+  val <= = NewJersey.String.<=
+  val size = size
+  val ord = ord
+  val implode = implode
+  val explode = explode
+  val ^ = ^
+  val > = NewJersey.String.>
+  val >= = NewJersey.String.>=
+  val chr = chr
+  val length = size
+end*)
+@
+
+
+1.6.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 5
+Revision 1.6  1992/08/07  14:44:53  davidt
+THIS FILE IS NO LONGER IN USE!
+Commented out code so that any attempted use of this
+file causes a parse error.
+
+@
+
+
+1.5
+log
+@Changed back into using New Jersey structure, of which we have a mirror
+image of the relevant parts
+@
+text
+@d5 4
+d25 3
+a27 1
+require"string";
+d29 1
+a29 1
+structure String_ : STRING =
+d56 1
+a56 1
+end
+@
+
+
+1.4
+log
+@Added a SUBSTRING pervasive as a temporary measure so that the same code
+can be compiled under under both New Jersey and MLWorks.
+@
+text
+@d5 4
+d29 1
+a29 10
+  val substring = substring (* Use New Jersey's pervasive substring *)
+  fun string_less(x, y) =
+    if size x = 0 then
+      size y <> 0
+    else
+      if size y = 0 then false
+      else
+	if ord x <> ord y then ord x < ord y
+	else
+	  string_less(substring(x, 1, size x - 1), substring(y, 1, size y - 1))
+d39 2
+a40 2
+  val < = string_less
+  val <= = fn (x, y) => x = y orelse string_less(x, y)
+d46 2
+a47 2
+  val > = fn (x, y) => string_less(y, x)
+  val >= = not o <
+@
+
+
+1.3
+log
+@A better still attempt at this in sml only
+@
+text
+@d5 3
+d25 1
+a25 18
+  fun substring(s, i, j) =
+    if j < 0 orelse i < 0 orelse i+j > size s then
+      raise Substring
+    else
+      let
+	fun drop(_, []) = []
+	| drop (i, x as hd :: tl) =
+	  if i <= 0 then x
+	  else
+	    drop(i-1, tl)
+	fun take(_, []) = []
+	| take(i, x as hd :: tl) =
+	  if i <= 0 then []
+	  else
+	    hd :: take(i-1, tl)
+      in
+	implode(take(j, drop(i, explode s)))
+      end
+@
+
+
+1.2
+log
+@Rewrote in standard ml to allow compilation by our compiler
+@
+text
+@d5 3
+d19 1
+a19 1
+  exception Substring = Substring
+d22 18
+a63 1
+  val substring = String.substring
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+$Log$
+d16 1
+a16 1
+  exception Substring = String.Substring
+d18 14
+a31 1
+  val print = String.print
+d37 2
+a38 2
+  val < = String.<
+  val <= = String.<=
+d45 2
+a46 2
+  val > = String.>
+  val >= = String.>=
+d48 1
+a48 2
+  val ordof = String.ordof
+  val length = String.length
+@

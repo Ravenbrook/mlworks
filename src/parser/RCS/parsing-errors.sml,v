@@ -1,0 +1,98 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2;
+locks; strict;
+
+
+1.2
+date	92.09.02.15.37.07;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.08.25.17.01.17;	author matthew;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.09.02.15.37.07;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Parsing Error Messages signature
+@
+
+
+1.2
+log
+@Installed central error reporting mechanism.
+@
+text
+@(* parsing-errors.sml the signature *)
+(*
+$Log: parsing-errors.sml,v $
+Revision 1.1  1992/08/25  17:01:17  matthew
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+THIS FILE IS NO LONGER USED
+
+require "../basics/absyn";
+
+signature PARSINGERRORS =
+  sig
+    structure Absyn : ABSYN
+    type Marks
+   sharing type Marks = Absyn.Source_marks
+    (* WARNING means something that is not contrary to the definition, but requires a warning *)
+    (* SIMPLE is an error that should not prevent later code generation *)
+    (* SERIOUS means further processing should not occur as errors will arise *)  
+    datatype Severity = WARNING | SIMPLE | SERIOUS
+    val get_print_errors : unit -> bool
+    val set_print_errors : bool -> unit
+    val reset_errors : unit -> unit
+    val get_errors : unit -> (string * Marks * Severity) list
+    val report_error : string * Marks * Severity -> unit
+    val error_occurred : unit -> bool
+    val serious_error_occurred : unit -> bool
+    val print_error : (string * Marks * Severity) -> string
+    val print_all_errors : unit -> unit
+    val with_errors_shown : (unit -> 'a) -> 'a
+  end;
+
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/09/02  15:37:07  richard
+Installed central error reporting mechanism.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+d9 2
+@

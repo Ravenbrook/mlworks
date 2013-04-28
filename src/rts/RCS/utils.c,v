@@ -1,0 +1,784 @@
+head	1.22;
+access;
+symbols
+	Final_version_of_old_runtime:1.22
+	ML_revised_beta_release_25/05/94:1.22
+	ML_final_beta_release_02/03/94:1.22
+	mlworks-28-01-1994:1.21
+	Release:1.21
+	mlworks-beta-01-09-1993:1.21
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.12
+	checkpoint_17_08_92:1.9;
+locks; strict;
+comment	@ *  @;
+
+
+1.22
+date	94.01.28.17.23.48;	author nickh;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.08.26.18.45.57;	author daveb;	state Exp;
+branches
+	1.21.1.1;
+next	1.20;
+
+1.20
+date	93.08.24.14.27.36;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	93.08.12.14.18.52;	author daveb;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.06.22.11.14.53;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.06.02.13.15.15;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.02.10.17.02.05;	author jont;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.02.02.17.21.39;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.02.01.16.04.24;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.12.07.14.32.42;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.10.01.15.37.37;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.08.24.15.44.36;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.08.18.09.48.47;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.08.05.17.50.40;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.07.21.13.54.52;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.03.12.16.58.06;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.11.11.46.50;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.20.16.03.15;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.09.15.55.13;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.12.23.13.18.44;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.19.13.36.23;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.18.13.03.11;	author davidt;	state Exp;
+branches;
+next	;
+
+1.21.1.1
+date	93.08.26.18.45.57;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Simple run-time system utilities.
+@
+
+
+1.22
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== MISCELLANEOUS UTILITY FUNCTIONS ====
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  $Log: utils.c,v $
+ *  Revision 1.21  1993/08/26  18:45:57  daveb
+ *  The runtime reads the module name from the consistency information in the
+ *  file.  Therefore module_name() isn't needed any more.
+ *
+ *  Revision 1.20  1993/08/24  14:27:36  richard
+ *  The is_ml_frame function didn't cope with shared closures.
+ *
+ *  Revision 1.19  1993/08/12  14:18:52  daveb
+ *  Replaced basename with module_name.
+ *
+ *  Revision 1.18  1993/06/22  11:14:53  richard
+ *  Moved stack backtrace here from GC and top-level handler.
+ *
+ *  Revision 1.17  1993/06/02  13:15:15  richard
+ *  Added nonreturning qualifier to verror().
+ *  Added missing include of extensions.h.
+ *  Added prototype for getrusage().
+ *
+ *  Revision 1.16  1993/02/10  17:02:05  jont
+ *  Changes for code vector reform, and also fixed a bug whereby time based
+ *  profiling only worked on the first of a set of mutually recursive code
+ *  vectors
+ *
+ *  Revision 1.15  1993/02/02  17:21:39  jont
+ *  Made is_ml_frame check for the right sort of pointer (ie not a ref)
+ *
+ *  Revision 1.14  1993/02/01  16:04:24  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.13  1992/12/07  14:32:42  richard
+ *  Added user_clock().
+ *
+ *  Revision 1.12  1992/10/01  15:37:37  richard
+ *  Added ansi.h.
+ *
+ *  Revision 1.11  1992/08/24  15:44:36  richard
+ *  More checks in is_ml_frame().
+ *
+ *  Revision 1.10  1992/08/18  09:48:47  richard
+ *  Corrected ml_frame to return the code vector from the frame
+ *  it is passed and not its parent frame.
+ *
+ *  Revision 1.9  1992/08/05  17:50:40  richard
+ *  Code vectors are now tagged differently to strings.
+ *  This information is used by is_ml_frame() to avoid finding
+ *  assembler subroutines etc.
+ *
+ *  Revision 1.8  1992/07/21  13:54:52  richard
+ *  Added is_ml_frame(), derived from is_ml_stack() in a storage manager
+ *  independent way.  Implemented alloc().
+ *
+ *  Revision 1.7  1992/03/12  16:58:06  richard
+ *  Made basename() take a const argument.
+ *
+ *  Revision 1.6  1992/03/11  11:46:50  richard
+ *  Changed call to allocate_string() in basename() to include terminator.
+ *
+ *  Revision 1.5  1992/01/20  16:03:15  richard
+ *  Changed message() and error() to use variable argument lists.
+ *
+ *  Revision 1.4  1992/01/09  15:55:13  richard
+ *  Fixed an error in basename().
+ *
+ *  Revision 1.3  1991/12/23  13:18:44  richard
+ *  Added basename().
+ *
+ *  Revision 1.2  91/12/19  13:36:23  richard
+ *  Rewrote runtime_message() in terms of fputs so that it doesn't
+ *  call malloc().  This can now be used before memory is initialized.
+ * 
+ *  Revision 1.1  91/10/18  13:03:11  davidt
+ *  Initial revision
+ */
+
+
+#include "ansi.h"
+#include "syscalls.h"
+#include "utils.h"
+#include "allocator.h"
+#include "values.h"
+#include "storeman.h"
+#include "extensions.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <errno.h>
+
+void message(const char *string, ...)
+{
+  va_list arg;
+
+  putc('[', stderr);
+  va_start(arg, string);
+  vfprintf(stderr, string, arg);
+  va_end(arg);
+  fputs("]\n", stderr);
+  fflush(stderr);
+}
+
+static nonreturning void verror(const char *prefix,
+				const char *string,
+				va_list arg)
+{
+  fprintf(stderr, "%s:\n ", prefix);
+  vfprintf(stderr, string, arg);
+  putc('\n', stderr);
+  fflush(stderr);
+  exit(EXIT_FAILURE);
+}
+
+void error(const char *string, ...)
+{
+  va_list arg;
+  va_start(arg, string);
+  verror("Fatal error in runtime system", string, arg);
+}
+
+void *alloc(size_t size, const char *string, ...)
+{
+  void *p = malloc(size);
+  va_list arg;
+
+  if(p == NULL)
+  {
+    va_start(arg, string);
+    verror("Fatal allocation error in runtime system", string, arg);
+  }
+
+  return(p);
+}
+
+/*  == User clock ==
+ *
+ *  This is just like clock(3) except that it returns only user time.
+ */
+
+clock_t user_clock(void)
+{
+  struct rusage ru;
+
+  if(getrusage(RUSAGE_SELF, &ru))
+    error("Unable to read resource usage.  "
+	  "getrusage() set errno to %d.", errno);
+
+  return(ru.ru_utime.tv_usec + 1000000 * ru.ru_utime.tv_sec);
+}
+
+
+
+/*  == Is a frame an ML frame? ==
+ *
+ *  A frame contains ML values iff its frame pointer points into an ML stack area.
+ */
+
+#ifdef sparc
+mlval is_ml_frame(struct stack_frame *sp)
+{
+  mlval closure = sp->closure;
+
+  if(is_ml_stack(sp->fp) && ISORDPTR(closure))
+  {
+    mlval secondary = SECONDARY(GETHEADER(closure));
+
+    if(secondary == RECORD || secondary == 0)
+    {
+      mlval *object = OBJECT(closure);
+
+      if(is_ml_heap(object) || is_ml_stack(object))
+      {
+	mlval code = FIELD(closure, 0);
+
+	if(is_ml_heap(OBJECT(code)) && PRIMARY(code) == POINTER &&
+	   (SECONDARY(GETHEADER(code)) == CODE || SECONDARY(GETHEADER(code)) == BACKPTR))
+	  return(code);
+      }
+    }
+  }
+
+  return(MLUNIT);
+}
+#else
+#error Cannot determine is_ml_frame() for this architecture.
+#endif
+
+
+/*  == Stack backtrace ==  */
+
+void backtrace(FILE *stream, struct stack_frame *sp, int depth_max)
+{
+  fprintf(stream, "Stack backtrace\n");
+  fprintf(stream, "  %p closure 0x%08X\n", sp, sp->closure);
+
+  while(depth_max-- && sp->fp)
+  {
+    struct stack_frame *fp = sp->fp;
+
+    if(is_ml_stack(fp))
+    {
+      const char *name =
+	ISPTR(fp->closure) ? CSTRING(CCODENAME(FIELD(fp->closure, 0))) :
+	fp->closure == STACK_EXTENSION ? "stack extension" :
+	fp->closure == STACK_LEAF_RAISE ? "leaf raise" :
+	fp->closure == STACK_RAISE ? "raise" :
+	fp->closure == STACK_RESUME ? "resume" :
+	fp->closure == STACK_PROFILE ? "profiler" :
+	fp->closure == STACK_EVENT ? "asynchronous event handler" :
+	fp->closure == STACK_C_RAISE ? "raise from C" : 
+	fp->closure == STACK_C_CALL ? "call to C" :
+	fp->closure == STACK_START ? "ML stack start" :
+        fp->closure == STACK_INTERCEPT ? "intercept" : "special";
+
+      fprintf(stream, "  %p closure 0x%08X: %s\n", fp, fp->closure, name);
+    }
+
+    sp = sp->fp;
+  }
+}
+@
+
+
+1.21
+log
+@The runtime reads the module name from the consistency information in the
+file.  Therefore module_name() isn't needed any more.
+@
+text
+@d6 4
+d82 1
+a95 2
+extern int getrusage(int who, struct rusage *rusage);
+
+@
+
+
+1.21.1.1
+log
+@Fork for bug fixing
+@
+text
+@a5 4
+ *  Revision 1.21  1993/08/26  18:45:57  daveb
+ *  The runtime reads the module name from the consistency information in the
+ *  file.  Therefore module_name() isn't needed any more.
+ *
+@
+
+
+1.20
+log
+@The is_ml_frame function didn't cope with shared closures.
+@
+text
+@d6 3
+a136 36
+
+/* This may be reset by the -path option. */
+const char *mod_path = "../";
+
+mlval module_name(const char *path)
+{
+  const char *start, *end, *p;
+  char *q;
+  int length = strlen(path);
+  mlval result;
+
+  start = path;
+  if (strncmp(start, mod_path, strlen(mod_path)) == 0)
+    start += strlen(mod_path);
+
+  while (start[0] == '/')
+    start += 1;
+
+  if(strcmp(path + length - 3, ".mo") == 0)
+    end = path + length - 3;
+  else
+    end = path + length;
+
+  length = end - start;
+  result = allocate_string(length+1);
+  for (p = start, q = CSTRING(result); p != end; p++, q++) {
+    if (*p == '/')
+      *q = '.';
+    else
+      *q = *p;
+  }
+  CSTRING(result)[length] = '\0';
+
+  return(result);
+}
+
+@
+
+
+1.19
+log
+@Replaced basename with module_name.
+@
+text
+@d6 3
+d199 1
+a199 2
+  if(is_ml_stack(sp->fp) && ISORDPTR(closure) &&
+     SECONDARY(GETHEADER(closure)) == RECORD)
+d201 1
+a201 1
+    mlval *object = OBJECT(closure);
+d203 1
+a203 1
+    if(is_ml_heap(object) || is_ml_stack(object))
+d205 1
+a205 1
+      mlval code = FIELD(closure, 0);
+d207 8
+a214 3
+      if(is_ml_heap(OBJECT(code)) && PRIMARY(code) == POINTER &&
+	 (SECONDARY(GETHEADER(code)) == CODE || SECONDARY(GETHEADER(code)) == BACKPTR))
+	return(code);
+@
+
+
+1.18
+log
+@Moved stack backtrace here from GC and top-level handler.
+@
+text
+@d6 3
+d132 4
+a135 1
+mlval basename(const char *path)
+d137 2
+a138 1
+  const char *start, *end;
+d142 6
+a147 5
+  start = strrchr(path, '/');
+  if(start == NULL)
+    start = path;
+  else
+    ++start;
+d156 6
+a161 1
+  strncpy(CSTRING(result), start, length);
+@
+
+
+1.17
+log
+@Added nonreturning qualifier to verror().
+Added missing include of extensions.h.
+Added prototype for getrusage().
+@
+text
+@d6 5
+d203 34
+@
+
+
+1.16
+log
+@Changes for code vector reform, and also fixed a bug whereby time based profiling
+only worked on the first of a set of mutually recursive code vectors
+@
+text
+@d6 5
+d68 1
+d77 1
+d92 3
+a94 1
+static void verror(const char *prefix, const char *string, va_list arg)
+d187 1
+a187 1
+      if(is_ml_heap(code) && PRIMARY(code) == POINTER &&
+@
+
+
+1.15
+log
+@Made is_ml_frame check for the right sort of pointer (ie not a ref)
+@
+text
+@d6 3
+d178 2
+a179 1
+      if(PRIMARY(code) == POINTER && SECONDARY(GETHEADER(code)) == CODE)
+@
+
+
+1.14
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d6 3
+d166 1
+a166 1
+  if(is_ml_stack(sp->fp) && ISPTR(closure) &&
+@
+
+
+1.13
+log
+@Added user_clock().
+@
+text
+@d6 3
+d170 1
+a170 1
+      mlval code = GETFIELD(closure, 0);
+@
+
+
+1.12
+log
+@Added ansi.h.
+@
+text
+@d6 3
+d59 3
+d130 18
+@
+
+
+1.11
+log
+@More checks in is_ml_frame().
+@
+text
+@d6 3
+d46 1
+@
+
+
+1.10
+log
+@Corrected ml_frame to return the code vector from the frame
+it is passed and not its parent frame.
+@
+text
+@d6 4
+d132 2
+a133 1
+  if(is_ml_stack(sp->fp) && ISPTR(closure))
+@
+
+
+1.9
+log
+@Code vectors are now tagged differently to strings.
+This information is used by is_ml_frame() to avoid finding
+assembler subroutines etc.
+@
+text
+@d6 5
+d120 1
+a120 3
+ *  On the SPARC the frame pointer of an ML frame points into an ML stack
+ *  area, and that frame's closure register is a pointer to a closure
+ *  record, the first element of which is the code vector.
+d126 3
+a128 1
+  if(is_ml_stack(sp->fp) && ISPTR(sp->fp->closure))
+d130 1
+a130 1
+    mlval code = GETFIELD(sp->fp->closure, 0);
+d132 7
+a138 2
+    if(PRIMARY(code) == POINTER && SECONDARY(GETHEADER(code)) == CODE)
+      return(GETFIELD(sp->fp->closure, 0));
+@
+
+
+1.8
+log
+@Added is_ml_frame(), derived from is_ml_stack() in a storage manager
+independent way.  Implemented alloc().
+@
+text
+@d6 4
+d124 6
+a129 1
+    return(GETFIELD(sp->fp->closure, 0));
+@
+
+
+1.7
+log
+@Made basename() take a const argument.
+@
+text
+@d6 3
+d33 1
+d53 1
+a53 1
+void error(const char *string, ...)
+d55 1
+a55 4
+  va_list arg;
+
+  fputs("Fatal error in runtime system:\n ", stderr);
+  va_start(arg, string);
+a56 1
+  va_end(arg);
+d62 21
+d107 20
+@
+
+
+1.6
+log
+@Changed call to allocate_string() in basename() to include terminator.
+@
+text
+@d6 3
+d62 1
+a62 1
+mlval basename(char *path)
+d64 1
+a64 1
+  char *start, *end;
+@
+
+
+1.5
+log
+@Changed message() and error() to use variable argument lists.
+@
+text
+@d6 3
+d77 1
+a77 1
+  result = allocate_string(length);
+@
+
+
+1.4
+log
+@Fixed an error in basename().
+@
+text
+@d6 3
+d28 1
+d31 1
+a31 1
+void message(char *string)
+d33 6
+a38 2
+  fputs("[ML runtime: ", stderr);
+  fputs(string, stderr);
+d40 1
+d43 1
+a43 1
+void error(char *string)
+d45 8
+a52 1
+  message(string);
+@
+
+
+1.3
+log
+@Added basename().
+@
+text
+@d5 4
+a8 1
+ *  $Log:	utils.c,v $
+d49 2
+@
+
+
+1.2
+log
+@Rewrote runtime_message() in terms of fputs so that it doesn't
+call malloc().  This can now be used before memory is initialized.
+@
+text
+@d1 8
+a8 6
+/*
+ * utils.c
+ * Simple run-time system utilities.
+ * $Log:	utils.c,v $
+ * Revision 1.1  91/10/18  13:03:11  davidt
+ * Initial revision
+d10 2
+a11 2
+ * 
+ * Copyright (c) 1991 harlequin Ltd.
+d14 5
+d20 2
+d23 2
+a24 1
+void runtime_message(char *message)
+d27 1
+a27 1
+  fputs(message, stderr);
+d31 1
+a31 1
+void runtime_error(int code, char *message)
+d33 25
+a57 2
+  runtime_message(message);
+  exit(code);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+ * $Log$
+d8 1
+d14 1
+a14 2
+runtime_message(str)
+char *str;
+d16 3
+a18 1
+  fprintf(stderr, "[ML runtime : %s]\n", str);
+d21 1
+a21 2
+runtime_error(str)
+char *str;
+d23 2
+a24 2
+  runtime_message(str);
+  exit (-1);
+@

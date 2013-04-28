@@ -1,0 +1,141 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.31.57;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C HEADERS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: c_header$
+ *
+ *)
+
+
+require "../utils/crash";
+require "../utils/lists";
+
+require "../initbasis/__general";
+
+require "c_data";
+require "fi_sig";
+
+require "c_sig";
+
+functor CSignature(
+
+   structure CData     : C_DATA
+   structure FISignature  : FOREIGN_SIGNATURE
+   structure Lists     : LISTS
+
+   structure Crash     : CRASH
+
+) : C_SIGNATURE =
+  struct
+
+    open General
+
+    structure CData = CData
+    structure FITypes = CData.FITypes
+    open FITypes
+
+    type c_type = CData.c_type
+
+
+  (* Mapping *)
+
+    type 'l_type foreign_signature = 'l_type FISignature.foreign_signature
+
+    val FInew_sig       =  FISignature.new_sig
+    val FIlookup_entry  =  FISignature.lookup_entry 
+    val FIdef_entry     =  FISignature.def_entry 
+    val FIhide_entry    =  FISignature.hide_entry 
+    val FIshow_entries  =  FISignature.show_entries
+
+    val unzip            =  Lists.unzip
+    val extract_default  =  fn a => fn x => General.getOpt(x,a)
+
+    val impossible     =  Crash.impossible
+    val unimplemented  =  Crash.unimplemented
+
+
+  (* SIGNATURE ENTRY *)
+
+    datatype c_sig_entry =
+        UNDEF_SE
+    |
+        VAR_SE of { name : name, ctype : c_type deferred }
+    |
+        CODE_SE of { name   : name,
+                     source : c_type list deferred,
+                     target : c_type deferred }
+    |
+        TYPE_SE of { name : name,
+                     defn : c_type deferred,
+                     size : int deferred }
+    |
+        CONST_SE of { name : name, ctype : c_type deferred }
+
+
+
+    (* C SIGNATURE operations *)
+
+    type c_signature = c_sig_entry foreign_signature
+
+    val new_sig : unit -> c_signature = fn () => FInew_sig()
+
+    val lookup_entry : c_signature -> string -> c_sig_entry =
+        fn (csig) => fn (s) =>
+           extract_default UNDEF_SE (FIlookup_entry(csig,s))
+
+    fun name_of_entry(UNDEF_SE)             = impossible("name_of_entry")
+      | name_of_entry(VAR_SE{name, ...})    = name
+      | name_of_entry(CODE_SE{name, ...})   = name
+      | name_of_entry(TYPE_SE{name, ...})   = name
+      | name_of_entry(CONST_SE{name, ...})  = name
+
+    val def_entry    : c_signature * c_sig_entry -> unit =
+        fn (_,UNDEF_SE) => ()
+         | (csig,ent) =>
+             let val str = name_of_entry(ent)
+             in
+                 FIdef_entry(csig,(str,ent))
+             end
+
+    val hide_entry   : c_signature * string -> unit =
+        FIhide_entry
+
+    val show_entries : c_signature -> c_sig_entry list =
+        fn (csig) => map (fn (_,ent) => ent) (FIshow_entries csig)
+
+    val load_header : filename -> c_signature =
+        fn (_) => unimplemented("load_header")
+
+  end;
+@

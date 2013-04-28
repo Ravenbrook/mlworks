@@ -1,0 +1,44 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.10.20.13.37.15;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #70184]
+Customise at test-time for configurations
+@
+
+
+1.1
+log
+@new unit
+[Bug #70184]
+Customise at test-time for configurations
+@
+text
+@(* Copyright (C) 1998 Harlequin Group plc.  All rights reserved.
+ *
+ * Revision Log
+ * ------------
+ * $Log: $
+ *
+ *)
+
+Shell.Options.set (Shell.Options.ValuePrinter.maximumStrDepth, 0);
+
+Shell.Project.openProject "cub.mlp";
+Shell.Project.setConfiguration "ARCH_OS";
+Shell.Project.compileAll ();
+Shell.Project.loadAll ();
+
+@

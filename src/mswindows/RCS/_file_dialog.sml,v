@@ -1,0 +1,101 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	95.12.13.15.00.44;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.08.08.15.48.35;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.08.03.12.52.06;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+MS Windows GUI
+@
+
+
+1.3
+log
+@Added mask and file_type arguments..
+@
+text
+@(*
+ *  Copyright (c) 1994 Harlequin Ltd.
+ *  $Log: _file_dialog.sml,v $
+ * Revision 1.2  1995/08/08  15:48:35  matthew
+ * Making it all work
+ *
+ * Revision 1.1  1995/08/03  12:52:06  matthew
+ * new unit
+ * MS Windows GUI
+ *
+ *)
+
+require "../main/info";
+require "windows";
+
+require "../gui/file_dialog";
+
+functor FileDialog(structure Info : INFO
+                   structure Windows : WINDOWS
+                     ) : FILE_DIALOG =
+  struct
+    structure Location = Info.Location
+    type Widget = Windows.Hwnd
+
+    exception Unimplemented of string
+
+    datatype FileType = DIRECTORY | FILE
+
+    fun find_file (parent, mask, file_type) =
+      (output (MLWorks.IO.terminal_out,"find_file unimplemented\n");
+       raise Unimplemented "find_file")
+end;
+@
+
+
+1.2
+log
+@Making it all work
+@
+text
+@d4 7
+a10 4
+# Revision 1.1  1995/08/03  12:52:06  matthew
+# new unit
+# MS Windows GUI
+#
+d24 1
+d26 4
+a29 1
+    fun find_file parent =
+@
+
+
+1.1
+log
+@new unit
+MS Windows GUI
+@
+text
+@d4 4
+d20 1
+a20 1
+    type Widget = Windows.window
+d23 2
+a24 1
+      raise Unimplemented "find_file"
+@

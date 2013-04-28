@@ -1,0 +1,151 @@
+head	1.4;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.4
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	98.10.19.13.27.58;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.08.06.15.21.26;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.06.08.10.25.59;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.34.21;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding scripts to run applications/tests into hope
+@
+
+
+1.4
+log
+@[Bug #70203]
+Modify for new argument passing mechanism
+@
+text
+@#!/bin/sh
+#
+# Copyright (c) 1998, Harlequin Group plc
+# All rights reserved
+#
+# $Log: RUN_SOME.sh,v $
+# Revision 1.3  1998/08/06  15:21:26  jont
+# [Bug #70148]
+# Handle case when MLWORKS_PERVASIVE or MLWORKS_SRC_PATH are unset properly
+#
+# Revision 1.2  1998/06/08  10:25:59  jont
+# [Bug #70127]
+# Allow source parameter to be given as a relative path
+#
+# Revision 1.1  1998/05/28  15:34:21  jont
+# new unit
+# Adding scripts to run applications/tests into hope
+#
+#
+
+SRC=/u/sml/MLW/src
+ARCH=SPARC/Solaris
+DIR=
+IMAGE=
+
+while [ $# -gt 0 ]
+do
+  case $1 in
+    -src) shift ; SRC=$1 ; shift ;;
+    -arch) shift ; ARCH=$1 ; shift ;;
+    -dir) shift ; DIR="$1 $DIR"; shift ;;
+    -image) shift ; IMAGE=$1 ; shift ;;
+    *) echo "unknown parameter $1: use -src, -dir or -arch"; exit 1 ;;
+  esac
+done
+
+HERE=`pwd`
+cd $SRC
+SRC=`pwd`
+cd $HERE
+if [ -z "$IMAGE" ]; then
+  MLWORKS="$SRC/rts/runtime-g -MLWpass MLWargs -batch -load $SRC/images/$ARCH/guib.img MLWargs -tty -no-init"
+else
+  MLWORKS="$SRC/rts/runtime-g -MLWpass MLWargs -batch -load $IMAGE MLWargs -tty -no-init"
+fi
+if [ -z "$MLWORKS_PERVASIVE" ] ; then
+  MLWORKS_PERVASIVE=$SRC/pervasive;export MLWORKS_PERVASIVE
+fi
+for dir in $DIR
+do
+  ( 
+    if [ -z "$MLWORKS_SRC_PATH" ] ; then
+      MLWORKS_SRC_PATH=$dir;export MLWORKS_SRC_PATH
+    else
+      MLWORKS_SRC_PATH=.:$MLWORKS_SRC_PATH;export MLWORKS_SRC_PATH
+    fi
+    (echo "OS.FileSys.chDir\"$dir\";";cat $dir/load.sml ) | $MLWORKS
+  )
+done
+@
+
+
+1.3
+log
+@[Bug #70148]
+Handle case when MLWORKS_PERVASIVE or MLWORKS_SRC_PATH are unset properly
+@
+text
+@d7 4
+d42 1
+a42 1
+  MLWORKS="$SRC/rts/runtime-g -load $SRC/images/$ARCH/guib.img -pass args -tty args"
+d44 4
+a47 1
+  MLWORKS="$SRC/rts/runtime-g -load $IMAGE -pass args -tty args"
+@
+
+
+1.2
+log
+@[Bug #70127]
+Allow source parameter to be given as a relative path
+@
+text
+@d7 4
+d45 6
+a50 5
+    cd $dir
+    MLWORKS_SRC_PATH=.:$MLWORKS_SRC_PATH;export MLWORKS_SRC_PATH
+    $MLWORKS << EOF
+use "load";
+EOF
+@
+
+
+1.1
+log
+@new unit
+Adding scripts to run applications/tests into hope
+@
+text
+@d6 5
+a10 1
+# $Log$
+d29 4
+@

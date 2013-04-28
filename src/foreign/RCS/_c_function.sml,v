@@ -1,0 +1,862 @@
+head	1.8;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.8
+	MLWorks_Beta_1996_06_06:1.8
+	MLWorks_Beta_1996_06_05:1.8
+	MLWorks_Beta_1996_06_03:1.8
+	MLWorks_Beta_1996_05_31:1.8
+	MLWorks_Beta_1996_05_30:1.8;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	96.04.18.17.05.51;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.03.20.15.12.46;	author matthew;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.08.14.00.15;	author brianm;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.07.22.43.38;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.07.18.12.17.13;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.06.26.12.01.06;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.05.04.19.30.19;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.04.25.11.29.08;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.8
+log
+@initbasis becomes basis
+@
+text
+@(*  ==== FOREIGN INTERFACE : C FUNCTION ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _c_function.sml,v $
+ * Revision 1.7  1996/03/20  15:12:46  matthew
+ * Language revision
+ *
+ * Revision 1.6  1995/09/08  14:00:15  brianm
+ * Further modification for updates and general reorganisation.
+ *
+ *  Revision 1.5  1995/09/07  22:43:38  brianm
+ *  Modifications for reorganisation & documentation.
+ *
+ *  Revision 1.4  1995/07/18  12:17:13  brianm
+ *  Changing names of deferred data-type operators (stream-edit)
+ *
+ *  Revision 1.3  1995/06/26  12:01:06  brianm
+ *  Adding remote access, diagnostics and other facilities.
+ *
+ *  Revision 1.2  1995/05/04  19:30:19  brianm
+ *  Removing restrictive eqtype constraints & introduce abstypes in
+ *  various implementing types.
+ *
+ *  Revision 1.1  1995/04/25  11:29:08  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../basis/__general";
+require "../basis/__word8";
+
+require "../utils/lists";
+
+require "c_codeinfo";
+require "c_codeset";
+
+require "static_bytearray";
+
+require "fi_aliens";
+require "fi_codeset";
+require "fi_data";
+require "fi_utils";
+
+require "c_function";
+
+functor CFunction(
+
+   structure StaticByteArray : STATIC_BYTEARRAY
+
+   structure Lists  :  LISTS
+
+   structure CCodeInfo  : C_CODEINFO
+   structure CCodeSet     : C_CODESET
+
+   structure FIAliens  : FOREIGN_ALIENS
+   structure FICodeSet  : FOREIGN_CODESET
+   structure FIData    : FOREIGN_DATA
+   structure FIUtils   : FOREIGN_UTILS
+
+   sharing CCodeSet.FITypes  =  FIAliens.FITypes    =  FICodeSet.FITypes
+                            =  FIData.FITypes      =  FIUtils.FITypes
+                            =  CCodeInfo.FITypes 
+                               (* This information:
+                                  `CCodeSet.FITypes = CCodeInfo.FITypes'
+                                   is implied in the signature C_FUNCTION.  Bug??
+                                *)
+   sharing type
+
+       FICodeSet.foreign_module = FIAliens.foreign_module
+
+     and type
+       
+       CCodeInfo.CData.pod = FIData.pod
+
+     and type
+
+       CCodeSet.foreign_codeset = FICodeSet.foreign_codeset
+
+) : C_FUNCTION =
+  struct
+
+    open General
+
+    structure CCodeSet      = CCodeSet
+    structure CCodeInfo     = CCodeInfo
+    structure CData         = CCodeInfo.CData
+    structure FITypes       = CData.FITypes
+ 
+    open FITypes
+
+    open CCodeSet
+    open CCodeInfo
+    open CData
+
+ (* Internal utilities *)
+
+    val MLWcast  =  MLWorks.Internal.Value.cast
+
+ (* ByteArray operators *)
+
+    structure ByteArray  =  MLWorks.ByteArray
+
+    type static_bytearray = StaticByteArray.static_bytearray
+
+(*
+    val null_byte     =  Word8.intToWord(0)
+    val static_array  =  fn sz => StaticByteArray.array(sz,null_byte)
+ *)
+
+    val static_array  =  StaticByteArray.alloc_array
+    val to_bytearray  =  StaticByteArray.to_bytearray
+    val address_of    =  StaticByteArray.address_of
+
+    val module  =  fn (c_str) => FICodeSet.module(to_struct c_str)
+
+    type foreign_item    =  FIAliens.foreign_item
+
+    val get_item_later   =  FIAliens.get_item_later
+    val get_item_now     =  FIAliens.get_item_now
+ 
+    val call_alien_code  =  FIAliens.call_alien_code
+
+    val to_pod           =  CData.c_pod_to_pod
+
+    val examine_pod   = 
+        fn (c_pod,addr) => FIData.examine_pod(to_pod c_pod,addr)
+
+    val pod_value      =
+        fn (c_pod,ba,i) => FIData.pod_value(to_pod c_pod,ba,i)
+
+    val set_pod_value  =
+        fn (c_pod,ba,i) => FIData.set_pod_value(to_pod c_pod,ba,i)
+
+    val pod_address    =
+        fn (c_pod) => FIData.pod_address(to_pod c_pod)
+
+ (* General imports *)
+
+    exception Fail  =  General.Fail
+
+    val extract  =  General.valOf
+
+    val llength  =  Lists.length
+    val forall   =  Lists.forall
+    val iterate  =  Lists.iterate
+    val member   =  Lists.member
+    val tl       =  Lists.tl
+
+    val int_to_bytearray  =  FIUtils.int_to_bytearray
+    val bytearray_to_int  =  FIUtils.bytearray_to_int
+
+    val string_to_bytearray  =  FIUtils.string_to_bytearray
+    val bytearray_to_string  =  FIUtils.bytearray_to_string
+
+    val word32_to_bytearray  =  FIUtils.word32_to_bytearray
+    val bytearray_to_word32  =  FIUtils.bytearray_to_word32
+
+  (* Exported Definitions *)
+
+    type c_codeset  = CCodeSet.c_codeset
+    type c_codeinfo  = CCodeInfo.c_codeinfo
+
+    abstype c_function =
+             CFUN of { source : c_type list,
+                       target : c_type,
+                       code   : foreign_item }
+    with
+
+       fun attach(c_str,c_sig) =
+	   let fun value_info nm = symbol_info(c_str,nm)
+	       val value_decl = lookup_entry(c_sig)
+
+	       val f_mod = module(c_str)
+	       val (_,l_mode) = file_info(c_str)
+	       val get_item  =
+		   case l_mode of
+		     IMMEDIATE_LM =>  get_item_later
+		   |
+		     DEFERRED_LM   =>  get_item_now
+
+	       fun get_code nm = get_item(f_mod,nm)            
+
+	       fun get_fun (nm) = 
+		   case value_info(nm) of
+		     CODE_VT =>
+		       ( case value_decl(nm) of
+			   CODE_DI{source,target, ...} =>
+			      CFUN{ source = getBOX(source),
+				    target = getBOX(target),
+				    code   = get_code(nm) }
+			 |
+			   _ => raise Fail "code item has wrong type"
+		       )
+		   | UNKNOWN_VT => raise Fail "unrecognised name"
+		   | _ => raise Fail "non code item"
+	   in
+	      get_fun
+	   end
+
+       local
+
+	  val max_call_args = 32
+
+	  fun check_types(len,ty_lst) =
+	      let fun chk_ty'(ty::ty_lst,pd::pd_lst) =
+		      let val pdty = pod_type(pd)
+		      in
+			  equal_type(ty,pdty)
+			  andalso
+			  chk_ty'(ty_lst,pd_lst)
+		      end
+		    | chk_ty'(_,_) = true
+
+		  fun chk_ty(pd_lst) =
+			(llength pd_lst = len)
+			andalso
+			chk_ty'(ty_lst,pd_lst)
+	      in
+		  chk_ty
+	      end
+
+	  fun check_callable_type(STRING_CT(_)) = true
+	    | check_callable_type(ARRAY_CT(_)) = true
+	    | check_callable_type(ty) = size_of(ty) <= 4
+
+	  fun check_callable_types(ty_lst) =
+		(forall check_callable_type ty_lst)
+		andalso
+		(llength ty_lst <= max_call_args)
+
+	  local
+	     val arg_size = size_of(INT_CT)
+
+	     val args_buffer_size = arg_size * max_call_args
+
+	     val args_buffer   =  static_array(args_buffer_size)
+	     val args_addr     =  address_of(args_buffer,0)
+	     val args_buffer'  =  to_bytearray(args_buffer)
+
+	     fun copy_pod_addr(pod,i) =
+		 let val addr = pod_address(pod)
+		 in
+		     word32_to_bytearray{src=addr,arr=args_buffer',st=i}
+		 end
+
+	     fun copy_arg_data(pod,i) =
+		 case pod_type(pod) of
+		   STRING_CT(_) => copy_pod_addr(pod,i)
+		 |
+		   ARRAY_CT(_)  => copy_pod_addr(pod,i)
+		 |
+		   _ => pod_value(pod,args_buffer',i)
+
+	     val result_buffer   =  static_array(arg_size)
+	     val result_addr     =  address_of(result_buffer,0)
+
+	     val result_buffer'  =  to_bytearray(result_buffer)
+
+	     fun copy_result_pod(pod) =
+		 let val addr = bytearray_to_word32{arr=result_buffer',st=0}
+		 in
+		     examine_pod(pod,addr)
+		 end
+
+	     fun copy_tgt_data(pod) =
+		 case pod_type(pod) of
+		   STRING_CT(_) => copy_result_pod(pod)
+		 |
+		   ARRAY_CT(_)  => copy_result_pod(pod)
+		 |
+		   _ => set_pod_value(pod,result_buffer',0)
+	  in
+	     fun call_code(code,arg_list,arity,tgt) =
+		 let fun wrap_args(idx,pd::pd_lst) =
+			 ( copy_arg_data(pd,idx);
+			   wrap_args(idx+arg_size,pd_lst)
+			 )
+		       | wrap_args(_) = ()
+		 in
+
+		   wrap_args(0,arg_list);
+		   call_alien_code(code,args_addr,arity,result_addr);
+		   copy_tgt_data(tgt)
+		 end
+	  end
+       in
+	  fun call (CFUN{source,target,code}) =
+	      let val ty_lst = target :: source
+	      in
+		  if check_callable_types(ty_lst)
+		  then let val arity  = llength source
+			   val chk_ty = check_types(1+arity,ty_lst)
+
+			   fun make_call(src_pdlst,tgt_pd) =
+			       let val pdlst = tgt_pd :: src_pdlst
+			       in
+				   if chk_ty(pdlst)
+				   then call_code(code,src_pdlst,arity,tgt_pd)
+				   else raise Fail "runtime type failure"
+			       end
+		       in
+			   make_call
+		       end
+		  else raise Fail "infeasible calling types"
+	      end
+       end
+    end
+  end;
+@
+
+
+1.7
+log
+@Language revision
+@
+text
+@d11 3
+d37 2
+a38 2
+require "../initbasis/__general";
+require "../initbasis/__word8";
+@
+
+
+1.6
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d11 3
+d102 1
+a102 1
+    val MLWcast  =  MLWorks.Internal.Value.cast (fn x => x) : 'a -> 'b
+@
+
+
+1.5
+log
+@Modifications for reorganisation & documentation.
+@
+text
+@d11 3
+d54 2
+a55 2
+   structure CCodeInfo  : C_SIGNATURE
+   structure CCodeSet     : C_STRUCTURE
+d87 3
+a89 3
+    structure CCodeInfo   = CCodeInfo
+    structure CData        = CCodeInfo.CData
+    structure FITypes      = CData.FITypes
+a163 64
+
+    fun elaborate_type(c_sig) =
+        let val lookup'  =  lookup_entry(c_sig)
+
+            val names_seen  =  ref([] : string list)
+
+            fun check_name_seen(nm)  =  member(nm,!names_seen)
+
+            fun push_name(nm)  =  (names_seen := nm :: !names_seen)
+            fun pop_name()     =  (names_seen := tl (!names_seen))
+
+            fun excluding_name(nm,body) =
+                fn arg =>
+                   ( push_name(nm);
+                     body(arg);
+                     pop_name()
+                   )
+
+            fun elab_type ( ty : c_type ) =
+                case ty of
+                  SIZE_OF{ctype=cty, ...} => ignore( elab_type(cty) )
+                |
+                  TYPENAME_CT{defn=BOX(ref(SOME(_))), ...} => ()
+                |
+                  TYPENAME_CT{name=nm,defn,size=ty_size} =>
+                    if check_name_seen(nm) then () else
+                    ( case lookup'(nm) of
+                        TYPE_DI{defn=BOX(ref(SOME(cty))), size=rhs_size, ...} =>
+                          ( (setBOX defn cty);
+                            excluding_name(nm,elab_type)(cty);
+                            let val sz = size_of(cty)
+                            in
+                              (setBOX rhs_size sz);
+                              (setBOX ty_size sz)
+                            end
+                          )
+                      |
+                        _ => raise Fail "not a typename"
+                    )
+                |
+                  STAR_CT{ctype, ...} => ignore( elab_type(ctype) )
+                |
+                  STRUCT_CT{fields, ...} => iterate elab_field fields
+                |
+                  UNION_CT{variants,current,...} =>
+                    ( iterate elab_variant (!variants);
+                      ( case extractBOX(current) of
+                          NONE => ()
+                        |
+                          SOME(CVNT{ctype, ...}) => ignore( elab_type(ctype) )
+                      )
+                    )
+                |
+                  ARRAY_CT{ctype, ...} => ignore( elab_type(ctype) )
+                | _ => ()
+
+            and elab_variant (CVNT{ctype, ...}) = ignore( elab_type(ctype) )
+
+            and elab_field (CFLD{ctype, ...})   = ignore( elab_type(ctype) )
+
+        in
+            fn ty => ( elab_type(ty); ty )                  
+        end
+
+@
+
+
+1.4
+log
+@Changing names of deferred data-type operators (stream-edit)
+@
+text
+@d11 3
+d33 2
+a34 2
+require "c_sig";
+require "c_struct";
+d39 1
+a39 1
+require "fi_struct";
+d51 2
+a52 2
+   structure CSignature  : C_SIGNATURE
+   structure CStruct     : C_STRUCTURE
+d55 1
+a55 1
+   structure FIStruct  : FOREIGN_STRUCTURE
+d59 1
+a59 1
+   sharing CStruct.FITypes  =  FIAliens.FITypes    =  FIStruct.FITypes
+d61 1
+a61 1
+                            =  CSignature.FITypes 
+d63 1
+a63 1
+                                  `CStruct.FITypes = CSignature.FITypes'
+d68 1
+a68 1
+       FIStruct.foreign_module = FIAliens.foreign_module
+d72 1
+a72 1
+       CSignature.CData.pod = FIData.pod
+d76 1
+a76 1
+       CStruct.foreign_structure = FIStruct.foreign_structure
+d83 3
+a85 3
+    structure CStruct      = CStruct
+    structure CSignature   = CSignature
+    structure CData        = CSignature.CData
+d90 2
+a91 2
+    open CStruct
+    open CSignature
+d113 1
+a113 1
+    val module  =  fn (c_str) => FIStruct.module(to_struct c_str)
+d159 2
+a160 2
+    type c_structure  = CStruct.c_structure
+    type c_signature  = CSignature.c_signature
+d183 1
+a183 1
+                  TYPENAME_T{defn=DF(ref(SOME(_))), ...} => ()
+d185 1
+a185 1
+                  TYPENAME_T{name=nm,defn,size=ty_size} =>
+d188 2
+a189 2
+                        TYPE_SE{defn=DF(ref(SOME(cty))), size=rhs_size, ...} =>
+                          ( (setDF defn cty);
+d193 2
+a194 2
+                              (setDF rhs_size sz);
+                              (setDF ty_size sz)
+d201 1
+a201 1
+                  STAR_T{ctype, ...} => ignore( elab_type(ctype) )
+d203 1
+a203 1
+                  STRUCT_T{fields, ...} => iterate elab_field fields
+d205 1
+a205 1
+                  UNION_T{variants,current,...} =>
+d207 1
+a207 1
+                      ( case extractDF(current) of
+d214 1
+a214 1
+                  ARRAY_T{ctype, ...} => ignore( elab_type(ctype) )
+d240 1
+a240 1
+		     IMMEADIATE_LM =>  get_item_later
+d250 3
+a252 3
+			   CODE_SE{source,target, ...} =>
+			      CFUN{ source = getDF(source),
+				    target = getDF(target),
+d257 1
+a257 1
+		   | NONE_VT => raise Fail "unrecognised name"
+d285 2
+a286 2
+	  fun check_callable_type(STRING_T(_)) = true
+	    | check_callable_type(ARRAY_T(_)) = true
+d295 1
+a295 1
+	     val arg_size = size_of(INT_T)
+d311 1
+a311 1
+		   STRING_T(_) => copy_pod_addr(pod,i)
+d313 1
+a313 1
+		   ARRAY_T(_)  => copy_pod_addr(pod,i)
+d330 1
+a330 1
+		   STRING_T(_) => copy_result_pod(pod)
+d332 1
+a332 1
+		   ARRAY_T(_)  => copy_result_pod(pod)
+@
+
+
+1.3
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@d11 3
+d204 1
+a204 1
+                      ( case getDF(current) of
+d248 2
+a249 2
+			      CFUN{ source = extractDF(source),
+				    target = extractDF(target),
+@
+
+
+1.2
+log
+@Removing restrictive eqtype constraints & introduce abstypes in
+various implementing types.
+@
+text
+@d11 4
+d118 2
+a119 2
+    val snapshot_pod   = 
+        fn (c_pod,addr) => FIData.snapshot_pod(to_pod c_pod,addr)
+d195 1
+a195 1
+                  STAR_T{ctype=cty, ...} => ignore( elab_type(cty) )
+d197 1
+a197 2
+                  STRUCT_T{fields=NL(fld_lst1), ...} =>
+                    iterate elab_nameitem fld_lst1
+d199 2
+a200 2
+                  UNION_T{variants=NL(vnt_lst1),current,...} =>
+                    ( iterate elab_nameitem vnt_lst1;
+d204 1
+a204 1
+                          SOME(NI{item=cty, ...}) => ignore( elab_type(cty) )
+d208 1
+a208 1
+                  ARRAY_T{ctype=cty, ...} => ignore( elab_type(cty) )
+d211 3
+a213 1
+            and elab_nameitem (NI{item=cty, ...}) = ignore( elab_type(cty) )
+d225 1
+a263 4
+
+   val _ = debugP "chk_ty : ty   = " (ty)
+   val _ = debugP "chk_ty : pdty = " (pdty)
+
+d270 1
+a271 2
+   (debugP "check_types : length of list = " (llength pd_lst);
+   debugP "check_types : arity + 1 = " len;
+a274 1
+   )
+a298 1
+   val _ = debugP("Pod address = ")(addr)
+d319 1
+a319 1
+		     snapshot_pod(pod,addr)
+a322 2
+   (debugP "copy_tgt_data : pod_type = " (pod_type pod);
+   debugP "copy_tgt_data : result_buffer' = " result_buffer';
+a328 1
+   )
+a335 2
+   val _ = debugP("Args address = ")(args_addr)
+   val _ = debugP("Result address = ")(result_addr)
+a338 1
+   debugP "args_buffer = " args_buffer';
+a345 1
+   val _ = debugP("call : (target :: source) = ")(ty_lst)
+a348 1
+   val _ = debugP("call : arity = ")(arity)
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@d10 4
+a13 1
+ *  $Log$
+d15 1
+d215 1
+a215 1
+    datatype c_function =
+d219 28
+a246 56
+
+    fun attach(c_str,c_sig) =
+	let fun value_info nm = symbol_info(c_str,nm)
+	    val value_decl = lookup_entry(c_sig)
+
+	    val f_mod = module(c_str)
+	    val (_,l_mode) = file_info(c_str)
+	    val get_item  =
+		case l_mode of
+		  IMMEADIATE_LM =>  get_item_later
+		|
+		  DEFERRED_LM   =>  get_item_now
+
+	    fun get_code nm = get_item(f_mod,nm)            
+
+	    fun get_fun (nm) = 
+		case value_info(nm) of
+		  CODE_VT =>
+		    ( case value_decl(nm) of
+			CODE_SE{source,target, ...} =>
+			   CFUN{ source = extractDF(source),
+				 target = extractDF(target),
+				 code   = get_code(nm) }
+		      |
+			_ => raise Fail "code item has wrong type"
+		    )
+		| NONE_VT => raise Fail "unrecognised name"
+		| _ => raise Fail "non code item"
+	in
+	   get_fun
+	end
+
+    local
+
+       val max_call_args = 32
+
+       fun check_types(len,ty_lst) =
+	   let fun chk_ty'(ty::ty_lst,pd::pd_lst) =
+		   let val pdty = pod_type(pd)
+
+val _ = debugP "chk_ty : ty   = " (ty)
+val _ = debugP "chk_ty : pdty = " (pdty)
+
+		   in
+		       equal_type(ty,pdty)
+		       andalso
+		       chk_ty'(ty_lst,pd_lst)
+		   end
+		 | chk_ty'(_,_) = true
+	       fun chk_ty(pd_lst) =
+(debugP "check_types : length of list = " (llength pd_lst);
+debugP "check_types : arity + 1 = " len;
+		     (llength pd_lst = len)
+		     andalso
+		     chk_ty'(ty_lst,pd_lst)
+)
+d248 1
+a248 1
+	       chk_ty
+a250 9
+       fun check_callable_type(STRING_T(_)) = true
+	 | check_callable_type(ARRAY_T(_)) = true
+	 | check_callable_type(ty) = size_of(ty) <= 4
+
+       fun check_callable_types(ty_lst) =
+	     (forall check_callable_type ty_lst)
+	     andalso
+	     (llength ty_lst <= max_call_args)
+
+a251 25
+	  val arg_size = size_of(INT_T)
+
+	  val args_buffer_size = arg_size * max_call_args
+
+	  val args_buffer   =  static_array(args_buffer_size)
+	  val args_addr     =  address_of(args_buffer,0)
+	  val args_buffer'  =  to_bytearray(args_buffer)
+
+	  fun copy_pod_addr(pod,i) =
+	      let val addr = pod_address(pod)
+val _ = debugP("Pod address = ")(addr)
+	      in
+		  word32_to_bytearray{src=addr,arr=args_buffer',st=i}
+	      end
+
+	  fun copy_arg_data(pod,i) =
+	      case pod_type(pod) of
+		STRING_T(_) => copy_pod_addr(pod,i)
+	      |
+		ARRAY_T(_)  => copy_pod_addr(pod,i)
+	      |
+		_ => pod_value(pod,args_buffer',i)
+
+	  val result_buffer   =  static_array(arg_size)
+	  val result_addr     =  address_of(result_buffer,0)
+d253 1
+a253 1
+	  val result_buffer'  =  to_bytearray(result_buffer)
+d255 20
+a274 2
+	  fun copy_result_pod(pod) =
+	      let val addr = bytearray_to_word32{arr=result_buffer',st=0}
+d276 1
+a276 1
+		  snapshot_pod(pod,addr)
+d279 71
+a349 10
+	  fun copy_tgt_data(pod) =
+(debugP "copy_tgt_data : pod_type = " (pod_type pod);
+debugP "copy_tgt_data : result_buffer' = " result_buffer';
+	      case pod_type(pod) of
+		STRING_T(_) => copy_result_pod(pod)
+	      |
+		ARRAY_T(_)  => copy_result_pod(pod)
+	      |
+		_ => set_pod_value(pod,result_buffer',0)
+)
+d351 3
+a353 8
+	  fun call_code(code,arg_list,arity,tgt) =
+	      let fun wrap_args(idx,pd::pd_lst) =
+		      ( copy_arg_data(pd,idx);
+			wrap_args(idx+arg_size,pd_lst)
+		      )
+		    | wrap_args(_) = ()
+val _ = debugP("Args address = ")(args_addr)
+val _ = debugP("Result address = ")(result_addr)
+d355 16
+a370 5
+
+		wrap_args(0,arg_list);
+debugP "args_buffer = " args_buffer';
+		call_alien_code(code,args_addr,arity,result_addr);
+		copy_tgt_data(tgt)
+a372 22
+    in
+       fun call (CFUN{source,target,code}) =
+	   let val ty_lst = target :: source
+val _ = debugP("call : (target :: source) = ")(ty_lst)
+	   in
+	       if check_callable_types(ty_lst)
+	       then let val arity  = llength source
+val _ = debugP("call : arity = ")(arity)
+			val chk_ty = check_types(1+arity,ty_lst)
+
+			fun make_call(src_pdlst,tgt_pd) =
+			    let val pdlst = tgt_pd :: src_pdlst
+			    in
+				if chk_ty(pdlst)
+				then call_code(code,src_pdlst,arity,tgt_pd)
+				else raise Fail "runtime type failure"
+			    end
+		    in
+			make_call
+		    end
+	       else raise Fail "infeasible calling types"
+	   end
+@

@@ -1,0 +1,301 @@
+head	1.8;
+access;
+symbols
+	ML_beta_release_12/08/94:1.8
+	ML_beta_release_03/08/94:1.8
+	ML_revised_beta_release_25/05/94:1.8
+	ML_final_beta_release_02/03/94:1.8
+	mlworks-28-01-1994:1.8
+	Release:1.8
+	mlworks-beta-01-09-1993:1.8
+	MLWorks-1-0-4-29/01/1993:1.7
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.6
+	Ten15_release_19-11-91:1.1.1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	93.04.06.11.54.52;	author jont;	state Exp;
+branches
+	1.8.1.1;
+next	1.7;
+
+1.7
+date	92.10.30.15.01.24;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.08.11.10.51.45;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.01.23.14.50.24;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.01.07.16.11.05;	author colin;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.11.21.16.55.01;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.19.12.19.20;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.45.57;	author colin;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	91.11.19.11.13.07;	author jont;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	93.04.06.11.54.52;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Datatypes for several core static semantic objects
+(see also datatypes and basis)
+@
+
+
+1.8
+log
+@Added push and pop functions for the id counters
+@
+text
+@(* simpletypes.sml the signature *)
+(*
+$Log: simpletypes.sml,v $
+Revision 1.7  1992/10/30  15:01:24  jont
+Added special maps for tyfun_id, tyname_id, strname_id
+
+Revision 1.6  1992/08/11  10:51:45  jont
+Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+
+Revision 1.5  1992/01/23  14:50:24  jont
+Added functions to read and reset tyfun_id_counter
+
+Revision 1.4  1992/01/07  16:11:05  colin
+Added counters to tyname_id and strname_id
+
+Revision 1.3  1991/11/21  16:55:01  jont
+Added copyright message
+
+Revision 1.2  91/11/19  12:19:20  jont
+Merging in comments from Ten15 branch to main trunk
+
+Revision 1.1.1.1  91/11/19  11:13:07  jont
+Added comments for DRA on functions
+
+Revision 1.1  91/06/07  11:45:57  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+
+(* Tyname_id's, Tyfun_id's, and Strname_id's are all defined to ensure
+uniqueness of typenames, type functions, and structure names. These
+are all actually defined in datatypes.sml. Since any of these can be
+incomplete in early stages of typechecking, they are not given
+definite id's until they have been fully resolved. This module
+provides functions for dealing with those id's. *)
+
+require "../utils/mononewmap";
+
+signature TYNAME_ID  =
+  sig 
+    structure Map : MONONEWMAP
+    eqtype Tyname_id
+    sharing type Tyname_id = Map.object
+    val make_tyname_n : int -> Tyname_id
+    val make_tyname_id : unit -> Tyname_id
+    val tyname_id : Tyname_id -> int
+    val tyname_id_lt : (Tyname_id * Tyname_id) -> bool
+    val tyname_id_eq : Tyname_id * Tyname_id -> bool
+    val reset_counter : int -> unit
+    val read_counter : unit -> int
+    val push_counter : unit -> unit
+    val pop_counter : unit -> unit
+  end;
+
+signature TYFUN_ID  =
+  sig 
+    structure Map : MONONEWMAP
+    eqtype Tyfun_id
+    sharing type Tyfun_id = Map.object
+    val make_tyfun_n : int -> Tyfun_id
+    val make_tyfun_id : unit -> Tyfun_id
+    val tyfun_id : Tyfun_id -> int
+    val tyfun_id_lt : (Tyfun_id * Tyfun_id) -> bool
+    val string_tyfun_id : Tyfun_id -> string
+    val reset_counter : int -> unit
+    val read_counter : unit -> int
+    val push_counter : unit -> unit
+    val pop_counter : unit -> unit
+  end;
+
+signature STRNAME_ID  =
+  sig 
+    structure Map : MONONEWMAP
+    eqtype Strname_id
+    sharing type Strname_id = Map.object
+    val make_strname_n : int -> Strname_id
+    val make_strname_id : unit -> Strname_id
+    val string_strname_id : Strname_id -> string
+    val strname_id : Strname_id -> int
+    val strname_id_lt : (Strname_id * Strname_id) -> bool
+    val reset_counter : int -> unit
+    val read_counter : unit -> int
+    val push_counter : unit -> unit
+    val pop_counter : unit -> unit
+  end;
+@
+
+
+1.8.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.8  1993/04/06  11:54:52  jont
+Added push and pop functions for the id counters
+
+@
+
+
+1.7
+log
+@Added special maps for tyfun_id, tyname_id, strname_id
+@
+text
+@d4 3
+d53 2
+d69 2
+d85 2
+@
+
+
+1.6
+log
+@Removed some redundant structure arguments and sharing
+Converted where relevant to use NewMap.{forall,exists,iterate}
+@
+text
+@d4 4
+d36 2
+d40 1
+d42 1
+d54 1
+d56 1
+d68 1
+d70 1
+@
+
+
+1.5
+log
+@Added functions to read and reset tyfun_id_counter
+@
+text
+@d4 3
+d38 1
+d50 1
+@
+
+
+1.4
+log
+@Added counters to tyname_id and strname_id
+@
+text
+@d4 3
+d47 2
+@
+
+
+1.3
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	simpletypes.sml,v $
+d29 2
+a30 3
+    val make_tyname_mn : int * int -> Tyname_id
+    val make_tyname_id : int -> Tyname_id
+    val no_of_cons : Tyname_id -> int
+d33 2
+d54 2
+@
+
+
+1.2
+log
+@Merging in comments from Ten15 branch to main trunk
+@
+text
+@d1 1
+d4 3
+d13 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 7
+a8 1
+$Log$
+d10 8
+@
+
+
+1.1.1.1
+log
+@Added comments for DRA on functions
+@
+text
+@d2 1
+a2 4
+$Log:	simpletypes.sml,v $
+Revision 1.1  91/06/07  11:45:57  colin
+Initial revision
+
+a3 8
+
+(* Tyname_id's, Tyfun_id's, and Strname_id's are all defined to ensure
+uniqueness of typenames, type functions, and structure names. These
+are all actually defined in datatypes.sml. Since any of these can be
+incomplete in early stages of typechecking, they are not given
+definite id's until they have been fully resolved. This module
+provides functions for dealing with those id's. *)
+
+@

@@ -1,0 +1,154 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.11.03.18.37.33;	author io;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.11.03.17.56.39;	author io;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+add xtest.sml for testing xtst.so graphics
+@
+
+
+1.2
+log
+@add comment explaining differing filenames under Irix
+@
+text
+@(* ++++ XTest example ML FI interface code ++++ *)
+(* ++++ ================================== ++++ *)
+require "$.foreign.__interface";
+
+(* ML FI structure mapping *)
+
+local
+   structure Store  = Interface.Store
+   structure Structure  = Interface.C.Structure
+   structure Signature  = Interface.C.Signature
+   structure Function  = Interface.C.Function
+   structure Type  = Interface.C.Type
+   structure Value  = Interface.C.Value
+in
+   val ALIGNED_4     = Store.ALIGNED_4
+   val BREAK         = Store.BREAK
+   val RDWR_STATUS   = Store.RDWR_STATUS
+   val store         = Store.store
+   val SUCC          = Store.SUCC
+   val EXTEND        = Store.EXTEND
+   val dupObject     = Value.dupObject
+
+   val loadObjectFile = Structure.loadObjectFile
+   val IMMEDIATE_LOAD   = Structure.IMMEDIATE_LOAD
+   val symbols          = Structure.symbols
+   val symbolInfo       = Structure.symbolInfo
+
+   val newSignature = Signature.newSignature
+   val defEntry = Signature.defEntry
+   val FUN_DECL = Signature.FUN_DECL
+     
+   val defineForeignFun = Function.defineForeignFun
+   val call               = Function.call
+
+   type c_type = Type.c_type
+
+   val VOID_TYPE     = Type.VOID_TYPE
+   val STRING_TYPE   = Type.STRING_TYPE
+   val INT_TYPE      = Type.INT_TYPE
+   val CHAR_TYPE     = Type.CHAR_TYPE
+   val ptrType       = Type.ptrType
+
+   val object          = Value.object
+   val setString       = Value.setString
+   val getString       = Value.getString
+   val setInt          = Value.setInt
+   val getInt          = Value.getInt
+   val setPtrType     = Value.setPtrType
+   val setPtrAddrOf  = Value.setPtrAddrOf
+   val castPtrType    = Value.castPtrType
+end
+
+   (*  Loading X libraries 
+    *  This would depend on the versions you have access to.
+    *
+    *  On Irix the shared library paths are more regular
+    *  Use: /usr/lib/libX11.so
+    *       /usr/lib/libXt.so
+    *       /usr/lib/libXm.so
+    *)
+
+   val libX11 = loadObjectFile("/usr/lib/libX11.so.5.0",IMMEDIATE_LOAD);
+   val libXt  = loadObjectFile("/usr/lib/libXt.so.5.0",IMMEDIATE_LOAD);
+   val libXm  = loadObjectFile("/usr/lib/libXm.so",IMMEDIATE_LOAD);
+
+   (*  Building C structures *)
+
+   val x_store =
+          store{ alloc    = SUCC,
+                 overflow = EXTEND,
+                 size     = 1000,
+                 status   = RDWR_STATUS   };
+
+   (* load shared library *)
+
+   val x_name = "foreign/samples/Unix/xtst.so";
+  
+   val x_struct = loadObjectFile(x_name,IMMEDIATE_LOAD);
+
+   symbols(x_struct);
+   symbolInfo(x_struct,"demo_box");
+
+   (* Building C OBJECT's *)
+
+   val x_object =
+         object { ctype     = STRING_TYPE{ length = 64 },
+               store    = x_store };
+   
+   val x_object1 = dupObject(x_object);
+
+
+   val void_object =
+         object { ctype     = VOID_TYPE,
+                  store     = x_store };
+
+
+   (* Building C Signatures *)
+
+   val x_sig = newSignature();
+
+   defEntry(x_sig,
+             FUN_DECL 
+               { name = "demo_box",
+                 source = [STRING_TYPE{ length = 64 }],
+                 target = VOID_TYPE });
+   
+   val demo_box = defineForeignFun(x_struct,x_sig)("demo_box");
+
+   setString(x_object1,"Hope springs Eternal"); 
+
+   call(demo_box)([x_object1],void_object);
+
+@
+
+
+1.1
+log
+@new unit
+add xtest.sml for testing xtst.so graphics
+@
+text
+@d54 6
+a59 1
+    *  This would depend on the versions you have access to
+@

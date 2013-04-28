@@ -1,0 +1,223 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.06.28.13.13.51;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Functions for setting the constraint resources for Motif form widgets.
+@
+
+
+1.1
+log
+@new unit
+Functions for setting the constraint resources for Motif form widgets.
+@
+text
+@require "^.library.xm";
+require "^.utils.crash";
+
+require "layout";
+
+functor Layout (
+  structure Xm: XM
+  structure Crash: CRASH
+): LAYOUT =
+struct
+  val sep_size = 10;
+
+  type Widget = Xm.Widget
+
+  datatype Class =
+    MENUBAR of Widget
+  | TEXT of Widget
+  | OTHER of Widget
+  | PANED of Widget
+  | SPACE
+
+  (* Some abbreviations. *)
+
+  val top_none = [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]
+  val bottom_none = [(Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_NONE)]
+  val top_form = [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)]
+  val bottom_form = [(Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)]
+  val lr_form = [(Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+                 (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM)]
+
+  val top_offset = (Xm.TopOffset, Xm.INT sep_size)
+  val bottom_offset = (Xm.BottomOffset, Xm.INT sep_size)
+  val lr_offsets = [(Xm.LeftOffset, Xm.INT sep_size),
+		    (Xm.RightOffset, Xm.INT sep_size)]
+
+  (* top_widget/bottom_widget return a top/bottom attachment to the widget
+     in the specified class. *)
+  fun top_widget c =
+    let
+      fun aux w =
+        [(Xm.TopAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+         (Xm.TopWidget, Xm.WIDGET w)]
+    in
+      case c
+      of MENUBAR w => aux w
+      |  TEXT w => aux w
+      |  OTHER w => aux w
+      |  PANED w => aux w
+      |  SPACE => Crash.impossible "SPACE argument to top_widget"
+    end
+    
+  fun bottom_widget c =
+    let
+      fun aux w =
+        [(Xm.BottomAttachment, Xm.ATTACHMENT Xm.ATTACH_WIDGET),
+         (Xm.BottomWidget, Xm.WIDGET w)]
+    in
+      case c
+      of MENUBAR w => aux w
+      |  TEXT w => aux w
+      |  OTHER w => aux w
+      |  PANED w => aux w
+      |  SPACE => Crash.impossible "SPACE argument to bottom_widget"
+    end
+    
+  (* lay_out_one sets the constraints for an individual widget.  The left
+     and right constraints depend only on the type of the widget.  The top
+     and/or bottom constraints are passed as an argument. *)
+  fun lay_out_one (MENUBAR w, attach) =
+    Xm.Widget.valuesSet (w, attach @@ lr_form)
+  |   lay_out_one (SPACE, _) =
+    Crash.impossible "SPACE argument to lay_out_one"
+  |   lay_out_one (PANED w, attach) =
+    Xm.Widget.valuesSet
+      (* The offset 2 is to allow room for the 3D border in the parent *)
+      (w, attach @@ lr_form @@
+          [(Xm.LeftOffset, Xm.INT 2), (Xm.RightOffset, Xm.INT 2)])
+  |   lay_out_one (TEXT w, attach) =
+    Xm.Widget.valuesSet (w, attach @@ lr_form @@ lr_offsets)
+  |   lay_out_one (OTHER w, attach) =
+    Xm.Widget.valuesSet (w, attach @@ lr_form @@ lr_offsets)
+
+  (* lay_out_from_top is the basic lay_out function.  It traverses a 
+     (pre-processed) list of classes, calling lay_out_one with appropriate
+     top/bottom attachments for each class.  It returns a top_attachment
+     that can be used to tie a further widget to the last in the list. *)
+  fun lay_out_from_top ([], top_attach, _) =
+    top_attach
+  |   lay_out_from_top ([SPACE], top_attach, _) =
+    Crash.impossible "final SPACE argument to lay_out_from_top"
+  |   lay_out_from_top ([w], top_attach, bottom_attach) =
+    (lay_out_one (w, top_attach @@ bottom_attach);
+     top_widget w)
+  |   lay_out_from_top (SPACE :: rest, top_attach, bottom_attach) =
+    lay_out_from_top (rest, top_offset :: top_attach, bottom_attach)
+  |   lay_out_from_top (w :: rest, top_attach, bottom_attach) =
+    (lay_out_one (w, top_attach);
+     lay_out_from_top (rest, top_widget w, bottom_attach))
+
+  (* lay_out_from_bottom is equivalent to lay_out_from_top, but starts at
+     the bottom of the form instead of the top.  It expects its list argument
+     to be already reversed. *)
+  fun lay_out_from_bottom ([], bottom_attach, _) =
+    bottom_attach
+  |   lay_out_from_bottom ([SPACE], bottom_attach, _) =
+    Crash.impossible "SPACE argument to lay_out_from_bottom"
+  |   lay_out_from_bottom ([w], bottom_attach, top_attach) =
+    (lay_out_one (w, bottom_attach @@ top_attach);
+     bottom_widget w)
+  |   lay_out_from_bottom (SPACE :: rest, bottom_attach, top_attach) =
+    lay_out_from_bottom (rest, bottom_offset :: bottom_attach, top_attach)
+  |   lay_out_from_bottom (w :: rest, bottom_attach, top_attach) =
+    (lay_out_one (w, bottom_attach);
+     lay_out_from_bottom (rest, bottom_widget w, top_attach))
+
+  (* The trim_spaces function removes duplicate and trailing SPACE specifiers.
+     It returns the modified list and a boolean which is true iff there were
+     trailing SPACE specifiers. *)
+  fun trim_spaces [] = ([], false)
+  |   trim_spaces [SPACE] = ([], true)
+  |   trim_spaces (SPACE :: (rest as SPACE :: _)) = trim_spaces rest
+  |   trim_spaces (spec :: rest) =
+    let
+      val (rest', b) = trim_spaces rest
+    in
+      (spec :: rest', b)
+    end
+
+  (* lay_out_simple is used for any list that doesn't contain a text widget.
+     It calls lay_out_from_top to do most of the work. *)
+  fun lay_out_simple [] = ()
+  |   lay_out_simple l =
+    let
+      val (l', b) = trim_spaces l
+      val bottom_attach =
+	if b then bottom_offset :: bottom_form else bottom_form
+    in
+      lay_out_from_top (l', top_form, bottom_attach);
+      ()
+    end
+
+  (* lay_out_text is used for any list that includes a text widget.  It
+     divides the list into those widgets above the text widget and those
+     below, and processes these parts with lay_out_from_top and
+     lay_out_from_bottom respectively.  The text widget is then linked to
+     its immediately adjoining widgets.  This ensures correct resizing of
+     the text widget.  Unfortunately this process cannot be extended to
+     multiple text widgets in Motif. *)
+  fun lay_out_text (above, text, below) =
+    let
+      val (above', space_above) = trim_spaces above
+      val top_attach =
+	lay_out_from_top (above', top_form, bottom_none)
+      val top_attach' =
+	if space_above then top_offset :: top_attach else top_attach
+
+      val (below', space_below) = trim_spaces (rev below)
+      val bottom_attach =
+	lay_out_from_bottom (below', bottom_form, top_none)
+      val bottom_attach' =
+	if space_below then bottom_offset :: bottom_attach else bottom_attach
+    in
+      Xm.Widget.valuesSet
+        (text,
+	 top_attach' @@ bottom_attach' @@
+	 [(Xm.LeftAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.RightAttachment, Xm.ATTACHMENT Xm.ATTACH_FORM),
+          (Xm.LeftOffset, Xm.INT sep_size),
+          (Xm.RightOffset, Xm.INT sep_size)])
+    end
+
+  (* find_text splits a list into those elements before the first text 
+     widget and the rest. *)
+  local 
+    fun find_text' (acc, []) = (rev acc, [])
+    |   find_text' (acc, l as TEXT text :: _) = (rev acc, l)
+    |   find_text' (acc, c :: rest) = find_text' (c::acc, rest)
+  in
+    fun find_text l = find_text' ([], l)
+  end
+
+  (* lay_out is the user_visible layout function.  It tests for the
+     existence of a text widget and calls the appropriate function to
+     process the list. *)
+  fun lay_out [] = ()
+  |   lay_out l =
+    let
+      val (above, rest) = find_text l
+    in
+      case rest 
+      of [] => lay_out_simple above
+      |  (TEXT text::below) => (lay_out_text (above, text, below); ())
+      |  _ => Crash.impossible "non-text class returned from find_text"
+    end
+	
+end
+
+@

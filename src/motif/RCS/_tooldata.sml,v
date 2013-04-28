@@ -1,0 +1,948 @@
+head	1.15;
+access;
+symbols
+	ML_beta_release_12/08/94:1.10
+	ML_beta_release_03/08/94:1.10
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.15
+date	95.07.03.16.20.18;	author matthew;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	95.05.29.13.56.38;	author daveb;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	95.04.28.17.02.32;	author daveb;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.03.17.11.25.00;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.03.15.16.00.52;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	94.08.01.09.56.43;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	94.07.14.16.01.00;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	94.07.14.09.53.02;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	94.06.20.11.23.04;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.11.03.18.14.29;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.10.22.17.01.35;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.10.12.16.25.37;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.05.05.11.49.13;	author daveb;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	93.04.30.13.12.03;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.04.16.17.18.35;	author matthew;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	93.05.05.11.49.13;	author jont;	state Exp;
+branches;
+next	1.3.1.2;
+
+1.3.1.2
+date	93.10.12.15.25.37;	author matthew;	state Exp;
+branches;
+next	1.3.1.3;
+
+1.3.1.3
+date	93.10.21.14.07.38;	author daveb;	state Exp;
+branches;
+next	1.3.1.4;
+
+1.3.1.4
+date	93.11.03.17.52.11;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@Type definitions for windowing tools
+@
+
+
+1.15
+log
+@Capification
+@
+text
+@(* Types for passing to motif tools.
+ *  
+ *  Copyright (C) 1993 Harlequin Ltd.
+ *  
+ *  $Log: _tooldata.sml,v $
+ *  Revision 1.14  1995/05/29  13:56:38  daveb
+ *  Separated user_options into tool-specific and context-specific parts.
+ *
+ *  Revision 1.13  1995/04/28  17:02:32  daveb
+ *  Moved all the user_context stuff from ShellTypes into a separate file.
+ *
+ *  Revision 1.12  1995/03/17  11:25:00  daveb
+ *  Added a Writable parameter to add_context_fn.
+ *  
+ *  Revision 1.11  1995/03/15  16:00:52  daveb
+ *  Added current_context type, and associated functions.
+ *  
+ *  Revision 1.10  1994/08/01  09:56:43  daveb
+ *  Moved preferences into separate structure.
+ *  
+ *  Revision 1.9  1994/07/14  16:01:00  daveb
+ *  Changed second parameter of exit_mlworks to ApplicationData, and
+ *  extended that type with a flag set to true if the GUI is launched from
+ *  a TTY listener.
+ *  
+ *  Revision 1.8  1994/07/14  09:53:02  daveb
+ *  Modified works menu to show Exit or Close, not both.
+ *  
+ *  Revision 1.7  1994/06/20  11:23:04  daveb
+ *  Changed context refs to user_contexts.
+ *  
+ *  Revision 1.6  1993/11/03  18:14:29  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.5  1993/10/22  17:01:35  daveb
+ *  Merged in bug fix.
+ *  
+ *  Revision 1.4  1993/10/12  16:25:37  matthew
+ *  Merging bug fixes
+ *  
+ *  Revision 1.3.1.4  1993/11/03  17:52:11  daveb
+ *  Copied user_options when creating new tool.
+ *  
+ *  Revision 1.3.1.3  1993/10/21  14:07:38  daveb
+ *  Changed ToolData.works_menu to take a (unit -> bool) function that
+ *  controls whether the Close menu option is enabled.
+ *  
+ *  Revision 1.3.1.2  1993/10/12  15:25:37  matthew
+ *  Changed the Exit MLWorks function to use the quit on exit flag, rather than
+ *  directly calling MLWorks.exit.
+ *  
+ *  Revision 1.3.1.1  1993/05/05  11:49:13  jont
+ *  Fork for bug fixing
+ *  
+ *  Revision 1.3  1993/05/05  11:49:13  daveb
+ *  Moved exit_mlworks from _podium to _tooldata.  Added tools argument to
+ *  works_menu(), removed exitApplication from TOOLDATA.
+ *  
+ *  Revision 1.2  1993/04/30  13:12:03  daveb
+ *  Added function to create Works menu.
+ *  
+ *  Revision 1.1  1993/04/16  17:18:35  matthew
+ *  Initial revision
+ *  
+ *  
+ *)
+
+require "../interpreter/shell_types";
+require "../interpreter/user_context";
+require "../library/capi";
+require "../utils/newmap";
+require "../main/user_options";
+require "motif_utils";
+require "menus";
+
+require "tooldata";
+
+functor ToolData (
+  structure ShellTypes : SHELL_TYPES
+  structure UserContext : USER_CONTEXT
+  structure UserOptions : USER_OPTIONS
+  structure MotifUtils : MOTIF_UTILS
+  structure Map : NEWMAP
+  structure Capi : CAPI
+  structure Menus : MENUS
+
+  sharing UserContext.Options = ShellTypes.Options
+
+  sharing type UserContext.user_context = ShellTypes.user_context =
+	       MotifUtils.user_context
+  sharing type UserContext.Context = ShellTypes.Context
+  sharing type UserOptions.user_tool_options = ShellTypes.user_options =
+	       UserContext.user_tool_options
+  sharing type Map.T = UserContext.map
+) : TOOL_DATA =
+  struct
+    structure ShellTypes = ShellTypes
+    structure UserContext = UserContext
+
+    type Widget = Capi.Widget
+    type ButtonSpec = Menus.ButtonSpec
+    datatype Writable = WRITABLE | ALL
+    type MotifContext = MotifUtils.MotifContext
+
+    datatype current_context =
+      CURRENT of
+      {motif_context : MotifContext ref,
+       context_register:
+         ((int,
+           (MotifContext -> unit)
+	   * (unit -> UserOptions.user_tool_options)
+	   * Writable) Map.T
+          * int) ref}
+  
+    datatype ApplicationData =
+      APPLICATIONDATA of {applicationShell : Widget, has_controlling_tty: bool}
+
+    datatype ToolData =
+      TOOLDATA of
+	{args: ShellTypes.ListenerArgs,
+         appdata : ApplicationData,
+         current_context : current_context,
+	 motif_context : MotifContext,
+         tools : (string * (ToolData -> unit) * Writable) list}
+
+    fun add_context_fn
+          (CURRENT {context_register as ref (map, count), ...}, context_fn) =
+      (context_register := (Map.define (map, count, context_fn), count + 1);
+       count)
+  
+    fun remove_context_fn
+          (CURRENT {context_register as ref (map, count), ...}, key) =
+      context_register := (Map.undefine (map, key), count)
+  
+    fun set_current
+          (CURRENT {motif_context, context_register = ref (map, _), ...},
+           register_key,
+           UserOptions.USER_TOOL_OPTIONS ({set_context, ...}, _),
+           new_context) =
+      if !set_context then
+        let
+          fun do_context (key, (f, mk_user_options, writable)) =
+            if key <> register_key then
+	      if writable = WRITABLE
+		 andalso UserContext.is_const_context
+			   (MotifUtils.get_user_context (!motif_context)) then
+		()
+              else
+                let
+                  val UserOptions.USER_TOOL_OPTIONS ({sense_context, ...}, _) =
+                    mk_user_options ()
+                in
+                  if !sense_context then
+                    f new_context
+                  else
+                    ()
+                end
+            else
+              ()
+        in
+          motif_context := new_context;
+          Map.iterate do_context map
+        end
+      else
+        ();
+  
+    fun get_current (CURRENT {motif_context,  ...}) =
+      !motif_context
+
+    fun make_current motif_context =
+      CURRENT
+      {motif_context = ref motif_context,
+       context_register = ref (Map.empty' op<, 0)}
+  
+    fun exit_mlworks (parent, APPLICATIONDATA {applicationShell, has_controlling_tty}) =
+      Capi.exit_dialog (parent,applicationShell,has_controlling_tty)
+
+    fun copy_args
+          (ShellTypes.LISTENER_ARGS
+ 	     {user_context, user_options, user_preferences, prompter, mk_xinterface_fn}) =
+      ShellTypes.LISTENER_ARGS
+	{user_context = user_context,
+	 user_options = UserOptions.copy_user_tool_options user_options,
+	 user_preferences = user_preferences,
+	 prompter = prompter,
+	 mk_xinterface_fn = mk_xinterface_fn}
+
+    fun copy_tooldata
+	  (TOOLDATA {args, appdata, current_context, motif_context, tools}) =
+      TOOLDATA {args = copy_args args, appdata = appdata,
+		current_context = current_context,
+		motif_context = motif_context, tools = tools}
+
+    (* The result of the mk_tooldata argument is data to be passed to each
+       tool on creation.  It includes a list of tools to use in the menu
+       itself.  The mk_tooldata argument is not applied until an
+       entry is selected, so that it gets the latest shell state from a
+       listener. *)
+    fun works_menu (mk_tooldata, close_fn, close_enable, get_user_context) =
+      let 
+	val tooldata = mk_tooldata ()
+
+	val TOOLDATA {tools, ...} = tooldata
+
+	fun is_valid writable =
+	  let
+	    val user_context = get_user_context ()
+	  in
+	    not (UserContext.is_const_context user_context
+		 andalso writable = WRITABLE)
+	  end
+
+        val tools_buttons =
+          map
+            (fn (name,toolfun,writable) =>
+               Menus.PUSH (name,
+			   fn _ => toolfun (copy_tooldata (mk_tooldata ())),
+			   fn _ => is_valid writable))
+            tools
+      in
+	Menus.CASCADE
+	  ("works",
+           tools_buttons @@
+           [Menus.SEPARATOR,
+            Menus.PUSH ("close",
+			fn _ => close_fn (),
+			fn _ => close_enable ())],
+	   fn _ => true)
+      end
+  end
+@
+
+
+1.14
+log
+@Separated user_options into tool-specific and context-specific parts.
+@
+text
+@d6 3
+d70 1
+a70 1
+require "../library/xm";
+d84 1
+a84 1
+  structure Xm : XM
+d100 1
+a100 1
+    type Widget = Xm.Widget
+d175 2
+a176 44
+    (* This function should only be called for the special purpose of quitting *)
+    (* So I haven't put it in xm.sml *)
+    local 
+      fun env s = MLWorks.Internal.Value.cast (MLWorks.Internal.Runtime.environment s)
+    in
+      val quit_on_exit : unit -> unit = env "x quit on exit"
+    end
+
+    fun exit_mlworks
+	  (parent, APPLICATIONDATA {applicationShell, has_controlling_tty}) =
+        let
+          val shell =
+            Xm.Widget.createPopupShell (Xm.Widget.NAME "quitDialog",
+                                        Xm.Widget.Class.DialogShell,
+                                        parent, [])
+
+          (* To make life easy, we use a standard MessageBox widget and
+             change the labels and actions around.  *)
+          val message =
+            Xm.Widget.create
+              (Xm.Widget.NAME "message", Xm.Widget.Class.MessageBox, shell,
+               [(* This magic is actually done in the app-defaults file.
+		(Xm.OkLabelString, "End X Session"),
+                (Xm.CancelLabelString, "Exit MLWorks"),
+                (Xm.HelpLabelString, "Cancel"),
+                (Xm.MessageString, "Select an Action:")
+		*)
+               ])
+                
+          fun tty _ = Xm.Widget.destroy applicationShell
+          fun exit _ = (quit_on_exit(); Xm.Widget.destroy applicationShell);
+          fun cancel _ = Xm.Widget.destroy shell
+        in
+	  if not has_controlling_tty then
+	    Xm.Widget.unmanage
+	      (Xm.Widget.messageBoxGetChild
+		 (message, Xm.Widget.Child.OK_BUTTON))
+	  else 
+	    ();
+          Xm.Widget.callbackAdd (message, Xm.Callback.Ok, tty);
+          Xm.Widget.callbackAdd (message, Xm.Callback.Help, cancel);
+          Xm.Widget.callbackAdd (message, Xm.Callback.Cancel, exit);
+          Xm.Widget.manage message
+        end
+@
+
+
+1.13
+log
+@Moved all the user_context stuff from ShellTypes into a separate file.
+@
+text
+@d6 3
+d70 1
+d79 1
+d86 2
+a87 1
+  sharing type UserContext.user_context = ShellTypes.user_context
+d89 2
+a90 2
+  sharing type UserOptions.user_options = ShellTypes.user_options =
+	       UserContext.user_options
+d100 1
+d104 1
+a104 1
+      {user_context : ShellTypes.user_context ref,
+d107 2
+a108 2
+           (ShellTypes.user_context -> unit)
+	   * (unit -> UserOptions.user_options)
+d120 1
+d133 1
+a133 1
+          (CURRENT {user_context, context_register = ref (map, _), ...},
+d135 1
+a135 1
+           UserOptions.USER_OPTIONS ({set_context, ...}, _),
+d142 2
+a143 1
+		 andalso UserContext.is_const_context (!user_context) then
+d147 1
+a147 1
+                  val UserOptions.USER_OPTIONS ({sense_context, ...}, _) =
+d158 1
+a158 1
+          user_context := new_context;
+d164 2
+a165 2
+    fun get_current (CURRENT {user_context,  ...}) =
+      !user_context
+d167 1
+a167 1
+    fun make_current user_context =
+d169 1
+a169 1
+      {user_context = ref user_context,
+d219 1
+a219 1
+ 	     {user_context, user_options, prompter, mk_xinterface_fn}) =
+d222 2
+a223 1
+	 user_options = UserOptions.copy user_options,
+d227 2
+a228 1
+    fun copy_tooldata (TOOLDATA {args, appdata, current_context, tools}) =
+d230 2
+a231 1
+		current_context = current_context, tools = tools}
+@
+
+
+1.12
+log
+@Added a Writable parameter to add_context_fn.
+@
+text
+@d2 58
+a59 55
+
+Copyright (C) 1993 Harlequin Ltd.
+
+$Log: _tooldata.sml,v $
+Revision 1.11  1995/03/15  16:00:52  daveb
+Added current_context type, and associated functions.
+
+Revision 1.10  1994/08/01  09:56:43  daveb
+Moved preferences into separate structure.
+
+Revision 1.9  1994/07/14  16:01:00  daveb
+Changed second parameter of exit_mlworks to ApplicationData, and
+extended that type with a flag set to true if the GUI is launched from
+a TTY listener.
+
+Revision 1.8  1994/07/14  09:53:02  daveb
+Modified works menu to show Exit or Close, not both.
+
+Revision 1.7  1994/06/20  11:23:04  daveb
+Changed context refs to user_contexts.
+
+Revision 1.6  1993/11/03  18:14:29  daveb
+Merged in bug fix.
+
+Revision 1.5  1993/10/22  17:01:35  daveb
+Merged in bug fix.
+
+Revision 1.4  1993/10/12  16:25:37  matthew
+Merging bug fixes
+
+Revision 1.3.1.4  1993/11/03  17:52:11  daveb
+Copied user_options when creating new tool.
+
+Revision 1.3.1.3  1993/10/21  14:07:38  daveb
+Changed ToolData.works_menu to take a (unit -> bool) function that
+controls whether the Close menu option is enabled.
+
+Revision 1.3.1.2  1993/10/12  15:25:37  matthew
+Changed the Exit MLWorks function to use the quit on exit flag, rather than directly
+called MLWorks.exit.
+
+Revision 1.3.1.1  1993/05/05  11:49:13  jont
+Fork for bug fixing
+
+Revision 1.3  1993/05/05  11:49:13  daveb
+Moved exit_mlworks from _podium to _tooldata.  Added tools argument to
+works_menu(), removed exitApplication from TOOLDATA.
+
+Revision 1.2  1993/04/30  13:12:03  daveb
+Added function to create Works menu.
+
+Revision 1.1  1993/04/16  17:18:35  matthew
+Initial revision
+
+
+d63 1
+d73 1
+a75 2
+    sharing type UserOptions.user_options = ShellTypes.user_options
+    sharing type Map.T = ShellTypes.map
+d78 8
+d89 1
+d134 1
+a134 1
+		 andalso ShellTypes.is_const_context (!user_context) then
+d236 1
+a236 1
+	    not (ShellTypes.is_const_context user_context
+@
+
+
+1.11
+log
+@Added current_context type, and associated functions.
+@
+text
+@d6 3
+d81 1
+d89 2
+a90 1
+	   * (unit -> UserOptions.user_options)) Map.T
+d96 6
+a101 4
+    datatype ToolData = TOOLDATA of {args: ShellTypes.ListenerArgs,
+                                     appdata : ApplicationData,
+				     current_context : current_context,
+                                     tools : (string * (ToolData -> unit)) list}
+d119 1
+a119 1
+          fun do_context (key, (f, mk_user_options)) =
+d121 13
+a133 9
+              let
+                val UserOptions.USER_OPTIONS ({sense_context, ...}, _) =
+                  mk_user_options ()
+              in
+                 if !sense_context then
+                   f new_context
+                 else
+                   ()
+              end
+d214 1
+a214 1
+    fun works_menu (mk_tooldata, close_fn, close_enable) =
+d216 3
+a218 1
+	 val tooldata = mk_tooldata ()
+d220 7
+a226 1
+	 val TOOLDATA {tools, ...} = tooldata
+d230 1
+a230 1
+            (fn (name,toolfun) =>
+d233 1
+a233 1
+			   fn _ => true))
+@
+
+
+1.10
+log
+@Moved preferences into separate structure.
+@
+text
+@d6 3
+d58 1
+d67 1
+d69 1
+d79 9
+d93 1
+d96 44
+d194 3
+a196 2
+    fun copy_tooldata (TOOLDATA {args, appdata, tools}) =
+      TOOLDATA {args = copy_args args, appdata = appdata, tools = tools}
+@
+
+
+1.9
+log
+@Changed second parameter of exit_mlworks to ApplicationData, and
+extended that type with a flag set to true if the GUI is launched from
+a TTY listener.
+@
+text
+@d6 5
+d130 1
+a130 3
+	 user_options =
+	   UserOptions.make_user_options
+	     (UserOptions.new_options user_options),
+@
+
+
+1.8
+log
+@Modified works menu to show Exit or Close, not both.
+@
+text
+@d6 3
+d69 1
+a69 1
+      APPLICATIONDATA of {applicationShell : Widget}
+d83 2
+a84 1
+    fun exit_mlworks (parent, applicationShell) =
+d108 6
+@
+
+
+1.7
+log
+@Changed context refs to user_contexts.
+@
+text
+@d6 3
+d124 3
+a126 7
+    (* works_menu takes a list of tools to include in the menu.  This can't
+       be defined here because the tools themselves use this file.
+       The result of the mk_tooldata argument is data to be passed to each
+       tool on creation.  This includes a list of tools for the new tool
+       to use in its "Works" menu.  In practice this list of tools will be
+       the same as the tools argument itself, but conceptually they could
+       be different.  The mk_tooldata argument is not applied until an
+d129 1
+a129 1
+    fun works_menu (shell, tools, mk_tooldata, close_enable) =
+d133 1
+a133 3
+	 val TOOLDATA {appdata = APPLICATIONDATA {applicationShell, ...},
+		       tools, ...} =
+	   tooldata
+a144 8
+           [Menus.PUSH ("close",
+			fn _ => Xm.Widget.destroy shell,
+			(* _podium passes (fn () => false) as the close_enable
+			   parameter, but it's worth checking that we don't
+			   kill the application shell here anyway. *)
+	   		fn _ => shell <> applicationShell andalso
+				close_enable ()),
+	    Menus.SEPARATOR] @@
+d147 3
+a149 3
+            Menus.PUSH ("exit",
+			fn _ => exit_mlworks (shell, applicationShell),
+			fn _ => true)],
+@
+
+
+1.6
+log
+@Merged in bug fix.
+@
+text
+@d6 3
+d109 1
+a109 1
+ 	     {context_ref, user_options, prompter, mk_xinterface_fn}) =
+d111 1
+a111 1
+	{context_ref = context_ref,
+@
+
+
+1.5
+log
+@Merged in bug fix.
+@
+text
+@d2 7
+a8 4
+ *
+ * Copyright (C) 1993 Harlequin Ltd.
+ *
+ * $Log: _tooldata.sml,v $
+d12 3
+d28 4
+a31 1
+ works_menu(), removed exitApplication from TOOLDATA.
+d33 4
+a36 7
+ *  Revision 1.2  1993/04/30  13:12:03  daveb
+ *  Added function to create Works menu.
+ *  
+ *  Revision 1.1  1993/04/16  17:18:35  matthew
+ *  Initial revision
+ *  
+ *
+d41 1
+d48 2
+d104 14
+d138 2
+a139 1
+               Menus.PUSH (name, fn _ => toolfun (mk_tooldata ()),
+@
+
+
+1.4
+log
+@Merging bug fixes
+@
+text
+@d6 7
+d104 1
+a104 1
+    fun works_menu (shell, tools, mk_tooldata) =
+d123 5
+a127 1
+	   		fn _ => shell <> applicationShell),
+@
+
+
+1.3
+log
+@Moved exit_mlworks from _podium to _tooldata.  Added tools argument to
+ works_menu(), removed exitApplication from TOOLDATA.
+@
+text
+@d6 11
+d50 8
+d79 1
+a79 1
+          fun exit _ = MLWorks.exit 0;
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a5 4
+Revision 1.3  1993/05/05  11:49:13  daveb
+Moved exit_mlworks from _podium to _tooldata.  Added tools argument to
+ works_menu(), removed exitApplication from TOOLDATA.
+
+@
+
+
+1.3.1.2
+log
+@Changed the Exit MLWorks function to use the quit on exit flag, rather than directly
+called MLWorks.exit.
+@
+text
+@a5 3
+Revision 1.3.1.1  1993/05/05  11:49:13  jont
+Fork for bug fixing
+
+a42 8
+    (* This function should only be called for the special purpose of quitting *)
+    (* So I haven't put it in xm.sml *)
+    local 
+      fun env s = MLWorks.Internal.Value.cast (MLWorks.Internal.Runtime.environment s)
+    in
+      val quit_on_exit : unit -> unit = env "x quit on exit"
+    end
+
+d64 1
+a64 1
+          fun exit _ = (quit_on_exit(); Xm.Widget.destroy applicationShell);
+@
+
+
+1.3.1.3
+log
+@Changed ToolData.works_menu to take a (unit -> bool) function that
+controls whether the Close menu option is enabled.
+@
+text
+@a5 4
+Revision 1.3.1.2  1993/10/12  15:25:37  matthew
+Changed the Exit MLWorks function to use the quit on exit flag, rather than directly
+called MLWorks.exit.
+
+d93 1
+a93 1
+    fun works_menu (shell, tools, mk_tooldata, close_enable) =
+d112 1
+a112 5
+			(* _podium passes (fn () => false) as the close_enable
+			   parameter, but it's worth checking that we don't
+			   kill the application shell here anyway. *)
+	   		fn _ => shell <> applicationShell andalso
+				close_enable ()),
+@
+
+
+1.3.1.4
+log
+@Copied user_options when creating new tool.
+@
+text
+@d2 4
+a5 8
+
+ Copyright (C) 1993 Harlequin Ltd.
+
+$Log: _tooldata.sml,v $
+Revision 1.3.1.3  1993/10/21  14:07:38  daveb
+Changed ToolData.works_menu to take a (unit -> bool) function that
+controls whether the Close menu option is enabled.
+
+d15 1
+a15 4
+works_menu(), removed exitApplication from TOOLDATA.
+
+Revision 1.2  1993/04/30  13:12:03  daveb
+Added function to create Works menu.
+d17 7
+a23 4
+Revision 1.1  1993/04/16  17:18:35  matthew
+Initial revision
+
+
+a27 1
+require "../main/user_options";
+a33 2
+  structure UserOptions : USER_OPTIONS
+    sharing type UserOptions.user_options = ShellTypes.user_options
+a87 14
+    fun copy_args
+          (ShellTypes.LISTENER_ARGS
+ 	     {context_ref, user_options, prompter, mk_xinterface_fn}) =
+      ShellTypes.LISTENER_ARGS
+	{context_ref = context_ref,
+	 user_options =
+	   UserOptions.make_user_options
+	     (UserOptions.new_options user_options),
+	 prompter = prompter,
+	 mk_xinterface_fn = mk_xinterface_fn}
+
+    fun copy_tooldata (TOOLDATA {args, appdata, tools}) =
+      TOOLDATA {args = copy_args args, appdata = appdata, tools = tools}
+
+d108 1
+a108 2
+               Menus.PUSH (name,
+			   fn _ => toolfun (copy_tooldata (mk_tooldata ())),
+@
+
+
+1.2
+log
+@Added function to create Works menu.
+@
+text
+@d6 6
+a11 3
+Revision 1.1  1993/04/16  17:18:35  matthew
+Initial revision
+
+d33 1
+a33 2
+      APPLICATIONDATA of {exitApplication : unit -> unit,
+                          applicationShell : Widget}
+d39 40
+a78 1
+    fun works_menu (shell, mk_tooldata) =
+d80 1
+a80 1
+	val tooldata = mk_tooldata ()
+d82 3
+a84 4
+	val TOOLDATA {appdata = APPLICATIONDATA {exitApplication,
+						 applicationShell, ...},
+		      tools, ...} =
+	  tooldata
+d89 2
+a90 1
+               Menus.PUSH (name, fn _ => toolfun tooldata, fn _ => true))
+d101 3
+a103 1
+            Menus.PUSH ("exit", fn _ => exitApplication(), fn _ => true)],
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 4
+a8 1
+ * $Log: tooldata.sml,v $
+d14 1
+d18 5
+a22 3
+functor ToolData (structure ShellTypes : SHELL_TYPES
+                  structure Xm : XM
+                    ) : TOOL_DATA =
+d25 1
+d27 6
+a32 2
+    datatype ApplicationData = APPLICATIONDATA of {exitApplication : unit -> unit,
+                                                   applicationShell : Widget}
+d36 27
+@

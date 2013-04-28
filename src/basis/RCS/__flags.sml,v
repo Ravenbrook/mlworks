@@ -1,0 +1,66 @@
+head	1.1;
+access;
+symbols
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.04.07.14.09.36;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@(* the flags structure *)
+(*
+ * Copyright (c) 1998 Harlequin Group plc
+ *
+ * See signature for details
+ *
+ * $Log$
+ *
+ *)
+
+require "__sys_word";
+require "flags";
+
+structure Flags : FLAGS =
+  struct
+    type flags = SysWord.word;
+    val toWord = fn x => x
+    val fromWord = fn x => x
+    fun flags(acc, []) = acc
+      | flags(acc, x :: xs) = flags(SysWord.orb(acc, x), xs)
+    val flags = fn x => flags(0w0, x)
+    fun allSet(total_flags, test_flags) =
+      let
+	val combined = SysWord.orb(total_flags, test_flags)
+      in
+	combined = total_flags
+      end
+
+    fun anySet(total_flags, test_flags) =
+      let
+	val intersected = SysWord.andb(total_flags, test_flags)
+      in
+	intersected <> 0w0
+      end
+  end
+@

@@ -1,0 +1,538 @@
+head	1.20;
+access;
+symbols
+	Final_version_of_old_runtime:1.20
+	ML_revised_beta_release_25/05/94:1.20
+	ML_final_beta_release_02/03/94:1.18
+	mlworks-28-01-1994:1.18
+	Release:1.17
+	mlworks-beta-01-09-1993:1.17
+	MLWorks-1-0-3-21/12/1992:1.7
+	MLWorks-1-0-2-15/12/1992:1.7
+	MLWorks-1-0-1-04/12/1992:1.7
+	checkpoint_17_08_92:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.20
+date	94.05.13.18.09.01;	author daveb;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	94.04.08.15.26.34;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.11.30.15.49.44;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	93.08.26.15.40.46;	author daveb;	state Exp;
+branches
+	1.17.1.1;
+next	1.16;
+
+1.16
+date	93.06.14.18.53.30;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.05.27.15.07.15;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.05.13.13.21.01;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.03.24.12.17.20;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.03.18.11.40.18;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.02.03.16.00.12;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.01.15.10.23.46;	author daveb;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.01.15.10.07.52;	author daveb;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.01.04.16.05.36;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.05.12.15.17.57;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	91.10.17.16.52.26;	author davidt;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.10.16.14.40.33;	author davidt;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.10.16.12.55.39;	author davidt;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.15.16.46.16;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.05.15.15.29.09;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.05.14.11.06.20;	author jont;	state Exp;
+branches;
+next	;
+
+1.17.1.1
+date	93.08.26.15.40.46;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@The load time opcodes (byte code)
+@
+
+
+1.20
+log
+@Increased version number because encoded of overloaded types has changed.
+@
+text
+@/*
+ * objectfile.h
+ * The ML object file format.
+ * $Log: objectfile.h,v $
+ * Revision 1.19  1994/04/08  15:26:34  jont
+ * Increase version number because
+ * Adding original require file names to consistency info.
+ *
+ * Revision 1.18  1993/11/30  15:49:44  matthew
+ * New Version number because of change to TYNAME and METATYNAME
+ *
+ * Revision 1.17  1993/08/26  15:40:46  daveb
+ * Added HEADER_SIZE.
+ *
+ * Revision 1.16  1993/06/14  18:53:30  daveb
+ * New object file format.
+ *
+ * Revision 1.15  1993/05/27  15:07:15  jont
+ * New version cos encapsulator has changed
+ *
+ * Revision 1.14  1993/05/13  13:21:01  richard
+ * Changed the encapsulation format of code vectors, and so the
+ * object file version is now 6.
+ *
+ * Revision 1.13  1993/03/24  12:17:20  richard
+ * Corrected #define symbols to upper case.
+ *
+ * Revision 1.12  1993/03/18  11:40:18  jont
+ * New version to account for code changes for leaf and intercept offset
+ *
+ * Revision 1.11  1993/02/03  16:00:12  jont
+ * Changes for code vector reform
+ *
+ * Revision 1.10  1993/01/15  10:23:46  daveb
+ * Changed version to object_file_version, because this identifier is
+ * macro-expanded by the C pre-processor, and "version" had false matches.
+ *
+ * Revision 1.9  1993/01/15  10:07:52  daveb
+ * Changed runtime_version to version (since it's the version of the
+ * object file format, not of the runtime system).
+ *
+ * Revision 1.8  1993/01/04  16:05:36  daveb
+ * Added a version number for the object file format.
+ *
+ * Revision 1.7  1992/05/12  15:17:57  jont
+ * Changed to use a magic number we can safely represent
+ *
+ * Revision 1.6  1991/10/17  16:52:26  davidt
+ * Put the magic numbers in here so that one awk script can collect
+ * the magic numbers as well as the opcode numbers.
+ *
+ * Revision 1.5  91/10/16  14:40:33  davidt
+ * Changed enum datatype to a set of #defines to make automatic generation
+ * of the sml file from this file easier.
+ * 
+ * Revision 1.4  91/10/16  12:55:39  davidt
+ * Took out lots of the redundant opcodes now that the object file format
+ * has been redesigned.
+ * 
+ * Revision 1.3  91/10/15  16:46:16  davidt
+ * Put in opcode_wordset and took out old (commented out) version
+ * of opcode types.
+ * 
+ * Revision 1.2  91/05/15  15:29:09  jont
+ * New set of opcodes for revision of load format
+ * 
+ * Revision 1.1  91/05/14  11:06:20  jont
+ * Initial revision
+ * 
+ */
+
+/* Avoid multiple inclusion */
+#ifndef codes_h
+#define codes_h
+
+/*
+ * GOOD_MAGIC (0x1ADE6818) is an ML object file of the same endianness.
+ * NOT_SO_GOOD_MAGIC (0x1868DE1A) is an ML object file of the wrong endianness.
+ */
+
+#define OLD_GOOD_MAGIC		987654321
+#define GOOD_MAGIC		450783256
+#define NOT_SO_GOOD_MAGIC	409525786
+
+#define HEADER_SIZE	44
+/*
+ * The current version number.  Changed whenever the format of the object
+ * files or of the generated code is changed.  This number is tested
+ * when loading an object file (loader.c, encapsulate.sml) and when loading
+ * a wordset in the interpreter (interload.sml).
+ */
+
+#define OBJECT_FILE_VERSION 11
+
+/*
+ * The opcodes used in the object file.
+ */
+
+#define OPCODE_CODESET	0
+#define OPCODE_REAL	1
+#define OPCODE_STRING	2
+#define OPCODE_EXTERNAL	3
+
+#endif
+@
+
+
+1.19
+log
+@Increase version number because
+Adding original require file names to consistency info.
+@
+text
+@d5 4
+d93 1
+a93 1
+#define OBJECT_FILE_VERSION 10
+@
+
+
+1.18
+log
+@New Version number because of change to TYNAME and METATYNAME
+@
+text
+@d5 3
+d89 1
+a89 1
+#define OBJECT_FILE_VERSION 9
+@
+
+
+1.17
+log
+@Added HEADER_SIZE.
+@
+text
+@d5 3
+d86 1
+a86 1
+#define OBJECT_FILE_VERSION 8
+@
+
+
+1.17.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+ * Revision 1.17  1993/08/26  15:40:46  daveb
+ * Added HEADER_SIZE.
+ *
+@
+
+
+1.16
+log
+@New object file format.
+@
+text
+@d5 3
+d75 1
+@
+
+
+1.15
+log
+@New version cos encapsulator has changed
+@
+text
+@d5 3
+d79 1
+a79 1
+#define OBJECT_FILE_VERSION 7
+@
+
+
+1.14
+log
+@Changed the encapsulation format of code vectors, and so the
+object file version is now 6.
+@
+text
+@d5 4
+d76 1
+a76 1
+#define OBJECT_FILE_VERSION 6
+@
+
+
+1.13
+log
+@Corrected #define symbols to upper case.
+@
+text
+@d5 3
+d72 1
+a72 1
+#define OBJECT_FILE_VERSION 5
+@
+
+
+1.12
+log
+@New version to account for code changes for leaf and intercept offset
+@
+text
+@d5 3
+d69 1
+a69 1
+#define object_file_version 5
+d75 4
+a78 4
+#define opcode_codeset	0
+#define opcode_real	1
+#define opcode_string	2
+#define opcode_external	3
+@
+
+
+1.11
+log
+@Changes for code vector reform
+@
+text
+@d5 3
+d66 1
+a66 1
+#define object_file_version 4
+@
+
+
+1.10
+log
+@Changed version to object_file_version, because this identifier is
+macro-expanded by the C pre-processor, and "version" had false matches.
+@
+text
+@d5 4
+d63 1
+a63 1
+#define object_file_version 3
+@
+
+
+1.9
+log
+@Changed runtime_version to version (since it's the version of the
+object file format, not of the runtime system).
+@
+text
+@d5 4
+d59 1
+a59 1
+#define version 3
+@
+
+
+1.8
+log
+@Added a version number for the object file format.
+@
+text
+@d5 3
+d55 1
+a55 1
+#define runtime_version 3
+@
+
+
+1.7
+log
+@Changed to use a magic number we can safely represent
+@
+text
+@d5 3
+d44 9
+@
+
+
+1.6
+log
+@Put the magic numbers in here so that one awk script can collect
+the magic numbers as well as the opcode numbers.
+@
+text
+@d4 5
+a8 1
+ * $Log:	objectfile.h,v $
+d34 2
+a35 2
+ * GOOD_MAGIC (0x3ADE68B1) is an ML object file of the same endianness.
+ * NOT_SO_GOOD_MAGIC (0x68B13ADE) is an ML object file of the wrong endianness.
+d38 3
+a40 2
+#define GOOD_MAGIC		987654321
+#define NOT_SO_GOOD_MAGIC	1756445406
+@
+
+
+1.5
+log
+@Changed enum datatype to a set of #defines to make automatic generation
+of the sml file from this file easier.
+@
+text
+@d2 7
+a8 3
+ * opcodes.h
+ * The run time opcodes
+ * $Log:	opcodes.h,v $
+d28 12
+@
+
+
+1.4
+log
+@Took out lots of the redundant opcodes now that the object file format
+has been redesigned.
+@
+text
+@d2 1
+a2 1
+ * codes.h
+d4 5
+a8 1
+ * $Log:	codes.h,v $
+d25 4
+a28 6
+typedef enum {
+  opcode_wordset,
+  opcode_real,
+  opcode_string,
+  opcode_external
+} opcodes;
+@
+
+
+1.3
+log
+@Put in opcode_wordset and took out old (commented out) version
+of opcode types.
+@
+text
+@d5 4
+d17 2
+a18 1
+#ifndef codes_h /* Avoid multiple inclusion */
+d22 1
+a22 4
+  opcode_word_seqn,
+  opcode_record,
+  opcode_fun_call,
+  opcode_int,
+d25 1
+a25 3
+  opcode_loc_ref,
+  opcode_ext_ref,
+  opcode_wordset
+a28 1
+/* End codes.h */
+@
+
+
+1.2
+log
+@New set of opcodes for revision of load format
+@
+text
+@d5 3
+d24 2
+a25 1
+  opcode_ext_ref
+a26 15
+
+#if 0 /* Old revision 1.1 */
+typedef enum {
+  opcode_start_struct,
+  opcode_end_struct,  /* Theoretically not needed */
+  opcode_start_comp,
+  opcode_end_comp,    /* Theoretically not needed */
+  opcode_int,
+  opcode_real,
+  opcode_string,
+  opcode_fun_def,
+  opcode_fun_appl,
+  opcode_word_seqn
+} opcodes;
+#endif
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d14 12
+d37 1
+@

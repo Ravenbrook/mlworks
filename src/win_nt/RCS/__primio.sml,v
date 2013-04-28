@@ -1,0 +1,1219 @@
+head	1.13;
+access;
+symbols
+	MLWorks_Beta_1996_07_02:1.10
+	MLWorks_Beta_1996_06_07:1.10
+	MLWorks_Beta_1996_06_06:1.10
+	MLWorks_Beta_1996_06_05:1.10
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.8;
+locks; strict;
+comment	@ *  @;
+
+
+1.13
+date	96.07.16.13.48.14;	author andreww;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	96.07.04.18.05.10;	author andreww;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	96.07.03.12.19.48;	author andreww;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.05.30.14.02.31;	author andreww;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.30.12.45.33;	author andreww;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.24.11.54.09;	author andreww;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.05.20.16.55.32;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.15.14.08.50;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.07.08.58.39;	author stephenb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.01.15.23.05;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.04.18.15.25.46;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.03.13.18.43.24;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.03.05.16.03.29;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Support for revised initial basis
+@
+
+
+1.13
+log
+@simplifying standard in, out and err.
+@
+text
+@(*  ==== INITIAL BASIS : OS_PRIM_IO for Win32 ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __primio.sml,v $
+ *  Revision 1.12  1996/07/04  18:05:10  andreww
+ *  Altering interface with win32 runtime environment
+ *
+ *  Revision 1.11  1996/07/03  12:19:48  andreww
+ *  redirecting standard input/output to Window listeners.
+ *
+ *  Revision 1.10  1996/05/30  14:02:31  andreww
+ *  Removing TextPrimIO and BinPrimIO structures.
+ *
+ *  Revision 1.9  1996/05/30  12:45:33  andreww
+ *  adding bin to text converters.
+ *
+ *  Revision 1.8  1996/05/24  11:54:09  andreww
+ *  extracting TextPrimIO and BinPrimIO structures
+ *
+ *  Revision 1.7  1996/05/20  16:55:32  jont
+ *  Changes for new signatures
+ *
+ *  Revision 1.6  1996/05/15  14:08:50  jont
+ *  __fileposint moved to __position
+ *
+ *  Revision 1.5  1996/05/07  08:58:39  stephenb
+ *  Make stdErr write to stderr rather than stdout.
+ *
+ *  Revision 1.4  1996/05/01  15:23:05  matthew
+ *  Fixing sharing problem
+ *
+ *  Revision 1.3  1996/04/18  15:25:46  jont
+ *  initbasis moves to basis
+ *
+ *  Revision 1.2  1996/03/13  18:43:24  jont
+ *  Reinstate signature constraint commented out during debugging
+ *
+ *  Revision 1.1  1996/03/05  16:03:29  jont
+ *  new unit
+ *  Support for revised initial basis
+ *
+ *
+ *)
+
+require "^.basis.__word8";
+require "^.basis.__word8array";
+require "^.basis.__word8vector";
+require "^.basis.__char";
+require "^.basis.__chararray";
+require "^.basis.__charvector";
+require "^.basis.osprimio";
+require "^.basis.__text_prim_io";
+require "^.basis.__bin_prim_io";
+require "^.basis.toplevel";
+require "^.basis.__position";
+require "__win32os";
+require "__win32";
+
+structure OSPrimIO : OS_PRIM_IO =
+struct
+
+  type bin_reader = BinPrimIO.reader
+  type bin_writer = BinPrimIO.writer
+  type text_reader = TextPrimIO.reader
+  type text_writer = TextPrimIO.writer 
+  type file_desc = int (* A Win32 Handle *)
+
+
+  (*                                            *)
+  (* Readers and Writers for Win N/T filesystem *)
+  (*                                            *)
+
+
+
+  fun mkWin32Reader
+       {fd: file_desc, name: string, initialPos: BinPrimIO.pos, 
+        checkSize : bool} =
+    let
+      val pos = ref initialPos
+
+      val stringsize = size
+
+(*
+      val {size, blksize, ...} = Win32OS_.stat fd (* Extent and blocksize *)
+*)
+      val blksize = 1024 (* Temporary *)
+      val size = if checkSize then Win32OS_.size fd else 1
+    in
+      BinPrimIO.augmentReader
+        (BinPrimIO.RD
+	   {readVec =
+	      SOME (fn i =>
+	              (let val result = Win32OS_.read (fd, i)
+		       in
+		         pos := !pos + Word8Vector.length result;
+			 result
+		       end)),
+            readVecNB = NONE,
+(* Can Win32 do non-blocking read?
+	      SOME (fn i =>
+	              (let val result =
+			     Win32OS_.read (fd, i)
+		       in
+		         pos := !pos + stringsize result;
+			 SOME result
+		       end)
+	               handle
+	                 Win32OS_.WouldBlock => NONE),
+*)
+
+            readArr = NONE,
+            readArrNB = NONE,
+            block = NONE,
+            canInput = NONE,
+            name = name,
+            chunkSize =  blksize,
+            close = fn () => Win32OS_.close fd,
+            getPos = fn () => !pos,
+            setPos = fn newPos =>
+		       (Win32OS_.seek (fd, newPos,Win32OS_.FILE_BEGIN);
+		        pos := newPos),
+            endPos = fn () => size,
+	    ioDesc = NONE})
+    end
+
+
+
+  fun openRd filename =
+    mkWin32Reader
+      {fd = Win32OS_.open_ (filename, 
+                            Win32OS_.GENERIC_READ, 
+                            Win32OS_.OPEN_ALWAYS),
+       name = filename,
+       initialPos = (* Position.fromDefault *) 0, checkSize = true}
+
+
+
+  fun mkWin32Writer
+       {fd: file_desc, name: string, blocksize: int, size: int,
+        initialPos: BinPrimIO.pos} =
+    let
+      val pos = ref initialPos
+
+    in
+      BinPrimIO.augmentWriter
+        (BinPrimIO.WR
+           {writeVec =
+	      SOME (fn {buf, i, sz} => 
+	              (let
+			 val nelems = case sz of
+			   SOME i => i
+			 | NONE => Word8Vector.length buf - i
+			 val result = Win32OS_.write (fd, buf, i, nelems)
+		       in
+		         pos := result;
+			 result
+		       end)),
+            writeVecNB = NONE,
+(* Can Win32 do non-blocking write?
+	      SOME (fn {data, first, nelems} => 
+	              (let
+			 val result = Win32OS_.write (fd, data, first, nelems)
+		       in
+		         pos := result;
+			 SOME result
+		       end)
+	               handle
+	                 Win32OS_.WouldBlock => NONE),
+*)
+            writeArrNB = NONE,
+            writeArr = NONE,
+            block = NONE,
+            canOutput = NONE,
+            name = name,
+            chunkSize = blocksize,
+            close = fn () => Win32OS_.close fd,
+            getPos = fn () => !pos,
+            setPos = fn newPos =>
+            (Win32OS_.seek (fd, newPos,Win32OS_.FILE_BEGIN);
+		        pos := newPos),
+            endPos = fn () => size,
+	    ioDesc = NONE})
+    end
+   
+  fun openWr filename =
+    let 
+      val fd = Win32OS_.open_ (filename, Win32OS_.GENERIC_WRITE,
+                               Win32OS_.OPEN_ALWAYS)
+(*
+      val {size, blksize, ...} = Win32OS_.stat fd
+*)
+      val blksize = 1024 (* Temporary *)
+      val size = Win32OS_.size fd
+    in
+      mkWin32Writer
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* Position.fromDefault *) 0}
+    end
+
+  fun openApp filename =
+    let 
+      val fd = Win32OS_.open_ (filename, Win32OS_.GENERIC_READ_WRITE,
+                               Win32OS_.OPEN_ALWAYS)   (*1. open*)
+      val _ = Win32OS_.seek(fd,0,Win32OS_.FILE_END)    (*2. move to end*)
+(*
+      val {size, blksize, ...} = Win32OS_.stat fd
+*)
+     val blksize = 1024 (* Temporary *)
+      val size = Win32OS_.size fd
+    in
+      mkWin32Writer
+        {fd = fd,
+         name = filename,
+	 blocksize = blksize,
+	 size = size,
+         initialPos = (* Position.fromDefault *) size}
+    end
+
+
+
+
+
+   (*                                                    *)
+   (* Standard Input, Standard Output and Standard Error *)
+   (*                                                    *)
+
+   (* note that the functions for getPos and setPos have cases where
+    * they handle the MLWorks.Internal.SysErr exception.  This is
+    * needed when an illegal seek occurs ... for example, when standard
+    * in has been redirected from a pipe --- as is the case when
+    * guib is being loaded.  I just ignore it. *)
+
+  local
+    open MLWorks.Internal.StandardIO
+  in
+    val stdIn =  BinPrimIO.augmentReader
+      (BinPrimIO.RD
+       {readVec = SOME (fn i => #get(#input(currentIO())) i),
+        readVecNB =NONE,
+        readArr = NONE,
+        readArrNB = NONE,
+        block = NONE,
+        canInput = SOME(fn ()=>valOf(#can_input(#input(currentIO()))) ()
+                       handle Option => raise Fail "RandomAccessNotSupported"),
+        name = "<stdIn>",
+        chunkSize =  1,                        (* arbitrary! *)
+        close = fn () => #close(#input(currentIO()))(),
+        getPos = fn ()=> valOf(#get_pos(#input(currentIO())))()
+                      handle Option => raise Fail "RandomAccessNotSupported"
+                           | MLWorks.Internal.SysErr _ => 0,
+        setPos = fn newPos => valOf(#set_pos(#input(currentIO()))) newPos
+                      handle Option => raise Fail "RandomAccessNotSupported"
+                           | MLWorks.Internal.SysErr _ => (),
+        endPos = fn()=> raise Fail "RandomAccessNotSupported",
+        ioDesc = NONE}) (* this value cannot be redirected dynamically*)
+      
+    val stdOut =
+      BinPrimIO.augmentWriter
+      (BinPrimIO.WR
+       {writeVec = SOME (fn s => #put(#output(currentIO())) s),
+       writeVecNB = NONE,
+       writeArrNB = NONE,
+       writeArr = NONE,
+       block = NONE,
+       canOutput = SOME(fn () => valOf(#can_output(#output(currentIO())))()
+                        handle Option => true),
+       name = "<stdOut>",
+       chunkSize = 1,               (* arbitrary! *)
+       close = fn() => #close(#output(currentIO()))(),
+       getPos = fn ()=> valOf(#get_pos(#output(currentIO())))()
+                 handle Option => raise Fail "RandomAccessNotSupported"
+                      | MLWorks.Internal.SysErr _ => 0,
+       setPos = fn newPos => valOf(#set_pos(#output(currentIO()))) newPos
+                     handle Option => raise Fail "RandomAccessNotSupported"
+                          | MLWorks.Internal.SysErr _ => (),
+       endPos = fn () => ~1,
+       ioDesc=NONE})   
+      
+    val stdErr =
+      BinPrimIO.augmentWriter
+      (BinPrimIO.WR
+       {writeVec = SOME (fn s => #put(#error(currentIO())) s),
+       writeVecNB = NONE,
+       writeArrNB = NONE,
+       writeArr = NONE,
+       block = NONE,
+       canOutput = SOME(fn ()=> valOf(#can_output(#error(currentIO())))()
+                       handle Option => raise Fail "RandomAccessNotSupported"),
+       name = "<stdOut>",
+       chunkSize = 1,               (* arbitrary! *)
+       close = fn () => #close(#error(currentIO()))(),
+       getPos = fn () => valOf(#get_pos(#error(currentIO()))) ()
+                       handle Option => raise Fail "RandomAccessNotSupported"
+                            | MLWorks.Internal.SysErr _ => 0,
+       setPos = fn newPos => valOf(#set_pos(#error(currentIO()))) newPos
+                       handle Option => raise Fail "RandomAccessNotSupported"
+                            | MLWorks.Internal.SysErr _ => (),
+       endPos = fn () => raise Fail "RandomAccessNotSupported",
+       ioDesc=NONE})   
+      
+  end
+
+
+
+
+  (* On Win32, text isn't binary: but the only difference appears    *)
+  (* to be that line feeds in text become linefeeds+carriage returns *)
+  (* in binary mode.  Therefore conversion should simply remove      *)
+  (* carriage returns.                                               *)
+
+  (* NOTE: the reader/writer operations return the number of chars   *)
+  (* that they read from/wrote to the in/outstream.  I'm assuming    *)
+  (* that they always read/write the required number of chars.  The  *)
+  (* library spec suggests that any k less than the required number  *)
+  (* can do, but I don't quite know what this means.  Thus I subtract*)
+  (* the number of carriage returns from the total.                  *)
+
+
+
+  fun translateIn (x : BinPrimIO.reader) : TextPrimIO.reader = 
+    let
+       val BinPrimIO.RD({name= n,
+                         chunkSize=cS,
+                         readVec=rV,
+                         readArr=rA,
+                         readVecNB=rVNB,
+                         readArrNB=rANB,
+                         block= b,
+                         canInput=cI,
+                         getPos=gP,
+                         setPos=sP,
+                         endPos=eP,
+                         close=c,
+                         ioDesc=iD}) = x
+
+       val CR = 13
+
+
+
+       (* following functions remove CRs in VECTORS *)
+       (* if vector only contains CRs, must reinput,*)
+       (* otherwise end-of-stream signalled falsely *)
+         
+
+       local
+         fun removeCRinVector v f= 
+           if (Word8Vector.length v) = 0 then v         (*propagate EOS*)
+           else 
+             case (Word8Vector.foldr (fn (w,l)=> 
+                                      let val i = (Word8.toInt w)
+                                      in if i=CR then l
+                                         else (Char.chr i)::l
+                                      end) [] v)
+               of [] => removeCRinVector (f()) f           (* reinput *)
+                | l =>  CharVector.fromList l
+       in
+
+         fun rVconv NONE = NONE
+           | rVconv (SOME f) = SOME(fn args => removeCRinVector (f args)
+                                                (fn () => f args))
+
+         (* for nonblocking input, have to propagate "input blocks"    *)
+         (* signals.  Use the block exception for this.                *)
+
+         fun rVNBconv NONE = NONE
+           | rVNBconv (SOME f) = 
+             SOME(fn args => case (f args)
+                               of NONE => NONE
+                                | (SOME v) => 
+                                    let exception block
+                                    in
+                                      SOME(removeCRinVector v
+                                           (fn () => case (f args)
+                                                       of NONE => raise block
+                                                        | (SOME v) => v))
+                                      handle block => NONE
+                                    end)
+       end
+
+
+
+
+
+
+         (* following functions remove CRs in ARRAYS *)
+         (* again, problem with having to reinput    *)
+
+       local
+         (* in following, src is the source Binary array, size is the *)
+         (* size of input data, trg is the target character array and *)
+         (* more is the function that reloads the array in case CR    *)
+         (** removal empties src.                                     *)
+
+         fun removeCRinArray src size trg posn more= 
+           let 
+             fun removeCR i j s = 
+               if i>= size then (size-s,j)
+               else let val k=(Word8.toInt(Word8Array.sub(src,i)))
+                     in if k=CR then removeCR (i+1) j (size-1)
+                        else (CharArray.update(trg,j,Char.chr k);
+                             removeCR (i+1) (j+1) size)
+                    end
+           in 
+             if size=0 then 0 else              (* propagate eos condition   *)
+               case (removeCR 0 posn size)      (* otherwise remove CRs.     *)
+                 of (CRs,0)=>removeCRinArray    (* if removing CRs empties   *)
+                         src (more()) trg       (* array, reinput and repeat *)
+                         posn more              
+                  | (CRs,k)=> k-CRs             (* ow, return number of chars*)
+           end
+       in
+         fun rAconv NONE=NONE
+           | rAconv (SOME f) =
+             SOME(fn (args as {buf=a,i=p,sz=s}) => 
+                  let
+                    val len = case s
+                                of NONE=> CharArray.length a-p
+                                 | (SOME z)=> z
+
+                    val b = Word8Array.array(len,Word8.fromInt 0)
+                  in
+                    removeCRinArray b (f {buf=b,i=0,sz=NONE}) a p
+                                      (fn () => f {buf=b,i=0,sz=NONE})
+                  end)
+
+
+         fun rANBconv NONE=NONE
+           | rANBconv (SOME f) = 
+             SOME(fn (args as {buf=a,i=p,sz=s}) => 
+                  let
+                    val len = case s
+                                of NONE=> CharArray.length a-p
+                                 | (SOME z)=> z
+
+                    val b = Word8Array.array(len,Word8.fromInt 0)
+
+                    exception block
+                                
+                    fun more () = case (f {buf=b,i=0,sz=NONE})
+                                    of NONE=> raise block
+                                     | (SOME k)=> k
+
+
+                  in
+                    SOME(removeCRinArray b (more ()) a p more)
+                    handle block => NONE
+                  end)
+       end
+    in
+      TextPrimIO.RD({name=n,
+                     chunkSize=cS,
+                     readVec=rVconv rV,
+                     readArr=rAconv rA,
+                     readVecNB=rVNBconv rVNB,
+                     readArrNB=rANBconv rANB,
+                     block= b,
+                     canInput=cI,
+                     getPos=gP,
+                     setPos=sP,
+                     endPos=eP,
+                     close=c,
+                     ioDesc=iD})
+    end
+
+
+
+  (* NOW, to translate binary writers into text writers.  The translator *)
+  (* should only involve adding CRs after or before line feeds.  No need *)
+  (* for complicated re-outputs.                                         *)
+  (* (Though perhaps chunk size efficiency should be considered?)        *)
+
+
+  fun translateOut (x : BinPrimIO.writer) : TextPrimIO.writer = 
+    let
+      val BinPrimIO.WR({name = n,
+                        chunkSize=cS,
+                        writeVec=wV,
+                        writeArr=wA,
+                        writeVecNB=wVNB,
+                        writeArrNB=wANB,
+                        block=b,
+                        canOutput=cO,
+                        endPos=eP,
+                        getPos=gP,
+                        setPos=sP,
+                        close=c,
+                        ioDesc=iD})=x
+
+      val LF = 10
+      val LFcode=Word8.fromInt LF
+      val CRcode=Word8.fromInt 13
+
+      local
+                            (* the following functions do the conversions *)
+                            (* for the two write vector operations        *)
+                            (* Convert text writes to binary writes.      *)
+
+        fun addCRtoVec v = 
+          let val CRs = ref 0
+              val v'= Word8Vector.fromList (CharVector.foldr
+                                    (fn (c,l)=> if Char.ord c=LF then
+                                       (CRs:=(!CRs)+1;CRcode::LFcode::l) else
+                                       Word8.fromInt (Char.ord c)::l)
+                                    [] v)
+           in
+             (!CRs,v')
+          end
+
+      in
+            fun wVconv NONE=NONE
+              | wVconv (SOME f) =
+                SOME(fn {buf=v,i=p,sz=(s:int option)} =>
+                     let val (CRs,v')=addCRtoVec (CharVector.extract(v,p,s))
+                       in f{buf=v',i=0, sz=NONE}-CRs
+                     end)
+                     
+
+            fun wVNBconv NONE=NONE
+              | wVNBconv (SOME f) =
+                SOME(fn {buf=v,i=p,sz=(s:int option)}=>
+                     let val (CRs,v') = addCRtoVec (CharVector.extract(v,p,s))
+                     in
+                       case f{buf=v',i=0,sz=NONE}
+                              of NONE=> NONE
+                               | (SOME k) => SOME(k-CRs)
+                     end)
+
+            fun wAconv NONE=NONE
+              | wAconv (SOME f) =
+                SOME(fn {buf=a,i=p,sz=(s:int option)}=>
+                     let val (CRs,v) = addCRtoVec (CharArray.extract(a,p,s))
+                         val a'= Word8Array.array(Word8Vector.length v,
+                                                  Word8.fromInt 0)
+                      in
+                        (Word8Array.copyVec{src=v,si=0,len=NONE,dst=a',di=0};
+                         f{buf=a',i=0,sz=NONE}-CRs)
+                     end)
+
+
+            fun wANBconv NONE=NONE
+              | wANBconv (SOME f) =
+                SOME(fn {buf=a,i=p,sz=(s:int option)}=>
+                     let val (CRs,v) = addCRtoVec (CharArray.extract(a,p,s))
+                         val a'= Word8Array.array(Word8Vector.length v,
+                                                  Word8.fromInt 0)
+                      in
+                        (Word8Array.copyVec{src=v,si=0,len=NONE,dst=a',di=0};
+                         case f{buf=a',i=0,sz=NONE}
+                           of NONE=> NONE
+                            | (SOME k) => SOME (k-CRs))
+                     end)
+
+
+
+      end
+
+
+
+
+    in
+      TextPrimIO.WR({name=n,
+                     chunkSize=cS,
+                     writeVec=wVconv wV,
+                     writeArr=wAconv wA,
+                     writeVecNB=wVNBconv wVNB,
+                     writeArrNB=wANBconv wANB,
+                     block=b,
+                     canOutput=cO,
+                     endPos=eP,
+                     getPos=gP,
+                     setPos=sP,
+                     close=c,
+                     ioDesc=iD})
+    end
+
+
+end
+@
+
+
+1.12
+log
+@Altering interface with win32 runtime environment
+@
+text
+@d12 3
+d64 1
+a64 1
+
+d233 3
+d237 5
+a241 44
+  (* win_n/t standard IO readers and writers. *)
+
+
+    val terminalIn =mkWin32Reader {fd = Win32OS_.std_in,
+                                  name = "<stdIn>",
+                                  initialPos = 0, checkSize = false}
+
+    val terminalOut =  let 
+                 val fd = Win32OS_.std_out
+                 (*
+                 val {blksize, ...} = Win32OS_.stat fd
+                  *)
+                 val blksize = 1024 (* Temporary *)
+               in
+                 mkWin32Writer
+                 {fd = fd,
+                  name = "<stdOut>",
+                  size = 0,
+                  blocksize = blksize,
+                  initialPos = 0}
+               end
+
+
+    val terminalErr = let 
+                 val fd = Win32OS_.std_err
+               in
+                 mkWin32Writer
+                 {fd = fd,
+                  name = "<stdErr>",
+                  size = 0,
+                  blocksize = 1,
+                  initialPos = 0}
+               end
+
+  (*                                        *)
+  (* readers and writers for GUI windows    *)
+  (*                                        *)
+
+  (* note: these readers/writers do not     *)
+  (* implement getPos,setPos and endPos     *)
+  (* because they may refer to different    *)
+  (* windows at different times.   Another  *)
+  (* alternative would be to attach a "home"*)
+  (* window to each reader/writer.          *)
+d244 1
+a244 66
+
+    open MLWorks.Internal.GuiStandardIO
+
+
+    (* OUTPUT TO GUI WINDOW *********************************)
+    
+    fun output str = #output_fun (currentWindow ()) str
+      
+    (* INPUT FROM GUI WINDOW ********************************)
+      
+    fun buff_empty() = 
+      let val {buffer_pos,buffer_data,...} = currentWindow()
+      in  !buffer_pos>= size (!buffer_data)
+      end
+    
+    
+    fun refill_buff () =
+      let val {input_fun,buffer_pos,buffer_data,...} = 
+        currentWindow()
+          val new_string = input_fun ()
+            
+      in
+        buffer_pos := 0;
+        buffer_data := new_string
+      end
+    
+    fun get_input n =
+      let
+        val {buffer_pos,buffer_data,eof_flag,...} = currentWindow()
+        val string = !buffer_data
+        val pointer = !buffer_pos
+        val len = size string
+      in
+        if !eof_flag then
+          ""
+        else if pointer + n > len then
+          (refill_buff ();
+           String.substring (string,pointer,len-pointer) ^
+           get_input (n - len + pointer))
+             else
+               let val result = String.substring (string,pointer,n)
+               in
+                 buffer_pos := (!buffer_pos + n);
+                 result
+               end
+      end
+    
+    fun do_lookahead () =
+      let 
+        val {buffer_pos,buffer_data,eof_flag,...} = currentWindow()
+      in
+        (if !eof_flag then
+           ""
+        else if !buffer_pos >= size (!buffer_data) then
+           (refill_buff ();
+            do_lookahead ())
+             else 
+               String.substring (!buffer_data, !buffer_pos, 1))
+           
+      end
+    
+    fun close_in () =(#eof_flag o currentWindow) () := true
+    fun closed_in () = (! o #eof_flag o currentWindow) ()
+    fun clear_eof () = (#eof_flag o  currentWindow) ():= false
+      
+      
+d246 1
+a246 6
+
+    exception UnSafeGuiOp
+
+    fun mkGuiReader name =
+      
+      BinPrimIO.augmentReader
+d248 1
+a248 1
+       {readVec = SOME get_input,
+d253 3
+a255 2
+        canInput = SOME (not o buff_empty),
+        name = name,
+d257 9
+a265 11
+        close = close_in,
+        (* unsafe, as windows *)
+        (* may be switched    *)
+        (* surreptitiously    *)
+        getPos = ! o #buffer_pos o 
+        MLWorks.Internal.GuiStandardIO.currentWindow,
+        setPos = fn newPos => (#buffer_pos o
+                 MLWorks.Internal.GuiStandardIO.currentWindow) () := newPos,
+        endPos = size o ! o #buffer_data o
+        MLWorks.Internal.GuiStandardIO.currentWindow,
+        ioDesc=NONE})
+d267 21
+a287 7
+    (* unsafe versions are:
+     * getPos=#buffer_pos MLWorks.Internal.GuiStandardIO.currentWindow,
+     * setPos = fn newPos => 
+     *         (#buffer_pos GuiStandardIO.currentWindow) () := newPos,
+     * endPos=String.size o #buffer_data o
+     *                   MLWorks.Internal.GuiStandardIO.currentWindow,
+     *)
+d289 1
+a289 7
+
+   (* HACK: the following write functions always assume that *)
+   (* (a) the entire string was written to the GUI window,   *)
+   (* (b) that output can always be written.                 *)
+
+
+    fun mkGuiWriter name =
+d292 1
+a292 7
+       {writeVec = SOME (fn {buf,i,sz} =>
+                         let val s= (Word8Vector.extract) (buf,i,sz)
+                         in 
+                           #output_fun(
+                            MLWorks.Internal.GuiStandardIO.currentWindow ())s;
+                           Word8Vector.length s
+                         end),
+d297 3
+a299 2
+       canOutput = SOME(fn () => true),
+       name = name,
+d301 9
+a309 8
+       close = fn () => (),
+       getPos = fn () => (MLWorks.IO.output(MLWorks.IO.std_out,"4\n");
+                          raise UnSafeGuiOp),
+       setPos = fn newPos => (MLWorks.IO.output(MLWorks.IO.std_out,"5\n");
+                              raise UnSafeGuiOp),
+       endPos = fn () => (MLWorks.IO.output(MLWorks.IO.std_out,"6\n");
+                          raise UnSafeGuiOp),
+       ioDesc=NONE})
+a312 4
+   (*                                                    *)
+   (* Standard Input, Standard Output and Standard Error *)
+   (*                                                    *)
+
+a313 4
+  val guiIn =  mkGuiReader "<stdIn>"
+  val guiOut = mkGuiWriter "<stdOut>"
+  val guiErr = mkGuiWriter "<stdErr>"
+               
+@
+
+
+1.11
+log
+@redirecting standard input/output to Window listeners.
+@
+text
+@d12 3
+d80 2
+a81 1
+       {fd: file_desc, name: string, initialPos: BinPrimIO.pos, checkSize : bool} =
+d124 1
+a124 1
+		       (Win32OS_.seek {fd=fd, pos=newPos};
+d130 2
+d134 3
+a136 1
+      {fd = Win32OS_.open_ (filename, 0),  (* 0 => GENERIC_READ *)
+d183 1
+a183 1
+		       (Win32OS_.seek {fd=fd, pos=newPos};
+d191 2
+a192 2
+      val fd = Win32OS_.open_ (filename, 1)
+			(* 1 => GENERIC_WRITE *)
+d209 3
+a211 2
+      val fd = Win32OS_.open_ (filename, 2)
+			(* 2 => GENERIC_READ | GENERIC_WRITE *)
+d215 1
+a215 1
+      val blksize = 1024 (* Temporary *)
+d234 1
+a234 1
+    val terminalIn = mkWin32Reader {fd = 0,
+d239 1
+a239 1
+                 val fd = 1
+d255 1
+a255 1
+                 val fd = 2
+@
+
+
+1.10
+log
+@Removing TextPrimIO and BinPrimIO structures.
+@
+text
+@d12 3
+d52 1
+a52 1
+require "^.basis._primio";
+d60 1
+a60 1
+structure PrimIO =
+d69 8
+a76 1
+  fun mkReader
+d127 1
+a127 1
+    mkReader
+d132 3
+a134 1
+  fun mkWriter
+d191 1
+a191 1
+      mkWriter
+d209 1
+a209 1
+      mkWriter
+a216 5
+  val stdIn =
+    mkReader
+      {fd = 0,
+       name = "<stdIn>",
+       initialPos = 0, checkSize = false}
+a217 15
+  val stdOut =
+    let 
+      val fd = 1
+(*
+      val {blksize, ...} = Win32OS_.stat fd
+*)
+      val blksize = 1024 (* Temporary *)
+    in
+      mkWriter
+        {fd = fd,
+         name = "<stdOut>",
+         size = 0,
+         blocksize = blksize,
+         initialPos = 0}
+    end
+d219 194
+a412 11
+  val stdErr =
+    let 
+      val fd = 2
+    in
+      mkWriter
+        {fd = fd,
+         name = "<stdErr>",
+         size = 0,
+         blocksize = 1,
+         initialPos = 0}
+    end
+a686 12
+
+
+
+
+
+
+
+
+
+
+
+
+@
+
+
+1.9
+log
+@adding bin to text converters.
+@
+text
+@d12 3
+d50 2
+a54 17
+
+structure TextPrimIO =
+  PrimIO (
+      structure A = CharArray
+      structure V = CharVector
+      val someElem = #"\000"
+      type pos = Position.int
+      val posLess = Position.<)
+
+structure BinPrimIO =
+  PrimIO (
+      structure A = Word8Array
+      structure V = Word8Vector
+      val someElem = 0w0 : Word8.word
+      type pos = Position.int
+      val posLess = Position.<)
+
+@
+
+
+1.8
+log
+@extracting TextPrimIO and BinPrimIO structures
+@
+text
+@d12 3
+d251 272
+a522 5
+  exception Dummy
+  (* On Win32, text isn't binary *)
+  (* Dunno what to do with these yet *)
+  fun translateIn (x : BinPrimIO.reader) : TextPrimIO.reader = raise Dummy
+  fun translateOut (x : BinPrimIO.writer) : TextPrimIO.writer = raise Dummy
+d524 12
+@
+
+
+1.7
+log
+@Changes for new signatures
+@
+text
+@d12 3
+a43 1
+require "^.basis.osprimio";
+d48 2
+a49 4
+structure PrimIO: OS_PRIM_IO =
+struct
+  structure TextPrimIO =
+    PrimIO (
+d56 2
+a57 2
+  structure BinPrimIO =
+    PrimIO (
+d65 8
+@
+
+
+1.6
+log
+@__fileposint moved to __position
+@
+text
+@d12 3
+d80 3
+a82 3
+      BinPrimIO.augmentIn
+        (BinPrimIO.Rd
+	   {readBlock =
+d89 1
+a89 1
+            readNoBlock = NONE,
+d102 2
+a103 2
+            readaBlock = NONE,
+            readaNoBlock = NONE,
+a109 2
+            findPos = fn ({data, first, nelems}, pos) =>
+		        Position.+ (pos, (* Position.fromDefault *) nelems),
+d113 2
+a114 1
+            endPos = fn () => size})
+d130 9
+a138 5
+      BinPrimIO.augmentOut
+        (BinPrimIO.Wr
+           {writeBlock =
+	      SOME (fn {data, first, nelems} => 
+	              (let val result = Win32OS_.write (fd, data, first, nelems)
+d143 1
+a143 1
+            writeNoBlock = NONE,
+d155 2
+a156 2
+            writeaNoBlock = NONE,
+            writeaBlock = NONE,
+d166 2
+a167 1
+            endPos = fn () => size})
+@
+
+
+1.5
+log
+@Make stdErr write to stderr rather than stdout.
+@
+text
+@d12 3
+d34 1
+a34 1
+require "^.basis.__chars";
+d40 1
+a40 1
+require "^.basis.__fileposint";
+d50 2
+a51 2
+      type pos = FilePosInt.int
+      val posLess = FilePosInt.<)
+d58 2
+a59 2
+      type pos = FilePosInt.int
+      val posLess = FilePosInt.<)
+d108 1
+a108 1
+		        FilePosInt.+ (pos, (* FilePosInt.fromDefault *) nelems),
+d119 1
+a119 1
+       initialPos = (* FilePosInt.fromDefault *) 0, checkSize = true}
+d178 1
+a178 1
+         initialPos = (* FilePosInt.fromDefault *) 0}
+d196 1
+a196 1
+         initialPos = (* FilePosInt.fromDefault *) size}
+@
+
+
+1.4
+log
+@Fixing sharing problem
+@
+text
+@d12 3
+d220 1
+a220 1
+      val fd = 1
+@
+
+
+1.3
+log
+@initbasis moves to basis
+@
+text
+@d12 3
+d28 3
+d41 8
+d51 1
+a51 1
+      val someElem = 0w0: Word8.word
+a54 1
+  structure BinPrimIO = TextPrimIO
+d227 1
+d230 2
+a231 3
+  fun translateIn x = x
+  fun translateOut x = x
+
+@
+
+
+1.2
+log
+@Reinstate signature constraint commented out during debugging
+@
+text
+@d12 3
+d22 7
+a28 7
+require "^.initbasis.__word8";
+require "^.initbasis.__word8array";
+require "^.initbasis.__word8vector";
+require "^.initbasis._primio";
+require "^.initbasis.osprimio";
+require "^.initbasis.toplevel";
+require "^.initbasis.__fileposint";
+@
+
+
+1.1
+log
+@new unit
+Support for revised initial basis
+@
+text
+@d11 5
+a15 1
+ *  $Log$
+d28 1
+a28 2
+
+structure PrimIO(*: OS_PRIM_IO*) =
+@

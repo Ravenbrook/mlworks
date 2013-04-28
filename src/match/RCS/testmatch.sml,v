@@ -1,0 +1,221 @@
+head	1.3;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.3
+	mlworks-28-01-1994:1.3
+	Release:1.3
+	mlworks-beta-01-09-1993:1.3
+	MLWorks-1-0-4-29/01/1993:1.3
+	MLWorks-1-0-3-21/12/1992:1.3
+	MLWorks-1-0-2-15/12/1992:1.3
+	MLWorks-1-0-1-04/12/1992:1.3
+	checkpoint_17_08_92:1.2
+	Ten15_release_19-11-91:1.1
+	Ten15_release_21-08-91:1.1
+	Ten15_release_19-08-91:1.1
+	ten15_release:1.1;
+locks; strict;
+
+
+1.3
+date	92.10.14.11.40.54;	author richard;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	91.11.21.16.35.04;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.06.07.11.07.08;	author colin;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	92.10.14.11.40.54;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@General tests for the Match compiler
+@
+
+
+1.3
+log
+@Added location information to the `require' topdec.
+@
+text
+@(* testmatch.sml *)
+(*
+$Log: testmatch.sml,v $
+Revision 1.2  1991/11/21  16:35:04  jont
+Added copyright message
+
+Revision 1.1  91/06/07  11:07:08  colin
+Initial revision
+
+Copyright (c) 1991 Harlequin Ltd.
+*)
+require "../lexer/__lexer";
+require "../basics/__absyn";
+require "../parser/__parserenv";
+require "../typechecker/__datatypes";
+require "../parser/__parser";
+require "../typechecker/__basis";
+require "../typechecker/__valenv";
+require "../typechecker/__tyenv";
+require "../typechecker/__nameset";
+require "../typechecker/__sigenv";
+require "../typechecker/__funenv";
+require "../typechecker/__core_rules";
+require "__match";
+
+(**
+    Last updated : Tue Jan 22 11:39:35 1991
+**)
+
+local 
+
+  fun parse pB str =
+    let
+      val done = ref false
+      fun f _ = if !done then "" else (done := true ; str)
+    in
+      Parser_.parse_topdec(Lexer_.mkTokenStream f, pB)
+    end
+
+  val (_, initial) =
+    parse ParserEnv_.empty_pB   
+
+    "(* first value constructors *) \
+    \  datatype constructors = true | false | nil | :: | ref \
+     
+    \  (* next exception constructors *) \
+    \  exception Abs and Ord and Chr and Div and Mod and Quot and Prod \
+    \ and Neg and Sum and Diff and Floor and Sqrt and Exp and Ln and Io \
+    \ and Match and Bind and Interrupt \
+
+    \  (* next value variables *) \
+    \  val map = () and rev = () and not = () and ~ = () and abs = () \
+    \  and floor = () and real = () and sqrt = () and sin = () and cos = () \
+    \  and arctan = () and exp = () and ln = () and size = () and chr = () \
+    \  and ord = () and explode = () and implode = () and ! = () \
+    
+    \  and / = () and div = () and mod = () and + = () and - = () \
+    \  and ^ = () and @@ = () and <> = () and < = () and > = () \
+    \  and <= = () and >= = () and := = () and o = () \
+
+    \  (* finally we define the infix identifiers *) \
+    \  infix 7 / * div mod \
+    \  infix 6 + - ^ \
+    \  infix 5 @@ \
+    \  infixr 5 :: \
+    \  infix 4 <> < > <= >= =\
+    \  infix 3 := o"
+
+  val env = Datatypes_.ENV
+    (Datatypes_.SE (Datatypes_.Mapping.empty_map),
+     Tyenv_.initial_te,
+     Valenv_.initial_ve,
+     Valenv_.initial_ee)
+
+  val basis = Basis_.BASIS
+    (Nameset_.initial_nameset,
+     Funenv_.empty_funenv,
+     Sigenv_.empty_sigenv,
+     env)
+
+  val context = Basis_.basis_to_context basis  
+
+in
+
+  exception foobar of string;
+  
+  fun munge (Absyn_.VALdec ([(_,Absyn_.FNexp (pairs,_,_))],_,_)) = pairs
+    | munge (Absyn_.SEQUENCEdec ll) =
+      let
+	fun internal ((a as (Absyn_.VALdec _))::_) = munge a
+	  | internal (_::mm) = internal mm
+	  | internal [] = raise foobar "munge failed"
+      in
+	internal ll
+      end
+    | munge _ = raise foobar "not sequence";
+  
+  fun test (x) =
+    let 
+      val (Absyn_.STRDECtopdec (Absyn_.DECstrdec dec), _) = parse initial x
+    in
+      dec
+    end;
+
+  fun test_mc (s) =
+    let
+      val dec = test ( (* "val it = fn " ^ *) s)
+      val _ = Core_rules_.check_dec (dec,context)
+      val (root, tree) = 
+	Match_.compile_match (munge dec) handle Match_.impossible s =>
+	  ((output (std_out, ("Error was:" ^ s ^ "\n"))); raise
+	   Match_.impossible s)
+      (* print out the match tree generated *)
+      val _ = output (std_out, "\nMatch tree is:\n")
+      val _ = map (fn x => output (std_out,x)) (Match_.unparseTree tree "")
+      val _ = output (std_out, "\n")
+    in
+      (root, tree)
+    end ;
+
+(** Print out the parse tree, and returns it too. **)
+  fun parp x =
+      let
+	val foo = test x
+      in
+	(output (std_out, AbsynPrint_.printDec foo);
+	 output (std_out, "\n\n");
+	 foo)
+      end
+
+end
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.3  1992/10/14  11:40:54  richard
+Added location information to the `require' topdec.
+
+@
+
+
+1.2
+log
+@Added copyright message
+@
+text
+@d3 4
+a6 1
+$Log:	testmatch.sml,v $
+d35 1
+a35 1
+      fun f () = if !done then "" else (done := true ; str)
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d1 1
+d3 5
+a7 1
+$Log$
+@

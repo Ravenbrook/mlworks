@@ -1,0 +1,97 @@
+head	1.2;
+access;
+symbols
+	ML_beta_release_12/08/94:1.2
+	ML_beta_release_03/08/94:1.1
+	ML_revised_beta_release_25/05/94:1.1
+	ML_final_beta_release_02/03/94:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.2
+date	94.08.10.11.48.28;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.02.02.13.41.24;	author johnk;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.2
+log
+@Added get_home_dir.
+@
+text
+@(*  GETENV FUNCTION - UNIX VERSIOn
+ *
+ *  Copyright (C) 1994 Harlequin Ltd.
+ *
+ *  $Log: _unixgetenv.sml,v $
+# Revision 1.1  1994/02/02  13:41:24  johnk
+# new file
+#
+ *
+ *)
+
+require "../utils/option";
+require "getenv";
+
+functor UnixGetenv
+  (structure Option : OPTION
+  ): GETENV =
+struct
+  structure Option = Option
+
+  fun get_option_value option_name =
+    let
+      val option_length = size option_name
+
+      fun get_value [] = Option.ABSENT
+      |   get_value(arg :: rest) =
+        if size arg < option_length then
+          get_value rest
+        else if String.substring(arg, 0, option_length) = option_name then
+          if size arg - option_length = 0 then
+            Option.ABSENT
+          else
+            Option.PRESENT
+	      (String.substring(arg, option_length, size arg - option_length))
+        else
+          get_value rest
+    in
+      get_value
+    end
+
+  fun get_user_name () = 
+    get_option_value "USER=" (MLWorks.OS.Unix.environment())
+
+  fun get_source_path () =
+    get_option_value "MLWORKS_SRC_PATH=" (MLWorks.OS.Unix.environment())
+
+  fun get_pervasive_dir () =
+    get_option_value "MLWORKS_PERVASIVE=" (MLWorks.OS.Unix.environment())
+
+  fun get_home_dir () =
+    get_option_value "HOME=" (MLWorks.OS.Unix.environment())
+end
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d5 4
+a8 1
+ *  $Log$
+d49 3
+@

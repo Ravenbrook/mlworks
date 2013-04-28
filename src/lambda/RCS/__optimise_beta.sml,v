@@ -1,0 +1,288 @@
+head	1.12;
+access;
+symbols
+	ML_beta_release_12/08/94:1.12
+	ML_beta_release_03/08/94:1.12
+	ML_revised_beta_release_25/05/94:1.12
+	ML_final_beta_release_02/03/94:1.12
+	mlworks-28-01-1994:1.12
+	Release:1.11
+	mlworks-beta-01-09-1993:1.11
+	MLWorks-1-0-4-29/01/1993:1.10
+	MLWorks-1-0-3-21/12/1992:1.10
+	MLWorks-1-0-2-15/12/1992:1.10
+	MLWorks-1-0-1-04/12/1992:1.10
+	checkpoint_17_08_92:1.10;
+locks; strict;
+
+
+1.12
+date	93.11.24.16.44.14;	author nosa;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.05.18.18.51.58;	author jont;	state Exp;
+branches
+	1.11.1.1;
+next	1.10;
+
+1.10
+date	92.07.09.09.27.27;	author davida;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.06.17.11.30.43;	author davida;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.05.28.13.56.38;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.30.15.23.24;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.04.22.15.07.36;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.27.13.07.06;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.03.03.13.40.48;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.22.18.16.15;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.09.15.12.42;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.09.09.12.48.28;	author davida;	state Exp;
+branches;
+next	;
+
+1.11.1.1
+date	93.05.18.18.51.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Heuristic controlled beta-reduction.
+@
+
+
+1.12
+log
+@Structures Types and Unify.
+@
+text
+@
+(*
+ * Lambda-Calculus Optimisation: __optimise_beta
+ * Advanced beta-reduction and function in-lining
+ *
+ * Copyright (c) 1991 Harlequin Ltd.
+ *)
+
+require "../utils/__crash";
+require "../utils/__lists";
+require "../utils/__print";
+require "../utils/__timer";
+require "../typechecker/__types";
+require "../typechecker/__unify";
+require "__lambdasub";
+require "__lambdaprint";
+require "_optimise_beta";
+
+structure OptimiseBeta_ = OptimiseBeta(
+  structure Crash = Crash_
+  structure Lists = Lists_
+  structure Print = Print_
+  structure Timer = Timer_
+  structure LambdaSub = LambdaSub_
+  structure LambdaPrint = LambdaPrint_
+  structure Types = Types_
+  structure Unify = Unify_
+  val real_size = 4 
+  and int_size = 0 
+  and string_size_fn = size
+);
+   
+@
+
+
+1.11
+log
+@Removed integer parameter
+@
+text
+@d13 2
+d26 2
+@
+
+
+1.11.1.1
+log
+@Fork for bug fixing
+@
+text
+@@
+
+
+1.10
+log
+@Removed OptimiseLib parameter.
+@
+text
+@a11 1
+require "../utils/__integer";
+a12 1
+require "../basics/__ident";
+a20 1
+  structure Integer = Integer_
+a21 1
+  structure Ident = Ident_
+@
+
+
+1.9
+log
+@eta-reduced string_size_fn as this was slow in NJ
+(but hopefully will have made little odds for us)
+@
+text
+@d15 1
+a16 1
+require "__optimise_lib";
+d26 1
+a26 1
+  structure Lib = OptimiseLib_
+@
+
+
+1.8
+log
+@A few speed improvements including specialising the hash equality function
+@
+text
+@d30 1
+a30 1
+  and string_size_fn = fn s => size s
+@
+
+
+1.7
+log
+@Took out timer
+@
+text
+@d13 1
+d24 1
+@
+
+
+1.6
+log
+@General speed improvements
+@
+text
+@a22 1
+  structure Timer = Timer_
+@
+
+
+1.5
+log
+@Added require integer, and integer parameter to functor
+@
+text
+@d14 1
+d23 1
+d26 1
+@
+
+
+1.4
+log
+@Used our Print rather than pervasive NJ print
+@
+text
+@d12 1
+d21 1
+@
+
+
+1.3
+log
+@Now builds using Lists structure.
+@
+text
+@a8 1
+require "../basics/__ident";
+d11 2
+d16 10
+a25 8
+structure OptimiseBeta_ =
+  OptimiseBeta(structure Lib = OptimiseLib_
+	       structure Ident = Ident_
+	       structure Crash = Crash_
+	       structure Lists = Lists_
+	       val real_size = 4 
+	       and int_size = 0 
+	       and string_size_fn = fn s => size s);
+@
+
+
+1.2
+log
+@Made changes due to record selection now requiring
+the total size of the record to be present as well as the index.
+@
+text
+@d2 6
+a7 1
+   (*  Lambda-Calculus Optimisation: __optimise_beta *)
+a8 6
+  (*  Advanced beta-reduction and function in-lining  *)
+
+
+(*  Copyright (c) 1991 Harlequin Ltd. *)
+
+
+d11 1
+d19 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 1
+d15 7
+a21 6
+
+structure OptimiseBeta_ = OptimiseBeta(structure Lib = OptimiseLib_
+				       structure Ident = Ident_
+				       val real_size = 4 
+				       and int_size = 0 
+				       and string_size_fn = fn s => size s);
+@

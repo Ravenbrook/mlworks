@@ -1,0 +1,122 @@
+head	1.4;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.4
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.4
+date	99.03.23.10.05.32;	author mitchell;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	98.07.30.09.32.12;	author johnh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	98.06.04.09.33.06;	author johnh;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.01.14.16.59;	author mitchell;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #50071]
+Test for Shell.Project structure
+@
+
+
+1.4
+log
+@[Bug #190534]
+Debug and Release modes are now displayed
+@
+text
+@val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : unit = ()
+val it : {description: string, version: string} = {description="Dummy project", version="V1"}
+val it : string list = ["Config"]
+val it : string = "Config"
+val it : {files: string list, library: string list} = {files=["files"], library=["library"]}
+val it : {binariesLoc: string, libraryPath: string list, objectsLoc: string} = {binariesLoc="binariesLoc", libraryPath=["path1", "path2"], objectsLoc="objectsLoc"}
+val it : string list = ["Mode", "Debug", "Release"]
+val it : string = "Mode"
+val it : {generate_debug_info: bool, generate_interceptable_code: bool, generate_interruptable_code: bool, generate_variable_debug_info: bool, location: string, mips_r4000: bool, optimize_leaf_fns: bool, optimize_self_tail_calls: bool, optimize_tail_calls: bool, sparc_v7: bool} = {generate_debug_info=true, generate_interceptable_code=false, generate_interruptable_code=true, generate_variable_debug_info=false, location="location", mips_r4000=false, optimize_leaf_fns=true, optimize_self_tail_calls=true, optimize_tail_calls=false, sparc_v7=true}
+val it : string list = ["file1.sml", "sub_dir/file2.sml", "sub_dir2/file3.sml", "sub_dir/sub_sub_dir/file4.sml"]
+val it : string list = ["subproject.mlp"]
+val it : string list = ["file2.sml", "file4.sml", "file3.sml"]
+val it : string list = ["file2.sml"]
+val it : string = "The mode missing-mode is undefined"
+val it : string = "The configuration missing-configuration is undefined"
+val it : string = "The target missing-target is undefined"
+val it : string = "Cannot remove missing-mode as it does not exist"
+val it : string = "Cannot remove missing-configuration as it does not exist"
+val it : string = "There is no target called missing-target"
+val it : string = "Unable to set target details for invalid-target"
+val it : string = "Cannot remove Mode as it is the current mode"
+val it : unit = ()
+val it : unit = ()
+val it : string list = []
+val it : unit = ()
+val it : unit = ()
+@
+
+
+1.3
+log
+@[Bug #30453]
+New targets must exist in the total list of files.
+@
+text
+@d10 1
+a10 1
+val it : string list = ["Mode"]
+@
+
+
+1.2
+log
+@[Bug #30369]
+Replacing source path with a list of files.
+@
+text
+@d13 1
+a13 1
+val it : string list = ["file1.sml", "sub_dir/file2.sml"]
+d15 2
+a16 2
+val it : string list = ["target2", "target3", "target1"]
+val it : string list = ["target2"]
+d23 1
+@
+
+
+1.1
+log
+@new unit
+[Bug #50071]
+Test for Shell.Project structure
+@
+text
+@d8 1
+a8 1
+val it : {library: string list, source: string list} = {library=["library"], source=["source"]}
+d13 1
+a13 1
+val it : string list = ["dir1", "dir2"]
+@

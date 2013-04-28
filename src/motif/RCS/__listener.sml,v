@@ -1,0 +1,478 @@
+head	1.20;
+access;
+symbols
+	ML_beta_release_12/08/94:1.16
+	ML_beta_release_03/08/94:1.16
+	ML_revised_beta_release_25/05/94:1.15
+	ML_final_beta_release_02/03/94:1.15
+	mlworks-28-01-1994:1.15
+	Release:1.15
+	mlworks-beta-01-09-1993:1.15;
+locks; strict;
+comment	@ * @;
+
+
+1.20
+date	95.07.17.11.48.37;	author matthew;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	95.07.05.11.55.11;	author io;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	95.06.29.09.39.16;	author matthew;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	95.03.31.13.49.15;	author daveb;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	94.08.01.10.57.28;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.05.27.11.18.10;	author matthew;	state Exp;
+branches
+	1.15.1.1;
+next	1.14;
+
+1.14
+date	93.05.18.17.29.46;	author jont;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	93.04.29.16.56.58;	author daveb;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	93.04.27.16.30.54;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	93.04.19.14.33.39;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	93.04.19.14.33.39;	author richard;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	93.04.16.11.07.13;	author matthew;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	93.04.13.14.48.24;	author daveb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	93.04.06.16.12.15;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	93.04.01.17.12.56;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.03.30.09.46.11;	author matthew;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.03.25.13.05.35;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.03.18.17.09.28;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.03.17.13.16.28;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.03.02.17.15.22;	author daveb;	state Exp;
+branches;
+next	;
+
+1.15.1.1
+date	93.05.27.11.18.10;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Listener window for motif.
+@
+
+
+1.20
+log
+@Moved __entry.sml to interpreter
+@
+text
+@(*
+listener.sml the structure.
+
+$Log: __listener.sml,v $
+ *  Revision 1.19  1995/07/05  11:55:11  io
+ *  adding searching capability
+ *
+
+Revision 1.18  1995/06/29  09:39:16  matthew
+Adding Capi structure
+
+Revision 1.17  1995/03/31  13:49:15  daveb
+Removed redundant parameters.
+
+Revision 1.16  1994/08/01  10:57:28  daveb
+Added Preferences argument.
+
+Revision 1.15  1993/05/27  11:18:10  matthew
+ Added ShellUtils structure
+
+Revision 1.14  1993/05/18  17:29:46  jont
+Removed integer parameter
+
+Revision 1.13  1993/04/29  16:56:58  daveb
+Added BrowserTool parameter.
+
+Revision 1.12  1993/04/27  16:30:54  daveb
+Added MotifUtils parameter.
+
+Revision 1.11  1993/04/19  14:33:39  daveb
+Added BrowserTool argument.
+
+Revision 1.9  1993/04/16  11:07:13  matthew
+Removed ShellTypes,FileSelect, added ToolData
+
+Revision 1.8  1993/04/13  14:48:24  daveb
+Added Lists parameter.
+
+Revision 1.7  1993/04/06  16:12:15  jont
+Moved user_options and version from interpreter to main
+
+Revision 1.6  1993/04/01  17:12:56  matthew
+Added FileSelect structure
+
+Revision 1.5  1993/03/30  09:46:11  matthew
+Added Crash structure
+
+Revision 1.4  1993/03/25  13:05:35  matthew
+Added debugger and inspector
+
+Revision 1.3  1993/03/18  17:09:28  matthew
+ Added UserOptions substructure
+
+Revision 1.2  1993/03/17  13:16:28  matthew
+Added Menus substructure
+
+Revision 1.1  1993/03/02  17:15:22  daveb
+Initial revision
+
+
+Copyright (c) 1993 Harlequin Ltd.
+
+*)
+
+require "../library/__capi";
+require "../utils/__lists";
+require "../utils/__crash";
+require "../main/__user_options";
+require "../main/__preferences";
+require "../debugger/__ml_debugger";
+require "../interpreter/__tty_listener";
+require "../interpreter/__shell";
+require "../interpreter/__shell_utils";
+require "__tooldata";
+require "__debugger_window";
+require "__menus";
+require "__motif_utils";
+require "../interpreter/__entry";
+require "_listener";
+
+
+structure Listener_ = Listener (
+  structure Capi = Capi_
+  structure Lists = Lists_
+  structure Crash = Crash_
+  structure UserOptions = UserOptions_
+  structure Preferences = Preferences_
+  structure Ml_Debugger = Ml_Debugger_
+  structure TTYListener = TTYListener_
+  structure Shell = Shell_
+  structure ShellUtils = ShellUtils_
+  structure ToolData = ToolData_
+  structure DebuggerWindow = DebuggerWindow_
+  structure MotifUtils = MotifUtils_
+  structure Menus = Menus_
+  structure Entry = Entry_
+);
+@
+
+
+1.19
+log
+@adding searching capability
+@
+text
+@d5 3
+d78 1
+a78 1
+require "__entry";
+@
+
+
+1.18
+log
+@Adding Capi structure
+@
+text
+@d5 7
+a11 3
+ *  Revision 1.17  1995/03/31  13:49:15  daveb
+ *  Removed redundant parameters.
+ *
+d75 1
+d78 1
+d93 1
+@
+
+
+1.17
+log
+@Removed redundant parameters.
+@
+text
+@d5 3
+d58 1
+a58 1
+require "../library/__xm";
+d74 1
+a74 1
+  structure Xm = Xm_
+@
+
+
+1.16
+log
+@Added Preferences argument.
+@
+text
+@d5 3
+a61 2
+require "../interpreter/__action_queue";
+require "../interpreter/__shell_types";
+a65 1
+require "__inspector_tool";
+a76 1
+  structure ActionQueue = ActionQueue_
+a80 1
+  structure InspectorTool = InspectorTool_
+@
+
+
+1.15
+log
+@ Added ShellUtils structure
+@
+text
+@d5 3
+d56 1
+d75 1
+@
+
+
+1.15.1.1
+log
+@Fork for bug fixing
+@
+text
+@a4 3
+Revision 1.15  1993/05/27  11:18:10  matthew
+ Added ShellUtils structure
+
+@
+
+
+1.14
+log
+@Removed integer parameter
+@
+text
+@d5 3
+d58 1
+d75 1
+@
+
+
+1.13
+log
+@Added BrowserTool parameter.
+@
+text
+@d5 3
+a47 1
+require "../utils/__integer";
+a63 1
+  structure Integer = Integer_
+@
+
+
+1.12
+log
+@Added MotifUtils parameter.
+@
+text
+@d5 3
+a55 1
+require "__browser_tool";
+a71 1
+  structure BrowserTool = BrowserTool_
+@
+
+
+1.11
+log
+@Added BrowserTool argument.
+@
+text
+@d5 3
+d55 1
+d72 1
+@
+
+
+1.10
+log
+@Added BrowserTool paramter.
+@
+text
+@@
+
+
+1.9
+log
+@Removed ShellTypes,FileSelect, added ToolData
+@
+text
+@d5 3
+d50 1
+d66 1
+@
+
+
+1.8
+log
+@Added Lists parameter.
+@
+text
+@d5 3
+d44 1
+a44 1
+require "__fileselect";
+a58 1
+  structure ShellTypes = ShellTypes_
+d60 1
+a60 1
+  structure FileSelect = FileSelect_
+@
+
+
+1.7
+log
+@Moved user_options and version from interpreter to main
+@
+text
+@d5 3
+d32 1
+d50 1
+@
+
+
+1.6
+log
+@Added FileSelect structure
+@
+text
+@d5 3
+d31 1
+a31 1
+require "../interpreter/__user_options";
+@
+
+
+1.5
+log
+@Added Crash structure
+@
+text
+@d5 3
+d34 1
+d50 1
+@
+
+
+1.4
+log
+@Added debugger and inspector
+@
+text
+@d5 3
+d24 1
+d39 1
+@
+
+
+1.3
+log
+@ Added UserOptions substructure
+@
+text
+@d5 3
+d27 2
+d41 2
+@
+
+
+1.2
+log
+@Added Menus substructure
+@
+text
+@d5 3
+d18 1
+d30 1
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 3
+a6 1
+$Log$
+d8 1
+d20 1
+d31 1
+@

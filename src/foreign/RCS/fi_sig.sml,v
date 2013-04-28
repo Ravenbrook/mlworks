@@ -1,0 +1,66 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.42.33;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_SIGNATURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_header.sml,v $
+# Revision 1.1  1995/03/27  15:48:27  brianm
+# new unit
+# New file.
+#
+ *
+ *)
+
+require "../initbasis/__general";
+
+signature FOREIGN_SIGNATURE =
+   sig
+
+     type ('a)option
+       sharing type option = General.option
+
+     type ('entry) foreign_signature
+
+
+     (* foreign signature operations *)
+
+     val new_sig      : unit -> 'entry foreign_signature
+
+     val lookup_entry : 'entry foreign_signature * string -> ('entry)option
+     val def_entry    : 'entry foreign_signature * (string * 'entry) -> unit
+     val hide_entry   : 'entry foreign_signature * string -> unit
+
+     val show_entries : 'entry foreign_signature -> (string * 'entry) list
+
+   end; (* signature FOREIGN_SIGNATURE *)
+@

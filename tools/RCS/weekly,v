@@ -1,0 +1,158 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.02.02.14.11.09;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #20104]
+Script to collect benchmark results weekly
+@
+
+
+1.1
+log
+@new unit
+[Bug #20104]
+Script to collect benchmark results weekly
+@
+text
+@#!/bin/sh
+#
+#	==== WEEKLY BENCHMARK SCRIPT ====
+#
+# Copyright (C) 1998 Harlequin Group plc.  All rights reserved.
+#
+# $Log:$
+
+
+# === ENVIRONMENT ===
+#
+# Set up the environment for the run
+
+status=0
+script=`basename $0`
+SML=/u/sml/MLW; export SML
+umask 002
+
+# Handle SIGINT and delete lock file
+# 2 SIGINT
+# 3 SIGQUIT
+# 9 SIGKILL uncatchable
+# 15 SIGTERM
+trap "rm -f $SML/tools/weekly-lock; echo Received interrupt and deleting locks...; exit 1" 2 3 15
+
+MLWORKS_LICENSE=server; export MLWORKS_LICENSE
+usage="USAGE: $script [-base_arch <ARCH:default SPARC>] [-base_os <OS:default Solaris>] [-no_mail]"
+
+no_mail=0
+base_os=Solaris
+base_arch=SPARC
+
+if [ $# -gt 0 ]; then
+  while [ $# -ge 1 ]; do
+    case $1 in
+      -no_mail) no_mail=1;;
+      -base_os)
+        if [ $# -le 1 ]; then
+          echo "$usage";
+          exit 8;
+        else
+          shift;
+          base_os=$1;
+        fi;;
+      -base_arch)
+        if [ $# -le 1 ]; then
+          echo "$usage";
+          exit 8;
+        else
+          shift;
+          base_arch=$1;
+        fi;;
+      *) echo "$usage"; exit 8;;
+    esac
+    shift
+  done
+fi
+
+ARCH=$base_arch;export ARCH
+OS=$base_os;export OS
+
+# Assert an exclusive lock on the run
+
+cd $SML
+PATH=$SML/tools:/usr/local/lib/MLWorks/bin:/bin:/usr/local/bin:/usr/ucb:/usr/ccs/bin:$PATH; export PATH
+MLWORKS_SRC_PATH=.; export MLWORKS_SRC_PATH
+MLWORKS_PERVASIVE=$SML/src/pervasive; export MLWORKS_PERVASIVE
+
+LD_LIBRARY_PATH=/usr/dt/lib/:/usr/lib:/u/sml/MLW/src/rts/bin/$ARCH/$OS/; export LD_LIBRARY_PATH
+
+
+if [ -f tools/weekly-lock ]
+then
+  echo "$script: The lock is already set:"
+  cat tools/weekly-lock 1>&2
+  exit 1
+fi
+
+(echo "$script: Weekly benchmarks"
+ echo "$script: started `date '+%Y-%m-%d %H:%M:%S'` on `hostname`") |
+ tee tools/weekly-lock
+
+  cd $SML/src/images
+  if test -f $ARCH/$OS/guib.img ;
+  then
+    echo "$script: Testing the benchmarks using this image:"
+    ls -l $ARCH/$OS/guib.img
+    cd $SML/benchmarks
+    STATUS=0
+    # this will write a single file named $ARCH_OS_DIR/`date '+%y%m%d'`
+    ./RUN_BENCHMARK_ALL -new -src ../src -dir $ARCH/$OS 
+
+    cat $ARCH/$OS/`date '+%y%m%d'`
+
+    if [ $no_mail -eq 0 ]; then
+      {
+        echo "$script: Results of benchmarks"
+	{
+           echo "From: Weekly benchmark script <sml>"
+           echo "To: mlworkers"
+           echo "Subject: Benchmarks run on: " `hostname`
+           echo
+ 	   echo "Results of running the weekly benchmarks: " $SML
+           echo
+  	   cat $ARCH/$OS/`date '+%y%m%d'` | sed -e 's/^/> /'
+           echo
+         } |
+         /usr/lib/sendmail -t
+      }
+    fi
+  else
+    echo "$script: Lawks!  No MLWorks image.  I can't work under these conditions!"
+    rm $SML/tools/weekly-lock
+    exit 7
+  fi
+
+  echo "Weekly benchmarks finished at `date +'%Y/%m/%d:%H:%M:%S'` on " `hostname`
+  rm $SML/tools/weekly-lock
+  echo "$script: Weekly benchmark status : $status"
+  exit $status
+
+@

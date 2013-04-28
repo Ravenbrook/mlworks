@@ -1,0 +1,933 @@
+head	1.19;
+access;
+symbols
+	Final_version_of_old_runtime:1.19
+	ML_revised_beta_release_25/05/94:1.19
+	ML_final_beta_release_02/03/94:1.19
+	mlworks-28-01-1994:1.19
+	Release:1.18
+	mlworks-beta-01-09-1993:1.18
+	MLWorks-1-0-3-21/12/1992:1.13
+	MLWorks-1-0-2-15/12/1992:1.13
+	MLWorks-1-0-1-04/12/1992:1.13
+	checkpoint_17_08_92:1.11;
+locks; strict;
+comment	@ *  @;
+
+
+1.19
+date	93.11.22.16.51.26;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	93.08.26.19.08.14;	author daveb;	state Exp;
+branches
+	1.18.1.1;
+next	1.17;
+
+1.17
+date	93.08.23.16.26.09;	author richard;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	93.08.17.16.39.05;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	93.04.19.14.45.16;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	93.02.01.14.48.21;	author richard;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.09.23.08.19.55;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.08.26.15.50.52;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.13.11.37.35;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.07.08.17.17.43;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.07.02.09.12.35;	author richard;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.07.01.14.40.23;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.03.17.17.42.35;	author richard;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.11.12.16.17;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.12.23.13.18.39;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.12.04.15.24.25;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.10.21.11.32.15;	author davidt;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.10.18.15.52.20;	author davidt;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.10.17.15.15.28;	author davidt;	state Exp;
+branches;
+next	;
+
+1.18.1.1
+date	93.08.26.19.08.14;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functions for dealing with associating names with external modules.
+@
+
+
+1.19
+log
+@Added extra function to lookup module timestamp
+Changed mt_add to accept extra parameter for module timestamp
+@
+text
+@/*  ==== GLOBAL MODULE TABLE ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The module table is an association list of ML values.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: modules.c,v $
+ *  Revision 1.18  1993/08/26  19:08:14  daveb
+ *  mt_lookup no longer destructively modifies its argument.
+ *
+ *  Revision 1.17  1993/08/23  16:26:09  richard
+ *  Added a missing root declaration in mt_lookup().
+ *
+ *  Revision 1.16  1993/08/17  16:39:05  daveb
+ *  mt_lookup looks along the module path.
+ *
+ *  Revision 1.15  1993/04/19  14:45:16  richard
+ *  Removed call to rusty polymorphic equality.
+ *
+ *  Revision 1.14  1993/02/01  14:48:21  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.13  1992/09/23  08:19:55  clive
+ *  Needed some roots in mt_add
+ *
+ *  Revision 1.12  1992/08/26  15:50:52  richard
+ *  The module table is now a pervasive value.
+ *
+ *  Revision 1.11  1992/07/13  11:37:35  richard
+ *  Implemented the module table as a proper ML list.
+ *
+ *  Revision 1.10  1992/07/08  17:17:43  clive
+ *  MLNIL for test in lookup - not MLUNIT
+ *
+ *  Revision 1.9  1992/07/02  09:12:35  richard
+ *  Returns ERROR rather than IMPOSSIBLE in the error case.
+ *
+ *  Revision 1.8  1992/07/01  14:40:23  richard
+ *  Changed modules to be an entirely ML type to make them storage
+ *  manager independent.
+ *
+ *  Revision 1.7  1992/03/17  17:42:35  richard
+ *  Rewrote and generalised.
+ *
+ *  Revision 1.6  1992/03/11  12:16:17  richard
+ *  The module table is now a C entity containing many C roots rather than one
+ *  ML object.  The ML approach failed because the ML object was _updated_
+ *  causing havoc with the generation mechanism.
+ */
+
+
+#include <string.h>
+
+#include "modules.h"
+#include "diagnostic.h"
+#include "mltypes.h"
+#include "values.h"
+#include "allocator.h"
+
+mlval mt_empty(void)
+{
+  return(MLNIL);
+}
+
+mlval mt_add(mlval table, mlval name, mlval structure, mlval time)
+{
+  mlval triple = MLUNIT, new_table = MLUNIT;
+
+  declare_root(&table);
+  declare_root(&name);
+  declare_root(&structure);
+  declare_root(&time);
+
+  triple = allocate_record(3);
+  FIELD(triple, 0) = name;
+  FIELD(triple, 1) = structure;
+  FIELD(triple, 2) = time;
+  retract_root(&table);
+  retract_root(&name);
+  retract_root(&structure);
+  retract_root(&time);
+  new_table = cons(triple, table);
+
+  return(new_table);
+}
+
+mlval mt_lookup(mlval table, mlval name, mlval parent)
+{
+  char *end, *path;
+  mlval mod_name, t;
+  int index, name_len = CSTRINGLENGTH(name) + 1;
+
+  declare_root(&table);
+  declare_root(&parent);
+  declare_root(&name);
+  mod_name = allocate_string (CSTRINGLENGTH(parent) + name_len);
+  retract_root(&parent);
+  retract_root(&name);
+  retract_root(&table);
+
+  path = CSTRING(parent);
+
+  end = path + strlen (path) - 1;
+
+  DIAGNOSTIC(2, "parent = %s, name = %s", CSTRING(parent), CSTRING(name));
+  do {
+    while (end > path && *end != '.')
+      end--;
+
+    if (end > path) {
+      index = end - path + 1;
+      strncpy (CSTRING(mod_name), path, index);
+      end --;
+    } else {
+      index = 0;
+    }
+
+    strcpy (CSTRING(mod_name) + index, CSTRING(name));
+    CSTRING(mod_name)[index + name_len] = '\0';
+
+    t = table;
+
+    while(!MLISNIL(t))
+    {
+      mlval triple = MLHEAD(t);
+  
+      if(!strcmp(CSTRING(FIELD(triple, 0)), CSTRING(mod_name)))
+        return(FIELD(triple, 1));
+  
+      t = MLTAIL(t);
+    }
+  } while (index != 0);
+
+  return(ERROR);
+}
+
+mlval mt_lookup_time(mlval table, mlval name, mlval parent)
+{
+  char *end, *path;
+  mlval mod_name, t;
+  int index, name_len = CSTRINGLENGTH(name) + 1;
+
+  declare_root(&table);
+  declare_root(&parent);
+  declare_root(&name);
+  mod_name = allocate_string (CSTRINGLENGTH(parent) + name_len);
+  retract_root(&parent);
+  retract_root(&name);
+  retract_root(&table);
+
+  path = CSTRING(parent);
+
+  end = path + strlen (path) - 1;
+
+  DIAGNOSTIC(2, "parent = %s, name = %s", CSTRING(parent), CSTRING(name));
+  do {
+    while (end > path && *end != '.')
+      end--;
+
+    if (end > path) {
+      index = end - path + 1;
+      strncpy (CSTRING(mod_name), path, index);
+      end --;
+    } else {
+      index = 0;
+    }
+
+    strcpy (CSTRING(mod_name) + index, CSTRING(name));
+    CSTRING(mod_name)[index + name_len] = '\0';
+
+    t = table;
+
+    while(!MLISNIL(t))
+    {
+      mlval triple = MLHEAD(t);
+  
+      if(!strcmp(CSTRING(FIELD(triple, 0)), CSTRING(mod_name)))
+        return(FIELD(triple, 2));
+  
+      t = MLTAIL(t);
+    }
+  } while (index != 0);
+
+  return(ERROR);
+}
+@
+
+
+1.18
+log
+@mt_lookup no longer destructively modifies its argument.
+@
+text
+@d12 3
+d69 1
+a69 1
+mlval mt_add(mlval table, mlval name, mlval structure)
+d71 1
+a71 1
+  mlval pair = MLUNIT, new_table = MLUNIT;
+d76 1
+d78 4
+a81 4
+  pair = allocate_record(2);
+  FIELD(pair, 0) = name;
+  FIELD(pair, 1) = structure;
+
+d85 2
+a87 2
+  new_table = cons(pair, table);
+
+d129 1
+a129 1
+      mlval pair = MLHEAD(t);
+d131 52
+a182 2
+      if(!strcmp(CSTRING(FIELD(pair, 0)), CSTRING(mod_name)))
+        return(FIELD(pair, 1));
+@
+
+
+1.18.1.1
+log
+@Fork for bug fixing
+@
+text
+@a11 3
+ *  Revision 1.18  1993/08/26  19:08:14  daveb
+ *  mt_lookup no longer destructively modifies its argument.
+ *
+@
+
+
+1.17
+log
+@Added a missing root declaration in mt_lookup().
+@
+text
+@d12 3
+d103 2
+d107 2
+a108 1
+    end = strrchr (path, '.');
+d110 1
+a110 1
+    if (end != NULL) {
+d113 1
+a113 1
+      *end = '\0';
+a119 2
+
+    DIAGNOSTIC(2, "looking up %s, path = %s", CSTRING(mod_name), path);
+@
+
+
+1.16
+log
+@mt_lookup looks along the module path.
+@
+text
+@d12 3
+d90 1
+d96 1
+@
+
+
+1.15
+log
+@Removed call to rusty polymorphic equality.
+@
+text
+@d12 3
+d50 1
+d81 1
+a81 1
+mlval mt_lookup(mlval table, mlval name)
+d83 9
+a91 3
+  while(!MLISNIL(table))
+  {
+    mlval pair = MLHEAD(table);
+d93 1
+a93 2
+    if(!strcmp(CSTRING(FIELD(pair, 0)), CSTRING(name)))
+      return(FIELD(pair, 1));
+d95 29
+a123 2
+    table = MLTAIL(table);
+  }
+@
+
+
+1.14
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d12 3
+d44 2
+d83 1
+a83 1
+    if(equal(FIELD(pair, 0), name))
+@
+
+
+1.13
+log
+@Needed some roots in mt_add
+@
+text
+@d12 3
+d60 2
+a61 2
+  (void)SETFIELD(pair, 0, name);
+  (void)SETFIELD(pair, 1, structure);
+d78 2
+a79 2
+    if(equal(GETFIELD(pair, 0), name))
+      return(GETFIELD(pair, 1));
+@
+
+
+1.12
+log
+@The module table is now a pervasive value.
+@
+text
+@d12 3
+d52 4
+d59 4
+@
+
+
+1.11
+log
+@Implemented the module table as a proper ML list.
+@
+text
+@d12 3
+a38 4
+
+
+mlval modules = MLNIL;		/* the global module table */
+
+@
+
+
+1.10
+log
+@MLNIL for test in lookup - not MLUNIT
+@
+text
+@d12 3
+a49 1
+  declare_root(&pair);
+d54 1
+a54 4
+  new_table = allocate_record(2);
+  (void)SETFIELD(new_table, 0, pair);
+  (void)SETFIELD(new_table, 1, table);
+  retract_root(&pair);
+d61 1
+a61 1
+  while(table != MLNIL)
+d63 4
+a66 2
+    if(equal(GETFIELD(GETFIELD(table, 0), 0), name))
+      return(GETFIELD(GETFIELD(table, 0), 1));
+d68 1
+a68 1
+    table = GETFIELD(table, 1);
+@
+
+
+1.9
+log
+@Returns ERROR rather than IMPOSSIBLE in the error case.
+@
+text
+@d12 3
+d62 1
+a62 1
+  while(table != MLUNIT)
+@
+
+
+1.8
+log
+@Changed modules to be an entirely ML type to make them storage
+manager independent.
+@
+text
+@d12 4
+d67 1
+a67 1
+  return(IMPOSSIBLE);
+@
+
+
+1.7
+log
+@Rewrote and generalised.
+@
+text
+@d7 1
+a7 1
+ *  The module table is a simple self-extending array.
+d11 4
+a14 1
+ *  $Log$
+d23 1
+a23 1
+#include "loader.h"
+d25 1
+a25 6
+#include "gc.h"
+#include "utils.h"
+#include "diagnostic.h"
+#include "alloc.h"
+
+#include <stddef.h>
+d28 1
+a28 1
+#define INITIAL_TABLE_SIZE	16
+d31 1
+a31 1
+ModuleTable mt_empty(void)
+d33 1
+a33 9
+  ModuleTable table = (ModuleTable)malloc(sizeof(*table));
+
+  if(table == NULL)
+    error("Unable to allocate module table.");
+
+  table->free = table->size = 0;
+  table->array = NULL;
+
+  return(table);
+d36 1
+a36 1
+void mt_discard(ModuleTable table)
+d38 1
+a38 7
+  size_t i;
+
+  for(i=0; i<table->free; ++i)
+  {
+    retract_root(&table->array[i].name);
+    retract_root(&table->array[i].structure);
+  }
+d40 9
+a48 2
+  if(table->array != NULL)
+    free(table->array);
+d50 1
+a50 1
+  free(table);
+d53 1
+a53 1
+void mt_add(ModuleTable table, mlval name, mlval structure)
+d55 1
+a55 1
+  if(table->free >= table->size)
+d57 2
+a58 1
+    size_t i;
+d60 1
+a60 16
+    for(i=0; i<table->free; ++i)
+    {
+      retract_root(&table->array[i].name);
+      retract_root(&table->array[i].structure);
+    }
+
+    table->size = table->size == 0 ? INITIAL_TABLE_SIZE : table->size*2;
+    table->array = realloc(table->array, sizeof(*table->array) * table->size);
+    if(table->array == NULL)
+      error("Unable to extend module table.");
+
+    for(i=0; i<table->free; ++i)
+    {
+      declare_root(&table->array[i].name);
+      declare_root(&table->array[i].structure);
+    }
+a61 16
+
+  table->array[table->free].name = name;
+  declare_root(&table->array[table->free].name);
+  table->array[table->free].structure = structure;
+  declare_root(&table->array[table->free].structure);
+  ++table->free;
+}
+
+
+mlval mt_lookup(const ModuleTable table, mlval name)
+{
+  size_t i;
+
+  for(i=0; i<table->free; ++i)
+    if(equal(name, table->array[i].name))
+      return(table->array[i].structure);
+@
+
+
+1.6
+log
+@The module table is now a C entity containing many C roots rather than one
+ML object.  The ML approach failed because the ML object was _updated_
+causing havoc with the generation mechanism.
+@
+text
+@d7 1
+d12 4
+d19 1
+d25 1
+a25 1
+#include "modules.h"
+a28 4
+static struct entry
+{
+  mlval name, module;
+} *table = NULL;
+d30 1
+a30 1
+static size_t table_size, next_free;
+d32 2
+a33 1
+void init_module_table(int size)
+d35 1
+a35 2
+  if(table != NULL)
+    error("Attempt to initialize the module table when it has already been initialized.");
+a36 2
+  table = (struct entry *)malloc(sizeof(struct entry)*size);
+
+d38 1
+a38 1
+    error("Unable to allocate global module table.");
+d40 4
+a43 2
+  next_free = 0;
+  table_size = size;
+d46 1
+a46 1
+void discard_module_table(void)
+d50 1
+a50 1
+  for(i=0; i<next_free; ++i)
+d52 2
+a53 2
+    retract_root(&(table[i].name));
+    retract_root(&(table[i].module));
+d56 3
+a59 1
+  table = NULL;
+d62 1
+a62 1
+mlval lookup_module (const char *current, mlval name)
+d64 3
+a66 1
+  size_t i;
+d68 5
+a72 3
+  for(i=0; i<next_free; ++i)
+    if(equal(name, table[i].name))
+      return(table[i].module);
+d74 17
+a90 1
+  loader_error("Module %s references unknown external %s", current, CSTRING(name));
+d93 2
+a94 1
+void add_module (mlval name, mlval module)
+d96 1
+a96 2
+  if(next_free >= table_size)
+    error("The global module table is full.");
+d98 5
+a102 5
+  table[next_free].name = name;
+  declare_root(&(table[next_free].name));
+  table[next_free].module = module;
+  declare_root(&(table[next_free].module));
+  ++next_free;
+@
+
+
+1.5
+log
+@Added some missing #include's.  Changed the name of the fatal
+runtime error handler to error().  Added void casts to some
+unused results.
+@
+text
+@d1 10
+a10 2
+/*
+ * Lookup module in table of previously loaded modules.
+d13 1
+a13 1
+#include "allocator.h"
+a14 2
+#include "mltypes.h"
+#include "modules.h"
+d18 2
+d21 1
+a21 1
+#include <string.h>
+d23 4
+a26 4
+/*
+ * This table is allocated in the ML heap so that the garbage
+ * collector can treat it as a root.
+ */
+d28 1
+a28 3
+static mlval global_table;
+static int next_free_slot;
+static int number_slots;
+d30 1
+a30 6
+/*
+ * Initialise the table of modules, making it visible as a root to
+ * the garbage collector.
+ */
+
+void init_module_table (int maximum_size)
+d32 2
+a33 1
+  int loop;
+d35 1
+a35 2
+  /* Get a vector if appropriate size */
+  global_table = allocate_record(maximum_size);
+d37 2
+a38 3
+  /* Clear vector so that garbage collector can scan it ok */
+  for (loop = 0; loop < maximum_size; loop++)
+    (void)SETFIELD(global_table, loop, NULL);
+d40 2
+a41 6
+  /* The vector must be a root during garbage collection */
+  declare_root(&global_table);
+
+  /* Setup ready for add_module */
+  next_free_slot = 0;
+  number_slots = maximum_size;
+d44 1
+a44 1
+void discard_module_table (void)
+d46 10
+a55 2
+  retract_root(&global_table);
+  number_slots = 0;
+d58 1
+a58 1
+mlval lookup_module (char *current, mlval name)
+d60 1
+a60 3
+  word loop;
+  char * a_name;
+  char * c_name = CSTRING(name);
+d62 3
+a64 7
+  /* Search for the module */
+  for (loop = 0; loop < next_free_slot; loop++)
+  {
+    a_name = CSTRING(GETFIELD(GETFIELD(global_table, loop),0));
+    if (strcmp(c_name, a_name) == 0)
+      return GETFIELD(GETFIELD(global_table,loop),1);
+  }
+d66 1
+a66 2
+  /* We didn't find the module */
+  loader_error("Module %s references unknown external %s", current, c_name);
+d69 1
+a69 1
+void add_module (mlval module_name, mlval module)
+d71 2
+a72 9
+  if (next_free_slot < number_slots)
+  {
+    mlval pair = allocate_record(2);
+    (void)SETFIELD(pair, 0, module_name);
+    (void)SETFIELD(pair, 1, module);
+    (void)SETFIELD(global_table, next_free_slot++, pair);
+  }
+  else
+    error("Internal error (add_module)");
+d74 5
+@
+
+
+1.4
+log
+@Removed the redundant `/library' module.
+@
+text
+@d10 2
+d13 2
+a31 1
+  mlval dummy;
+d38 1
+a38 1
+    SETFIELD(global_table, loop, NULL);
+d61 2
+a62 1
+  for (loop = 0; loop < next_free_slot; loop++) {
+d64 1
+a64 1
+    if (strcmp(c_name, a_name) == 0) {
+d66 1
+a66 2
+    }
+  };
+d74 2
+a75 1
+  if (next_free_slot < number_slots) {
+d77 3
+a79 5
+    SETFIELD(pair, 0, module_name);
+    SETFIELD(pair, 1, module);
+    SETFIELD(global_table, next_free_slot++, pair);
+  } else {
+    runtime_error("Internal error (add_module)");
+d81 3
+@
+
+
+1.3
+log
+@Changed calls to declare_root and retract_root (their argument
+types are different now).
+@
+text
+@a29 3
+  /* We put in an extra slot for the pervasive module */
+  ++maximum_size;
+
+d34 2
+a35 1
+  for (loop = 0; loop < maximum_size; loop++) SETFIELD(global_table,loop,NULL);
+a42 3
+
+  /* Insert a dummy pervasive module in the table */
+  add_module(ml_string("/library"), allocate_record(60));
+@
+
+
+1.2
+log
+@Actually implemented the functions!
+@
+text
+@d31 1
+a31 1
+  maximum_size++;
+d40 1
+a40 1
+  declare_root(global_table);
+d52 1
+a52 1
+  retract_root(global_table);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d5 2
+a6 2
+#include <stdio.h>
+
+a8 2
+#include "allocator.h"
+#include "loader.h"
+d18 1
+a18 1
+static int maximum_fields;
+d28 1
+d30 3
+d42 1
+d44 4
+a47 1
+  maximum_fields = maximum_size;
+d52 2
+d56 1
+a56 1
+mlval lookup_module (char *current_module, mlval module_name)
+d58 14
+a71 5
+  fprintf
+    (stderr,
+     "[Loader error : Module '%s' references unknown external '%s']\n",
+     current_module, CSTRING(module_name));
+  exit (-1);
+d76 8
+@

@@ -1,0 +1,95 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.08.17.39.01;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.08.17.16.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting applications into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(*
+Status: R
+
+variable.sig			BMM   27-02-90
+
+This signature gives the interface for the available functions for handling variables.
+
+*)
+
+signature VARIABLE =
+  sig
+	type Sort
+	type Sort_Store 
+
+	type Variable
+	val variable_sort : Variable -> Sort
+	val variable_label : Variable -> string
+	val generate_variable : Sort -> Variable
+	val make_variable : string -> Sort -> Variable 
+	val VarEq : Variable -> Variable -> bool
+	val rename_variable : Variable -> Variable
+	val ord_v : Variable -> Variable -> bool
+
+	type Variable_Store
+	val Empty_Variable_Store : Variable_Store
+	val read_variable : Variable_Store -> string -> Variable Search
+	val declare_variable : Variable_Store -> string * Sort -> Variable_Store
+	val declare_prefix : Variable_Store -> string * Sort -> Variable_Store
+	val delete_variable : Variable_Store -> string -> Variable_Store
+
+	val display_variable : Variable_Store -> Variable -> string
+	val names_of_vars : Variable_Store -> ((string * string) list * (string * string) list)
+	val variable_parser : Sort_Store -> Variable_Store -> 
+		    	      (string , Variable)  Assoc.Assoc ->
+		    	       string list ->
+		   	      ((Variable * string list) * 
+		   		(string , Variable) Assoc.Assoc) Maybe
+
+	type Variable_Print_Env
+	val Empty_Var_Print_Env : Variable_Print_Env
+	val lookup_var_print_env : Variable_Print_Env -> Variable_Store -> 
+			Variable -> string * Variable_Print_Env
+
+  end (* of signature VARIABLE *);
+
+@
+
+
+1.1
+log
+@new unit
+Putting applications into hope and daily
+@
+text
+@@

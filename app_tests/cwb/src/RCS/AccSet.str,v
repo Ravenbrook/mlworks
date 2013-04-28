@@ -1,0 +1,75 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.15.13;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.30;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: AccSet.str,v 1.3 1994/10/28 17:17:20 pxs Exp $";
+functor AccSet ( structure A    : ACT;
+                 structure Trie : TRIE ) : ACCSET =
+struct
+   type act = A.act
+   type accset = (act,unit) Trie.trie
+
+   val empty = Trie.empty
+
+   fun insert aset = Trie.insert A.le (aset,())
+   val union = Trie.merge A.le
+
+   val eq = fn x => Trie.eq A.eq (op =) x
+
+   val mkaccset =
+       let fun mas S [] = S
+             | mas S (h::t) =
+               mas (if Trie.has_sublist A.le S h then S
+                    else insert h (Trie.rm_superlists A.le h S)) t
+        in mas empty
+       end
+
+   val subaccset = Trie.subaccset A.le
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

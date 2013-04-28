@@ -1,0 +1,102 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	96.04.23.16.01.54;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.23.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Defining char properly
+@
+text
+@(*  ==== INITIAL BASIS : Byte structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __bytes.sml,v $
+ * Revision 1.1  1996/04/18  11:23:53  jont
+ * new unit
+ *
+ *  Revision 1.2  1995/05/10  15:01:54  daveb
+ *  Type of char changed from int to Word8.word.
+ *
+ * Revision 1.1  1995/04/13  13:13:05  jont
+ * new unit
+ * No reason given
+ *
+ *
+ *)
+
+require "__chars";
+require "__word8";
+require "__word8array";
+require "__word8vector";
+require "__charvector";
+require "bytes";
+
+structure Byte : BYTE =
+  struct
+    exception Ord
+    fun chr (x: Word8.word): Char.char = MLWorks.Internal.Value.cast x
+    fun ord (x: Char.char): Word8.word = MLWorks.Internal.Value.cast x
+
+    val maxw = Bits.lshift(1, Word8.wordSize)
+    val string : Word8Vector.vector -> string =
+      fn v =>
+      let
+	val len = Word8Vector.length v
+	fun elems(0, acc) = acc
+	  | elems(n, acc) = elems(n-1, chr(Word8Vector.sub(v, n-1)) :: acc)
+      in
+	CharVector.vector(elems(len, []))
+      end
+
+    val extract : Word8Array.array * int * int -> string =
+      fn (a, start, len) =>
+      let
+	fun elems(0, acc) = acc
+	  | elems(n, acc) = elems(n-1, chr(Word8Array.sub(a, start+n-1)) :: acc)
+      in
+	CharVector.vector(elems(len, []))
+      end
+
+  end
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ *  $Log$
+d35 2
+a36 2
+    fun chr (x: Word8.word): Char.char = x
+    fun ord (x: Char.char): Word8.word = x
+@

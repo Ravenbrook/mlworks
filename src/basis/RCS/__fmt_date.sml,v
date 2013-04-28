@@ -1,0 +1,166 @@
+head	1.3;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	96.05.01.11.35.07;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.04.29.15.38.07;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.26.01;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.3
+log
+@String functions explode, implode, chr and ord now only available from String
+io functions and types
+instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+now only available from MLWorks.IO
+@
+text
+@(*  ==== INITIAL BASIS : Fmt_Date structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __fmt_date.sml,v $
+ * Revision 1.2  1996/04/29  15:38:07  matthew
+ * Removed MLWorks.Integer
+ *
+ * Revision 1.1  1996/04/18  11:26:01  jont
+ * new unit
+ *
+ *  Revision 1.1  1995/04/13  13:18:07  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "__integer";
+require "__date";
+require "fmt_date";
+
+structure Fmt_Date : FMT_DATE =
+  struct
+    fun day_str Date.Mon = "Mon"
+      | day_str Date.Tue = "Tue"
+      | day_str Date.Wed = "Wed"
+      | day_str Date.Thu = "Thu"
+      | day_str Date.Fri = "Fri"
+      | day_str Date.Sat = "Sat"
+      | day_str Date.Sun = "Sun"
+
+    fun month_str Date.Jan = "Jan"
+      | month_str Date.Feb = "Feb"
+      | month_str Date.Mar = "Mar"
+      | month_str Date.Apr = "Apr"
+      | month_str Date.May = "May"
+      | month_str Date.Jun = "Jun"
+      | month_str Date.Jul = "Jul"
+      | month_str Date.Aug = "Aug"
+      | month_str Date.Sep = "Sep"
+      | month_str Date.Oct = "Oct"
+      | month_str Date.Nov = "Nov"
+      | month_str Date.Dec = "Dec"
+
+    fun to_two_digits x =
+      let
+	val str = Int.toString x
+      in
+	if size str = 1 then "0" ^ str else str
+      end
+
+    val dateToStr : Date.date -> string =
+      fn Date.DATE
+      {year, (* since 1900 *)
+       month,
+       day, (* 1 - 31 *)
+       hour, (* 0 - 23 *)
+       minute, (* 0 - 59 *)
+       second, (* 0 - 61 to allow for leap seconds *)
+       offset, (* +/- from GMT? *)
+       zone,
+       wday
+       } =>
+      let
+	val hours = to_two_digits hour
+	val minutes = to_two_digits minute
+	val seconds = to_two_digits second
+      in
+	String.implode[day_str wday,
+		" ",
+		month_str month,
+		" ",
+		Int.toString day,
+		" ",
+		hours,
+		":",
+		minutes,
+		":",
+		seconds,
+		" ",
+		Int.toString(1900 + year),
+		"\n"]
+
+      end
+
+    val formatDate : string -> Date.date -> string =
+      fn str =>
+      fn date =>
+      MLWorks.Time.format(str, MLWorks.Time.LOCAL, Date.dateToTime date)
+
+  end (* FMT_DATE *)
+@
+
+
+1.2
+log
+@Removed MLWorks.Integer
+@
+text
+@d10 3
+d74 1
+a74 1
+	implode[day_str wday,
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d20 1
+d49 1
+a49 1
+	val str = MLWorks.Integer.makestring x
+d75 1
+a75 1
+		MLWorks.Integer.makestring day,
+d83 1
+a83 1
+		MLWorks.Integer.makestring(1900 + year),
+@

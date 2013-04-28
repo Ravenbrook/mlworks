@@ -1,0 +1,693 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.01.21.12.01.39;	author richard;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	91.12.03.15.19.09;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.11.25.14.16.59;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.21.16.42.15;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.01.21.12.01.39;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Functor of the register interference graph module.
+@
+
+
+1.4
+log
+@Added missing require of array.
+@
+text
+@(*  ==== REGISTER INTERFERENCE GRAPH ====
+ *                FUNCTOR
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  The graph is implemented as an array of arrays of integers forming an
+ *  adjacency matrix[1].  This has three benefits:
+ *
+ *    1. it's fast to build the graph,
+ *    2. it's space-efficient to build the graph,
+ *    3. the process of coalescing vertices to remove unnecessary MOVE
+ *       operations is easier (although this hasn't been implemented yet).
+ *  
+ *  When the time comes to colour the graph an adjacency array is
+ *  constructed (see `adjacency_array_of_graph' below) and is used in a
+ *  simple greedy algorithm.  This should be changed to a priority based
+ *  algorithm as outlined in [1].
+ *
+ *  [1] Register Allocation & Spilling via Graph Coloring
+ *      G J Chaitin
+ *      Proc. of SIGPLAN '82 Symp. on Compiler Construction pp98-105
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _interferencegraph.sml,v $
+ *  Revision 1.3  1991/12/03  15:19:09  richard
+ *  Added connect and isolate.
+ *
+ *  Revision 1.2  91/11/25  14:16:59  richard
+ *  Corrected the definition of `build' to cope with zero-sized graphs.
+ *  Improved the diagnostic output and exported functions for printing.
+ *  
+ *  Revision 1.1  91/11/21  16:42:15  richard
+ *  Initial revision
+ *)
+
+
+require "../utils/lists";
+require "../utils/diagnostic";
+require "../utils/integer";
+require "../utils/array";
+require "interferencegraph";
+
+
+functor InterferenceGraph (
+
+  structure Array	: ARRAY
+  structure Diagnostic	: DIAGNOSTIC
+  structure Integer	: INTEGER
+  structure Lists	: LISTS
+
+) : INTERFERENCEGRAPH =
+
+  struct
+
+    structure Array = Array
+    structure Diagnostic = Diagnostic
+
+
+
+    (*  === SYMMETRIC MATRIX OF BOOLEANS ===
+     *
+     *  This abstype defines a symmetric matrix with the leading diagonal
+     *  always false.  It is used as an adjacency matrix for the graph
+     *  vertices.
+     *)
+
+    abstype matrix = MATRIX of bool Array.array Array.array
+    with
+
+      open Array
+      nonfix sub	(* needed in nonSML of NJ *)
+
+
+      (*  == Build a matrix containing no edges ==  *)
+
+      fun build size =
+	let
+	  val matrix = array (size, array (0, false))
+
+	  fun build' 0 = ()
+	    | build' n =
+	      let
+		val row = size-n
+	      in
+		update (matrix, row, array (row, false));
+		build' (n-1)
+	      end
+	in
+	  build' size;
+	  MATRIX (matrix)
+	end
+
+
+      (*  == Set an edge in the matrix ==  *)
+
+      fun set_edge (MATRIX matrix, row, column) =
+	if row = column then
+	  ()
+	else
+	  let
+	    val (row', column') =
+	      if row < column then (column, row) else (row, column)
+	  in
+	    update (sub (matrix, row'), column', true)
+	  end
+
+
+      (*  == Clear an edge in the matrix ==  *)
+
+      fun clear_edge (MATRIX matrix, row, column) =
+	if row = column then
+	  ()
+	else
+	  let
+	    val (row', column') =
+	      if row < column then (column, row) else (row, column)
+	  in
+	    update (sub (matrix, row'), column', false)
+	  end
+
+
+      (*  == Is there an edge? ==  *)
+
+      fun edge (MATRIX matrix, row, column) =
+	if row = column then
+	  false
+	else
+	  let
+	    val (row', column') =
+	      if row < column then (column, row) else (row, column)
+	  in
+	    sub (sub (matrix, row'), column')
+	  end
+
+    end
+
+
+
+    (*  === THE GRAPH TYPE ===
+     *
+     *  The following fields are defined:
+     *    size     the number of vertices in the graph
+     *    pack     a function from vertices to the integers in [0,size-1]
+     *    unpack   the inverse of pack
+     *    matrix   an adjacency matrix representing the graph edges
+     *)
+
+    datatype 'vertex T =
+      GRAPH of {size	: int,
+		pack	: 'vertex -> int,
+		unpack	: int -> 'vertex,
+		matrix	: matrix}
+
+
+
+    (*  === DIAGNOSTIC OUTPUT ===  *)
+
+    fun diagnostic (level, output_function) =
+      Diagnostic.output level
+      (fn verbosity => "InterferenceGraph: " :: (output_function verbosity))
+
+
+
+    (*  === BUILD AN EMPTY GRAPH ===  *)
+
+    fun empty {range, pack, unpack} =
+      (
+        diagnostic (1, fn _ => ["building empty graph of size ",
+				Integer.makestring range]);
+
+	GRAPH {size = range,
+	       pack = pack,
+	       unpack = unpack,
+	       matrix = build range}
+      )
+
+
+
+    (*  == Convert graph to adjacency array ==
+     *
+     *  Constructs an array, indexed by vertex number, containing lists of
+     *  vertices adjacent to the index.  The function returns this array,
+     *  tupled with the vertex number with the longest such list.
+     *)
+
+    fun adjacency_array_of_graph (GRAPH {size, matrix, ...}) =
+      let
+	open Array
+	nonfix sub
+
+	val array = array (size, [])
+
+	fun build_array (largest, _, 0) = largest
+	  | build_array (largest, largest_length, down) =
+	    let
+	      fun adjacent (done, 0) = done
+		| adjacent (done, across) =
+		  if edge (matrix, size-down, size-across) then
+		    adjacent ((size-across)::done, across-1)
+		  else
+		    adjacent (done, across-1)
+
+	      val list = adjacent([], size)
+	      val list_length = Lists.length list
+	    in
+	      update (array, size-down, list);
+	      if list_length > largest_length then
+		build_array (size-down, list_length, down-1)
+	      else
+		build_array (largest, largest_length, down-1)
+	    end
+
+	val largest = build_array (0, 0, size)
+      in
+	(largest, array)
+      end
+
+
+
+    (*  === CONVERT GRAPH INTO STRINGS ===
+     *
+     *  These two functions convert a graph into a list of strings which,
+     *  when printed one after the other, will display the graph.  The first
+     *  shows the graph as an adjacency matrix, the second shows it as a set
+     *  of adjacency lists.
+     *)
+
+    fun strings_of_graph_matrix (GRAPH {size, pack, unpack, matrix}) =
+      let
+	open Array
+	nonfix sub
+
+	fun row (done, 0) = done
+	  | row (done, r) =
+	    let
+	      val r' = r - 1
+
+	      fun column (done, 0) = done
+		| column (done, c) =
+		  let
+		    val c' = c - 1
+		    val done' =
+		      (if edge (matrix, r', c') then "* " else ". ") :: done
+		  in
+		    column (done', c')
+		  end
+	    in
+	      row (column ("\n" :: done, size), r')
+	    end
+      in
+	row ([], size)
+      end
+
+
+    (*  == Convert adjacency array to strings ==  *)
+
+    fun strings_of_adjacency_array printer adjacent =
+      let
+	open Array
+	nonfix sub
+
+	fun row (done, 0) = done
+	  | row (done, r) =
+	    let
+	      val r' = r - 1
+
+	      val column =
+		(printer r') :: ": " ::
+		(map
+		 (fn i => printer i ^ " ")
+		 (sub (adjacent, r')))
+	    in
+	      row (column @@ ("\n" :: done), r')
+	    end
+      in
+	row ([], length adjacent)
+      end
+
+
+    (*  === EXPORTED PRINTING FUNCTIONS ===  *)
+
+    fun strings_of_graph_lists printer (graph as GRAPH {unpack, ...}) =
+      let
+	val (_, array) = adjacency_array_of_graph graph
+      in
+	strings_of_adjacency_array (printer o unpack) array
+      end
+
+
+
+    (*  === ADD INTERFERENCE EDGES ===  *)
+
+    fun add_edges (graph as GRAPH {pack, matrix, ...}, vertices) =
+      let
+	fun add_edges' [] = ()
+	  | add_edges' (vertex::vertices) =
+	  let
+	    fun add [] = ()
+	      | add (vertex'::vertices') =
+		(
+		  set_edge (matrix, vertex, vertex');
+		  add vertices'
+		)
+	  in
+	    add vertices;
+	    add_edges' vertices
+	  end
+
+	val packed_vertices = map pack vertices
+      in
+	diagnostic (1, (fn _ => "adding clique " ::
+			(map (fn i => Integer.makestring i ^ " ")
+			 packed_vertices)));
+
+	add_edges' packed_vertices;
+
+	diagnostic (2, (fn _ => "resulting graph\n" ::
+			(strings_of_graph_matrix graph)))
+      end
+
+
+    (*  === REMOVE EDGES ===  *)
+
+    fun isolate (graph as GRAPH {pack, size, matrix, ...}, vertex) =
+      let
+	val vertex_number = pack vertex
+
+	fun isolate' 0 = ()
+	  | isolate' n =
+	    let
+	      val vertex_number' = size - n
+	    in
+	      clear_edge (matrix, vertex_number, vertex_number');
+	      isolate' (n - 1)
+	    end
+      in
+	diagnostic (1, (fn _ =>
+			["isolating ", Integer.makestring vertex_number]));
+	isolate' size;
+
+	diagnostic (2, (fn _ => "resulting graph\n" ::
+			(strings_of_graph_matrix graph)))
+      end
+
+
+    (*  === ADD EDGES FROM ONE VERTEX ===  *)
+
+    fun connect (graph as GRAPH {pack, matrix, ...}, vertex, vertices) =
+      let
+	val vertex_number = pack vertex
+
+	fun connect' [] = ()
+	  | connect' (vertex'::vertices') =
+	    let 
+	      val vertex_number' = pack vertex'
+	    in
+	      set_edge (matrix, vertex_number, vertex_number');
+	      connect' vertices'
+	    end
+      in
+	diagnostic (1,
+		    (fn _ => ["connecting ", Integer.makestring vertex_number,
+			      " to"] @@
+		     (map
+		      (fn v => " " ^ Integer.makestring (pack v))
+		      vertices)));
+
+	connect' vertices;
+
+	diagnostic (2, (fn _ => "resulting graph\n" ::
+			(strings_of_graph_matrix graph)))
+      end
+
+
+
+    (*  === COLOUR THE INTERFERENCE GRAPH ===
+     *
+     *  At present this is a simple greedy algorithm, but should be
+     *  converted to a priority based polynomial method which runs roughly
+     *  as follows: Remove the vertex with the most edges from the graph
+     *  repeatedly until there are none left, then put them back in reverse
+     *  order and colour greedily as you go.  A reference to a description
+     *  of this method is given in the comment at the top of this file.
+     *)
+
+    datatype '_colour colour = COLOUR of '_colour | NONE
+
+    fun colour {graph as GRAPH {size, pack, unpack, ...},
+		choose,
+		state,
+		colours = precolours} =
+      let
+	open Array
+	nonfix sub
+
+        (* Build an array mapping vertices onto lists of adjacent vertices. *)
+
+	val (_, adjacent) = adjacency_array_of_graph graph
+
+	val _ =
+	  diagnostic (2, fn _ => 
+		      "adjacency array is\n" ::
+		      (strings_of_adjacency_array Integer.makestring adjacent))
+
+	(* Build an array mapping vertices onto their colours.  Initially *)
+	(* all vertices are uncoloured. *)
+
+	val colours = array (size, NONE)
+
+	(* Fill the colours array with any precoloured vertices. *)
+
+        fun precolour [] = ()
+	  | precolour ((vertex, colour)::rest) =
+	    (
+	      update (colours, pack vertex, COLOUR colour);
+	      precolour rest
+            )
+
+        (* This array is filled with the colours adjacent to a vertex and *)
+	(* then passed to the choose function.  It is used in preference to *)
+	(* a list for efficiency. *)
+
+	val adjacent_colours = array (size, NONE)
+
+        (* Fill in the adjacent_colours array with the colours of a list of *)
+	(* vertices.  The function returns the number of colours it put in *)
+	(* the array. *)
+
+	fun fill_in_adjacent (number, []) = number
+	  | fill_in_adjacent (number, vertex::vertices) =
+	    case sub (colours, vertex)
+	      of NONE => fill_in_adjacent (number, vertices)
+	       | colour as COLOUR _ =>
+		 (
+		   update (adjacent_colours, number, colour);
+		   fill_in_adjacent (number+1, vertices)
+		 )
+
+	(* Colour the vertices by calling choose on each one in turn.  This *)
+	(* is the greedy algorithm and isn't particulary good. *)
+
+	fun colour' (0, choose_state) = ()
+	  | colour' (n, choose_state) =
+	    let
+	      val vertex = size - n
+	    in
+	      (* If the vertex is already coloured then skip it.  This might *)
+	      (* occur if it has been precoloured. *)
+	      case sub (colours, vertex)
+		of NONE =>
+		   let
+		     val length = fill_in_adjacent (0, sub (adjacent, vertex))
+		     val (colour, new_state) =
+		       choose {vertex = unpack vertex,
+			       state = choose_state,
+			       adjacent = adjacent_colours,
+			       length = length}
+		   in
+		     update (colours, vertex, colour);
+		     colour' (n-1, new_state)
+		   end
+		 | COLOUR _ => 
+		   colour' (n-1, choose_state)
+	    end
+
+	  (* Convert the array of colours into two lists, one of pairs from *)
+	  (* vertices to colours, the other of uncoloured vertices. *)
+
+	  fun convert_result (coloured, uncoloured, 0) =
+	      (coloured, uncoloured)
+	    | convert_result (coloured, uncoloured, n) =
+	      let
+		val vertex = size-n
+		val unpacked = unpack vertex
+	      in
+		case sub (colours, vertex)
+		  of NONE =>
+		     convert_result (coloured,
+				     unpacked::uncoloured,
+				     n-1)
+		   | COLOUR colour =>
+		     convert_result ((unpacked, colour)::coloured,
+				     uncoloured,
+				     n-1)
+	      end
+      in
+	precolour precolours;
+	colour' (size, state);
+	convert_result ([], [], size)
+      end
+
+
+  end
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a27 3
+ *  Revision 1.4  1992/01/21  12:01:39  richard
+ *  Added missing require of array.
+ *
+@
+
+
+1.3
+log
+@Added connect and isolate.
+@
+text
+@d27 4
+a30 1
+ *  $Log:	_interferencegraph.sml,v $
+d43 1
+@
+
+
+1.2
+log
+@Corrected the definition of `build' to cope with zero-sized graphs.
+Improved the diagnostic output and exported functions for printing.
+@
+text
+@d28 4
+d107 14
+d315 53
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d25 5
+a29 1
+ *  Revision Log: $Log$
+d75 8
+a82 6
+	  fun build' 0 = matrix
+	    | build' row_number =
+	      (
+	        update (matrix, row_number, array (row_number, false));
+		build' (row_number -1)
+              )
+d84 2
+a85 1
+	  MATRIX (build' (size-1))
+d144 17
+a160 1
+    (*  == Convert graph into strings ==
+d162 3
+a164 2
+     *  Converts the adjacency matrix of the graph in to a list of strings
+     *  which, when printed one after the other, will represent the graph.
+d167 1
+a167 1
+    fun strings_of_graph (GRAPH {size, pack, unpack, matrix}) =
+d172 42
+d238 1
+a238 1
+    fun strings_of_adjacency_array adjacent =
+d249 1
+a249 1
+		(Integer.makestring r') :: ": " ::
+d251 1
+a251 1
+		 (fn i => Integer.makestring i ^ " ")
+d261 1
+d263 6
+a268 1
+    (*  === BUILD AN EMPTY GRAPH ===  *)
+a269 5
+    fun empty {range, pack, unpack} =
+      GRAPH {size = range,
+	     pack = pack,
+	     unpack = unpack,
+	     matrix = build range}
+a271 1
+
+d299 1
+a299 1
+			(strings_of_graph graph)))
+a303 41
+    (*  == Convert graph to adjacency array ==
+     *
+     *  Constructs an array, indexed by vertex number, containing lists of
+     *  vertices adjacent to the index.  The function returns this array,
+     *  tupled with the vertex number with the longest such list.
+     *)
+
+    fun adjacency_array_of_graph (GRAPH {size, matrix, ...}) =
+      let
+	open Array
+	nonfix sub
+
+	val array = array (size, [])
+
+	fun build_array (largest, _, 0) = largest
+	  | build_array (largest, largest_length, down) =
+	    let
+	      fun adjacent (done, 0) = done
+		| adjacent (done, across) =
+		  if edge (matrix, size-down, size-across) then
+		    adjacent ((size-across)::done, across-1)
+		  else
+		    adjacent (done, across-1)
+
+	      val list = adjacent([], size)
+	      val list_length = Lists.length list
+	    in
+	      update (array, size-down, list);
+	      if list_length > largest_length then
+		build_array (size-down, list_length, down-1)
+	      else
+		build_array (largest, largest_length, down-1)
+	    end
+
+	val largest = build_array (0, 0, size)
+      in
+	(largest, array)
+      end
+
+
+
+d328 4
+a331 3
+	val _ = diagnostic (2, fn _ => 
+			    "adjacency array is\n" ::
+			    (strings_of_adjacency_array adjacent))
+d419 1
+a419 1
+	       
+@

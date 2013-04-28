@@ -1,0 +1,161 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.05.28.15.29.00;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.05.28.15.16.42;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Adding applications/tests into hope
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ * $Log$
+ *)               
+
+           (* Categories with finite LIMITS and COLIMITS and
+                a SUBOBJECT CLASSIFIER are semitoposes *)
+
+           (* Logical connectives are defined in semitoposes *)
+
+
+   (* Needs "basic" and "cat"; the example file "x.semitopos"
+        needs "comma" as well *)
+
+   (* Data types *)
+
+   type ('o,'m)Square = 'm * 'm * 'm * 'm;
+   type ('o,'m)PullBack_Square = ('o,'m)Square * (('m*'m) -> 'm);
+   type ('o,'m)Subobject_Classifier = 
+		('o*'m) * ('m -> ('o,'m)PullBack_Square);
+  
+   datatype ('o,'m)Semi_Topos = semi_topos of  ('o,'m)Cat *
+			                  ('o,'m)Limit *
+			                  ('o,'m)Colimit *
+			                  ('o,'m)Subobject_Classifier ;
+
+   (* Useful functions *)
+
+   fun character( semi_topos(_,_,_,(_,sc_univ)) ) m  =
+	let val ((_,chi,_,_),_) = sc_univ m	
+        in chi
+        end;
+   fun true_ (T as semi_topos(C,lim,_,((_,truth),_))) a =
+        let val cC = complete_cat (C,lim)
+        in compose C (terminal_mor cC a,truth)
+        end;
+   fun factorise(semi_topos(C,lim,colim,_)) (f)  =
+	   let val ((p,q),po_univ) = pushout(cocomplete_cat(C,colim))(f,f) 
+	       val ((a,e),eq_univ) = equaliser(complete_cat(C,lim))(p,q) 
+	       val f1 = eq_univ(source(C)(f),f)
+           in (f1,e)
+           end;
+
+   (* Semitopos of FINITE SETS *)
+
+   fun image_set(set_mor(a,f,b)) = f mapset a;
+   fun inv(set_mor(S,f,T)) =
+           set_mor( T,
+                    fn y =>
+	    	     let val (z,S1) = singleton_split(S)
+                     in if (f(z)=y) then z
+                        else (inv(set_mor(S1,f,T))) OF y
+                     end,
+                    S ) ;
+
+   val FinSet_subobj_classifier = fn ()=>
+	let val lC as complete_cat(C,_) = complete_FinSet
+	    val truvals = set [ttrue,ffalse]
+	    val truth = set_mor(set [ttrue],identity_fn,truvals)
+	    val chi =
+	   fn m =>
+	      set_mor(target(C)(m),
+		      fn z => if z is_in (image_set m) then ttrue else ffalse ,
+		      truvals )
+       in ( (truvals,truth),
+	    fn m => let val t = terminal_mor(lC)(source(C)(m))
+                     in ((truth,chi(m),t,m),
+	                 fn (f,g) => compose C (g,inv m) )
+                     end  )
+       end;
+
+   val FinSet_semi_topos =
+	   let val complete_cat(C,lim) = complete_FinSet 
+	       val cocomplete_cat(_,colim) = cocomplete_FinSet()
+           in semi_topos(C,lim,colim,FinSet_subobj_classifier())
+           end;
+
+
+   (* LOGICAL CONNECTIVES in a semitopos *)
+
+   fun FALSE (T as semi_topos(C,lim,colim,_)) =
+	   let val (init,_) = initial(cocomplete_cat(C,colim))
+	       val m = terminal_mor(complete_cat(C,lim))(init)
+           in character(T)(m)
+           end;
+
+   fun NOT(T) = character(T)(FALSE T);
+
+   fun AND(T as semi_topos(C,lim,colim,sc) ) =
+	let val lC = complete_cat(C,lim) 
+	    val ((truvals,truth),_) = sc
+	    val (_,p_univ) = product(lC)(truvals,truvals)
+	    val m = p_univ(terminal_obj(lC),truth,truth) 
+        in character(T)(m)
+        end;
+
+   fun OR(T as semi_topos(C,lim,colim,((truvals,truth),_))) =
+	let val lC = complete_cat(C,lim)
+	    val cC = cocomplete_cat(C,colim)
+	    val ((coprod,p,q),cp_univ) = coproduct(cC)(truvals,truvals)  
+	    val ((prod,r,s),pr_univ) = product (lC) (truvals,truvals)
+	    val t = compose(C)(terminal_mor(lC)(truvals),truth) 
+	    val p1 = pr_univ(truvals,identity(C)(truvals),t) 
+	    val p2 = pr_univ(truvals,t,identity(C)(truvals))
+	    val m  = cp_univ(prod,p1,p2) 
+	    val (_,im_of_m) = factorise(T)(m)
+        in character(T)(im_of_m)
+        end;
+
+   fun IMPLY(T as semi_topos(C,lim,colim,( (truvals,truth),_) )) =
+	let val lC = complete_cat(C,lim)
+	    val ((prod,r,s),pr_univ) = product(lC)(truvals,truvals) 
+	    val m = pr_univ(terminal_obj(lC),truth,truth) 
+	    val conj = character(T)(m) 
+	    val ((_,m1),_) = equaliser(lC)(conj,r)
+        in character(T)(m1)
+        end;
+@
+
+
+1.1
+log
+@new unit
+Adding applications/tests into hope
+@
+text
+@@

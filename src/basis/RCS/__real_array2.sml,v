@@ -1,0 +1,907 @@
+head	1.5;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.5.1
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.3
+	MLWorks_20c0_1998_08_04:1.3
+	MLWorks_20b2c2_1998_06_19:1.3
+	MLWorks_20b2_Windows_1998_06_12:1.3
+	MLWorks_20b1c1_1998_05_07:1.3
+	MLWorks_20b0_1998_04_07:1.3
+	MLWorks_20b0_1998_03_20:1.3
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.3
+	MLWorks_11r1:1.1.1.1.1.2.1
+	MLWorks_workspace_97:1.2.2
+	MLWorks_dt_wizard:1.2.1
+	MLWorks_11c0_1997_09_09:1.1.1.1.1.2
+	MLWorks_10r3:1.1.1.1.3
+	MLWorks_10r2_551:1.1.1.1.2
+	MLWorks_11:1.1.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	99.03.20.21.39.25;	author daveb;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	99.02.02.15.58.15;	author mitchell;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.10.09.17.56.07;	author jkbrook;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.08.08.13.46.06;	author brucem;	state Exp;
+branches
+	1.2.1.1
+	1.2.2.1;
+next	1.1;
+
+1.1
+date	97.03.03.11.32.05;	author matthew;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.10.29.04;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1
+	1.1.1.1.2.1
+	1.1.1.1.3.1;
+next	;
+
+1.1.1.1.1.1
+date	97.07.28.18.14.42;	author daveb;	state Exp;
+branches;
+next	1.1.1.1.1.2;
+
+1.1.1.1.1.2
+date	97.08.08.17.50.26;	author jkbrook;	state Exp;
+branches
+	1.1.1.1.1.2.1.1;
+next	;
+
+1.1.1.1.1.2.1.1
+date	97.10.07.11.39.45;	author jkbrook;	state Exp;
+branches;
+next	1.1.1.1.1.2.1.2;
+
+1.1.1.1.1.2.1.2
+date	97.10.09.18.10.08;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.1.2.1
+date	97.09.08.17.08.06;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.1.3.1
+date	97.09.09.14.03.16;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.09.10.19.17.45;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.2.1
+date	97.09.11.20.48.33;	author daveb;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	99.04.01.17.52.42;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.5
+log
+@[Bug #20125]
+Replaced substructure with type.
+@
+text
+@(*  ==== INITIAL BASIS : 2D ARRAYS ====
+ *
+ *  Copyright (C) 1997 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the Basis Library
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __real_array2.sml,v $
+ *  Revision 1.4  1999/02/02  15:58:15  mitchell
+ *  [Bug #190500]
+ *  Remove redundant require statements
+ *
+ *  Revision 1.3  1997/10/09  17:56:07  jkbrook
+ *  [Bug #30245]
+ *  Fix mistake in pattern: RowMajor should be Array2.RowMajor
+ *
+ *  Revision 1.2  1997/08/08  13:46:06  brucem
+ *  [Bug #30245]
+ *  Signature has changed.
+ *
+ *  Revision 1.1  1997/03/03  11:32:05  matthew
+ *  new unit
+ *
+*)
+
+require "__real_array";
+require "__array2";
+require "__list";
+require "mono_array2";
+require "__real_vector";
+
+structure RealArray2 : MONO_ARRAY2 where type elem = real =
+  struct
+    (* We'll use these when we can *)
+    (* For extra checks, define these to be the safe operations *)
+
+    val usub = MLWorks.Internal.Value.unsafe_floatarray_sub
+    val uupdate = MLWorks.Internal.Value.unsafe_floatarray_update
+
+    structure Array1 = RealArray
+
+    type vector = RealVector.vector
+
+    type elem = real 
+    datatype array = ARR2 of Array1.array * int * int
+    type region = {
+      base : array,
+      row : int, col : int,
+      nrows : int option, ncols : int option}
+    datatype traversal = datatype Array2.traversal
+
+    (* useful region of all the array *)
+    fun allreg a = {base = a, row=0,col=0,nrows=NONE,ncols=NONE}
+
+    (* we are only bounded by the representation maximum *)
+    val maxSize = Array1.maxLen
+    fun array (n,m,x) = ARR2 (Array1.array (n*m,x),n,m)
+
+    fun fromList [] = ARR2 (Array1.fromList [],0,0)
+      | fromList (l as (h::rest)) =
+      let        
+        val numcols = List.length h
+        val numrows = List.length l
+        (* Find the total length and check the lists are consistent lengths *)
+        fun check ([],total) = total
+          | check (l::rest,total) =
+          let
+            val len = List.length l
+          in
+            if len <> numcols
+            then raise Size
+            else check (rest,len + total)
+          end
+        (* utility function, append a list of lists *)
+        fun appendl ([],[],acc) = rev acc
+          | appendl ([],a::rest,acc) = appendl (a,rest,acc)
+          | appendl (a::b,rest,acc) = appendl (b,rest,a::acc)
+      in
+        if check (rest,numcols) > maxSize
+          then raise Size
+        else ARR2 (Array1.fromList (appendl ([],l,[])), numrows,numcols)
+      end
+
+    (* General function for checking if array sizes are allowable *)
+    fun check_size (n,m) =
+      if n < 0 orelse m < 0 orelse n * m > maxSize
+        then true
+      else false
+      handle Overflow => true
+
+    fun tabulate tr (n,m,f) =
+        if check_size (n,m)
+          then raise Size
+        else
+          case tr
+          of Array2.RowMajor => (* We just use Array1.tabulate and some refs *)
+            let
+              val ir = ref 0
+              val jr = ref 0
+              fun tab _ = 
+                let 
+                  val i = !ir
+                  val j = !jr
+                  val result = f (i,j)
+                  val j' = j + 1
+                in
+                  if j' = m then (ir := i+1;jr:=0)
+                  else jr:=j';
+                  result
+                end
+            in
+              ARR2 (Array1.tabulate (n * m, tab),
+                    n,m)
+            end
+         | Array2.ColMajor =>(* Uses Array1.array then Array.update to fill *) 
+            let 
+              val a = Array1.array (n*m, f(0, 0))
+              val ir = ref 1  val jr = ref 0 (* start down one row *)
+              val _ =
+                while (!jr < m) do (
+                  Array1.update (a, m * !ir + !jr, f(!ir, !jr));
+                  ir := !ir + 1;
+                  if(!ir = n) then (jr := !jr + 1; ir :=0) else ()
+                )
+            in
+              ARR2(a, n, m)
+            end
+    (* end of fun tabulate *)
+
+    (* sub and update *)
+    fun sub (ARR2 (a,n,m),i,j) =
+      if i < 0 then raise Subscript
+      else if i >= n then raise Subscript
+      else if j < 0 then raise Subscript
+      else if j >= m then raise Subscript
+      else usub (a,i*m+j)
+    fun update (ARR2 (a,n,m),i,j,x) =
+      if i < 0 then raise Subscript
+      else if i >= n then raise Subscript
+      else if j < 0 then raise Subscript
+      else if j >= m then raise Subscript
+      else uupdate (a,i*m+j,x)
+
+    fun dimensions (ARR2 (a,n,m)) = (n,m)
+
+    fun nCols (ARR2 (a,n,m)) = m
+    fun nRows (ARR2 (a,n,m)) = n
+    fun row (ARR2 (a,n,m),i) =
+      if i < 0 then raise Subscript
+      else if i >= n then raise Subscript
+      else
+        let
+          val base = i * m
+        in
+          RealVector.tabulate (n,fn j => usub (a,base+j))
+        end
+
+    (* use tabulate and a ref to avoid doing the multiply each time *)
+    fun column (ARR2 (a,n,m),j) =
+      if j < 0 then raise Subscript
+      else if j >= m then raise Subscript
+      else 
+        let
+          val ir = ref j
+          fun tab _ =
+            let
+              val i = !ir
+              val result = usub (a,i)
+            in
+              ir := i+m;
+              result
+            end
+        in
+          RealVector.tabulate (m,tab)
+        end
+
+    (* Check that a slice is correctly ordered *)
+    fun check (n,row,row') =
+      0 <= row andalso row <= row' andalso row' <= n
+        
+    fun copy {src={base=ARR2(a,n,m),row,col,nrows,ncols},
+              dst=ARR2(dst_a,dst_n,dst_m),
+              dst_row,
+              dst_col} =
+      let
+        val h = case nrows of SOME h => h | _ => n - row
+        val w = case ncols of SOME w => w | _ => m - col
+        val row' = row+h
+        val col' = col+w
+        val dst_row' = dst_row+h
+        val dst_col' = dst_col+w
+      in
+        if not (check (n,row,row')) orelse
+           not (check (m,col,col')) orelse
+           not (check (dst_n,dst_row,dst_row')) orelse
+           not (check (dst_m,dst_col,dst_col'))
+          then raise Subscript
+        else
+          (* To ensure correct behaviour when copying from a to a *)
+          (* we use different loop parameters for different cases *)
+          let
+            (* multiply through by num of columns here *)
+            val (istart,iend,dst_istart,iinc,dst_iinc) =
+              if dst_row <= row then (row*m,row'*m,dst_row*dst_m,m,dst_m)
+              else ((row'-1)*m,(row-1)*m,(dst_row'-1)*dst_m,~m,~dst_m)
+            fun loop1 (ibase,dst_ibase) =
+              if ibase = iend then ()
+              else
+                let
+                  val (jstart,jend,dst_jstart,jinc) =
+                    if dst_col <= col then (col,col',dst_col,1)
+                    else (col'-1,col-1,dst_col'-1,~1)
+                  fun loop2 (j,dst_j) =
+                    if j = jend then ()
+                    else 
+                      (uupdate (dst_a, dst_ibase + dst_j,
+                                usub (a,ibase+j));
+                       loop2 (j+jinc,dst_j+jinc))
+                in
+                  loop2 (jstart,dst_jstart);
+                  loop1 (ibase+iinc,dst_ibase+dst_iinc)
+                end
+          in
+            loop1 (istart,dst_istart)
+          end
+      end
+
+    fun foldi traversal f acc {base=ARR2(a,n,m),row,col,nrows,ncols} =
+      let
+        val h = case nrows of SOME h => h | NONE => n - row
+        val w = case ncols of SOME w => w | NONE => m - col
+        val row' = row + h
+        val col' = col + w
+      in
+        if not (check (n,row,row')) orelse not (check (m,col,col'))
+          then raise Subscript 
+        else
+          case traversal of
+	    Array2.RowMajor =>
+              let
+                fun loop1 (i,ibase,acc) =
+                  if i = row' then acc
+                  else 
+                    let 
+                      fun loop2 (j,acc) =
+                        if j = col' then acc
+                        else loop2 (j+1,f (i,j,usub (a,ibase+j),acc))
+                    in
+                      loop1 (i+1,ibase+m,loop2 (col,acc))
+                    end
+              in
+                loop1 (row,row*m,acc)
+              end
+          | Array2.ColMajor =>
+              let
+                val base = row*m
+                fun loop1 (j,acc) =
+                  if j = col' then acc
+                  else 
+                    let 
+                      (* index strides through the column elements *)
+                      (* incrementing by m each time *)
+                      fun loop2 (i,index,acc) =
+                        if i = row' then acc
+                        else loop2 (i+1,index+m,f (i,j,usub (a,index),acc))
+                    in
+                      loop1 (j+1,loop2 (row,base+j,acc))
+                    end
+              in
+                loop1 (col,acc)
+              end
+      end
+
+    fun fold tr f init arr =
+      foldi tr (fn (_,_,a,b) => f (a,b)) init (allreg arr)
+
+    fun modifyi tr f (r as {base = a, ...}) =
+      foldi tr (fn (i,j,x,_) => update (a,i,j,f (i,j,x))) () r
+
+    fun modify tr f a = 
+      modifyi tr (f o #3) (allreg a)
+
+    fun appi tr f r =
+      foldi tr (fn (i,j,x,_) => f (i,j,x)) () r
+
+    fun app tr f a = 
+      appi tr (f o #3) {base = a, row=0,col=0,nrows=NONE,ncols=NONE}
+
+
+  end
+
+
+@
+
+
+1.5.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@a11 4
+ *  Revision 1.5  1999/03/20  21:39:25  daveb
+ *  [Bug #20125]
+ *  Replaced substructure with type.
+ *
+@
+
+
+1.4
+log
+@[Bug #190500]
+Remove redundant require statements
+@
+text
+@d12 4
+d45 1
+a45 1
+    structure Vector = RealVector
+d158 1
+a158 1
+          Vector.tabulate (n,fn j => usub (a,base+j))
+d177 1
+a177 1
+          Vector.tabulate (m,tab)
+@
+
+
+1.3
+log
+@[Bug #30245]
+Fix mistake in pattern: RowMajor should be Array2.RowMajor
+@
+text
+@d12 4
+a25 1
+require "__array";
+@
+
+
+1.2
+log
+@[Bug #30245]
+Signature has changed.
+@
+text
+@d12 4
+d92 1
+a92 1
+          of RowMajor => (* We just use Array1.tabulate and some refs *)
+d111 1
+a111 1
+         | ColMajor =>(* Uses Array1.array then Array.update to fill *) 
+@
+
+
+1.2.2.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@a11 4
+ *  Revision 1.2  1997/08/08  13:46:06  brucem
+ *  [Bug #30245]
+ *  Signature has changed.
+ *
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_dt_wizard
+@
+text
+@a11 4
+ *  Revision 1.2  1997/08/08  13:46:06  brucem
+ *  [Bug #30245]
+ *  Signature has changed.
+ *
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ *  $Log: __array2.sml,v $
+d22 1
+d34 2
+d37 6
+a42 2
+    datatype array2 = ARR2 of Array1.array * int * int
+    type region = {row:int,col:int,ht:int option,wd:int option}
+d45 1
+a45 1
+    val allreg = {row=0,col=0,ht=NONE,wd=NONE}
+d83 1
+a83 2
+    (* We just use Array1.tabulate and some refs *)
+    fun tabulate (n,m,f) =
+d87 34
+a120 18
+          let
+            val ir = ref 0
+            val jr = ref 0
+            fun tab _ = 
+              let 
+                val i = !ir
+                val j = !jr
+                val result = f (i,j)
+                val j' = j + 1
+              in
+                if j' = m then (ir := i+1;jr:=0)
+                else jr:=j';
+                result
+              end
+          in
+            ARR2 (Array1.tabulate (n * m, tab),
+                  n,m)
+          end
+d138 2
+a139 2
+    fun width (ARR2 (a,n,m)) = m
+    fun height (ARR2 (a,n,m)) = n
+d147 1
+a147 1
+          Array1.tabulate (n,fn j => usub (a,base+j))
+d166 1
+a166 1
+          Array1.tabulate (m,tab)
+d173 1
+a173 1
+    fun copy {src=ARR2(a,n,m),
+a174 1
+              src_reg={row,col,ht,wd},
+d178 2
+a179 2
+        val h = case ht of SOME h => h | _ => n - row
+        val w = case wd of SOME w => w | _ => m - col
+d220 1
+a220 1
+    fun foldi traversal f acc (ARR2(a,n,m),{row,col,ht,wd}) =
+d222 2
+a223 2
+        val h = case ht of SOME h => h | NONE => n - row
+        val w = case wd of SOME w => w | NONE => m - col
+d267 1
+a267 7
+      foldi tr (fn (_,_,a,b) => f (a,b)) init (arr,allreg)
+
+    fun modifyi f (a,r) =
+      foldi Array2.RowMajor (fn (i,j,x,_) => update (a,i,j,f (i,j,x))) () (a,r)
+
+    fun modify f a = 
+      modifyi (f o #3) (a,allreg)
+d269 2
+a270 58
+    fun appi f (a,r) =
+      foldi Array2.RowMajor (fn (i,j,x,_) => f (i,j,x)) () (a,r)
+
+    fun app f a = 
+      appi (f o #3) (a,{row=0,col=0,ht=NONE,wd=NONE})
+
+    (* This should be correct when p and q are out of range *)
+    fun shift (ARR2 (a,n,m),p,q,x) =
+      let
+        val result = Array1.array (n*m,x)
+        fun dorow (i,i',lim) =
+          if i >= lim then ()
+          else
+            let
+              fun docol (j,j',lim) =
+                if j >= lim then ()
+                else (uupdate (result,j',usub (a,j));
+                      docol (j+1,j'+1,lim))
+            in
+              if q >= 0
+                then docol (i,i'+q,i+m-q)
+              else docol (i-q,i',i+m);
+              dorow (i+m,i'+m,lim)
+            end
+      in
+        if p >= 0
+          then dorow (0,p*m,(n-p)*m)
+        else dorow (~p*m,0,n*m);
+        ARR2 (result,n,m)
+      end
+    fun rotate (ARR2 (a,n,m),i,j) =
+      if n = 0 orelse m = 0 then ARR2 (a,n,m)
+      else
+        let
+          val iinc = i mod n (* so 0 <= i < n *)
+          val jinc = j mod m (* so 0 <= j < m *)
+          val dst = Array1.array (Array1.length a,Array1.sub(a,0))
+          fun iloop (i,dst_i) =              
+            if i = n
+              then ()
+            else
+              let
+                val ibase = i*m
+                val dst_ibase = dst_i * m
+                fun jloop (j,dst_j) =
+                  if j = m then ()
+                  else
+                    (Array1.update (dst,dst_ibase+dst_j,
+                                   Array1.sub (a,ibase+j));
+                     jloop (j+1,if dst_j + 1 = m then 0 else dst_j + 1))
+              in
+                jloop (0,jinc);
+                iloop (i+1,if dst_i + 1 = n then 0 else dst_i +1)
+              end
+        in
+          iloop (0,iinc);
+          ARR2(dst,n,m)
+        end
+d272 2
+a273 25
+    fun transpose (ARR2 (a,n,m)) =
+      if n = 0 orelse m = 0
+        then ARR2 (a,m,n)
+      else
+        let
+          val x = usub (a,0)
+          val result = Array1.array (m*n,x)
+          fun iloop (i,ibase) =
+            if i = n then ()
+            else
+              let                
+                fun jloop (j,jbase) =
+                  if j = m then ()
+                  else
+                    (uupdate (result,jbase+i,
+                              usub (a,ibase+j));
+                     jloop (j+1,jbase+n))
+              in
+                jloop (0,0);
+                iloop (i+1,ibase+m)
+              end
+        in
+          iloop (0,0);
+          ARR2 (result,m,n)
+        end
+d275 2
+a276 13
+    fun map f (ARR2 (a,n,m)) =
+      ARR2 (Array1.tabulate (Array1.length a,
+                            fn i => f (usub (a,i))),
+            n,m)
+
+    fun map2 f (ARR2 (a,n,m),ARR2 (b,n',m')) =
+      if n <> n' orelse m <> m'
+        then raise Size
+      else
+        ARR2 (Array1.tabulate (Array1.length a,
+                              fn i => f (usub (a,i),
+                                         usub (b,i))),
+              n,m)
+d278 2
+a279 2
+    fun mapRows f arr =
+      Array.tabulate (height arr, fn i => f (row (arr,i)))
+a280 2
+    fun mapCols f arr =
+      Array.tabulate (width arr, fn j => f (column (arr,j)))
+a281 9
+    fun dot (f, a1:array2, a2:array2) =
+      let
+        fun id x = x
+        val rows = mapRows id a1
+        val cols = mapCols id a2
+      in
+        tabulate (height a1,width a2,
+                  fn (i,j) => f (Array.sub (rows,i), Array.sub (cols, j)))
+      end
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d11 1
+a11 4
+ *  $Log: __real_array2.sml,v $
+ *  Revision 1.1  1997/03/03  11:32:05  matthew
+ *  new unit
+ *
+@
+
+
+1.1.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a11 3
+ *  Revision 1.1.1.1  1997/05/12  10:29:04  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a11 3
+ *  Revision 1.1.1.1  1997/05/12  10:29:04  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a11 3
+ *  Revision 1.1.1.1  1997/05/12  10:29:04  hope
+ *  branched from 1.1
+ *
+@
+
+
+1.1.1.1.1.2
+log
+@[Bug #30245]
+Merging into 1.1
+Signature has changed.
+@
+text
+@a11 3
+ *  Revision 1.1.1.1.1.1  1997/07/28  18:14:42  daveb
+ *  branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+ *
+a24 1
+require "__real_vector";
+a35 2
+    structure Vector = RealVector
+
+d37 2
+a38 6
+    datatype array = ARR2 of Array1.array * int * int
+    type region = {
+      base : array,
+      row : int, col : int,
+      nrows : int option, ncols : int option}
+    datatype traversal = datatype Array2.traversal
+d41 1
+a41 1
+    fun allreg a = {base = a, row=0,col=0,nrows=NONE,ncols=NONE}
+d79 2
+a80 1
+    fun tabulate tr (n,m,f) =
+d84 18
+a101 34
+          case tr
+          of RowMajor => (* We just use Array1.tabulate and some refs *)
+            let
+              val ir = ref 0
+              val jr = ref 0
+              fun tab _ = 
+                let 
+                  val i = !ir
+                  val j = !jr
+                  val result = f (i,j)
+                  val j' = j + 1
+                in
+                  if j' = m then (ir := i+1;jr:=0)
+                  else jr:=j';
+                  result
+                end
+            in
+              ARR2 (Array1.tabulate (n * m, tab),
+                    n,m)
+            end
+         | ColMajor =>(* Uses Array1.array then Array.update to fill *) 
+            let 
+              val a = Array1.array (n*m, f(0, 0))
+              val ir = ref 1  val jr = ref 0 (* start down one row *)
+              val _ =
+                while (!jr < m) do (
+                  Array1.update (a, m * !ir + !jr, f(!ir, !jr));
+                  ir := !ir + 1;
+                  if(!ir = n) then (jr := !jr + 1; ir :=0) else ()
+                )
+            in
+              ARR2(a, n, m)
+            end
+    (* end of fun tabulate *)
+d119 2
+a120 2
+    fun nCols (ARR2 (a,n,m)) = m
+    fun nRows (ARR2 (a,n,m)) = n
+d128 1
+a128 1
+          Vector.tabulate (n,fn j => usub (a,base+j))
+d147 1
+a147 1
+          Vector.tabulate (m,tab)
+d154 1
+a154 1
+    fun copy {src={base=ARR2(a,n,m),row,col,nrows,ncols},
+d156 1
+d160 2
+a161 2
+        val h = case nrows of SOME h => h | _ => n - row
+        val w = case ncols of SOME w => w | _ => m - col
+d202 1
+a202 1
+    fun foldi traversal f acc {base=ARR2(a,n,m),row,col,nrows,ncols} =
+d204 2
+a205 2
+        val h = case nrows of SOME h => h | NONE => n - row
+        val w = case ncols of SOME w => w | NONE => m - col
+d249 1
+a249 1
+      foldi tr (fn (_,_,a,b) => f (a,b)) init (allreg arr)
+d251 2
+a252 2
+    fun modifyi tr f (r as {base = a, ...}) =
+      foldi tr (fn (i,j,x,_) => update (a,i,j,f (i,j,x))) () r
+d254 2
+a255 2
+    fun modify tr f a = 
+      modifyi tr (f o #3) (allreg a)
+d257 2
+a258 2
+    fun appi tr f r =
+      foldi tr (fn (i,j,x,_) => f (i,j,x)) () r
+d260 2
+a261 2
+    fun app tr f a = 
+      appi tr (f o #3) {base = a, row=0,col=0,nrows=NONE,ncols=NONE}
+d263 92
+d356 15
+@
+
+
+1.1.1.1.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a11 5
+ *  Revision 1.1.1.1.1.2  1997/08/08  17:50:26  jkbrook
+ *  [Bug #30245]
+ *  Merging into 1.1
+ *  Signature has changed.
+ *
+@
+
+
+1.1.1.1.1.2.1.2
+log
+@[Bug #30245]
+Merging from trunk:
+Fixing patterns -- RowMajor should be Array2.RowMajor
+@
+text
+@a11 3
+ *  Revision 1.1.1.1.1.2.1.1  1997/10/07  11:39:45  jkbrook
+ *  branched from MLWorks_11 for label MLWorks_11r1
+ *
+d99 1
+a99 1
+          of Array2.RowMajor => (* We just use Array1.tabulate and some refs *)
+d118 1
+a118 1
+         | Array2.ColMajor =>(* Uses Array1.array then Array.update to fill *) 
+@

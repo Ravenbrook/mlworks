@@ -1,0 +1,374 @@
+head	1.5;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.5
+	MLWorks_20c1_1998_08_20:1.5
+	MLWorks_20c0_1998_08_04:1.5
+	MLWorks_20b2c2_1998_06_19:1.5
+	MLWorks_20b2_Windows_1998_06_12:1.5
+	MLWorks_20b1c1_1998_05_07:1.5
+	MLWorks_20b0_1998_04_07:1.4
+	MLWorks_20b0_1998_03_20:1.4
+	MLWorks_20m2_1998_02_16:1.3
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_11r1:1.2.1.2.1
+	MLWorks_11c0_1997_09_09:1.2.1.2
+	MLWorks_11:1.2.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.5
+date	98.04.21.12.19.47;	author mitchell;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	98.02.18.11.56.01;	author mitchell;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	97.11.21.10.47.57;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.08.08.15.59.14;	author brucem;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.08.08.15.44.58;	author brucem;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.08.13.16.16.37;	author johnh;	state Exp;
+branches;
+next	1.2.1.2;
+
+1.2.1.2
+date	97.08.13.16.17.45;	author johnh;	state Exp;
+branches
+	1.2.1.2.1.1;
+next	;
+
+1.2.1.2.1.1
+date	97.10.07.12.14.01;	author jkbrook;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Test RealArray2 structure.
+Similar to the Array2 test file
+@
+
+
+1.5
+log
+@[Bug #30336]
+Fix tests to agree with change in spec of toString and fmt
+@
+text
+@(*  ==== Testing ====
+ *
+    Result: OK
+ *
+ *  Copyright (C) 1997 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: real_array2.sml,v $
+ *  Revision 1.4  1998/02/18  11:56:01  mitchell
+ *  [Bug #30349]
+ *  Fix test to avoid non-unit sequence warning
+ *
+ *  Revision 1.3  1997/11/21  10:47:57  daveb
+ *  [Bug #30323]
+ *
+ *  Revision 1.2  1997/08/08  15:59:14  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+ *
+ *)
+
+  fun maken (n,m) =
+    RealArray2.tabulate RealArray2.RowMajor
+      (n,m,fn (i,j) => Real.fromInt(i*m+j))
+
+  fun allreg a = {base = a, row = 0, col = 0, nrows = NONE, ncols = NONE}
+
+  fun mkreg (a, r, c, h, w) =
+                {base = a, row = r, col = c, nrows = SOME h, ncols = SOME w}
+
+  fun iprint a =
+    let
+      fun pad s = if size s < 3 then pad (" " ^ s) else s
+        
+      fun one (i,j,n) =
+        print ((if j = 0 then "\n" else "") ^ pad (Real.toString n) ^ " ")
+    in
+      RealArray2.appi RealArray2.RowMajor one (allreg a);
+      print "\n"
+    end;
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = RealArray2.tabulate RealArray2.RowMajor
+                 (4, 6, (fn _ => (i:= !i+1; Real.fromInt (!i))))
+      val b = RealArray2.tabulate RealArray2.RowMajor 
+                 (4, 6, (fn (a,_) => (Real.fromInt a)))
+      val c = RealArray2.tabulate RealArray2.ColMajor 
+                 (4, 6, (fn (_,a) => (Real.fromInt a)))
+    in
+      print "tabulate RowMajor\n";
+      iprint a ; iprint b ; iprint c
+    end
+
+  val _ = 
+    let
+      val i = ref (~1)
+      val a = RealArray2.tabulate RealArray2.ColMajor 
+                 (4, 6, (fn _ => (i:= !i+1; Real.fromInt (!i))))
+      val b = RealArray2.tabulate RealArray2.ColMajor 
+                 (4, 6, (fn (a,_) => (Real.fromInt a)))
+      val c = RealArray2.tabulate RealArray2.ColMajor 
+                 (4, 6, (fn (_,a) => (Real.fromInt a)))
+    in
+      print "tabulate ColMajor \n";
+      iprint a ; iprint b ; iprint c
+    end
+  
+
+  fun copytest (a,b,c,d,e,f) =
+    let val arr = maken (6,8)
+    in
+      RealArray2.copy {src=mkreg (arr, a,b,c,d), dst=arr, dst_row=e, dst_col=f};
+      iprint arr
+    end;
+
+  val _ = print "copy test\n";
+  val _ = copytest (0,0,3,2,2,4);
+  val _ = copytest (0,0,3,2,2,0);
+  val _ = copytest (2,2,3,2,0,0);
+  val _ = copytest (0,0,3,3,1,1);
+  val _ = copytest (1,1,3,3,0,0);
+  (copytest (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,~2,1,2,1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,0,2,~1,2,~1) ; "FAIL") handle Subscript => "OK";
+  (copytest (0,10,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  fun copytest2 (a,b,c,d,e,f) =
+    let 
+      val arr = maken (6,8)
+      val dst = RealArray2.array (10,10,0.0)
+    in
+      RealArray2.copy {src=mkreg (arr, a,b,c,d), dst_row=e, dst_col = f, dst=dst};
+      iprint dst
+    end;
+
+  val _ = print "copy test2\n";
+  val _ = copytest2 (0,0,3,2,2,4);
+  val _ = copytest2 (0,0,3,2,2,0);
+  val _ = copytest2 (2,2,3,2,0,0);
+  val _ = copytest2 (0,0,3,3,1,1);
+  val _ = copytest2 (1,1,3,3,0,0);
+  (copytest2 (0,0,2,1,2,~1) ; "FAIL") handle Subscript => "OK";
+
+  val _ = print "app test\n";
+  val _ = 
+    (RealArray2.app RealArray2.RowMajor (fn x => print (Real.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (RealArray2.app RealArray2.ColMajor (fn x => print (Real.toString x ^ " "))
+       (maken (4,6));
+     print "\n") ;
+
+  val _ = 
+    (RealArray2.appi RealArray2.RowMajor 
+       (fn (i,j,x) => if i <> j then () else print (Real.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = 
+    (RealArray2.appi RealArray2.ColMajor 
+       (fn (i,j,x) => if i <> j then () else print (Real.toString x ^ " "))
+       (allreg (maken (4, 6)));
+      print "\n") ;
+
+  val _ = (RealArray2.appi RealArray2.RowMajor
+            (fn (i,j,x) => if i = j then () else print (Real.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+  val _ = (RealArray2.appi RealArray2.ColMajor
+            (fn (i,j,x) => if i = j then () else print (Real.toString x ^ " "))
+            {base = maken(4, 6), row=1,col=1, nrows=SOME 3, ncols=SOME 3};
+           print "\n") ;
+
+
+  print "modify test\n";
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      RealArray2.modifyi RealArray2.RowMajor 
+        (fn (i,j,x) => if i = j then 0.0 else x + x) (allreg a);
+      iprint a
+    end;
+
+  val _ = 
+    let
+      val a = maken (4,6)
+    in
+      RealArray2.modifyi RealArray2.RowMajor 
+        (fn (i,j,x) => if i = j then 0.0 else x + x) (mkreg(a, 1,1,3,4));
+      iprint a
+    end;
+
+  val _ = 
+    let 
+      val a = RealArray2.array (4, 6, 0.0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); Real.fromInt (!i))
+    in
+      print "modify RowMajor\n";
+      RealArray2.modify RealArray2.RowMajor m a;
+      iprint a
+    end ;
+
+  val _ = 
+    let 
+      val a = RealArray2.array (4, 6, 0.0)
+      val i = ref (~1)
+      fun m _ = (i:=(!i+1); Real.fromInt (!i))
+    in
+      print "modify ColMajor\n";
+      RealArray2.modify RealArray2.ColMajor m a;
+      iprint a
+    end ;
+
+
+  val _ = print "fold test\n";
+  val fold1 = rev (RealArray2.fold RealArray2.RowMajor op:: [] (maken (4,4)));
+  val fold2 = rev (RealArray2.fold RealArray2.ColMajor op:: [] (maken (4,4)));
+  val fold3 = (ignore(rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), ~1,1,2,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold4 = (ignore(rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 100,1,2,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold5 = (ignore(rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 1,1,200,2)))); "FAIL")
+               handle Subscript => "OK";
+  val fold6 = rev (RealArray2.fold RealArray2.ColMajor op:: [] (maken (4,4)));
+
+@
+
+
+1.4
+log
+@[Bug #30349]
+Fix test to avoid non-unit sequence warning
+@
+text
+@d10 4
+d36 1
+@
+
+
+1.3
+log
+@[Bug #30323]
+@
+text
+@d10 3
+d182 2
+a183 2
+  val fold3 = (rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), ~1,1,2,2))); "FAIL")
+d185 2
+a186 2
+  val fold4 = (rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 100,1,2,2))); "FAIL")
+d188 2
+a189 2
+  val fold5 = (rev (RealArray2.foldi RealArray2.RowMajor (fn _ => raise Div) []
+               (mkreg (maken(4, 4), 1,1,200,2))); "FAIL")
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@d9 5
+a13 1
+ *  $Log:$
+a15 8
+
+local
+  val _ =  Shell.Options.set(Shell.Options.ValuePrinter.maximumStrDepth, 0);
+in
+  val _ =
+    (Shell.Build.loadSource "basis.__real_array2";
+     Shell.Build.loadSource "basis.__real")
+end ;
+@
+
+
+1.2.1.1
+log
+@branched from *NoSuchBranch* for label MLWorks_11
+@
+text
+@d9 1
+a9 5
+ *  $Log: real_array2.sml,v $
+ *  Revision 1.2  1997/08/08  15:59:14  brucem
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.2.1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' *  '
+@
+text
+@@
+
+
+1.2.1.2.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a9 4
+ *  Revision 1.2.1.2  1997/08/13  16:17:45  johnh
+ *  Automatic checkin:
+ *  changed attribute _comment to ' *  '
+ *
+@
+
+
+1.1
+log
+@new unit
+Test RealArray2 structure.
+Similar to the Array2 test file
+@
+text
+@@

@@ -1,0 +1,91 @@
+head	1.3;
+access;
+symbols
+	ML_beta_release_12/08/94:1.1
+	ML_beta_release_03/08/94:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.3
+date	95.05.31.10.56.50;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.04.06.15.43.43;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	94.07.05.19.51.16;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.3
+log
+@Combined the show_input and hide_input fields of the result into a
+single function of type bool->unit, for use with Toggle buttons.
+@
+text
+@(*
+ * Copyright (c) 1994 Harlequin Ltd.
+ * 
+ *  $Log: input.sml,v $
+ *  Revision 1.2  1995/04/06  15:43:43  daveb
+ *  Added applicationShell argument to input widget.
+ * 
+ *  Revision 1.1  1994/07/05  19:51:16  daveb
+ *  new file
+ * 
+ *)
+
+signature INPUT_WINDOW =
+sig
+  type Widget
+
+  val create:
+    Widget * string * Widget
+    -> {instream: instream, input_widget: Widget, show_input: bool -> unit,
+	clear_input: unit -> unit, input_visible: unit -> bool}
+end;
+@
+
+
+1.2
+log
+@Added applicationShell argument to input widget.
+@
+text
+@d4 7
+a10 4
+ * $Log: input.sml,v $
+# Revision 1.1  1994/07/05  19:51:16  daveb
+# new file
+#
+d19 2
+a20 3
+    -> {instream: instream, input_widget: Widget, show_input: 'a -> unit,
+	clear_input: unit -> unit, input_visible: unit -> bool,
+	hide_input: 'a -> unit}
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d4 4
+a7 1
+ * $Log$
+d15 1
+a15 1
+    Widget * string
+@

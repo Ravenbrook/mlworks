@@ -1,0 +1,1539 @@
+head	1.25;
+access;
+symbols
+	MLWorks_Beta_1996_07_02:1.25
+	MLWorks_Beta_1996_06_07:1.23
+	MLWorks_Beta_1996_06_06:1.22
+	MLWorks_Beta_1996_06_05:1.21
+	MLWorks_Beta_1996_06_03:1.20
+	MLWorks_Beta_1996_05_31:1.20
+	MLWorks_Beta_1996_05_30:1.20
+	ML_beta_release_12/08/94:1.5
+	ML_beta_release_03/08/94:1.5
+	ML_revised_beta_release_25/05/94:1.5
+	ML_final_beta_release_02/03/94:1.5
+	mlworks-28-01-1994:1.5
+	mlworks-beta-01-09-1993:1.3
+	Release:1.3;
+locks; strict;
+
+
+1.25
+date	96.06.25.09.33.47;	author jont;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	96.06.20.12.36.43;	author daveb;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	96.06.07.12.16.34;	author jont;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	96.06.06.14.36.04;	author jont;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	96.06.04.13.54.05;	author brianm;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	96.05.16.16.42.30;	author jont;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	96.04.19.10.02.46;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	96.04.02.15.44.11;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	96.03.26.16.28.23;	author daveb;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	96.02.09.16.38.10;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	96.01.29.17.40.12;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	96.01.29.17.00.33;	author jont;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	96.01.24.12.00.28;	author jont;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	95.10.19.14.35.25;	author daveb;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	95.10.19.14.06.43;	author daveb;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	95.05.04.14.42.36;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	95.05.04.14.34.42;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	95.05.03.14.26.52;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	95.02.27.14.45.56;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	94.08.15.12.35.22;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	93.11.10.14.41.57;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	93.09.09.17.00.11;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	93.09.07.14.57.52;	author daveb;	state Exp;
+branches
+	1.3.1.1;
+next	1.2;
+
+1.2
+date	93.09.01.16.36.22;	author jont;	state Exp;
+branches
+	1.2.1.2;
+next	1.1;
+
+1.1
+date	93.08.27.19.01.46;	author daveb;	state Exp;
+branches;
+next	;
+
+1.2.1.2
+date	93.09.07.14.56.16;	author daveb;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	93.09.07.14.57.52;	author jont;	state Exp;
+branches;
+next	1.3.1.2;
+
+1.3.1.2
+date	93.09.09.16.13.21;	author daveb;	state Exp;
+branches;
+next	1.3.1.3;
+
+1.3.1.3
+date	93.11.10.14.34.36;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@Installation script for MLWorks.
+@
+
+
+1.25
+log
+@Add a default setting for MLWORKS_SRC_PATH
+@
+text
+@#!/bin/sh
+#
+#       ==== INSTALL MLWORKS ====
+#
+# This script installs MLWorks from the contents of the current
+# directory, which should be the MLWorks distribution.
+#
+#
+#       === CONFIGURATION ===
+#
+# The following variable may be adjusted to suit your system:
+#
+#       Location of installation
+#
+#   MLWORKSDIR  root directory for MLWorks
+#   LIBDIR      directory for MLWorks libraries
+#   IMAGEDIR    directory for MLWorks images
+#   BINDIR      directory for MLWorks binaries
+#   SCRIPTDIR   directory for MLWorks scripts
+#   MANDIR      root directory for MLWorks manual pages
+#   RUNTIME     name of the runtime system to install as mlrun
+#   RUNTIMEOPTS options when using it
+#   ARCH	architecture of the host machine (e.g. SPARC)
+#   OS		operating system of the host machine (e.g. SunOS)
+#
+#	Other variables
+#
+#   If you have a dynamically-linkable Motif library at your site, use
+#   RUNTIME=main, otherwise use RUNTIME=main-static.
+#
+#   If your X installation recognises the %C escape in the value of
+#   XFILESEARCHPATH, set APP_DEFAULT_EXTENSION=%N%C.  Otherwise set
+#   APP_DEFAULT_EXTENSION=%N-color or APP_DEFAULT_EXTENSION=%N-mono,
+#   as appropriate for your system.  X11R5 recognises the %C escape.
+
+#
+# We allow MLWORKSDIR to be given on the command line
+#
+
+if [ $# -eq 1 ]; then
+  MLWORKSDIR=$1
+else
+  MLWORKSDIR=/usr/local/lib/MLWorks
+fi
+echo MLWORKSDIR=$MLWORKSDIR
+
+LIBDIR=$MLWORKSDIR/lib
+IMAGEDIR=$MLWORKSDIR/images
+BINDIR=$MLWORKSDIR/bin
+SCRIPTDIR=$MLWORKSDIR/bin
+MANDIR=$MLWORKSDIR/man
+RUNTIME=main
+RUNTIMEOPTS=
+APP_DEFAULT_EXTENSION=%N%C
+#
+# These two are defaults, and can be overridden from the command line
+#
+ARCH=SPARC
+OS=SunOS
+packages=
+
+#       Programs
+#
+# You may want to alter the options passed to these programs.
+
+cp="/bin/cp"
+rm="/bin/rm -f"
+mkdir="/bin/mkdir -p"
+sed=/bin/sed
+#zcat="/usr/ucb/zcat"
+zcat=zcat
+
+chmod_exec="chmod 775"
+chmod_non_exec="chmod 664"
+chmod_read_only="chmod 444"
+
+#       === END OF CONFIGURATION ===
+#
+# You should not normally need to change anything beyond this comment.
+
+script=`basename $0`
+
+# This is a sed script to substitute the values of the installation
+# variables into text files.
+
+subst="s!\$MLWORKSDIR!$MLWORKSDIR!g
+       s!\$LIBDIR!$LIBDIR!g
+       s!\$IMAGEDIR!$IMAGEDIR!g
+       s!\$BINDIR!$BINDIR!g
+       s!\$SCRIPTDIR!$SCRIPTDIR!g
+       s!\$MANDIR!$MANDIR!g
+       s!\$RUNTIME!$RUNTIME!g"
+
+# Let's get going.
+
+# Sort out command line arguments
+# Not doing this any more
+
+#if [ $# -ne 0 ]
+#then
+#  while getopts O:A: option
+#  do
+#    case $option in
+#      O) OS=$OPTARG ;;
+#      A) ARCH=$OPTARG ;;
+#      ?) echo "Usage : install [-A <arch>] [-O <OS>] [<packages>]";exit 1
+#    esac
+#  done
+#fi
+#
+#if [ $# -ne 0 ]
+#then
+#  while [ "$1" != "" ]
+#  do
+#    if [ "$1" = "-O" ]
+#    then
+#      shift 2
+#    elif [ "$1" = "-A" ]
+#    then
+#      shift 2
+#    else
+#      packages="$packages $1"; shift
+#    fi
+#  done
+#fi
+
+$mkdir $MLWORKSDIR
+if test ! -d $MLWORKSDIR
+then
+  echo Failed to create $MLWORKSDIR, exiting
+  exit 1
+fi
+
+# The arguments are a list of packages to install.  If no arguments
+# were specified then install all the packages.
+
+#packages=${packages:-"binaries scripts pervasives libraries images emacs X11 manuals environments"}
+
+# Now we always install all the packages
+packages="binaries scripts pervasives libraries images emacs X11 manuals environments"
+
+echo ARCH=$ARCH
+echo OS=$OS
+echo packages=$packages
+
+for package in $packages
+do
+  case $package in
+    # The binaries are simply copied to $BINDIR
+    binaries)
+      echo "$script: binaries in $BINDIR"
+      {
+	if test \! -d $BINDIR
+	then
+          $mkdir $BINDIR &&
+	  $chmod_exec $BINDIR
+	fi &&
+	$rm $BINDIR/mlrun &&
+        $cp bin/$ARCH/$OS/$RUNTIME $BINDIR/mlrun &&
+	$chmod_exec $BINDIR/mlrun
+      } ||
+      {
+        echo "$script: Failed to install binaries"
+        exit 50
+      };;
+
+    # Scripts are processed to include the configuration settings if
+    # their name matches *.in, otherwise they are just copied.
+    scripts)
+      echo "$script: shell scripts in $SCRIPTDIR"
+      {
+	if test \! -d $SCRIPTDIR
+	then
+          $mkdir $SCRIPTDIR &&
+	  $chmod_exec $SCRIPTDIR
+	fi &&
+        (
+          cd scripts &&
+          for s in *
+          do
+	    dest=$SCRIPTDIR/`basename $s .in`
+	    $rm $dest &&
+            case $s in
+              *.in)
+                cat - $s > $dest <<EOF &&
+#!/bin/sh
+MLWORKSDIR=$MLWORKSDIR
+IMAGEDIR=$IMAGEDIR
+LIBDIR=$LIBDIR
+BINDIR=$BINDIR
+SCRIPTDIR=$SCRIPTDIR
+MANDIR=$MANDIR
+RUNTIME=$RUNTIME
+RUNTIMEOPTS=$RUNTIMEOPTS
+MLWORKS_PERVASIVE=\${MLWORKS_PERVASIVE:-$MLWORKSDIR/pervasive}
+export MLWORKS_PERVASIVE
+MLWORKS_SRC_PATH=\${MLWORKS_SRC_PATH:-.}:$MLWORKSDIR
+export MLWORKS_SRC_PATH
+XFILESEARCHPATH=\
+\$LIBDIR/X11/%L/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/%l/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$LIBDIR/X11/%T/$APP_DEFAULT_EXTENSION%S:\
+\$XFILESEARCHPATH
+export XFILESEARCHPATH
+EOF
+                $chmod_exec $dest;;
+              *)
+                $cp $s $dest;;
+            esac
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install shell scripts"
+        exit 60
+      };;
+
+    # The pervasive modules are simply copied.
+    pervasives)
+      echo "$script: pervasive modules in $MLWORKSDIR/pervasive"
+      {
+	if test \! -d $MLWORKSDIR/pervasive
+	then
+          $mkdir $MLWORKSDIR/pervasive &&
+	  $chmod_exec $MLWORKSDIR/pervasive
+	fi &&
+	(
+	  cd pervasive/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/pervasive/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	)
+      } ||
+      {
+        echo "$script: Failed to install pervasive modules"
+        exit 10
+      };;
+
+    # The library modules are simply copied.
+    libraries)
+      echo "$script: library modules in $MLWORKSDIR/{basis,utils,motif,unix,foreign}"
+      {
+      {
+	if test \! -d $MLWORKSDIR/foreign
+	then
+          $mkdir $MLWORKSDIR/foreign &&
+	  $chmod_exec $MLWORKSDIR/foreign
+	fi &&
+	if test \! -d $MLWORKSDIR/foreign/samples
+	then
+          $mkdir $MLWORKSDIR/foreign/samples &&
+	  $chmod_exec $MLWORKSDIR/foreign/samples
+	fi &&
+	(
+	  cd foreign/samples &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/foreign/samples/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	) &&
+	(
+	  cd foreign/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/foreign/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	) &&
+	(
+	  cd foreign &&
+	  for f in *.sml
+	  do
+	    dest=$MLWORKSDIR/foreign/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_read_only $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/basis
+	then
+          $mkdir $MLWORKSDIR/basis &&
+	  $chmod_exec $MLWORKSDIR/basis
+	fi &&
+	(
+	  cd basis/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/basis/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	) &&
+	(
+	  cd basis &&
+	  for f in *.sml
+	  do
+	    dest=$MLWORKSDIR/basis/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_read_only $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/utils
+	then
+          $mkdir $MLWORKSDIR/utils &&
+	  $chmod_exec $MLWORKSDIR/utils
+	fi &&
+	(
+	  cd utils/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/utils/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/motif
+	then
+          $mkdir $MLWORKSDIR/motif &&
+	  $chmod_exec $MLWORKSDIR/motif
+	fi &&
+	(
+	  cd motif/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/motif/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	) &&
+	(
+	  cd motif &&
+	  for f in *.sml
+	  do
+	    dest=$MLWORKSDIR/motif/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_read_only $dest
+	  done
+	)
+      } &&
+      {
+	if test \! -d $MLWORKSDIR/unix
+	then
+          $mkdir $MLWORKSDIR/unix &&
+	  $chmod_exec $MLWORKSDIR/unix
+	fi &&
+	(
+	  cd unix/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/unix/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+	  done
+	)
+      } &&
+      {
+    # Now make a suitable system link
+	if test -h $MLWORKSDIR/system
+	then
+	  $rm $MLWORKSDIR/system
+	fi &&
+	ln -s $MLWORKSDIR/unix $MLWORKSDIR/system
+      }
+      } ||
+      {
+        echo "$script: Failed to install library modules"
+        exit 10
+      };;
+
+    # Images are uncompressed if their name matches *.Z, otherwise
+    # they are simply copied.
+    images)
+      echo "$script: images in $IMAGEDIR"
+      {
+	if test \! -d $IMAGEDIR
+	then
+          $mkdir $IMAGEDIR &&
+          $chmod_exec $IMAGEDIR
+	fi &&
+        (
+          cd images/$ARCH/$OS &&
+          for f in *
+          do
+	    dest=$IMAGEDIR/`basename $f .Z`
+	    $rm $dest &&
+            case $f in
+              *.Z) $zcat $f > $dest;;
+              *)   $cp $f $dest;;
+            esac &&
+	    $chmod_non_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install images"
+        exit 20
+      };;
+
+    # Emacs LISP files are run through sed using the $subst script
+    # constructed above if their name matches *.in.  This allows them
+    # to locate other Emacs bits and bobs.  Other files, and the files
+    # in the etc directory, are simply copied.
+    emacs)
+      echo "$script: Emacs library in $LIBDIR/emacs"
+      {
+	if test \! -d $LIBDIR
+	then
+	  $mkdir $LIBDIR &&
+	  $chmod_exec $LIBDIR
+	fi &&
+	if test \! -d $LIBDIR/emacs
+	then
+	  $mkdir $LIBDIR/emacs &&
+	  $chmod_exec $LIBDIR/emacs
+	fi &&
+	if test \! -d $LIBDIR/emacs/lisp
+	then
+          $mkdir $LIBDIR/emacs/lisp &&
+          $chmod_exec $LIBDIR/emacs/lisp
+	fi &&
+	if test \! -d $LIBDIR/emacs/etc
+	then
+          $mkdir $LIBDIR/emacs/etc &&
+          $chmod_exec $LIBDIR/emacs/etc
+	fi &&
+	(
+	  cd lib/emacs/etc/$ARCH/$OS &&
+	  for f in *
+	  do
+	    dest=$LIBDIR/emacs/etc/$f
+	    $rm $dest && $cp $f $dest && $chmod_exec $dest
+	  done
+	) &&
+        (
+          cd lib/emacs/lisp &&
+          for f in *
+          do
+	    dest=$LIBDIR/emacs/lisp/`basename $f .in`
+	    $rm $dest &&
+            case $f in
+              *.in) $sed -e "$subst" < $f > $dest;;
+	      *)    $cp $f $dest;;
+            esac &&
+	    $chmod_non_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install Emacs library"
+        exit 30
+      };;
+
+    # X11 stuff: Bitmap files are simply copied, but resource files
+    # are run through the $subst sed script constructed above if their
+    # name matches *.in.  This allows them to locate the bitmaps.
+    X11)
+      echo "$script: X11 library in $LIBDIR/X11"
+      {
+	if test \! -d $LIBDIR/X11
+	then
+	  $mkdir $LIBDIR/X11 &&
+	  $chmod_exec $LIBDIR/X11
+	fi &&
+	if test \! -d $LIBDIR/X11/bitmaps
+	then
+	  $mkdir $LIBDIR/X11/bitmaps &&
+	  $chmod_exec $LIBDIR/X11/bitmaps
+	fi &&
+	if test \! -d $LIBDIR/X11/app-defaults
+	then
+	  $mkdir $LIBDIR/X11/app-defaults &&
+	  $chmod_exec $LIBDIR/X11/app-defaults
+	fi &&
+	(
+	  cd lib/X11/bitmaps &&
+	  for f in *
+	  do
+	    dest=$LIBDIR/X11/bitmaps/$f
+	    $rm $dest && $cp $f $dest && $chmod_non_exec $dest
+	  done
+	) &&
+        (
+          cd lib/X11/app-defaults &&
+          (for f in *
+           do
+	     dest=$LIBDIR/X11/app-defaults/`basename $f .in`
+	     $rm $dest &&
+             case $f in
+               *.in) $sed -e "$subst" < $f > $dest;;
+	       *)    $cp $f $dest;;
+             esac &&
+	     $chmod_non_exec $dest
+           done
+	   $rm $LIBDIR/X11/app-defaults/MLWorks-fonts
+	   ln -s MLWorks-normal-fonts $LIBDIR/X11/app-defaults/MLWorks-fonts
+	  )
+        )
+      } ||
+      {
+        echo "$script: Failed to install X11 library"
+        exit 31
+      };;
+
+    # The manual pages are run throught the $subst sed script if their
+    # name matches *.in so that they can cross reference the
+    # installation itself.  Otherwise they are just copied.
+    manuals)
+      echo "$script: manual pages in $MANDIR"
+      {
+	if test \! -d $MANDIR
+	then
+          $mkdir $MANDIR &&
+          $chmod_exec $MANDIR
+	fi &&
+        (
+          cd man &&
+          for d in *
+          do
+	    if test \! -d $MANDIR/$d
+	    then
+              $mkdir $MANDIR/$d &&
+              $chmod_exec $MANDIR/$d
+	    fi &&
+            cd $d &&
+            for f in *
+            do
+	      dest=$MANDIR/$d/`basename $f .in`
+	      $rm $dest &&
+              case $f in
+                *.in) $sed -e "$subst" < $f > $dest;;
+		*)    $cp $f $dest;;
+              esac &&
+	      $chmod_non_exec $dest
+            done
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install manual pages"
+        exit 40
+      };;
+
+    environments)
+      echo "$script: environments in $MLWORKSDIR/env"
+      {
+	if test \! -d $MLWORKSDIR/env
+	then
+          $mkdir $MLWORKSDIR/env &&
+          $chmod_exec $MLWORKSDIR/env
+	fi &&
+        (
+          cd env &&
+          for f in *
+          do
+	    dest=$MLWORKSDIR/env/`basename $f .in`
+	    $rm $dest &&
+            case $f in
+              *.in) $sed -e "$subst" < $f > $dest;;
+	      *)    $cp $f $dest;;
+            esac &&
+	    $chmod_non_exec $dest
+          done
+        )
+      } ||
+      {
+        echo "$script: Failed to install environments"
+        exit 50
+      };;
+
+    *)
+      echo "$script: Unknown package: $package"
+      exit 255;;
+  esac
+done
+@
+
+
+1.24
+log
+@Removed variable DIR, which was never used.
+@
+text
+@d197 2
+@
+
+
+1.23
+log
+@Chnage the checkout file mode
+@
+text
+@a39 1
+DIR=/usr/local/lib/MLWorks
+@
+
+
+1.22
+log
+@Modifications to install source files for signatures
+Also getting the auxiliary files correct for the FI
+@
+text
+@@
+
+
+1.21
+log
+@Adding foreign/samples directory into library distribution.
+@
+text
+@d76 1
+d257 8
+d273 2
+a274 2
+	  cd foreign/auxfiles &&
+	  for f in *
+d276 2
+a277 2
+	    dest=$MLWORKSDIR/foreign/samples/$f
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+d294 8
+d331 8
+@
+
+
+1.20
+log
+@Add code to install the FFI objects
+@
+text
+@d250 5
+d260 8
+@
+
+
+1.19
+log
+@initbasis moves to basis
+@
+text
+@d242 1
+a242 1
+      echo "$script: library modules in $MLWORKSDIR/{basis,utils,motif,unix}"
+d244 15
+@
+
+
+1.18
+log
+@Modifying to use mkdir -p and to accept the target directory on the command line
+Remove packages and command line parsing for ARCH and OS
+@
+text
+@d242 1
+a242 1
+      echo "$script: library modules in $MLWORKSDIR/{initbasis,utils,motif,unix}"
+d245 1
+a245 1
+	if test \! -d $MLWORKSDIR/initbasis
+d247 2
+a248 2
+          $mkdir $MLWORKSDIR/initbasis &&
+	  $chmod_exec $MLWORKSDIR/initbasis
+d251 1
+a251 1
+	  cd initbasis/$ARCH/$OS &&
+d254 1
+a254 1
+	    dest=$MLWORKSDIR/initbasis/$f
+@
+
+
+1.17
+log
+@Ensured that the definition of LIBDIR is added to the installed scripts.
+@
+text
+@d36 12
+a47 1
+MLWORKSDIR=/usr/local/lib/MLWorks
+d69 1
+a69 1
+mkdir="/bin/mkdir"
+d97 1
+d99 27
+a125 11
+if [ $# -ne 0 ]
+then
+  while getopts O:A: option
+  do
+    case $option in
+      O) OS=$OPTARG ;;
+      A) ARCH=$OPTARG ;;
+      ?) echo "Usage : install [-A <arch>] [-O <OS>] [<packages>]";exit 1
+    esac
+  done
+fi
+d127 2
+a128 1
+if [ $# -ne 0 ]
+d130 2
+a131 12
+  while [ "$1" != "" ]
+  do
+    if [ "$1" = "-O" ]
+    then
+      shift 2
+    elif [ "$1" = "-A" ]
+    then
+      shift 2
+    else
+      packages="$packages $1"; shift
+    fi
+  done
+a133 2
+$mkdir $MLWORKSDIR
+
+d137 4
+a140 1
+packages=${packages:-"binaries scripts pervasives libraries images emacs X11 manuals environments"}
+@
+
+
+1.16
+log
+@Added LIBDIR variable, used in mlworks-server.el.in.
+@
+text
+@d169 1
+@
+
+
+1.15
+log
+@More bug fixing with app-defaults
+@
+text
+@d16 1
+d37 1
+d76 1
+d177 4
+a180 4
+\$MLWORKSDIR/lib/X11/%L/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/%l/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/%T/$APP_DEFAULT_EXTENSION%S:\
+d331 1
+a331 1
+      echo "$script: Emacs library in $MLWORKSDIR/lib/emacs"
+d333 1
+a333 1
+	if test \! -d $MLWORKSDIR/lib
+d335 2
+a336 2
+	  $mkdir $MLWORKSDIR/lib &&
+	  $chmod_exec $MLWORKSDIR/lib
+d338 1
+a338 1
+	if test \! -d $MLWORKSDIR/lib/emacs
+d340 2
+a341 2
+	  $mkdir $MLWORKSDIR/lib/emacs &&
+	  $chmod_exec $MLWORKSDIR/lib/emacs
+d343 1
+a343 1
+	if test \! -d $MLWORKSDIR/lib/emacs/lisp
+d345 2
+a346 2
+          $mkdir $MLWORKSDIR/lib/emacs/lisp &&
+          $chmod_exec $MLWORKSDIR/lib/emacs/lisp
+d348 1
+a348 1
+	if test \! -d $MLWORKSDIR/lib/emacs/etc
+d350 2
+a351 2
+          $mkdir $MLWORKSDIR/lib/emacs/etc &&
+          $chmod_exec $MLWORKSDIR/lib/emacs/etc
+d357 1
+a357 1
+	    dest=$MLWORKSDIR/lib/emacs/etc/$f
+d365 1
+a365 1
+	    dest=$MLWORKSDIR/lib/emacs/lisp/`basename $f .in`
+d384 1
+a384 1
+      echo "$script: X11 library in $MLWORKSDIR/lib/X11"
+d386 1
+a386 1
+	if test \! -d $MLWORKSDIR/lib/X11
+d388 2
+a389 2
+	  $mkdir $MLWORKSDIR/lib/X11 &&
+	  $chmod_exec $MLWORKSDIR/lib/X11
+d391 1
+a391 1
+	if test \! -d $MLWORKSDIR/lib/X11/bitmaps
+d393 2
+a394 2
+	  $mkdir $MLWORKSDIR/lib/X11/bitmaps &&
+	  $chmod_exec $MLWORKSDIR/lib/X11/bitmaps
+d396 1
+a396 1
+	if test \! -d $MLWORKSDIR/lib/X11/app-defaults
+d398 2
+a399 2
+	  $mkdir $MLWORKSDIR/lib/X11/app-defaults &&
+	  $chmod_exec $MLWORKSDIR/lib/X11/app-defaults
+d405 1
+a405 1
+	    dest=$MLWORKSDIR/lib/X11/bitmaps/$f
+d413 1
+a413 1
+	     dest=$MLWORKSDIR/lib/X11/app-defaults/`basename $f .in`
+d421 2
+a422 2
+	   $rm $MLWORKSDIR/lib/X11/app-defaults/MLWorks-fonts
+	   ln -s MLWorks-normal-fonts $MLWORKSDIR/lib/X11/app-defaults/MLWorks-fonts
+@
+
+
+1.14
+log
+@Ensure linking of MLWorks-fonts done in correct directory
+@
+text
+@d418 2
+a419 2
+	   $rm MLWorks-fonts
+	   ln -s MLWorks-normal-fonts MLWorks-fonts
+@
+
+
+1.13
+log
+@Moving xm stuff to motif
+@
+text
+@d408 13
+a420 12
+          for f in *
+          do
+	    dest=$MLWORKSDIR/lib/X11/app-defaults/`basename $f .in`
+	    $rm $dest &&
+            case $f in
+              *.in) $sed -e "$subst" < $f > $dest;;
+	      *)    $cp $f $dest;;
+            esac &&
+	    $chmod_non_exec $dest
+          done
+	  $rm MLWorks-fonts
+	  ln -s MLWorks-normal-fonts MLWorks-fonts
+@
+
+
+1.12
+log
+@Now generates a symbolic link from app-defaults/MLWorks-fonts to
+MLWorks-normal-fonts.
+@
+text
+@d35 1
+a35 1
+MLWORKSDIR=/usr/local/MLWorks
+d218 1
+a218 1
+      echo "$script: library modules in $MLWORKSDIR/{initbasis,utils,library,unix}"
+d251 1
+a251 1
+	if test \! -d $MLWORKSDIR/library
+d253 2
+a254 2
+          $mkdir $MLWORKSDIR/library &&
+	  $chmod_exec $MLWORKSDIR/library
+d257 1
+a257 1
+	  cd library/$ARCH/$OS &&
+d260 1
+a260 1
+	    dest=$MLWORKSDIR/library/$f
+@
+
+
+1.11
+log
+@Corrected comment about main-static.
+@
+text
+@d418 2
+@
+
+
+1.10
+log
+@Set default dir back to correct value
+@
+text
+@d28 1
+a28 1
+#   RUNTIME=main, otherwise use RUNTIME=main-static-X.
+@
+
+
+1.9
+log
+@Add stuff to handle initial basis and xm library
+and handle object files in arch/os specific places
+@
+text
+@d35 1
+a35 2
+#MLWORKSDIR=/usr/local/MLWorks
+MLWORKSDIR=/u/ldisk/jont/ml/MLWorks
+@
+
+
+1.8
+log
+@Copy emacs/etc stuff from emacs/etc/$ARCH/$OS
+@
+text
+@d35 2
+a36 1
+MLWORKSDIR=/usr/local/MLWorks
+d59 2
+a60 1
+zcat="/usr/ucb/zcat"
+d118 1
+a118 1
+packages=${packages:-"binaries scripts pervasives images emacs X11 manuals environments"}
+d204 1
+a204 1
+	  cd pervasive &&
+d214 78
+@
+
+
+1.7
+log
+@Allow for multi-targetting
+Two new command line parameters are allowed, each taking an argument.
+-O can be followed b an OS name
+-A by an architecture name
+@
+text
+@d272 1
+a272 1
+	  cd lib/emacs/etc &&
+@
+
+
+1.6
+log
+@runtime names have changed.
+@
+text
+@a7 2
+# Author:       Richard Brooksby <richard@@harlequin.co.uk>
+# Modified:     1993-05-25
+a8 1
+
+d43 3
+d48 1
+d81 30
+d116 5
+a120 1
+packages=${*:-"binaries scripts pervasives images emacs X11 manuals environments"}
+d226 1
+a226 1
+          cd images &&
+@
+
+
+1.5
+log
+@Merged in bug fix.
+@
+text
+@d25 2
+d31 1
+a31 1
+#   RUNTIME=mlrun, otherwise use RUNTIME=mlrun-static-X.
+d43 1
+a43 1
+RUNTIME=mlrun
+d46 2
+d100 1
+a100 1
+        $cp run/$RUNTIME $BINDIR/mlrun &&
+@
+
+
+1.4
+log
+@Merged in bug fix.
+@
+text
+@d26 9
+a34 2
+# If you have a dynamically-linkable Motif library at your site, use
+# RUNTIME=mlrun, otherwise use RUNTIME=mlrun-static-X.
+d43 1
+d134 4
+a137 4
+\$MLWORKSDIR/lib/X11/%L/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/%l/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/%T/%N%C%S:\
+@
+
+
+1.3
+log
+@Merged in bug fix.
+@
+text
+@d43 1
+a43 2
+rmdir="/bin/rm -rf"
+mkdir="/bin/mkdir -p"
+d47 3
+d82 5
+a86 3
+	$rmdir $BINDIR
+        $mkdir $BINDIR &&
+	chmod 775 $BINDIR &&
+d89 1
+a89 1
+	chmod 775 $BINDIR/mlrun
+d101 5
+a105 3
+#	$rmdir $SCRIPTDIR &&
+#       $mkdir $SCRIPTDIR &&
+#	chmod 775 $SCRIPTDIR && SCRIPTDIR is same as BINDIR
+d133 1
+a133 1
+                chmod 775 $dest;;
+d149 5
+a153 3
+	$rmdir $MLWORKSDIR/pervasive &&
+        $mkdir $MLWORKSDIR/pervasive &&
+	chmod 775 $MLWORKSDIR/pervasive &&
+d159 1
+a159 1
+	    $rm $dest && $cp -p $f $dest && chmod 664 $dest
+d173 5
+a177 3
+        $rmdir $IMAGEDIR &&
+        $mkdir $IMAGEDIR &&
+        chmod 775 $IMAGEDIR &&
+d188 1
+a188 1
+	    chmod 664 $dest
+d204 28
+a231 7
+	$rmdir $MLWORKSDIR/lib &&
+	$mkdir $MLWORKSDIR/lib/ $MLWORKSDIR/lib/emacs &&
+	chmod 775 $MLWORKSDIR/lib/ $MLWORKSDIR/lib/emacs &&
+        $mkdir $MLWORKSDIR/lib/emacs/lisp $MLWORKSDIR/lib/emacs/etc &&
+        chmod 775 $MLWORKSDIR/lib/emacs/lisp $MLWORKSDIR/lib/emacs/etc &&
+        $cp lib/emacs/etc/* $MLWORKSDIR/lib/emacs/etc &&
+	chmod 775 $MLWORKSDIR/lib/emacs/etc/* &&
+d242 1
+a242 1
+	    chmod 664 $dest
+d257 15
+a271 6
+	$rmdir $MLWORKSDIR/lib/X11 &&
+	$mkdir $MLWORKSDIR/lib/X11 &&
+	chmod 775 $MLWORKSDIR/lib/X11 &&
+        $rmdir $MLWORKSDIR/lib/X11/bitmaps $MLWORKSDIR/lib/X11/app-defaults &&
+        $mkdir $MLWORKSDIR/lib/X11/bitmaps $MLWORKSDIR/lib/X11/app-defaults &&
+        chmod 775 $MLWORKSDIR/lib/X11/bitmaps $MLWORKSDIR/lib/X11/app-defaults &&
+d277 1
+a277 1
+	    $rm $dest && $cp $f $dest && chmod 664 $dest
+d290 1
+a290 1
+	    chmod 664 $dest
+d305 5
+a309 3
+        $rmdir $MANDIR &&
+        $mkdir $MANDIR &&
+        chmod 775 $MANDIR &&
+d314 5
+a318 3
+            $rmdir $MANDIR/$d &&
+            $mkdir $MANDIR/$d &&
+            chmod 775 $MANDIR/$d &&
+d328 1
+a328 1
+	      chmod 664 $dest
+d341 5
+a345 3
+        $rmdir $MLWORKSDIR/env &&
+        $mkdir $MLWORKSDIR/env &&
+        chmod 775 $MLWORKSDIR/env &&
+d356 1
+a356 1
+	    chmod 664 $dest
+@
+
+
+1.3.1.1
+log
+@Fork for bug fixing
+@
+text
+@@
+
+
+1.3.1.2
+log
+@Ensured that existing files aren't deleted unless they are ones that
+the installation is replacing.
+@
+text
+@d43 2
+a44 1
+mkdir="/bin/mkdir"
+a47 3
+chmod_exec="chmod 775"
+chmod_non_exec="chmod 664"
+
+d80 3
+a82 5
+	if test \! -d $BINDIR
+	then
+          $mkdir $BINDIR &&
+	  $chmod_exec $BINDIR
+	fi &&
+d85 1
+a85 1
+	$chmod_exec $BINDIR/mlrun
+d97 3
+a99 5
+	if test \! -d $SCRIPTDIR
+	then
+          $mkdir $SCRIPTDIR &&
+	  $chmod_exec $SCRIPTDIR
+	fi &&
+d127 1
+a127 1
+                $chmod_exec $dest;;
+d143 3
+a145 5
+	if test \! -d $MLWORKSDIR/pervasive
+	then
+          $mkdir $MLWORKSDIR/pervasive &&
+	  $chmod_exec $MLWORKSDIR/pervasive
+	fi &&
+d151 1
+a151 1
+	    $rm $dest && $cp -p $f $dest && $chmod_non_exec $dest
+d165 3
+a167 5
+	if test \! -d $IMAGEDIR
+	then
+          $mkdir $IMAGEDIR &&
+          $chmod_exec $IMAGEDIR
+	fi &&
+d178 1
+a178 1
+	    $chmod_non_exec $dest
+d194 7
+a200 28
+	if test \! -d $MLWORKSDIR/lib
+	then
+	  $mkdir $MLWORKSDIR/lib &&
+	  $chmod_exec $MLWORKSDIR/lib
+	fi &&
+	if test \! -d $MLWORKSDIR/lib/emacs
+	then
+	  $mkdir $MLWORKSDIR/lib/emacs &&
+	  $chmod_exec $MLWORKSDIR/lib/emacs
+	fi &&
+	if test \! -d $MLWORKSDIR/lib/emacs/lisp
+	then
+          $mkdir $MLWORKSDIR/lib/emacs/lisp &&
+          $chmod_exec $MLWORKSDIR/lib/emacs/lisp
+	fi &&
+	if test \! -d $MLWORKSDIR/lib/emacs/etc
+	then
+          $mkdir $MLWORKSDIR/lib/emacs/etc &&
+          $chmod_exec $MLWORKSDIR/lib/emacs/etc
+	fi &&
+	(
+	  cd lib/emacs/etc &&
+	  for f in *
+	  do
+	    dest=$MLWORKSDIR/lib/emacs/etc/$f
+	    $rm $dest && $cp $f $dest && $chmod_exec $dest
+	  done
+	) &&
+d211 1
+a211 1
+	    $chmod_non_exec $dest
+d226 6
+a231 15
+	if test \! -d $MLWORKSDIR/lib/X11
+	then
+	  $mkdir $MLWORKSDIR/lib/X11 &&
+	  $chmod_exec $MLWORKSDIR/lib/X11
+	fi &&
+	if test \! -d $MLWORKSDIR/lib/X11/bitmaps
+	then
+	  $mkdir $MLWORKSDIR/lib/X11/bitmaps &&
+	  $chmod_exec $MLWORKSDIR/lib/X11/bitmaps
+	fi &&
+	if test \! -d $MLWORKSDIR/lib/X11/app-defaults
+	then
+	  $mkdir $MLWORKSDIR/lib/X11/app-defaults &&
+	  $chmod_exec $MLWORKSDIR/lib/X11/app-defaults
+	fi &&
+d237 1
+a237 1
+	    $rm $dest && $cp $f $dest && $chmod_non_exec $dest
+d250 1
+a250 1
+	    $chmod_non_exec $dest
+d265 3
+a267 5
+	if test \! -d $MANDIR
+	then
+          $mkdir $MANDIR &&
+          $chmod_exec $MANDIR
+	fi &&
+d272 3
+a274 5
+	    if test \! -d $MANDIR/$d
+	    then
+              $mkdir $MANDIR/$d &&
+              $chmod_exec $MANDIR/$d
+	    fi &&
+d284 1
+a284 1
+	      $chmod_non_exec $dest
+d297 3
+a299 5
+	if test \! -d $MLWORKSDIR/env
+	then
+          $mkdir $MLWORKSDIR/env &&
+          $chmod_exec $MLWORKSDIR/env
+	fi &&
+d310 1
+a310 1
+	    $chmod_non_exec $dest
+@
+
+
+1.3.1.3
+log
+@Added APP_DEFAULTS_EXTENSION variable, because some implementations of
+X don't recognise the %C escape for XFILESEARCHPATH.
+@
+text
+@d26 2
+a27 9
+#	Other variables
+#
+#   If you have a dynamically-linkable Motif library at your site, use
+#   RUNTIME=mlrun, otherwise use RUNTIME=mlrun-static-X.
+#
+#   If your X installation recognises the %C escape in the value of
+#   XFILESEARCHPATH, set APP_DEFAULT_EXTENSION=%N%C.  Otherwise set
+#   APP_DEFAULT_EXTENSION=%N-color or APP_DEFAULT_EXTENSION=%N-mono,
+#   as appropriate for your system.  X11R5 recognises the %C escape.
+a35 1
+APP_DEFAULT_EXTENSION=%N%C
+d126 4
+a129 4
+\$MLWORKSDIR/lib/X11/%L/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/%l/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/app-defaults/$APP_DEFAULT_EXTENSION:\
+\$MLWORKSDIR/lib/X11/%T/$APP_DEFAULT_EXTENSION%S:\
+@
+
+
+1.2
+log
+@Ensured all dirs and files created with the correct permissions
+@
+text
+@d120 4
+a123 4
+\$MLWORKSDIR/lib/X11/%L/app-defaults/%N:\
+\$MLWORKSDIR/lib/X11/%l/app-defaults/%N:\
+\$MLWORKSDIR/lib/X11/app-defaults/%N:\
+\$MLWORKSDIR/lib/X11/%T/%N%S:\
+@
+
+
+1.2.1.2
+log
+@Added %C to entries on XFILESEARCHPATH.
+@
+text
+@d120 4
+a123 4
+\$MLWORKSDIR/lib/X11/%L/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/%l/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/app-defaults/%N%C:\
+\$MLWORKSDIR/lib/X11/%T/%N%C%S:\
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d43 1
+d80 1
+d82 1
+d84 2
+a85 1
+        $cp run/$RUNTIME $BINDIR/mlrun
+d97 3
+a99 1
+        $mkdir $SCRIPTDIR &&
+d127 1
+a127 1
+                chmod a+rx $dest;;
+d143 1
+d145 1
+d151 1
+a151 1
+	    $rm $dest && $cp -p $f $dest
+d165 1
+d167 1
+d177 2
+a178 1
+            esac
+d194 3
+d198 1
+d200 1
+d210 2
+a211 1
+            esac
+d226 4
+d231 1
+d237 1
+a237 1
+	    $rm $dest && $cp $f $dest
+d249 2
+a250 1
+            esac
+d265 1
+d267 1
+d272 1
+d274 1
+d283 2
+a284 1
+              esac
+d297 1
+d299 1
+d309 2
+a310 1
+            esac
+@

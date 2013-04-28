@@ -1,0 +1,115 @@
+head	1.2;
+access;
+symbols
+	Final_version_of_old_runtime:1.2
+	ML_revised_beta_release_25/05/94:1.2
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	92.10.02.09.31.27;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.03.25.15.48.03;	author richard;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.10.02.09.31.27;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@C language extensions
+@
+
+
+1.2
+log
+@Added nonreturning and functional macros.  This file is now
+distributed.
+@
+text
+@/*  ==== C LANGUAGE EXTENSIONS ====
+ *
+ *  Copyright (C) 1992 Harleqiun Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This header declares macros which allow optimising extensions of the C
+ *  language to be used in conjunction with certain compilers, most notably,
+ *  GCC.  On compilers which do not support the extensions the macros are
+ *  defined to have no effect.  The macros defined are as follows:
+ *
+ *    `inline'
+ *      Can be placed on functions to cause them to be inlined.  Not to be
+ *      used  with `extern'.
+ *
+ *    `nonreturning'
+ *      Can qualify a function prorotype to indicate that the function never
+ *      returns.
+ *
+ *    `functional'
+ *      Indicates that a function will always return the same result for the
+ *      same arguments.
+ *
+ *  $Id$
+ */
+
+
+#ifndef extensions_h
+#define extensions_h
+
+
+#ifdef __GNUC__
+#  define inline	__inline__
+#  define nonreturning	volatile
+#  define functional	const
+#else
+#  define inline
+#  define nonreturning
+#  define functional
+#endif
+
+
+#endif
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d24 1
+a24 1
+ *  $Id: extensions.h,v 1.2 1992/10/02 09:31:27 richard Exp jont $
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d16 9
+a24 3
+ *  Revision Log
+ *  ------------
+ *  $Log$
+d34 2
+d38 2
+@

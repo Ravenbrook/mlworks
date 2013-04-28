@@ -1,0 +1,370 @@
+head	1.11;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.11
+	MLWorks_Beta_1996_06_06:1.11
+	MLWorks_Beta_1996_06_05:1.11
+	MLWorks_Beta_1996_06_03:1.10
+	MLWorks_Beta_1996_05_31:1.10
+	MLWorks_Beta_1996_05_30:1.10;
+locks; strict;
+comment	@# @;
+
+
+1.11
+date	96.06.05.02.22.50;	author io;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	96.05.20.10.19.35;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	96.05.16.14.21.44;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	96.05.08.13.04.39;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.05.01.16.34.41;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.04.19.12.47.29;	author stephenb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.02.08.11.32.22;	author io;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.09.21.12.02.09;	author daveb;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.06.08.13.35.52;	author daveb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.03.06.20.28.49;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.01.26.14.59.35;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Answer file for Unix path name tests.
+@
+
+
+1.11
+log
+@stringcvt->string_cvt
+@
+text
+@val it : unit = ()
+Compiling utils.lists
+Compiling utils._lists
+Compiling utils.__lists
+Compiling basis.path
+Compiling unix._unixpath
+Compiling unix.__path
+structure Path_ =
+  struct
+    datatype path_ext =
+      EXT of string |
+      NOEXT
+    datatype path_root =
+      ABS of string |
+      REL
+    val ABS : string -> Path_.path_root
+    val EXT : string -> Path_.path_ext
+    val NOEXT : Path_.path_ext
+    exception Path
+    val REL : Path_.path_root
+    val addExt : {ext: Path_.path_ext, name: string} -> string = fn
+    val addLast : {dir: string, last: string} -> string = fn
+    val concatPath : (string * string) -> string = fn
+    val current : string = "."
+    val dir : string -> string = fn
+    val explodePath : string -> {arcs: string list, root: Path_.path_root} = fn
+    val ext : string -> Path_.path_ext = fn
+    val getParent : string -> string = fn
+    val implodePath : {arcs: string list, root: Path_.path_root} -> string = fn
+    val isAbsolute : string -> bool = fn
+    val isRelative : string -> bool = fn
+    val isValidArc : string -> bool = fn
+    val isValidPath : string -> bool = fn
+    val isValidRoot : string -> bool = fn
+    val last : string -> string = fn
+    val mkAbsolute : (string * string) -> string = fn
+    val mkCanonical : string -> string = fn
+    val mkRelative : (string * string) -> string = fn
+    val name : string -> string = fn
+    val parent : string = ".."
+    val root : string -> Path_.path_root = fn
+    val splitExt : string -> {ext: Path_.path_ext, name: string} = fn
+    val splitLast : string -> {dir: string, last: string} = fn
+  end
+val it : unit = ()
+Compiling basis.general
+Compiling basis.__general
+Compiling basis.toplevel
+Compiling basis.string_cvt
+Compiling basis.__pre_basis
+Compiling basis.__pre_string_cvt
+Compiling basis.__string_cvt
+Compiling basis.__preinteger
+Compiling basis.__preint32
+Compiling basis.integer
+Compiling basis.__integer
+structure Int =
+  struct
+    eqtype int = int
+    val * : (int * int) -> int = fn
+    val + : (int * int) -> int = fn
+    val - : (int * int) -> int = fn
+    val < : (int * int) -> bool = fn
+    val <= : (int * int) -> bool = fn
+    val > : (int * int) -> bool = fn
+    val >= : (int * int) -> bool = fn
+    val abs : int -> int = fn
+    val compare : (int * int) -> order(hidden) = fn
+    val div : (int * int) -> int = fn
+    val fmt : radix(hidden) -> int -> string = fn
+    val fromInt : int -> int = fn
+    val fromLarge : MLWorks.Internal.Types.int32 -> int = fn
+    val fromString : string -> int MLWorks.Option.option = fn
+    val max : (int * int) -> int = fn
+    val maxInt : int MLWorks.Option.option = SOME 536870911
+    val min : (int * int) -> int = fn
+    val minInt : int MLWorks.Option.option = SOME ~536870912
+    val mod : (int * int) -> int = fn
+    val precision : int MLWorks.Option.option = SOME 30
+    val quot : (int * int) -> int = fn
+    val rem : (int * int) -> int = fn
+    val sameSign : (int * int) -> bool = fn
+    val scan : radix(hidden) -> ('a -> (char * 'a) MLWorks.Option.option) -> 'a -> (int * 'a) MLWorks.Option.option = fn
+    val sign : int -> int = fn
+    val toInt : int -> int = fn
+    val toLarge : int -> MLWorks.Internal.Types.int32 = fn
+    val toString : int -> string = fn
+    val ~ : int -> int = fn
+  end
+structure UnixPath =
+  struct
+    datatype path_ext =
+      EXT of string |
+      NOEXT
+    datatype path_root =
+      ABS of string |
+      REL
+    val ABS : string -> Path_.path_root
+    val EXT : string -> Path_.path_ext
+    val NOEXT : Path_.path_ext
+    exception Path
+    val REL : Path_.path_root
+    val addExt : {ext: Path_.path_ext, name: string} -> string = fn
+    val addLast : {dir: string, last: string} -> string = fn
+    val concatPath : (string * string) -> string = fn
+    val current : string = "."
+    val dir : string -> string = fn
+    val explodePath : string -> {arcs: string list, root: Path_.path_root} = fn
+    val ext : string -> Path_.path_ext = fn
+    val getParent : string -> string = fn
+    val implodePath : {arcs: string list, root: Path_.path_root} -> string = fn
+    val isAbsolute : string -> bool = fn
+    val isRelative : string -> bool = fn
+    val isValidArc : string -> bool = fn
+    val isValidPath : string -> bool = fn
+    val isValidRoot : string -> bool = fn
+    val last : string -> string = fn
+    val mkAbsolute : (string * string) -> string = fn
+    val mkCanonical : string -> string = fn
+    val mkRelative : (string * string) -> string = fn
+    val name : string -> string = fn
+    val parent : string = ".."
+    val root : string -> Path_.path_root = fn
+    val splitExt : string -> {ext: Path_.path_ext, name: string} = fn
+    val splitLast : string -> {dir: string, last: string} = fn
+  end
+val dummyExplodedPath : {arcs: 'a list, root: Path_.path_root} = {arcs=[], root=ABS "error"}
+val dummySplitPath : {dir: string, ext: Path_.path_ext, name: string} = {dir="error", ext=EXT "error", name="error"}
+val tests : bool list = [true, true, true, true, true, true, true, true, true, true, ..]
+val check_result : (bool * (int list * int)) -> (int list * int) = fn
+val foldl : (('a * 'b) -> 'b) -> 'b -> 'a list -> 'b = fn
+val print_list : int list -> unit = fn
+val failures : int list = []
+All tests succeeded
+@
+
+
+1.10
+log
+@maxint became maxInt
+@
+text
+@d49 4
+a52 3
+Compiling basis.stringcvt
+Compiling basis.__pre_char
+Compiling basis.__stringcvt
+@
+
+
+1.9
+log
+@output has changed slightly
+@
+text
+@d74 1
+a74 1
+    val maxint : int MLWorks.Option.option = SOME 536870911
+d76 1
+a76 1
+    val minint : int MLWorks.Option.option = SOME ~536870912
+@
+
+
+1.8
+log
+@Revised basis changes
+@
+text
+@a45 3
+Compiling basis.word
+Compiling basis.__word
+Compiling basis.__word8
+d69 1
+d82 1
+@
+
+
+1.7
+log
+@Fixing up after changes to toplevel visible string and io stuff
+@
+text
+@d53 1
+@
+
+
+1.6
+log
+@initbasis is now basis.
+@
+text
+@d45 44
+@
+
+
+1.5
+log
+@update Shell.Make
+@
+text
+@d5 1
+a5 1
+Compiling initbasis.path
+@
+
+
+1.4
+log
+@Changed printing of datatypes.
+@
+text
+@d2 6
+a7 6
+Make: compiling unix.__path
+Make: compiling    utils.__lists
+Make: compiling       utils._lists
+Make: compiling          utils.lists
+Make: compiling    unix._unixpath
+Make: compiling       initbasis.path
+@
+
+
+1.3
+log
+@The path module has moved, so make produces a slightly different message.
+@
+text
+@d16 3
+d20 1
+d53 3
+d57 1
+@
+
+
+1.2
+log
+@Removed the "last" component from exploded paths, and replaced
+splitPath with splitExt and splitLast.
+@
+text
+@d7 1
+a7 1
+Make: compiling       utils.path
+@
+
+
+1.1
+log
+@new unit
+Answer file for Unix path name tests.
+@
+text
+@d17 2
+a18 1
+    val base : string -> string = fn
+d22 1
+a22 1
+    val explodePath : string -> {arcs: string list, last: string, root: Path_.path_root} = fn
+d25 1
+a25 1
+    val implodePath : {arcs: string list, last: string, root: Path_.path_root} -> string = fn
+a31 1
+    val makePath : {dir: string, ext: Path_.path_ext, name: string} -> string = fn
+d38 2
+a39 2
+    val splitPath : string -> {dir: string, ext: Path_.path_ext, name: string} = fn
+    val suffix : (string * string) -> int MLWorks.Option.option = fn
+d50 2
+a51 1
+    val base : string -> string = fn
+d55 1
+a55 1
+    val explodePath : string -> {arcs: string list, last: string, root: Path_.path_root} = fn
+d58 1
+a58 1
+    val implodePath : {arcs: string list, last: string, root: Path_.path_root} -> string = fn
+a64 1
+    val makePath : {dir: string, ext: Path_.path_ext, name: string} -> string = fn
+d71 2
+a72 2
+    val splitPath : string -> {dir: string, ext: Path_.path_ext, name: string} = fn
+    val suffix : (string * string) -> int MLWorks.Option.option = fn
+d74 1
+a74 1
+val dummyExplodedPath : {arcs: 'a list, last: string, root: Path_.path_root} = {arcs=[], last="error", root=ABS "error"}
+d76 1
+a76 1
+val tests : bool list = [true, true, true, true, true, true, true, true, true, true,...]
+@

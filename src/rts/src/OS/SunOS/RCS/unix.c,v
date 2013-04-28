@@ -1,0 +1,1240 @@
+head	1.8;
+access;
+symbols
+	hope_poo:1.2.1
+	ML_beta_release_12/08/94:1.2.1.1
+	ML_beta_release_03/08/94:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.8
+date	96.01.26.12.07.57;	author stephenb;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	96.01.22.15.57.32;	author stephenb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	95.09.19.14.20.56;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.05.10.14.26.47;	author daveb;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	94.12.09.15.46.28;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	94.10.19.14.17.12;	author nickb;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	94.06.09.14.27.16;	author nickh;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	94.06.09.10.51.46;	author nickh;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	95.07.05.10.28.38;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new file
+@
+
+
+1.8
+log
+@Change write from fd*str -> int  to  fd*str*offset*len -> int
+so that it is possible to more efficiently write out substrings.
+@
+text
+@/*  ==== PERVASIVE UNIX FUNCTIONS ====
+ *
+ *  Copyright (C) 1993 Harlequin Ltd
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: src:OS:SunOS:unix.c,v $
+ * Revision 1.7  1996/01/22  15:57:32  stephenb
+ * Rename the Unix exceptions that are no longer pervasive and
+ * remove any that are no longer needed.
+ *
+ * Revision 1.6  1995/09/19  14:20:56  jont
+ * Fix problems with C ordering of evaluation of function parameters
+ * interaction with gc and C roots
+ *
+ * Revision 1.5  1995/05/10  14:26:47  daveb
+ * Make the Unix exception take the string returned by perror instead
+ * of the integer errno.
+ * Added the stat, seek, can_input and set_block_mode functions.
+ *
+ * Revision 1.4  1994/12/09  15:46:28  jont
+ * Change time.h to mltime.h
+ *
+ * Revision 1.3  1994/10/19  14:17:12  nickb
+ * Gcc prototypes open(), so we don't need OPEN_MODE_ARGUMENT
+ *
+ * Revision 1.2  1994/06/09  14:27:16  nickh
+ * new file
+ *
+ * Revision 1.1  1994/06/09  10:51:46  nickh
+ * new file
+ *
+ *  Revision 1.11  1994/02/08  14:40:39  matthew
+ *  Added realpath function
+ *
+ *  Revision 1.10  1994/01/28  17:40:14  nickh
+ *  Moved extern function declarations to header files.
+ *
+ *  Revision 1.9  1993/11/12  16:54:13  nickh
+ *  changed interface to ml_time values.
+ *
+ *  Revision 1.8  1993/08/27  19:29:54  daveb
+ *  Added unix_unlink, unix_mkdir and unix_rmdir.
+ *
+ *  Revision 1.7  1993/08/25  10:26:51  richard
+ *  Added kill function.
+ *
+ *  Revision 1.6  1993/06/22  11:18:29  richard
+ *  Added system calls interfaces to opendir etc. (for opening and reading
+ *  directories) and to getpwent etc. (for reading password database
+ *  entries).  unix_password_file() should be removed later.
+ *
+ *  Revision 1.5  1993/06/10  14:27:20  richard
+ *  Used the shared-memory semantics of vfork() to pass an error code
+ *  from child to parent in the vfork_exec functions.
+ *
+ *  Revision 1.4  1993/05/06  14:47:43  jont
+ *  Added fix to close password file when it's finished with
+ *
+ *  Revision 1.3  1993/05/05  17:27:26  jont
+ *  Added a function to get the password file entries for translating
+ *  filenames with ~ in them
+ *
+ *  Revision 1.2  1993/04/21  14:54:57  richard
+ *  Removed defunct Editor interface and added sytem calls to enable
+ *  its replacement.
+ *
+ *  Revision 1.1  1993/04/07  14:05:44  richard
+ *  Initial revision
+ *
+ */
+
+#include "unix.h"
+#include "mltypes.h"
+#include "values.h"
+#include "allocator.h"
+#include "gc.h"
+#include "environment.h"
+#include "global.h"
+#include "mltime.h"
+#include "utils.h"
+#include "exceptions.h"
+#include "syscalls.h"
+
+#include <errno.h>
+#include <string.h>
+#include <memory.h>
+#include <stdlib.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/errno.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <vfork.h>
+#include <fcntl.h>
+#include <sys/filio.h>
+
+static mlval unix_exn_ref_unix;
+static mlval unix_exn_ref_would_block;
+
+static mlval unix_af_unix;
+static mlval unix_af_inet;
+static mlval unix_sock_stream;
+static mlval unix_sock_dgram;
+
+
+#define SOCKADDR_BUFFER		sizeof(struct sockaddr_un)
+
+static void unix_error (int i)
+{
+  exn_raise_string(unix_exn_ref_unix, sys_errlist[i]);
+}
+
+static mlval unix_environment(mlval unit)
+{
+  static mlval result = DEAD;
+  int i;
+
+  if(result == DEAD)
+  {
+    result = MLNIL;
+    declare_root(&result);
+
+    for(i=0; environ[i] != NULL; ++i) {
+      mlval poo = ml_string(environ[i]);
+      /* Do not inline this function call */
+      /* C is to stupid to realise that it should evaluate parameters */
+      /* before building the arguments to a function */
+      result = cons(poo, result);
+    }
+  }
+
+  return(result);
+}
+
+static mlval unix_getwd(mlval unit)
+{
+  char buffer[MAXPATHLEN];
+  char *result = getwd(buffer);
+
+  if(result == NULL)
+    exn_raise_string(perv_exn_ref_io, buffer);
+
+  return(ml_string(buffer));
+}
+
+static mlval unix_realpath(mlval filename)
+{
+  char buffer[MAXPATHLEN];
+  char *result = realpath(CSTRING(filename),buffer);
+
+  if(result == NULL)
+    exn_raise_string(perv_exn_ref_io, buffer);
+
+  return(ml_string(buffer));
+}
+
+static mlval unix_setwd(mlval string)
+{
+  if(chdir(CSTRING(string)))
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_rusage(mlval unit)
+{
+  struct rusage ru;
+  mlval utime, stime, result;
+
+  if(getrusage(RUSAGE_SELF, &ru))
+    unix_error(errno);
+
+  result = allocate_record(16);
+
+  utime = ml_time(&ru.ru_utime);
+  stime = ml_time(&ru.ru_stime);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * idrss	integral resident set size
+   * inblock	block input operations
+   * isrss	currently 0
+   * ixrss	currently 0
+   * majflt	page faults requiring physical I/O
+   * maxrss	maximum resident set size
+   * minflt	page faults not requiring physical I/O
+   * msgrcv	messages received
+   * msgsnd	messages sent
+   * nivcsw	involuntary context switches
+   * nsignals	signals received
+   * nswap	swaps voluntary
+   * nvcsw	context switches
+   * oublock	block output operations
+   * stime	system time used
+   * utime	user time used
+   */
+
+  FIELD(result,  0) = MLINT(ru.ru_idrss);
+  FIELD(result,  1) = MLINT(ru.ru_inblock);
+  FIELD(result,  2) = MLINT(ru.ru_isrss);
+  FIELD(result,  3) = MLINT(ru.ru_ixrss);
+  FIELD(result,  4) = MLINT(ru.ru_majflt);
+  FIELD(result,  5) = MLINT(ru.ru_maxrss);
+  FIELD(result,  6) = MLINT(ru.ru_minflt);
+  FIELD(result,  7) = MLINT(ru.ru_msgrcv);
+  FIELD(result,  8) = MLINT(ru.ru_msgsnd);
+  FIELD(result,  9) = MLINT(ru.ru_nivcsw);
+  FIELD(result, 10) = MLINT(ru.ru_nsignals);
+  FIELD(result, 11) = MLINT(ru.ru_nswap);
+  FIELD(result, 12) = MLINT(ru.ru_nvcsw);
+  FIELD(result, 13) = MLINT(ru.ru_oublock);
+  FIELD(result, 14) = stime;
+  FIELD(result, 15) = utime;
+
+  return(result);
+}
+
+static mlval unix_open(mlval arg)
+{
+  int fd = open(CSTRING(FIELD(arg, 0)),
+		CINT(FIELD(arg, 1)),
+		CINT(FIELD(arg, 2)));
+
+  if(fd == -1)
+    unix_error(errno);
+
+  return(MLINT(fd));
+}
+
+static mlval unix_close(mlval arg)
+{
+  if(close(CINT(arg)) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_unlink(mlval arg)
+{
+  if(unlink(CSTRING(arg)) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_socket(mlval arg)
+{
+  int fd = socket(CINT(FIELD(arg, 0)),
+		
+		CINT(FIELD(arg, 1)),
+		
+		CINT(FIELD(arg, 2)));
+  if(fd == -1)
+    unix_error(errno);
+
+  return(MLINT(fd));
+}
+
+static mlval unix_bind(mlval arg)
+{
+  size_t length;
+  struct sockaddr_un un;
+
+  length = strlen(CSTRING(FIELD(arg, 1)));
+  if(length > sizeof(un.sun_path))
+    unix_error (EINVAL);
+
+  un.sun_family = AF_UNIX;
+  memcpy(&un.sun_path, CSTRING(FIELD(arg, 1)), length);
+
+  if(bind(CINT(FIELD(arg, 0)),
+	 (struct sockaddr *)&un,
+	 sizeof(un.sun_family)+length) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_connect(mlval arg)
+{
+  size_t length;
+  struct sockaddr_un un;
+
+  length = strlen(CSTRING(FIELD(arg, 1)));
+  if(length > sizeof(un.sun_path))
+    unix_error (EINVAL);
+
+  un.sun_family = AF_UNIX;
+  memcpy(&un.sun_path, CSTRING(FIELD(arg, 1)), length);
+
+  if(connect(CINT(FIELD(arg, 0)),
+	    (struct sockaddr *)&un,
+	    sizeof(un.sun_family)+length) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_getsockname(mlval arg)
+{
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval result;
+  size_t length;
+
+  if(getsockname(CINT(arg), sa, &namelen))
+    unix_error(errno);
+
+  if(sa->sa_family != AF_UNIX)
+    unix_error (EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  result = allocate_string(length+1);
+  memcpy(CSTRING(result), un->sun_path, length);
+  CSTRING(result)[length] = '\0';
+
+  return(result);
+}
+
+static mlval unix_getpeername(mlval arg)
+{
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval result;
+  size_t length;
+
+  if(getpeername(CINT(arg), sa, &namelen))
+    unix_error(errno);
+
+  if(sa->sa_family != AF_UNIX)
+    unix_error (EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  result = allocate_string(length+1);
+  memcpy(CSTRING(result), un->sun_path, length);
+  CSTRING(result)[length] = '\0';
+
+  return(result);
+}
+
+static mlval unix_accept(mlval arg)
+{
+  char buffer[SOCKADDR_BUFFER];
+  int namelen = SOCKADDR_BUFFER, s;
+  struct sockaddr *sa = (struct sockaddr *)buffer;
+  struct sockaddr_un *un = (struct sockaddr_un *)buffer;
+  mlval ml_sockaddr, result;
+  size_t length;
+
+  s = accept(CINT(arg), sa, &namelen);
+
+  if(s == -1)
+    unix_error(errno);
+
+  if(sa->sa_family != AF_UNIX)
+    unix_error (EINVAL);
+
+  length = namelen - sizeof(un->sun_family);
+  ml_sockaddr = allocate_string(length+1);
+  memcpy(CSTRING(ml_sockaddr), un->sun_path, length);
+  CSTRING(ml_sockaddr)[length] = '\0';
+  declare_root(&ml_sockaddr);
+  result = allocate_record(2);
+  FIELD(result, 0) = MLINT(s);
+  FIELD(result, 1) = ml_sockaddr;
+  retract_root(&ml_sockaddr);
+
+  return(result);
+}
+
+static mlval unix_listen(mlval arg)
+{
+  if(listen(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1))))
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_write(mlval arg)
+{
+  int w = write(CINT(FIELD(arg, 0)),
+		CSTRING(FIELD(arg, 1)) + (unsigned)CINT(FIELD(arg, 2)),
+		(unsigned)CINT(FIELD(arg, 3)));
+
+  if(w == -1)
+    unix_error(errno);
+
+  return(MLINT(w));
+}
+
+static mlval unix_seek(mlval arg)
+{
+  int fd = CINT(FIELD(arg, 0));
+  int offset = CINT(FIELD(arg, 1));
+
+  if (lseek (fd, SEEK_SET, offset) == -1)
+    unix_error (errno);
+
+  return (MLUNIT);
+}
+
+static mlval unix_set_block_mode (mlval arg)
+{
+  int flags;
+  int fd = CINT(FIELD(arg, 0));
+  int b = CINT(FIELD(arg, 1));
+
+  flags = fcntl (fd, F_GETFL, 0);
+
+  if (flags == -1)
+    unix_error (errno);
+
+  if (b == MLTRUE) {
+    if (fcntl (fd, F_SETFL, O_NONBLOCK|flags))
+      unix_error (errno);
+  }
+  else {
+    if (fcntl (fd, F_SETFL, (~O_NONBLOCK)&flags))
+      unix_error (errno);
+  }
+
+  return (MLUNIT);
+}
+
+static mlval unix_can_input (mlval arg)
+{
+  int fd = CINT(arg);
+  long l;
+
+  if (ioctl (fd, FIONREAD, (caddr_t)&l))
+    unix_error (errno);
+
+  return (MLINT (l));
+}
+
+static mlval unix_stat (mlval arg)
+{
+  struct stat st;
+  mlval atime, ctime, mtime, result;
+  int fd = CINT (arg);
+
+  if (fstat (fd, &st))
+    unix_error(errno);
+
+  result = allocate_record(13);
+
+  atime = ml_time_t(st.st_atime);
+  ctime = ml_time_t(st.st_ctime);
+  mtime = ml_time_t(st.st_mtime);
+
+  /* Lexical ordering for fields -- the result is a record with name fields.
+   *
+   * atime      file last access time
+   * blksize    preferred blocksize for file system I/O
+   * blocks     actual number of blocks allocated
+   * ctime      file last status change time
+   * dev        device file resides on
+   * gid        group ID of owner
+   * ino        the file serial number
+   * mode       file mode
+   * mtime      file last modify time
+   * nlink      number of hard links to the file
+   * rdev       the device identifier (special files only)
+   * size       total size of file, in bytes
+   * uid        user ID of owner
+   */
+
+  FIELD(result,  0) = atime;
+  FIELD(result,  1) = MLINT(st.st_blksize);
+  FIELD(result,  2) = MLINT(st.st_blocks);
+  FIELD(result,  3) = ctime;
+  FIELD(result,  4) = MLINT(st.st_dev);
+  FIELD(result,  5) = MLINT(st.st_gid);
+  FIELD(result,  6) = MLINT(st.st_ino);
+  FIELD(result,  7) = MLINT(st.st_mode);
+  FIELD(result,  8) = mtime;
+  FIELD(result,  9) = MLINT(st.st_nlink);
+  FIELD(result, 10) = MLINT(st.st_rdev);
+  FIELD(result, 11) = MLINT(st.st_size);
+  FIELD(result, 12) = MLINT(st.st_uid);
+
+  return(result);
+}
+
+static mlval unix_read(mlval arg)
+{
+  int length = CINT(FIELD(arg, 1));
+  char *buffer = alloc((size_t) length, "unix_read"), *s;
+  int r = read(CINT(FIELD(arg, 0)), buffer, length);
+  mlval string;
+
+  if(r == -1)
+  {
+    int e = errno;
+    free(buffer);
+    if (e == EAGAIN)
+      exn_raise (unix_exn_ref_would_block);
+    else
+      unix_error (e);
+  }
+
+  string = allocate_string((size_t) (r+1));
+  s = CSTRING(string);
+  memcpy(s, buffer, (size_t) r);
+  free(buffer);
+  s[r] = '\0';
+
+  return(string);
+}
+
+static char **list_to_array(mlval list)
+{
+  size_t i;
+  mlval l;
+  char **array;
+
+  i = 0;
+  for(l=list; l!=MLNIL; l=MLTAIL(l))
+    ++i;
+
+  array = alloc(sizeof(char *)*(i+1), "list_to_array");
+
+  i = 0;
+  for(l=list; l!=MLNIL; l=MLTAIL(l))
+    array[i++] = CSTRING(MLHEAD(l));
+  array[i] = NULL;
+
+  return(array);
+}
+
+static mlval unix_execve(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  char **envp = list_to_array(FIELD(arg, 2));
+  int e;
+
+  execve(CSTRING(FIELD(arg, 0)), argv, envp);
+
+  e = errno;
+
+  free(argv);
+  free(envp);
+
+  unix_error(errno);
+  return MLUNIT;
+}
+  
+static mlval unix_execv(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e;
+
+  execv(CSTRING(FIELD(arg, 0)), argv);
+
+  e = errno;
+
+  free(argv);
+
+  unix_error(errno);
+  return MLUNIT;
+}
+  
+static mlval unix_execvp(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e;
+
+  execvp(CSTRING(FIELD(arg, 0)), argv);
+
+  e = errno;
+
+  free(argv);
+
+  unix_error(errno);
+  return MLUNIT;
+}
+  
+static mlval unix_vfork_execve(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  char **envp = list_to_array(FIELD(arg, 2));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execve(CSTRING(FIELD(arg, 0)), argv, envp);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+  free(envp);
+
+  if(pid == -1)
+    unix_error (e);
+  if(exec_errno != 0)
+    unix_error (exec_errno);
+
+  return(MLINT(pid));
+}
+
+static mlval unix_vfork_execv(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execv(CSTRING(FIELD(arg, 0)), argv);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+
+  if(pid == -1)
+    unix_error (e);
+  if(exec_errno != 0)
+    unix_error (exec_errno);
+
+
+  return(MLINT(pid));
+}
+
+static mlval unix_vfork_execvp(mlval arg)
+{
+  char **argv = list_to_array(FIELD(arg, 1));
+  int e, pid;
+  volatile int exec_errno = 0;
+
+  pid = vfork();
+
+  if(pid == 0)
+  {
+    execvp(CSTRING(FIELD(arg, 0)), argv);
+    exec_errno = errno;
+    _exit(-1);			/* only reached on error */
+  }
+
+  e = errno;
+  free(argv);
+
+  if(pid == -1)
+    unix_error (e);
+  if(exec_errno != 0)
+    unix_error (exec_errno);
+
+  return(MLINT(pid));
+}
+
+static mlval ml_passwd(struct passwd *pw)
+{
+  mlval name, passwd, gecos, dir, shell, result;
+
+  /* Lexical ordering of passwd structure fields:
+   *
+   * dir
+   * gecos
+   * gid
+   * name
+   * passwd
+   * shell
+   * uid
+   */
+
+  name = ml_string(pw->pw_name);
+  declare_root(&name);
+  passwd = ml_string(pw->pw_passwd);
+  declare_root(&passwd);
+  gecos = ml_string(pw->pw_gecos);
+  declare_root(&gecos);
+  dir = ml_string(pw->pw_dir);
+  declare_root(&dir);
+  shell = ml_string(pw->pw_shell);
+  declare_root(&shell);
+  result = allocate_record(7);
+  FIELD(result, 0) = dir;
+  FIELD(result, 1) = gecos;
+  FIELD(result, 2) = MLINT(pw->pw_gid);
+  FIELD(result, 3) = name;
+  FIELD(result, 4) = passwd;
+  FIELD(result, 5) = shell;
+  FIELD(result, 6) = MLINT(pw->pw_uid);
+  retract_root(&shell);
+  retract_root(&dir);
+  retract_root(&gecos);
+  retract_root(&passwd);
+  retract_root(&name);
+
+  return(result);
+}
+
+static mlval unix_getpwent(mlval arg)
+{
+  struct passwd *pw = getpwent();
+
+  if(pw == NULL)
+    unix_error (0);
+
+  return(ml_passwd(pw));
+}
+
+static mlval unix_setpwent(mlval arg)
+{
+  setpwent();
+  return(MLUNIT);
+}
+
+static mlval unix_endpwent(mlval arg)
+{
+  endpwent();
+  return(MLUNIT);
+}
+
+static mlval unix_getpwuid(mlval arg)
+{
+  struct passwd *pw = getpwuid(CINT(arg));
+
+  if(pw == NULL)
+    unix_error (0);
+
+  return(ml_passwd(pw));
+}
+
+static mlval unix_getpwnam(mlval arg)
+{
+  struct passwd *pw = getpwnam(CSTRING(arg));
+
+  if(pw == NULL)
+    unix_error (0);
+
+  return(ml_passwd(pw));
+}
+
+static mlval unix_mkdir(mlval arg)
+{
+  if(mkdir(CSTRING(FIELD(arg, 0)),
+	   CINT(FIELD(arg, 1))) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_rmdir(mlval arg)
+{
+  if(rmdir(CSTRING(arg)) == -1)
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval unix_opendir(mlval arg)
+{
+  DIR *dir = opendir(CSTRING(arg));
+
+  if(dir == NULL)
+    unix_error(errno);
+
+  return((mlval)dir);
+}
+
+static mlval unix_readdir(mlval arg)
+{
+  struct dirent *d;
+
+  errno = 0;
+
+  d = readdir((DIR *)arg);
+
+  if(errno)
+    unix_error(errno);
+
+  if(d == NULL)			/* EOF */
+    return(ml_string(""));	/* by analogy with lookahead */
+
+  return(ml_string(d->d_name));
+}
+
+static mlval unix_closedir(mlval arg)
+{
+  if(closedir((DIR *)arg))
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+static mlval password_file_result = DEAD;
+
+static mlval unix_password_file(mlval arg)
+{
+  if (password_file_result == DEAD) {
+    mlval result = MLNIL,
+          str1 = MLNIL,
+          str2 = MLNIL,
+          pair = MLNIL;
+    struct passwd *entry = getpwent();
+    password_file_result = MLNIL;
+    declare_root(&password_file_result);
+    declare_root(&result);
+    declare_root(&str1);
+    declare_root(&str2);
+    declare_root(&pair);
+    while (entry != NULL) {
+      str1 = ml_string(entry->pw_name);
+      str2 = ml_string(entry->pw_dir);
+      pair = allocate_record(2);
+      FIELD(pair, 0) = str1;
+      FIELD(pair, 1) = str2;
+      result = cons(pair, result);
+      entry = getpwent();
+    };
+    endpwent();
+    retract_root(&result);
+    retract_root(&str1);
+    retract_root(&str2);
+    retract_root(&pair);
+    password_file_result = result;
+  }
+  return password_file_result;
+}
+
+static mlval unix_kill(mlval arg)
+{
+  if(kill(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1))))
+    unix_error(errno);
+
+  return(MLUNIT);
+}
+
+void unix_init(void)
+{
+  env_function("system os unix environment", unix_environment);
+  env_function("system os unix getwd", unix_getwd);
+  env_function("system os unix setwd", unix_setwd);
+  env_function("system os unix realpath", unix_realpath);
+  env_function("system os unix rusage", unix_rusage);
+  env_function("system os unix stat", unix_stat);
+  env_function("system os unix open", unix_open);
+  env_function("system os unix close", unix_close);
+  env_function("system os unix unlink", unix_unlink);
+  env_function("system os unix set block mode", unix_set_block_mode);
+  env_function("system os unix can input", unix_can_input);
+  env_function("system os unix seek", unix_seek);
+  env_function("system os unix socket", unix_socket);
+  env_function("system os unix bind", unix_bind);
+  env_function("system os unix connect", unix_connect);
+  env_function("system os unix read", unix_read);
+  env_function("system os unix write", unix_write);
+  env_function("system os unix accept", unix_accept);
+  env_function("system os unix listen", unix_listen);
+  env_function("system os unix getsockname", unix_getsockname);
+  env_function("system os unix getpeername", unix_getpeername);
+  env_function("system os unix execve", unix_execve);
+  env_function("system os unix execv", unix_execv);
+  env_function("system os unix execvp", unix_execvp);
+  env_function("system os unix vfork_execve", unix_vfork_execve);
+  env_function("system os unix vfork_execv", unix_vfork_execv);
+  env_function("system os unix vfork_execvp", unix_vfork_execvp);
+  env_function("system os unix getpwent", unix_getpwent);
+  env_function("system os unix setpwent", unix_setpwent);
+  env_function("system os unix endpwent", unix_endpwent);
+  env_function("system os unix getpwuid", unix_getpwuid);
+  env_function("system os unix getpwnam", unix_getpwnam);
+  env_function("system os unix rmdir", unix_rmdir);
+  env_function("system os unix mkdir", unix_mkdir);
+  env_function("system os unix opendir", unix_opendir);
+  env_function("system os unix readdir", unix_readdir);
+  env_function("system os unix closedir", unix_closedir);
+  env_function("system os unix password_file", unix_password_file);
+  env_function("system os unix kill", unix_kill);
+
+  unix_af_unix= MLINT(AF_UNIX);
+  env_value("system os unix af_unix", unix_af_unix);
+  declare_global("system os unix af_unix", &unix_af_unix, NULL);
+
+  unix_af_inet= MLINT(AF_INET);
+  env_value("system os unix af_inet", unix_af_inet);
+  declare_global("system os unix af_inet", &unix_af_inet, NULL);
+
+  unix_sock_stream= MLINT(SOCK_STREAM);
+  env_value("system os unix sock_stream", unix_sock_stream);
+  declare_global("system os unix sock_stream", &unix_sock_stream, NULL);
+
+  unix_sock_dgram= MLINT(SOCK_DGRAM);
+  env_value("system os unix sock_dgram", unix_sock_dgram);
+  declare_global("system os unix sock_dgram", &unix_sock_dgram, NULL);
+
+  unix_exn_ref_unix = ref(exn_default);
+  unix_exn_ref_would_block = ref(exn_default);
+  env_value("system os unix exception Unix", unix_exn_ref_unix);
+  env_value("system os unix exception Would Block", unix_exn_ref_would_block);
+  declare_global("system os unix exception Unix", &unix_exn_ref_unix, NULL);
+  declare_global
+    ("system os unix exception Would Block", &unix_exn_ref_would_block, NULL);
+}
+@
+
+
+1.7
+log
+@Rename the Unix exceptions that are no longer pervasive and
+remove any that are no longer needed.
+@
+text
+@d8 4
+d108 6
+d394 2
+a395 2
+		CSTRING(FIELD(arg, 1)),
+		strlen(CSTRING(FIELD(arg, 1))));
+d891 16
+@
+
+
+1.6
+log
+@Fix problems with C ordering of evaluation of function parameters
+interaction with gc and C roots
+@
+text
+@d8 4
+d101 2
+a102 3
+static mlval perv_exn_ref_unix;
+static mlval perv_exn_ref_not_unix;
+static mlval perv_exn_ref_would_block;
+d108 1
+a108 1
+  exn_raise_string(perv_exn_ref_unix, sys_errlist[i]);
+d499 1
+a499 1
+      exn_raise (perv_exn_ref_would_block);
+d882 5
+a886 8
+  perv_exn_ref_unix = ref(exn_default);
+  perv_exn_ref_not_unix = ref(exn_default);
+  perv_exn_ref_would_block = ref(exn_default);
+  env_value("exception Unix", perv_exn_ref_unix);
+  env_value("exception NotUnix", perv_exn_ref_not_unix);
+  env_value("exception Would Block", perv_exn_ref_would_block);
+  declare_global("pervasive exception Unix", &perv_exn_ref_unix, NULL);
+  declare_global("pervasive exception Not Unix", &perv_exn_ref_not_unix, NULL);
+d888 1
+a888 1
+    ("pervasive exception Would Block", &perv_exn_ref_would_block, NULL);
+@
+
+
+1.5
+log
+@Make the Unix exception take the string returned by perror instead
+of the integer errno.
+Added the stat, seek, can_input and set_block_mode functions.
+@
+text
+@d8 5
+d118 7
+a124 2
+    for(i=0; environ[i] != NULL; ++i)
+      result = cons(ml_string(environ[i]), result);
+@
+
+
+1.4
+log
+@Change time.h to mltime.h
+@
+text
+@d8 3
+d78 2
+a79 1
+#include <sys/errno.h>
+d89 2
+d94 1
+d98 5
+d145 1
+a145 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d156 1
+a156 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d158 2
+a160 1
+  declare_root(&utime);
+a161 4
+  declare_root(&stime);
+  result = allocate_record(16);
+  retract_root(&stime);
+  retract_root(&utime);
+d210 1
+a210 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d218 1
+a218 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d226 1
+a226 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d239 1
+a239 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d251 1
+a251 1
+    exn_raise_int(perv_exn_ref_unix, EINVAL);
+d259 1
+a259 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d271 1
+a271 1
+    exn_raise_int(perv_exn_ref_unix, EINVAL);
+d279 1
+a279 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d294 1
+a294 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d297 1
+a297 1
+    exn_raise_int(perv_exn_ref_unix, EINVAL);
+d317 1
+a317 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d320 1
+a320 1
+    exn_raise_int(perv_exn_ref_unix, EINVAL);
+d342 1
+a342 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d345 1
+a345 1
+    exn_raise_int(perv_exn_ref_unix, EINVAL);
+d363 1
+a363 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d375 1
+a375 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d380 94
+d485 4
+a488 1
+    exn_raise_int(perv_exn_ref_unix, e);
+d533 2
+a534 1
+  exn_raise_int(perv_exn_ref_unix, errno);
+d548 2
+a549 1
+  exn_raise_int(perv_exn_ref_unix, errno);
+d563 2
+a564 1
+  exn_raise_int(perv_exn_ref_unix, errno);
+d588 1
+a588 1
+    exn_raise_int(perv_exn_ref_unix, e);
+d590 1
+a590 1
+    exn_raise_int(perv_exn_ref_unix, exec_errno);
+d614 1
+a614 1
+    exn_raise_int(perv_exn_ref_unix, e);
+d616 1
+a616 1
+    exn_raise_int(perv_exn_ref_unix, exec_errno);
+d641 1
+a641 1
+    exn_raise_int(perv_exn_ref_unix, e);
+d643 1
+a643 1
+    exn_raise_int(perv_exn_ref_unix, exec_errno);
+d695 1
+a695 1
+    exn_raise_int(perv_exn_ref_unix, 0);
+d717 1
+a717 1
+    exn_raise_int(perv_exn_ref_unix, 0);
+d727 1
+a727 1
+    exn_raise_int(perv_exn_ref_unix, 0);
+d736 1
+a736 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d744 1
+a744 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d754 1
+a754 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d768 1
+a768 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d779 1
+a779 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d822 1
+a822 1
+    exn_raise_int(perv_exn_ref_unix, errno);
+d834 1
+d838 3
+d871 1
+d874 1
+d877 2
+@
+
+
+1.3
+log
+@Gcc prototypes open(), so we don't need OPEN_MODE_ARGUMENT
+@
+text
+@d8 3
+d64 1
+a64 1
+#include "time.h"
+d87 1
+d757 1
+d759 1
+d761 1
+@
+
+
+1.2
+log
+@new file
+@
+text
+@d8 3
+a63 2
+
+#define OPEN_MODE_ARGUMENT 1
+@
+
+
+1.2.1.1
+log
+@branched from 1.2
+@
+text
+@a7 3
+ * Revision 1.2  1994/06/09  14:27:16  nickh
+ * new file
+ *
+@
+
+
+1.1
+log
+@new file
+@
+text
+@d7 4
+a10 1
+ *  $Log: unix.c,v $
+@

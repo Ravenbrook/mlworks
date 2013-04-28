@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.30.34;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : Math structure ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *  Revision 1.1  1995/04/13  13:24:14  jont
+ *  new unit
+ *  No reason given
+ *
+ *
+ *)
+
+require "__general";
+require "maths";
+
+structure Math : MATH =
+  struct
+    type real = real
+
+    exception Sqrt = General.Sqrt
+    exception Trig
+    exception Ln = General.Ln
+
+    val pi : real = 4.0 * arctan 1.0
+    val e : real = exp 1.0
+
+    val sqrt : real -> real = sqrt
+    val sin : real -> real = sin
+    val cos : real -> real = cos
+    val tan : real -> real =
+      fn x =>
+      (sin x / cos x) handle Div => raise Trig
+			   | Overflow => raise Trig
+    val atan : real -> real = arctan
+    val atan2 : real * real -> real =
+      fn (x, y) =>
+      if x = 0.0 then
+	if y = 0.0 then
+	  0.0
+	else
+	  if y < 0.0 then
+	    ~ pi / 2.0
+	  else
+	    pi / 2.0
+      else
+	let
+	  val at = arctan(y/x)
+	in
+	  if x > 0.0 then
+	    at
+	  else
+	    if y < 0.0 then
+	      at - pi
+	    else
+	      at + pi
+	end
+
+    val asin : real -> real =
+      fn y =>
+      if abs y > 1.0 then
+	raise Trig
+      else
+	let
+	  val x = sqrt(1.0 - y*y)
+	in
+	  atan2(x, y)
+	end
+
+    val acos : real -> real =
+      fn x =>
+      if abs x > 1.0 then
+	raise Trig
+      else
+	let
+	  val y = sqrt(1.0 - x*x)
+	in
+	  atan2(x, y)
+	end
+
+    val exp : real -> real = exp
+    val pow : real * real -> real = fn (x, y) => exp(y * ln x)
+    val ln : real -> real = ln
+    val log10 : real -> real = fn x => ln x / ln 10.0
+
+  end (* signature MATH *)
+@

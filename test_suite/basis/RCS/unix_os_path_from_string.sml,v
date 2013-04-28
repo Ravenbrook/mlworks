@@ -1,0 +1,97 @@
+head	1.2;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.2
+	MLWorks_Beta_1996_06_06:1.2
+	MLWorks_Beta_1996_06_05:1.2
+	MLWorks_Beta_1996_06_03:1.2
+	MLWorks_Beta_1996_05_31:1.2
+	MLWorks_Beta_1996_05_30:1.2;
+locks; strict;
+comment	@ *  @;
+
+
+1.2
+date	96.05.22.10.19.31;	author daveb;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.21.12.43.26;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.2
+log
+@Shell.Module renamed to Shell.Build.
+@
+text
+@(* Copyright (c) 1996 Harlequin Ltd.
+
+Result: OK
+
+ *
+ * Test OS.Path.fromString.  All tests should return true.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log: basis:unix_os_path_from_string.sml,v $
+ *  Revision 1.1  1996/05/21  12:43:26  stephenb
+ *  new unit
+ *
+ *
+ *)
+
+Shell.Build.loadSource "unix.__os";
+
+open OS.Path;
+
+val a = fromString "" = {isAbs=false, vol = "", arcs = []};
+
+val b = fromString "/" = {isAbs=true, vol = "", arcs = [""]};
+
+val c = fromString "//" = {isAbs=true, vol = "", arcs = ["",""]};
+
+val d = fromString "a" = {isAbs=false, vol = "", arcs = ["a"]};
+
+val e = fromString "/a" = {isAbs=true, vol = "", arcs = ["a"]};
+
+val f = fromString "//a" = {isAbs=true, vol = "", arcs = ["","a"]};
+
+val g = fromString "a/" = {isAbs=false, vol = "", arcs = ["a",""]};
+
+val h = fromString "a//" = {isAbs=false, vol = "", arcs = ["a","", ""]};
+
+val i = fromString "a/b" = {isAbs=false, vol = "", arcs = ["a", "b"]};
+
+val j = fromString "a.b/c" = {isAbs=false, vol = "", arcs = ["a.b", "c"]};
+
+val k = fromString "a.b/c/" = {isAbs=false, vol = "", arcs = ["a.b", "c", ""]};
+
+val l = fromString "a/./c" = {isAbs=false, vol = "", arcs = ["a", ".", "c"]};
+
+val m = fromString "a/../c" = {isAbs=false, vol = "", arcs = ["a", "..", "c"]};
+
+val n = fromString "." = {isAbs=false, vol = "", arcs = ["."]};
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d11 4
+a14 1
+ * $Log$
+d18 1
+a18 1
+Shell.Module.loadSource "unix.__os";
+@

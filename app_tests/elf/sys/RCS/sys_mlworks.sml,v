@@ -1,0 +1,77 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.03.11.48.03;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.03.11.29.56;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+(* Copyright (c) 1991 by Carnegie Mellon University *)
+(* Author: Frank Pfenning <fp@@cs.cmu.edu>           *)
+
+(* System dependencies.  Currently not used pervasively *)
+
+functor NewJersey () : SYS =
+  struct
+    val handle_interrupt : (unit -> unit) -> unit =
+      fn _ => ()
+    val output_immediately : outstream * string -> unit =
+      fn (str, s) => (output(str, s); flush_out str)
+    val input_one_line : instream -> string = input_line
+    val exception_name : exn -> string =
+      MLWorks.Internal.Value.exn_name
+    val sml_version : string = "MLWorks"
+    val save_file : string * string -> unit = fn (file, _) => 
+      Shell.saveImage (file,true)
+    val date : unit -> string =
+      fn () => Date.toString(Date.fromTimeLocal(Time.now ()))
+    val cd : string -> unit = MLWorks.Internal.Runtime.environment
+                                                       "POSIX.FileSys.chdir"
+    val cwd : unit -> string = MLWorks.Internal.Runtime.environment
+                                                       "POSIX.FileSys.getcwd"
+    val ls : string -> unit = fn _ => (output(std_out, "ls unimplemented\n"); raise Match)
+    val exit : unit -> 'a = fn () => 
+      (ignore(MLWorks.Internal.Runtime.environment "system os exit" 0);raise Match)
+  end
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,95 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	98.04.07.14.14.30;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.02.58;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@/*
+ *
+ * Produce the security key values for MLWorks
+ *
+ * Copyright (C) 1998 Harlequin Group plc
+ *
+ * $Log$
+ *
+ */
+
+#include "windows.h"
+
+#include <stdio.h>
+
+void print_key_and_value(const char *key, unsigned int value)
+{
+  printf("    val %s = 0wx%x : SysWord.word\n", key, value);
+}
+
+int main(int argc, char *argv[])
+{
+  printf("require \"$.basis.__sys_word\";\n\n");
+  printf("structure Keys =\n  struct\n");
+  print_key_and_value("synchronize", SYNCHRONIZE);
+  print_key_and_value("standardRightsRead", STANDARD_RIGHTS_READ);
+  print_key_and_value("standardRightsWrite", STANDARD_RIGHTS_WRITE);
+  print_key_and_value("standardRightsExecute", STANDARD_RIGHTS_EXECUTE);
+  print_key_and_value("standardRightsAll", STANDARD_RIGHTS_ALL);
+  print_key_and_value("createLink", KEY_CREATE_LINK);
+  print_key_and_value("createSubKey", KEY_CREATE_SUB_KEY);
+  print_key_and_value("enumerateSubKeys", KEY_ENUMERATE_SUB_KEYS);
+  print_key_and_value("notify", KEY_NOTIFY);
+  print_key_and_value("queryValue", KEY_QUERY_VALUE);
+  print_key_and_value("setValue", KEY_SET_VALUE);
+  print_key_and_value("read", KEY_READ);
+  print_key_and_value("write", KEY_WRITE);
+  print_key_and_value("execute", KEY_EXECUTE);
+  print_key_and_value("allAccess", KEY_ALL_ACCESS);
+  printf(" end");
+  return 0;
+}
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d7 1
+a7 5
+ * $Log: src:OS:Win32:make_keys.c,v $
+ * Revision 1.1  1998/04/07  14:14:30  jont
+ * new unit
+ * ** No reason given. **
+ *
+@

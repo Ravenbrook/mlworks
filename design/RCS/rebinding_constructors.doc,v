@@ -1,0 +1,293 @@
+head	1.1;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.1
+	MLWorks_20c1_1998_08_20:1.1
+	MLWorks_20c0_1998_08_04:1.1
+	MLWorks_20b2c2_1998_06_19:1.1
+	MLWorks_20b2_Windows_1998_06_12:1.1
+	MLWorks_20b1c1_1998_05_07:1.1
+	MLWorks_20b0_1998_04_07:1.1
+	MLWorks_20b0_1998_03_20:1.1
+	MLWorks_20m2_1998_02_16:1.1
+	MLWorks_20m1_1997_10_23:1.1
+	MLWorks_11r1:1.1.1.1.1.1.1
+	MLWorks_11c0_1997_09_09:1.1.1.1.1.1
+	MLWorks_10r3:1.1.1.1.3
+	MLWorks_10r2_551:1.1.1.1.2
+	MLWorks_11:1.1.1.1.1
+	MLWorks_1_0_r2c2_1997_07_28:1.1.1.1
+	MLWorks_20m0_1997_06_20:1.1
+	MLWorks_1_0_r2c2_1997_06_14:1.1.1.1
+	MLWorks_1_0_r2c1_released_1997_05_23:1.1.1.1
+	MLWorks_1_0_r2c1_1997_05_12:1.1.1
+	MLWorks_BugFix_1997_04_24:1.1
+	MLWorks_1_0_r2_Win32_1997_04_11:1.1
+	MLWorks_1_0_r2_Unix_1997_04_04:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	97.01.06.16.14.59;	author andreww;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	97.05.12.10.25.22;	author hope;	state Exp;
+branches
+	1.1.1.1.1.1
+	1.1.1.1.2.1
+	1.1.1.1.3.1;
+next	;
+
+1.1.1.1.1.1
+date	97.07.28.18.11.19;	author daveb;	state Exp;
+branches
+	1.1.1.1.1.1.1.1;
+next	;
+
+1.1.1.1.1.1.1.1
+date	97.10.07.11.36.06;	author jkbrook;	state Exp;
+branches;
+next	;
+
+1.1.1.1.2.1
+date	97.09.08.17.04.38;	author daveb;	state Exp;
+branches;
+next	;
+
+1.1.1.1.3.1
+date	97.09.09.13.59.43;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+describes the implementation of constructor rebinding
+@
+
+
+1.1
+log
+@new unit
+describes the implementation of constructor rebinding
+@
+text
+@%
+% Internal documentation on how I implemented constructor rebinding
+% Andrew Wilson
+% Nov 29th 1996
+%
+% Revision Log:
+% -------------
+% $Log:,v$
+%
+%
+% Copyright (C) 1996 Harlequin Ltd.
+%
+
+CONSTRUCTOR REBINDING
+---------------------
+
+In SML'90, once an identifier was known to be a constructor, it
+couldn't be rebound (except as another constructor).  In SML'96, this
+is no longer the case.  A consequence of the simplification of the
+definition is that the constructor status of a value identifier may be
+overwritten in a val rec (and hence function) declaration.
+
+This note describes the main details of the implementation, all of
+which are localised in the parser.
+
+
+files: parser/_actionfunctions.sml
+       parser/ml-tables/actions.data
+       parser/ml-tables/gotos.data
+
+
+The fundamental change concerned the nonterminal VARDEF.  both VARDEF
+and LONGVAR have identical syntactic productions (though different
+actions):
+
+	VARDEF <- :longid
+	LONGVAR <- :longid
+
+Which causes a reduce-reduce conflict in the LALR parser.  We use the
+LISPWORKS parser generator, and there the conflict is resolved by the
+statement
+
+   (((:reduce (vardef :longid)) (:reduce (longvar :longid)))
+     (:funcall ifvarstack (:reduce (vardef :longid))
+		          (:reduce (longvar :longid))))
+
+which tells the parser that in order to resolve the conflict between
+the above two productions, we have to call the function denoted by
+ifvarstack, given the two actions "reduce longid to vardef" and
+"reduce longid to longvar" as parameters.  This particular function
+call is implemented by the _actionfunctions.sml:ifVarStack function.
+The only change is in the clause
+
+	| SOME (Ident.CON _) => conred
+
+which becomes
+
+	| SOME (Ident.CON _) => if oldDefinition then conred else varred
+
+This means that in SML'96, every Constructor is regarded as a VARDEF,
+even if it will not ultimately be used in this way.  Note that the
+production for VARDEF becomes
+
+	(* 	((VARDEF :longid))  *)
+
+	       fn ([LONGID ([],id)],opts) => 
+	          let val valid = resolveValId id 
+	           in if get_old_definition opts
+        	        then check_not_short_constructor (opts,valid)
+	              else (); VALID valid
+        	  end
+	       | ([LONGID (longid as (_,id))],opts) =>
+	            (report_long_error (opts,longid,"variable"); 
+	            VALID (Ident.VAR id))
+	 | _ => raise ActionError 189,
+
+which checks that vardefs aren't short constructors only in SML'90
+mode.
+
+
+Parsing Functions
+-----------------
+
+Even though the definition treats function declarations as derived
+forms of val rec decs, the parser treats the two separately.  The
+individual function binding productions concern the FVAL nonterminal.
+There are seven of these, three of which are error cases.  It's here
+that the above modification of the reduce-reduce conflict counts.  All
+we have to do is convert every constructor Ident.CON x that occurs as
+a VARDEF here into an Ident.VAR x (this is done by the function
+varify) and continue as before.
+
+.val.vs.val.rec:
+
+
+Parsing Val Rec Declarations
+----------------------------
+
+This is a real pain.  The problem here is that when we are building
+VALBIND productions we do not know whether or not they will occur as
+val decs or val rec decs.  This has the following consequence: if a
+valbind production will belong to a val dec, then a constructor (such
+as NONE) may occur many times.  However, if the production belongs to
+a val rec dec, then each constructor may occur only once in a VARDEF
+position (i.e., NONE may occur only once).  It seems that at this
+point the most sensible route is to assume that constructors are not
+going to be overwritten (which allows more than one instance of
+constructors in VARDEF positions) and then backtrack if we
+subsequently discover we're in a val rec dec.  This route also seems
+optimal because val rec decs almost never occur in real code.
+
+Thus, in the relevant production for ATPATS (atomic patterns):
+
+	ATPAT <- OPVARDEF
+
+the action becomes:
+
+       fn ([VALID id],opts) => 
+         PAT (Absyn.VALpat (annotate' (make_long_id id),
+                            get_location opts),
+              if is_constructor id then PE.empty_pVE
+                                   else make_pVE id,Set.empty_set)
+
+Thus, a constructor is never treated as bindable (i.e., parsing a
+constructor in a VARDEF will always return an empty parser Value
+Environment), but true vars are given singleton value environments.
+(See parser documentation.)
+
+Val decs can then be parsed as before.  The last change occurs at the
+val rec production:
+
+   VALBIND <- :rec VALBIND
+
+where the action becomes
+
+     fn ([_,VALBIND (v1,v2,tyvars,pVE)],opts) =>
+        (check_rec_bindings (opts,v1); 
+         let val vbind = VALBIND ([],v2@@v1,tyvars,pVE)
+          in if get_old_definition opts then vbind
+             else varify_valbind (vbind,opts)  (* change all constructors
+                                           that occur in var positions
+                                           into vars (so can be rebound)*)
+         end)
+
+The crucial clause is the last one, where in SML'96 mode, every
+constructor that occurs in a VARDEF position in the argument valbind
+is converted into a variable, so that it can be rebound.  Note that it
+is at this point that multiple occurrences of ex-constructor VARDEFs
+are rejected.  The definition of the function varify_valbind
+essentially just recurses over the definition of patterns.
+
+@
+
+
+1.1.1.1
+log
+@branched from 1.1
+@
+text
+@d8 1
+a8 5
+% $Log: rebinding_constructors.doc,v $
+# Revision 1.1  1997/01/06  16:14:59  andreww
+# new unit
+# describes the implementation of constructor rebinding
+#
+@
+
+
+1.1.1.1.3.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r3
+@
+text
+@a8 3
+# Revision 1.1.1.1  1997/05/12  10:25:22  hope
+# branched from 1.1
+#
+@
+
+
+1.1.1.1.2.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_10r2_551
+@
+text
+@a8 3
+# Revision 1.1.1.1  1997/05/12  10:25:22  hope
+# branched from 1.1
+#
+@
+
+
+1.1.1.1.1.1
+log
+@branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+@
+text
+@a8 3
+# Revision 1.1.1.1  1997/05/12  10:25:22  hope
+# branched from 1.1
+#
+@
+
+
+1.1.1.1.1.1.1.1
+log
+@branched from MLWorks_11 for label MLWorks_11r1
+@
+text
+@a8 3
+# Revision 1.1.1.1.1.1  1997/07/28  18:11:19  daveb
+# branched from MLWorks_1_0_r2c1_1997_05_12 for label MLWorks_11
+#
+@

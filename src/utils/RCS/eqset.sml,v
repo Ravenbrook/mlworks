@@ -1,0 +1,101 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	92.02.28.15.23.51;	author jont;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.02.27.15.15.47;	author jont;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.02.28.15.23.51;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Sets with given equality function to avoid inefficiencies of
+polymorphic eqaulity
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@(* eqset.sml the signature *)
+(*
+$Log: eqset.sml,v $
+Revision 1.1  1992/02/27  15:15:47  jont
+Initial revision
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "set";
+
+signature EQSET =
+  sig
+    structure Set : SET
+    eqtype el_type
+    type EqSet
+
+    val add_member   : (el_type * EqSet) -> EqSet
+    val singleton    : el_type -> EqSet
+    val empty_set    : EqSet
+    val empty_setp   : EqSet -> bool
+    val is_member    :  (el_type * EqSet) -> bool
+    val union        : EqSet * EqSet -> EqSet
+    val intersection : EqSet * EqSet -> EqSet
+    val subset       : EqSet * EqSet -> bool
+    val setdiff      : EqSet * EqSet -> EqSet
+    val seteq        : EqSet * EqSet -> bool
+    val set_to_list  : EqSet -> el_type list
+    val list_to_set  : el_type list -> EqSet
+    val set_to_set   : EqSet -> el_type Set.Set
+    val map	     : (el_type -> ''b) -> EqSet -> ''b Set.Set
+    val set_print    : EqSet * (el_type -> string) -> string
+  end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 3
+Revision 1.2  1992/02/28  15:23:51  jont
+*** empty log message ***
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d3 4
+a6 1
+$Log$
+d30 1
+@

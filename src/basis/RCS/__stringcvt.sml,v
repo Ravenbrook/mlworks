@@ -1,0 +1,399 @@
+head	1.7;
+access;
+symbols
+	MLWorks_Beta_1996_06_03:1.7
+	MLWorks_Beta_1996_05_31:1.7
+	MLWorks_Beta_1996_05_30:1.6;
+locks; strict;
+comment	@ *  @;
+
+
+1.7
+date	96.05.30.11.25.35;	author daveb;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.05.23.12.14.57;	author io;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	96.05.15.09.05.14;	author io;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	96.05.10.11.31.01;	author matthew;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	96.05.07.11.44.15;	author io;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.02.17.25.55;	author io;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.23.12.25.03;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.7
+log
+@ord is now at top level.
+@
+text
+@(*  ==== INITIAL BASIS : StringCvt ====
+ *
+ *  Copyright (C) 1996 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  $Log: __stringcvt.sml,v $
+ *  Revision 1.6  1996/05/23  12:14:57  io
+ *  fix padRight
+ *
+ *  Revision 1.5  1996/05/15  09:05:14  io
+ *  fix dropl
+ *
+ *  Revision 1.4  1996/05/10  11:31:01  matthew
+ *  Fixing some bugs
+ *
+ *  Revision 1.3  1996/05/07  11:44:15  io
+ *  modify to use __pre_char
+ *
+ *  Revision 1.2  1996/05/02  17:25:55  io
+ *  add scanString.
+ *
+ *  Revision 1.1  1996/04/23  12:25:03  matthew
+ *  new unit
+ *
+ *
+ *)
+require "toplevel";
+require "stringcvt";
+require "__pre_char";
+
+structure StringCvt : STRING_CVT =
+  struct
+    datatype radix = BIN | OCT | DEC | HEX
+    datatype realfmt = 
+      SCI of int option
+    | FIX of int option
+    | GEN of int option
+
+    type cs = int
+    type ('a,'b) reader = 'b -> ('a * 'b) option
+
+    (* miscellaneous *)
+    fun revImplode ([]:char list) : string = ""
+      | revImplode cs = MLWorks.String.implode_char (map PreChar.ctoi (rev cs)) (* stolen from String *)
+
+    (* copy src string from indices src_x to src_y inclusive to dest_x offset in dest string *)
+    fun copyFrom (src, dest, src_x, src_y, dest_x) = 
+      let
+        fun aux x = 
+          if x <= src_y then
+            (PreChar.unsafe_string_update 
+             (dest, x+dest_x, PreChar.unsafe_string_sub (src, x));
+             aux (x+1))
+          else
+            dest
+      in
+        aux src_x
+      end
+    (* copy src char to a string at its x and y indices inclusive *)
+    fun fillFrom (c:char, dest:string, dest_x:int, dest_y:int) =
+      let fun aux i = 
+        if i <= dest_y then
+          (PreChar.unsafe_string_update (dest, i, ord c);
+           aux (i+1))
+        else dest
+      in
+        aux dest_x
+      end
+    
+    (* end of miscellaneous *)
+    fun padLeft (c:char) (i:int) (s:string) : string = 
+      let
+        val size = size s
+        val pad = i - size
+      in
+        if pad > 0 then
+          let val alloc_s = PreChar.alloc_string (i+1)
+          in
+            fillFrom (c, alloc_s, 0, pad-1);
+            copyFrom (s, alloc_s, 0, size-1, pad); 
+            alloc_s
+          end
+        else
+          s
+      end
+    fun padRight (c:char) (i:int) (s:string) : string = 
+      let
+        val size = size s
+        val pad = i - size
+      in
+        if pad > 0 then
+          let
+            val alloc_s = PreChar.alloc_string (i+1)
+          in
+            copyFrom (s, alloc_s, 0, size-1, 0); 
+            fillFrom (c, alloc_s, size, i-1);
+            alloc_s
+          end
+        else
+          s
+      end
+
+    fun scanList f (cs:char list) = 
+      let fun aux ([]:char list) = NONE
+            | aux (c::cs) = SOME (c, cs)
+      in
+        case f aux cs of
+          SOME (c,_) => SOME c
+        | NONE => NONE
+      end
+    fun scanString f (s:string) = 
+      let val size = size s
+        fun aux i = 
+          if i < size then
+            SOME (PreChar.itoc (PreChar.unsafe_string_sub (s, i)), i+1)
+          else
+            NONE
+      in
+        case f aux 0 of
+          SOME (x,_) => SOME x
+        | NONE => NONE
+      end
+    fun skipWS f s = 
+      let fun aux cs = 
+        case f cs of
+          SOME (c, cs') =>
+            if PreChar.isSpace c then
+              aux cs'
+            else
+              cs
+        | NONE => cs
+      in
+        aux s
+      end
+    fun dropl p f src = 
+      let
+        fun aux cs = 
+          case f cs of
+            SOME (c, cs') =>
+              if p c then
+                aux cs'
+              else
+                cs
+          | NONE => cs
+      in
+        aux src
+      end
+    fun splitl (p:char -> bool) f src = 
+      let
+        fun aux (acc, cs) = 
+          case f cs of
+            SOME (c, cs') => 
+              if p c then
+                aux (c::acc, cs')
+              else
+                (revImplode acc, cs)
+          | NONE => (revImplode acc, cs)
+      in
+        aux ([], src)
+      end
+    fun takel p f src =
+      let
+        fun aux (acc, cs) = 
+          case f cs of
+            SOME (c, cs) => 
+              if p c then 
+                aux (c::acc, cs)
+              else
+                acc
+          | NONE => acc
+      in
+        revImplode (aux ([], src))
+      end
+  end
+
+@
+
+
+1.6
+log
+@fix padRight
+@
+text
+@d10 3
+d66 1
+a66 1
+          (PreChar.unsafe_string_update (dest, i, Char.ord c);
+@
+
+
+1.5
+log
+@fix dropl
+@
+text
+@d10 3
+d46 10
+a55 11
+    (* copy src string to an offset at destination string *)
+    fun copyFrom (s:string, d:string, offset:int, length:int) = 
+      let fun aux i = 
+        if i < length then
+          let in
+            PreChar.unsafe_string_update 
+            (d, i + offset, PreChar.unsafe_string_sub (s, i));
+            aux (i+1)
+          end
+        else
+          ()
+d57 1
+a57 2
+        aux 0;
+        d
+d60 1
+a60 1
+    fun fillFrom (c:char, d:string, x:int, y:int) =
+d62 2
+a63 2
+        if i < y then
+          (PreChar.unsafe_string_update (d, i, PreChar.ctoi c);
+d65 1
+a65 1
+        else ()
+d67 1
+a67 2
+        aux x;
+        d
+d69 1
+d79 2
+a80 2
+            fillFrom (c, alloc_s, 0, pad);
+            copyFrom (s, alloc_s, pad, i); 
+d95 2
+a96 2
+            copyFrom (s, alloc_s, 0, size);
+            fillFrom (c, alloc_s, size, i);
+@
+
+
+1.4
+log
+@Fixing some bugs
+@
+text
+@d10 3
+d138 1
+a138 1
+            SOME (c, cs) =>
+d140 1
+a140 1
+                aux cs
+@
+
+
+1.3
+log
+@modify to use __pre_char
+@
+text
+@d10 3
+d38 1
+a38 1
+      | revImplode cs = MLWorks.String.implode_char (map PreChar.ctoi cs) (* stolen from String *)
+d148 1
+a148 1
+            SOME (c, cs) => 
+d150 1
+a150 1
+                aux (c::acc, cs)
+@
+
+
+1.2
+log
+@add scanString.
+@
+text
+@d10 3
+d20 1
+a33 13
+    (* sort where to move stuff to later
+     * needed to avoid circular dependency between char, string and stringcvt
+     *)
+    val itoc : int -> char = MLWorks.Internal.Value.cast
+    val ctoi : char -> int = MLWorks.Internal.Value.cast
+    val unsafe_string_sub : (string * int) -> int = MLWorks.Internal.Value.unsafe_string_sub
+    val unsafe_string_update : (string * int * int) -> unit = MLWorks.Internal.Value.unsafe_string_update
+    val maxSize = 32767 (* stolen from String *)
+    fun alloc_string (n: int) : string = 
+      if n > maxSize then
+        raise Size
+      else
+        MLWorks.Internal.Value.alloc_string n
+d35 2
+a36 2
+      | revImplode cs = MLWorks.String.implode_char (map ctoi cs) (* stolen from String *)
+    fun isSpace c = c = #" " orelse ((ctoi c) >= 9 andalso (ctoi c) <= 13)
+d42 2
+a43 2
+            unsafe_string_update 
+            (d, i + offset, unsafe_string_sub (s, i));
+d56 1
+a56 1
+          (unsafe_string_update (d, i, ctoi c);
+d70 1
+a70 1
+          let val alloc_s = alloc_string (i+1)
+d86 1
+a86 1
+            val alloc_s = alloc_string (i+1)
+d108 1
+a108 1
+            SOME (itoc (unsafe_string_sub (s, i)), i+1)
+d120 1
+a120 1
+            if isSpace c then
+d167 1
+a168 3
+
+
+  end
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d9 4
+a12 1
+ *  $Log: real.sml,v $
+a14 1
+
+d26 152
+a177 1
+    type ('a,'b) reader = int
+a178 1
+    type cs = int
+@

@@ -1,0 +1,935 @@
+head	1.23;
+access;
+symbols
+	ML_beta_release_12/08/94:1.23
+	ML_beta_release_03/08/94:1.23
+	ML_revised_beta_release_25/05/94:1.23
+	ML_final_beta_release_02/03/94:1.22
+	mlworks-28-01-1994:1.22
+	Release:1.22
+	mlworks-beta-01-09-1993:1.22
+	MLWorks-1-0-4-29/01/1993:1.19
+	MLWorks-1-0-3-21/12/1992:1.19
+	MLWorks-1-0-2-15/12/1992:1.18
+	MLWorks-1-0-1-04/12/1992:1.17
+	checkpoint_17_08_92:1.11;
+locks; strict;
+
+
+1.23
+date	94.03.25.18.10.22;	author daveb;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	93.08.27.17.34.53;	author daveb;	state Exp;
+branches
+	1.22.1.1;
+next	1.21;
+
+1.21
+date	93.08.09.17.26.31;	author daveb;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.03.04.17.11.43;	author matthew;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.12.16.19.07.53;	author jont;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.12.08.20.23.48;	author jont;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.12.04.11.34.27;	author jont;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.12.01.15.19.56;	author daveb;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.11.27.15.45.07;	author daveb;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.11.17.17.56.06;	author matthew;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.10.29.16.00.21;	author richard;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.09.03.07.36.13;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.22.13.42.11;	author jont;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.06.25.17.55.36;	author jont;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.06.16.16.44.06;	author jont;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.05.13.10.49.20;	author jont;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.04.28.18.07.57;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.03.25.18.56.19;	author jont;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.10.19.08.31;	author jont;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.03.05.17.41.10;	author jont;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.02.18.11.36.23;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.02.18.09.43.06;	author clive;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.02.04.14.41.07;	author jont;	state Exp;
+branches;
+next	;
+
+1.22.1.1
+date	93.08.27.17.34.53;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@A make type system for our compiler
+@
+
+
+1.23
+log
+@Added recompile_module.
+@
+text
+@(* recompile.sml the signature *)
+(*
+$Log: recompile.sml,v $
+Revision 1.22  1993/08/27  17:34:53  daveb
+Changed type of recompile to take a list of strings, so that caches can
+be preserved between each recompilation.
+
+Revision 1.21  1993/08/09  17:26:31  daveb
+Added recompile_pervasive - recompile_file is now only for user files.
+
+Revision 1.20  1993/03/04  17:11:43  matthew
+Options & Info changes
+
+Revision 1.19  1992/12/16  19:07:53  jont
+Added a Diagnostic substructure to expose diagnostic functions
+
+Revision 1.18  1992/12/08  20:23:48  jont
+Removed a number of duplicated signatures and structures
+
+Revision 1.17  1992/12/04  11:34:27  jont
+Removed unnecessary require
+
+Revision 1.16  1992/12/01  15:19:56  daveb
+Changes to propagate compiler options as parameters instead of references.
+
+Revision 1.15  1992/11/27  15:45:07  daveb
+Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+
+Revision 1.14  1992/11/17  17:56:06  matthew
+Changed Error structure to Info
+
+Revision 1.13  1992/10/29  16:00:21  richard
+Changes to pervasives and representation of time.
+
+Revision 1.12  1992/09/03  07:36:13  richard
+Installed central error reporting mechanism.
+
+Revision 1.11  1992/07/22  13:42:11  jont
+Changed to be a signature only, implementation moved to _recompile.sml
+
+Copyright (c) 1992 Harlequin Ltd.
+*)
+
+require "../main/info";
+require "../main/options";
+
+signature RECOMPILE =
+  sig
+    structure Info        : INFO
+    structure Options     : OPTIONS
+
+    val recompile_modules :
+      Info.options -> Options.options -> string list -> unit
+    val recompile_files :
+      Info.options -> Options.options -> string list -> unit
+    val recompile_pervasive : Info.options -> Options.options -> unit
+  end
+@
+
+
+1.22
+log
+@Changed type of recompile to take a list of strings, so that caches can
+be preserved between each recompilation.
+@
+text
+@d4 4
+d50 7
+a56 3
+    structure Info       : INFO
+    structure Options    : OPTIONS
+    val recompile : Info.options -> Options.options -> string list -> unit
+@
+
+
+1.22.1.1
+log
+@Fork for bug fixing
+@
+text
+@a3 4
+Revision 1.22  1993/08/27  17:34:53  daveb
+Changed type of recompile to take a list of strings, so that caches can
+be preserved between each recompilation.
+
+@
+
+
+1.21
+log
+@Added recompile_pervasive - recompile_file is now only for user files.
+@
+text
+@d4 3
+d48 1
+a48 1
+    val recompile : Info.options -> Options.options -> string -> unit
+@
+
+
+1.20
+log
+@Options & Info changes
+@
+text
+@d4 3
+d46 1
+@
+
+
+1.19
+log
+@Added a Diagnostic substructure to expose diagnostic functions
+@
+text
+@d4 3
+d35 2
+a36 2
+require "../utils/diagnostic";
+require "../mir/mirtypes";
+d40 3
+a42 5
+    structure Diagnostic : DIAGNOSTIC
+    structure MirTypes	 : MIRTYPES
+    val recompile :
+      MirTypes.Debugger_Types.Info.options -> MirTypes.options -> string ->
+      unit
+@
+
+
+1.18
+log
+@Removed a number of duplicated signatures and structures
+@
+text
+@d4 3
+d32 1
+d37 1
+@
+
+
+1.17
+log
+@Removed unnecessary require
+@
+text
+@d4 3
+d34 3
+a36 1
+    val recompile : MirTypes.Info.options -> MirTypes.options -> string -> unit
+@
+
+
+1.16
+log
+@Changes to propagate compiler options as parameters instead of references.
+@
+text
+@d4 3
+a25 1
+require "../main/info";
+@
+
+
+1.15
+log
+@Changes to make show_id_class and show_eq_info part of Info structure
+instead of references.
+@
+text
+@d4 4
+d24 1
+d28 2
+a29 2
+    structure Info	 : INFO
+    val recompile : Info.options -> string -> unit
+@
+
+
+1.14
+log
+@Changed Error structure to Info
+@
+text
+@d4 3
+a18 1
+require "../utils/diagnostic";
+a22 1
+    structure Diagnostic : DIAGNOSTIC
+d24 1
+a24 1
+    val recompile : string -> unit
+@
+
+
+1.13
+log
+@Changes to pervasives and representation of time.
+@
+text
+@d4 3
+d17 1
+a17 1
+require "../main/error";
+d22 1
+a22 1
+    structure Error	: ERROR
+@
+
+
+1.12
+log
+@Installed central error reporting mechanism.
+@
+text
+@d4 3
+d13 1
+d18 1
+@
+
+
+1.11
+log
+@Changed to be a signature only, implementation moved to _recompile.sml
+@
+text
+@d3 4
+a6 1
+$Log$
+d10 2
+d14 1
+@
+
+
+1.10
+log
+@Changed to use maps instead of lists for dependencies
+@
+text
+@d1 5
+a5 8
+require "../utils/__print";
+require "../utils/__btree";
+require "../utils/__string";
+require "../utils/__lists";
+require "../utils/__crash";
+require "../make/__unix";
+require "../main/__encapsulate";
+require "../main/__toplevel";
+d7 3
+a9 241
+fun compile x = TopLevel_.compile_file x
+
+fun root_name filename =
+  let
+    val len = size filename
+    val final_name =
+      if len >= 4 then
+	String_.substring(filename, len-4, 4)
+      else ""
+  in
+    case final_name of
+      ".sml" => String_.substring(filename, 0, len-4)
+    | _ => filename
+  end
+
+fun compilation_name filename =
+  let
+    val root = root_name filename
+    val exp_root = explode root
+    fun remove_slash(result, []) = result
+      | remove_slash(result, "/" :: rest) = remove_slash(rest, rest)
+      | remove_slash(result, x :: rest) = remove_slash(result, rest)
+  in
+    implode(remove_slash(exp_root, exp_root))
+  end
+
+fun compilation_path filename =
+  let
+    val root = root_name filename
+    val final = compilation_name filename
+  in
+    String_.substring(root, 0, size root - size final)
+  end
+
+fun sml_name filename = root_name filename ^ ".sml"
+
+fun mo_name filename =
+  if size filename = 0 then
+    "test.mo"
+  else
+    root_name filename ^ ".mo"
+
+fun relative_name(path, name) =
+  case String_.substring(name, 0, 1) of
+    "/" => name
+      (* Handle case of require via absolute pathname *)
+  | _ => 
+      let
+	fun join path name =
+	  if size name < 3 orelse path = "" then path ^ name
+	  else
+	    case String_.substring(name, 0, 3) of
+	      "../" =>
+		let
+		  val prepath =
+		    compilation_path(String_.substring(path, 0, size path - 1))
+		in
+		  join prepath (String_.substring(name, 3, size name - 3))
+		end
+	    | _ => path ^ name
+      in
+	join path name
+      end
+
+fun ignore_spaces [] = []
+| ignore_spaces(" " :: rest) = ignore_spaces rest
+| ignore_spaces x = x
+
+fun strip ("\""::x) = x     (* Damn emacs messes up \" *)
+| strip (_::x) = strip x
+| strip [] = []
+
+fun strip_to_quote [] = false
+| strip_to_quote("\"" :: _) = true
+| strip_to_quote(" " :: _) = false
+| strip_to_quote(_ :: rest) = strip_to_quote rest
+
+fun extract_path line =   (* get part in quotes *)
+  implode (rev (strip (rev (strip (explode line)))))
+
+fun get_terminated_line file =
+  let
+    fun extend_line line =
+      if end_of_stream file then
+	implode(rev line)
+      else
+	let
+	  val char = input(file, 1)
+	in
+	  if char = "\n" then implode(rev("\n" :: line))
+	  else
+	    extend_line(char :: line)
+	end
+  in
+    extend_line []
+  end
+    
+val input_line = get_terminated_line
+
+fun get_imports_from_stream stream =
+  if end_of_stream stream then
+    []
+  else
+    let
+      val line = input_line stream   (* all of string *)
+    in
+      if size line > 7
+	then
+	  if String_.substring (line,0,7) = "require" andalso
+	    let
+	      val rest_line =
+		explode(String_.substring(line, 7, size line - 7))
+	      val rest_line = ignore_spaces rest_line
+	      val starts_quote = case rest_line of
+		"\"" :: rest => true
+	      | _ => false
+	      val rest_line =
+		if starts_quote then Lists_.tl rest_line else rest_line
+	    in
+	      strip_to_quote rest_line
+	    end
+	    then                       (* go for it *)
+	      extract_path line :: get_imports_from_stream stream
+	  else
+	    get_imports_from_stream stream
+      else
+	get_imports_from_stream stream
+    end
+
+fun get_imports filename =
+  let
+    val stream = open_in filename
+    val imports = get_imports_from_stream stream
+    val _ = close_in stream
+  in
+    imports
+  end
+
+fun requires_in_done_list([], _) = false
+| requires_in_done_list(x :: xs, done) =
+  (BTree_.apply'(done, x);
+   true) handle BTree_.Undefined => requires_in_done_list(xs, done)
+
+fun recompile([], done, up_to_date) = (done, up_to_date)
+| recompile(name :: rest, done, up_to_date) =
+  let
+    val filename = sml_name name
+    val source_time = case Unix_.mtime filename of
+      Unix_.EXISTS i => i
+    | _ => Crash_.impossible("File '" ^ filename ^
+			     "' being compiled does not exist")
+    val pervasive_library_mo = mo_name (! TopLevel_.pervasive_library_path)
+    val object_name = mo_name name
+    (* First do all required files *)
+    val imports = get_imports filename
+    val path = compilation_path filename
+    val import_names =
+      map
+      (fn name => relative_name(path, name))
+      imports
+    val imports_to_do =
+      Lists_.filterp
+      (fn x =>
+       ((BTree_.apply'(up_to_date, compilation_name x);
+	 false) handle BTree_.Undefined => true))
+      import_names
+    val (done, up_to_date) = recompile(imports_to_do, done, up_to_date)
+    val comp_name = compilation_name filename (* Minus the .sml bit *)
+    val mo_time = Unix_.mtime object_name
+    val pervasive_library_has_been_changed =
+      not(Lists_.member(compilation_name name,["__builtin_library","__pervasive_library","__callc_codes"]))
+      andalso
+      (case (Unix_.mtime pervasive_library_mo, mo_time) of
+         (Unix_.EXISTS{hi, lo}, Unix_.EXISTS{hi=hi', lo=lo'}) =>
+	   hi > hi' orelse (hi = hi' andalso lo > lo')
+       | (Unix_.EXISTS _,_) => false
+       | _ => Crash_.impossible "Can't find the pervasive_library file")
+    val (do_file, mo_time) =
+      case mo_time of
+	Unix_.EXISTS mo_time => (false, mo_time)
+      | _ => (true, {hi=0, lo=0})
+    val do_file =
+      pervasive_library_has_been_changed orelse do_file orelse
+      (* Compile if mo doesn't exist or recompiled some requires *)
+      (* or out of date with some requires *)
+      ((BTree_.apply'(up_to_date, comp_name);
+	false) handle BTree_.Undefined =>
+       let
+	 val Encapsulate_.TOTAL_OUTPUT{consistency=cons, ...} =
+	   Encapsulate_.input_file object_name
+	 val cons = Encapsulate_.decode_cons cons
+	 val (stamp, rest) = case cons of
+	   [] => ({hi=0, lo=0}, [])
+	 | (_, (hi, lo)) :: rest => ({hi=hi, lo=lo}, rest)
+	 fun check_require(require_name, (time, _)) =
+	   let
+	     val rel_name = mo_name(relative_name(path, require_name))
+	     val req_mo_time =
+	       case Unix_.mtime rel_name of
+		 Unix_.EXISTS mo_stamp => mo_stamp
+	       | _ => Crash_.impossible("mo file missing for require '" ^
+					require_name ^ "'\n")
+	     val Encapsulate_.TOTAL_OUTPUT{consistency=cons, ...} =
+	       Encapsulate_.input_file rel_name
+	     val cons = Encapsulate_.decode_cons cons
+	     val stamp = case cons of
+	       [] => 0
+	     | (_, (time, _)) :: _ => time
+	   in
+	     time <> stamp orelse
+	     (case (mo_time, req_mo_time) of
+		({hi=hi, lo=lo}, {hi=hi', lo=lo'}) =>
+		  hi' > hi orelse (hi' = hi andalso lo' > lo))
+	   (* recompile if mo for require newer than mo for requirer *)
+	   end
+       in
+	 stamp <> source_time orelse
+	 requires_in_done_list(map compilation_name import_names, done)
+	 orelse Lists_.exists check_require rest
+       end)
+    val done =
+      if (not do_file) then 
+	done
+      else
+	BTree_.define(done, comp_name, 0)
+    val up_to_date = BTree_.define(up_to_date, comp_name, 0)
+    val _ = if do_file then compile filename else ()
+  in
+    recompile(rest, done, up_to_date)
+  end
+
+val empty_map = BTree_.empty' String_.<
+
+val recompile = fn filename =>
+  let
+    val (done, up_to_date) =
+      recompile([sml_name (! TopLevel_.pervasive_library_path)], empty_map,
+		empty_map)
+    val _ = recompile([filename], done, up_to_date)
+  in
+    Print_.print"Up to date\n"
+@
+
+
+1.9
+log
+@Changed recompilation criterion to redo if mo times out of order
+@
+text
+@d2 1
+d150 2
+a151 1
+  Lists_.member(x, done) orelse requires_in_done_list(xs, done)
+d172 3
+a174 1
+      (fn x => not(Lists_.member(compilation_name x, up_to_date)))
+d195 35
+a229 41
+      (if Lists_.member(comp_name, up_to_date) then false
+       else
+	 let
+	   val Encapsulate_.TOTAL_OUTPUT{consistency=cons, ...} =
+	     Encapsulate_.input_file object_name
+	   val cons = Encapsulate_.decode_cons cons
+	   val (stamp, rest) = case cons of
+	     [] => ({hi=0, lo=0}, [])
+	   | (_, (hi, lo)) :: rest => ({hi=hi, lo=lo}, rest)
+	   fun check_require(require_name, (time, _)) =
+(*
+	     (Print_.print("Checking " ^ require_name ^ "\n");
+*)
+	      let
+		val rel_name = mo_name(relative_name(path, require_name))
+		val req_mo_time =
+		  case Unix_.mtime rel_name of
+		    Unix_.EXISTS mo_stamp => mo_stamp
+		  | _ => Crash_.impossible("mo file missing for require '" ^
+					  require_name ^ "'\n")
+		val Encapsulate_.TOTAL_OUTPUT{consistency=cons, ...} =
+		  Encapsulate_.input_file rel_name
+		val cons = Encapsulate_.decode_cons cons
+		val stamp = case cons of
+		  [] => 0
+		| (_, (time, _)) :: _ => time
+	      in
+		time <> stamp orelse
+		(case (mo_time, req_mo_time) of
+		   ({hi=hi, lo=lo}, {hi=hi', lo=lo'}) =>
+		     hi' > hi orelse (hi' = hi andalso lo' > lo))
+	      (* recompile if mo for require newer than mo for requirer *)
+	      end
+(*
+	      )
+*)
+	 in
+	   stamp <> source_time orelse
+	   requires_in_done_list(map compilation_name import_names, done)
+	   orelse Lists_.exists check_require rest
+	 end)
+d231 1
+a231 1
+      if (not do_file) orelse Lists_.member(comp_name, done) then
+d234 2
+a235 7
+	comp_name :: done
+    val up_to_date =
+      if Lists_.member(comp_name, up_to_date) then
+	up_to_date
+      else
+	comp_name :: up_to_date
+    (* Don't let the lists get too big *)
+d241 2
+d246 2
+a247 1
+      recompile([sml_name (! TopLevel_.pervasive_library_path)],[],[])
+@
+
+
+1.8
+log
+@Modified for two integer time stamps
+@
+text
+@d174 1
+d178 1
+a178 1
+      (case (Unix_.mtime pervasive_library_mo,Unix_.mtime object_name) of
+d183 4
+a187 4
+      case Unix_.mtime object_name of
+	Unix_.EXISTS _ => false
+      | _ => true
+    val do_file =
+d206 5
+d218 5
+a222 1
+		time <> stamp
+@
+
+
+1.7
+log
+@Made tl into Lists_.tl. Added input_line function
+@
+text
+@d11 12
+a22 12
+  fun root_name filename =
+    let
+      val len = size filename
+      val final_name =
+	if len >= 4 then
+	  String_.substring(filename, len-4, 4)
+	else ""
+    in
+      case final_name of
+	".sml" => String_.substring(filename, 0, len-4)
+      | _ => filename
+    end
+d24 5
+a28 5
+  fun compilation_name filename =
+    let
+      val root = root_name filename
+      val exp_root = explode root
+      fun remove_slash(result, []) = result
+d31 3
+a33 3
+    in
+      implode(remove_slash(exp_root, exp_root))
+    end
+d35 7
+a41 7
+  fun compilation_path filename =
+    let
+      val root = root_name filename
+      val final = compilation_name filename
+    in
+      String_.substring(root, 0, size root - size final)
+    end
+d43 1
+a43 1
+  fun sml_name filename = root_name filename ^ ".sml"
+d45 5
+a49 5
+  fun mo_name filename =
+    if size filename = 0 then
+      "test.mo"
+    else
+      root_name filename ^ ".mo"
+d178 2
+a179 1
+         (Unix_.EXISTS i,Unix_.EXISTS j) => (i > j)
+d197 2
+a198 2
+	     [] => (0, [])
+	   | (_, (time, _)) :: rest => (time, rest)
+@
+
+
+1.6
+log
+@Fixed a bug whereby out of date requires weren't noticed
+@
+text
+@d89 19
+d125 2
+a126 1
+	      val rest_line = if starts_quote then tl rest_line else rest_line
+@
+
+
+1.5
+log
+@Improved algorithm for determining whether to recompile a file
+to avoid so much searching through sub-requires
+@
+text
+@d140 1
+a140 1
+    val mo_name = mo_name name
+d157 1
+a157 1
+      (case (Unix_.mtime pervasive_library_mo,Unix_.mtime mo_name) of
+d162 1
+a162 1
+      case Unix_.mtime mo_name of
+d168 1
+d173 1
+a173 1
+	     Encapsulate_.input_file mo_name
+d175 21
+a195 3
+	   val stamp = case cons of
+	     [] => 0
+	   | (_, (time, _)) :: _ => time
+d199 1
+@
+
+
+1.4
+log
+@Changed to use unix structure rather than reapplying functor
+@
+text
+@d131 2
+a132 2
+fun recompile([], done, did) = (done, did)
+| recompile(name :: rest, done, did) =
+d148 5
+a152 1
+    val (done, _) = recompile(import_names, done, false)
+d168 1
+a168 1
+      (if Lists_.member(comp_name, done) then false
+d186 5
+d194 1
+a194 1
+    recompile(rest, done, did orelse do_file)
+d199 3
+a201 2
+    val (_,did) = recompile([sml_name (! TopLevel_.pervasive_library_path)],[],false)
+    val (_, did) = recompile([filename], [], did)
+d203 1
+a203 2
+    if did then ()
+    else Print_.print"Up to date\n"
+@
+
+
+1.3
+log
+@Fixed some bugs whereby some files weren't being recompiled when they
+should have been
+@
+text
+@d5 1
+a5 1
+require "../make/_unix";
+a8 2
+structure Unix = Unix()
+
+d135 2
+a136 2
+    val source_time = case Unix.mtime filename of
+      Unix.EXISTS i => i
+d153 3
+a155 3
+      (case (Unix.mtime pervasive_library_mo,Unix.mtime mo_name) of
+         (Unix.EXISTS i,Unix.EXISTS j) => (i > j)
+       | (Unix.EXISTS _,_) => false
+d158 2
+a159 2
+      case Unix.mtime mo_name of
+	Unix.EXISTS _ => false
+@
+
+
+1.2
+log
+@Added pervasive_library check
+@
+text
+@d129 4
+d150 1
+a150 1
+    val (done, did') = recompile(import_names, done, false)
+d163 2
+a164 1
+    val do_file = pervasive_library_has_been_changed orelse do_file orelse did' orelse
+d176 2
+a177 1
+	   stamp <> source_time
+d179 6
+a184 1
+    val done = comp_name :: done
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d137 1
+d148 7
+d159 1
+a159 1
+    val do_file = do_file orelse did' orelse
+d181 2
+a182 1
+    val (_, did) = recompile([filename], [], false)
+@

@@ -1,0 +1,98 @@
+head	1.1;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.1
+	mlworks-28-01-1994:1.1
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1
+	MLWorks-1-0-4-29/01/1993:1.1
+	MLWorks-1-0-3-21/12/1992:1.1
+	MLWorks-1-0-2-15/12/1992:1.1
+	MLWorks-1-0-1-04/12/1992:1.1
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	92.04.29.13.38.24;	author richard;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	92.04.29.13.38.24;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Register preallocator.
+ Signature.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@(*  ==== REGISTER PREALLOCATOR ====
+ *            SIGNATURE
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The preallocator makes a fast examination of large blocks in an
+ *  annotated MIR procedure and produces a list of pairs of registers which
+ *  do not clash.  This list is passed on to the register allocator as
+ *  hinting information.
+ *
+ *  Diagnostics
+ *  -----------
+ *   1  block tags processed
+ *   2  mergers between registers
+ *   3  sets of confined registers and register lifespans
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *)
+
+
+require "../utils/diagnostic";
+require "mirprocedure";
+require "mirtypes";
+
+
+signature PREALLOCATOR =
+
+  sig
+    
+    structure MirTypes		: MIRTYPES
+    structure MirProcedure	: MIRPROCEDURE
+    sharing MirTypes = MirProcedure.MirTypes
+    structure Diagnostic	: DIAGNOSTIC
+
+    val analyse : MirProcedure.procedure ->
+      {gc     : (MirTypes.GC.T * MirTypes.GC.T) list,
+       non_gc : (MirTypes.NonGC.T * MirTypes.NonGC.T) list,
+       fp     : (MirTypes.FP.T * MirTypes.FP.T) list}
+
+  end
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d21 1
+a21 4
+ *  $Log: preallocator.sml,v $
+ *  Revision 1.1  1992/04/29  13:38:24  richard
+ *  Initial revision
+ *
+@

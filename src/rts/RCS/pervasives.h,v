@@ -1,0 +1,698 @@
+head	1.27;
+access;
+symbols
+	Final_version_of_old_runtime:1.27
+	ML_revised_beta_release_25/05/94:1.27
+	ML_final_beta_release_02/03/94:1.27
+	mlworks-28-01-1994:1.27
+	Release:1.27
+	mlworks-beta-01-09-1993:1.27
+	MLWorks-1-0-3-21/12/1992:1.27
+	MLWorks-1-0-2-15/12/1992:1.27
+	MLWorks-1-0-1-04/12/1992:1.27
+	checkpoint_17_08_92:1.24;
+locks; strict;
+comment	@ *  @;
+
+
+1.27
+date	92.10.28.14.19.35;	author richard;	state Exp;
+branches
+	1.27.1.1;
+next	1.26;
+
+1.26
+date	92.10.02.10.48.26;	author matthew;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	92.08.26.15.44.54;	author richard;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	92.08.17.10.55.59;	author richard;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	92.07.28.13.28.54;	author richard;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	92.07.22.14.04.30;	author clive;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	92.07.16.10.30.38;	author clive;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	92.07.16.10.24.58;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.07.09.14.44.05;	author clive;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.07.07.16.19.08;	author clive;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.06.23.13.31.38;	author clive;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.06.19.15.43.44;	author jont;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.06.12.18.27.03;	author jont;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.06.11.10.46.25;	author clive;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.05.18.11.43.49;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.04.24.15.44.09;	author jont;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.03.12.16.06.23;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.03.10.12.44.45;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.02.25.14.06.55;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.02.18.17.10.27;	author richard;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.02.06.18.14.19;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.01.22.08.11.11;	author richard;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	91.12.17.14.48.36;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	91.12.16.12.48.12;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	91.12.13.16.49.17;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	91.12.04.16.20.58;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	91.11.28.16.07.46;	author richard;	state Exp;
+branches;
+next	;
+
+1.27.1.1
+date	92.10.28.14.19.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@This library contains those pervasives implemented in C.
+@
+
+
+1.27
+log
+@General reorganization of the pervasives into separate files.
+@
+text
+@/*  ==== C-IMPLEMENTED PERVASIVES ====
+ *
+ *  Copyright (C) 1991 Harequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  The pervasives.c file implements various ML functions values which are
+ *  exported to the pervasive environment of ML via the runtime environment
+ *  (see environment.h).
+ *
+ *  Revision Log
+ *  ------------
+ *  Revision log: $Log: pervasives.h,v $
+ *  Revision 1.26  1992/10/02  10:48:26  matthew
+ *  Added a CLM exception
+ *
+ *  Revision 1.25  1992/08/26  15:44:54  richard
+ *  The module table is now a pervasive value.
+ *  Added exn_unbound to be raised when env_lookup() fails.
+ *
+ *  Revision 1.24  1992/08/17  10:55:59  richard
+ *  Added a prototype for the interrupt_handler.
+ *
+ *  Revision 1.23  1992/07/28  13:28:54  richard
+ *  Removed exported ML functions.  C pervasives are now added to
+ *  the runtime environment instead.
+ *
+ *  Revision 1.22  1992/07/22  14:04:30  clive
+ *  Added weak array support code
+ *
+ *  Revision 1.21  1992/07/16  10:30:38  clive
+ *  Removed breakpointing C functiond
+ *
+ *  Revision 1.20  1992/07/16  10:24:58  richard
+ *  The gc_message_level is now a pervasive ref cell, so it can be updated
+ *  by the ML code.
+ *
+ *  Revision 1.19  1992/07/09  14:44:05  clive
+ *  Added an explicit function for calling the debugger
+ *
+ *  Revision 1.18  1992/07/07  16:19:08  clive
+ *  Added a manual call of the debugger for the interpreter
+ *
+ *  Revision 1.17  1992/06/23  13:31:38  clive
+ *  Added some breakpointing stuff
+ *
+ *  Revision 1.16  1992/06/19  15:43:44  jont
+ *  Added ml_require function for use by interpreter
+ *
+ *  Revision 1.15  1992/06/12  18:27:03  jont
+ *  Added functions required by interpretive system
+ *
+ *  Revision 1.14  1992/06/11  10:46:25  clive
+ *  Added utilities that the debugger needs
+ *
+ *  Revision 1.13  1992/05/18  11:43:49  clive
+ *  Added timers and code for compiling the make system
+ *
+ *  Revision 1.12  1992/04/24  15:44:09  jont
+ *  Added ml_exn_name
+ *
+ *  Revision 1.11  1992/03/12  16:06:23  richard
+ *  Added lookahead() and pervasives_init().
+ *
+ *  Revision 1.10  1992/03/10  12:44:45  clive
+ *  ml_eof added
+ *
+ *  Revision 1.9  1992/02/25  14:06:55  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.8  1992/02/18  17:10:27  richard
+ *  Added string comparisons and substring.
+ *
+ *  Revision 1.7  1992/02/06  18:14:19  jont
+ *  Added ml_call_compiled_code
+ *
+ *  Revision 1.6  1992/01/22  08:11:11  richard
+ *  Added integer operations.
+ *
+ *  Revision 1.5  1991/12/17  14:48:36  richard
+ *  Added functions for real numbers.
+ *
+ *  Revision 1.4  91/12/16  12:48:12  richard
+ *  Added ml_size and ml_append.
+ *  
+ *  Revision 1.3  91/12/13  16:49:17  richard
+ *  Added ord, chr, explode, implode, and a dodgy version of equal.
+ *  
+ *  Revision 1.2  91/12/04  16:20:58  richard
+ *  Added pervasives for file input and output.
+ *  
+ *  Revision 1.1  91/11/28  16:07:46  richard
+ *  Initial revision
+ *  
+ */
+
+#ifndef pervasives_h
+
+#include "storeman.h"		/* for gc_message_level and gc_interface */
+
+#include <signal.h>
+
+
+/*  === INITIALISE THE PERVASIVES ===
+ *
+ *  Carries out any internal initialisation and initialises the runtime
+ *  environment (see environment.h).
+ */
+
+void pervasives_init(void);
+
+
+/*  == The global module list ==
+ *
+ *  This is a ref to the list of modules that have been loaded by main() or
+ *  ML.
+ */
+
+extern mlval modules;
+
+
+#endif
+@
+
+
+1.27.1.1
+log
+@Fork for bug fixing
+@
+text
+@a13 3
+ *  Revision 1.27  1992/10/28  14:19:35  richard
+ *  General reorganization of the pervasives into separate files.
+ *
+@
+
+
+1.26
+log
+@Added a CLM exception
+@
+text
+@d14 3
+a120 21
+
+/*  == The `Unbound' exn ==
+ *
+ *  This exception is raised by env_lookup() when it fails to find a binding
+ *  for a string.
+ */
+
+extern mlval exn_unbound;
+
+
+/*  == Interrupt handler ==
+ *
+ *  This is a signal handler function which catches SIGINT (keyboard
+ *  interrupt) and passes it on to C in an appropriate manner.
+ */
+
+extern void interrupt_handler(int sig, int code, struct sigcontext *scp, char *addr);
+
+/*  == CLM error exception == */
+
+extern mlval exn_clm_error;
+@
+
+
+1.25
+log
+@The module table is now a pervasive value.
+Added exn_unbound to be raised when env_lookup() fails.
+@
+text
+@d14 4
+d136 3
+@
+
+
+1.24
+log
+@Added a prototype for the interrupt_handler.
+@
+text
+@d14 3
+d104 18
+@
+
+
+1.23
+log
+@Removed exported ML functions.  C pervasives are now added to
+the runtime environment instead.
+@
+text
+@d14 4
+d89 3
+a91 1
+#include "storeman.h"		/* for gc_message_level */
+d101 9
+@
+
+
+1.22
+log
+@Added weak array support code
+@
+text
+@d1 1
+a1 2
+/*
+ *  ==== C-IMPLEMENTED PERVASIVES ====
+d3 1
+a3 4
+ *  These are functions which are either implemented in C for
+ *  efficiency, or by necessity.  The call_c interface (see callc.c)
+ *  selects these functions from a table using the integer argument
+ *  passed to the interpret_callc function by the ML program.
+d5 5
+a9 1
+ *  Copyright (C) 1991 Harequin Ltd.
+d11 2
+d14 3
+d83 2
+a84 1
+#include "mltypes.h"
+a86 4
+#define BITS_PER_INT_IN_TIMER 16
+#define TIMER_HI(x) (x >> BITS_PER_INT_IN_TIMER)
+#define TIMER_LOW(x) (x & ((1 << BITS_PER_INT_IN_TIMER) - 1))
+#define REAL_TIMER_VALUE(x,y) ((x << BITS_PER_INT_IN_TIMER) + y)
+d88 6
+d96 2
+a97 65
+mlval ml_open_in (mlval);
+mlval ml_close_in (mlval);
+mlval ml_open_out (mlval);
+mlval ml_close_out (mlval);
+mlval ml_input (mlval);
+mlval ml_output (mlval);
+mlval ml_string_equal (mlval);
+mlval ml_string_not_equal (mlval);
+mlval ml_string_less (mlval);
+mlval ml_string_greater (mlval);
+mlval ml_substring (mlval);
+mlval ml_chr (mlval);
+mlval ml_ord (mlval);
+mlval ml_concatenate (mlval);
+mlval ml_explode (mlval);
+mlval ml_implode (mlval);
+mlval ml_equal (mlval);
+mlval ml_not_equal (mlval);
+mlval ml_size (mlval);
+mlval ml_append (mlval);
+mlval ml_imodulo (mlval);
+mlval ml_imultiply (mlval);
+mlval ml_idivide (mlval);
+mlval ml_iabs (mlval);
+mlval ml_inegate (mlval);
+mlval ml_rabs (mlval);
+mlval ml_rdivide (mlval);
+mlval ml_requal (mlval);
+mlval ml_rgt (mlval);
+mlval ml_rge (mlval);
+mlval ml_rlt (mlval);
+mlval ml_rle (mlval);
+mlval ml_rminus (mlval);
+mlval ml_rmultiply (mlval);
+mlval ml_rnegate (mlval);
+mlval ml_rnequal (mlval);
+mlval ml_rplus (mlval);
+mlval ml_call_compiled_code(mlval);
+mlval ml_val_print(mlval);
+mlval ml_lookahead(mlval);
+mlval ml_exn_name(mlval);
+mlval ml_start_timer(mlval);
+mlval ml_check_timer(mlval);
+mlval ml_check_timer_gc(mlval);
+mlval ml_makestring_timer(mlval);
+mlval ml_mtime(mlval);
+mlval ml_system(mlval);
+mlval ml_environ(mlval);
+mlval ml_install_debugger(mlval);
+mlval ml_get_data_from_frame(mlval);
+mlval ml_get_next_frame(mlval);
+mlval ml_get_argument_from_frame(mlval);
+mlval ml_get_primary_tag(mlval);
+mlval ml_get_object_at_address(mlval);
+mlval ml_exit(mlval);
+mlval ml_get_stack_frame(mlval);
+mlval ml_generate_debugger_call(mlval);
+mlval ml_identity(mlval);
+mlval ml_list_to_tuple(mlval);
+mlval ml_call_ml_value(mlval);
+mlval ml_require(mlval);
+mlval ml_profile(mlval);
+mlval ml_save_image(mlval);
+mlval ml_check_weak_validity(mlval);
+mlval ml_make_into_weak_array(mlval);
+@
+
+
+1.21
+log
+@Removed breakpointing C functiond
+@
+text
+@d12 3
+d149 4
+@
+
+
+1.20
+log
+@The gc_message_level is now a pervasive ref cell, so it can be updated
+by the ML code.
+@
+text
+@d12 4
+a139 2
+mlval ml_set_breakpoint(mlval);
+mlval ml_unset_breakpoint(mlval);
+@
+
+
+1.19
+log
+@Added an explicit function for calling the debugger
+@
+text
+@d12 3
+d72 1
+@
+
+
+1.18
+log
+@Added a manual call of the debugger for the interpreter
+@
+text
+@d12 3
+d134 1
+@
+
+
+1.17
+log
+@Added some breakpointing stuff
+@
+text
+@d12 3
+d131 1
+@
+
+
+1.16
+log
+@Added ml_require function for use by interpreter
+@
+text
+@d12 3
+d126 2
+@
+
+
+1.15
+log
+@Added functions required by interpretive system
+@
+text
+@d12 3
+d126 1
+@
+
+
+1.14
+log
+@Added utilities that the debugger needs
+@
+text
+@d12 3
+d121 2
+@
+
+
+1.13
+log
+@Added timers and code for compiling the make system
+@
+text
+@d12 3
+d55 1
+a55 1
+#define BITS_PER_INT_IN_TIMER 20
+d110 8
+a117 1
+
+@
+
+
+1.12
+log
+@Added ml_exn_name
+@
+text
+@d12 3
+d52 5
+d100 8
+@
+
+
+1.11
+log
+@Added lookahead() and pervasives_init().
+@
+text
+@d12 3
+d91 1
+@
+
+
+1.10
+log
+@ml_eof added
+@
+text
+@d12 3
+d46 2
+d87 1
+a87 1
+mlval ml_eof(mlval);
+@
+
+
+1.9
+log
+@Added val_print in the System structure in ML
+@
+text
+@d12 3
+d82 1
+@
+
+
+1.8
+log
+@Added string comparisons and substring.
+@
+text
+@d12 3
+d78 1
+@
+
+
+1.7
+log
+@Added ml_call_compiled_code
+@
+text
+@d12 3
+d45 3
+@
+
+
+1.6
+log
+@Added integer operations.
+@
+text
+@d12 3
+d68 1
+@
+
+
+1.5
+log
+@Added functions for real numbers.
+@
+text
+@d11 4
+a14 1
+ *  Revision log: $Log:	pervasives.h,v $
+d48 5
+@
+
+
+1.4
+log
+@Added ml_size and ml_append.
+@
+text
+@d12 3
+d45 12
+@
+
+
+1.3
+log
+@Added ord, chr, explode, implode, and a dodgy version of equal.
+@
+text
+@d12 3
+d40 2
+@
+
+
+1.2
+log
+@Added pervasives for file input and output.
+@
+text
+@d12 3
+d30 7
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d11 4
+a14 1
+ *  Revision log: $Log$
+d19 5
+a23 1
+
+d25 2
+@

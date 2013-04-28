@@ -1,0 +1,366 @@
+head	1.3;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	96.05.23.10.40.54;	author matthew;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	96.05.23.08.54.38;	author matthew;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.05.22.15.26.09;	author matthew;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New test
+@
+
+
+1.3
+log
+@Updating
+@
+text
+@val it : unit = ()
+Compiling basis.general
+Compiling basis.__general
+Compiling basis.toplevel
+structure TopLevel =
+  struct
+    datatype 'a option =
+      NONE |
+      SOME of 'a
+    datatype order =
+      EQUAL |
+      GREATER |
+      LESS
+    exception Domain
+    val EQUAL : order
+    exception Fail of string
+    val GREATER : order
+    val LESS : order
+    val NONE : 'a option
+    val SOME : 'a -> 'a option
+  end
+datatype 'a option =
+  NONE |
+  SOME of 'a
+datatype order =
+  EQUAL |
+  GREATER |
+  LESS
+exception Domain
+val EQUAL : order
+exception Fail of string
+val GREATER : order
+val LESS : order
+val NONE : 'a option
+val SOME : 'a -> 'a option
+val it : unit = ()
+Compiling basis.stringcvt
+Compiling basis.__pre_char
+Compiling basis.__stringcvt
+Compiling basis.__preinteger
+Compiling basis.__preint32
+Compiling basis.integer
+Compiling basis.__integer
+structure Int =
+  struct
+    eqtype int = int
+    val * : (int * int) -> int = fn
+    val + : (int * int) -> int = fn
+    val - : (int * int) -> int = fn
+    val < : (int * int) -> bool = fn
+    val <= : (int * int) -> bool = fn
+    val > : (int * int) -> bool = fn
+    val >= : (int * int) -> bool = fn
+    val abs : int -> int = fn
+    val compare : (int * int) -> order = fn
+    val div : (int * int) -> int = fn
+    val fmt : radix(hidden) -> int -> string = fn
+    val fromInt : int -> int = fn
+    val fromLarge : MLWorks.Internal.Types.int32 -> int = fn
+    val fromString : string -> int option = fn
+    val max : (int * int) -> int = fn
+    val maxInt : int option = SOME 536870911
+    val min : (int * int) -> int = fn
+    val minInt : int option = SOME ~536870912
+    val mod : (int * int) -> int = fn
+    val precision : int option = SOME 30
+    val quot : (int * int) -> int = fn
+    val rem : (int * int) -> int = fn
+    val sameSign : (int * int) -> bool = fn
+    val scan : radix(hidden) -> ('a -> (char * 'a) option) -> 'a -> (int * 'a) option = fn
+    val sign : int -> int = fn
+    val toInt : int -> int = fn
+    val toLarge : int -> MLWorks.Internal.Types.int32 = fn
+    val toString : int -> string = fn
+    val ~ : int -> int = fn
+  end
+infix 1 seq
+val flush_out : MLWorks.IO.outstream -> unit = fn
+val output : (MLWorks.IO.outstream * string) -> unit = fn
+val seq : ('a * 'b) -> 'b = fn
+val std_out : MLWorks.IO.outstream = FLEXOUT(FLEXOUTSTREAM(ref(RIGIDOUTSTREAM {close_out=fn, closed_out=fn, flush_out=fn, output=fn})))
+val say : string -> unit = fn
+val check : bool -> string = fn
+val check' : (unit -> bool) -> string = fn
+val range : (int * int) -> (int -> bool) -> bool = fn
+val checkrange : (int * int) -> (int -> bool) -> string = fn
+val it : unit = ()
+Compiling basis.math
+Compiling basis.__math
+Compiling basis.ieeereal
+Compiling basis.__ieeereal
+Compiling basis.__prereal
+Compiling basis.real
+Compiling basis.__real
+structure Real =
+  struct
+    structure Math =
+      struct
+        eqtype real = real
+        val acos : real -> real = fn
+        val asin : real -> real = fn
+        val atan : real -> real = fn
+        val atan2 : (real * real) -> real = fn
+        val cos : real -> real = fn
+        val cosh : real -> real = fn
+        val e : real = 2.718281828
+        val exp : real -> real = fn
+        val ln : real -> real = fn
+        val log10 : real -> real = fn
+        val pi : real = 3.141592654
+        val pow : (real * real) -> real = fn
+        val sin : real -> real = fn
+        val sinh : real -> real = fn
+        val sqrt : real -> real = fn
+        val tan : real -> real = fn
+        val tanh : real -> real = fn
+      end
+    eqtype real = real
+    val * : (real * real) -> real = fn
+    val *+ : (real * real * real) -> real = fn
+    val *- : (real * real * real) -> real = fn
+    val + : (real * real) -> real = fn
+    val - : (real * real) -> real = fn
+    val / : (real * real) -> real = fn
+    val < : (real * real) -> bool = fn
+    val <= : (real * real) -> bool = fn
+    val > : (real * real) -> bool = fn
+    val >= : (real * real) -> bool = fn
+    val abs : real -> real = fn
+    val ceil : real -> int = fn
+    val checkFloat : real -> real = fn
+    val class : real -> float_class(hidden) = fn
+    val compare : (real * real) -> order = fn
+    val compareReal : (real * real) -> real_order(hidden) = fn
+    val copySign : (real * real) -> real = fn
+    val floor : real -> int = fn
+    val fmt : realfmt(hidden) -> real -> string = fn
+    val fromInt : int -> real = fn
+    val fromLarge : rounding_mode(hidden) -> real -> real = fn
+    val fromLargeInt : MLWorks.Internal.Types.int32 -> real = fn
+    val fromSci : {exp: int, man: real} -> real = fn
+    val fromString : string -> real option = fn
+    val isFinite : real -> bool = fn
+    val isNan : real -> bool = fn
+    val isNormal : real -> bool = fn
+    val max : (real * real) -> real = fn
+    val maxFinite : real = 1.797693135E308
+    val min : (real * real) -> real = fn
+    val minNormalPos : real = 2.225073859E~308
+    val minPos : real = 4.940656458E~324
+    val negInf : real = ~inf
+    val nextAfter : (real * real) -> real = fn
+    val posInf : real = inf
+    val precision : int = 53
+    val radix : int = 2
+    val rem : (real * real) -> real = fn
+    val round : real -> int = fn
+    val sameSign : (real * real) -> bool = fn
+    val scan : ('a -> (char * 'a) option) -> 'a -> (real * 'a) option = fn
+    val sign : real -> int = fn
+    val signBit : real -> bool = fn
+    val split : real -> {frac: real, whole: real} = fn
+    val toInt : rounding_mode(hidden) -> real -> int = fn
+    val toLarge : real -> real = fn
+    val toLargeInt : rounding_mode(hidden) -> real -> MLWorks.Internal.Types.int32 = fn
+    val toSci : real -> {exp: int, man: real} = fn
+    val toString : real -> string = fn
+    val trunc : real -> int = fn
+    val unequal : (real * real) -> bool = fn
+    val unordered : (real * real) -> bool = fn
+    val ~ : real -> real = fn
+  end
+val it : unit = ()
+structure StringCvt =
+  struct
+    eqtype cs = int
+    datatype radix =
+      BIN |
+      DEC |
+      HEX |
+      OCT
+    type ('a, 'b) reader = 'b -> ('a * 'b) option
+    datatype realfmt =
+      FIX of int option |
+      GEN of int option |
+      SCI of int option
+    val BIN : StringCvt.radix
+    val DEC : StringCvt.radix
+    val FIX : int option -> StringCvt.realfmt
+    val GEN : int option -> StringCvt.realfmt
+    val HEX : StringCvt.radix
+    val OCT : StringCvt.radix
+    val SCI : int option -> StringCvt.realfmt
+    val dropl : (char -> bool) -> ('a -> (char * 'a) option) -> 'a -> 'a = fn
+    val padLeft : char -> int -> string -> string = fn
+    val padRight : char -> int -> string -> string = fn
+    val scanList : ((char list -> (char * char list) option) -> char list -> ('a * 'b) option) -> char list -> 'a option = fn
+    val scanString : ((int -> (char * int) option) -> int -> ('a * int) option) -> string -> 'a option = fn
+    val skipWS : ('a -> (char * 'a) option) -> 'a -> 'a = fn
+    val splitl : (char -> bool) -> ('a -> (char * 'a) option) -> 'a -> (string * 'a) = fn
+    val takel : (char -> bool) -> ('a -> (char * 'a) option) -> 'a -> string = fn
+  end
+val it : unit = ()
+Compiling basis.list
+Compiling basis.__list
+structure List =
+  struct
+    val @@ : ('a list * 'a list) -> 'a list = fn
+    exception Empty
+    val all : ('a -> bool) -> 'a list -> bool = fn
+    val app : ('a -> unit) -> 'a list -> unit = fn
+    val concat : 'a list list -> 'a list = fn
+    val drop : ('a list * int) -> 'a list = fn
+    val exists : ('a -> bool) -> 'a list -> bool = fn
+    val filter : ('a -> bool) -> 'a list -> 'a list = fn
+    val find : ('a -> bool) -> 'a list -> 'a option = fn
+    val foldl : (('a * 'b) -> 'b) -> 'b -> 'a list -> 'b = fn
+    val foldr : (('a * 'b) -> 'b) -> 'b -> 'a list -> 'b = fn
+    val hd : 'a list -> 'a = fn
+    val last : 'a list -> 'a = fn
+    val length : 'a list -> int = fn
+    val map : ('a -> 'b) -> 'a list -> 'b list = fn
+    val mapPartial : ('a -> 'b option) -> 'a list -> 'b list = fn
+    val nth : ('a list * int) -> 'a = fn
+    val null : 'a list -> bool = fn
+    val partition : ('a -> bool) -> 'a list -> ('a list * 'a list) = fn
+    val rev : 'a list -> 'a list = fn
+    val revAppend : ('a list * 'a list) -> 'a list = fn
+    val tabulate : (int * (int -> 'a)) -> 'a list = fn
+    val take : ('a list * int) -> 'a list = fn
+    val tl : 'a list -> 'a list = fn
+  end
+infix 4 quot
+infix 4 rem
+val chk : ('a -> ''b option) -> ('a * ''b) -> string = fn
+val chkScan : StringCvt.radix -> (string * int) -> string = fn
+val test10 : string = "OK"
+val test11 : string = "OK"
+val test12 : string = "OK"
+val test13a : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+val test13b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", ..]
+val test14a : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+val test14b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", ..]
+val test15a : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+val test15b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", ..]
+val test16a : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+val test16b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", ..]
+val test17a : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+val test17b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", ..]
+val test18 : string = "OK"
+val test19 : string = "OK"
+val test1a : string = "OK"
+val test1b : string = "OK"
+val test1c : string = "OK"
+val test1d : string = "OK"
+val test20 : string = "OK"
+val test21 : string = "OK"
+val test22 : string = "OK"
+val test2a : string = "OK"
+val test2b : string = "OK"
+val test2c : string = "OK"
+val test2d : string = "OK"
+val test3 : string = "OK"
+val test4 : string = "OK"
+val test5 : string = "OK"
+val test6 : string = "OK"
+val test7 : string = "OK"
+val test8 : string = "OK"
+val test9 : string = "OK"
+@
+
+
+1.2
+log
+@Fixing bungle
+@
+text
+@d151 1
+a151 1
+    val negInf : real = ~Infinity
+d153 1
+a153 1
+    val posInf : real = Infinity
+@
+
+
+1.1
+log
+@new unit
+New test
+@
+text
+@a1 17
+val show_mach : bool -> unit = fn
+val show_absyn : bool -> unit = fn
+val show_lamb : bool -> unit = fn
+val show_unopt_lamb : bool -> unit = fn
+val show_mir : bool -> unit = fn
+val show_opt_mir : bool -> unit = fn
+val alldebug : bool -> unit = fn
+val debug : bool -> unit = fn
+val timeit : ('a -> 'b) -> 'a -> 'b = fn
+val don : ('a -> 'b) -> int -> 'a -> 'b = fn
+val timen : ('a -> 'b) -> int -> 'a -> 'b = fn
+val app : ('a -> 'b) -> 'a list -> unit = fn
+val make : string -> unit = fn
+val break : string -> unit = fn
+val f : 'a -> int = fn
+val it : unit = ()
+val it : unit = ()
+d241 1
+a241 1
+val test13b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+d243 1
+a243 1
+val test14b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+d245 1
+a245 1
+val test15b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+d247 1
+a247 1
+val test16b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+d249 1
+a249 1
+val test17b : string list = ["OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK", "OK"]
+@

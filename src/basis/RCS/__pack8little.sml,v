@@ -1,0 +1,333 @@
+head	1.4;
+access;
+symbols
+	MLWorks_1_0_1_ULTRASPARC_1997_02_24:1.4.4.1.1
+	MLWorks_gui_1996_12_18:1.4.5
+	MLWorks_1_0_Win32_1996_12_17:1.4.4
+	MLWorks_1_0_Irix_1996_11_28_released_1996_12_17:1.4.2.1.1.1
+	MLWorks_1_0_Unix_1996_11_14_released_1996_12_17:1.4.2.1
+	MLWorks_1_0_Irix_1996_11_28:1.4.2.1.1
+	MLWorks_1_0_Win32_1996_11_22:1.4.3
+	MLWorks_1_0_Unix_1996_11_14:1.4.2
+	MLWorks_Open_Beta2_1996_10_11:1.4.1
+	MLWorks_License_dev:1.3.2
+	MLWorks_1_open_beta_1996_09_13:1.3.1
+	MLWorks_Open_Beta_1996_08_22:1.3
+	MLWorks_Beta_1996_07_02:1.3
+	MLWorks_Beta_1996_06_07:1.3
+	MLWorks_Beta_1996_06_06:1.3
+	MLWorks_Beta_1996_06_05:1.3
+	MLWorks_Beta_1996_06_03:1.3
+	MLWorks_Beta_1996_05_31:1.3
+	MLWorks_Beta_1996_05_30:1.3;
+locks; strict;
+comment	@ * @;
+
+
+1.4
+date	96.10.09.13.57.36;	author jont;	state Exp;
+branches
+	1.4.1.1
+	1.4.2.1
+	1.4.3.1
+	1.4.4.1
+	1.4.5.1;
+next	1.3;
+
+1.3
+date	96.05.17.12.41.33;	author jont;	state Exp;
+branches
+	1.3.1.1
+	1.3.2.1;
+next	1.2;
+
+1.2
+date	96.05.15.13.44.21;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	96.04.18.11.32.46;	author jont;	state Exp;
+branches;
+next	;
+
+1.3.1.1
+date	96.09.13.11.09.54;	author hope;	state Exp;
+branches;
+next	;
+
+1.3.2.1
+date	96.10.07.16.00.46;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	96.10.17.11.19.01;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.2.1
+date	96.11.14.12.42.35;	author hope;	state Exp;
+branches
+	1.4.2.1.1.1;
+next	;
+
+1.4.2.1.1.1
+date	96.11.28.14.54.28;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.3.1
+date	96.11.22.18.03.05;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.4.1
+date	96.12.17.17.42.00;	author hope;	state Exp;
+branches
+	1.4.4.1.1.1;
+next	;
+
+1.4.4.1.1.1
+date	97.02.24.11.30.22;	author hope;	state Exp;
+branches;
+next	;
+
+1.4.5.1
+date	96.12.18.09.35.56;	author hope;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.4
+log
+@Change structure name to be Pack8Little
+@
+text
+@(*  ==== INITIAL BASIS :  PACK WORD 8 (LITTLE) ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ * Immediate implementation in terms of Word8 vectors and arrays
+ * (i.e. MLWorks bytearrays).
+ *
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __pack8little.sml,v $
+ * Revision 1.3  1996/05/17  12:41:33  jont
+ * Revise to latest signature
+ *
+ * Revision 1.2  1996/05/15  13:44:21  jont
+ * pack_words moved to pack_word
+ *
+ * Revision 1.1  1996/04/18  11:32:46  jont
+ * new unit
+ *
+ *  Revision 1.2  1995/09/12  16:11:45  daveb
+ *  words.sml replaced with word.sml.
+ *
+ *  Revision 1.1  1995/03/22  20:17:28  brianm
+ *  new unit
+ *  New file.
+ *
+ *)
+
+require "__word8";
+require "__word8vector";
+require "__word8array";
+require "__word32";
+require "pack_word";
+
+structure Pack8Little : PACK_WORD =
+   struct
+     val bytesPerElem : int = 1
+     val isBigEndian : bool = false
+
+     val subVec = Word8.toLargeWord o Word8Vector.sub
+     val subArr = Word8.toLargeWord o Word8Array.sub
+     val subVecX = Word8.toLargeWordX o Word8Vector.sub
+     val subArrX = Word8.toLargeWordX o Word8Array.sub
+     fun update(array, i, word) =
+       Word8Array.update(array, i, Word8.fromLargeWord word)
+   end;
+@
+
+
+1.4.5.1
+log
+@branched from 1.4
+@
+text
+@a14 3
+ * Revision 1.4  1996/10/09  13:57:36  jont
+ * Change structure name to be Pack8Little
+ *
+@
+
+
+1.4.4.1
+log
+@branched from 1.4
+@
+text
+@a14 3
+ * Revision 1.4  1996/10/09  13:57:36  jont
+ * Change structure name to be Pack8Little
+ *
+@
+
+
+1.4.4.1.1.1
+log
+@branched from 1.4.4.1
+@
+text
+@a14 3
+ * Revision 1.4.4.1  1996/12/17  17:42:00  hope
+ * branched from 1.4
+ *
+@
+
+
+1.4.3.1
+log
+@branched from 1.4
+@
+text
+@a14 3
+ * Revision 1.4  1996/10/09  13:57:36  jont
+ * Change structure name to be Pack8Little
+ *
+@
+
+
+1.4.2.1
+log
+@branched from 1.4
+@
+text
+@a14 3
+ * Revision 1.4  1996/10/09  13:57:36  jont
+ * Change structure name to be Pack8Little
+ *
+@
+
+
+1.4.2.1.1.1
+log
+@branched from 1.4.2.1
+@
+text
+@a14 3
+ * Revision 1.4.2.1  1996/11/14  12:42:35  hope
+ * branched from 1.4
+ *
+@
+
+
+1.4.1.1
+log
+@branched from 1.4
+@
+text
+@a14 3
+ * Revision 1.4  1996/10/09  13:57:36  jont
+ * Change structure name to be Pack8Little
+ *
+@
+
+
+1.3
+log
+@Revise to latest signature
+@
+text
+@d15 3
+d39 1
+a39 1
+structure Pack8Big : PACK_WORD =
+@
+
+
+1.3.2.1
+log
+@branched from 1.3
+@
+text
+@a14 3
+ * Revision 1.3  1996/05/17  12:41:33  jont
+ * Revise to latest signature
+ *
+@
+
+
+1.3.1.1
+log
+@branched from 1.3
+@
+text
+@a14 3
+ * Revision 1.3  1996/05/17  12:41:33  jont
+ * Revise to latest signature
+ *
+@
+
+
+1.2
+log
+@pack_words moved to pack_word
+@
+text
+@d7 1
+a7 1
+ * Immeadiate implementation in terms of Word8 vectors and arrays
+d15 3
+a27 1
+ *
+d33 1
+a34 1
+require "word";
+d36 1
+a36 1
+structure Pack8Little : PACK_WORD =
+d38 2
+d41 6
+a46 14
+     structure Word : WORD = Word8
+
+     type vector = Word8Vector.vector
+
+     type array = Word8Array.array
+
+     type word = Word.word
+
+     val bytesPerWord : int = 1
+     val isBig : bool = false
+
+     val subv : (vector * int) -> word           = Word8Vector.sub
+     val sub  : (array * int) -> word            = Word8Array.sub
+     val update : (array * int * word) -> unit   = Word8Array.update
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@d14 4
+a17 1
+ *  $Log$
+d31 1
+a31 1
+require "pack_words";
+@

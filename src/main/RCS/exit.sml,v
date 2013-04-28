@@ -1,0 +1,77 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.04.17.15.27.08;	author stephenb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Provide an OS independent way of terminating MLWorks.
+@
+
+
+1.1
+log
+@new unit
+Provide an OS independent way of terminating MLWorks.
+@
+text
+@(* Copyright (C) 1996 Harlequin Ltd.
+ *
+ * Interface to process termination.
+ * It provides a status type which is the type of value that is returned
+ * by the process when it terminates and some functions for terminating
+ * the process and registering functions to be executed upon termination.
+ *
+ * This is effectively the subset of OS.Process concerned with termination
+ * augmented with additional error codes that MLWorks returns in certain
+ * circumstances.
+ *
+ * Any type/value that shares a name with one in OS.Process behaves 
+ * according to the description of that type/value in OS.Process.
+ *
+ * For more information on the additional error codes see where they are
+ * used (mainly _batch.sml) since their names and values were initially 
+ * based on the context in which they were used and the integer values
+ * used in that context.
+ * 
+ * Revision Log
+ * ------------
+ *
+ * $Log$
+ *
+ *)
+
+signature EXIT =
+  sig
+    eqtype status
+
+    val success : status
+
+    val failure : status
+
+    val uncaughtIOException : status
+
+    val badUsage : status
+
+    val stop : status
+
+    val save : status
+
+    val badInput : status
+
+    val atExit : (unit -> unit) -> unit
+
+    val exit : status -> 'a
+
+    val terminate : status -> 'a
+
+  end
+@

@@ -1,0 +1,163 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.09.28.10.08.51;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.08.18;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Shell script for building dlls
+@
+
+
+1.1
+log
+@new unit
+Shell script for building dlls
+@
+text
+@#!/bin/sh
+#
+# Copyright (c) 1998, Harlequin Group plc
+# All rights reserved
+#
+# $Log$
+#
+# make-dll [-g] <dll-name> [<libraries>]
+#
+usage="make-dll: usage: make-dll [-g] <dll-name> [<libs>]"
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+if [ "$1" = "-g" ]; then
+  debug=-g
+  shift
+else
+  debug=
+fi
+if [ $# -lt 1 ]; then
+  echo ${usage}
+  exit 1
+fi
+dll=$1
+echo "make ${dll}${debug}.dll"
+base=0x10000000
+if [ "${dll}" = "pervasive" ]; then
+  base=0x11000000
+else
+  if [ "${dll}" = "lexer" ]; then
+    base=0x12000000
+  else
+    if [ "${dll}" = "typer" ]; then
+      base=0x13000000
+    else
+      if [ "${dll}" = "batch" ]; then
+        base=0x14000000
+      else
+        if [ "${dll}" = "shell" ]; then
+          base=0x15000000
+        else
+          if [ "${dll}" = "gui2" ]; then
+            base=0x16000000
+          else
+	    base=0x17000000
+	  fi
+	fi
+      fi
+    fi
+  fi
+fi
+make ${dll}-files
+sed -e "s?\.mo??g" ${dll}-files > ${dll}-tmp-files
+cat /dev/null > make-dll-makefile
+for x in `cat ${dll}-tmp-files` ; do
+  echo "all:	${x}_text.o ${x}_data.o" >> make-dll-makefile
+  echo >> make-dll-makefile
+  echo "${x}_text.o:	${x}_text.S" >> make-dll-makefile
+  echo "	@@gcc -c ${x}_text.S -o ${x}_text.o" >> make-dll-makefile
+  echo "	@@./extend ${x}_text.o" >> make-dll-makefile
+  echo >> make-dll-makefile
+  echo "${x}_data.o:	${x}_data.S" >> make-dll-makefile
+  echo "	@@gcc -c ${x}_data.S -o ${x}_data.o" >> make-dll-makefile
+  echo "	@@./extend ${x}_data.o" >> make-dll-makefile
+  echo >> make-dll-makefile
+done
+make -f make-dll-makefile all
+gcc -c glue.S
+./extend glue.o
+echo "	.data" > foo.S
+echo "	.globl	uid" >> foo.S
+echo "uid:" >> foo.S
+uuidgen -s | sed -e "1d;2s/^/	.long/;2,4s/,//;3,4s/^/	.short/;5s/^/	.byte/;6d;s/{//g;s/}//g" >> foo.S
+echo "	.globl	text_start" >> foo.S
+echo "	.long	text_start" >> foo.S
+echo "	.globl	data_start" >> foo.S
+echo "	.long	data_start" >> foo.S
+echo "	.globl	text_end" >> foo.S
+echo "	.long	text_end" >> foo.S
+echo "	.globl	data_end" >> foo.S
+echo "	.long	data_end" >> foo.S
+echo "	.long	0" >> foo.S
+echo "	.asciz	\"${dll}\"" >> foo.S
+gcc -c foo.S
+./extend foo.o
+echo "	.text" > start_text.S
+echo "	.globl	text_start" >> start_text.S
+echo "	.align	4" >> start_text.S
+echo "text_start:" >> start_text.S
+echo "	.section	text$$z" > end_text.S
+echo "	.globl	text_end" >> end_text.S
+echo "	.align	4" >> end_text.S
+echo "text_end:" >> end_text.S
+echo "	.data" > start_data.S
+echo "	.globl	data_start" >> start_data.S
+echo "	.align	4" >> start_data.S
+echo "data_start:" >> start_data.S
+echo "	.section	data$$z" > end_data.S
+echo "	.globl	data_end" >> end_data.S
+echo "	.align	4" >> end_data.S
+echo "data_end:" >> end_data.S
+gcc -c start_text.S
+./extend start_text.o
+gcc -c start_data.S
+./extend start_data.o
+gcc -c end_text.S
+./extend end_text.o
+gcc -c end_data.S
+./extend end_data.o
+shift
+files=`cat ${dll}-tmp-files`
+cl /Fe${dll}${debug}.dll start_text.o start_data.o glue.o foo.o end_text.o end_data.o `for x in ${files} ; do echo ${x}_data.o ; done` `for x in ${files} ; do echo ${x}_text.o ; done`  $* /nologo -link /MAP:${dll}${debug}.map /DLL /ENTRY:MLWDLLmain@@12 -base:${base}
+rm  ${dll}-tmp-files
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d6 1
+a6 5
+# $Log: I386:NT:make-dll,v $
+# Revision 1.1  1998/09/28  10:08:51  jont
+# new unit
+# Shell script for building dlls
+#
+@

@@ -1,0 +1,163 @@
+head	1.1;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.1
+	MLWorks_Beta_1996_06_06:1.1
+	MLWorks_Beta_1996_06_05:1.1
+	MLWorks_Beta_1996_06_03:1.1
+	MLWorks_Beta_1996_05_31:1.1
+	MLWorks_Beta_1996_05_30:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	96.05.19.13.59.07;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Renamed file.
+@
+
+
+1.1
+log
+@new unit
+Renamed file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_CODESET ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: _codeset.sml,v $
+ * Revision 1.4  1996/05/01  11:46:04  jont
+ * String functions explode, implode, chr and ord now only available from String
+ * io functions and types
+ * instream, oustream, open_in, open_out, close_in, close_out, input, output and end_of_stream
+ * now only available from MLWorks.IO
+ *
+ * Revision 1.3  1996/03/28  13:10:17  matthew
+ * New sharing syntax etc.
+ *
+ * Revision 1.2  1996/03/07  11:50:25  jont
+ * Changing newmap to map, NEWMAP to MAP, T to map
+ *
+ * Revision 1.1  1995/09/07  22:48:34  brianm
+ * new unit
+ * Rename due to reorganisation & documentation of FI.
+ *
+ *  Revision 1.1  1995/04/25  11:38:04  brianm
+ *  new unit
+ *  New file.
+ *
+ *
+ *)
+
+require "../utils/stringlib";
+require "../utils/map";
+require "../utils/lists";
+
+require "aliens";
+require "codeset";
+require "types";
+
+functor ForeignCodeSet(
+
+     structure StringLib : STRING_LIB
+     structure FIAliens  : FOREIGN_ALIENS where type info = string
+
+     structure FITypes : FOREIGN_TYPES
+     structure Lists     : LISTS
+     structure Map       : MAP
+
+     sharing
+         type Map.map  = FIAliens.Map
+) : FOREIGN_CODESET =
+   struct
+
+   (* Mapping *)
+
+     structure FITypes = FITypes
+     open FITypes
+
+     open MLWorks.Option
+
+     type ('a,'b)Map = ('a,'b)Map.map
+
+     exception Undefined = Map.Undefined
+
+     type foreign_module    =  FIAliens.foreign_module
+
+     val get_module_later   =  FIAliens.get_module_later
+     val get_item_later     =  FIAliens.get_item_later
+
+     val get_module_now     =  FIAliens.get_module_now
+     val get_item_now       =  FIAliens.get_item_now
+
+     val get_item_names     =  FIAliens.get_item_names
+     val get_item_info      =  FIAliens.get_item_info
+
+     val chrof              =  String.chr o String.ordof
+     val to_lower           =  StringLib.to_lower
+
+     val adjoin             = Lists.adjoin
+
+     val lookup             = Map.apply'
+
+
+   (* Definitions *)
+
+     datatype load_mode = IMMEDIATE_LOAD | DEFERRED_LOAD
+
+     val files = ref([] : filename list)
+
+     fun files_loaded () = !files
+
+     datatype value_type = CODE_VALUE | VAR_VALUE | UNKNOWN_VALUE
+
+     fun load_module (fname,IMMEDIATE_LOAD)  =  get_module_now(fname)
+       | load_module (fname,DEFERRED_LOAD)    =  get_module_later(fname)
+
+     abstype foreign_codeset =
+
+        FCODESET of (filename * load_mode * foreign_module)
+
+     with
+
+        fun load_codeset(fname : filename, mode) =
+            let val F_mod = load_module(fname,mode)
+            in
+              files := adjoin(fname,!files);
+              FCODESET(fname,mode,F_mod)
+            end
+
+        fun file_info(FCODESET(fname,mode,_)) = (fname,mode)
+
+        fun symbols(FCODESET(_,_,f_mod)) = get_item_names(f_mod)
+
+        fun symbol_info(FCODESET(_,_,f_mod),str) =
+            let val info_map = get_item_info(f_mod)
+                val info = lookup(info_map,str)
+                val chr  = to_lower(chrof(info,0))
+            in
+                case chr of
+                  "c" => CODE_VALUE |
+                  "v" => VAR_VALUE  |
+                   _  => UNKNOWN_VALUE
+            end handle Undefined => UNKNOWN_VALUE
+
+        fun module(FCODESET(_,_,f_mod)) = f_mod
+
+     end
+   end;
+@

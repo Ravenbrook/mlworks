@@ -1,0 +1,62 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	96.04.18.11.44.20;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+@
+
+
+1.1
+log
+@new unit
+@
+text
+@(*  ==== INITIAL BASIS : MONO-VECTORS ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This is part of the extended Initial Basis.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *  Revision 1.2  1995/03/18  18:37:05  brianm
+ *  Made all types into eqtypes (as per the current draft).
+ *
+ * Revision 1.1  1995/03/16  21:18:41  brianm
+ * new unit
+ *renamed from mono_vectors.sml
+ *
+ *)
+
+signature MONO_VECTOR =
+  sig
+
+    eqtype elem
+    eqtype vector
+
+    val maxlen : int
+
+  (* vector creation functions *)
+    val vector   : elem list -> vector
+    val tabulate : (int * (int -> elem)) -> vector
+
+    val length   : vector -> int
+    val sub      : (vector * int) -> elem
+    val extract  : (vector * int * int) -> vector
+    val concat   : vector list -> vector
+
+  end
+@

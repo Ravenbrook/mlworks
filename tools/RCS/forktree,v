@@ -1,0 +1,163 @@
+head	1.3;
+access;
+symbols
+	mlworks-28-01-1994:1.3
+	Release:1.1
+	mlworks-beta-01-09-1993:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	93.09.07.15.19.46;	author jont;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	93.09.02.10.43.18;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	93.09.01.10.04.55;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	93.09.01.10.04.55;	author jont;	state Exp;
+branches;
+next	1.1.1.2;
+
+1.1.1.2
+date	93.09.02.10.41.06;	author jont;	state Exp;
+branches;
+next	1.1.1.3;
+
+1.1.1.3
+date	93.09.07.15.12.30;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Utility to produce bug fixing branches
+@
+
+
+1.3
+log
+@Merged in bug fixes
+@
+text
+@#!/bin/csh
+# $Log: forktree,v $
+# Revision 1.1.1.3  1993/09/07  15:12:30  jont
+# Added /usr/sml/src/scripts directory
+#
+# Revision 1.1.1.2  1993/09/02  10:41:06  jont
+# Added extra directories. Stopped using cout -l before forking, it's not required
+#
+# Revision 1.1.1.1  1993/09/01  10:04:55  jont
+# Fork for bug fixing
+#
+# Revision 1.1  1993/09/01  10:04:55  jont
+# Initial revision
+#
+# Copyright (c) 1993 Harlequin Ltd.
+if ($#argv != 1) then
+  echo Usage: forktree name
+  exit(1)
+endif
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src /usr/sml/src/scripts)
+  pushd $i
+  if (`ls RCS | wc -l` != 0) then
+    foreach x (RCS/*,v)
+      echo forking $i/$x
+      ci -q -f -m"Fork for bug fixing" -u -d -M -r$argv[1].1 $x
+      cout $x
+    end
+  endif
+  popd
+end
+@
+
+
+1.2
+log
+@Merged in bug fixes
+@
+text
+@d3 3
+d20 1
+a20 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src)
+d25 2
+a26 1
+      ci -f -m"Fork for bug fixing" -u -d -M -r$argv[1].1 $x
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d2 10
+a11 1
+# $Log$
+d17 1
+a17 1
+foreach i (`cat /usr/sml/tools/dirs`)
+a21 1
+      cout -l $x
+@
+
+
+1.1.1.1
+log
+@Fork for bug fixing
+@
+text
+@d2 1
+a2 4
+# $Log: forktree,v $
+# Revision 1.1  1993/09/01  10:04:55  jont
+# Initial revision
+#
+@
+
+
+1.1.1.2
+log
+@Added extra directories. Stopped using cout -l before forking, it's not required
+@
+text
+@a2 3
+# Revision 1.1.1.1  1993/09/01  10:04:55  jont
+# Fork for bug fixing
+#
+d11 1
+a11 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src)
+d16 1
+@
+
+
+1.1.1.3
+log
+@Added /usr/sml/src/scripts directory
+@
+text
+@a2 3
+# Revision 1.1.1.2  1993/09/02  10:41:06  jont
+# Added extra directories. Stopped using cout -l before forking, it's not required
+#
+d14 1
+a14 1
+foreach i (`cat /usr/sml/tools/dirs` /usr/sml /usr/sml/tools /usr/sml/src /usr/sml/src/scripts)
+d19 1
+a19 2
+      ci -q -f -m"Fork for bug fixing" -u -d -M -r$argv[1].1 $x
+      cout $x
+@

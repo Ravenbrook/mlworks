@@ -1,0 +1,218 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	92.08.10.13.30.33;	author davidt;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	92.05.18.15.40.36;	author clive;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	92.08.10.13.30.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Initial version
+@
+
+
+1.2
+log
+@THIS FILE IS NO LONGER IN USE!
+The code has been changed so that it gives a parser error
+if it is ever used.
+@
+text
+@(* 
+   Redefine the timer functions to give the same results as our system 
+   i.e. to return three integers - the high and low parts of the seconds
+   field and the usec field
+*)
+
+(*
+$Log: redefine_timer_functions.sml,v $
+Revision 1.1  1992/05/18  15:40:36  clive
+Initial revision
+
+*)
+
+structure MLworks (*: MLWORKS =
+  struct
+    val use = NewJersey.use
+    val exportML = NewJersey.exportML
+    val flush_out = NewJersey.flush_out
+
+    structure Bits  = NewJersey.Bits
+    structure Array = NewJersey.Array
+    structure String = NewJersey.String
+    structure ByteArray = NewJersey.ByteArray
+    structure ControlPrint = NewJersey.System.Control.Print
+
+    structure System =
+      struct
+	val environ = NewJersey.System.environ
+	val system = NewJersey.System.system
+
+	structure Timer =
+	  struct
+	    type timer = NewJersey.System.Timer.timer
+	    val start_timer = NewJersey.System.Timer.start_timer
+
+	    val const = NewJersey.Bits.lshift(1,16);
+	    fun to_time(x:int,y,z) =
+	      NewJersey.System.Timer.TIME{sec= Bits.orb(Bits.lshift(x,16),y) ,usec=z}
+	    fun from_time(NewJersey.System.Timer.TIME{sec,usec}) =
+	      (sec div const,sec mod const,usec)
+	    datatype time = TIME of int * int * int
+	    fun check_timer x =
+	      TIME(from_time(NewJersey.System.Timer.check_timer x))
+	    fun check_timer_gc x =
+	      TIME(from_time(NewJersey.System.Timer.check_timer_gc x))
+	    fun check_timer_sys x =
+	      TIME(from_time(NewJersey.System.Timer.check_timer_sys x))
+	    fun makestring (TIME x) =
+	      NewJersey.System.Timer.makestring(to_time x)
+	  end
+	structure Unsafe =
+	  struct
+	    structure SysIO =
+	      struct
+		datatype fname = PATH of string
+
+		val p = NewJersey.System.Unsafe.SysIO.PATH
+
+		type time = NewJersey.System.Timer.time
+		fun atime (PATH s) = Timer.TIME(Timer.from_time(NewJersey.System.Unsafe.SysIO.atime (p s)))
+		fun ctime (PATH s) = Timer.TIME(Timer.from_time(NewJersey.System.Unsafe.SysIO.ctime (p s)))
+		fun mtime (PATH s) = Timer.TIME(Timer.from_time(NewJersey.System.Unsafe.SysIO.mtime (p s)))
+
+		type fd = NewJersey.System.Unsafe.SysIO.fd
+		datatype offset = BEG | CUR | END
+
+		val close_out = NewJersey.System.Unsafe.SysIO.closef
+
+		fun seek (os, i, BEG) =
+		    (NewJersey.System.Unsafe.SysIO.lseek (os, i, NewJersey.System.Unsafe.SysIO.L_SET); ())
+		  | seek (os, i, CUR) =
+		    (NewJersey.System.Unsafe.SysIO.lseek (os, i, NewJersey.System.Unsafe.SysIO.L_INCR); ())
+		  | seek (os, i, END) =
+		    (NewJersey.System.Unsafe.SysIO.lseek (os, i, NewJersey.System.Unsafe.SysIO.L_XTND); ())
+
+		fun output (fd, s) =
+		  let
+		    val b = NewJersey.ByteArray.array (size s, 0)
+		    fun itr x =
+		      if x < 0 then () else
+			(NewJersey.ByteArray.update(b, x, NewJersey.String.ordof(s,x)); itr (x-1))
+		  in
+		    itr (size s - 1);
+		    NewJersey.System.Unsafe.SysIO.write(fd, b, size s)
+		  end
+
+		fun open_out s =
+		  NewJersey.System.Unsafe.SysIO.openf(s, NewJersey.System.Unsafe.SysIO.O_WRITE)
+	      end
+	  end
+	structure Timer :
+	  sig
+	    eqtype timer
+            datatype time = TIME of int * int * int
+	    val check_timer : timer -> time
+	    val check_timer_gc : timer -> time
+	    val check_timer_sys : timer -> time
+	    val makestring : time -> string
+	    val start_timer : unit -> timer
+	  end = Timer
+      end
+  end;
+
+(* structure NewJersey = struct end; *)
+*)
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@a8 5
+Revision 1.2  1992/08/10  13:30:33  davidt
+THIS FILE IS NO LONGER IN USE!
+The code has been changed so that it gives a parser error
+if it is ever used.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 3
+d13 45
+a57 42
+structure NewJersey =
+ struct
+  open NewJersey
+  structure System =
+    struct
+     open NewJersey.System
+     structure Timer =
+     struct
+       open NewJersey.System.Timer
+       val const = Bits.lshift(1,16);
+       fun to_time(x:int,y,z) = TIME{sec= Bits.orb(Bits.lshift(x,16),y) ,usec=z}
+       fun from_time(TIME{sec,usec}) = (sec div const,sec mod const,usec)
+       datatype time = TIME of int * int * int
+       val check_timer = fn x => TIME(from_time(check_timer x))
+       val check_timer_gc = fn x => TIME(from_time(check_timer_gc x))
+       val check_timer_sys = fn x => TIME(from_time(check_timer_sys x))
+       val makestring = fn (TIME x) => makestring(to_time x)
+     end
+     structure Unsafe =
+       struct
+         open NewJersey.System.Unsafe
+         structure SysIO =
+         struct
+           open NewJersey.System.Unsafe.SysIO
+           type time = NewJersey.System.Timer.time
+           val atime = fn x => Timer.TIME(Timer.from_time(atime x))
+           val ctime = fn x => Timer.TIME(Timer.from_time(ctime x))
+           val mtime = fn x => Timer.TIME(Timer.from_time(mtime x))
+         end
+       end
+     structure Timer :
+       sig
+         datatype time = TIME of int * int * int
+           eqtype timer
+         val check_timer : timer -> time
+         val check_timer_gc : timer -> time
+         val check_timer_sys : timer -> time
+         val makestring : time -> string
+         val start_timer : unit -> timer
+       end = Timer
+    end
+ end
+d59 47
+@

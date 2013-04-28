@@ -1,0 +1,573 @@
+head	1.7;
+access;
+symbols
+	MLWorks_Beta_1996_06_07:1.7
+	MLWorks_Beta_1996_06_06:1.7
+	MLWorks_Beta_1996_06_05:1.7
+	MLWorks_Beta_1996_06_03:1.7
+	MLWorks_Beta_1996_05_31:1.7
+	MLWorks_Beta_1996_05_30:1.7;
+locks; strict;
+comment	@ * @;
+
+
+1.7
+date	96.04.18.16.59.37;	author jont;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	96.03.28.13.53.18;	author matthew;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	95.09.10.15.23.13;	author brianm;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	95.06.25.18.20.58;	author brianm;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	95.05.04.19.42.39;	author brianm;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	95.04.20.14.42.33;	author brianm;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	95.03.27.15.47.52;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+
+New file.
+@
+
+
+1.7
+log
+@initbasis becomes basis
+@
+text
+@(*  ==== FOREIGN INTERFACE : FOREIGN_DATA ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: fi_data.sml,v $
+ * Revision 1.6  1996/03/28  13:53:18  matthew
+ * Sharing constraints
+ *
+ * Revision 1.5  1995/09/10  15:23:13  brianm
+ * Further modification for updates and general reorganisation.
+ *
+ * Revision 1.4  1995/06/25  18:20:58  brianm
+ * Adding remote access, diagnostics and other facilities.
+ *
+ * Revision 1.3  1995/05/04  19:42:39  brianm
+ * Removing restrictive eqtype constraints & introduce abstypes in
+ * various implementing types.
+ *
+ * Revision 1.2  1995/04/20  14:42:33  brianm
+ * General updating to reach prototype level for ML FI.
+ *
+ * Revision 1.1  1995/03/27  15:47:52  brianm
+ * new unit
+ *
+ *)
+
+require "../basis/__general";
+require "fi_types";
+require "fi_hostel";
+
+signature FOREIGN_DATA =
+   sig
+
+     type 'a option = 'a General.option
+
+     structure FITypes  : FOREIGN_TYPES
+
+     type bytearray = FITypes.bytearray
+     type address = FITypes.address
+
+     structure FIHostel : FOREIGN_HOSTEL
+
+     type hostel = FIHostel.hostel
+
+     exception ReadOnly
+     exception WriteOnly
+
+     type ('l_type) pod
+
+     datatype pod_mode = LOCAL_PM | REMOTE_PM
+     datatype pod_status = PERMANENT_PS | TEMPORARY_PS
+
+     exception OutOfBounds
+     exception Currency
+
+     val pod : { lang_type : '_l_type,
+                 size      : int,
+                 status    : pod_status,
+                 mode      : pod_mode,
+                 currency  : bool,
+                 hostel    : hostel } -> ('_l_type) pod
+
+     val pod_status       : ('l_type) pod -> pod_status
+
+     val pod_currency     : ('l_type) pod -> bool
+     val set_pod_currency : ('l_type) pod * bool -> unit
+
+     val pod_mode      : ('l_type) pod -> pod_mode
+     val set_pod_mode  : ('l_type) pod * pod_mode -> unit
+
+     val pod_type      : ('l_type) pod -> 'l_type
+     val set_pod_type  : ('l_type) pod * 'l_type -> unit
+
+     val pod_size      : ('l_type) pod -> int
+     val set_pod_size  : ('l_type) pod * int -> unit  (* sets currency false *)
+     val set_pod_size' : ('l_type) pod * int -> unit  (* leaves currency unchanged *)
+
+     val pod_value     : ('l_type) pod * bytearray * int -> unit
+     val pod_value'    : ('l_type) pod * bytearray * int -> unit
+                         (* doesn't check currency *) 
+
+     val set_pod_value   : ('l_type) pod * bytearray * int -> unit
+     val copy_pod_value  : { from : ('l_type) pod,
+                             to   : ('l_type) pod } -> unit   
+     val copy_pod_value' : { from : ('l_type) pod,
+                             to   : ('l_type) pod } -> unit   
+
+     val new_pod        : ('_l_type) pod -> ('_l_type) pod
+     val dup_pod        : ('_l_type) pod -> ('_l_type) pod
+     val tmp_pod        : ('_l_type) pod -> ('_l_type) pod
+
+     val to_location    : ('l_type) pod * address -> int
+     val to_address     : ('l_type) pod * int -> address
+
+     val relative_location  : ('l_type) pod * address -> int
+     val relative_address   : ('l_type) pod * int -> address
+     
+     val pod_location   : ('l_type) pod -> int
+
+     val move_pod       : ('l_type) pod * int -> unit  (* sets currency false *)
+     val offset_pod     : ('l_type) pod * int -> unit  (* sets currency false *)
+
+     val move_pod'      : ('l_type) pod * int -> unit  (* leaves currency unchanged *)
+     val offset_pod'    : ('l_type) pod * int -> unit  (* leaves currency unchanged *)
+
+     val pod_address      : ('l_type) pod -> address
+
+     val set_pod_address  : ('l_type) pod * address -> unit
+     val set_pod_address' : ('l_type) pod * address -> unit
+  
+     val examine_pod    : ('l_type) pod * address -> unit
+
+
+     (* Diagnostic tools *)
+
+     val pod_info : ('l_type -> 'l_info) -> ('l_type) pod ->
+		{ hostel    : hostel,
+		  status    : string,
+		  currency  : string,
+		  mode      : string,
+                  langtype  : 'l_info,
+                  size      : int,
+                  offset    : int,
+                  base      : address option
+                }
+
+     val pod_data         : ('l_type)pod -> int list
+     val pod_data_hex     : ('l_type)pod -> string
+     val pod_data_ascii   : ('l_type)pod -> string
+
+
+   (*
+      The CURRENCY flag
+      =================
+
+      When currency flag is false, the pod data is not to be trusted.
+      When currency flag is true, the pod data is probably valid (but may not be).
+
+      Operations which change currency:
+         set_pod_currency
+
+      Operations which set currency false:
+         tmp_pod, move_pod, offset_pod, set_pod_address, set_pod_size
+
+      Operations which preserve currency:
+         new_pod, dup_pod, move_pod', offset_pod', set_pod_address', set_pod_size',
+         pod_value', copy_pod_value'(to)
+
+      Operations which set currency true:
+         examine_pod, set_pod_value, copy_pod_value(to)
+
+      Operations which _need_ currency set true:
+         pod_value, copy_pod_value(from)
+   *)
+
+   end;  (* signature FOREIGN_DATA *) 
+@
+
+
+1.6
+log
+@Sharing constraints
+@
+text
+@d11 3
+d17 12
+a28 15
+# Revision 1.4  1995/06/25  18:20:58  brianm
+# Adding remote access, diagnostics and other facilities.
+#
+# Revision 1.3  1995/05/04  19:42:39  brianm
+# Removing restrictive eqtype constraints & introduce abstypes in
+# various implementing types.
+#
+# Revision 1.2  1995/04/20  14:42:33  brianm
+# General updating to reach prototype level for ML FI.
+#
+# Revision 1.1  1995/03/27  15:47:52  brianm
+# new unit
+#
+# New file.
+#
+d32 1
+a32 1
+require "../initbasis/__general";
+@
+
+
+1.5
+log
+@Further modification for updates and general reorganisation.
+@
+text
+@d11 3
+d39 1
+a39 2
+     type 'a option
+       sharing type option     = General.option
+d43 2
+a44 6
+     type bytearray
+     type address
+
+       sharing type bytearray  = FITypes.bytearray
+       sharing type address    = FITypes.address
+
+d48 1
+a48 2
+     type hostel
+       sharing type hostel     = FIHostel.hostel
+@
+
+
+1.4
+log
+@Adding remote access, diagnostics and other facilities.
+@
+text
+@a6 98
+ *  A _Data Port_ is an ML object that is used to access (i.e. read and write)
+ *  foreign data.  Conceptually, it consists mainly of two components:
+ *  
+ *     - a type component which describes the `interpretation' and assumed
+ *       structure of the data component.
+ *  
+ *     - a value component, refering to foreign data.
+ *  
+ *  It will be necessary to implement this from within the run-time
+ *  system.
+ *  
+ *  A dataport is associated with a hostel and all writes from ML via a
+ *  dataport will occur within this hostel.  Note that it is possible to
+ *  have several dataports all using the same hostel.
+ *  
+ *  It will be convenient (i.e. to avoid excessive copying) to permit
+ *  dataports to _read_ data from memory outside of the associated hostel.
+ *  An attempt to write to memory via a dataport that is currently located
+ *  outside of its associated hostel raises an OutOfBounds exception.
+ *  
+ *  A dataport also has a boolean `currency' value.  When the currency is true,
+ *  the type component describes the value pointed at by the value component.
+ *  An attempt to read from a dataport that is not `current' raises a Currency 
+ *  exception.  Reading from or writing to the value of a dataport does not 
+ *  generally affect its currency (but see set_port_value() below).  However,
+ *  changing the type component of a dataport always makes the currency true
+ *  and changing its value pointer (i.e. `moving' the dataport) always makes
+ *  the currency false.  By doing this, the following protocol for moving
+ *  a data port will ensure that the currency is true:
+ *  
+ *     - move the data port to new address  ... so making currency false
+ *     - setting the type of the data port  ... so making currency true
+ *  
+ *  It is the responsibility of the user programmer to maintain the type
+ *  and value components - and generally this maintenance is strongly
+ *  dependent on the semantics of the foreign programming language to be
+ *  interfaced with. A sub-protocol of additional utilities is required
+ *  when providing support for specific languages (see below for a proposed
+ *  sub-protocol for the C language). In particular, this sub-protocol must
+ *  provide an ML type describing the salient features of the foreign type
+ *  system used to organise data types. This type is used to instantiate
+ *  the language type for each dataport.
+ *  
+ *  Note that a hostel is not _language_ dependent in this way - and so this
+ *  proposal has some capacity to support multi-lingual access of common data.
+ *  
+ *  data_port(ty,cu,h) - Creates a dataport of type ty, currency cu and
+ *                  located at the origin of the given hostel, h.
+ *  
+ *  currency_of(dp)         - Gives the currency of the dataport dp.
+ *  
+ *  set_currency_of(cu,dp)  - Sets the currency of the given dataport dp
+ *                        to the value cu, returning dp.
+ *  
+ *  port_type(dp)         - Returns the current type component of dataport dp.
+ *  
+ *  set_port_type(ty,dp)  - Sets the type component of dp to type ty,
+ *                      returning dp and setting the currency to true.
+ *  
+ *  port_value(dp)
+ *      - Returns the current value of dataport dp as a bytearray,
+ *        raising exception WriteOnly if value is located with the
+ *        hostel, but the hostel is unreadable and raising 
+ *        exception Currency if the currency is false.
+ *  
+ *  set_port_value(ba,dp)
+ *     - Sets the value component of dp to the contents of
+ *       bytearray ba, returning dp and making the currency
+ *       false.  This operation raises exception ReadOnly if
+ *       the hostel is not writable, raises exception
+ *       OutOfBounds if the dataport is pointing outside of its
+ *       associated hostel and raises exception ExpandHostel if 
+ *       the write operation required expansion of the hostel and 
+ *       this couldn't be acheived.  Such a failure
+ *       may arise because the hostel is Standard and
+ *       requires explicit expansion, or because
+ *       there is no further room for expansion.
+ *  
+ *  
+ *  move_port(a,dp)
+ *    - moves the dataport dp to the address a - this
+ *      updates the value pointer directly.  The dataport
+ *      dp is then returned and the currency of dp is set
+ *      to false.
+ *  
+ *  dup_port(dp)
+ *    - generates a copy of the dataport dp.
+ *  
+ *  addr_port(dp)
+ *    - returns the address (i.e. the value pointer) of the given
+ *      dataport, dp.
+ *  
+ *  offset_port(a,dp)
+ *    - returns a relocated copy of the given dataport, dp, but
+ *      with the value pointer set to the given address, a.
+ *      In addition, the currency of the new dataport is set to
+ *      false, leaving the currency of the original unchanged.
+ *  
+d11 3
+d31 1
+d39 1
+a39 1
+     structure FITypes : FOREIGN_TYPES
+d47 3
+d51 4
+a61 2
+     exception ReadOnly
+     exception WriteOnly
+@
+
+
+1.3
+log
+@Removing restrictive eqtype constraints & introduce abstypes in
+various implementing types.
+@
+text
+@d109 4
+d124 1
+d130 2
+a140 1
+
+d145 6
+d155 2
+d160 2
+d165 2
+a166 5
+     val pod_type     : ('l_type) pod -> 'l_type
+     val set_pod_type : ('l_type) pod * 'l_type -> unit
+
+     val pod_size     : ('l_type) pod -> int
+     val set_pod_size : ('l_type) pod * int -> unit
+d168 2
+a169 1
+     exception OutOfBounds
+d171 13
+a183 2
+     val pod_value      : ('l_type) pod * bytearray * int -> unit
+     val set_pod_value  : ('l_type) pod * bytearray * int -> unit
+d185 1
+a185 2
+     val copy_pod_value : { from : ('l_type) pod,
+                            to   : ('l_type) pod } -> unit
+d187 1
+d194 10
+d205 40
+a244 2
+     val pod_location   : ('l_type) pod -> int
+     val pod_address    : ('l_type) pod -> address
+d246 2
+a247 2
+     val move_pod       : ('l_type) pod * int -> unit
+     val offset_pod     : ('l_type) pod * int -> unit
+d249 3
+a251 1
+     val snapshot_pod   : ('l_type) pod * address -> unit
+@
+
+
+1.2
+log
+@General updating to reach prototype level for ML FI.
+@
+text
+@d109 3
+d137 1
+a137 1
+     eqtype ('l_type) pod
+@
+
+
+1.1
+log
+@new unit
+
+New file.
+@
+text
+@a6 28
+ *  A _Hostel_ is an area of memory reserved for the purpose of reading/writing
+ *  data from ML for use in foreign computations.  A hostel possesses a size (in
+ *  8-bit bytes) and can either be _Standard_ or _Managed_.  A Standard hostel
+ *  generally remains fixed in size, and can only be expanded by an explicit
+ *  call of function expand_hostel().  A Managed hostel, on the other hand,
+ *  can be expanded automatically as needed - in principle, the memory used
+ *  can be allocated as needed.
+ *  
+ *  The use of hostels helps the user programmer to control the memory mgmt.
+ *  overhead when dealing with foreign data - although a Managed
+ *  hostel is most convenient, a Standard hostel of a fixed size might be
+ *  all that is actually required.
+ *  
+ *  Also associated with a hostel is a status field - this is provided
+ *  to help the user provide low-level support for avoiding inadvertent
+ *  corruption of data.
+ *  
+ *     - If the status is Rd then only reading is permitted, but writing is not.
+ *     - If the status is Wr then only writing is permitted but reading is not.
+ *     - If the status is RdWr then both reading and writing are permitted.
+ *  
+ *  In the presence of concurrency within ML, this form of locking would
+ *  have to be additionally protected by an appropriate monitor ...
+ *  
+ *  
+ *  1.2.2. Data Ports
+ *  -----------------
+ *  
+d54 1
+a54 1
+ *  		    located at the origin of the given hostel, h.
+d59 1
+a59 1
+ *  			  to the value cu, returning dp.
+d64 1
+a64 1
+ *  			returning dp and setting the currency to true.
+d108 6
+a113 1
+ *  $Log$
+d117 1
+a117 1
+
+a121 1
+     eqtype address
+d123 1
+a123 1
+     eqtype hostel
+d125 2
+a126 2
+     exception ReadOnly
+     exception WriteOnly
+d128 2
+a129 1
+     datatype hostel_status = RD | WR | RDWR 
+a130 2
+     val status_of     : hostel -> hostel_status
+     val set_status_of : (hostel * hostel_status) -> unit
+d132 1
+a132 1
+     datatype hostel_mode = STANDARD | MANAGED
+d134 1
+a134 1
+     val hostel : (hostel_mode * hostel_status * int) -> hostel
+d136 6
+a141 2
+     val hostel_size    : hostel -> int
+     val hostel_origin  : hostel -> address
+d143 2
+a144 2
+     exception ExpandHostel
+     val expand_hostel  : (hostel * int) -> hostel
+d146 2
+a147 1
+     eqtype ('l_type) data_port
+d149 2
+a150 1
+     exception Currency
+d152 1
+a152 2
+     type currency_port
+     sharing type currency_port = bool
+d154 2
+a155 1
+     val data_port : 'l_type * currency_port * hostel -> ('l_type) data_port
+d157 3
+a159 2
+     val currency_of     : ('l_type) data_port -> currency_port
+     val set_currency_of : currency_port * ('l_type) data_port -> ('l_type)data_port
+d161 2
+a162 2
+     val port_type     : ('l_type) data_port -> 'l_type
+     val set_port_type : 'l_type * ('l_type) data_port -> ('l_type)data_port
+d164 2
+a165 1
+     exception OutOfBounds
+d167 2
+a168 2
+     val port_value     : ('l_type) data_port -> Word8Array.array
+     val set_port_value : bytearray * ('l_type) data_port -> ('l_type) data_port
+d170 2
+a171 2
+     val move_port   : address * ('l_type) data_port -> ('l_type) data_port
+     val dup_port    : ('l_type) data_port -> ('l_type) data_port
+d173 1
+a173 2
+     val addr_port   : ('l_type) data_port -> address
+     val offset_port : int * ('l_type) data_port -> ('l_type) data_port
+@

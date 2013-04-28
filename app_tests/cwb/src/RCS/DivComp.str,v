@@ -1,0 +1,289 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.18.53;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.31;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: DivComp.str,v 1.3 1994/12/03 14:42:37 pxs Exp $";
+functor DivComp ( structure Elem : ELEM ) : DIVCOMP =
+struct
+   structure Elem = Elem
+   structure PG = Elem.PG
+
+(*****************************************************************************)
+(* A) Checking of divergence properties                                      *)
+(*     These predicates apply to all three situations:                       *)
+(*         i)   strong divergence                                            *)
+(*         ii)  weak divergence                                              *)
+(*         iii) divergence in the "sense of testing"                         *)
+(*     So their result is context dependend                                  *)
+(*****************************************************************************)
+
+   fun globfun p l = let fun gf [] = true
+                           | gf (h::t) = (p h andalso (gf l)) orelse gf t
+                      in not(null l) andalso gf l
+                     end
+
+(*****************************************************************************)
+(* The next function checks global divergence                                *)
+(*****************************************************************************)
+
+   fun globdivpred sr = !(Elem.compgldivref sr)
+
+(*****************************************************************************)
+(* The next function checks local divergence of state1. Note under some      *)
+(* circumstances we have: not(globdivpred implies locdivpred). That mainly   *)
+(* occurs during testing preorder checking where locdivpred in contrast to   *)
+(* globdivpred is always false.                                              *)
+(*****************************************************************************)
+
+   fun locdivpred (sr,ac) = Elem.actmem(ac,Elem.divinf sr)
+
+(*****************************************************************************)
+(* A) The next functions handle divergence.                                  *)
+(* Primitive divergence is represented by !givecompprdiv state = true        *)
+(* Global divergence is represented by !givecompgldivref state = true        *)
+(*                                                                           *)
+(* divergence in the sense of testing; this is weak global divergence plus   *)
+(* the property that the divergence of a state also forces all of its        *)
+(* successors to diverge.                                                    *)
+(*                                                                           *)
+(* They can be seen as transition system transformations:                    *)
+(*  a) for introducing strong global divergence information                  *)
+(*  b) for introducing strong local divergence information                   *)
+(*  c) for introducing weak global divergence information                    *)
+(*  d) for introducing weak local divergence information                     *)
+(*  e) for introducing divergence information in the sense                   *)
+(*     of testing                                                            *)
+(*****************************************************************************)
+
+(*****************************************************************************)
+(* The following auxiliary predicate has three meanings:                     *)
+(*    1) it computes the union of al1 and al2                                *)
+(*    2) it assigns this union to the divergenceinf component of state1      *)
+(*    3) it delivers true whenever the union is bigger than al1              *)
+(*****************************************************************************)
+
+   fun actlistincr (sr1,     (* state checked for divergence          *)
+                    nil,     (* st's  current list for local div.     *)
+                    al2,     (* state2`s  current list for local div. *)
+                    divl) =  (* list for the resulting div. info.     *)
+       let fun ali(sr1,nil,divl) = (Elem.infocompdivref sr1 := divl; false)
+             | ali(sr1,al2 as (h2::t2),divl) =
+               (Elem.infocompdivref sr1 := (divl@@al2); true)
+        in ali(sr1,al2,divl)
+       end
+     | actlistincr (sr1,al1 as (h1::t1),nil,divl) =
+       (Elem.infocompdivref sr1 := divl@@al1; false)
+     | actlistincr (sr1,al1 as (h1::t1),al2 as (h2::t2),divl) =
+       if PG.act_le(h1,h2) then
+          if PG.act_le(h2,h1) then
+             (ignore(actlistincr(sr1,t1,t2,divl@@(h1::nil))); false)
+          else actlistincr(sr1,t1,al2,divl@@(h1::nil))
+       else (ignore(actlistincr(sr1,al1,t2,divl@@(h2::nil))); true)
+
+(*****************************************************************************)
+(*  a) Strong global divergence. Tau is considered as a normal action        *)
+(*     Here only primitive divergence is considered as global divergence     *)
+(*****************************************************************************)
+
+   fun strgldivinf y =
+       exists (fn x => (Elem.compgldivref x := Elem.compprdiv x;false)) y
+
+(*****************************************************************************)
+(*  b) Strong local divergence. Tau is considered as a normal action.        *)
+(*                                                                           *)
+(*     Detection of a-divergence, i.e. of "reachability of a global          *)
+(*     divergent state by means of an a action".                             *)
+(*          We proceed by determining the corresponding minimal fixpoint     *)
+(*     (application of globalization with a minimal initialization:          *)
+(*     complglobaldivergence). Note, the minimal fixpoint coincides here     *)
+(*     with the maximal one!                                                 *)
+(*****************************************************************************)
+
+   fun strlocdivinf streflist =
+       let fun locdivfunct sr1 =
+
+(*****************************************************************************)
+(* This function provides the local functional for the globalization process *)
+(* which delivers the local divergence information.                          *)
+(*****************************************************************************)
+
+(*****************************************************************************)
+(* The next functions adds the action name "act" to the divergence informa-  *)
+(* tion of state1, if there exists an act successor which is globally diver- *)
+(* gent. If this increases the divergence information of state1, the         *)
+(* function delivers true, else false                                        *)
+(*****************************************************************************)
+
+               let fun locactdiv(nil,_) = false
+                     | locactdiv((act1,streflistref1)::t,sr1) =
+                       let fun lactdfunct (nil,_,_) = false
+                             | lactdfunct (h::t,act1,sr1) =
+                               if (globdivpred h) orelse (globdivpred sr1) then
+                                  actlistincr(sr1,Elem.divinf sr1,act1::nil,nil)
+                               else lactdfunct (t,act1,sr1)
+                        in if Elem.actmem(act1,Elem.divinf sr1) then
+                              locactdiv(t,sr1)
+                           else (lactdfunct(!streflistref1,act1,sr1)
+                                 orelse locactdiv(t,sr1))
+                       end
+                in locactdiv (!(Elem.compsuc sr1),sr1)
+               end
+        in globfun locdivfunct (ignore(strgldivinf streflist); streflist)
+       end
+
+(*****************************************************************************)
+(*  c)  Weak global divergence. Tau is not observable. Here divergence means *)
+(*      either: - primitive divergence             or                        *)
+(*              - possible initinite tau sequence  or                        *)
+(*              - primitive divergence reachable by tau moves                *)
+(*                                                                           *)
+(*      Here we proceed by determining the corresponding maximal fixpoint    *)
+(*      (application of globalization with a maximal initialization          *)
+(*****************************************************************************)
+
+  fun weakgldivinf streflist =
+      let fun globdivfunct sr1 =
+              let fun gdfunct L = forall (not o globdivpred) L andalso
+                                  (Elem.compgldivref sr1 := false; true)
+               in not(Elem.compprdiv sr1) andalso (globdivpred sr1) andalso
+                  (gdfunct (Elem.actsuclist(PG.tau,sr1)))
+              end
+          fun setgldiv nil    = ()
+            | setgldiv (h::t)  = ( Elem.compgldivref h:= true; setgldiv t )
+       in globfun globdivfunct ((setgldiv streflist);streflist)
+      end
+
+(*****************************************************************************)
+(*  d) Weak local divergence. Tau is considered as a normal action.          *)
+(*                                                                           *)
+(*     Detection of a-divergence, i.e. of "reachability of a global          *)
+(*     divergent state by means of an a action".                             *)
+(*          We proceed by determining the corresponding minimal fixpoint     *)
+(*     (application of globalization with a minimal initialization:          *)
+(*     complglobaldivergence). Note, the minimal fixpoint coincides here     *)
+(*     with the maximal one!                                                 *)
+(*****************************************************************************)
+
+  fun weaklocdivinf (streflist) =
+
+(*****************************************************************************)
+(* The next functions provides the local functional for the globalization    *)
+(* process which delivers the local divergence information.                  *)
+(*****************************************************************************)
+
+      let fun locdivfunct sr1 =
+
+(*****************************************************************************)
+(* The next functions adds the divergence information of all tau successors  *)
+(* of state1 to the divergenceinformation of state1. If this increases the   *)
+(* divergence information of state1, the function delivers true, else false. *)
+(*****************************************************************************)
+
+              let fun ltaudfunct (L,sr1) =
+                      exists (fn x => actlistincr(sr1,Elem.divinf sr1,
+                                                          Elem.divinf x,nil)) L
+
+(*****************************************************************************)
+(* The next functions adds the action name "act" to the divergence informa-  *)
+(* tion of state1, if there exists an act successor which is globally        *)
+(* divergent. If this increases the divergence information of state1, the    *)
+(* function delivers true, else false.                                       *)
+(*****************************************************************************)
+
+                  fun locactdiv(nil,_) = false
+                    | locactdiv((act1,streflistref1)::t,sr1) =
+                      let fun lactdfunct (L,act1,sr1) =
+                              exists (fn x => globdivpred x orelse
+                                                  globdivpred sr1) L andalso
+                              actlistincr(sr1,Elem.divinf sr1,(act1::nil),nil)
+                       in if Elem.actmem(act1,Elem.divinf sr1) then
+                             locactdiv(t,sr1)
+                          else (lactdfunct (!streflistref1,act1,sr1) orelse
+                                locactdiv(t,sr1))
+                      end
+               in (ltaudfunct(Elem.actsuclist(PG.tau,sr1),sr1) orelse
+                   locactdiv(!(Elem.compsuc sr1),sr1))
+              end
+       in globfun locdivfunct (ignore(weakgldivinf streflist); streflist)
+      end
+
+(*****************************************************************************)
+(*  e) Divergence in the sense of testing.                                   *)
+(*                                                                           *)
+(*     This is weak global divergence plus the property that the divergence  *)
+(*     of a state also forces all its successors to diverge.                 *)
+(*     We proceed by determining the corresponding minimal fixpoint          *)
+(*     application of globalization with a minimal initialization:           *)
+(*     complglobaldivergence). Note, the minimal fixpoint coincides here     *)
+(*     with the maximal one!                                                 *)
+(*****************************************************************************)
+
+  fun testdivinf streflist =
+
+(*****************************************************************************)
+(* The next functions provides the local functional for the globalization    *)
+(* process which delivers the "test divergence" information.                 *)
+(*****************************************************************************)
+
+      let fun locdivfunct sr1 =
+              let fun locactdiv nil = false
+                    | locactdiv((act1,streflistref1)::t) =
+                      let fun lactdfunct (nil,succlist) = locactdiv(succlist)
+                            | lactdfunct (h1::t1,succlist) =
+                              if globdivpred h1 then lactdfunct(t1,succlist)
+                              else ( ignore(!(Elem.compgldivref h1) = true);
+                                     ignore(lactdfunct(t1,succlist)); true )
+                       in lactdfunct(!streflistref1,t)
+                      end
+               in globdivpred sr1 andalso locactdiv (!(Elem.compsuc sr1))
+              end
+       in globfun locdivfunct (ignore(strgldivinf streflist); streflist)
+      end
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

@@ -1,0 +1,194 @@
+head	1.3;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.3
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2
+	MLWorks_20b1c1_1998_05_07:1.2
+	MLWorks_20b0_1998_04_07:1.2
+	MLWorks_20b0_1998_03_20:1.2
+	MLWorks_20m2_1998_02_16:1.2
+	MLWorks_workspace_97:1.2.1
+	MLWorks_20m1_1997_10_23:1.2
+	MLWorks_20m0_1997_06_20:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.3
+date	99.03.25.14.32.31;	author johnh;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	97.06.30.10.00.59;	author stephenb;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	97.05.20.09.36.35;	author stephenb;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	97.11.30.16.47.57;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+[Bug #30121]
+@
+
+
+1.3
+log
+@[Bug #190548]
+Fix typos and pathnames.
+@
+text
+@Each example involves creating a .so specific to that example.  In
+order to create the .so, the value of MLWORKS_INCLUDE must be set to
+point to the directory that contains mlw_ci.h.  The default location
+of mlw_ci.h is MLWorks/foreign and all that you should need to do to 
+build the .so for each example is type the following in each example
+directory.
+
+  $ make
+
+If the make works, it should produce a .so in that example directory.
+For example, if the above is typed in the add example directory, then
+it should produce the add_stub.so
+
+If for some reason mlw_ci.h is not in its default location, then you
+can alter MLWORKS_INCLUDE in a couple of ways: it can be set on the
+command line or directly in the Makefile for each example.
+
+For example, assuming that MLWorks is installed in /usr/local/MLWorks,
+you can set the value on the command line as :-
+
+  $ make MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+
+or you could edit the Makefile in each example to include the line 
+
+  MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+
+and then just type 
+
+  $ make
+
+
+When you come to run any of the examples, it is vital that your
+LD_LIBRARY_PATH environment variable is set correctly.  If is not,
+then the examples can fail in various (and often ungraceful) ways.
+For example, one common way of failing is for the following message to
+be output :-
+
+  dlopen: stub interception failed
+  Abort
+
+The simplest way to ensure that the examples work is to set
+LD_LIBRARY_PATH so that the current directory is searched.  Under
+sh/bash/ksh you can do this by typing :-
+
+  $ LD_LIBRARY_PATH=.
+  $ export LD_LIBRARY_PATH
+
+and under csh by typing :-
+
+  % setenv LD_LIBRARY_PATH=.
+
+If you want to run an example from a different directory, then you
+either need to put the example specific .so in a directory which is
+in your LD_LIBRARY_PATH or add the example to your LD_LIBRARY_PATH.
+For example, if you wanted to run the ndbm example from elsewhere,
+then in sh/ksh/bash you'd do :-
+
+    $ LD_LIBRARY_PATH=/usr/local/MLWorks/examples/foreign/ndbm
+    $ export LD_LIBRARY_PATH
+@
+
+
+1.2
+log
+@[Bug #30029]
+Removed the section on setting MLWORKS_INCLUDE as an environment
+variable since it does not work.
+@
+text
+@d2 1
+a2 1
+order create the .so, the value of MLWORKS_INCLUDE must be set to
+d4 2
+a5 2
+of mlw_ci.h is this directory all that you should need to do to build
+the .so for each example is type the following in each example
+d15 1
+a15 1
+can alter MLWORKS_INCLUDE in a couble of ways: it can be set on the
+d19 1
+a19 1
+you can set the value on the command line command line as :-
+d21 1
+a21 1
+  $ make MLWORKS_INCLUDE=/usr/local/MLWorks/examples/foreign
+d25 1
+a25 1
+  MLWORKS_INCLUDE=/usr/local/MLWorks/examples/foreign
+d42 1
+a42 1
+LD_LIBRARY_PATH so that the current directory searched.  Under
+d52 1
+a52 1
+If you want to run and example from a different directory, then you
+@
+
+
+1.2.1.1
+log
+@branched from trunk for label MLWorks_workspace_97
+@
+text
+@@
+
+
+1.1
+log
+@new unit
+[Bug #30121]
+@
+text
+@d15 2
+a16 3
+can alter MLWORKS_INCLUDE in a number of ways: it can be set in your
+environment, on the command line or directly in the Makefile for each
+example.
+d19 1
+a19 1
+you could define an environment variable using setenv in csh :-
+d21 1
+a21 11
+  % setenv MLWORKS_INCLUDE /usr/local/MLWorks/foreign
+
+or via export in sh/ksh/bash :-
+
+  $ MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+  $ export MLWORKS_INCLUDE
+
+and then just use make in each example directory :-
+     
+  $ cd ndbm
+  $ make
+d25 1
+a25 1
+  MLWORKS_INCLUDE=/usr/local/MLWorks/foreign
+a31 1
+
+d58 1
+a58 1
+    $ LD_LIBRARY_PATH=/usr/local/MLWorks/foreign/ndbm
+@

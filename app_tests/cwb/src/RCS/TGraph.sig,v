@@ -1,0 +1,104 @@
+head	1.2;
+access;
+symbols
+	MLWorks_21c0_1999_03_25:1.2
+	MLWorks_20c1_1998_08_20:1.2
+	MLWorks_20c0_1998_08_04:1.2
+	MLWorks_20b2c2_1998_06_19:1.2
+	MLWorks_20b2_Windows_1998_06_12:1.2;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.06.02.15.33.33;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.06.02.13.04.35;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Putting application tests into hope and daily
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*
+ *
+ * $Log$
+ *
+ *)
+RCS "$Id: TGraph.sig,v 1.3 1994/10/31 16:24:42 pxs Exp $";
+(********************************** TGraph ***********************************)
+(*                                                                           *)
+(* This file contains a signature for building Dgraphs Tgraphs and STgraphs, *)
+(* which are deterministic transition systems.  They are constructed on the  *)
+(* basis of *polygraphs*, which are polymorphic graphs that correspond to    *)
+(* transition systems.  The definitions of Dgraphs Tgraphs and STgraphs      *)
+(* associated with an agent are the following.                               *)
+(* Dgraph - a deterministic graph (i.e. no tau-moves, and only one state     *)
+(*     transition per action from a given state) that is observable trace    *)
+(*     equivalent (i.e. same tau-free traces) to the polygraph of the agent  *)
+(* Tgraph - a deterministic graph (in the same sense that a Dgraph is        *)
+(*     deterministic, satisfying the following constraints:                  *)
+(*     1. Each state in the Tgraph is labeled with (a minimal representation *)
+(*        of) the acceptance set associated with the trace (between the root *)
+(*        and the state in the Tgraph) in the original polygraph.            *)
+(*     2. Each state in the Tgraph is either *open* or *closed*.  A state is *)
+(*       *open* if at least one polygraph state in the set of polygraph      *)
+(*       states corresponding to the Tgraph is divergent or if some ancestor *)
+(*       state in the Tgraph is open; otherwise, the Tgraph state is closed. *)
+(* STgraph - an STgraph is a "strong" Tgraph, meaning that open states have  *)
+(*      no successors built for them.  These are used for testing the "must" *)
+(*      equivalence and preorder.                    Rance Cleaveland Aug-88 *)
+(*                                                                           *)
+(* P        - the structure of polymorphic graph operations (from Joachim).  *)
+(* AS       - the structure for acceptance sets.                             *)
+(* mkDgraph - given a polygraph and an initilization function, builds the    *)
+(*            (polymorphic) Dgraph associated with the polygraph.            *)
+(* mkTgraph - given a polygraph and an initialization function (that, note,  *)
+(*            takes a list of state *and* an acceptance set as an argument), *)
+(*            build the appropriate Tgraph.                                  *)
+(* mkSTgraph- builds the appropriate STgraph, given the same arguments as    *)
+(*            "mkTgraph".                                                    *)
+(*****************************************************************************)
+
+signature TGRAPH =
+sig
+   structure PG   : POLYGRAPH
+   structure AS   : ACCSET
+     sharing type PG.act = AS.act
+
+   val mkDgraph  : '_a PG.state ref * '_a PG.state ref list
+                    -> ('_a PG.state ref list -> '_b)
+                    -> '_b PG.state ref * '_b PG.state ref list
+
+   val mkTgraph  : '_a PG.state ref * '_a PG.state ref list
+                    -> ('_a PG.state ref list -> AS.accset -> '_b)
+                    -> '_b PG.state ref * '_b PG.state ref list
+
+   val mkSTgraph : '_a PG.state ref * '_a PG.state ref list
+                    -> ('_a PG.state ref list -> AS.accset -> '_b)
+                    -> '_b PG.state ref * '_b PG.state ref list
+end
+
+@
+
+
+1.1
+log
+@new unit
+Putting application tests into hope and daily
+@
+text
+@@

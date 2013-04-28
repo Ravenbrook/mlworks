@@ -1,0 +1,193 @@
+head	1.6;
+access;
+symbols
+	Final_version_of_old_runtime:1.6
+	ML_revised_beta_release_25/05/94:1.6
+	ML_final_beta_release_02/03/94:1.6
+	mlworks-28-01-1994:1.6
+	Release:1.5
+	mlworks-beta-01-09-1993:1.5
+	MLWorks-1-0-3-21/12/1992:1.5
+	MLWorks-1-0-2-15/12/1992:1.5
+	MLWorks-1-0-1-04/12/1992:1.5
+	checkpoint_17_08_92:1.1;
+locks; strict;
+comment	@ *  @;
+
+
+1.6
+date	93.09.07.11.02.33;	author daveb;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.10.02.09.27.17;	author richard;	state Exp;
+branches
+	1.5.1.1;
+next	1.4;
+
+1.4
+date	92.09.01.11.25.48;	author richard;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.08.26.15.46.19;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.08.19.07.06.10;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.07.23.11.48.35;	author richard;	state Exp;
+branches;
+next	;
+
+1.5.1.1
+date	92.10.02.09.27.17;	author jont;	state Exp;
+branches;
+next	1.5.1.2;
+
+1.5.1.2
+date	93.09.02.15.26.05;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@Main runtime system header
+@
+
+
+1.6
+log
+@Added -mono option.
+@
+text
+@/*  === TOP LEVEL OF RUNTIME SYSTEM ===
+ *
+ *  Copyright (C) 1991 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *  This file contains the main() function, which parses the command
+ *  line, loads and invokes the modules, etc.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: main.h,v $
+ *  Revision 1.5  1992/10/02  09:27:17  richard
+ *  Added missing consts.
+ *
+ *  Revision 1.4  1992/09/01  11:25:48  richard
+ *  Implemented argument passing to the modules.
+ *
+ *  Revision 1.3  1992/08/26  15:46:19  richard
+ *  The module table is now a pervasive value.
+ *
+ *  Revision 1.2  1992/08/19  07:06:10  richard
+ *  Added modules as an export.
+ *
+ *  Revision 1.1  1992/07/23  11:48:35  richard
+ *  Initial revision
+ *
+ */
+
+#ifndef main_h
+#define main_h
+
+extern mlval image_continuation;
+
+extern int module_argc;		/* arguments to be passed to ML */
+extern const char *const *module_argv;
+
+extern int mono;		/* running on a mono screen? */
+
+extern int main(int argc, const char *const *argv);
+
+#endif
+@
+
+
+1.5
+log
+@Added missing consts.
+@
+text
+@d13 3
+d37 2
+@
+
+
+1.5.1.1
+log
+@Fork for bug fixing
+@
+text
+@a12 3
+ *  Revision 1.5  1992/10/02  09:27:17  richard
+ *  Added missing consts.
+ *
+@
+
+
+1.5.1.2
+log
+@Added -mono option.
+@
+text
+@a37 2
+extern int mono;		/* running on a mono screen? */
+
+@
+
+
+1.4
+log
+@Implemented argument passing to the modules.
+@
+text
+@d13 3
+d33 1
+a33 1
+extern const char **module_argv;
+d35 1
+a35 1
+extern int main(int argc, char **argv);
+@
+
+
+1.3
+log
+@The module table is now a pervasive value.
+@
+text
+@d13 3
+d28 3
+@
+
+
+1.2
+log
+@Added modules as an export.
+@
+text
+@d13 3
+a24 1
+extern mlval modules;
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d22 1
+@

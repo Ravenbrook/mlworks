@@ -1,0 +1,987 @@
+head	1.24;
+access;
+symbols
+	Final_version_of_old_runtime:1.24
+	ML_revised_beta_release_25/05/94:1.24
+	ML_final_beta_release_02/03/94:1.24
+	mlworks-28-01-1994:1.23
+	Release:1.23
+	mlworks-beta-01-09-1993:1.23
+	MLWorks-1-0-3-21/12/1992:1.19
+	MLWorks-1-0-2-15/12/1992:1.19
+	MLWorks-1-0-1-04/12/1992:1.19
+	checkpoint_17_08_92:1.17;
+locks; strict;
+comment	@ *  @;
+
+
+1.24
+date	94.01.28.17.22.39;	author nickh;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	93.06.22.11.13.58;	author richard;	state Exp;
+branches
+	1.23.1.1;
+next	1.22;
+
+1.22
+date	93.06.02.13.02.53;	author richard;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	93.04.19.13.17.08;	author richard;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	93.02.01.14.40.21;	author richard;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	92.10.26.14.09.18;	author richard;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	92.10.02.09.32.55;	author richard;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	92.07.29.14.10.32;	author clive;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	92.07.24.09.51.13;	author richard;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	92.07.20.13.14.23;	author richard;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	92.07.16.14.34.00;	author clive;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	92.07.07.16.14.47;	author clive;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	92.07.03.09.24.10;	author richard;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	92.07.01.16.08.18;	author richard;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	92.06.23.15.05.56;	author clive;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	92.06.22.15.45.38;	author clive;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	92.06.11.11.45.00;	author clive;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	92.05.05.15.47.45;	author clive;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	92.04.13.16.45.45;	author clive;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	92.03.18.13.39.21;	author richard;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	92.02.25.15.49.14;	author clive;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	92.01.08.14.06.55;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.01.03.14.30.42;	author richard;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.01.02.13.55.34;	author richard;	state Exp;
+branches;
+next	;
+
+1.23.1.1
+date	93.06.22.11.13.58;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Top Level Exception Handler.
+@
+
+
+1.24
+log
+@Moved extern function declarations to header files.
+@
+text
+@/*  ==== TOP LEVEL EXCEPTION HANDLER ====
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Implementation
+ *  --------------
+ *  At present the toplevel handler terminates the runtime system
+ *  after displaying the exception packet.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: handler.c,v $
+ *  Revision 1.23  1993/06/22  11:13:58  richard
+ *  Moved the stack backtrace to a common place (utils).
+ *
+ *  Revision 1.22  1993/06/02  13:02:53  richard
+ *  Changed some print formats from %08X to %p.
+ *
+ *  Revision 1.21  1993/04/19  13:17:08  richard
+ *  New code vector organization and access macros.
+ *  Changed STACK_INTERRUPT to STACK_EVENT (more general).
+ *  Changed val_print() for new value printer.
+ *
+ *  Revision 1.20  1993/02/01  14:40:21  richard
+ *  Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+ *
+ *  Revision 1.19  1992/10/26  14:09:18  richard
+ *  Removed debugger related stuff and tidied up the backtrace
+ *  format.
+ *
+ *  Revision 1.18  1992/10/02  09:32:55  richard
+ *  Added missing cast and const.
+ *
+ *  Revision 1.17  1992/07/29  14:10:32  clive
+ *  Changed now that we have callml so that C can do all of the work
+ *
+ *  Revision 1.16  1992/07/24  09:51:13  richard
+ *  Corrected and improved the stack backtrace.
+ *
+ *  Revision 1.15  1992/07/20  13:14:23  richard
+ *  Reimplemented the stack backtrace so that is doesn't depend on the
+ *  memory manager.  Changed non-ANSI assembler command to a call to
+ *  flush_windows().
+ *
+ *  Revision 1.14  1992/07/16  14:34:00  clive
+ *  Added the single_step hook
+ *
+ *  Revision 1.13  1992/07/07  16:14:47  clive
+ *  Made up to date with __pervasive_library
+ *
+ *  Revision 1.12  1992/07/03  09:24:10  richard
+ *  Some changes toward proper debugger installation.
+ *
+ *  Revision 1.11  1992/07/01  16:08:18  richard
+ *  Reformatting.  References to typemap[] and other storage manager
+ *  specific things need to be removed.
+ *
+ *  Revision 1.10  1992/06/23  15:05:56  clive
+ *  Added a flag to say if the interrupt is continuable
+ *
+ *  Revision 1.9  1992/06/22  15:45:38  clive
+ *  A few changes for the debugger
+ *
+ *  Revision 1.8  1992/06/11  11:45:00  clive
+ *  Adjusted to allow the call of the ML debugger via a hook
+ *
+ *  Revision 1.7  1992/05/05  15:47:45  clive
+ *  Take note of the maximum depth number specified in main
+ *
+ *  Revision 1.6  1992/04/13  16:45:45  clive
+ *  Added a stack backtrace now we have function names
+ *
+ *  Revision 1.5  1992/03/18  13:39:21  richard
+ *  Changed call to val_print().  See values.h.
+ *
+ *  Revision 1.4  1992/02/25  15:49:14  clive
+ *  Added val_print in the System structure in ML
+ *
+ *  Revision 1.3  1992/01/08  14:06:55  richard
+ *  Switched off the register dump, as this hasn't been implemented yet.
+ *
+ *  Revision 1.2  1992/01/03  14:30:42  richard
+ *  Added debugging code to display the registers saved on raise.
+ *
+ * Revision 1.1  1992/01/02  13:55:34  richard
+ * Initial revision
+ *
+ */
+
+#include "ansi.h"
+#include "implicit.h"
+#include "handler.h"
+#include "mltypes.h"
+#include "values.h"
+#include "utils.h"
+#include "state.h"
+#include "diagnostic.h"
+#include "storeman.h"
+#include "allocator.h"
+#include "interface.h"
+#include "print.h"
+
+#include <stdio.h>
+#include <string.h>
+
+int max_backtrace_depth = 25;
+
+mlval handler(mlval packet)
+{
+#ifdef sparc
+  flush_windows();
+#endif
+
+  putc('\n', stderr);
+
+  backtrace(stderr, GC_SP, max_backtrace_depth);
+
+  fprintf(stderr, "\nUncaught exception \"%s\" of ",
+	  CSTRING(FIELD(FIELD(packet, 0), 1)));
+  print(NULL, stderr, FIELD(packet, 1));
+  fputc('\n', stderr);
+
+  error("Uncaught exception");
+}
+@
+
+
+1.23
+log
+@Moved the stack backtrace to a common place (utils).
+@
+text
+@d13 3
+d90 1
+@
+
+
+1.23.1.1
+log
+@Fork for bug fixing
+@
+text
+@a12 3
+ *  Revision 1.23  1993/06/22  11:13:58  richard
+ *  Moved the stack backtrace to a common place (utils).
+ *
+@
+
+
+1.22
+log
+@Changed some print formats from %08X to %p.
+@
+text
+@d13 3
+a105 3
+  struct stack_frame *sp = GC_SP;
+  int i = max_backtrace_depth;
+  
+d110 1
+a110 2
+  fprintf(stderr, "\nStack backtrace\n");
+  fprintf(stderr, "  %p closure 0x%X\n", sp, sp->closure);
+d112 1
+a112 21
+  for(sp = GC_SP; i-- && sp->fp != NULL; sp = sp->fp)
+  {
+    struct stack_frame *fp = sp->fp;
+
+    if(is_ml_stack(fp))
+    {
+      const char *name =
+	ISPTR(fp->closure) ? CSTRING(CCODENAME(FIELD(fp->closure, 0))) :
+	fp->closure == STACK_EXTENSION ? "stack extension" :
+	fp->closure == STACK_LEAF_RAISE ? "leaf raise" :
+	fp->closure == STACK_RAISE ? "raise" :
+	fp->closure == STACK_RESUME ? "resume" :
+	fp->closure == STACK_PROFILE ? "profiler" :
+	fp->closure == STACK_EVENT ? "asynchronous event handler" :
+	fp->closure == STACK_C_RAISE ? "raise from C" : 
+	fp->closure == STACK_C_CALL ? "call to C" :
+	fp->closure == STACK_START ? "ML stack start" : "special";
+
+      fprintf(stderr, "  %p closure 0x%X: %s\n", fp, fp->closure, name);
+    }
+  }
+@
+
+
+1.21
+log
+@New code vector organization and access macros.
+Changed STACK_INTERRUPT to STACK_EVENT (more general).
+Changed val_print() for new value printer.
+@
+text
+@d13 5
+d111 1
+a111 1
+  fprintf(stderr, "  %8X closure 0x%08X\n", sp, sp->closure);
+d131 1
+a131 1
+      fprintf(stderr, "  %8X closure 0x%08X: %s\n", fp, fp->closure, name);
+@
+
+
+1.20
+log
+@Abolished SETFIELD and GETFIELD in favour of lvalue FIELD.
+@
+text
+@d13 3
+d89 1
+d115 1
+a115 1
+	ISPTR(fp->closure) ? CCVNAME(FIELD(fp->closure, 0)) :
+d121 1
+a121 1
+	fp->closure == STACK_INTERRUPT ? "interrupt handler" :
+d132 1
+a132 1
+  val_print(stderr, FIELD(packet, 1), NULL);
+@
+
+
+1.19
+log
+@Removed debugger related stuff and tidied up the backtrace
+format.
+@
+text
+@d13 4
+d111 1
+a111 1
+	ISPTR(fp->closure) ? CCVNAME(GETFIELD(fp->closure, 0)) :
+d127 2
+a128 2
+	  CSTRING(GETFIELD(GETFIELD(packet, 0), 1)));
+  val_print(stderr, GETFIELD(packet, 1), NULL);
+@
+
+
+1.18
+log
+@Added missing cast and const.
+@
+text
+@d13 3
+a86 2
+mlval debugger_hook = MLUNIT;
+mlval single_step_hook = MLUNIT;
+d90 3
+d97 2
+a98 6
+  if(debugger_hook != MLUNIT)
+  {
+    mlval result;
+    mlval continue_frame = GETFIELD(packet,1);
+    extern mlval ml_get_stack_frame(mlval);
+    int continuable_flag;
+d100 1
+a100 25
+    declare_root(&packet);
+    result = allocate_record(3);
+    retract_root(&packet);
+
+    (void)SETFIELD(result, 0, MLUNIT);
+    (void)SETFIELD(result, 2, packet);
+
+    if(GETFIELD(packet, 0) == implicit_vector.interrupt_exception && GETFIELD(packet, 1) != MLUNIT)
+      continuable_flag = 1;
+    else	
+      continuable_flag = 0;
+    
+    (void)SETFIELD(result, 0, (mlval)ml_state.sp);
+    (void)SETFIELD(result, 1, MLINT(continuable_flag ? 0 : 1));
+
+    result = callml(result,debugger_hook);
+
+    if(result)
+      implicit_vector.interrupt = (mlval) -2;
+
+    if(continuable_flag)
+      return(continue_frame);	
+    else error("\n\nCan't continue from the debugger at this point\n");
+  }
+  else
+d102 1
+a102 2
+    struct stack_frame *sp = GC_SP;
+    int i = max_backtrace_depth;
+d104 1
+a104 8
+    fprintf(stderr, "\n");
+    fprintf(stderr,
+	    "\nfinal frame 0x%X\n"
+	    "  o0 %8X\n  o1 %8X\n  o2 %8X\n  o3 %8X\n"
+	    "  o4 %8X\n  o5 %8X\n  sp %8X\n  o7 %8X\n",
+	    sp, sp->i0, sp->closure, sp->i2, sp->i3, sp->i4, sp->i5, sp->fp, sp->lr);
+
+    for(sp = GC_SP; i-- && sp->fp != NULL; sp = sp->fp)
+d106 11
+a116 1
+      struct stack_frame *fp = sp->fp;
+d118 1
+a118 21
+      if(is_ml_stack(fp))
+      {
+	const char *name =
+	  ISPTR(fp->closure) ? CCVNAME(GETFIELD(fp->closure, 0)) :
+	  fp->closure == STACK_EXTENSION ? "stack extension" :
+	  fp->closure == STACK_LEAF_RAISE ? "leaf raise" :
+	  fp->closure == STACK_RAISE ? "raise" :
+	  fp->closure == STACK_RESUME ? "resume" :
+	  fp->closure == STACK_PROFILE ? "profiler" :
+	  fp->closure == STACK_INTERRUPT ? "interrupt handler" :
+	  fp->closure == STACK_C_RAISE ? "raise from C" : 
+	  fp->closure == STACK_START ? "ML stack start" : "special";
+
+	fprintf(stderr,
+		"ML frame 0x%X: %s\n"
+		"  i0 %8X  l0 %8X\n  cl %8X  l1 %8X\n  i2 %8X  l2 %8X\n  i3 %8X  l3 %8X\n"
+		"  i4 %8X  l4 %8X\n  i5 %8X  l5 %8X\n  fp %8X  l6 %8X\n  lr %8X  l7 %8X\n",
+		fp, name,
+		fp->i0, fp->l0, fp->closure, fp->l1, fp->i2, fp->l2, fp->i3, fp->l3,
+		fp->i4, fp->l4, fp->i5, fp->l5, fp->fp, fp->l6, fp->lr, fp->l7);
+      }
+d120 1
+d122 4
+a125 4
+    fprintf(stderr, "Uncaught exception \"%s\" of ",
+	    CSTRING(GETFIELD(GETFIELD(packet, 0), 1)));
+    val_print(stderr, GETFIELD(packet, 1), NULL);
+    fputc('\n', stderr);
+d127 1
+a127 2
+    error("Uncaught exception");
+  }
+@
+
+
+1.17
+log
+@Changed now that we have callml so that C can do all of the work
+@
+text
+@d13 3
+d112 1
+a112 1
+    (void)SETFIELD(result,0,ml_state.sp);
+d142 1
+a142 1
+	char *name =
+@
+
+
+1.16
+log
+@Corrected and improved the stack backtrace.
+@
+text
+@d13 3
+d75 1
+d93 3
+d98 1
+a98 1
+    result = allocate_record(4);
+d101 1
+a101 1
+    (void)SETFIELD(result, 0, debugger_hook);
+d105 1
+a105 3
+      {
+	(void)SETFIELD(result, 1, MLINT(0));
+      }
+d107 4
+a110 3
+      {
+	(void)SETFIELD(result, 1, MLINT(1));
+      }
+d112 1
+a112 2
+    debugger_hook = MLUNIT;
+    single_step_hook = MLUNIT;
+d114 6
+a119 1
+    return(result);
+@
+
+
+1.15
+log
+@Reimplemented the stack backtrace so that is doesn't depend on the
+memory manager.  Changed non-ANSI assembler command to a call to
+flush_windows().
+@
+text
+@d13 5
+d113 1
+a113 1
+    struct stack_frame *sp;
+d117 9
+d127 22
+a148 8
+    for(sp = GC_SP; i-- && sp != NULL; sp = sp->fp)
+      if(is_ml_stack(sp->fp))
+	printf("ML frame 0x%X: %s\n"
+	       "  i0 %8X  l0 %8X\n  cl %8X  l1 %8X\n  i2 %8X  l2 %8X\n  i3 %8X  l3 %8X\n"
+	       "  i4 %8X  l4 %8X\n  i5 %8X  l5 %8X\n  fp %8X  l6 %8X\n  lr %8X  l7 %8X\n",
+	       sp, ISPTR(sp->closure) ? CCVNAME(GETFIELD(sp->closure, 0)) : "special",
+	       sp->i0, sp->l0, sp->closure, sp->l1, sp->i2, sp->l2, sp->i3, sp->l3,
+	       sp->i4, sp->l4, sp->i5, sp->l5, sp->fp, sp->l6, sp->lr, sp->l7);
+@
+
+
+1.14
+log
+@Added the single_step hook
+@
+text
+@d13 3
+d65 1
+a65 2
+#include "mem.h"
+#include "gc.h"
+d77 2
+a78 6
+  int count = max_backtrace_depth;
+
+#ifdef __GNUC__
+  /* If using GCC we can flush the register windows here, thus avoiding it */
+  /* if unnecessary.  See Makefile. */
+  __asm__("ta 3");
+d108 2
+a109 1
+    struct stack_frame *sp = GC_SP;
+a110 2
+    DIAGNOSTIC(4, "sp %x of type %d ", sp, typemap[BLKNO(sp)]);
+
+d113 8
+a120 11
+    while(typemap[BLKNO(sp)] == STACKBLK && typemap[BLKNO(sp->fp)] == STACKBLK && count != 0)
+    {
+      --count;
+
+      if(sp->closure && typemap[BLKNO(sp->closure)]==HEAPBLK)
+	fprintf(stderr, " Stack frame(%x): %s\n", sp, CCVNAME(GETFIELD(sp->closure, 0)));
+      else
+	fprintf(stderr, " Dummy frame\n");
+
+      sp = sp->fp;
+    }
+@
+
+
+1.13
+log
+@Made up to date with __pervasive_library
+@
+text
+@d13 3
+d71 1
+d96 1
+a96 1
+	(void)SETFIELD(result, 1, MLTRUE);
+d100 1
+a100 1
+	(void)SETFIELD(result, 1, MLFALSE);
+d104 1
+@
+
+
+1.12
+log
+@Some changes toward proper debugger installation.
+@
+text
+@d13 3
+d84 1
+a84 1
+    result = allocate_record(3);
+d91 3
+a93 1
+      (void)SETFIELD(result, 1, MLTRUE);
+d95 3
+a97 1
+      (void)SETFIELD(result, 1, MLFALSE);
+@
+
+
+1.11
+log
+@Reformatting.  References to typemap[] and other storage manager
+specific things need to be removed.
+@
+text
+@d13 4
+a62 3
+unsigned int outstanding_interrupts = 0;
+unsigned int continuable_interrupt = 0;
+
+d64 1
+a64 1
+mlval debugger_hook = (mlval) 0;
+a67 2
+
+  word stack,next_stack;
+d76 1
+a76 3
+  outstanding_interrupts = 0;
+
+  if(debugger_hook)
+a78 1
+    extern mlval interrupt_exception_packet;
+d87 1
+a87 3
+    if(packet == interrupt_exception_packet && continuable_interrupt)
+    {
+      continuable_interrupt = 0;
+a88 1
+    }	
+a89 1
+    {
+a90 1
+    }
+d92 1
+a92 1
+    debugger_hook = 0;
+d98 1
+a98 3
+
+    stack = (word) P((word) ml_state.sp + 56);
+    next_stack = (word)(P(stack + 56));	
+d100 1
+a100 1
+    DIAGNOSTIC(4, "stack %x of type %d ", stack, typemap[BLKNO(stack)]);
+d104 1
+a104 1
+    while(typemap[BLKNO(stack)] == STACKBLK && typemap[BLKNO(next_stack)] == STACKBLK && count != 0)
+d106 4
+a109 14
+      word constants = P(stack + 36);
+      word code;
+      word offset;
+      char *name;
+
+      count--;
+
+      if(constants && typemap[BLKNO(constants)]==HEAPBLK)
+      {
+	code = P(constants - 1);
+	offset = P(code + 7);
+	name = (char *) (code + offset);
+	fprintf(stderr, " Stack frame(%x): %s\n", stack,name);
+      }
+d113 1
+a113 2
+      stack = next_stack;
+      next_stack = (word)(P(stack + 56));
+d116 1
+a116 1
+     fprintf(stderr, "Uncaught exception \"%s\" of ",
+a122 1
+
+a123 2
+
+
+@
+
+
+1.10
+log
+@Added a flag to say if the interrupt is continuable
+@
+text
+@d13 3
+d68 2
+a69 2
+  word stack,next_stack ;
+  int count = max_backtrace_depth ;
+d79 11
+a89 4
+if(debugger_hook)
+{
+  mlval result;
+  extern mlval interrupt_exception_packet;
+d91 9
+a99 3
+  declare_root(&packet);
+  result = allocate_record(3);
+  retract_root(&packet);
+d101 1
+a101 2
+  (void) SETFIELD(result,0,debugger_hook);
+  (void) SETFIELD(result,2,packet);
+d103 3
+a105 6
+  if(packet == interrupt_exception_packet && continuable_interrupt)
+  {
+    continuable_interrupt = 0;
+    (void) SETFIELD(result,1,MLTRUE);
+  }	
+  else	
+a106 2
+    (void) SETFIELD(result,1,MLFALSE);
+  };	
+d108 2
+a109 1
+  debugger_hook = 0;
+d111 1
+a111 18
+  return(result);
+}
+else
+{
+    
+  stack = (word) P((word) ml_state.sp + 56);
+  next_stack = (word)(P(stack + 56));	
+  
+  DIAGNOSTIC(4,"stack %x of type %d ",stack,typemap[BLKNO(stack)]);
+  
+  fprintf(stderr,"\n");
+  
+  while(typemap[BLKNO(stack)] == STACKBLK && typemap[BLKNO(next_stack)] == STACKBLK && count != 0)
+  {
+    word constants = P(stack + 36);
+    word code ;
+    word offset;
+    char *name ;
+d113 1
+a113 1
+    count --;
+d115 1
+a115 1
+    if(constants && typemap[BLKNO(constants)]==HEAPBLK)
+d117 19
+a135 4
+      code = P(constants - 1);
+      offset = P(code + 7);
+      name = (char *) (code + offset);
+      fprintf(stderr," Stack frame(%x): %s\n",stack,name);
+a136 2
+    else
+      fprintf(stderr," Dummy frame\n");
+d138 4
+a141 8
+    stack = next_stack;
+    next_stack = (word)(P(stack + 56));
+  };
+
+   fprintf(stderr, "Uncaught exception \"%s\" of ",
+	  CSTRING(GETFIELD(GETFIELD(packet, 0), 1)));
+  val_print(stderr, GETFIELD(packet, 1), NULL);
+  fputc('\n', stderr);
+d143 2
+a144 2
+  error("Uncaught exception");
+};
+@
+
+
+1.9
+log
+@A few changes for the debugger
+@
+text
+@d13 3
+d57 1
+d88 1
+a88 1
+  if(packet == interrupt_exception_packet)
+d90 1
+@
+
+
+1.8
+log
+@Adjusted to allow the call of the ML debugger via a hook
+@
+text
+@d13 3
+d53 2
+d70 2
+d78 1
+a78 1
+  result = allocate_record(2);
+d82 2
+a94 2
+  fprintf(stderr, "Uncaught exception \"%s\" \n",
+	  CSTRING(GETFIELD(GETFIELD(packet, 0), 1)));
+d116 1
+a116 1
+    if(constants)
+d124 1
+a124 1
+      fprintf(stderr," Dummy stack frame for gap between stacks\n");
+@
+
+
+1.7
+log
+@Take note of the maximum depth number specified in main
+@
+text
+@d13 3
+d36 1
+a36 1
+
+d44 2
+d51 1
+d53 1
+a53 1
+void handler(mlval packet)
+d65 28
+d97 1
+a97 1
+
+d99 1
+a99 1
+
+d129 2
+a131 1
+
+@
+
+
+1.6
+log
+@Added a stack backtrace now we have function names
+@
+text
+@d13 3
+d45 1
+d51 1
+d64 3
+a66 1
+  while(typemap[BLKNO(stack)] == STACKBLK && typemap[BLKNO(next_stack)] == STACKBLK)
+d73 2
+d80 1
+a80 1
+      fprintf(stderr," Stack frame: %s\n",name);
+@
+
+
+1.5
+log
+@Changed call to val_print().  See values.h.
+@
+text
+@d13 3
+d36 2
+d40 1
+a44 3
+#ifdef NEVER
+  int i;
+  word *stack = (word *)(ml_state.sp+0x40);
+d46 1
+a46 1
+  fprintf(stderr, "sp = 0x%08X  stack = 0x%08X\n", ml_state.sp, stack);
+d48 4
+a51 6
+  for(i=0; i<8; ++i)
+    fprintf(stderr, "%%g%d  0x%-8X    %%l%d  0x%-8X\n",
+	    i, stack[i+24], i, stack[i+8]);
+  for(i=0; i<8; ++i)
+    fprintf(stderr, "%%o%d  0x%-8X    %%i%d  0x%-8X\n",
+	    i, stack[i+16], i, stack[i]);
+d54 27
+a80 1
+  fprintf(stderr, "Uncaught exception \"%s\" of ",
+@
+
+
+1.4
+log
+@Added val_print in the System structure in ML
+@
+text
+@d13 3
+d55 1
+a55 1
+  val_print(stderr, GETFIELD(packet, 1), 8, val_print_internals);
+@
+
+
+1.3
+log
+@Switched off the register dump, as this hasn't been implemented yet.
+@
+text
+@d13 3
+d52 1
+a52 1
+  val_print(stderr, GETFIELD(packet, 1), 8);
+@
+
+
+1.2
+log
+@Added debugging code to display the registers saved on raise.
+@
+text
+@d13 3
+d31 1
+a31 1
+mlval handler(mlval packet)
+d33 1
+a38 5
+  fprintf(stderr, "Uncaught exception \"%s\" of ",
+	  CSTRING(GETFIELD(GETFIELD(packet, 0), 1)));
+  val_print(stderr, GETFIELD(packet, 1), 8);
+  fputc('\n', stderr);
+
+d45 1
+d47 5
+a52 2
+
+  return(MLUNIT);
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d12 4
+a15 1
+ *  $Log$
+d23 1
+d30 5
+d39 7
+@

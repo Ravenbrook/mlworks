@@ -1,0 +1,135 @@
+head	1.4;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.4
+	mlworks-28-01-1994:1.4
+	Release:1.4
+	mlworks-beta-01-09-1993:1.4
+	MLWorks-1-0-4-29/01/1993:1.4
+	MLWorks-1-0-3-21/12/1992:1.4
+	MLWorks-1-0-2-15/12/1992:1.4
+	MLWorks-1-0-1-04/12/1992:1.4
+	checkpoint_17_08_92:1.4;
+locks; strict;
+comment	@ *  @;
+
+
+1.4
+date	92.08.04.11.46.33;	author jont;	state Exp;
+branches
+	1.4.1.1;
+next	1.3;
+
+1.3
+date	92.05.18.14.06.51;	author richard;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	92.03.31.12.49.17;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	92.02.27.14.31.11;	author richard;	state Exp;
+branches;
+next	;
+
+1.4.1.1
+date	92.08.04.11.46.33;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Monomorphic Integer Sets: implementation using lists
+Structure
+@
+
+
+1.4
+log
+@Removed integer parameter
+@
+text
+@(*  ==== INTEGER SET ABSTRACT TYPE ====
+ *   ===    LIST IMPLEMENTATION    ===
+ *              STRUCTURE
+ *
+ *  Copyright (C) 1992 Harlequin Ltd.
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log: __intsetlist.sml,v $
+ *  Revision 1.3  1992/05/18  14:06:51  richard
+ *  Added int_to_text parameter to functor.
+ *
+ *  Revision 1.2  1992/03/31  12:49:17  jont
+ *  Changed text for __text and integer for __integer
+ *
+ *  Revision 1.1  1992/02/27  14:31:11  richard
+ *  Initial revision
+ *
+ *)
+
+
+require "__text";
+require "_intsetlist";
+
+
+structure IntSetList_ = IntSetList (
+  structure Text = Text_
+  val int_to_text = Text.from_string o Integer.makestring
+)
+@
+
+
+1.4.1.1
+log
+@Fork for bug fixing
+@
+text
+@a9 3
+ *  Revision 1.4  1992/08/04  11:46:33  jont
+ *  Removed integer parameter
+ *
+@
+
+
+1.3
+log
+@Added int_to_text parameter to functor.
+@
+text
+@d10 3
+a22 1
+require "__integer";
+a27 2
+  structure Integer = Integer_
+
+@
+
+
+1.2
+log
+@Changed text for __text and integer for __integer
+@
+text
+@d10 3
+d27 2
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d9 4
+a12 1
+ *  $Log$
+d16 2
+a17 2
+require "text";
+require "integer";
+@

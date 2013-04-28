@@ -1,0 +1,70 @@
+head	1.1;
+access;
+symbols
+	MLW_daveb_inline_1_4_99:1.1.1
+	MLWorks_21c0_1999_03_25:1.1;
+locks; strict;
+comment	@# @;
+
+
+1.1
+date	98.09.28.10.08.34;	author jont;	state Exp;
+branches
+	1.1.1.1;
+next	;
+
+1.1.1.1
+date	99.04.01.18.08.23;	author daveb;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+Initial code for building dll
+@
+
+
+1.1
+log
+@new unit
+Initial code for building dll
+@
+text
+@/*
+ * Copyright (c) 1998, Harlequin Group plc
+ * All rights reserved
+ *
+ * $Log$
+ */
+	.text
+	.globl	_MLWDLLmain@@12
+	.globl	ml_register_time_stamp
+	.globl	uid
+_MLWDLLmain@@12:
+	cmpl	$1,8(%esp)
+	jne	l1		/* Branch if not load */
+	pushl	%ebp
+	movl	%esp,%ebp
+	lea	uid,%eax
+	call	ml_register_time_stamp	/* Declare us to the runtime system */
+	leave
+l1:
+	mov	$1,%eax
+	ret	$12
+@
+
+
+1.1.1.1
+log
+@branched from trunk for label MLW_daveb_inline_1_4_99
+@
+text
+@d5 1
+a5 5
+ * $Log: I386:NT:glue.S,v $
+# Revision 1.1  1998/09/28  10:08:34  jont
+# new unit
+# Initial code for building dll
+#
+@

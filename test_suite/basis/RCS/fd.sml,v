@@ -1,0 +1,61 @@
+head	1.2;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.2
+date	98.04.21.12.58.10;	author jont;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	98.04.21.12.54.00;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+** No reason given. **
+@
+
+
+1.2
+log
+@Automatic checkin:
+changed attribute _comment to ' * '
+@
+text
+@(*  ==== Testing ====
+ *
+ *  Result: OK
+ *
+ *  Copyright (C) 1998. Harlequin Group plc
+ *  All rights reserved.
+ *
+ *  $Log$
+ *
+ *)
+
+local
+  structure s = Shell.Project;
+in
+  val _ = s.openProject"../src/mlworks.mlp";
+  val _ = s.setConfiguration"I386/NT";
+  val _ = s.setMode"Debug";
+  val _ = s.setTargets["__batch.sml"];
+  val _ = s.compileAll();
+  val _ = s.loadAll();
+end
+@
+
+
+1.1
+log
+@new unit
+** No reason given. **
+@
+text
+@@

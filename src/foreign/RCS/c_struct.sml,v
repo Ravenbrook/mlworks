@@ -1,0 +1,71 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ *  @;
+
+
+1.1
+date	95.04.25.11.48.25;	author brianm;	state Exp;
+branches;
+next	;
+
+
+desc
+@new unit
+New file.
+@
+
+
+1.1
+log
+@new unit
+New file.
+@
+text
+@(*  ==== FOREIGN INTERFACE : C_STRUCTURE ====
+ *
+ *  Copyright (C) 1995 Harlequin Ltd.
+ *
+ *  Description
+ *  -----------
+ *
+ *  Revision Log
+ *  ------------
+ *  $Log$
+ *
+ *)
+
+require "fi_types";
+
+signature C_STRUCTURE =
+   sig
+
+     structure FITypes : FOREIGN_TYPES
+
+     eqtype name
+     eqtype filename
+
+       sharing type name       = FITypes.name  
+       sharing type filename   = FITypes.filename
+
+
+     type foreign_structure
+     type c_structure
+
+     val to_struct : c_structure -> foreign_structure
+
+     datatype load_mode = IMMEADIATE_LM | DEFERRED_LM
+
+     val load_structure : filename * load_mode -> c_structure
+     val file_info : c_structure -> (filename * load_mode)
+
+     val files_loaded : unit -> filename list
+     val symbols      : c_structure -> name list
+
+     datatype value_type = CODE_VT | VAR_VT | NONE_VT
+
+     val symbol_info : c_structure * name -> value_type
+
+   end;
+@

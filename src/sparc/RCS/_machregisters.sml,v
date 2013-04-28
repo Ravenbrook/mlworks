@@ -1,0 +1,118 @@
+head	1.2;
+access;
+symbols
+	ML_final_beta_release_02/03/94:1.2
+	mlworks-28-01-1994:1.2
+	Release:1.2
+	mlworks-beta-01-09-1993:1.2
+	MLWorks-1-0-4-29/01/1993:1.2
+	MLWorks-1-0-3-21/12/1992:1.2
+	MLWorks-1-0-2-15/12/1992:1.2
+	MLWorks-1-0-1-04/12/1992:1.2
+	checkpoint_17_08_92:1.2;
+locks; strict;
+
+
+1.2
+date	91.11.14.10.55.31;	author richard;	state Exp;
+branches
+	1.2.1.1;
+next	1.1;
+
+1.1
+date	91.10.04.11.15.04;	author richard;	state Exp;
+branches;
+next	;
+
+1.2.1.1
+date	91.11.14.10.55.31;	author jont;	state Exp;
+branches;
+next	;
+
+
+desc
+@Machine independent register specifications. This is the functor.
+@
+
+
+1.2
+log
+@Removed references to fp_double registers.
+@
+text
+@(* machregisters.sml the functor *)
+(* machine register dependency is encapsulated here *)
+
+(* $Log:	_machregisters.sml,v $
+Revision 1.1  91/10/04  11:15:04  richard
+Initial revision
+
+Copyright (C) 1991 Harlequin Ltd.
+*)
+
+require "../utils/set";
+require "machtypes";
+require "machregisters";
+
+
+functor MachRegisters (
+
+  structure MachTypes	: MACHTYPES
+  structure Set		: SET
+
+) : MACHREGISTERS =
+
+  struct
+
+
+    structure Set = MachTypes.Set
+
+
+    type T = MachTypes.Sparc_Reg
+
+    val gcs = MachTypes.gc_registers
+    val non_gcs = MachTypes.non_gc_registers
+    val fps = MachTypes.fp_registers
+
+    val fn_arg = MachTypes.fn_arg
+    val cl_arg = MachTypes.cl_arg
+    val fp = MachTypes.fp
+    val sp = MachTypes.sp
+    val lr = MachTypes.lr
+    val handler = MachTypes.handler
+    val global = MachTypes.global
+    val gc1 = MachTypes.gc1
+    val gc2 = MachTypes.gc2
+
+    val after_preserve = MachTypes.after_preserve
+    val after_restore = MachTypes.after_restore
+
+  end
+@
+
+
+1.2.1.1
+log
+@Fork for bug fixing
+@
+text
+@d4 1
+a4 4
+(* $Log: _machregisters.sml,v $
+Revision 1.2  1991/11/14  10:55:31  richard
+Removed references to fp_double registers.
+
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d4 4
+a7 1
+(* $Log$
+a33 1
+    val fp_doubles = MachTypes.fp_double_registers
+@
