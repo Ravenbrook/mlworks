@@ -30,3 +30,23 @@ project.
 Ravenbrook would like to thank Xanalys, and especially Paul Miller, for
 being both willing and generous to help with the open source publishing
 of this work.
+
+Build Notes
+-----------
+
+Ubuntu Linux
+............
+
+To get started building the rts on Linux, you will need the following
+packages installed on top of a normal development environment:
+
+* libelf-dev
+* libxt-dev
+* libxpm-dev
+* libmotif-dev
+* libxp-dev
+
+If you are building on 64 bit Linux, you will also need:
+
+* ia32-libs
+* 32 bit versions of the above packages (``libelf-dev:i386``, etc).
