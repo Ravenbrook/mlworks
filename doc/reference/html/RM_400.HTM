@@ -29,7 +29,6 @@
 val hello_struct =
 &nbsp;Interface.C.Structure.loadObjectFile(&quot;hello.so&quot;, Interface.C.Structure.IMMEDIATE_LOAD);
 &gt; val hello_struct : c_structure = _
-<P></P>
 </PRE>
 <P>Once this action is complete, raw foreign code will have been loaded into MLWorks. We now want to feed data as arguments to functions in the foreign code -- in this case, the <CODE>hello</CODE> function in the C program -- and then to accept the results of the foreign computations as they are returned to ML. However, there is no means of accessing the foreign code from ML yet. </P>
 <P>To access the foreign code we must build ML entities which can access and manipulate foreign data. The FI provides a range of features to help us do so. </P>
@@ -40,7 +39,6 @@ val hello_struct =
 <PRE>
 val hello_store =	Interface.Store.store{alloc = Interface.Store.ALIGNED_4, overflow = Interface.Store.BREAK, size = 60, status = Interface.Store.RDWR_STATUS }; 
 &gt; val hello_store : store = _
-<P></P>
 </PRE>
 <P>We now have a workspace for storing data values relating to the foreign code. The parameters in the call above say that:</P>
 <UL>
@@ -53,40 +51,36 @@ val hello_store =	Interface.Store.store{alloc = Interface.Store.ALIGNED_4, overf
 <PRE>
 <A NAME=MARKER-10-740></A>val void_object = Interface.C.Value.object { ctype = Interface.C.Type.VOID_TYPE, store = hello_store };
 &gt; val void_object : c_type object = _ 
-<P></P>
+
 val str_object = Interface.C.Value.object { ctype = Interface.C.Type.STRING_TYPE{ length = 30 }, store = hello_store };
 &gt; val str_object : c_type object = _ 
-<P></P>
+
 val int_object1 = Interface.C.Value.object { ctype = Interface.C.Type.INT_TYPE, store = hello_store };
 &gt; val int_object1 : c_type object = _ 
-<P></P>
+
 val int_object2 = Interface.C.Value.object { ctype = Interface.C.Type.INT_TYPE, store = hello_store };
 &gt; val int_object2 : c_type object = _ 
-<P></P>
+
 val ptr_object = Interface.C.Value.object { ctype = Interface.C.Type.ptrType(Interface.C.Type.VOID_TYPE), store = hello_store };
 &gt; val ptr_object : c_type object = _
-<P></P>
 </PRE>
 <P>These objects are associated with particular places in the <CODE>hello_store</CODE>. However, because no values have yet been bound to these objects, read operations upon them are assumed to be invalid. Once they have been written to, they can then be read safely. The following code initializes some of these objects:</P>
 <PRE>
 Interface.C.Value.setString(str_object, &quot;What is 65 - 42? ---- Ans is &quot;);
 Interface.C.Value.setInt(int_object1, 23);
-<P></P>
 </PRE>
 <P>The following code extracts their values: </P>
 <PRE>
 Interface.C.Value.getString(str_object); 
 &gt; val it : string = &quot;What is 65 - 42? ---- Ans is &quot;
-<P></P>
+
 Interface.C.Value.getInt(int_object1); 
 &gt; val it : int = 23
-<P></P>
 </PRE>
 <P>Having set this data up, we need to use it in conjunction with the foreign code we have already loaded. To do this, we need some signature information concerning the foreign functions we want to use. This requires an empty <CODE>c_signature</CODE> object: </P>
 <PRE>
 val hello_sig = Interface.C.Signature.newSignature(); 
 &gt; val hello_sig : c_signature = _
-<P></P>
 </PRE>
 <P>Next add the following entry to the signature. The entry corresponds to the foreign function we wish to use:</P>
 <PRE>
@@ -95,20 +89,17 @@ Interface.C.Signature.defEntry(hello_sig, Interface.C.Signature.FUN_DECL { name 
 	Interface.C.Type.INT_TYPE] : Interface.C.Type.c_type list, 
 	target = Interface.C.Type.INT_TYPE }
 );
-<P></P>
 </PRE>
 <P>Note how the form of the signature information follows the structure of the ANSI C prototype for the function. <A NAME=MARKER-10-741></A></P>
 <P>We can now use the <CODE>c_signature</CODE> and <CODE>c_structure</CODE> information we have obtained to extract <I>callable entries</I> for the foreign functions they provide.</P>
 <PRE>
 val def_hello = Interface.C.Function.defineForeignFun(hello_struct, hello_sig); 
 &gt; val def_hello : filename -&gt; c_function = fn
-<P></P>
 </PRE>
 <P>Using this, we can obtain a <CODE>c_function</CODE> object that can then be called directly:</P>
 <PRE>
 val hello = def_hello &quot;hello&quot;; 
 &gt; val hello : c_function = _
-<P></P>
 </PRE>
 <P>The above allows foreign functions to be extracted as ML values and bound to ML identifiers in the usual way.</P>
 <P>We have almost reached the point at which we can call our foreign function. Before we do, we need to set up the first argument as a character pointer to some string data: </P>
@@ -116,14 +107,12 @@ val hello = def_hello &quot;hello&quot;;
 Interface.C.Value.setPtrType { ptr = ptr_object, data = str_object };
 Interface.C.Value.setPtrAddrOf { ptr = ptr_object, data = str_object };
 Interface.C.Value.castPtrType { ptr = ptr_object, ctype = Interface.C.Type.CHAR_TYPE };
-<P></P>
 </PRE>
 <P>First, the pointer was set to the appropriate type, <CODE>str_object</CODE>. Then it was set to point at the <CODE>str_object</CODE> data. Finally, the pointer was cast to the required argument type. In fact, because strings are such a frequent case, the FI can accept <CODE>STRING_TYPE</CODE> values directly and convert them into an appropriate <CODE>CHAR_TYPE</CODE> pointer, for both argument and result from a foreign function.</P>
 <P>Finally, we can call our foreign function <CODE>hello()</CODE> using all we have put together:</P>
 <PRE>
 Interface.C.Function.call hello ([ptr_object,int_object1], int_object2); 
 &gt; val it : unit = ()
-<P></P>
 </PRE>
 <P>The above call required two objects to give the argument values and an object to accept the result. The string</P>
 <PRE>
@@ -134,7 +123,6 @@ Interface.C.Function.call hello ([ptr_object,int_object1], int_object2);
 <PRE>
 getInt(int_object2); 
 &gt; val it : int = 65
-<P></P>
 </PRE>
 
 </DIV>

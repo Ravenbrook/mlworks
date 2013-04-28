@@ -41,12 +41,12 @@
 <P> This datatype records time-profiling information about a function. If you ask the profiler to time-profile a particular function, the results of profiling will be stored in a <CODE><A HREF="#MARKER-9-211">function_time_profile</A></CODE> value in the <CODE>time</CODE> field of the <A HREF="RM_45.HTM#MARKER-9-209"><CODE>function_profile</CODE></A> returned by the profiler. See <CODE>make_manner</CODE> for a discussion of how to ask for time profiling. </P>
 <P> The record contains the following data:</P>
 <DL>
-<P> </P><DT><CODE>found</CODE><DD> The number of times that the function was found on the stack. This will be -1 if time profiling was not requested in the profiling manner used.
-<P> </P><DT><CODE>top</CODE><DD> The number of times that the function was found on the top of the stack.
-<P> </P><DT><CODE>scans</CODE><DD> The number of scans in which the function was found on the stack at least once.
-<P> </P><DT><CODE>depth</CODE><DD> The maximum number of recursions performed in a single scan.
-<P> </P><DT><CODE>self</CODE><DD> The maximum number of self-recursions performed in a single scan. 
-<P> </P><DT><CODE>callers</CODE><DD> A list of the functions that called the profiled function, with timing data for those functions attached.
+<DT><CODE>found</CODE><DD> The number of times that the function was found on the stack. This will be -1 if time profiling was not requested in the profiling manner used.
+<DT><CODE>top</CODE><DD> The number of times that the function was found on the top of the stack.
+<DT><CODE>scans</CODE><DD> The number of scans in which the function was found on the stack at least once.
+<DT><CODE>depth</CODE><DD> The maximum number of recursions performed in a single scan.
+<DT><CODE>self</CODE><DD> The maximum number of self-recursions performed in a single scan. 
+<DT><CODE>callers</CODE><DD> A list of the functions that called the profiled function, with timing data for those functions attached.
 </DL>
 <P> Roughly, <CODE>top</CODE> indicates how much time was spent in <I>f</I> alone, and <CODE>scans</CODE> how much time was spent in <I>f</I> and all the functions it called. The average recursion of the function is roughly <CODE>found</CODE> divided by <CODE>scans</CODE>, and <CODE>depth</CODE> and <CODE>self</CODE> are indicators of the maximum recursion of the function. These are all rough indicators because of the random element introduced by time-based sampling and because optimizations such as tail-call removal have an effect on the stack. </P>
 <H3>Example</H3>

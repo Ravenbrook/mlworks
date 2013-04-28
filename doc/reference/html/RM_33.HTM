@@ -27,7 +27,6 @@ datatype options =
 &nbsp;&nbsp;Options of
 &nbsp;&nbsp;{scan : int,
 &nbsp;&nbsp;&nbsp;selector : function_id -&gt; manner}
-<P></P>
 </PRE>
 <P>The fields are:</P>
 <DL>
@@ -47,7 +46,6 @@ val write_fns_manner = make_manner {
 &nbsp;&nbsp;depth = 1,
 &nbsp;&nbsp;breakdown = [ TOTAL ] 
 };
-<P></P>
 </PRE>
 <P>See <A HREF="RM_40.HTM#MARKER-9-200"><CODE>make_manner</CODE>,  page 30</A>, for more details. A suitable selector function might be:</P>
 <PRE>
@@ -58,13 +56,11 @@ in
 &nbsp;&nbsp;fun my_selector s = if is_write_fns s then write_fns_manner 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else generic_manner
 end;
-<P></P>
 </PRE>
 <P>This selector returns <CODE>write_fns_manner</CODE> for profiling any function whose identifier has the prefix <CODE>write</CODE>. Any other function will be profiled with the manner <CODE>generic_manner</CODE>. </P>
 <P>Now you can construct a set of options to pass to <CODE>profile</CODE>. A <CODE>scan</CODE> value of 10 (100 clock ticks per second) or so is typical on both UNIX and Windows.</P>
 <PRE>
 val my_options = Options { scan = 10, selector = my_selector };<A NAME=MARKER-2-188></A>
-<P></P>
 </PRE>
 
 </DIV>

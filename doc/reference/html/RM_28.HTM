@@ -34,13 +34,13 @@
 <dl><dd><pre>with_delivery_hook <I>hook</I> <I>f</I> <I>x</I> -&gt; <I>fn</I></pre></dl>
 <H3>Arguments</H3>
 <DL>
-<P> </P><DT><I>hook</I><DD> A user-customized delivery function of type <CODE>delivery_hook</CODE>.
-<P> </P><DT><I>f</I><DD> An ML function. 
-<P> </P><DT><I>x</I><DD> Arguments to <I>f</I>.
+<DT><I>hook</I><DD> A user-customized delivery function of type <CODE>delivery_hook</CODE>.
+<DT><I>f</I><DD> An ML function. 
+<DT><I>x</I><DD> Arguments to <I>f</I>.
 </DL>
 <H3>Values</H3>
 <DL>
-<P> </P><DT><I>fn</I><DD> A function.
+<DT><I>fn</I><DD> A function.
 </DL>
 <H3>Description</H3>
 <P> Adds a user-customized delivery function, <I>hook</I>, to a list of hooks that will be executed during delivery whenever the <CODE>deliver</CODE> function is called <I>during the application</I> of <I>f</I> to <I>x</I>. Note that hooks are executed in the order they were added: if <I>h1</I> is added first, it will be executed first.</P>
@@ -50,7 +50,7 @@
 val hello : unit -&gt; unit = fn</PRE></DL>
 <DL><DD><PRE>MLWorks&gt; fun deliver_hello () =
 &nbsp;&nbsp;MLWorks.Deliver.deliver(&quot;hello&quot;, hello, true);
-val deliver_hello : unit -&gt; unit = fn</PRE></DL>
+val deliver_hello : unit -&gt; unit = fn
 MLWorks&gt; MLWorks.Deliver.with_delivery_hook (fn f =&gt; fn
 &nbsp;&nbsp;x =&gt; f x handle _ =&gt; print &quot;Delivery failed\n&quot;) &nbsp;&nbsp;deliver_hello ();
 val it : unit = ()

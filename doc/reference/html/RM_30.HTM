@@ -25,14 +25,12 @@
 <P>A code item most closely corresponds to an instance of a lambda function (a <CODE>fn</CODE>) in the source. So in:</P>
 <PRE>
 val f = fn x =&gt; x + 10;
-<P></P>
 </PRE>
 <P>The <CODE>fn x =&gt; x+10</CODE> code item is profilable: an application of <CODE>f</CODE> to an integer value could be profiled, though in practice its execution would probably be completed so quickly that the profiler would not have time to record anything about the application.</P>
 <P>Consider the functions <CODE>foo</CODE> and <CODE>bar</CODE>:</P>
 <PRE>
 fun foo x = x + 10;
 val bar = foo;
-<P></P>
 </PRE>
 <P>In calls to <CODE>foo</CODE> and <CODE>bar</CODE>, the function <CODE>foo</CODE> would be profiled (it has an implicit lambda) but <CODE>bar</CODE> would not be profiled separately from <CODE>foo</CODE> because it shares a code item with it. </P>
 <PRE>
@@ -40,7 +38,6 @@ fun frob x y = x + y + 10;
 val bar = frob;
 val baz = frob 3;
 val qux = baz;
-<P></P>
 </PRE>
 <P>In the functions defined above, there are two code items for <CODE>frob</CODE>, one which is invoked when <CODE>frob</CODE> is applied to one argument, and one which is invoked when the result is further applied to another argument: <CODE>frob</CODE> has two implicit lambdas. These will appear separately in a profile. The functions <CODE>bar</CODE>, <CODE>baz</CODE> and <CODE>qux</CODE> are really just identifiers, not new code items, so will not show up separately in the profiler.</P>
 <P>The compiler might discard code items by inlining them at their call sites. It might also generate new code items when optimizing function-calling sequences. For instance, a third code item may be generated for the function <CODE>frob</CODE> above, which is used when <CODE>frob</CODE> is called with two known arguments in machine registers.</P>

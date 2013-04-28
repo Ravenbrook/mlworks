@@ -25,14 +25,14 @@
 <P><I>Type abbreviation</I></P>
 <DL>
 <DT>Specification:<DD><P> <CODE>type store</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>An encapsulated type representing store objects.
 </DL>
 <STRONG><A NAME=MARKER-2-761></A>store_status</STRONG>
 <P><I>Datatype</I></P>
 <DL>
 <DT>Specification:<DD><P> <CODE>datatype store_status = LOCKED_STATUS | RD_STATUS | WR_STATUS | RDWR_STATUS </CODE></P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>Each store has a status, which can take the following values:
 <DT><CODE>LOCKED_STATUS</CODE><DD><P> Store data may not be accessed or modified by ML.</P>
 <DT><CODE>RD_STATUS</CODE><DD><P> Store data is read-only from ML.</P>
@@ -43,35 +43,35 @@
 <P><I>Exception</I></P>
 <DL>
 <DT>Specification:<DD><P> <CODE>exception ReadOnly</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This exception is raised if an attempt is made to write data to a store whose status forbids writing: either <CODE>LOCKED_STATUS</CODE> or <CODE>RD_STATUS</CODE>.
 </DL>
 <STRONG><A NAME=MARKER-2-763></A>WriteOnly</STRONG>
 <P><I>Exception</I></P>
 <DL>
 <DT>Specification:<DD><P> <CODE>exception WriteOnly</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This exception is raised if an attempt is made to read data from a store whose status forbids reading: either <CODE>LOCKED_STATUS</CODE> or <CODE>WR_STATUS</CODE>.
 </DL>
 <STRONG><A NAME=MARKER-2-764></A>storeStatus</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT>Signature:<DD><P> <CODE>val storeStatus : store -&gt; store_status</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>Function for inspecting the status of a store object. 
 </DL>
 <STRONG><A NAME=MARKER-9-765></A>setStoreStatus</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-766></A>Signature:<DD><P> <CODE>val setStoreStatus : <BR>&nbsp;&nbsp;&nbsp;&nbsp;(store * store_status) -&gt; unit</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>Function for setting the status of a store object.
 </DL>
 <STRONG>alloc_policy</STRONG>
 <P><I>Datatype</I></P>
 <DL>
 <DT><A NAME=MARKER-2-767></A>Specification:<DD><P> <CODE>datatype alloc_policy = <BR>&nbsp;&nbsp;&nbsp;&nbsp;ORIGIN | SUCC | ALIGNED_4 | ALIGNED_8</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>A store object is created just like any other ML value (except that it is static, that is, the garbage collector may not relocate it) and given some memory for its representation. 
 <DT><DD>However, a store is involved in managing a number of <CODE>obj</CODE> objects associated with its workspace area. The <CODE>alloc_policy</CODE> datatype is used to specify the manner in which space is given to these <CODE>obj</CODE> objects from within the store's workspace:
 <DT><CODE>ORIGIN</CODE><DD><P> Newly created objects are initially located at the origin. Once created, such objects may be moved around with their host store by using relocation operations. In this way, you have control of the arrangement of objects within the store. </P>
@@ -85,7 +85,7 @@
 <P><I>Datatype</I></P>
 <DL>
 <DT><A NAME=MARKER-2-768></A>Specification:<DD><P> <CODE>datatype overflow_policy = <BR>&nbsp;&nbsp;&nbsp;&nbsp;BREAK | EXTEND | RECYCLE </CODE></P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>Each store object in effect manages a piece of workspace memory on ML's behalf, and objects are associated with parts of this workspace. A store is said to have <I>overflowed</I> when an attempt is made to use more space than is presently available in the associated workspace. When overflow occurs, an overflow policy is enacted. The <CODE>overflow_policy</CODE> datatype provides a number of possibilities when overflow occurs:
 <DT><CODE>BREAK</CODE><DD><P> The exception <CODE>ExpandStore</CODE> is raised upon an attempt to expand the store (possibly made with the <CODE>expand</CODE> function, described on page <A HREF="#MARKER-9-777">236</A>). A store with this overflow policy is effectively fixed in size because it cannot be expanded.</P>
 <DT><CODE>EXTEND</CODE> <DD><P> The store automatically expands, by amount determined by an internal rule, to accommodate further allocation requests. This expansion is obviously subject to system limits on the amount of memory that a process can have mapped at a time. </P>
@@ -99,7 +99,7 @@
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-770></A>Signature:<DD><P> <CODE>val store : <BR>&nbsp;&nbsp;&nbsp;&nbsp;{ alloc : alloc_policy, <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;overflow : overflow_policy, <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status : store_status, <BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;size : int <BR>&nbsp;&nbsp;&nbsp;&nbsp;} -&gt; store</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function generates fresh stores. The initial size, allocation policy, overflow policy, and initial store status can be supplied. 
 <DT><DD>The <CODE>store_status</CODE> may be modified using the <CODE>setStoreStatus</CODE> function (see page <A HREF="#MARKER-9-765">232</A>), and the store's <CODE>size</CODE> may be explicitly increased (when possible) using the <CODE>expand</CODE> function (see page <A HREF="#MARKER-9-777">236</A>). The other store attributes cannot be modified dynamically.
 </DL>
@@ -107,49 +107,49 @@
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-771></A>Signature:<DD><P> <CODE>val storeSize : store -&gt; int</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function returns the current size of the store.
 </DL>
 <STRONG>storeAlloc</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-772></A>Signature:<DD><P> <CODE>val storeAlloc : store -&gt; alloc_policy</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function returns the allocation policy for the store.
 </DL>
 <STRONG>storeOverflow</STRONG>
 <P><I>Function </I></P>
 <DL>
 <DT><A NAME=MARKER-2-773></A>Signature:<DD><P> <CODE>val storeOverflow : store -&gt; overflow_policy</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function returns the overflow policy for the store.
 </DL>
 <STRONG>isStandardStore</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-774></A>Signature:<DD><P> <CODE>val isStandardStore : store -&gt; bool</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This predicate determines if the store is considered to be standard. A store is <I>standard</I> when the allocation policy is not <CODE>ORIGIN</CODE> or if the overflow policy is not <CODE>RECYCLE</CODE>.
 </DL>
 <STRONG>isEphemeralStore</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-775></A>Signature:<DD><P> <CODE>val isEphemeralStore : store -&gt; bool</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This predicate determines if the store is considered to be ephemeral. A store is <I>ephemeral</I> when the allocation policy is not <CODE>ORIGIN</CODE> and the overflow policy is <CODE>RECYCLE</CODE>.
 </DL>
 <STRONG>ExpandStore</STRONG>
 <P><I>Exception</I></P>
 <DL>
 <DT><A NAME=MARKER-2-776></A>Specification:<DD><P> <CODE>exception ExpandStore</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This exception is raised when an attempt to expand a store cannot be met. 
 </DL>
 <STRONG><A NAME=MARKER-9-777></A>expand</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-778></A>Signature:<DD><P> <CODE>val expand : (store * int) -&gt; unit</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function expands a store by at least the specified size (given in bytes), or fails with exception <CODE>ExpandStore</CODE>.<A NAME=MARKER-2-779></A>
 </DL>
 

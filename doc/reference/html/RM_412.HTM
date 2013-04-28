@@ -26,7 +26,7 @@
 <P><I>Type abbreviation</I></P>
 <DL>
 <DT><A NAME=MARKER-2-828></A>Specification:<DD><P> <CODE>type c_structure</CODE> </P>
-<DT>Description:<DD><P> </P>
+<DT>Description:<DD>
 <DT><DD>Objects of type <CODE>c_structure</CODE> are containers of foreign code. Each <CODE>c_structure</CODE> object is created as a result of dynamically linking foreign code from a file. 
 <DT><DD>No attempt is made at present to cache this code when images are saved, and so it would have to be restored when an image is restarted. Fortunately, this is made trivial by using the tools provided via the <CODE>Aliens</CODE> structure. See <A HREF="RM_408.HTM#MARKER-9-799">"The Aliens structure" on page 241</A>.
 </DL>
@@ -34,7 +34,7 @@
 <P><I>Datatype</I></P>
 <DL>
 <DT><A NAME=MARKER-2-829></A>Specification:<DD><P> <CODE>datatype load_mode = IMMEDIATE_LOAD | DEFERRED_LOAD </CODE></P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>When foreign code is loaded, the dynamic linking of that code may occur immediately (at load time) or later (at call time). These options are reflected here by:
 <DT><CODE>IMMEDIATE_LOAD</CODE><DD><P> Link foreign code immediately.</P>
 <DT><CODE>DEFERRED_LOAD</CODE><DD><P> Link foreign code at first call to the library.</P>
@@ -43,35 +43,35 @@
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-830></A>Signature:<DD><P> <CODE>val loadObjectFile : filename * load_mode -&gt; c_structure</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function generates a <CODE>c_structure</CODE> by dynamically linking foreign code associated with the specified file, in accordance with the given <CODE>load_mode</CODE>.
 </DL>
 <STRONG>fileInfo</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-831></A>Signature:<DD><P> <CODE>val fileInfo : c_structure -&gt; (filename * load_mode)</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function obtains both the filename and the <CODE>load_mode</CODE> used to create the <CODE>c_structure</CODE>.
 </DL>
 <STRONG>filesLoaded</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-832></A>Signature:<DD><P> <CODE>val filesLoaded : unit -&gt; filename list</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This yields a list of all foreign code files loaded so far.
 </DL>
 <STRONG>symbols</STRONG>
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-833></A>Signature:<DD><P> <CODE>val symbols : c_structure -&gt; name list</CODE> </P>
-<DT>Description: <DD><P></P>
+<DT>Description: <DD>
 <DT><DD>Extracts symbol table information concerning the foreign code contained within a given <CODE>c_structure</CODE>. This info might indicate the name of the object, what kind of object it is, and even a relocatable address associated with the code.
 </DL>
 <STRONG>value_type</STRONG>
 <P><I>Datatype</I></P>
 <DL>
 <DT><A NAME=MARKER-2-834></A>Specification:<DD><P> <CODE>datatype value_type = CODE_VALUE | VAR_VALUE | UNKNOWN_VALUE </CODE></P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This datatype provides a coarse classification of foreign code objects.
 <DT><CODE>CODE_VALUE</CODE><DD><P> Object appears to be functional code of some description.</P>
 <DT><CODE>VAR_VALUE</CODE><DD><P> Object appears to be a (visible) variable containing foreign data.</P>
@@ -81,7 +81,7 @@
 <P><I>Function</I></P>
 <DL>
 <DT><A NAME=MARKER-2-835></A>Signature:<DD><P> <CODE>val symbolInfo : c_structure * name -&gt; value_type</CODE> </P>
-<DT>Description:<DD><P></P>
+<DT>Description:<DD>
 <DT><DD>This function attempts to classify named foreign code objects according to the scheme given in <CODE>value_type</CODE>, above. <A NAME=MARKER-10-836></A> <A NAME=MARKER-2-837></A>
 </DL>
 
