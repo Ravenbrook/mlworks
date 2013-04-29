@@ -192,6 +192,7 @@ int os_get_rounding_mode (void)
     return 1;
   default:
     assert(0);
+    return -1; /* suppress warning */
   }
 }
 

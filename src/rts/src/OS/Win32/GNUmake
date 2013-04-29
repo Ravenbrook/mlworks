@@ -85,6 +85,8 @@ GENFILES      := $(GENFILES) $(ARCH)/$(OS)/keys.sml $(ARCH)/$(OS)/statuses.sml
 
 VCCOPTS = -nologo -Gd -W3 -D_CRT_SECURE_NO_WARNINGS
 
+OBJ := obj
+
 # -nologo suppresses copyright message
 #
 # -Gd is __cdecl calling convention
@@ -133,10 +135,10 @@ foo:	all
 $(proj).res: $(proj).rc 
 	$(rc) $(rcvars) -r -isrc -isrc/arch/I386 -fo $(proj).res $(cvars) $(proj).rc
 
-$(proj).rbj:	$(proj).res $(proj).rc $(proj).ico $(proj).bmp
-	cvtres /MACHINE:X86 /OUT:$(proj).rbj $(proj).res
+$(proj)-res.$(OBJ):	$(proj).res $(proj).rc $(proj).ico $(proj).bmp
+	cvtres /NOLOGO /MACHINE:X86 /OUT:$(proj)-res.$(OBJ) $(proj).res
 
-$(proj): $(proj).res $(proj).def $(proj).rbj
+$(proj): $(proj).res $(proj).def $(proj)-res.$(OBJ)
 
 # Use MSVC++ for compiling and linking:
 
@@ -152,7 +154,7 @@ LINKFLAGSDEBUG  = $(CFLAGSDEBUG) -Fe
 # directive
 
 LINKENDFLAGS      = /link
-LINKENDFLAGSDEBUG = /link /DEBUG /PDB:none
+LINKENDFLAGSDEBUG = /link /DEBUG
 
 # We also use GCC, to generate dependencies and to assemble .S files
 # We don't need any warnings or optimization for this....
@@ -203,7 +205,7 @@ gen/$(ARCH)/$(OS)/os_errors.c: awk/win32_os_errors_c.awk awk/win32_c_errors_c.aw
 	$(AWK) -f awk/win32_c_errors_c.awk < src/OS/Win32/errno.h > $@
 	$(AWK) -f awk/win32_os_errors_c.awk < src/OS/Win32/winerror.h >> $@
 
-$(TARGETDIR)/make_keys:	obj/$(ARCH)/$(OS)/make_keys.o
+$(TARGETDIR)/make_keys:	obj/$(ARCH)/$(OS)/make_keys.$(OBJ)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console
@@ -212,7 +214,7 @@ gen/$(ARCH)/$(OS)/keys.sml:	$(TARGETDIR)/make_keys
 	@echo 'MAKE: $@'
 	$< > $@
 
-$(TARGETDIR)/make_statuses:	obj/$(ARCH)/$(OS)/make_statuses.o
+$(TARGETDIR)/make_statuses:	obj/$(ARCH)/$(OS)/make_statuses.$(OBJ)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console

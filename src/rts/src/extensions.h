@@ -54,11 +54,16 @@
 #define extensions_h
 
 
-#ifdef __GNUC__
+#if defined(__GNUC__)
 #  define inline	__inline__
 #  define nonreturning(return_type,function_name,args) \
 	return_type function_name args __attribute__ ((noreturn))
 #  define data_aligned(x,alignment) x __attribute__ ((aligned (alignment)))
+#elif defined(_MSC_VER)
+#  define inline __inline
+#  define nonreturning(return_type,function_name,args) \
+  __declspec(noreturn) return_type function_name args
+#  define data_aligned(x,alignment) x
 #else
 #  define inline
 #  define nonreturning(return_type, function_name,args) \
