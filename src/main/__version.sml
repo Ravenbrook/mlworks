@@ -140,10 +140,7 @@ structure Version_ : VERSION =
 
     datatype edition = ENTERPRISE | PERSONAL | PROFESSIONAL
 
-    val env = MLWorks.Internal.Runtime.environment
-    val get_edition : unit -> edition = env "license get edition"
-
-    fun edition () = get_edition () 
+    fun edition () = PROFESSIONAL
 
     fun current () = {major = 2, 
                       minor = 1, 
