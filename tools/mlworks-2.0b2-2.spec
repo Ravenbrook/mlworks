@@ -85,43 +85,6 @@ rm -rf $RPM_BUILD_DIR/mlworks-2.0b2/
 
 cd $RPM_INSTALL_PREFIX &&
 
-# Show legal agreement 
-
-if [ -z "$PAGER" ] || [ "`type $PAGER`" = "$PAGER not found" ] ; then
-  if [ "`type more`" != "more not found" ] ; then
-    paging="more"
-  else
-    paging=cat
-  fi
-else
-  paging="$PAGER"
-fi
-
-echo "Please read the following license agreement: "
-
-( cat license.txt | $paging; )
-
-echo "Do you accept all the terms of the preceding license agreement? (yes/no)"
-
-accept_license=
-while [ -z "$accept_license" ]; do
-  accept_license=`read foo < /dev/tty; echo $foo`
-  lcanswer=`echo "${accept_license}" | tr '[A-Z]' '[a-z]'`
-  case "$lcanswer" in
-    yes)
-      ;;
-    no)
-      echo "License not accepted.  MLWorks not installed."
-      exit 1
-      ;;
-    *)
-      echo " "
-      echo "Please enter \"yes\" or \"no\"."
-      accept_license=
-      ;;
-  esac
-done
-
 # Create location-specific scripts and symbolic links now that we know 
 # where we are installing
 MLWORKSDIR=$RPM_INSTALL_PREFIX
@@ -253,12 +216,6 @@ do
   sed -e "$subst" < $f > $dest
   $chmod_non_exec $dest 
 done
-
-# licensing
-
-echo "Enter license information."
-echo "To install MLWorks Personal Edition, leave both fields blank."
-$BINDIR/mlworks_license
 
 echo "Installed MLWorks 2.0b2 for Linux in " $RPM_INSTALL_PREFIX
 

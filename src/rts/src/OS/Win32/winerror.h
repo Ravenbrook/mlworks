@@ -4128,17 +4128,6 @@
 //
 #define ERROR_NO_USER_SESSION_KEY        1394L
 
-//
-// MessageId: ERROR_LICENSE_QUOTA_EXCEEDED
-//
-// MessageText:
-//
-//  The service being accessed is licensed for a particular number of
-//  connections. No more connections can be made to the service at this time
-//  because there are already as many connections as the service can accept.
-//
-#define ERROR_LICENSE_QUOTA_EXCEEDED     1395L
-
 // End of security error codes
 
 

@@ -89,7 +89,6 @@ require "../system/__os";
 require "../system/__mlworks_exit";
 require "../basis/__list";
 require "../main/__version";
-require "../main/__license";
 require "../main/__user_options";
 require "../main/__preferences";
 require "../main/__mlworks_io";
@@ -110,7 +109,6 @@ structure SaveImage_ =
     structure Info = Info_
     structure Exit = MLWorksExit
     structure Version = Version_
-    structure License = License_
     structure UserOptions = UserOptions_
     structure Preferences = Preferences_
     structure List = List

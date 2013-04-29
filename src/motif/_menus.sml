@@ -495,105 +495,6 @@ functor Menus (structure Xm : XM
 	 set_focus = fn n => (#2 (Lists.nth (n, res_list))) ()} (* should be changed to List.nth repercussions? *)
       end
 
-    val personalAdRef = ref NONE
-    val licensingRef = ref NONE
-
-    fun mkPersonalAd parent = 
-      let
-	val advertDialog =
-	  Xm.Widget.createPopupShell
-	    ("advertDialog",
-             Xm.Widget.DIALOG_SHELL,
-             parent,
-             [(Xm.TITLE, Xm.STRING "About MLWorks Professional Edition"),
-	      (Xm.DELETE_RESPONSE, Xm.DELETE_RESPONSE_VALUE Xm.DO_NOTHING),
-	      (Xm.ALLOW_SHELL_RESIZE, Xm.BOOL false)])
-
-	val mainWindow =
-          Xm.Widget.create ("mainform", Xm.Widget.FORM, advertDialog, [])
-
-	val cast = MLWorks.Internal.Value.cast
-	val read_pixmap : Widget * string -> Xm.drawable = env "x read pixmap file"
-
-	val runtime = 
-	  let val typed_name = CommandLine.name()
-	  in
-	    if OS.Path.isRelative(typed_name) then
-	      OS.Path.concat [OS.FileSys.getDir(), typed_name]
-	    else
-	      typed_name
-	  end
-	val start_dir = OS.Path.dir (OS.Path.mkCanonical runtime)
-
-	val file = OS.Path.concat [start_dir, "splash_advert.xpm"]
-	val p = read_pixmap (mainWindow, file)
-
-	val pixmap_ok = (p <> (cast 0))
-
-	val bitmap_label = 
-	  Xm.Widget.createManaged ("advertLabel", Xm.Widget.LABEL_GADGET, mainWindow, [])
-
-	fun close _ = 
-	  (personalAdRef := NONE;
-	   Xm.Widget.destroy advertDialog)
-
-	val closeButton = 
-	  Xm.Widget.createManaged ("personalAdExit", Xm.Widget.ROW_COLUMN, mainWindow, [])
-      in
-	if (pixmap_ok) then 
-	  (Xm.Widget.valuesSet (bitmap_label, 
-				[(Xm.LABEL_TYPE, Xm.LABEL_TYPE_VALUE Xm.PIXMAP_LABEL),
-				 (Xm.LABEL_PIXMAP, Xm.PIXMAP p)]);
-	   Xm.Widget.manage mainWindow)
-	else ();
-	ignore (make_buttons (closeButton, [PUSH ("   Close   ", close, fn _ => true)]));
-	personalAdRef := SOME advertDialog;
-	advertDialog
-      end
-
-    fun mkLicensingDialog parent =
-      let 
-	val licensingDialog =
-	  Xm.Widget.createPopupShell
-	    ("licensingInfo",
-             Xm.Widget.DIALOG_SHELL,
-             parent,
-             [(Xm.TITLE, Xm.STRING "MLWorks licensing information"),
-	      (Xm.DELETE_RESPONSE, Xm.DELETE_RESPONSE_VALUE Xm.DO_NOTHING),
-	      (Xm.ALLOW_SHELL_RESIZE, Xm.BOOL false)])
-
-	val mainWindow =
-          Xm.Widget.create ("mainform", Xm.Widget.FORM, licensingDialog, [])
-
-        val licLabel1 =
-          Xm.Widget.createManaged ("licLabel1", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel2 =
-          Xm.Widget.createManaged ("licLabel2", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel3 =
-          Xm.Widget.createManaged ("licLabel3", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel4 =
-          Xm.Widget.createManaged ("licLabel4", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel5 =
-          Xm.Widget.createManaged ("licLabel5", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel6 =
-          Xm.Widget.createManaged ("licLabel6", Xm.Widget.LABEL_GADGET, mainWindow, [])
-        val licLabel7 =
-          Xm.Widget.createManaged ("licLabel7", Xm.Widget.LABEL_GADGET, mainWindow, [])
-
-	val closeButton = 
-	  Xm.Widget.createManaged ("licensingExit", Xm.Widget.ROW_COLUMN, mainWindow, [])
-
-	fun close _ = 
-	  (licensingRef := NONE;
-	   Xm.Widget.destroy licensingDialog)
-      in
-	ignore (make_buttons (closeButton, [PUSH ("   Close   ", close, fn _ => true)]));
-	licensingRef := SOME licensingDialog;
-	Xm.Widget.manage mainWindow;
-	licensingDialog
-      end
-
-
     (* make_buttons and make_submenus need to be separate for Windoze *)
     fun make_submenus (menuBar, menuSpec) =
       let 
@@ -617,37 +518,15 @@ functor Menus (structure Xm : XM
 	    if (result_str <> "") then send_message(menuBar, result_str) else ()
 	  end
 
-	fun personalAd () =
-	  let
-	    val w = if isSome(!personalAdRef) then valOf(!personalAdRef)
-		    else mkPersonalAd (Xm.Widget.parent menuBar)
-	  in
-	    Xm.Widget.toFront w
-	  end
-
-	fun mlwLicensing () = 
-	  let
-	    val w = if isSome(!licensingRef) then valOf(!licensingRef)
-		    else mkLicensingDialog (Xm.Widget.parent menuBar)
-	  in
-	    Xm.Widget.toFront w
-	  end
-
 	fun aboutMLW () = send_message (menuBar, Version.versionString())
-	val isFree = Version.edition() = Version.PERSONAL
       in
 	ignore(make_buttons (menu,
 	    [PUSH ("HM_userGuide", 	  open_help_file "/guide/htm/unix",   fn _ => true),
 	     PUSH ("HM_referenceMan", 	  open_help_file "/reference/htm",    fn _ => true),
 	     PUSH ("HM_installationHelp", open_help_file "/install/htm/unix", fn _ => true),
-	     PUSH ("HM_licenseHelp", 	  open_help_file "/lsd/htm", 	      fn _ => true),
 	     PUSH ("HM_releaseNotes", 	  open_help_file "/relnotes/htm",     fn _ => true),
 	     SEPARATOR] @
-	    (if isFree then 
-	       [PUSH ("HM_personalAd", personalAd, fn _ => true)] 
-	     else []) @
-	    [PUSH ("HM_mlwLicensing", mlwLicensing, fn _ => true),
-	     PUSH ("HM_aboutMLW", aboutMLW, fn _ => true)]));
+	    [PUSH ("HM_aboutMLW", aboutMLW, fn _ => true)]));
         Xm.Widget.valuesSet (menuBar, [(Xm.MENU_HELP_WIDGET, Xm.WIDGET help_menu)]);
 	ignore(make_buttons (menuBar, menuSpec));
 	()

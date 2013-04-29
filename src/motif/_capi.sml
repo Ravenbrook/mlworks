@@ -1462,52 +1462,6 @@ struct
       popup
     end
 
-    fun license_complain parent message =
-      let
-        val continue = ref true
-        val personal = ref false
-        val gui_message = message^"\n\nYou need to reinstall your license information.\n\nClick `Continue' now to run a restricted session\nor `Exit' to exit MLWorks."
-
-        val dialog =
-          Xm.Widget.createPopupShell ("messageDialog",
-                                    Xm.Widget.DIALOG_SHELL,
-                                    parent, [])
-      val widget =
-        Xm.Widget.create
-          ("message", Xm.Widget.MESSAGE_BOX, dialog,
-           [(Xm.MESSAGE_STRING,
-             Xm.COMPOUND_STRING
-               (Xm.CompoundString.createLtoR
-                  (gui_message, Xm.CHAR_SET "")))])
-
-        val _ =
-          map
-           (fn c =>
-             Xm.Widget.unmanageChild (Xm.MessageBox.getChild(widget,c)))
-           [Xm.Child.HELP_BUTTON]
-
-        fun continueCB _ =
-          (personal := true;
-          continue := false;
-          Xm.Widget.destroy dialog)
-
-        fun exit _ =
-          (personal := false;
-          continue := false;
-          Xm.Widget.destroy parent)
-      in
-        set_label_string(Xm.MessageBox.getChild(widget, Xm.Child.OK_BUTTON), "Continue");
-        set_label_string(Xm.MessageBox.getChild(widget, Xm.Child.CANCEL_BUTTON), "Exit");
-        Xm.Callback.add (widget, Xm.Callback.OK, continueCB);
-        Xm.Callback.add (widget, Xm.Callback.CANCEL, exit);
-        Xm.Widget.manage widget;
-        to_front dialog;
-        event_loop continue;
-        (if !personal then (SOME false) else NONE)
-      end
-
-
-
   local
     val ref_show_splash = ref true
 
@@ -1598,22 +1552,7 @@ struct
 
   in
     fun show_splash_screen applicationShell = 
-      let 
-	val isFree =
-          let
-            val edition = Version.edition() 
-          in
-            edition = Version.PERSONAL 
-          end
-      in
-        if isFree
-        then
-          ( show_splash(applicationShell, "splash_free.xpm", 5, true);
-            ref_show_splash := true;
-            show_splash(applicationShell, "splash_advert.xpm", 5, false) )
-        else
           show_splash(applicationShell, "splash.xpm", 3, false) 
-      end (* fun show_splash_screen *)
   end (* local *)
 
   structure GraphicsPorts =

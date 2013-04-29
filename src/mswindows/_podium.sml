@@ -507,7 +507,6 @@ require "^.utils.__terminal";
 require "../main/user_options";
 require "../main/preferences";
 require "../main/version";
-require "../main/license";
 require "../main/proj_file";
 require "../debugger/ml_debugger";
 require "^.gui.capi";
@@ -530,7 +529,6 @@ functor Podium (
   structure Capi: CAPI
   structure UserOptions : USER_OPTIONS
   structure Preferences : PREFERENCES
-  structure License : LICENSE
   structure Version : VERSION
   structure Debugger_Window : DEBUGGERWINDOW
   structure ToolData : TOOL_DATA
@@ -910,28 +908,6 @@ struct
            Ml_Debugger.NOT_POSSIBLE)
         end
 
-      val default_to_free : unit -> unit =
-        MLWorks.Internal.Runtime.environment "license set edition"
-
-      fun license_ok () =
-	has_controlling_tty orelse
-        (
-        let
-           val license_status = 
-	      License.license (Capi.license_complain applicationShell)
-        in
-	    (case license_status of 
-                 SOME false => default_to_free ()
-               | _ => ());
-	    if SaveImage.showBanner() then 
-	      print_message (Version.versionString() ^ "\n")
-	    else ();
-           (case license_status of
-              SOME _ => true
-            | _  => false)
-        end
-        )
-
       fun mainLoop frame =
 	let
 	  val loop =
@@ -996,7 +972,6 @@ struct
  *)
       val toolbar = Menus.make_toolbar(mainWindow, 109, podium_buttons)
     in 
-      if (license_ok ()) then
         (Capi.Layout.lay_out
          (mainWindow, NONE,
           [Capi.Layout.MENUBAR menuBar] @
@@ -1021,9 +996,6 @@ struct
          MLWorks.Deliver.with_delivery_hook delivery_hook
            (Ml_Debugger.with_debugger_type debugger_type) mainLoop;
 	 ())
-      else
-	(Capi.destroy applicationShell;
-         MLWorks.Internal.StandardIO.resetIO())
     end
     handle Capi.WindowSystemError s =>
        Terminal.output("Graphics interface problem: "^s^"\n")

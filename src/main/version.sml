@@ -59,6 +59,7 @@ signature VERSION =
                   | BETA of int
                   | FULL of int
 
+    (* Since open-sourcing MLWorks, the only edition is PROFESSIONAL *)
     datatype edition = ENTERPRISE | PERSONAL | PROFESSIONAL
 
     val edition: unit -> edition

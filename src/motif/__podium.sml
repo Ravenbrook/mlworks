@@ -122,7 +122,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 require "../main/__user_options";
 require "../main/__preferences";
 require "../main/__version";
-require "../main/__license";
 require "../main/__proj_file";
 require "../winsys/__capi";
 require "../debugger/__ml_debugger";
@@ -147,7 +146,6 @@ structure Podium_ = Podium (
   structure UserOptions = UserOptions_
   structure Preferences = Preferences_
   structure Version = Version_
-  structure License = License_
   structure Debugger_Window = DebuggerWindow_
   structure ToolData = ToolData_
   structure Menus = Menus_

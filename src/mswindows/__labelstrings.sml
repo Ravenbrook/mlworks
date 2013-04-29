@@ -343,10 +343,6 @@ structure LabelStrings_ : LABELSTRINGS =
 
     val label_strings =
       [
-	(* Advert for personal edition *)
-	("personalAd", "About &Professional Edition"),
-	("mlwLicensing", "MLWorks &Licensing"),
-
 	(* Error browser *)
 	("repeatButton", "Repeat"),
 	("editSourceButton", "Edit"),

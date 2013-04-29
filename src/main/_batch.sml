@@ -493,7 +493,6 @@ require "../system/__os";
 require "../utils/mlworks_exit";
 require "encapsulate";
 require "version";
-require "license";
 require "user_options";
 require "mlworks_io";
 require "toplevel";
@@ -507,7 +506,6 @@ functor Batch (
   structure TopLevel	 : TOPLEVEL
   structure Encapsulate	 : ENCAPSULATE
   structure Version	 : VERSION
-  structure License	 : LICENSE
   structure Exit         : MLWORKS_EXIT
 
   sharing TopLevel.Options = User_Options.Options
@@ -1055,19 +1053,7 @@ functor Batch (
     end
 
     and obey (args : string list) : Exit.status =
-      (
-       let
-          val license_status = License.license License.ttyComplain
-          val default_to_free : unit -> unit =
-              MLWorks.Internal.Runtime.environment "license set edition"
-       in
-          case license_status of 
-              SOME false => default_to_free ()
-            | _  => () 
-       end;
-
-       (* we only know the edition to print after checking the license info *)
-       if not (arg_exists("no-banner", args)) then
+      (if not (arg_exists("no-banner", args)) then
 	 info [Version.versionString ()]
        else
 	 ();

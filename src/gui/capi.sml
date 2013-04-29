@@ -609,12 +609,6 @@ sig
 
   val show_splash_screen : Widget -> unit
 
-  (* Widget is the parent of the message box, the string is the message 
-   * to display, and the boolean indicates whether the user clicked
-   * retry or cancel (retry == true).
-   *)
-  val license_complain : Widget -> string -> bool option
-
   structure GraphicsPorts:
     sig
       type GraphicsPort

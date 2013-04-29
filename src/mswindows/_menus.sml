@@ -781,15 +781,6 @@ functor Menus (structure Lists : LISTS
 		WindowsGui.bringWindowToTop w
 	      end
 
-	    fun personalAd () = 
-	      mkDialog ("PERSONAL_AD", adWindow,
-		  fn w => (ignore (getBitmap (w, 2));
-			   WindowsGui.centerWindow (w, WindowsGui.getDesktopWindow());
-			   WindowsGui.addMessageHandler(w, WindowsGui.WM_PAINT, 
-				fn _ => (ignore (paintBitmap (WindowsGui.getDC w)); NONE))))
-
-	    fun mlwLicensing () = mkDialog ("MLWORKS_LICENSE", licWindow, fn w => ())
-
 	    val help_items = 
 	      let
 		val open_web_location : string -> unit = env "win32 open web location"
@@ -807,18 +798,12 @@ functor Menus (structure Lists : LISTS
 		  open_web_location (doc_path ^ "installation-notes\\html\\index.htm")
 		fun relnotes () = 
 		  open_web_location (doc_path ^ "release-notes\\html\\index.htm")
-		val aboutMLW = 
-		  if (Version.edition() = Version.PERSONAL) then
-		    [("personalAd", personalAd), ("mlwLicensing", mlwLicensing)]
-		  else [("mlwLicensing", mlwLicensing)]
 	      in
 		(map help_item 
 		  [("userGuide", guide),
 		   ("referenceMan", reference),
 		   ("installationHelp", install),
 		   ("releaseNotes", relnotes)]) @ 
-		[SEPARATOR] @
-		(map help_item aboutMLW)
 	      end
 
           in

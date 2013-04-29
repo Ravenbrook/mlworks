@@ -40,12 +40,6 @@ visit Harlequin's Web site at:
 
 REPORTING PROBLEMS
 
-To apply for your MLWorks license, please contact:
-
-        mlworks-keys@harlequin.com or mlworks-keys@harlequin.co.uk
-
-stating whether you require a license for Windows or Unix.
-
 Further information is available from Harlequin's Web site at:
 
         http://www.harlequin.com/mlworks/
@@ -283,11 +277,3 @@ MLWORKS ON LINUX".
 
 To download documentation independently form the rest of the
 distribution, see "MLWorks Versions and Upgrades" above.
-
-
-
-RUNNING MLWORKS
-
-When you run MLWorks for the first time please enter your Licence
-Name and key as shown on the covering letter.
-

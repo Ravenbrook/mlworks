@@ -143,9 +143,9 @@ chmod_non_exec=chmod 664
 chmod_read_only=chmod 444
 
 ifeq "$(NTTYPE)" "TRUE"
-TOPLEVEL = README.TXT sml_97.ps bug-template.txt winlicense.txt
+TOPLEVEL = README.TXT sml_97.ps bug-template.txt
 else
-TOPLEVEL = INSTALL.TXT README.TXT sml_97.ps bug-template.txt license.txt
+TOPLEVEL = INSTALL.TXT README.TXT sml_97.ps bug-template.txt
 endif
 
 ENV = cshenv.in emacs.in rcenv.in shenv.in
@@ -168,7 +168,6 @@ toplevel: $(TOPLEVEL)
 	$(CP) $(TOPLEVEL) $(DISTDIR)
 	$(chmod_read_only) $(TOPLEVEL:%=$(DISTDIR)/%)
 ifeq "$(NTTYPE)" "TRUE"
-	cd $(DISTDIR) && mv winlicense.txt license.txt
 else
 	cd $(DISTDIR) && mv README.TXT README
 endif

@@ -80,43 +80,6 @@ while getopts "s" opt; do
 done;
 shift `expr $OPTIND - 1`
 
-if [ $silent -eq 0 ]; then
-  if [ -z "$PAGER" ] || [ "`type $PAGER`" = "$PAGER not found" ] ; then
-    if [ "`type more`" != "more not found" ] ; then
-      page=more
-    else
-      page=cat
-    fi
-  else
-    page="$PAGER"
-  fi
-
-  $page license.txt
-
-  answer=
-  while [ -z "$answer" ] ; do
-    echo " "
-    echo "Do you accept the terms and conditions of this license agreement? (yes/no)"
-    read answer
-    ucanswer=`echo "${answer}" | tr '[a-z]' '[A-Z]'`
-    case "$ucanswer" in
-    YES)
-      ;;
-    NO)
-      echo " "
-      echo "License not accepted.  MLWorks not installed. "
-      echo " "
-      exit 1
-      ;;
-    *)
-      echo " "
-      echo "Please enter \"yes\" or \"no\"."
-      answer=
-      ;;
-    esac
-  done
-fi
-
 # MLWorks installation
 
 if [ $# -eq 1 ]; then
@@ -205,7 +168,7 @@ then
 fi
 
 # Now we always install all the packages
-packages="toplevel binaries scripts pervasives libraries images emacs X11 manuals environments examples licensing"
+packages="toplevel binaries scripts pervasives libraries images emacs X11 manuals environments examples"
 
 echo ARCH=$ARCH
 echo OS=$OS
@@ -245,10 +208,6 @@ do
         $cp bin/$ARCH/$OS/$RUNTIME $BINDIR/$RUN_NAME &&
         $ln $BINDIR/$RUN_NAME $BINDIR/mlrun &&
         $chmod_exec_read_only $BINDIR/$RUN_NAME &&
-        # copy the license validator
-        $rm $BINDIR/mlworks_license &&
-        $cp bin/$ARCH/$OS/mlworks_license $BINDIR/mlworks_license &&
-        $chmod_exec_read_only $BINDIR/mlworks_license &&  
         (
           cd bin/$ARCH/$OS &&
           for f in *.xpm
@@ -852,16 +811,6 @@ EOF
         echo "$script: Failed to install examples"
         exit 60
       };;
-
-    licensing)
-    {
-      if [ $silent -eq 0 ]; then
-         echo "Enter license information."
-         echo "To install MLWorks Personal Edition, leave both fields blank."
-	 $BINDIR/mlworks_license
-      fi
-
-    };;
 
     *)
       echo "$script: Unknown package: $package"

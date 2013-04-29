@@ -51,8 +51,6 @@ declare
 	STRING  svSystem ; //Points at windows\system[32]
 	STRING  svIcon ; // Build pathlist to icon file
 	STRING  svTemp ; // Short-lived odds and others.
-        STRING  szLicenseDlgTitle, szLicenseDlgMsg, szLicenseDlgQ; 
-        STRING  szLicenseFile;
         // Registration dialog stuff
         STRING  szLRMsg, szLRTitle, szLRField1, szLRField2;
         STRING  svLREdit1, svLREdit2;
@@ -75,11 +73,6 @@ declare
 	// Pop-up messages allowed in debug build
 	BOOL	bDebug ;
 
-        // DLL call for license validation and storage
-        NUMBER nRegResult;
-        STRING szDLL, svNRegResult;
-        BOOL bFreeEdition;
-
         // Function declarations.
         prototype SetupScreen();
         prototype CheckRequirements();
@@ -87,8 +80,6 @@ declare
         prototype CreateRegDBEntries();
 	prototype CreateMLWorksRegKey(string);
 	prototype CreateMLWorksRegValues(string);
-
-        prototype INT validate_license.validate_and_install_license(STRING,STRING);
 
 program
 
@@ -122,63 +113,6 @@ WelcomeDlg:
         Disable( BACKBUTTON );
         Welcome( "Welcome", 0 );
         Enable( BACKBUTTON );
-
-        // Ask user to confirm legal agreement
-
-LicenseAgreement:
-       szLicenseDlgTitle = "MLWorks License agreement";
-       szLicenseDlgMsg = "Please read the following license agreement.  Scroll down to see the rest of the agreement.";
-       szLicenseDlgQ = "Do you accept all the terms of the above license agreement?  If you select No, Setup will end.  To install MLWorks, you must accept this agreement.";
-
-       // get license text from distribution and put in temp dir
-       VarSave(SRCTARGETDIR);
-       TARGETDIR=SUPPORTDIR;
-       CompressGet( "data.z", "license.txt", COMP_NORMAL);
-       VarRestore(SRCTARGETDIR);
-
-       szLicenseFile = "license.txt";
-       SdLicense( szLicenseDlgTitle, szLicenseDlgMsg, szLicenseDlgQ, szLicenseFile );
-
-        // Registration
-Registration:
-
-        szLRMsg = "MLWorks Registration.\n\nEnter the license name and code supplied.  If you are installing MLWorks Personal edition you should leave the fields blank.";
-        szLRTitle = "MLWorks Registration";
-        szLRField1 = "Name";
-        szLRField2 = "Code";
-	svLREdit1 = "";
-	svLREdit2 = "";
-        nRegResult = 0;
-        bFreeEdition = FALSE;
-        
-        VarSave(SRCTARGETDIR);
-        TARGETDIR=SUPPORTDIR;
-        CompressGet( "data.z", "bin\\validate_license.DLL", COMP_NORMAL);
-        VarRestore(SRCTARGETDIR);
-	
-        szDLL = SUPPORTDIR ^ "validate_license.DLL";
-        UseDLL(szDLL);
-
-        while ((nRegResult = 0) && !bFreeEdition) 
-          nResult = SdShowDlgEdit2 ( szLRTitle, szLRMsg, szLRField1, szLRField2, svLREdit1, svLREdit2 );
-
-//         MessageBox("svLREdit1 "+svLREdit1,INFORMATION);
-//         MessageBox("svLREdit2 "+svLREdit2,INFORMATION);
-
-          if (nResult = NEXT) then
-            if ((svLREdit1 = "") && (svLREdit2 = "")) then
-               bFreeEdition = TRUE;
-//             MessageBox("Installing as FREE",INFORMATION);
-            else
-               nRegResult = validate_and_install_license(svLREdit1,svLREdit2);
-//             NumToStr(svNRegResult,nRegResult);
-//             MessageBox("Result of DLL is" + svNRegResult,INFORMATION);
-            endif;
-          endif;
-
-        endwhile;
-
-        UnUseDLL(SUPPORTDIR ^ "validate_license.DLL");
 
         // Ask user for a destination location for the installation.
 GetTargetDirectory:

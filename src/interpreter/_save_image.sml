@@ -220,7 +220,6 @@ require "../main/mlworks_io";
 require "../main/user_options";
 require "../main/preferences";
 require "../main/proj_file";
-require "../main/license";
 require "save_image";
 
 functor SaveImage
@@ -229,7 +228,6 @@ functor SaveImage
    structure Getenv : GETENV
    structure OS : OS
    structure Preferences : PREFERENCES
-   structure License : LICENSE
    structure UserOptions : USER_OPTIONS
    structure UserContext : USER_CONTEXT
    structure ShellTypes : SHELL_TYPES
@@ -638,17 +636,8 @@ struct
         val listener_args = ShellTypes.get_listener_args shell_data
       in
         if tty then
-          (let
-              val license_status = License.license License.ttyComplain
-              val default_to_free : unit -> unit =
-                 MLWorks.Internal.Runtime.environment "license set edition" 
-           in
-              case license_status of 
-                  SOME false => default_to_free ()
-                | _ => ()
-           end;
-            if showBanner() then message (Version.versionString ()) else ();
-            mk_tty_listener listener_args)
+          (if showBanner() then message (Version.versionString ()) else ();
+           mk_tty_listener listener_args)
         else
           (startGUI false shell_data;
            0  (* exit status *))

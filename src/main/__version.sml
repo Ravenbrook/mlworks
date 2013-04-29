@@ -138,12 +138,10 @@ structure Version_ : VERSION =
     (* constructors must kept consistent with those in rts/sha/mlw_mklic.h *)
     (* and in alphabetical order *)
 
+    (* Since open-sourcing MLWorks, the only edition is PROFESSIONAL *)
     datatype edition = ENTERPRISE | PERSONAL | PROFESSIONAL
 
-    val env = MLWorks.Internal.Runtime.environment
-    val get_edition : unit -> edition = env "license get edition"
-
-    fun edition () = get_edition () 
+    fun edition () = PROFESSIONAL
 
     fun current () = {major = 2, 
                       minor = 1, 
