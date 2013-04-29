@@ -1278,7 +1278,7 @@ static mlval mlw_os_io_kind(mlval arg)
 
   switch (st.st_mode & _S_IFMT) {
   case _S_IFREG:
-    return isatty(io_desc) ? mlw_os_io_kind_tty : mlw_os_io_kind_file;
+    return _isatty(io_desc) ? mlw_os_io_kind_tty : mlw_os_io_kind_file;
   case _S_IFDIR:
     return mlw_os_io_kind_dir;
   case _S_IFIFO:

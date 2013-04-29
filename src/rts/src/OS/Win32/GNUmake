@@ -83,7 +83,7 @@ MODULESSTATIC := $(MODULES)
 
 GENFILES      := $(GENFILES) $(ARCH)/$(OS)/keys.sml $(ARCH)/$(OS)/statuses.sml
 
-VCCOPTS = -nologo -Gd -W3
+VCCOPTS = -nologo -Gd -W3 -D_CRT_SECURE_NO_WARNINGS
 
 # -nologo suppresses copyright message
 #
@@ -124,7 +124,7 @@ proj=runtime
 
 GUILIBS = user32.lib gdi32.lib comdlg32.lib winspool.lib version.lib winmm.lib wsock32.lib advapi32.lib comctl32.lib shell32.lib
 
-LIBRARIES = libc.lib kernel32.lib msvcrt.lib $(GUILIBS)
+LIBRARIES = libcmt.lib kernel32.lib msvcrt.lib $(GUILIBS)
 
 foo:	all
 
@@ -134,7 +134,7 @@ $(proj).res: $(proj).rc
 	$(rc) $(rcvars) -r -isrc -isrc/arch/I386 -fo $(proj).res $(cvars) $(proj).rc
 
 $(proj).rbj:	$(proj).res $(proj).rc $(proj).ico $(proj).bmp
-	cvtres -$(CPU) $(proj).res -o $(proj).rbj
+	cvtres /MACHINE:X86 /OUT:$(proj).rbj $(proj).res
 
 $(proj): $(proj).res $(proj).def $(proj).rbj
 
@@ -151,8 +151,8 @@ LINKFLAGSDEBUG  = $(CFLAGSDEBUG) -Fe
 # These flags have to come at the end of the link line, before the subsystem:
 # directive
 
-LINKENDFLAGS      = -link
-LINKENDFLAGSDEBUG = -link -debug:full -debugtype:both -pdb:none
+LINKENDFLAGS      = /link
+LINKENDFLAGSDEBUG = /link /DEBUG /PDB:none
 
 # We also use GCC, to generate dependencies and to assemble .S files
 # We don't need any warnings or optimization for this....

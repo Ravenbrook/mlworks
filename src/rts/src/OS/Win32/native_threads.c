@@ -72,6 +72,13 @@
 
 #include <windows.h>
 
+/* This is coming up as undefined for some reason, in spite of the other
+   related symbols being fine and it being documented at
+   <http://msdn.microsoft.com/en-us/library/windows/desktop/ms687032%28v=vs.85%29.aspx>. */
+#ifndef WAIT_TIMEOUT
+#define WAIT_TIMEOUT 0x00000102L
+#endif
+
 /* abstracted the notions of setting and waiting for events, with
 their associated errors &c */
 

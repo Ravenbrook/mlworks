@@ -577,7 +577,7 @@ $(TARGETDIR)/libmlw: $(DLLOBJECTS)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 ifeq "$(NTTYPE)" "TRUE"
-	@$(LINK) /LD $(LINKFLAGS)$@ $(DLLOBJECTS) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGS) -subsystem:console
+	$(LINK) /VERBOSE:LIB /LD $(LINKFLAGS)$@ $(DLLOBJECTS) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGS) -subsystem:console
 else
 # 	for the sole benefit of Irix 5.1 OS, we have to name the shared library
 # 	"libmlw.so" rather than "bin/MIPS/Irix/libmlw.so", otherwise at
