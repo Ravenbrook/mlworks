@@ -34,6 +34,8 @@
 
 #include "license.h"
 #include "values.h"
+#include "allocator.h"
+#include "environment.h"
 
 /* These messages are for the case where we find a corrupt license at 
 the start of a session */
