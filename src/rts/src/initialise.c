@@ -194,6 +194,7 @@
 #include "threads.h"
 #include "sockets.h"
 #include "mlw_ci_init.h"
+#include "license.h"
 
 
 void initialise()
@@ -201,6 +202,7 @@ void initialise()
   image_continuation = MLUNIT;
   declare_global("image continuation", &image_continuation, 
 		 GLOBAL_DEFAULT, NULL, NULL, NULL);
+  license_init(); /* Licensing stubs */
   profile_init();
   load_init();
   pervasives_init();
