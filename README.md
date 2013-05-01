@@ -15,7 +15,8 @@ to port.  Get involved!
 of the MLWorks sources, and does not include the full version history.
 The master branch at some point be *rebased* to include the full
 history. Please work in branches to keep the number of master commits
-low and minimise disruption when this occurs.
+low and minimise disruption when this occurs.  For details, see
+<https://github.com/Ravenbrook/mlworks/wiki/History-recovery>.
 
 Please join the MLWorks discussion mailing list 
 <http://mailman.ravenbrook.com/mailman/listinfo/mlworks-discussion>.
