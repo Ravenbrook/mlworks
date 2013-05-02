@@ -1,0 +1,6015 @@
+%!PS-Adobe-3.0
+%%BoundingBox: (atend)
+%%Pages: (atend)
+%%PageOrder: (atend)
+%%DocumentFonts: (atend)
+%%Creator: Frame 5.1
+%%DocumentData: Clean7Bit
+%%EndComments
+%%BeginProlog
+%-
+%- Frame ps_prolog 5.0, for use with Frame 5.0 products
+%- This ps_prolog file is Copyright (c) 1986-1996 Adobe Systems, Incoporated.
+%- All rights reserved.  This ps_prolog file may be freely copied and 
+%- distributed in conjunction with documents created using FrameMaker, 
+%- FrameMaker/SGML FrameReader and FrameViewer as long as this 
+%- copyright notice is preserved.
+%-
+%- FrameMaker users specify the proper paper size for each print job in the
+%- "Print" dialog's "Printer Paper Size" "Width" and "Height~ fields.  If the
+%- printer that the PS file is sent to does not support the requested paper
+%- size, or if there is no paper tray of the proper size currently installed, 
+%- then the job will not be printed.  The following flag, if set to true, will
+%- cause the job to print on the default paper in such cases.
+/FMAllowPaperSizeMismatch            true def
+%-
+%- Frame products normally print colors as their true color on a color printer
+%- or as shades of gray, based on luminance, on a black-and white printer. The
+%- following flag, if set to true, forces all non-white colors to print as pure
+%- black. This has no effect on bitmap images.
+/FMPrintAllColorsAsBlack             false def
+%-
+%- Frame products can either set their own line screens or use a printer's 
+%- default settings. Three flags below control this separately for no 
+%- separations, spot separations and process separations. If a flag
+%- is true, then the default printer settings will not be changed. If it is
+%- false, Frame products will use their own settings from a table based on
+%- the printer's resolution.
+/FMUseDefaultNoSeparationScreen      true  def
+/FMUseDefaultSpotSeparationScreen    true  def
+/FMUseDefaultProcessSeparationScreen false def
+%-
+%- For any given PostScript printer resolution, Frame products have two sets of 
+%- screen angles and frequencies for printing process separations, which are 
+%- recomended by Adobe. The following variable chooses the higher frequencies
+%- when set to true or the lower frequencies when set to false. This is only
+%- effective if the appropriate FMUseDefault...SeparationScreen flag is false.
+/FMUseHighFrequencyScreens true def
+%-
+%- The following is a set of predefined optimal frequencies and angles for various
+%- common dpi settings. This is taken from "Advances in Color Separation Using
+%- PostScript Software Technology," from Adobe Systems (3/13/89 P.N. LPS 0043)
+%- and corrolated with information which is in various PPD (4.0) files.
+%-
+%- The "dpiranges" figure is the minimum dots per inch device resolution which
+%- can support this setting. The "low" and "high" values are controlled by the
+%- setting of the FMUseHighFrequencyScreens flag above. The "TDot" flags control
+%- the use of the "Yellow Triple Dot" feature whereby the frequency id divided by
+%- three, but the dot function is "trippled" giving a block of 3x3 dots per cell.
+%-
+%- PatFreq is a compromise pattern frequency for ps Level 2 printers which is close
+%- to the ideal WYSIWYG pattern frequency of 9 repetitions/inch but does not beat
+%- (too badly) against the screen frequencies of any separations for that DPI.
+% This is computed by taking dpi/9 as the ideal pixels per repetition, and then
+% computing a tiling size in printer pixels for each of the four separations as 
+% (dpi/screenFreq)*(cos(screenAngle)+sin(screenAngle)) Actually, this is the same 
+% for Cyan and Magenta). Then, we take a "nice" LCM of the tile sizes close to
+% the desired pattern tile where the beat factor is not more than 2 or 3.
+%
+/dpiranges   [  2540    2400    1693     1270    1200     635      600      0      ] def
+/CMLowFreqs  [ 100.402  94.8683 89.2289 100.402  94.8683  66.9349  63.2456 47.4342 ] def
+/YLowFreqs   [  95.25   90.0    84.65    95.25   90.0     70.5556  66.6667 50.0    ] def
+/KLowFreqs   [  89.8026 84.8528 79.8088  89.8026 84.8528  74.8355  70.7107 53.033  ] def
+/CLowAngles  [  71.5651 71.5651 71.5651 71.5651  71.5651  71.5651  71.5651 71.5651 ] def
+/MLowAngles  [  18.4349 18.4349 18.4349 18.4349  18.4349  18.4349  18.4349 18.4349 ] def
+/YLowTDot    [  true    true    false    true    true     false    false   false   ] def
+
+/CMHighFreqs [ 133.87  126.491 133.843  108.503 102.523  100.402   94.8683 63.2456 ] def
+/YHighFreqs  [ 127.0   120.0   126.975  115.455 109.091   95.25    90.0    60.0    ] def
+/KHighFreqs  [ 119.737 113.137 119.713  128.289 121.218   89.8026  84.8528 63.6395 ] def
+/CHighAngles [  71.5651 71.5651 71.5651  70.0169 70.0169  71.5651  71.5651 71.5651 ] def
+/MHighAngles [  18.4349 18.4349 18.4349  19.9831 19.9831  18.4349  18.4349 18.4349 ] def
+/YHighTDot   [  false   false   true     false   false    true     true    false   ] def
+
+/PatFreq     [	10.5833 10.0     9.4055  10.5833 10.0	  10.5833  10.0	   9.375   ] def
+%-
+%- PostScript Level 2 printers contain an "Accurate Screens" feature which can
+%- improve process separation rendering at the expense of compute time. This 
+%- flag is ignored by PostScript Level 1 printers.
+/FMUseAcccurateScreens true def
+%-
+%- The following PostScript procedure defines the spot function that Frame
+%- products will use for process separations. You may un-comment-out one of
+%- the alternative functions below, or use your own.
+%-
+%- Dot function
+/FMSpotFunction {abs exch abs 2 copy add 1 gt 
+		{1 sub dup mul exch 1 sub dup mul add 1 sub }
+		{dup mul exch dup mul add 1 exch sub }ifelse } def
+%-
+%- Line function
+%- /FMSpotFunction { pop } def
+%-
+%- Elipse function
+%- /FMSpotFunction { dup 5 mul 8 div mul exch dup mul exch add 
+%-		sqrt 1 exch sub } def
+%-
+%-
+
+/FMversion (5.0) def % matches PS_VERSION in fmprintdriver
+
+% PostScript Level 1 = true, 2 = false
+/fMLevel1 /languagelevel where {pop languagelevel} {1} ifelse 2 lt def
+
+% Set up Color vs. Black-and-White
+/FMPColor
+	fMLevel1 {
+		false
+		/colorimage where {pop pop true} if
+	} {
+%		statusdict /processcolors known {
+%			statusdict /processcolors get exec
+%		} {1} ifelse
+%		1 gt
+		true
+	} ifelse
+def
+
+/FrameDict 400 dict def % should check this value each time changes made
+
+%
+% For NeWS we add a fake errordict, so we can psh files
+%
+systemdict /errordict known not {/errordict 10 dict def
+		errordict /rangecheck {stop} put} if
+
+%- The readline in PS 23.0 doesn't recognize cr's as nl's on AppleTalk
+FrameDict /tmprangecheck errordict /rangecheck get put % save old rangecheck
+errordict /rangecheck {FrameDict /bug true put} put % will flag bug found
+FrameDict /bug false put % flag bug not found
+mark % since we're not sure what will happen next
+%- Some PS machines read past the CR, so keep the following 3 lines together!
+currentfile 5 string readline
+00
+0000000000
+cleartomark % junk from readline and rangecheck
+errordict /rangecheck FrameDict /tmprangecheck get put % restore rangecheck
+FrameDict /bug get { % redefine readline if last one got a rangecheck
+	/readline {
+		/gstring exch def
+		/gfile exch def
+		/gindex 0 def
+		{
+			gfile read pop % get a char
+			dup 10 eq {exit} if % exit if LF
+			dup 13 eq {exit} if % exit if CR
+			gstring exch gindex exch put % store it away
+			/gindex gindex 1 add def % bump index
+		} loop
+		pop % eol character
+		gstring 0 gindex getinterval true % simulate real readline
+		} bind def
+	} if
+
+% outer-world defs
+
+/FMshowpage /showpage load def
+/FMquit /quit load def
+
+/FMFAILURE { % enter with two error strings on the stack
+	dup = flush % send a copy of the message to the console
+	FMshowpage % msg on a page by itself, so it can't be, say, black on black
+	/Helvetica findfont 12 scalefont setfont
+	72 200 moveto show
+	72 220 moveto show
+	FMshowpage % we might be in the middle of some EPS, where "showpage"
+	FMquit % and "quit" are redefined
+	} def % only used once at most, so no bind
+
+/FMVERSION {
+	FMversion ne {
+		(Adobe Frame product version does not match ps_prolog!  Check installation;)
+		(also check ~/fminit and ./fminit for old versions) FMFAILURE
+		} if
+	} def % only used at startup, so no bind
+
+/FMBADEPSF { % Call with bad operator name on stack (as a string)
+	(Adobe's PostScript Language Reference Manual, 2nd Edition, section H.2.4)
+	(says your EPS file is not valid, as it calls X              )
+	dup dup (X) search pop exch pop exch pop length % parmstr errstr errstr indx
+	5 -1 roll % errstr errstr index parmstr
+	putinterval % errstr
+	FMFAILURE
+	} def
+
+% standard concatprocs routine
+/fmConcatProcs
+	{
+	/proc2 exch cvlit def/proc1 exch cvlit def/newproc proc1 length proc2 length add array def
+	newproc 0 proc1 putinterval newproc proc1 length proc2 putinterval newproc cvx
+}def
+
+% Put all local variables here in alphabetical order.
+FrameDict begin [
+	/ALDsave
+	/FMdicttop
+	/FMoptop
+	/FMpointsize
+	/FMsaveobject
+	/b
+	/bitmapsave
+	/blut
+	/bpside
+	/bs
+	/bstring
+	/bwidth
+	/c
+	/cf
+	/cs
+	/cynu
+	/depth
+	/edown
+	/fh
+	/fillvals
+	/fw
+	/fx
+	/fy
+	/g
+	/gfile
+	/gindex
+	/grnt
+	/gryt
+	/gstring
+	/height
+	/hh
+	/i
+	/im
+	/indx
+	/is
+	/k
+	/kk
+	/landscape
+	/lb
+	/len
+	/llx
+	/lly
+	/m
+	/magu
+	/manualfeed
+	/n
+	/offbits
+	/onbits
+	/organgle
+	/orgbangle
+	/orgbfreq
+	/orgbproc
+	/orgbxfer
+	/orgfreq
+	/orggangle
+	/orggfreq
+	/orggproc
+	/orggxfer
+	/orgmatrix
+	/orgproc
+	/orgrangle
+	/orgrfreq
+	/orgrproc
+	/orgrxfer
+	/orgxfer
+	/pagesave
+	/paperheight
+	/papersizedict
+	/paperwidth
+	/pos
+	/pwid
+	/r
+	/rad
+	/redt
+	/sl
+	/str
+	/tran
+	/u
+	/urx
+	/ury
+	/val
+	/width
+	/width
+	/ws
+	/ww
+	/x
+	/x1
+	/x2
+	/xindex
+	/xpoint
+	/xscale
+	/xx
+	/y
+	/y1
+	/y2
+	/yelu
+	/yindex
+	/ypoint
+	/yscale
+	/yy
+] { 0 def } forall
+
+% Start of PDF/Acrobat support
+
+% Bind def
+/FmBD {bind def} bind def
+
+systemdict /pdfmark known {
+	/fMAcrobat true def
+
+	% FmPD is a conditional PDFMark
+	/FmPD /pdfmark load def
+	
+	% FmPT is a show text operator which only show up when distiller is active
+	/FmPT /show load def
+	
+	% FmPD2 and FmPA are Acrobat 2.0-specific
+	currentdistillerparams /CoreDistVersion get 2000 ge {
+	
+		% FmPD2 is like FmPD but for Acrobat 2.0-specific PDF
+		/FmPD2 /pdfmark load def
+		
+		% x y/name FmPA
+		% 	is equivalent to
+		% [/Dest/name/View[/FitH x y FmDC exch pop]/DEST FmPD
+		% It is a shortcut for pagragraph Uinique ID designators whic occurr commonly.
+		/FmPA { mark exch /Dest exch 5 3 roll 
+				/View [ /XYZ null 6 -2 roll FmDC exch pop null] /DEST FmPD 
+		}FmBD
+	} {
+		% These are No-Ops for Distiller 1.0
+		/FmPD2 /cleartomark load def
+		/FmPA {pop pop pop}FmBD
+	} ifelse
+} {
+	% these are the No-Ops for regular PostScript
+	/fMAcrobat false def
+	/FmPD /cleartomark load def
+	/FmPD2 /cleartomark load def
+	/FmPT /pop load def
+	/FmPA {pop pop pop}FmBD
+} ifelse
+
+% This convert a set of X Y coordinates from the current user space to the default
+% PostScript coordinates needed by some pdfmark variants. We also convert to 
+% integer because the distiller doesn't always like floats!
+/FmDC {
+	transform fMDefaultMatrix itransform cvi exch cvi exch
+}FmBD
+
+% This converts four numbers into a bounding box making sure the first two are maller than the last two
+/FmBx {
+	dup 3 index lt {3 1 roll exch} if 
+	1 index 4 index lt {4 -1 roll 3 1 roll exch 4 1 roll} if
+}FmBD
+
+% End of PDF/Acrobat support
+
+%
+% Color separation code
+%
+
+% Constants.
+
+/FMnone 0 def
+/FMcyan 1 def
+/FMmagenta 2 def
+/FMyellow 3 def
+/FMblack 4 def
+/FMcustom 5 def
+
+/fMNegative false def % we are inverting the page
+
+% Variables.
+
+/FrameSepIs FMnone def % separation we are printing
+% If FrameSepIs is FMcustom, this is the custom color
+/FrameSepBlack 0 def
+/FrameSepYellow 0 def
+/FrameSepMagenta 0 def
+/FrameSepCyan 0 def
+/FrameSepRed 1 def
+/FrameSepGreen 1 def
+/FrameSepBlue 1 def
+/FrameCurGray 1 def
+/FrameCurPat null def
+
+/FrameCurColors [ 0 0 0 1 0 0 0 ] def % c m y k r g b
+
+% Utility routines
+
+/FrameColorEpsilon .001 def	% epsilon by which values can differ and sill be equal
+/eqepsilon {		% v1 v2 eqeps bool
+	sub dup 0 lt {neg} if
+	FrameColorEpsilon le
+} bind def
+
+% are the cmyk and cmykrgb arrays on the stack the same color?
+/FrameCmpColorsCMYK { % [ c1 m1 y1 k1 ] [ c2 m2 y2 k2 r2 g2 b2] -> bool
+	2 copy 0 get exch 0 get eqepsilon {
+		2 copy 1 get exch 1 get eqepsilon {
+			2 copy 2 get exch 2 get eqepsilon {
+				3 get exch 3 get eqepsilon
+			} {pop pop false} ifelse
+		}{pop pop false} ifelse
+	} {pop pop false} ifelse
+} bind def
+% are the rgb and cmykrgb arrays on the stack the same color?
+/FrameCmpColorsRGB { % [ r1 g1 b1 ] [ c2 m2 y2 k2 r2 g2 b2] -> bool
+	2 copy 4 get exch 0 get eqepsilon {
+		2 copy 5 get exch 1 get eqepsilon {
+			6 get exch 2 get eqepsilon
+		}{pop pop false} ifelse
+	} {pop pop false} ifelse
+} bind def
+
+% convert r g b to c m y k
+/RGBtoCMYK { % r g b
+	1 exch sub % r g y
+	3 1 roll % y r g
+	1 exch sub % y r m
+	3 1 roll % m y r
+	1 exch sub % m y c
+	3 1 roll % c m y
+	3 copy % c m y c m y
+	2 copy % c m y c m y m y
+	le { pop } { exch pop } ifelse % c m y c min(m,y)
+	2 copy % c m y c min(m,y) c min(m,y)
+	le { pop } { exch pop } ifelse % c m y min(c, min(m,y))
+	dup dup dup % c m y k k k k
+	6 1 roll % c k m y k k k
+	4 1 roll % c k m k y k k
+	7 1 roll % k c k m k y k
+	sub % k c k m k y
+	6 1 roll % y k c k m k
+	sub % y k c k m
+	5 1 roll % m y k c k
+	sub % m y k c
+	4 1 roll % c m y k 
+} bind def
+/CMYKtoRGB { % c m y k CMYKtoRGB r g b
+	dup dup 4 -1 roll add 						  % c m k k y+k
+	5 1 roll 3 -1 roll add 						  % y+k c k m+k
+	4 1 roll add 								  % m+k y+k c+k
+	1 exch sub dup 0 lt {pop 0} if 3 1 roll 	  % r m+k y+k
+	1 exch sub dup 0 lt {pop 0} if exch 	      % r b m+k
+	1 exch sub dup 0 lt {pop 0} if exch	  		  % r g b
+} bind def
+
+% Public routines
+
+
+% Happens at the top of each page that is a separation
+/FrameSepInit {
+	1.0 RealSetgray
+} bind def
+% Tell the separation code that this separation is for a custom color
+/FrameSetSepColor { % c m y k r g b
+	/FrameSepBlue exch def
+	/FrameSepGreen exch def
+	/FrameSepRed exch def
+	/FrameSepBlack exch def
+	/FrameSepYellow exch def
+	/FrameSepMagenta exch def
+	/FrameSepCyan exch def
+	/FrameSepIs FMcustom def
+	setCurrentScreen	
+} bind def
+% Tell the separation code that this separation is Cyan
+/FrameSetCyan {
+	/FrameSepBlue 1.0 def
+	/FrameSepGreen 1.0 def
+	/FrameSepRed 0.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 1.0 def
+	/FrameSepIs FMcyan def
+	setCurrentScreen	
+} bind def
+ 
+% Tell the separation code that this separation is Magenta
+/FrameSetMagenta {
+	/FrameSepBlue 1.0 def
+	/FrameSepGreen 0.0 def
+	/FrameSepRed 1.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 1.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMmagenta def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code that this separation is Yellow
+/FrameSetYellow {
+	/FrameSepBlue 0.0 def
+	/FrameSepGreen 1.0 def
+	/FrameSepRed 1.0 def
+	/FrameSepBlack 0.0 def
+	/FrameSepYellow 1.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMyellow def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code that this separation is Black
+/FrameSetBlack {
+	/FrameSepBlue 0.0 def
+	/FrameSepGreen 0.0 def
+	/FrameSepRed 0.0 def
+	/FrameSepBlack 1.0 def
+	/FrameSepYellow 0.0 def
+	/FrameSepMagenta 0.0 def
+	/FrameSepCyan 0.0 def
+	/FrameSepIs FMblack def
+	setCurrentScreen
+} bind def
+ 
+% Tell the separation code we are not doing a separation
+/FrameNoSep { %
+	/FrameSepIs FMnone def
+	setCurrentScreen
+} bind def
+
+% Initialize the separation code with all the custom colors we are
+% separating (not process colors)
+/FrameSetSepColors { % list of arrays of [c m y k r g b] count 
+	FrameDict begin
+	[ exch 1 add 1 roll ]
+	/FrameSepColors  % array of arrays of colors we are separating
+	exch def end
+	} bind def
+
+% is this color array in the array of custom color separations?
+/FrameColorInSepListCMYK { % [ c m y k ] -> bool
+	FrameSepColors {  % color elem-of-array
+       		exch dup 3 -1 roll % color color elem
+       		FrameCmpColorsCMYK % color bool
+       		{ pop true exit } if
+    	} forall % exits with either [color] or true
+	dup true ne {pop false} if
+	} bind def
+/FrameColorInSepListRGB { % [ r g b ] -> bool
+	FrameSepColors {  % color elem-of-array
+       		exch dup 3 -1 roll % color color elem
+       		FrameCmpColorsRGB % color bool
+       		{ pop true exit } if
+    	} forall % exits with either [color] or true
+	dup true ne {pop false} if
+	} bind def
+
+% Level 1 color operators saved and redefined
+/RealSetgray /setgray load def
+/RealSetrgbcolor /setrgbcolor load def
+/RealSethsbcolor /sethsbcolor load def
+end 
+
+% Setgray patch
+/setgray { % num
+	FrameDict begin
+	FrameSepIs FMnone eq
+		{ RealSetgray } 
+		{ % go to white unless the current sep color is black
+		FrameSepIs FMblack eq 
+			{ RealSetgray } 
+			{ FrameSepIs FMcustom eq 
+			  FrameSepRed 0 eq and
+			  FrameSepGreen 0 eq and
+			  FrameSepBlue 0 eq and {
+			  	RealSetgray
+			  } {
+				1 RealSetgray pop 
+			  } ifelse
+			} ifelse
+		} ifelse
+	end
+} bind def
+/setrgbcolor { % r g b
+	FrameDict begin
+	FrameSepIs FMnone eq
+	{  RealSetrgbcolor }
+	{
+		3 copy [ 4 1 roll ] % r g b [ r g b ]
+		FrameColorInSepListRGB
+		{
+				FrameSepBlue eq exch 
+			 	FrameSepGreen eq and exch 
+			 	FrameSepRed eq and
+			 	{ 0 } { 1 } ifelse
+		}
+		{
+			FMPColor {
+				RealSetrgbcolor
+				currentcmykcolor
+			} {
+				RGBtoCMYK
+			} ifelse
+			FrameSepIs FMblack eq
+			{1.0 exch sub 4 1 roll pop pop pop} {
+			FrameSepIs FMyellow eq
+			{pop 1.0 exch sub 3 1 roll pop pop} {
+			FrameSepIs FMmagenta eq
+			{pop pop 1.0 exch sub exch pop } {
+			FrameSepIs FMcyan eq
+			{pop pop pop 1.0 exch sub } 
+			{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+		} ifelse
+		RealSetgray
+	} 
+	ifelse
+	end
+} bind def
+/sethsbcolor {
+	FrameDict begin
+	FrameSepIs FMnone eq 
+	{ RealSethsbcolor } 
+	{
+		RealSethsbcolor % safe since we will overwrite the color state
+		currentrgbcolor  % r g b - Let PostsCript to the conversion.
+		setrgbcolor % call our version
+	} 
+	ifelse
+	end
+} bind def
+FrameDict begin
+
+/setcmykcolor where {
+	pop /RealSetcmykcolor /setcmykcolor load def
+} {
+	/RealSetcmykcolor {
+		4 1 roll
+		3 { 3 index add 0 max 1 min 1 exch sub 3 1 roll} repeat 
+		RealSetrgbcolor pop
+	} bind def
+} ifelse
+userdict /setcmykcolor { % c m y k
+		FrameDict begin
+		FrameSepIs FMnone eq
+		{ RealSetcmykcolor } 
+		{
+			4 copy [ 5 1 roll ]
+			FrameColorInSepListCMYK
+			{
+				FrameSepBlack eq exch 
+				FrameSepYellow eq and exch 
+				FrameSepMagenta eq and exch 
+				FrameSepCyan eq and 
+				{ 0 } { 1 } ifelse
+			}
+			{
+				FrameSepIs FMblack eq
+				{1.0 exch sub 4 1 roll pop pop pop} {
+				FrameSepIs FMyellow eq
+				{pop 1.0 exch sub 3 1 roll pop pop} {
+				FrameSepIs FMmagenta eq
+				{pop pop 1.0 exch sub exch pop } {
+				FrameSepIs FMcyan eq
+				{pop pop pop 1.0 exch sub } 
+				{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+			} ifelse
+			RealSetgray
+		}
+		ifelse
+		end
+	} bind put
+
+% Set up a prototype pattern for PostScript Level 2
+fMLevel1 { 
+	% set up screen functions for the patterns in PS level 1
+	% each entry contains an angle, spot function, flipped spot function,
+	% gray level and frequency multiplier.
+	/patScreenDict 7 dict dup begin
+		<0f1e3c78f0e1c387> [ 45  { pop } {exch pop} 		.5   2 sqrt] FmBD
+		<0f87c3e1f0783c1e> [ 135 { pop } {exch pop}			.5   2 sqrt] FmBD
+		<cccccccccccccccc> [ 0   { pop } dup				.5   2	   ] FmBD
+		<ffff0000ffff0000> [ 90  { pop } dup				.5   2	   ] FmBD
+		<8142241818244281> [ 45  { 2 copy lt {exch} if pop}	dup .75  2 sqrt] FmBD
+		<03060c183060c081> [ 45  { pop } {exch pop}			.875 2 sqrt] FmBD
+		<8040201008040201> [ 135 { pop } {exch pop}			.875 2 sqrt] FmBD
+	end def
+} { % prototype level 2 pattern dictionary
+	% define some PostScript procedures for known jaggy patterns.
+	/patProcDict 5 dict dup begin
+		<0f1e3c78f0e1c387> { 3 setlinewidth -1 -1 moveto 9 9 lineto stroke 
+											4 -4 moveto 12 4 lineto stroke
+											-4 4 moveto 4 12 lineto stroke} bind def
+		<0f87c3e1f0783c1e> { 3 setlinewidth -1 9 moveto 9 -1 lineto stroke 
+											-4 4 moveto 4 -4 lineto stroke
+											4 12 moveto 12 4 lineto stroke} bind def
+		<8142241818244281> { 1 setlinewidth -1 9 moveto 9 -1 lineto stroke
+											-1 -1 moveto 9 9 lineto stroke } bind def
+		<03060c183060c081> { 1 setlinewidth -1 -1 moveto 9 9 lineto stroke 
+											4 -4 moveto 12 4 lineto stroke
+											-4 4 moveto 4 12 lineto stroke} bind def
+		<8040201008040201> { 1 setlinewidth -1 9 moveto 9 -1 lineto stroke 
+											-4 4 moveto 4 -4 lineto stroke
+											4 12 moveto 12 4 lineto stroke} bind def
+	end def
+	/patDict 15 dict dup begin
+		/PatternType 1 def		% Always 1 for PS Level 2
+		/PaintType 2 def		% Uncolored pattern
+		/TilingType 3 def		% constant spacing and faster tiling
+		/BBox [ 0 0 8 8 ] def 	% bounding box
+		/XStep 8 def			% X offset
+		/YStep 8 def			% Y offset
+		/PaintProc {
+			begin
+			patProcDict bstring known {
+				patProcDict bstring get exec
+			} {
+				8 8 true [1 0 0 -1 0 8] bstring imagemask
+			} ifelse
+			end
+		} bind def
+	end def
+} ifelse
+
+%combineColor puts together the current gray value (which could also be
+%a fraction of on bits for a fill pattern and the current color and calls
+%the appropriate function
+%
+/combineColor {
+    FrameSepIs FMnone eq
+	{
+		graymode fMLevel1 or not {
+			% Level 2 pattern
+			[/Pattern [/DeviceCMYK]] setcolorspace
+			FrameCurColors 0 4 getinterval aload pop FrameCurPat setcolor
+		} {
+			FrameCurColors 3 get 1.0 ge {
+				FrameCurGray RealSetgray
+			} {
+				fMAcrobat not FMPColor graymode and and {
+					0 1 3 { 
+						FrameCurColors exch get
+						1 FrameCurGray sub mul
+					} for
+					RealSetcmykcolor
+				} {
+					4 1 6 {
+						FrameCurColors exch get
+						graymode {
+							1 exch sub 1 FrameCurGray sub mul 1 exch sub
+						} {
+							1.0 lt {FrameCurGray} {1} ifelse
+						} ifelse
+					} for
+					RealSetrgbcolor
+				} ifelse
+			} ifelse
+		} ifelse
+	} { % separation case
+		FrameCurColors 0 4 getinterval aload
+		FrameColorInSepListCMYK {
+			FrameSepBlack eq exch 
+			FrameSepYellow eq and exch 
+			FrameSepMagenta eq and exch 
+			FrameSepCyan eq and
+			FrameSepIs FMcustom eq and
+			{ FrameCurGray } { 1 } ifelse
+		} {
+			FrameSepIs FMblack eq
+			{FrameCurGray 1.0 exch sub mul 1.0 exch sub 4 1 roll pop pop pop} {
+			FrameSepIs FMyellow eq
+			{pop FrameCurGray 1.0 exch sub mul 1.0 exch sub 3 1 roll pop pop} {
+			FrameSepIs FMmagenta eq
+			{pop pop FrameCurGray 1.0 exch sub mul 1.0 exch sub exch pop } {
+			FrameSepIs FMcyan eq
+			{pop pop pop FrameCurGray 1.0 exch sub mul 1.0 exch sub } 
+			{pop pop pop pop 1} ifelse } ifelse } ifelse } ifelse 
+		} ifelse
+		graymode fMLevel1 or not {
+			% Level 2 pattern
+			[/Pattern [/DeviceGray]] setcolorspace
+			FrameCurPat setcolor
+		} { 
+			graymode not fMLevel1 and {
+				% Level 1 patterns are either all there or not there at all
+				dup 1 lt {pop FrameCurGray} if
+			} if
+			RealSetgray
+		} ifelse
+	} ifelse
+} bind def
+
+/savematrix {
+	orgmatrix currentmatrix pop
+	} bind def
+/restorematrix {
+	orgmatrix setmatrix
+	} bind def
+/fMDefaultMatrix matrix defaultmatrix def
+/fMatrix2 matrix def
+/dpi    72 0 fMDefaultMatrix dtransform
+    dup mul exch   dup mul add   sqrt def
+	
+% freq and sangle are used for ps Level 1 pattern building.
+/freq dpi dup 72 div round dup 0 eq {pop 1} if 8 mul div def
+/sangle 1 0 fMDefaultMatrix dtransform exch atan def
+	sangle fMatrix2 rotate 
+	fMDefaultMatrix fMatrix2 concatmatrix 
+	dup 0 get /sflipx exch def
+	    3 get /sflipy exch def
+
+%
+% screen index depending on dpi
+%	- screenIndex smallint
+/screenIndex {
+	0 1 dpiranges length 1 sub { dup dpiranges exch get 1 sub dpi le {exit} {pop} ifelse } for
+} bind def
+
+%
+% These routines get the standard Adobe frequencies, angles, and spot functions
+% depending on the DPI
+%
+% - getCyanScreen freq angle spotfunction
+/getCyanScreen {
+	FMUseHighFrequencyScreens { CHighAngles CMHighFreqs} {CLowAngles CMLowFreqs} ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get /FMSpotFunction load
+} bind def
+
+%
+% - getMagentaScreen freq angle spotFunction
+/getMagentaScreen {
+	FMUseHighFrequencyScreens { MHighAngles CMHighFreqs } {MLowAngles CMLowFreqs} ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get /FMSpotFunction load
+} bind def
+
+%
+% - getYellowScreen freq angle spotFunction
+% note that some of these use a "tripple dot" function at 1/3 the frequency
+/getYellowScreen {
+	FMUseHighFrequencyScreens { YHighTDot YHighFreqs} { YLowTDot YLowFreqs } ifelse
+		screenIndex dup 3 1 roll get 3 1 roll get { 3 div
+			{2 { 1 add 2 div 3 mul dup floor sub 2 mul 1 sub exch} repeat
+			FMSpotFunction } } {/FMSpotFunction load } ifelse
+			0.0 exch
+} bind def
+
+%
+% - getBlackScreen freq angle spotFunction
+/getBlackScreen  {
+	FMUseHighFrequencyScreens { KHighFreqs } { KLowFreqs } ifelse
+		screenIndex get 45.0 /FMSpotFunction load 
+} bind def
+
+%
+% - getSpotScreen freq angle spotFunction
+/getSpotScreen {
+	getBlackScreen
+} bind def
+
+%
+% - getCompositeScreen freq angle spotFunction
+/getCompositeScreen {
+	getBlackScreen
+} bind def
+
+% FmSetScreen sets the screen for either PostScript Level 1 or Level 2 and optionally
+% sets the accuratescreens flag in the latter case
+% freq angle spotfunction FMSetScreen -
+/FMSetScreen 
+	fMLevel1 { /setscreen load 
+	}{ {
+		8 dict begin
+		/HalftoneType 1 def
+		/SpotFunction exch def
+		/Angle exch def
+		/Frequency exch def
+		/AccurateScreens FMUseAcccurateScreens def
+		currentdict end sethalftone
+	} bind } ifelse
+def
+
+% This sets the default screen as was set at the beginning of the job
+% - setDefaultScreen -
+/setDefaultScreen {
+	FMPColor {
+		orgrxfer cvx orggxfer cvx orgbxfer cvx orgxfer cvx setcolortransfer
+	}
+	{
+		orgxfer cvx settransfer
+	} ifelse
+	orgfreq organgle orgproc cvx setscreen
+} bind def
+
+% This sets the current screen depending on FrameSepIs
+% - setCurrentScreen -
+/setCurrentScreen {
+	FrameSepIs FMnone eq {
+		FMUseDefaultNoSeparationScreen {
+			setDefaultScreen
+		} {
+			getCompositeScreen FMSetScreen
+		} ifelse
+	} {
+		FrameSepIs FMcustom eq {
+			FMUseDefaultSpotSeparationScreen {
+				setDefaultScreen
+			} {
+				getSpotScreen FMSetScreen
+			} ifelse
+		} {
+			FMUseDefaultProcessSeparationScreen {
+				setDefaultScreen
+			} {
+				FrameSepIs FMcyan eq {
+					getCyanScreen FMSetScreen
+				} {
+					FrameSepIs FMmagenta eq {
+						getMagentaScreen FMSetScreen
+					} {
+						FrameSepIs FMyellow eq {
+							getYellowScreen FMSetScreen
+						} {
+							getBlackScreen FMSetScreen
+						} ifelse
+					} ifelse
+				} ifelse
+			} ifelse
+		} ifelse
+	} ifelse 
+} bind def
+
+
+end
+
+% End of Color separation code
+%
+	
+/FMDOCUMENT { % xscale yscale edown negative paperwidth paperheight manfeed numcopies numfonts
+	array /FMfonts exch def % Why isn't this in FrameDict???
+	/#copies exch def
+	FrameDict begin
+	0 ne /manualfeed exch def
+	/paperheight exch def
+	/paperwidth exch def
+	0 ne /fMNegative exch def % invert page
+	0 ne /edown exch def % flip page along y axis
+	/yscale exch def
+	/xscale exch def
+
+	fMLevel1 {
+		manualfeed {setmanualfeed} if
+		/FMdicttop countdictstack 1 add def % some PS's leave junk on dict ...
+		/FMoptop count def % ...or on operand stack...
+		setpapername % This stuff may alter the transfer/screen/angle
+		manualfeed {true} {papersize} ifelse % true->more work to do
+		{manualpapersize} {false} ifelse % true->more work to do
+		{desperatepapersize} {false} ifelse % true->failed completely
+		{papersizefailure} if
+		count -1 FMoptop {pop pop} for
+		countdictstack -1 FMdicttop {pop end} for %...if tray not installed
+		}
+		{2 dict
+		 dup /PageSize [paperwidth paperheight] put
+		 manualfeed {dup /ManualFeed manualfeed put} if
+		 {setpagedevice} stopped {papersizefailure} if
+		}
+	ifelse % fMLevel1
+	
+	FMPColor {
+		currentcolorscreen
+			cvlit /orgproc exch def
+				  /organgle exch def 
+				  /orgfreq exch def
+			cvlit /orgbproc exch def
+				  /orgbangle exch def 
+				  /orgbfreq exch def
+			cvlit /orggproc exch def
+				  /orggangle exch def 
+				  /orggfreq exch def
+			cvlit /orgrproc exch def
+				  /orgrangle exch def 
+				  /orgrfreq exch def
+
+			currentcolortransfer 
+			fMNegative {
+				1 1 4 { 
+					pop { 1 exch sub } fmConcatProcs 4 1 roll
+				} for
+				4 copy
+				setcolortransfer
+			} if
+			cvlit /orgxfer exch def
+			cvlit /orgbxfer exch def
+			cvlit /orggxfer exch def
+			cvlit /orgrxfer exch def
+	} {
+		currentscreen 
+			cvlit /orgproc exch def
+				  /organgle exch def 
+				  /orgfreq exch def
+				  
+		currenttransfer 
+		fMNegative {
+			{ 1 exch sub } fmConcatProcs
+			dup settransfer
+		} if 
+		cvlit /orgxfer exch def
+	} ifelse
+
+	end % FrameDict
+} def % only used at startup, so no bind
+
+/FMBEGINPAGE { % pagewidth pageheight landscape color-arrays count
+	FrameDict begin % for the whole page...
+	/pagesave save def
+	3.86 setmiterlimit
+	/landscape exch 0 ne def
+	landscape { % check for landscape
+		90 rotate 0 exch dup /pwid exch def neg translate pop 
+	}{
+		pop /pwid exch def
+	} ifelse
+	edown { [-1 0 0 1 pwid 0] concat } if
+% paint the whole page in "white".  If the page is inverted, then
+% this will actually paint our black background
+	0 0 moveto paperwidth 0 lineto paperwidth paperheight lineto 
+	0 paperheight lineto 0 0 lineto 1 setgray fill
+	xscale yscale scale
+	/orgmatrix matrix def
+	gsave % for CLIP
+} def % only used infrequently, so no bind
+
+/FMENDPAGE {
+	grestore % for CLIP
+	pagesave restore
+	end % FrameDict
+	showpage
+	} def % only used infrequently, so no bind
+
+/FMFONTDEFINE { % fontindex nonstd_encoding fontname -- 
+	FrameDict begin
+	findfont % fontindex nonstd_encoding font
+	ReEncode % fontindex font'
+	1 index exch % fontindex fontindex font'
+	definefont % fontindex font"
+	FMfonts 3 1 roll %  FMfonts fontindex font"
+	put
+	end % FrameDict
+	} def % only used infrequently, so no bind
+
+/FMFILLS {
+	FrameDict begin dup
+	array /fillvals exch def
+	dict /patCache exch def
+	end % framedict
+	} def % Only called once, so no bind
+
+/FMFILL {
+	FrameDict begin
+	 fillvals 3 1 roll put
+	end % FrameDict
+	} def % only used infrequently, so no bind
+
+% Set things to a known, quiescent state, for when we switch to another writer
+/FMNORMALIZEGRAPHICS { 
+	newpath
+	1 setlinewidth
+	0 setlinecap
+	0 0 0 sethsbcolor
+	0 setgray % Not FMsetgray; only called outside of our environment!
+	} bind def
+
+/FMBEGINEPSF { % <theta> llx lly urx ury fw fh fx fy
+	end % FrameDict
+	/FMEPSF save def % in userdict
+	/showpage {} def % this def is in userdict
+%- See Adobe's "PostScript Language Reference Manual, 2nd Edition", page 714.
+%- "...the following operators MUST NOT be used in an EPS file:" (emphasis ours)
+	/banddevice {(banddevice) FMBADEPSF} def
+	/clear {(clear) FMBADEPSF} def
+	/cleardictstack {(cleardictstack) FMBADEPSF} def % FMBADEPSF knows this is the longest!
+	/copypage {(copypage) FMBADEPSF} def
+	/erasepage {(erasepage) FMBADEPSF} def
+	/exitserver {(exitserver) FMBADEPSF} def
+	/framedevice {(framedevice) FMBADEPSF} def
+	/grestoreall {(grestoreall) FMBADEPSF} def
+	/initclip {(initclip) FMBADEPSF} def
+	/initgraphics {(initgraphics) FMBADEPSF} def
+%	/initmatrix {(initmatrix) FMBADEPSF} def	% Aldus Freehand 4.0 epsf uses this harmlessly <Gus 4/26/95>
+	/quit {(quit) FMBADEPSF} def
+	/renderbands {(renderbands) FMBADEPSF} def
+	/setglobal {(setglobal) FMBADEPSF} def
+	/setpagedevice {(setpagedevice) FMBADEPSF} def
+	/setshared {(setshared) FMBADEPSF} def
+	/startjob {(startjob) FMBADEPSF} def
+	/lettertray {(lettertray) FMBADEPSF} def
+	/letter {(letter) FMBADEPSF} def
+	/lettersmall {(lettersmall) FMBADEPSF} def
+	/11x17tray {(11x17tray) FMBADEPSF} def
+	/11x17 {(11x17) FMBADEPSF} def
+	/ledgertray {(ledgertray) FMBADEPSF} def
+	/ledger {(ledger) FMBADEPSF} def
+	/legaltray {(legaltray) FMBADEPSF} def
+	/legal {(legal) FMBADEPSF} def
+	/statementtray {(statementtray) FMBADEPSF} def
+	/statement {(statement) FMBADEPSF} def
+	/executivetray {(executivetray) FMBADEPSF} def
+	/executive {(executive) FMBADEPSF} def
+	/a3tray {(a3tray) FMBADEPSF} def
+	/a3 {(a3) FMBADEPSF} def
+	/a4tray {(a4tray) FMBADEPSF} def
+	/a4 {(a4) FMBADEPSF} def
+	/a4small {(a4small) FMBADEPSF} def
+	/b4tray {(b4tray) FMBADEPSF} def
+	/b4 {(b4) FMBADEPSF} def
+	/b5tray {(b5tray) FMBADEPSF} def
+	/b5 {(b5) FMBADEPSF} def
+	FMNORMALIZEGRAPHICS % in case we're in a strange state
+	[/fy /fx /fh /fw /ury /urx /lly /llx] {exch def} forall % neat trick
+	fx fw 2 div add fy fh 2 div add  translate
+	rotate
+	fw 2 div neg fh 2 div neg translate
+	fw urx llx sub div fh ury lly sub div scale % then scale
+	llx neg lly neg translate % then compensate for LL offset 
+	/FMdicttop countdictstack 1 add def % high-water mark of dict stack
+	/FMoptop count def % tricky! "/FMoptop" on stack
+	} bind def
+
+/FMENDEPSF {
+	count -1 FMoptop {pop pop} for % clear EPS junk from operand stack
+	countdictstack -1 FMdicttop {pop end} for % ditto for dict stack
+	FMEPSF restore
+	FrameDict begin % for the whole page...
+	} bind def
+
+FrameDict begin % put most defs here
+
+/setmanualfeed {
+%%BeginFeature *ManualFeed True
+	 statusdict /manualfeed true put
+%%EndFeature
+	} bind def
+
+/max {2 copy lt {exch} if pop} bind def
+/min {2 copy gt {exch} if pop} bind def
+/inch {72 mul} def
+
+/pagedimen { % name width height
+	paperheight sub abs 16 lt exch % 16pt is an arbitrary slop amount
+	paperwidth sub abs 16 lt and
+	{/papername exch def} {pop} ifelse
+	} bind def
+
+/setpapername { % Already set up: paperwidth paperheight and manualfeed
+	/papersizedict 14 dict def % one for /papername, one for /unknown
+	papersizedict begin
+	/papername /unknown def % in case no match
+		/Letter 8.5 inch 11.0 inch pagedimen
+		/LetterSmall 7.68 inch 10.16 inch pagedimen
+		/Tabloid 11.0 inch 17.0 inch pagedimen
+		/Ledger 17.0 inch 11.0 inch pagedimen
+		/Legal 8.5 inch 14.0 inch pagedimen
+		/Statement 5.5 inch 8.5 inch pagedimen
+		/Executive 7.5 inch 10.0 inch pagedimen
+		/A3 11.69 inch 16.5 inch pagedimen
+		/A4 8.26 inch 11.69 inch pagedimen
+		/A4Small 7.47 inch 10.85 inch pagedimen
+		/B4 10.125 inch 14.33 inch pagedimen
+		/B5 7.16 inch 10.125 inch pagedimen
+	end
+	} bind def
+
+/papersize {
+	papersizedict begin
+		/Letter {lettertray letter} def
+		/LetterSmall {lettertray lettersmall} def
+		/Tabloid {11x17tray 11x17} def
+		/Ledger {ledgertray ledger} def
+		/Legal {legaltray legal} def
+		/Statement {statementtray statement} def
+		/Executive {executivetray executive} def
+		/A3 {a3tray a3} def
+		/A4 {a4tray a4} def
+		/A4Small {a4tray a4small} def
+		/B4 {b4tray b4} def
+		/B5 {b5tray b5} def
+		/unknown {unknown} def
+	papersizedict dup papername known {papername} {/unknown} ifelse get
+	end
+	statusdict begin stopped end % return true if more work to do
+	} bind def
+
+/manualpapersize {
+	papersizedict begin
+		/Letter {letter} def
+		/LetterSmall {lettersmall} def
+		/Tabloid {11x17} def
+		/Ledger {ledger} def
+		/Legal {legal} def
+		/Statement {statement} def
+		/Executive {executive} def
+		/A3 {a3} def
+		/A4 {a4} def
+		/A4Small {a4small} def
+		/B4 {b4} def
+		/B5 {b5} def
+		/unknown {unknown} def
+	papersizedict dup papername known {papername} {/unknown} ifelse get
+	end
+	stopped % return true if more work to do
+	} bind def
+
+/desperatepapersize {
+	statusdict /setpageparams known
+		{
+		paperwidth paperheight 0 1 
+		statusdict begin
+		{setpageparams} stopped % return true iff failed
+		end
+		} {true} ifelse % return true iff failed
+	} bind def
+
+/papersizefailure {
+	FMAllowPaperSizeMismatch not
+		{
+(The requested paper size is not available in any currently-installed tray)
+(Edit the PS file to "FMAllowPaperSizeMismatch true" to use default tray)
+		 FMFAILURE } if
+	} def
+
+%
+% Font re-encoding to include diacritics
+% 
+/DiacriticEncoding [
+
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /space /exclam /quotedbl
+/numbersign /dollar /percent /ampersand /quotesingle /parenleft
+/parenright /asterisk /plus /comma /hyphen /period /slash /zero /one
+/two /three /four /five /six /seven /eight /nine /colon /semicolon
+/less /equal /greater /question /at /A /B /C /D /E /F /G /H /I /J /K
+/L /M /N /O /P /Q /R /S /T /U /V /W /X /Y /Z /bracketleft /backslash
+/bracketright /asciicircum /underscore /grave /a /b /c /d /e /f /g /h
+/i /j /k /l /m /n /o /p /q /r /s /t /u /v /w /x /y /z /braceleft /bar
+/braceright /asciitilde /.notdef /Adieresis /Aring /Ccedilla /Eacute
+/Ntilde /Odieresis /Udieresis /aacute /agrave /acircumflex /adieresis
+/atilde /aring /ccedilla /eacute /egrave /ecircumflex /edieresis
+/iacute /igrave /icircumflex /idieresis /ntilde /oacute /ograve
+/ocircumflex /odieresis /otilde /uacute /ugrave /ucircumflex
+/udieresis /dagger /.notdef /cent /sterling /section /bullet
+/paragraph /germandbls /registered /copyright /trademark /acute
+/dieresis /.notdef /AE /Oslash /.notdef /.notdef /.notdef /.notdef
+/yen /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/ordfeminine /ordmasculine /.notdef /ae /oslash /questiondown
+/exclamdown /logicalnot /.notdef /florin /.notdef /.notdef
+/guillemotleft /guillemotright /ellipsis /.notdef /Agrave /Atilde
+/Otilde /OE /oe /endash /emdash /quotedblleft /quotedblright
+/quoteleft /quoteright /.notdef /.notdef /ydieresis /Ydieresis
+/fraction /currency /guilsinglleft /guilsinglright /fi /fl /daggerdbl
+/periodcentered /quotesinglbase /quotedblbase /perthousand
+/Acircumflex /Ecircumflex /Aacute /Edieresis /Egrave /Iacute
+/Icircumflex /Idieresis /Igrave /Oacute /Ocircumflex /.notdef /Ograve
+/Uacute /Ucircumflex /Ugrave /dotlessi /circumflex /tilde /macron
+/breve /dotaccent /ring /cedilla /hungarumlaut /ogonek /caron
+
+] def
+
+/ReEncode { % nonstd_encoding font -- reencodedfont
+	dup % nonstd_encoding font font
+	length % nonstd_encoding font dictlength
+	dict begin % nonstd_encoding font % currentdict = newdict
+	{% forall % forall is over font to be copied
+	1 index /FID ne % skip FID
+		{def} % defs go into newfontdict which is currentdict
+		{pop pop} ifelse % copy all keys including /Encoding
+	} forall % nonstd_encoding
+	0 eq {/Encoding DiacriticEncoding def} if % --
+	currentdict % push a copy of the copied font dict onto operand stack
+	end % font' % before popping it off dictionary stack
+	} bind def
+
+FMPColor 
+	% setup procs for color printing
+	{
+
+	/BEGINBITMAPCOLOR { % iw, ih, width, height, theta, x y 
+		BITMAPCOLOR} def
+	/BEGINBITMAPCOLORc { % iw, ih, width, height, theta, x y 
+		BITMAPCOLORc} def
+	/BEGINBITMAPTRUECOLOR { 
+		BITMAPTRUECOLOR } def
+	/BEGINBITMAPTRUECOLORc { 
+		BITMAPTRUECOLORc } def
+	/BEGINBITMAPCMYK { 
+		BITMAPCMYK } def
+	/BEGINBITMAPCMYKc { 
+		BITMAPCMYKc } def
+	}
+	% setup procs for B&W printing
+	{
+	/BEGINBITMAPCOLOR { % iw, ih, width, height, theta, x y 
+		BITMAPGRAY} def
+	/BEGINBITMAPCOLORc { % iw, ih, width, height, theta, x y 
+		BITMAPGRAYc} def
+	/BEGINBITMAPTRUECOLOR { 
+		BITMAPTRUEGRAY } def
+	/BEGINBITMAPTRUECOLORc { 
+		BITMAPTRUEGRAYc } def
+	/BEGINBITMAPCMYK { 
+		BITMAPCMYKGRAY } def
+	/BEGINBITMAPCMYKc { 
+		BITMAPCMYKGRAYc } def
+	}
+ifelse
+
+/K { % c m y k r g b SEPARATION
+	FMPrintAllColorsAsBlack {
+		dup 1 eq 2 index 1 eq and 3 index 1 eq and not
+			{7 {pop} repeat 0 0 0 1 0 0 0} if
+	} if 
+	FrameCurColors astore 
+	pop combineColor
+} bind def
+%
+% graymode is true if we are just doing gray fills, this way do not keep calling
+% setscreen. I don't know what the cost is on calling setscreen with defaults, but
+% this is easy to keep track of, and we know for sure we aren't wasting cycles.
+% if graymode is false and fMLevel1 is false, then we are using Level 2 patterns.
+%
+/graymode true def
+
+% used by level 1 patterns
+% defaultflip matrixentry fmGetFlit -> eith -1 or 1
+fMLevel1 {
+	/fmGetFlip {
+		fMatrix2 exch get mul 0 lt { -1 } { 1 } ifelse
+	} FmBD
+} if
+
+/setPatternMode {
+	fMLevel1 {
+		2 index patScreenDict exch known {
+			pop pop
+			patScreenDict exch get aload pop % angle spot fspot gray mult
+			freq 								% freq
+			mul									% times multiplier
+			5 2 roll							% angle spot fspot gray mult freq -> gray freq angle spot fspot
+			fMatrix2 currentmatrix 1 get 0 ne {
+				3 -1 roll 90 add 3 1 roll 		% landscape
+				sflipx 1 fmGetFlip sflipy 2 fmGetFlip neg mul
+			} {  								% portrait     
+				sflipx 0 fmGetFlip sflipy 3 fmGetFlip mul 
+			} ifelse
+			0 lt {exch pop} {pop} ifelse 		% take regular or flipped spot function
+			fMNegative { 
+				{neg} fmConcatProcs 			% invert spot function
+			} if
+			bind
+			% we need to bypass any screen filter and go directly to systemdict
+			% to avoid problems with Kodak Precision calibration software
+			% <Gus 9/13/93>
+			systemdict /setscreen get exec		% leave graylevel on stack
+			/FrameCurGray exch def
+		} {
+			/bwidth  exch def
+			/bpside  exch def
+			/bstring exch def
+			/onbits 0 def  /offbits 0 def
+			freq sangle landscape {90 add} if 
+				{/ypoint exch def
+				 /xpoint exch def
+				 /xindex xpoint 1 add 2 div bpside mul cvi def
+				 /yindex ypoint 1 add 2 div bpside mul cvi def
+				 bstring yindex bwidth mul xindex 8 idiv add get
+				 1 7 xindex 8 mod sub bitshift and 0 ne fMNegative {not} if
+				 {/onbits  onbits  1 add def 1}
+				 {/offbits offbits 1 add def 0}
+				 ifelse
+				}
+				setscreen
+			offbits offbits onbits add div fMNegative {1.0 exch sub} if
+			/FrameCurGray exch def
+		} ifelse
+	} { % Level 2 version
+		pop pop
+		dup patCache exch known {
+			patCache exch get
+		} { % not in cache
+			dup
+			patDict /bstring 3 -1 roll put
+			patDict 
+			9 PatFreq screenIndex get div dup matrix scale
+%			9 orgfreq 
+%				organgle sin abs organgle cos abs add div
+%				dup 16 div round dup 0 le {pop 1} if  % Unix pattern size
+%			    dup  9 div round dup 0 le {pop 1} if  % Mac larger (WYSIWYG) size
+%					div div dup matrix scale % This gives Unix pattern size.
+			makepattern
+			dup 
+			patCache 4 -1 roll 3 -1 roll put
+		} ifelse
+		/FrameCurGray 0 def
+		/FrameCurPat exch def
+	} ifelse
+	/graymode false def
+	combineColor
+} bind def
+
+/setGrayScaleMode {
+	graymode not {
+		/graymode true def
+		fMLevel1 {
+			setCurrentScreen
+		} if
+	} if
+	/FrameCurGray exch def
+	combineColor
+} bind def
+
+/normalize {
+	transform round exch round exch itransform
+	} bind def
+
+/dnormalize {
+	dtransform round exch round exch idtransform
+	} bind def
+
+/lnormalize { % line widths are always odd so that arrow heads work
+	0 dtransform exch cvi 2 idiv 2 mul 1 add exch idtransform pop
+	} bind def
+
+/H { % THICK
+	lnormalize setlinewidth
+	} bind def
+
+/Z {
+	setlinecap
+	} bind def
+	
+% This is used to fill or stroke white behind a Level 2 pattern
+/PFill {
+	graymode fMLevel1 or not {
+		gsave 1 setgray eofill grestore
+	} if
+} bind def
+/PStroke {
+	graymode fMLevel1 or not {
+		gsave 1 setgray stroke grestore
+	} if
+	stroke
+} bind def
+
+/X { % TEXTURE
+	fillvals exch get
+	dup type /stringtype eq
+	{8 1 setPatternMode} % Silly to pass parameters here
+	{setGrayScaleMode}
+	ifelse
+	} bind def
+
+/V { % FILL
+	PFill gsave eofill grestore
+	} bind def
+
+/Vclip {
+	clip
+	} bind def
+
+/Vstrk {
+	currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/N { % PEN
+	PStroke
+	} bind def
+
+/Nclip {
+	strokepath clip newpath
+	} bind def
+
+/Nstrk {
+	currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/M {newpath moveto} bind def
+/E {lineto} bind def
+/D {curveto} bind def
+/O {closepath} bind def
+
+/L { % POLYLINE
+ 	/n exch def
+	newpath
+	normalize
+	moveto 
+	2 1 n {pop normalize lineto} for
+	} bind def
+
+/Y { % POLYGON !!!
+	L % POLYLINE
+	closepath
+	} bind def
+
+/R { % RECT x1 y1 x2 y2
+	/y2 exch def
+	/x2 exch def
+	/y1 exch def
+	/x1 exch def
+	x1 y1
+	x2 y1
+	x2 y2
+	x1 y2
+	4 Y % POLYGON
+	} bind def
+
+/rarc % Leaves all sorts of junk on the operand stack for caller to clear off
+	{rad % arcto might fail if we're scaled way down
+	 arcto
+	} bind def
+
+/RR { % ROUNDRECT x1 y1 x2 y2 r
+	/rad exch def
+	normalize
+	/y2 exch def
+	/x2 exch def
+	normalize
+	/y1 exch def
+	/x1 exch def
+	mark
+	newpath
+	{
+	x1 y1 rad add moveto
+	x1 y2 x2 y2 rarc
+	x2 y2 x2 y1 rarc
+	x2 y1 x1 y1 rarc
+	x1 y1 x1 y2 rarc
+	closepath
+	} stopped {x1 y1 x2 y2 R} if % in case rarc failed for degenerate arcs
+	cleartomark
+	} bind def
+
+/RRR { % ROUNDRECT ROTATED xs ys x1 y1 x2 y2 x3 y3 x4 y4 r
+	/rad exch def
+	normalize /y4 exch def /x4 exch def
+	normalize /y3 exch def /x3 exch def
+	normalize /y2 exch def /x2 exch def
+	normalize /y1 exch def /x1 exch def
+	newpath
+	normalize moveto % eats xs ys
+	mark
+	{
+	x2 y2 x3 y3 rarc
+	x3 y3 x4 y4 rarc
+	x4 y4 x1 y1 rarc
+	x1 y1 x2 y2 rarc
+	closepath
+	} stopped
+	 {x1 y1 x2 y2 x3 y3 x4 y4 newpath moveto lineto lineto lineto closepath} if
+	cleartomark
+	} bind def
+
+/C { % CLIP
+	grestore
+	gsave
+	R % RECT
+	clip
+	setCurrentScreen
+} bind def
+
+/CP { % CLIPPOLY p1x p1y p2x p2y ... n 
+	grestore
+	gsave
+	Y % POLYGON
+	clip
+	setCurrentScreen
+} bind def
+
+/F { % FONT
+	FMfonts exch get
+	FMpointsize scalefont
+	setfont
+	} bind def
+
+/Q { % POINTSIZE (& font)
+	/FMpointsize exch def
+	F % could be slightly optimized here
+	} bind def
+
+/T { % TEXT <string> <x> <y>
+	moveto show
+	} bind def
+
+% Callers of RF (rotate/flip) must gsave (or save) first; (g)restore when done
+/RF { % <flip> <theta>
+	rotate
+	0 ne {-1 1 scale} if
+	} bind def
+
+/TF { % TEXTFLIPROTATE <string> <flip> <theta> <x> <y>
+	gsave
+	moveto 
+	RF
+	show
+	grestore
+	} bind def
+
+/P { % PADTEXT <pad> <string> <x> <y>
+	moveto
+	0 32 3 2 roll widthshow
+	} bind def
+
+/PF { % PADTEXTFLIPROTATE <pad> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto 
+	RF
+	0 32 3 2 roll widthshow
+	grestore
+	} bind def
+
+/S { % SPREADTEXT <spread> <string> <x> <y>
+	moveto
+	0 exch ashow
+	} bind def
+
+/SF { % SPREADTEXTFLIPROTATE <spread> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto
+	RF
+	0 exch ashow
+	grestore
+	} bind def
+
+/B { % PADSPREADTEXT <pad> <spread> <string> <x> <y>
+	moveto
+	0 32 4 2 roll 0 exch awidthshow
+	} bind def
+
+/BF { % PADSPREADTEXTFLIPROTATE <pad> <spread> <string> <flip> <theta> <x> <y>
+	gsave
+	moveto
+	RF
+	0 32 4 2 roll 0 exch awidthshow
+	grestore
+	} bind def
+
+/G { % ARCFILL theta1 theta2 width height x y
+	gsave
+	newpath
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	PFill fill
+	grestore
+	} bind def
+
+/Gstrk {
+	savematrix
+    newpath
+    2 index 2 div add exch 3 index 2 div sub exch % theta1 theta2 width height x y
+    normalize 2 index 2 div sub exch 3 index 2 div add exch % theta1 theta2 width height x y
+    translate
+    scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    restorematrix
+    currentlinewidth exch setlinewidth PStroke setlinewidth
+    } bind def
+
+/Gclip { % ARCFILL theta1 theta2 width height x y swid
+	newpath
+	savematrix
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	clip newpath
+	restorematrix
+	} bind def
+
+/GG { % ARCFILL ROTATED theta1 theta2 width height angle x y
+	gsave
+	newpath
+	normalize translate 0.0 0.0 moveto % eats x y
+	rotate % eats angle
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath
+	PFill
+	fill
+	grestore
+	} bind def
+
+/GGclip { % ARCFILL ROTATED theta1 theta2 width height angle x y
+	savematrix
+	newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath
+	clip newpath
+	restorematrix
+	} bind def
+
+/GGstrk { % ARCFILL ROTATED swid theta1 theta2 width height angle x y
+	savematrix
+    newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath 
+	restorematrix
+    currentlinewidth exch setlinewidth PStroke setlinewidth
+	} bind def
+
+/A { % ARCPEN theta1 theta2 width height x y
+	gsave
+	savematrix
+	newpath
+	2 index 2 div add exch 3 index 2 div sub exch % theta1 theta2 width height x y
+	normalize 2 index 2 div sub exch 3 index 2 div add exch % theta1 theta2 width height x y
+	translate 
+	scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	restorematrix
+	PStroke
+	grestore
+	} bind def
+
+/Aclip {
+	newpath
+	savematrix
+	normalize translate 0.0 0.0 moveto % eats x y
+	dnormalize scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	closepath 
+	strokepath clip newpath
+	restorematrix
+} bind def
+
+/Astrk {
+	Gstrk
+} bind def
+
+/AA { % ARCPEN ROTATED theta1 theta2 width height angle x y
+	gsave
+	savematrix
+	newpath
+	% theta1 theta2 width height angle x y
+	3 index 2 div add exch 4 index 2 div sub exch 
+	% theta1 theta2 width height angle x y
+	normalize 3 index 2 div sub exch 4 index 2 div add exch
+	translate % eats x y
+	rotate % eats angle
+	scale % eats width height
+	0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+	restorematrix
+	PStroke
+	grestore
+	} bind def
+
+/AAclip {
+	savematrix
+	newpath
+    normalize translate 0.0 0.0 moveto % eats x y
+    rotate % eats angle
+    dnormalize scale % eats width height
+    0.0 0.0 1.0 5 3 roll arc % eats theta1 theta2
+    closepath
+	strokepath clip newpath
+	restorematrix
+} bind def
+
+/AAstrk {
+	GGstrk
+} bind def
+
+/BEGINPRINTCODE { % -x -y width height
+	/FMdicttop countdictstack 1 add def % high-water mark of dict stack
+	/FMoptop count 7 sub def % tricky! 7 params on stack, plus "/FMoptop"
+	/FMsaveobject save def
+	userdict begin % insulate user from FrameDict; not in /FMdicttop count
+	/showpage {} def % this def is in userdict
+	FMNORMALIZEGRAPHICS % in case we're in a strange state
+	3 index neg 3 index neg translate
+	} bind def
+
+/ENDPRINTCODE {
+	count -1 FMoptop {pop pop} for % clear user junk from operand stack
+	countdictstack -1 FMdicttop {pop end} for % ditto for dict stack
+	FMsaveobject restore % this is now safe, unless user very malicious
+	} bind def
+
+/gn { % get a number in a funny encoding scheme
+	0 % result on stack
+	{	46 mul % shift old digits
+		cf read pop % get next character
+		32 sub % zero is the space character
+		dup 46 lt {exit} if % quit if we're the last digit
+		46 sub add % add in this digit and loop around for next
+		} loop
+	add % result on stack
+	} bind def
+
+/cfs { % create a string of length "sl" filled with "val"s
+	/str sl string def % create string as "str"
+	0 1 sl 1 sub {str exch val put} for % fill array
+	str def % define real array name, too; name is on stack from caller
+	} bind def
+
+/ic [ % "case" stmt list of procedures that the image commands should call
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0223
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0223
+	0
+	{0 hx} {1 hx} {2 hx} {3 hx} {4 hx} {5 hx} {6 hx} {7 hx} {8 hx} {9 hx}
+	{10 hx} {11 hx} {12 hx} {13 hx} {14 hx} {15 hx} {16 hx} {17 hx} {18 hx}
+	{19 hx} {gn hx} {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
+	{13} {14} {15} {16} {17} {18} {19} {gn} {0 wh} {1 wh} {2 wh} {3 wh}
+	{4 wh} {5 wh} {6 wh} {7 wh} {8 wh} {9 wh} {10 wh} {11 wh} {12 wh}
+	{13 wh} {14 wh} {gn wh} {0 bl} {1 bl} {2 bl} {3 bl} {4 bl} {5 bl} {6 bl}
+	{7 bl} {8 bl} {9 bl} {10 bl} {11 bl} {12 bl} {13 bl} {14 bl} {gn bl}
+	{0 fl} {1 fl} {2 fl} {3 fl} {4 fl} {5 fl} {6 fl} {7 fl} {8 fl} {9 fl}
+	{10 fl} {11 fl} {12 fl} {13 fl} {14 fl} {gn fl}
+	] def
+
+/ms { % make all the strings
+	/sl exch def % remember length of currently existing strings
+	/val 255 def % that's white
+	/ws cfs % make "ws" a string filled with white
+	/im cfs % and "im" is a complete image scanline
+	/val 0 def % that's black
+	/bs cfs % make "bs" a string filled with black
+	/cs cfs % here's where we'll put complete command lines
+	} bind def
+
+400 ms % make strings that will be plenty long for most applications
+
+/ip { % image procedure; reads and executes commands to make scanlines
+	is % leave image string and...
+	0 % ...image position on stack all through this procedure
+	cf cs readline pop % get a string of commands
+	{	ic exch get exec % execute next command
+		add % all commands leave a length on the stack; update pos
+		} forall % step through all commands
+	pop % get rid of image position pointer
+	% image string left on stack, so it's returned to image primitive
+	} bind def
+/rip { % this is similar to ip above, except for 24 bit images
+	   % this takes an extra argument, the width of the image
+	  % do red
+	  bis ris copy pop % copy blue to red
+      is
+      0
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop % remove is and position from stack
+	  ris gis copy pop % copy red to green
+	  dup is exch % position of green is width bytes into is
+	  % do green
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  gis bis copy pop % copy green to blue
+	  dup add is exch % position of blue is 2*width bytes into is
+	  % do blue
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+      pop 
+      
+      } bind def
+
+/rip4 { % this is similar to ip above, except for 32 bit images
+	   % this takes an extra argument, the width of the image
+	  % do cyan
+	  kis cis copy pop % copy black to cyan
+      is
+      0
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop % remove is and position from stack
+	  cis mis copy pop % copy cyan to magenta
+	  dup is exch % position of magenta is width bytes into is
+	  % do magenta
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  mis yis copy pop % copy magenta to yellow
+	  dup dup add is exch % position of yellow is 2*width bytes into is
+	  % do yellow
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+	  pop pop
+	  yis kis copy pop % copy yellow to black
+	  3 mul is exch % position of black is 3*width bytes into is
+	  % do black
+      cf cs readline pop 
+      {       ic exch get exec 
+              add 
+              } forall 
+      pop 
+      
+      } bind def
+
+
+/wh { % fill a number of bytes with "white"
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	ws 0 len getinterval im pos len getinterval copy pop
+	pos len % remember where we got to
+	} bind def
+
+/bl { % fill a number of bytes with "black"
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	bs 0 len getinterval im pos len getinterval copy pop
+	pos len % remember where we got to
+	} bind def
+
+/s1 1 string def
+
+/fl { % fill a number of bytes with a specific hex value
+	/len exch def % number of bytes to fill
+	/pos exch def % position to put them at
+	/val cf s1 readhexstring pop 0 get def
+	pos 1 pos len add 1 sub {im exch val put} for
+	pos len % remember where we got to
+	} bind def
+
+/hx { % read hex bytes directly; on entry, stack has <str> <pos> <len>
+	3 copy getinterval % stack has <str> <pos> <len> <substr>
+	cf exch readhexstring pop pop % stack back to <str> <pos> <len>
+	} bind def
+
+/wbytes { % width depth -> wb      find width in bytes  given 1, 2, 8 or 24 or 32
+      dup dup
+      8 gt { pop 8 idiv mul }
+      { 8 eq {pop} {1 eq {7 add 8 idiv} {3 add 4 idiv} ifelse} ifelse } ifelse
+	} bind def
+/BEGINBITMAPBWc { % iw, ih, width, height, theta, x y 
+	1 {} COMMONBITMAPc
+	} bind def
+/BEGINBITMAPGRAYc { % iw, ih, width, height, theta, x y 
+	8 {} COMMONBITMAPc
+	} bind def
+/BEGINBITMAP2BITc { % iw, ih, width, height, theta, x y 
+	2 {} COMMONBITMAPc
+	} bind def
+%
+% Common routine for imaging compressed images
+%
+/COMMONBITMAPc { % iw, ih, width, height, theta, x y depth proc
+		 % (x,y) is the lower left corner of the image
+	/cvtProc exch def
+	/depth exch def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def % LW+ has a buggy memory leak!
+	cvtProc                % run the desired proc after save has occurred
+	/is im 0 lb getinterval def % image substring
+	ws 0 lb getinterval is copy pop % whiten it
+	/cf currentfile def % evaluate "currentfile" only once
+	width height depth [width 0 0 height neg 0 height] % top to bottom
+	{ip} image % zap!
+	bitmapsave restore % avoid occasional disaster on the LW+
+	grestore
+	} bind def
+/BEGINBITMAPBW { % iw, ih, width, height, theta, x y 
+	1 {} COMMONBITMAP
+	} bind def
+/BEGINBITMAPGRAY { % iw, ih, width, height, theta, x y 
+	8 {} COMMONBITMAP
+	} bind def
+/BEGINBITMAP2BIT { % iw, ih, width, height, theta, x y 
+	2 {} COMMONBITMAP
+	} bind def
+%
+% Common routine for uncompressed images
+%
+/COMMONBITMAP { % iw, ih, width, height, theta, x y depth proc
+	/cvtProc exch def
+	/depth exch def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/bitmapsave save def % LW+ has a buggy memory leak!
+	cvtProc              % run the desired proc after save has occurred
+	/is width depth wbytes string def
+	/cf currentfile def % evaluate "currentfile" only once
+	width height depth [width 0 0 height neg 0 height] % top to bottom
+	{cf is readhexstring pop} image
+	bitmapsave restore % avoid occasional disaster on the LW+
+	grestore
+	} bind def
+
+%
+% All this hairy color setup stuff gus wrote on the mac, I just copied and
+% changed the variable names to be humanly readable.
+
+/ngrayt 256 array def
+/nredt 256 array def
+/nbluet 256 array def
+/ngreent 256 array def
+
+fMLevel1 {
+/colorsetup {
+	currentcolortransfer
+	/gryt exch def
+	/blut exch def
+	/grnt exch def
+	/redt exch def
+	0 1 255 {
+		/indx exch def
+		/cynu 1 red indx get 255 div sub def
+		/magu 1 green indx get 255 div sub def
+		/yelu 1 blue indx get 255 div sub def
+		/kk cynu magu min yelu min def
+% The HP PaintJet XL300 ignores the gray transfer curve but still sets its
+% default black generation and undercolor removal functions as if it is
+% used. This causes black colors not to work. Bug#56844 <Gus 2/22/93>
+% - We go back to the old (correct?) way of doing this since this code
+% is now bypassed for PS Level 2 printers in favor of colorSetup2 which
+% uses PS Level 2 indexed color, which is much cleaner. <Gus 3/3/93>
+		/u kk currentundercolorremoval exec def
+%-		/u 0 def
+		nredt indx 1 0 cynu u sub max sub redt exec put
+		ngreent indx 1 0 magu u sub max sub grnt exec put
+		nbluet indx 1 0 yelu u sub max sub blut exec put
+		ngrayt indx 1 kk currentblackgeneration exec sub gryt exec put
+	} for
+	{255 mul cvi nredt exch get}
+	{255 mul cvi ngreent exch get}
+	{255 mul cvi nbluet exch get}
+	{255 mul cvi ngrayt exch get}
+	setcolortransfer
+	{pop 0} setundercolorremoval
+	{} setblackgeneration
+	} bind def
+}
+{
+% Here, we set up indexed color for imaging on PS Level 2 without mucking around
+% with the transfer functions.
+
+/colorSetup2 {
+	[ /Indexed /DeviceRGB 255 
+		{dup red exch get 255 div 
+		 exch dup green exch get 255 div 
+		 exch blue exch get 255 div}
+	] setcolorspace
+} bind def
+} ifelse
+
+%
+% Setup a transfer function to convert psuedo color values into grayscale
+% values based on the color lookup tables.
+%
+/fakecolorsetup {
+	/tran 256 string def
+	0 1 255 {/indx exch def 
+		tran indx
+		red indx get 77 mul
+		green indx get 151 mul
+		blue indx get 28 mul
+		add add 256 idiv put} for
+	currenttransfer
+	{255 mul cvi tran exch get 255.0 div}
+	exch fmConcatProcs settransfer
+} bind def
+%
+% image a color image
+%
+/BITMAPCOLOR { % iw, ih, width, height, theta, x y 
+	/depth 8 def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/bitmapsave save def
+	fMLevel1 {	
+		colorsetup
+		/is width depth wbytes string def
+		/cf currentfile def % evaluate "currentfile" only once
+		width height depth [width 0 0 height neg 0 height] % top to bottom
+		{cf is readhexstring pop} {is} {is} true 3 colorimage 
+	} {
+		colorSetup2
+		/is width depth wbytes string def
+		/cf currentfile def % evaluate "currentfile" only once
+		7 dict dup begin
+			/ImageType 1 def
+			/Width width def
+			/Height height def
+			/ImageMatrix [width 0 0 height neg 0 height] def
+			/DataSource {cf is readhexstring pop} bind def
+			/BitsPerComponent depth def
+			/Decode [0 255] def
+		end image	
+	} ifelse
+	bitmapsave restore 
+	grestore
+	} bind def
+%
+% Compressed color image rendering
+%
+/BITMAPCOLORc { % iw, ih, width, height, theta, x y 
+	/depth 8 def
+	gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+	fMLevel1 {	
+		colorsetup
+		/is im 0 lb getinterval def % image substring
+		ws 0 lb getinterval is copy pop % whiten it
+		/cf currentfile def % evaluate "currentfile" only once
+		width height depth [width 0 0 height neg 0 height] % top to bottom
+		{ip} {is} {is} true 3 colorimage
+	} {
+		colorSetup2
+		/is im 0 lb getinterval def % image substring
+		ws 0 lb getinterval is copy pop % whiten it
+		/cf currentfile def % evaluate "currentfile" only once
+		7 dict dup begin
+			/ImageType 1 def
+			/Width width def
+			/Height height def
+			/ImageMatrix [width 0 0 height neg 0 height] def
+			/DataSource {ip} bind def
+			/BitsPerComponent depth def
+			/Decode [0 255] def
+		end image	
+	} ifelse
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPTRUECOLORc { 
+	/depth 24 def
+        gsave
+ 	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/ris im 0 width getinterval def	% red part of im
+	/gis im width width getinterval def	% green part of im
+	/bis im width 2 mul width getinterval def % blue part of im
+        
+	ws 0 lb getinterval is copy pop 
+	/cf currentfile def 
+	width height 8 [width 0 0 height neg 0 height] 
+	{width rip pop ris} {gis} {bis} true 3 colorimage
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPCMYKc { 
+	/depth 32 def
+        gsave
+ 	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+	/bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/cis im 0 width getinterval def	% cyan part of im
+	/mis im width width getinterval def	% magenta part of im
+	/yis im width 2 mul width getinterval def % yellow part of im
+	/kis im width 3 mul width getinterval def % black part of im
+        
+	ws 0 lb getinterval is copy pop 
+	/cf currentfile def 
+	width height 8 [width 0 0 height neg 0 height] 
+	{width rip4 pop cis} {mis} {yis} {kis} true 4 colorimage
+	bitmapsave restore 
+	grestore
+	} bind def
+/BITMAPTRUECOLOR { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /gis width string def
+        /bis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop } 
+        { cf gis readhexstring pop } 
+        { cf bis readhexstring pop } 
+        true 3 colorimage 
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYK { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /mis width string def
+        /yis width string def
+        /kis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop } 
+        { cf mis readhexstring pop } 
+        { cf yis readhexstring pop } 
+        { cf kis readhexstring pop } 
+        true 4 colorimage 
+        bitmapsave restore 
+        grestore
+        } bind def
+%
+% image a color image to a b&width device
+%
+/BITMAPTRUEGRAYc { 
+	/depth 24 def
+        gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+        /bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/ris im 0 width getinterval def	% red part of im
+	/gis im width width getinterval def	% green part of im
+	/bis im width 2 mul width getinterval def % blue part of im
+        ws 0 lb getinterval is copy pop 
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        {width rip pop ris gis bis width gray} image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYKGRAYc { 
+	/depth 32 def
+        gsave
+	% rotate about center of image
+	3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+	4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+	translate		% iw ih width height theta
+	rotate			% iw ih width height
+	1 index 2 div neg	% iw ih width height -(width/2)
+	1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+	translate		% iw ih width height
+	scale			% iw ih
+	/height exch def /width exch def
+	/lb width depth wbytes def % so "lb" has width in bytes
+	sl lb lt {lb ms} if % maybe make bigger strings
+        /bitmapsave save def 
+        
+	/is im 0 lb getinterval def	% Whole scanline
+	/cis im 0 width getinterval def	% cyan part of im
+	/mis im width width getinterval def	% magenta part of im
+	/yis im width 2 mul width getinterval def % yellow part of im
+	/kis im width 3 mul width getinterval def % black part of im
+        ws 0 lb getinterval is copy pop 
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        {width rip pop cis mis yis kis width cgray} image
+        bitmapsave restore 
+        grestore
+        } bind def
+/cgray { % c m y k width
+        /ww exch def
+        /k exch def
+        /y exch def
+        /m exch def
+        /c exch def
+        0 1 ww 1 sub { /i exch def c i get m i get y i get k i get CMYKtoRGB
+				.144 mul 3 1 roll .587 mul 3 1 roll .299 mul add add
+				c i 3 -1 roll floor cvi put } for
+        c
+ 		} bind def
+/gray { % r g b width
+        /ww exch def
+        /b exch def
+        /g exch def
+        /r exch def
+        0 1 ww 1 sub { /i exch def r i get .299 mul g i get .587 mul
+			b i get .114 mul add add r i 3 -1 roll floor cvi put } for
+        r
+        } bind def
+/BITMAPTRUEGRAY { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /gis width string def
+        /bis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop 
+          cf gis readhexstring pop 
+          cf bis readhexstring pop width gray}  image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPCMYKGRAY { 
+        gsave
+		% rotate about center of image
+		3 index 2 div add exch	% iw ih width height theta y+(height/2) x
+		4 index 2 div add exch	% iw ih width height theta x+(width/2) y+(height/2)
+		translate		% iw ih width height theta
+		rotate			% iw ih width height
+		1 index 2 div neg	% iw ih width height -(width/2)
+		1 index 2 div neg	% iw ih width height -(width/2) -(height/2)
+		translate		% iw ih width height
+		scale			% iw ih
+		/height exch def /width exch def
+        /bitmapsave save def 
+        /is width string def
+        /yis width string def
+        /mis width string def
+        /kis width string def
+        /cf currentfile def 
+        width height 8 [width 0 0 height neg 0 height] 
+        { cf is readhexstring pop 
+          cf mis readhexstring pop 
+          cf yis readhexstring pop 
+          cf kis readhexstring pop width cgray}  image
+        bitmapsave restore 
+        grestore
+        } bind def
+/BITMAPGRAY { % iw, ih, width, height, theta, x y 
+	8 {fakecolorsetup} COMMONBITMAP
+	} bind def
+/BITMAPGRAYc { % iw, ih, width, height, theta, x y 
+	8 {fakecolorsetup} COMMONBITMAPc
+	} bind def
+/ENDBITMAP {
+	} bind def
+end % of FrameDict definitions
+
+% OPI stuff
+	/ALDmatrix matrix def ALDmatrix currentmatrix pop
+/StartALD {
+	/ALDsave save def
+	 savematrix
+	 ALDmatrix setmatrix
+	} bind def
+/InALD {
+	 restorematrix
+	} bind def
+/DoneALD {
+	 ALDsave restore
+	} bind def
+
+% Dashed lines stuff
+/I { setdash } bind def
+/J { [] 0 setdash } bind def
+
+%%EndProlog
+%%BeginSetup
+(5.0) FMVERSION
+1 1 0 0 612 792 0 1 18 FMDOCUMENT
+0 0 /Palatino-Roman FMFONTDEFINE
+1 0 /Palatino-Bold FMFONTDEFINE
+2 0 /Palatino-Italic FMFONTDEFINE
+3 0 /Helvetica-Narrow-Bold FMFONTDEFINE
+4 0 /Courier-Bold FMFONTDEFINE
+5 0 /Helvetica-Bold FMFONTDEFINE
+32 FMFILLS
+0 0 FMFILL
+1 0.1 FMFILL
+2 0.3 FMFILL
+3 0.5 FMFILL
+4 0.7 FMFILL
+5 0.9 FMFILL
+6 0.97 FMFILL
+7 1 FMFILL
+8 <0f1e3c78f0e1c387> FMFILL
+9 <0f87c3e1f0783c1e> FMFILL
+10 <cccccccccccccccc> FMFILL
+11 <ffff0000ffff0000> FMFILL
+12 <8142241818244281> FMFILL
+13 <03060c183060c081> FMFILL
+14 <8040201008040201> FMFILL
+16 1 FMFILL
+17 0.9 FMFILL
+18 0.7 FMFILL
+19 0.5 FMFILL
+20 0.3 FMFILL
+21 0.1 FMFILL
+22 0.03 FMFILL
+23 0 FMFILL
+24 <f0e1c3870f1e3c78> FMFILL
+25 <f0783c1e0f87c3e1> FMFILL
+26 <3333333333333333> FMFILL
+27 <0000ffff0000ffff> FMFILL
+28 <7ebddbe7e7dbbd7e> FMFILL
+29 <fcf9f3e7cf9f3f7e> FMFILL
+30 <7fbfdfeff7fbfdfe> FMFILL
+%%EndSetup
+%%Page: "i" 1
+%%BeginPaperSize: Letter
+%%EndPaperSize
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+J
+0 0 0 1 0 0 0 K
+108 117 486 612 R
+7 X
+0 0 0 1 0 0 0 K
+V
+108 570.45 486 612 C
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 570.45 486 612 R
+7 X
+0 0 0 1 0 0 0 K
+V
+108 605.14 270 605.14 2 L
+V
+3 H
+2 Z
+0 X
+N
+108 596.14 270 596.14 2 L
+7 X
+V
+1 H
+0 X
+N
+36 72 576 720 C
+0 0 0 0 1 1 1 K
+0 2 Q
+7 X
+(0) 108 546.45 T
+0 0 0 1 0 0 0 K
+0 36 Q
+0 X
+0 0 0 1 0 0 0 K
+(ML) 109 546.45 T
+(W) 162.39 546.45 T
+(orks) 195.08 546.45 T
+0 24 Q
+(W) 108 503.45 T
+(indows V) 130.68 503.45 T
+(ersion 2.0) 230.26 503.45 T
+(Installation Notes) 108 472.45 T
+0 14 Q
+(August 1998) 108 440.12 T
+108 117 486 612 C
+248.06 117 345.94 225 C
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 X
+0 0 0 1 0 0 0 K
+%%BeginBinary:  22571    
+329 413 78.96 99.12 0 257.52 121.44
+/red <
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000000055595C5C60606364676A6B6B6E7272757679
+797D808081848787888A8B8F8F9596969D9DA0A4A4AAABABB2B2B4B9BABFC0C1
+C7C8CACBCECFD2D2D4D5D6D9DCDDDFE0E3E3E4E7EAEAEAEAEEF1F1F4F5F8F8FF
+> store
+/green <
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000008F939496969A999EA19D9DA5A8A2ACA4B0A7
+B3B7ABACBBBEB0BAC2B2C5B5C9B9BACCBFD0C0C3D3C7C8D7CDDACEDDD2D5E1D6
+E4DBDCDDE7E0E2E2E3EBE4E6EEE9EAEBF1F2EDEFF1F2F5F5F4F6F8F8F8FBFCFF
+> store
+/blue <
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000AFB1B3B3B4B6B6B8BAB9BABCBEBDC1BEC3C1
+C5C7C3C4C9CBC8CBCEC8D0CBD2CDCFD5D2D8D2D6DAD7D9DDDDE0DCE3E0E1E6E4
+E9E7E6E9EBEAEBECEBEEEDEFF1F0F0F2F4F4F3F5F5F6F6F7F8F9F9FAFBFCFCFF
+> store
+ BEGINBITMAPCOLORc
+
+
+
+
+
+
+
+
+
+@z&J.J(J2J)u
+BCCCFD7E0E9F7O%FEF1E0D9D4CCCCD1D7DEE4F1FEO/F1ECE0CFD4ECF1O#F7F1E9E0DBD7D1CCCCCCCCCCCCD1D9E4F7O(FAF1ECE0E0D7D7CFCCJ,J+8-J1JS*JT)
+LCCCCCCCCCCCCD7DBE4F1FEHF7ECE0D7CFCCCCCCCCCCCCCCCCCCCCCCCFD7DEE0F1FAO'F7E4DBD4CCCCCCCCCCCCCFD7DBE0ECF7JECD7CCCFDEF1F7FFFFO(FAF1ECE0E0D7D7CFJ+J+Cr&J*<r'J%s(JT
+O$CCCCCCCCCCD1D7E0ECF7>F1E4DED7CCCCCCCCCCCCCCD7DBE0ECF7JFAE9DED7CCCCCCCCCCCCD1D7DEE0F1FAGF1E0D7CFCCCFD7D9E0E4F1F7O+J+I+J,J*Hr'J)>s(
+O)CCCCCCCCCCCCD7DEE4F1FEF1E0DBD4CCCCCCCCCC:CCCCCCCCCCCCD4D9E0ECF1?FEECE0D7CFCCCCCCCCCCD4D7E0E4F1FE<F1E0D7CCCCCCCCCCCCCFD7D9E0E4F1F7J+>+J,J+Jr'F)Js(
+O/CCCCCCCCCCD1D9E0ECFAFAECE0D7D1CCCCCCCCCCECCCCCCCCCCCCD1D7E0E9F14FEF1E0D9D1CCCCCCCCCC=CCD7D9E0E9F1FEFEECDED4CCCCCCCC5CCCFD7D9E0E4F1F7J)8)J-?*J-<)Js(J$
+O4CCCCCCCCCCCCDBF1F7E0CCCCCCCCCCCCO"CCCCCCCCCCCCCFD7DEE4F1FEF1E4DBD4CCCCCCCCCCICCCCCCCCCCCCCFD7DBE0ECF1FAECDED4CCCCCCCCACCCFD7D9E0E4F1F7GFEECDEJ(8*J):(J)9&Js(J(
+O5D7DEE4F1FFFFFFFFFFFFFAF1E4DED7CFO'CCCCCCCCCFD7E0FEF1DECCCCCCCCCCO&CCCCCCCCCCD1D9E9FAE9E0D9D7MCCCFD7D9E0E4F1F7;FAE9DBD4CCCCCCJ&P>R&J*:*J)9Q(Js(E)
+O/D1D7E0ECF7F1E9E0D7D4O CFD7E0ECFAFFFFFFFFFFFFFFFAF1E0DED7CFO$CFD7E0ECFEFFFFFFFEF1E9E0DBD7CFMCCCFD7D9E0E4F1F7FAE9DBD1CCCCCCCCJ&PJQ&J%PAR&J&PBS'Js(9)
+O*D7DBE4F1FE4F7ECE0D9D7DD7DEE9FAF1ECE0D9D7GCFD7E0ECFAF1ECE0DED7D1O CCCFD7D9E0E4F1F7F7E4DBD1CCCCCCCC@%J&QJQ'J%PJQ'J%PJR'J)8(
+F1E0D9D4DD1D7E0ECF7?FAF1E0DED7CF8D7DEE9F77FAF1E4E0D7D1<D7DEECFA9F7F1E0DED7D4O!CCCCCCCCD4DBE4F7FEF1ECE0DBD7CF@P&J&PJQ'C%PJR'F%PJR'J*8S'
+F7ECE0D7D19D4DBE0F1FEKFEF1E9E0D7D1D4DBE9F7BF7ECE0DBD7CFD7DEE9F7EFAF1E4E0D7D7GD1D9E0F1FEFFFFFFFFF1ECE0DED7D1EQ&C&QJR&8%PJQ';%PJR'J&PDR
+F1E9DED7CFCFD7E0E9F7O(F7ECE0D9D7D4DBE4F1O FEF1E9E0D7D4D4DEE9F7O#FEF1E9E0D9D7;CFD7E0ECFAJP&9&PJ,JR)JS'E%P
+5FEF1E4DBD7D4DBE0F1FEO5FFFFFEF1E0D7D1DEE4F1FFO+F7E0CCD1DEE4F1FEO/F1ECE0DBD7CFD7DEE9F7J.J&t&J%t&JR'9%P
+:FFFFFFF7E9DECCD7E0F1FAFFFFO7FEF1E0D9D1CCD1D7E0ECF7O)F1E4DBD1CCD7DBE0ECF7O1F7F1E0DED7D1D4DBE4F1J%u&J+?,J*?-J.
+8F1E4DBD4CCD7DEE4F1FEO.FEF1E0D9D1CCCCCCCCCCCCCCCCCCCCCCD4DBE0F1FALFAECDED7CCCCCCCCCCCCCCCCCCCCCCD4D7E0E9F1FEO1FFFFFFFFFEF1E0CFD9E0E9F1F7H+@+J+J,J*J-J%u(
+FEF1E0D9D4CCCCCCCCCCCCCCCCCCCCD1D7E0E9F7O$FEF1E0D9D1CCCCCCCCCC4CCCCCCCCCCCCD7DEE4F1FEAFEF1E0D9CFCCCCCCCC4CCCCCCCCCCCCCFD7DEE0F1FAO+F7E9DBD4CCCFD7D9E0E4F1F1C+J,J+J+J*Jr&J*@t(
+FAF1E0D9D1CCCCCCCCCC4CCCCCCCCCCCCD4D9E0F1FAGFEF1E0D9D1CCCCCCCCCC?CCCCCCCCCCD1D7E0E9F18F7E4DBD4CCCCCCCCCC>CCD4D9E0ECF1O FEECE0D7CFCCCCCCCCCCD7D7E0E0F1F1FE@)J,J+J,C*J-J*Js(
+E0D7CFCCCCCCCCCC?CCCCCCCCCCCCD7DEE4F1FE<FAECE0D7CFCCCCCCCCCCICCCCCCCCCCCCD4D9E0ECFAFAECE0D7CCCCCCCCCCJCCCCCCCCCCCCD1D7DEE4F1FECF7E4DBD1CCCCCCCCCC7CCD4D7DEE0ECF1FA@$J+H+J,9)Jr&J*Js(
+CCCCCCJCCCCCCCCCCD1D7E0E9F7FAECE0D7CFCCCCCCCCCCO&CCCCCCCCCCCCD7DBE4F1FEF1E0D9D1CCCCCCCCO'CCD7DBE0ECF78FEECE0D7CCCCCCCCCCDCCD1D7DBE0E9F1F7J,=+J*8"J-C)Js#
+O.CCCCCCCCCCCCD4D9E0F1FAFAECE0D7CFCCCCCCCCCCO1CCCFD7E0ECFEFFFAECD4O2CCCCCCCCCCCCD1D7E0E9F1FEF7E4DBD1CCCCCCCCO#CCCFD7J)8(J%W&J-8*J#
+O4CCCCCCCCCCCFE0FEECD9CCCCCCCCCCO3D7DEE9FAF1E9E0D7CFO2CCCCCCCCCCCCCFD7DBE0F1FEFEECE0D7CCCCCCCCCCO/CCCCJ)8)J%PBP&J,
+O4D1D9E0F1FAFFFFFFFFFFFFFAF1E0DBD7O-D4DBE4F7FEF1E4DBD7O4D9E0F1FFFFF7DBD4CCCCCC@$J%Q>Q&J%PJQ&J)8+J$
+E0D7CFO"D4DBE4F1FAF1E0DBD7O"D1D9E0F16FAECE0D9D4O)D4DEE9FAFFFFFFFFFFFFFFFFFAF1E9E0D9D7O/D7E0F1@)J&PJQ&J*JQ&J%P@R(J(
+FFFFFFFAECE0D7CFECFD7DEE9F74FAF1E0DBD7ECFD7E0ECFEFFFFFFFFAF1E9E0D7CFLCFD9E0F1FEF1ECE0DBD7CFO#D4DEECFEFFFFFFCP%J&PJQ&J%PJP&J)JS'J)
+F7E9DED7<D1D7E0ECFA?FAF1E0D9D4;D7DEE9FAKFEF1E4DBD7CD4DEE9FAFFFFFFFF6F1F1E0DED7D1FD1DBE9FAFFFFFFFFHP%H&PJQ&F%PJQ&J%PJR'J)
+F7E4DBD4D4DBE0F1FEJF7ECE0D9D4D4DBE4F7O'FAECE0D9D48CFD7E0F1BF7F1E4E0D7D4;CFD9E4F7FFFFFFFFJP%>%QJQ&;%PJQ&D)JR'G(
+7F1E4DBD1D7DEE4F1O'F7ECE0D9D4D1D9E0F1O2F1E9E0D7CFD4DBE9F7FFFFFFFFO FAF1E9E0D9D7D7E0F1FFFFFFFFJ,PJP*JP&:*JR(;(
+<FFFFFFFFFEF1E0D1E0ECF7O3FAE0CCD1E9F7FFFFFFO=FEF1E4DBD7CFD7E0F1FEFFFFFFFFO+FEF1ECE0DBD7CFD4DEECFEFFFFFFJ,J&r&JQ)JS)
+>F7E9DED7CCCCCCD4DBE4F1O6FEF1E0D7CFCCD4D9E0ECF7O?E9D4CCD4DEE9F1FFO6E9D4CFE9F7FFFFFFJ*9*J*=,J%t&J1
+9F1E9DED7CCCCCCCCCCCCCCCCCCCCD4DBE4F1O-F1E4D9D1CCCCCCCCCCCCCCCCCCCCCCD7DBE0F1FAO:F7E9DED4CCD4DBE0F1FEO5FEECDED1CCCCCCCCCCCCD4D7E0E9F1FEJ*C*J*H,J*?+J(<-
+4F1E4DBD4CCCCCCCCCCCCCCCCCCCCD4DBE4F1O#F7E9DBD4CCCCCCCCCCCCCCCCCCCCCCD7DBE0F1FAO/FAECDED7CCCCCCCCCCCCCCCCCCCCCFD7E0E9F7O-F7E4D7CCCCCCCCCCCCCCCCCCCCCFD7DBE0ECF7E*J*J*F$@,J*I,J(Fr'
+F1E4DBD4CCCCCCCCCC7CCCCCCCCCCD4DBE4F1GFAECDED7CCCCCCCCCCDBF1D1CCCCCCCCCCCCD7DBE0F1FAO$FEECE0D7CFCCCCCCCCCCCCCCCCCCCCD7DBE4F1FEO#FAE9DBCFCCCCCCCCD1D7E0E4F1FE@*J*J*J&D,J+J+J(Jr
+F1E4DBD4CCCCCCCCCCACCCCCCCCCCD4DBE4F1=FEF1E0D9CFCCCCCCCC5D1FFFFE9D1CCCCCCCCCCCCD7DBE0F1FAGFEF1E0D9D1CCCCCCCCCC=CCCCCCCCCCD1D7E0ECFAIF1DED4CCCCCCCC:CC@%J*J*J(H,J*J+J(
+CCCCCCCCKCCCCCCCCCCD4DBE4F14F1E4DBD1CCCCCCCCCC9CCFAFFFFFFE9D1CCCCCCCCCCCCD7DBE0F1FA=F1E4DBD4CCCCCCCCCCGCCCCCCCCCCCCD7DEE4F1@FAE4D9CCCCCCCCJ*@*J"9%J,H*J+J(
+O0CCCCCCCCCCD4DBE4F1F7E9DED4CCCCCCCCCC?E9FFFFE9D16CCCCCCCCCCCCD7DBE0F1FAF7E9DED4CCCCCCCCCCO$CCCCCCCCCCD1D9E0F1FA6FEECDBD1CCCCCCJ)8)J";%J,=*J+D(
+O5CCCCCCCCCCD4DBE9FEECD7CCCCCCCCCCDDEFFFEE0CF:CCCCCCCCCCCCD7DBE0F1FAFAECE0D7CCCCCCCCCCO.CCCCCCCCCCCFD7DEE9F1F7E0D7CCCCCCCCJ&8(J"<&J)8'J,:(
+O8D7DEECFAFFFFFFFFF1E4D9D1ED4FFFFFEE0CF>CCCCCCCCCCCFE0FAE9D9CCCCCCCCO8CCCCCCCCCCCCD4DBE0F1FEFAE9DBCFCCCCCCJ%P<*J#=&J(8)J'9&
+O3D4DBE9F7FFFFFFFFFEF1E0D9D1@CCFEFFFFFEE0CF=D4DBE9F7FFFFFFFFFFFFFAF1E0DBD7O<CCCCCCD9E4F7F1E9DED7CFJ%PEP&J"?%J*>Q&J(9P&
+O.D1D9E0F1FEF1E0D9D1<ECFFFFFEDB7CFD7E0F1FEFFFFFFFFFAECE0D9D4O5D7E0F1FFFFFFFFFEF1E0DBD4J*JP&J"A%G%PHQ&J(BQ&
+O)CFD7E0ECFEFFFFFFFF9FEF1E0D9D17E0FFFFFADBD4DBE9F7F7ECE0D9D4O+D4DEECFFFFFFFFF7E9E0D7D1@$J%PJP&H"C%@*JQ&J(JP&
+E0D9D1FD4DEE9F7BFEF1E0D9D1D7FFFFFADBCFD7E0F1FEFFFFFFFF=F7ECE0D9D4O!D1DEECFEFFFFFF6FEF1E4DBD7@)J%PJP&C"E%:%PJQ&J)JQ&
+FFFFFFFEECE0D7CF<D1DBE4F1LFEF1E0D9D1CCFFFFFAD9D4DBE9F7GF7ECE0D9D4ED1DBE9FAFFFFFFFF>FAECE0D9D1CP%I*JP&?"F+JQ&J)JQ&
+FAECDED7CFD7E0F1FEFFFFFFFFO(FEF1E0D9D1F1FFFFF1E0F1FEFFFFFFFFO$F7ECE0D9D1;CFD9E9FAFFFFFFFFHF1E9DED7CFHP%@%PJP&:"H%JQ&G)JP&
+F7E9DED4D7DEECFAO1FEECE0D7CFE0FFFFFFFFO.F1E9E0D7D1CFD9E4F7FFFFFFFFO$FAF1E0DBD4JP)PJP&JQ&>(JQ&
+7F1E4DBD4D4DBE4F7O;FAECE0D7DBOJF1E9E0D7D1D7E0F1FFFFFFFFO-F7E9E0D7CFJ)JPJQ+JP&
+<FFF1E4DBDBE9FAFFOEP"F1E9E0CFDEF1FFFFFFFFO7FEF1E4DBD7J%r%J$J,JQ&
+8FAE9DED7CCCFD9E4F7OEFEECFAP&FAE9DBD1CCCCD4D9E0F1FAO<F7ECE0D9D1I*=)J(J)8,J&
+FEF1E0D7CFCCCCCCCCCCCCCCCCCFD7E0F1O=F1E0D9D1CCCCE4P"FEECDED1CCCCCCCCCCCCCCCCCCCCD7DEE4F1FEO<FFFFFFFEE9E*E*J*8"J(B+J&
+F1E4DBD1CCCCCCCCCCCCCCCCCCCCD7E0ECFEO3F7E9DBD4CCCCCCCCCCDBOMF1DED4CCCCCCCCCCCCCCCCCCCFD7E0E9F1O7FAE4D7CCCC@*J)J*="J(J,J'
+FAE9DED7CCCCCCCCCC9CCCCCCCCD4DEECFEO*FAECDED7CCCCCCCCCCD1OIF7E0D7CCCCCCCC5CCCCCCCCCCCCD4D9E0ECF7O.F7E0D4CCCCCC@%J)J*B#J(J,J'
+CCCCCCCCBCCCCCCCCD1DBE9FAO!FEF1E0D7CFCCCCCCCCCCFAODFAE4D9CFCCCCCC?CCCCCCCCCCCCD7DBE0F1FEO%F7DED1CCCCCCJ)J*G"J)J+J'
+O&CCCCCCCCD1D9E4F7GF1E4D9D1CCCCCCCCCCECO@FAE9DBD1CCCCCCCCHCCCCCCCCCCCFD7DEE9F1KECDBCFCCCCCCJ)J*J"J)J,J(
+O*CCCCCCCCCFD9E0F1>F7E9DED4CCCCCCCCCC6DEO<FEECDED4CCCCCCCCO#CCCCCCCCCCCCD1D7E0ECF7AFEE9D9CFCCCCCCJ*J*J"J"J(J,J(
+O.CCCCCCCCCCD7E0F1FE4FAECE0D7CCCCCCCCCC;D4GFE?F1E0D4CCCCCCCCO-CCCCCCCCCCCCD4DBE0F1FA8FAE4D9CCCCCCCCJ)A*J#J'J(J,E'
+O3CCCCCCCCD4DEECFEFEF1E0D9CFCCCCCCCC@CCFEFFADED7E0ECFA6F7E4D7CCCCCCCCO7CCCCCCCCCCCCD7DEE4F1FEFAE4D4CCCCCCJ):)J"J,C(J+='
+O7CCCCCCCCD4DBE9FAE4DBD1CCCCCCCCCCEF1FFFFFF1D7CCCCCCD7DEE9F7FAE4D9CFCCCCCCOACCCCCCCCCCD1D7E0E9F1F7DED1CCCCCCJ&9%J"J/:)J0
+O;CCD1D9E0FAFFF1E0D7IE0HFFFFF1D7CCCCCCCCCCCCD7DBE4F1FEE9DBD1CCCCCCCCOICCCCCCCCCCCCD4D9F7FFFADBD1CCCCJ*:)J"J%:-J%Q&
+O7CFD7E0ECFEFFFFFFFFFFFFFFFFF7E4D9CFDD7JFFFFF1D7CCCCCCCFDBF7FFFEE4DBD4CCP#CFDBECFEF1E9E0D7D1J%PB)J"J%8$T%J(<Q&
+O3D7DEECFAFFFFFFFFF7E9DBD1@CCLFFFFF1D1D7E4F7F1E4DBD4OJD1DBECFFFFFFFFF1E9E0D7D1J%PJ)J"J(?P%J'FQ&
+O.D4DBE9F75FFFFFFFFFAECDED4=F1MFFFFF1FFFFFFFFF1E4DBD4OBD1DEF7FFFFFFF7ECE0D9D4J%PJ)J"J"HP%J'JQ&
+O)D1DBE4F1>FFFFFFFFFEECE0D79E4O!FFF1E4DBD4O:D4E4FAFFFFFF9F7ECE0D9D4J*JP%J"JP%J'JQ"
+O$CFD9E0F1FEFFFFFFFFGF1E0D9CF4D9O9F1E4DBD4O2D9E9FAFFFFFFBF7J&PJ)F"JP%J(J"
+MCFD7E0ECFAO"FFFFFFFFF7E4D9D1CFO>F1E4DBD4O)CFD9E9FEFFFFFFKFFJ%PJ)B#JP%J(
+ID7DEE9F7O+FFFFFFFFFAE9DBD1CCF7OBF1E4DBD4O!CFDBECFFFFFFFFJ%PJ)?"JP%J'
+DD4DBE4F1O4FFFFFFFFFEECDED4E9OGF1E4DBD7GD1DEF7FFFFFF@"J*JP$;"JP%J'
+D44D1D9E0F1FEFFFFFFFFO=F1E0D7DBOLF7E9DED7?D4E4F7FFFFFF@&A&PJ*JP%J'
+FFFEECDED1CFD7E0ECFEOFFFFFFFFFF1E4D9CFD1P#F7E9DED77D7E4FAFFFFFFA)9%PJ&JP%E'
+FFFFFFFFFAE9DBCFD7DEE9FAP!FFFFFFFFF7P(F7E9DED7D9E9FEFFFFFFE,J"JP%<(
+FFFFFEECD4D4F1FFFFFFFFP*FFP-F7E9DED7CFDBECFFFFFFFFC.JP)
+F7E9DBD4CCCCCCCCCCCCD9E4F7R=F7E9D9D7F1FFFFFF@(<(J+
+E0D7CFCCCCCCCCCCCCCCCFDBE9FAR=FAE4D4CCCCCFD7E0ECFA@$C)J$J'8+
+CCCCCCCCCCCCCCD1DEECFEP"FAE9FEP1FAE4D4CCCCCCCCCCCCCCCCD1D9E0F1FEJ(J(J'@*
+>CCCCCCCCD7E0F1OIFEECDBD1CCCCF1P.FAE4D4CCCCCCCCCCCCCCCCD1D9E4F1J(J(8"J'H*
+BCCCCCCCFD9E4F7OBF1E0D4CCCCCCCCE0P+F7DED1CCCCCCCCCCCCCCCCD4DBE4F1J)J(<"J'J*
+ECCCCCCCCD1DBE9FAO:F7E4D9CCCCCCCCD7P(F7DED1CCCCCC:CCCCCCCCCCD7DEE9F7J)J(@"J'J*
+ICCCCCCCCD4DEECFEO2FAE9DBD1CCCCCCCCP%F7DED1CCCCCCBCCCCCCCCCCD7DEECFAJ(J(D"J'J*
+MCCCCCCCCD7E0F1O,ECDED4CCCCCCCCF1P!F7DED1CCCCCCJCCCCCCCCCFD7E0ECFAJ(J(H"J'J+
+O#CCCCCCCFD9E4F7O$F7E4D7CCCCCCCCE4OLF7DED1CCCCCCO#CCCCCCCCCCD1D9E0F1FEJ)J(J"J'J*
+O&CCCCCCCCD1DBE9FAJFAE9D9CFCCCCCC6D9OIECDBCFCCCCCCO+CCCCCCCCCCD1D9E4F1J(J)J"J'J*
+O*CCCCCCCCD4DEECCFEECDED1CCCCCCCC9CFOFECDBCFCCCCCCO3CCCCCCCCCCD4DBE4F1J(J(J#J'J*
+O.CCCCCCCCD7E0F7<F1E0D4CCCCCCCC=CCFAOBECDBCFCCCCCCO;CCCCCCCCCCD7DEE9F7J(J(J"J'J*
+O2CCCCCCCFD9E4FA4F7E4D9CFCCCCCCBE9O?ECDBCFCCCCCCOCCCCCCCCCCCD7DEECFAJ)B)J"J&J*
+O5CCCCCCCCD1DBE9FEFEE9DBD1CCCCCCCCEDBO=DBCFCCCCCCOKCCCCCCCCCFD7E0ECFAJ(<(J"J#J+
+O9CCCCCCCCD4DEECECDED4CCCCCCCCID1O=D9CCP$CCCCCCCCCCD1D9E0F1FEJ&8&J#J"J&
+O=CCCCD1DEFEF7D9CFCCCCMCCFEO<E9P*CCCCCFE0FAJ(8'J"J&J&
+O;D1DBE9FAFFFFFFFFFFFFF1E0D7MECO<FFF1E4D9D1P&D4E9FFFFFFJ)>(J"J)J%
+O7CFD9E4FAFFFFFFFFFFFFFFFFECDED4IDEO=FFFFFFFFFAECDED7P DBF1FFFFJ(F(J"JP%J&
+O4D9E4F7FFFFFFFFFFFFFFFEECDED1ED4OAF1E0D9CFOFCFE0FAFFFFJ(J)J"J)J&
+O0D7E0F1FFFFFFFF7FFFFFFFFFAE9DBD1ACCOFFFFFFFFFFAE9DED4O@D4E9FFFFFFJ(J)J"JP%J%
+O,D4DEECFEFFFFFF?FFFFFFFFF7E4D9CF>F1OIF1E0D9CFO9DBF1FFFFJ)J(J"J)J&
+O(D1DBECFEFFFFFFFFFFFFFFFFFF7E4D7;E0P FFFFFFFFFAE9DBD4O2CFE0FAFFFFJ)J(J"J*J&
+O$D1DBE9FAFFFFFFFFO FFFFFFFFF1E0D47D7P$FFFFFFFFFEF1E0D7CFO+D4E9FFFFFFJ)J(I"JP%J%
+O CFD9E4F7FFFFFFFFO(FFFFFFFEECDED4CCP(F7E9DBD4O%DBF1FFFFJ(J)F"J)J&
+KD7E0F7FFFFFFFFO/FFFFFFFFFEE9DBD1F7P,FFFFFFFFFEF1E0D7LCFE0FAFFFFJ(J)B"JP%J&
+GD4E0F1FFFFFFFFO7FFFFFFFFFAE9D9CFE4P0F7E4DBD1ED4E9FFFFFFJ(J)>"J)J%
+CD4DEECFEFFFFFFO?FFFFFFFFF7E4D9CFD9P5FFFFFFFFFEECE0D7?DBF1FFFF@#I)J(;"JP%J&
+E9D9D1DBE9FEFFFFFFFFOFFFFFFFFFF1E0D7CFP9F7E4DBD17CFE0FAFFFF@&B)J+J)G&
+FFFFFEE9D9CFDBE9FAFFFFFFFFP FFFFFFFFECDED4CCCCFAP=FFFFFFFFFAECDED7D4E9FFFFFFB';)J&JP%@%
+FFFFFFFEE9D9CFD9E4F7FFFFFFFFP(FFFFFFFEECPBF1E4D9D1DBF1FFFFE-J$J)9&
+FFFFFFFEE9D9E0F1FFFFFFFFP/FFFFFFPFFFFFFFFFFAECDED7CFE0FAFFFFH&JP&
+ECDBD1DBECS2F1DEFFFFFFD-J*
+FEE9D9CCCCCCCCCCCCCFDBECS2FEE9D1CCCCD7DEECFAA'<'J&8)
+FAE4D4CCCCCCCCCCCCCFDBECS-FADBCFCCCCCCCCCCCCD1DBE4F7@%B'J&>*
+D1CCCCCCCCCCCCCFDBECS(ECD7CCCCCCCCCCCCCCCCD7E0ECFE@"H'J$J&F)
+CCCCCCCCCFDBECP(FAE4DBPEFEE4D1CCCCCCCCCCCCD4DBE9F7J'J'J&J)
+@CCCCCCCFDBECP"F7E4D4CCCCCCPCFADBCFCCCC6CCCCCCCCCFD7E0F1J'J'9"J&J*
+CCCCCCCCFDBECOJF7DED1CCCCCCF1P@ECD7CCCCCC<CCCCCCCCCCD4DEE9FAJ'J'<"J&J)
+FCCCCCCCFDBECODF1DED1CCCCCCE0P=FEE0D1CCCCDCCCCCCCCD1D9E4F1J(J'?"J&J*
+ICCCCCCCFDBECFEO=ECDBCFCCCCCCD7P;F7DBCCCCCCJCCCCCCCCCCD7DEECFEJ(J(B"J%J)
+LCCCCCCCCD9E9FEO6FEECDBCFCCCCCCCFP9E9D7CCCCO$CCCCCCCCD1DBE4F7J'J(E#J&J&
+O"CCCCCCD9E9FEO0FEE9D9CCCCCCCCCCF7P5FEE0D1CCCCO*CCCCCCCCCCJ'J'J"J&
+O%CCCCCCD9E9FEO*FAE9D9CCCCCC4E4P3F7DBCCCCCCJ'J'J"J%
+O(CCCCCCD9E9FEO$FAE4D4CCCCCC7D9P1E9D4CCCCJ'J'J"J&
+O+CCCCCCD9E9FELF7E4D4CCCCCC:D1P.FAE0CFCCCCJ'J'J#J&
+O.CCCCCCD9E9FEFF7DED1CCCCCC=CCFAP+F1DBCCCCCCJ'J'J"J%
+O1CCCCCCD9E9FE@F1DED1CCCCCCAE9P)E9D4CCCCJ'J'J"J&
+O4CCCCCCD9E9FE:ECDBCFCCCCCCDDBP&FADECFCCCCJ'I(J"J&
+O7CCCCCCD9E9FEFEECDBCFCCCCCCGD4P$F1D9CCCCCCJ'C(J#J&
+O:CCCCCCD9E9FEFEE9D9CCCCCCCCJCCFEP FEE9D1CCCCJ'='J"J&
+O=CCCCCCD9E9FEFAE9D9CCCCCCO!ECOLFADECFCCCCJ.J"J&
+O@CCCCCCD9E9FEFFFAE4D4CCCCCCO$DEOJF1D9CCCCCCJ(J"J$9&
+OCD4E4F7FFECDBCFO'D7OAECE4F7FEE4D1CCCCJ$R$J"J*
+O@D7E4FAECDBCFO$CCOAFACCCCD4FAFADBCFCCJ'='J"J-
+O=D9E9FEFFFFFFFFFFFFECDBCFO"F1O@FFD9E4FEFFFFFFFFF7E4D9CFJ(C'J"J$:(
+O9CFDBECFEFFFFFFFFFFFFECDBCFME0OAFFFFFFFFFFFFFFF1E0D7J(I'J"J(
+O6D1DBECFFFFFFFFFFFFFFECDBCFJD7OLFFFFFFFFF1DED4J'J'J"J(
+O3D1DEF7FFFFFF:FFFFFFECDBCFGCFP"FFFFFFFEECDED4J'J'J#J)
+O0D4E4F7FFFFFF@FFFFFFECDBCFDCCF7P$FFFFFFFFFEE9DBD1J'J'J"J)
+O-D9E4FAFFFFFFFFFFFFFECDBCFBE4P(FFFFFFFFFAE9DBD1J'J'J"J)
+O*D9E9FEFFFFFFLFFFFFFECDBCF?D9P,FFFFFFFFF7E4D9CFJ(J'J"J(
+O&CFDBECFFFFFFFFO$FFFFFFECDBCF<D1P0FFFFFFFFF7E4D7J'J'J#J(
+O#D1DEECFFFFFFO+FFFFFFECDBCF9CCFAP3FFFFFFFFF1E0D7J'J'J"J(
+O D1DEF7FFFFFFO1FFFFFFECDBCF7E9P7FFFFFFFFECDED4J'J'J"J(
+KD4E4FAFFFFFFO7FFFFFFECDBCF4DBP;FFFFFFFEECDED1J'J'G"J)
+HD9E4FAFFFFFFO=FFFFFFECDBCFD4P>FFFFFFFFFAE9DBD1J'J'D#J)
+ED9E9FEFFFFFFOCFFFFFFECDBCFCCFEPAFFFFFFFFFAE9D9CFJ(J'B"J)
+ACFDBECFFFFFFFFOIFFFFFFECDBCFECPEFFFFFFFFF7E4D9CFJ'J'?"J(
+>D1DEF1FFFFFFP"FFFFFFECDBCFDEPIFFFFFFFFF1E0D7J'J'<"J(
+;D4DEF7FFFFFFP(FFFFFFECDBCFD7PMFFFFFFFFF1E0D4J'J'9"J(
+8D4E4FAFFFFFFP.FFFFFFECDBCFCCQ#FFFFFFFEECDED4J'J)J)
+5D9E9FAFFFFFFP4FFFFFFECDBCFCCF1Q%FFFFFFFFFEECDBD1G(J%J)
+CFD9E9FEFFFFFFP:FFFFFFECQ*FFFFFFFFFAE9DBD1D(J#J)
+CFDBECFFFFFFFFP@FFFFQ-FFFFFFFFF7E4D9CFA'J(
+D1DEF1FFFFFFT)FFFFFFFFF7E4D9@%J(
+F7FFFFFFT0FFFFFFFFF1E0D7@"J(
+FFT7FFFFFFFFECDED4J&
+TFFFFFFFFEEC@"J#
+E9T>FFFF@%J"
+CCCFE0FAT<E9A&J$
+CCCCCCDBF1T8F7D7CCD&J%
+CCCCD1E9FET3FEDECCCCF&J$
+CCCCCFDEFAT0E9CFCCH&J%
+CCCCCCD7ECT,F7D7CCCCJ&J%
+5CCCCD1E4FET'FEDBCCCCJ&J$
+7CCCCCFDBF7T$E4CFCCJ&J$J%
+9CCCCCCD7E9P9FAE0D9Q2F1D4CCCCJ&J&J%
+<CCCCD1E0FAP4F1DBCCCCCCQ0FEDBCCCCJ&J%9"J$
+>CCCCCCDBF1P0E9D4CCCCF1Q.E4CFCCJ%J&;"J%
+ACCCCD4E9P+FAE0CFCCCCE0Q,F1D4CCCCJ&J&="J%
+CCCCCCFDEFAP&F1DBCCCCCCD9Q*FEDBCCCCJ&J%@"J$
+ECCCCCCD9F1P"E9D4CCCCCFQ)E0CFCCJ&J&B#J%
+HCCCCD1E4FEOJFAE0CFCCCCCCF7Q&F1D1CCCCJ&J&E"J%
+JCCCCCFDBFAOFF1DBCCCCCCE4Q$FAD9CCCCJ&J%H"J$
+LCCCCCCD7ECOBE9D4CCCCDBQ#E0CFCCJ&J&J"J%
+O!CCCCD1E0FEO<FAE0CFCCCC4D1Q!F1D1CCCCJ&J&J#J%
+O#CCCCCCDBF7O8F1DBCCCCCC6CCFAPLFAD9CCCCJ%J%J"J$
+O&CCCCD4E9O4E9D4CCCC:E9PKE0CFCCJ&J&J"J%
+O(CCCCCFE0FAO.FAE0CFCCCC<DEPIF1D1CCCCJ&J&J"J%
+O*CCCCCCDBF1O*F1DBCCCCCC>D4PGFAD7CCCCJ&J%J#J%
+O-CCCCD1E9FEO%E9D4CCCCACCFEPDFEE0CCCCJ&J&J"J$
+O/CCCCCFDEFAO FAE0CFCCCCDF1PCECD1CCJ&J&J"J%
+O1CCCCCCD7ECJF1DBCCCCCCFE0PAFAD7CCCCJ&J%J"J$J%
+O4CCCCD1E4FEEE9D4CCCCID7OGE4E9FECFEE0CCCCJ&J&J"J'J$
+O6CCCCCFDBF7@FEE0CFCCCCKCCOGE9CCCCD9E9FE?ECD1CCJ&J&J"J*J%
+O8CCCCCCD7E9<F7DBCCCCCCO F1OFFFCFCCCCCCCCD7E4FA:FAD7CCCCJ&J%J#J":'J%
+O;CCCCD1E0FE7E9D7CCCCO#D9F1OFDBCCCCCCD4E4FA5FEDECCCCJ&H&J(J"='G$
+O=CCCCCCDBF1FEE0D1CCCCO%CCCCCCD7DEECFEOAECCCCCCCD4E4FAE9CFCCJ%D&J)J#?'B%
+O@CCCCD4E9F7DBCCCCCCO*CCCCCCCCD4DEE9FAO=FFCFCCCCCCD4DEF7F7D7CCCCJ&?%J)J"B'=%
+OBCCCCCFDEFAE9D7CCCCO1CCCCCCCCD1DBE9F7O:DBCCCCCCD1DEF7FEDECCCCJ&:&J)J"E'9$
+ODCCCCCCD9F1FEE0D1CCCCO7CCCCCCCCCFD9E4F7O6F1CCCCCCD1DEF7E9CFCCJ*J)J#G)
+OGCCCCD1F1FFDBCCCCCCO=CCCCCCCCCCD7E0F1O2FFD1CCCCCCCFDBD7CCCCJ(J)J"J$
+OHD7ECFFFFFEE0D1OCCCCCCCCCD7DEECFEO.DE4CCCCCCJ&8&J)J"
+OECFDBFAFFFFFFFFFFE9D7OECCCCCCCCD4DEE9FAO*F7J&=&J)J#
+OCD1E4FEFFFFFFFFF7DBCFOFCCCCCCCCD1DBE9F7O&FFD1J&A&J)J"
+OAD7ECFFFFFFFFFFFEE4D1OHCCCCCCCCCFD9E4F1O#E0J&F&J)J"
+O>CFDBFAFFFFFFFFFFECD7OJCCCCCCCCCCD7E0F1MFAJ&J&J)J#
+O<D1E4FEFFFF5FFFFFADBCFOLCCCCCCCCD4DEECFEHFFD4J&J&J)J"
+O:D7ECFFFFFF9FFFFFEE9D1P CCCCCCCCD4DBE9FAEE4J&J&J)J"
+O7CFDBFAFFFF>FFFFFFF1D9P"CCCCCCCCD1DBE4F7AFAJ&J&J)J#
+O5D1E4FEFFFFCFFFFFADECFP#CCCCCCCCCFD9E4F1=FFD4J&J&J)J"
+O3D7ECFFFFFFGFFFFFEE9D4P%CCCCCCCCCCD7E0F1:E9J&J&J)J"
+O0CFDBFAFFFFLFFFFFFF1DBP(CCCCCCCCD4DEECFE5FEJ&J&J)G#
+O.D1E4FEFFFFO#FFFFFAE0CFP)CCCCCCCCD4DBE9FAFFD9J&J&J)D"
+O,D7E9FFFFFFO'FFFFFFE9D4P+CCCCCCCCD1DBE4F7E9J%J%J)@"
+O*DBF7FFFFO-FFFFF7DBP-CCCCCCCCCFD9E4F1FEJ&J&J)<#
+O'D1E0FEFFFFO1FFFFFEE0D1P.CCCCCCCCCCD7E0F1FFDBJ&J&J)8"
+O%D7E9FFFFFFO5FFFFFFE9D7P1CCCCCCCCD4DEECFEECJ%J&J(
+O#DBF7FFFFO;FFFFF7DBCFP2CCCCCCCCD4DBE9J&J&J$
+O D1E0FEFFFFO?FFFFFEE4D1P4CCCCCCJ&J&
+LD7E9FFFFFFOCFFFFFFECD7J%J&
+JDBF7FFFFOIFFFFFADBCFJ&J&
+GD1E0FEFFFFOMFFFFFEE9D1J&J&
+ED7E9FFFFFFP#FFFFFFF1D9J%J&
+CDBF7FFFFP)FFFFFADECFJ&J&
+@D1E0FEFFFFP-FFFFFEE9D4J&J&
+>D7E9FFFFFFP1FFFFFFF1DBJ%J&
+<DBF7FFFFP7FFFFFAE0CFJ&J&
+9D1E0FEFFFFP;FFFFFFE9D4J&J%J,
+7D4E9FFFFFFP@FFFFF7DBO)C4C4C4C1BCBCBCB9B5B5C1J%J&J.x#
+5DBF1FFFFPEFFFFFEE0D1DCAC4C4C4C1BCBCBCB9B5B5B5AFAEAFC5H&J&I-zC$
+CFE0FAFFFFPIFFFFFFE9D7CAC4C4C4C0BCBCBCB6B5B5B50AEAEB1CAF&J3zJ#
+D4E9FFFFFFQ FFFFF7DBCFCCC8C4C4C4BEBCBCBCB5B5B5B3/AE>AEB5D%J0wJ#
+DBF1FFFFPHFCF9F9F9F2F2F2F2EAEAEAE7DCC6B0AEO AEBAA&J-z$J#
+CFE0FAFFFFP;FCF9F9F9F2F2F2EFEAEAEAE51E1DFD0B8O+AEC0@%J-zG&J#
+E9FFFFFFP.F9F9F9F8F2F2F2EDEAEAEAE3/E1E1E1E1D8C3O*AEC5@"J"wJ&J#
+FFP0FDE1CE1E1DFCEB4O(AFCAJ#J&J#
+P;FFEBO"E1E1E1D3BFO&AEB3J"J&J#
+P<F5O%E1E1DCC6B0O$AEB9J#J&J#
+P<FFE3O&E1E1E1D0BBO#AEBEJ"J&J#
+P=EDO)E1E1D8C3B0O!AEC4J"J&J#
+P=FCO+E1E1DFCEB4O AFC8@"J#J&J$
+F7P2FFE5O,E1E1E1D6C3LAEB3CA@$J"J&J#
+CCDEFEP1F3O/E1E1DCCBB4JAEB6A$J"J&J#
+CCCFE9P0FDO1E1E1E1D0B8IAEBCB%J#J"J#
+CCCCD4F1P.FFEBO4B0JAEC1D%J"J%J#
+CCCCDBFAP-F5O1D8BBAEAEKAFC5F$J#J%J$
+CCCFE0P,FFE3O.DFC6AEAEMAEB3CAG%J"J$J#
+CCCCD1F1P+EDO-D0B0AEO"AEB5I%J"J%J#
+CCCCD7FAP)FCO+D8BBAEAEO$AEBAJ%J#J%J#
+5CCCCE0FEP'FFE5O(DFC6AEAEO'AEC0J$J"J$J#
+7CCCFE9P'F3O'D0B0AEO*AFC5J%J"J%J$
+8CCCCD7F7P%FDO%D8BBAEAEO+AEAFCAJ%J#J%J#
+:CCCCDBFEP#FFEBO"DFC6AEAEO.AEB3J$J"J$J#
+<CCCFE4P#F5O!D0B0AEO1AEB9J%J#J%J#
+=CCCCD1F1P!FFE3LD8BBAEAEO3AEC0J%J"J%J#
+?CCCCD9FAP EDJDFC6AEAEO6AEC4J%J"J$J#
+ACCCFE0FEOLFCID0B0AEO9AFC8J%J#J%J$
+BCCCCD1ECOKFFE5FD8BBAEAEO:AEB3CAJ%J"J%J#
+DCCCCD7F7OJF3DDFC6AEAEO=AEB9J%J"J$J#
+FCCCCDEFEOHFDCD0B0AEO@AEBCJ$J#J%J#
+HCCCFE9OGFFEB@D8BBAEAEOBAEC1J%J"J%J#
+ICCCCD4F1OFF5>DFC6AEAEOEAFC5J%J#J$J$
+KCCCCDBFAODFFE3<D0B0AEOGAEB3CAJ$J"J%J#
+MCCCFE0ODED:D8BBAEAEOIAEB5J%J"J%J#
+O CCCCD1F1OBFC8DFC6AEAEOLAEBAJ%J#J$J#
+O"CCCCD7FAO@FFE56D0B0AEP!AEC0J%J"J%J#
+O$CCCCE0FEO?F34D8BBAEAEP#AFC5J$J"H%J$
+O&CCCFE9O>FDDFC6AEAEP%AEB1CAJ%J#F$J#
+O'CCCCD7F7O<FFEBD0B0AEP(AEB3J%J"D%J#
+O)CCCCDBFEO;F5D8BBAEAEP*AEB9J$J#A%J#
+O+CCCFE4O:FFE3DFC6AEAEP-AEC0J%J"@$J#
+O,CCCCD1F1O9EDD0B0AEP0AEC5J%J">%J#
+O.CCCCD9FAO7FCD8BBAEAEP2AFC8J%J#;%J$
+O0CCCFE0FEO5FFE5DFC6AEAEP4AEB3CAJ%J":$J#
+O1CCCCD1ECO5F3D0B0AEP7AEB9J%J"8%J#
+O3CCCCD7F7O3FDD8BBAEAEP9AEBEJ%J&J#
+O5CCCCDEFEO1FFE6C6AEAEP<AEC1J$J$J#
+O7CCCFE9O0ECC7AEP?AFC5J%J&J'
+O8CCCCD4F1O,FAD7CCCCAFP;B3B5B5BABCC1J%J%8"J*t
+O:CCCCDBFAO(FEDECCCCB9P/B5B5B5BCBCBCC4C4C4CCJ$J$:"J+w
+O<CCCFE0O&E4CFCCC5P"AFB5B5B6BCBCBCC4C4C4CCJ%J%;#J+w
+O=CCCCD1F1O"F1D4CCCCCCB1OCAFB5B5B6BCBCBEC4C4C5CCJ%J%>"J+w
+O?CCCCD7FALFAD9CCCCBEO7B1B5B5B9BCBCC0C4C4C8CCJ%J%@"J+w
+OACCCCE0FEHFEE0CFCCC8O+B3B5B5BABCBCC1C4C4C8CCJ$J%A#J+w
+OCCCCFE9FE9D1CCCCCCB6LB5B5B5BABCBCC1C4C4CACCJ%J%D"J*x
+ODCCCCD7F1BF7D7CCCCC0@B5B5B5BCBCBCC4C4C4CCJ%J%F#H+w
+OFCCCCDBFE>FEDBCCCCCCAFAFB5B5B6BCBCBEC4C4C4CCJ$J$I"<+w
+OHCCCFE4<E4CFCCB9B1B5B5B9BCBCBEC4C4C5CCJ%J%J&w
+OICCCCD1F18F1D1CCCC4C8C0C4C4C8CCJ%J%J&
+OKCCCCD9FA4FAD7CCCC6CCCCCCCCCCJ%F%
+OMCCCCE0FEFEE0CCCCJ$D$
+P!CCD1ECE9CFCCJ%@%
+P"CCCCD7F7F1D7CCCCJ%<%
+P$CCCCDEFEFEDBCCCCJ$:$
+P&CCCFE4E0CFCCJ)
+P'CCCCD4F7ECD1CCCCJ&
+P(CFE0FFFEDEJ)
+P'DBFAFFFFFFFFF7D4J%:%
+P%D4F1FFFFFFFFE4CFJ%>$
+P#CFE4FFFFFFFED9J$A%
+P"DEFEFFFFFFF1D1J%D%
+P D7F7FFFFFFFFE0CFJ%H$
+OLCFE9FFFFFFFAD7J$J%
+OKE0FEFF5FFFFECD1J%J$
+OID7FAFFFF8FFFEDEJ%J%
+OGD1ECFFFF;FFFFF7D7J%J%
+OECFE0FFFF?FFFFE4CFJ$J$
+ODD9FAFFCFFFEDBJ%J%
+OBD1F1FFFFEFFFFF1D4J%J%
+O@CFE4FFFFIFFFFE0CFJ$J$
+O?DBFEFFMFFFAD9J%J%
+O=D7F1FFFFO!FFFFECD1J%J$
+O;CFE9FFFFO%FFFEE0J$J%
+O:DEFEFFO(FFFFF7D7J%J%
+O8D7F7FFFFO+FFFFE9CFJ%J$
+O6D1ECFFFFO/FFFEDEJ$J%
+O5E0FEFFO2FFFFF1D4J%J%
+O3D9FAFFFFO5FFFFE4CFJ%J$
+O1D1F1FFFFO9FFFAD9J%J%
+O/CFE0FFFFO<FFFFF1D1J$J$
+O.DBFAFFO@FFFFE0J%J$
+O,D4F1FFFFOCFFFAD7J%J%
+O*CFE4FFFFOFFFFFECCFJ$J$
+O)DEFEFFOJFFFEDEJ%J%
+O'D7F7FFFFOLFFFFF7D4J%J%
+O%CFE9FFFFP"FFFFE4CFJ$J$
+O$E0FEFFP&FFFEDBJ%J%
+O"D7FAFFFFP(FFFFF1D1J%J%
+O D1ECFFFFP,FFFFE0CFJ%J$
+LCFE0FFFFP0FFFAD7@z#J$z
+BF0FAFFP3FFFFF6Q5F0@ZJZ
+CP6Q6
+
+
+
+
+
+
+
+
+
+
+
+
+J$
+SIFBCDFB@"t"J"uJ&
+DDC2D2P/D2C2PGFBBDAEBDFB@"t"J"uJ(J,9#
+D5AEC2P/C2AEPFFBBDAEAEAEBDFB;D2C2C2B2BDC2C2EEC2AEFBBDAEJ$9$J,8#
+SFFBBDAEAEBDFB:FFFFFFC2E8FFFFFFC2C2DDF4C9J$;$J#8#
+SEFBBDAEAEBDFBBDACDDADDJ#=#J#8#
+SEE2AEB2F4BE8BDBDF4J#<$J&
+SEFFDAB2EEFFCCDE2F4BDFFJ#:$J%
+SFFFCDB2EEFFDE2D2DADAJ#8$J%
+SGFFCDB2EEFFEFFB7C9F4J&J$
+SHFBBDB2EEFFGC9BDFFJ%J#9&8"
+SHFFFBF4FF@D2EED2EEFFE2DDC2J#J#9P8"
+SIFFFFAFFFFFF
+
+
+Jv"
+SED5F4J"z#D"z"?"u>.J#z$?$z";"uD"u":v"9"z#
+4B73D5E2F4EE9E8F4F4D5F4E8E8E8E8E8E2D5D5D5D5D5D57DDCD:C2C9D5F4F4CDB2>AEC2C2AED2C2EEAEE8E8>D5DDFBJz#B"z$<"u'zJ#z"=%J"u"I"z#
+46AEC2E8C2:AEB7CDF4E8AEFBE8D5CDC2B7/AE5FBBD?AED2DDAEAEAEO/C2AEE8D5@AED2FBJ$J%F'J#J#;#J#
+JAEAEDDFAEAEB2DDAEAEAEAEAEAEDBDAE?AED5E8AEPDAEBDJ#S$?#@"z#?$J+J#?#T$@#:"A%T"J"V#?#
+6CDE8FBDDB2B2F4EE1E8DDBDAEAEDD:C2CDD5DDE8E8E8FFFFFF4DDAEDAFBFBDAB2B2FBC2C2E2E8FBD5ODD5E2B7AED5J$>$?#@Z"@"J$SJ"?$?$@#9#@&J$?#
+5DAFFFFFFFFE8AED24C9B26C9DAEE7C2DAFFFFFFFFEEAEE2FBAEC2FFFFFFFFP,FFFBB2AEFBJ#B#?"J"@#H'J"?"C#@"9"A"J#@"
+4B7FFFFBDB7>EEAEE8B2D5F4FFFFFF?AEFBFFC9D5E8E2P1FFD2E2J"D"?"J"J%J"D"J"J"@"
+4C2C2AE>FF=D5FBFFFFLFFD5:E8P2E8D5J%
+P,B2E8FFFFJ#
+P,E8FFJ#
+P+CDFFJ"
+P+EEJ"Jz"
+P+FFO$/E8CDJz
+Q00AE
+
+J#z
+O)F4D54C2J"z
+O(D56AEJ#?"v"
+O'D5AEB7C2BDJ#?"W"J"z"
+O&FBAED5E8O?CD9D5E8J"@"J"Z
+O&DDFBOLE8:J"@"
+O&D5FF
+
+
+
+
+
+
+
+
+
+
+J"
+S'FBJ"J"?"J"J"@"
+O1FBOBC9D2IDA=D2E2J"@"J"?#J"A#J"@"
+O&E8DAOBDDB2EE<F4B2F4<E8C2J#?$J#>%J#@$v"E#?$
+O&FFB7B2DDFBO@FFBDAEB2D5F4:FFC2AEB2D2E8CDFFC2AEC9F4J"?yJ#>z">#@yF#?y
+O'E8AEO6EEB25AED5EEB2AEF4B2AEJ$J#J$J$J$
+O'FFEEB7?B2FBO*FFEEBDEFFEEB7GFFF4C2@"t"D"u>%z#9"uJ"u=%z"?%z"G%z":v"9"u"
+DDC2D2D2C2FFFFE2D2=C2E2FFEEC29DDD5FFFFE2CD:C2DDFFFFDDCD4C2B7FFFFEEDA>D5F4C2EEDDC2DD@VDV@Z:VJV?ZAZ"IZ:W9WC$T
+@9=6D5AFBE8FBJ$
+T?FFFFFF
+
+
+
+
+
+
+
+
+
+
+
+
+JV
+R:
+
+
+
+
+
+
+
+
+ENDBITMAP
+%%EndBinary
+0 0 0 1 0 0 0 K
+108 117 486 612 C
+36 72 576 720 C
+0 0 0 1 0 0 0 K
+[/Creator(FrameMaker xm5.1.1P1b)/DOCINFO FmPD2
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.i/DEST FmPD2
+[/Dest/F.Titledoc/DEST FmPD2
+[/Dest/L.Titledoc/DEST FmPD2
+108 569/I1.1.130711 FmPA
+108 663/I1.1.130687 FmPA
+108 663/I1.1.130696 FmPA
+FMENDPAGE
+%%EndPage: "i" 1
+%%Page: "ii" 2
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 81 540 117 R
+7 X
+0 0 0 1 0 0 0 K
+V
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+72 234 504 684 R
+V
+1 9 Q
+0 X
+(Copyright and T) 72 678 T
+(rademarks) 139.01 678 T
+2 F
+(ML) 72 663 T
+(W) 84.83 663 T
+(orks W) 93.15 663 T
+(indows V) 118.71 663 T
+(ersion 2.0 Installation Notes) 152.63 663 T
+0 F
+(August 1998) 72 648 T
+(Part number: ML) 72 633 T
+(W) 139.98 633 T
+(-2.0.0-W) 148.48 633 T
+(Copyright \251 1997-1998 by Harlequin Gr) 72 618 T
+(oup plc.) 231.07 618 T
+(Companies, names and data used in examples her) 72 603 T
+(ein ar) 271.03 603 T
+(e \336ctitious unless otherwise noted.) 293.34 603 T
+-0.04 (All Rights Reserved. No part of this publication may be r) 72 588 P
+-0.04 (epr) 297.85 588 P
+-0.04 (oduced, stor) 310.96 588 P
+-0.04 (ed in a r) 360.13 588 P
+-0.04 (etrieval system, or transmit-) 392.33 588 P
+-0.16 (ted, in any form or by any means, electr) 72 578 P
+-0.16 (onic, mechanical, photocopying, r) 228.58 578 P
+-0.16 (ecor) 362.33 578 P
+-0.16 (ding, or otherwise, without the) 378.94 578 P
+(prior written permission of Harlequin Gr) 72 568 T
+(oup plc.) 235.61 568 T
+-0.05 (The information in this publication is pr) 72 553 P
+-0.05 (ovided for information only) 230.7 553 P
+-0.05 (, is subject to change without notice, and) 340.94 553 P
+-0.06 (should not be constr) 72 543 P
+-0.06 (ued as a commitment by Harlequin Limited, Harlequin Incorporated, Harlequin Austra-) 152.85 543 P
+(lia Pty) 72 533 T
+(. Limited, or Harlequin Gr) 96.36 533 T
+(oup plc. Harlequin Gr) 200.82 533 T
+(oup plc assumes no r) 288.65 533 T
+(esponsibility or liability for any) 372.6 533 T
+(err) 72 523 T
+(ors or inaccuracies that may appear in this publication. The softwar) 83.26 523 T
+(e described in this book is furnished) 350.92 523 T
+(under license and may only be used or copied in accor) 72 513 T
+(dance with the terms of that license.) 288.12 513 T
+(ML) 72 498 T
+(W) 85.35 498 T
+(orks is a trademark of Harlequin Gr) 93.52 498 T
+(oup plc.) 236.02 498 T
+(Other brand or pr) 72 483 T
+(oduct names ar) 142.9 483 T
+(e the r) 203.88 483 T
+(egister) 228.56 483 T
+(ed trademarks or trademarks of their r) 254.95 483 T
+(espective holders.) 407.93 483 T
+(US Government Use) 72 468 T
+(The ML) 72 453 T
+(W) 102.66 453 T
+(orks Softwar) 110.83 453 T
+(e is a computer softwar) 161.34 453 T
+(e pr) 254.14 453 T
+(ogram developed at private expense and is subject to the) 269.51 453 T
+-0.13 (following Restricted Rights Legend: \322Use, duplication, or disclosur) 72 443 P
+-0.13 (e by the United States Government is sub-) 337.49 443 P
+(ject to r) 72 433 T
+(estrictions as set forth in \050i\051 F) 101.09 433 T
+(AR 52.227-14 Alt III or \050ii\051 F) 215.16 433 T
+(AR 52.227-19, as applicable. Use by agencies) 324.12 433 T
+(of the Department of Defense \050DOD\051 is subject to Harlequin\325s customary commer) 72 423 T
+(cial license as contained in) 395.67 423 T
+(the accompanying license agr) 72 413 T
+(eement, in accor) 189.4 413 T
+(dance with DF) 253.86 413 T
+(AR 227.7202-1\050a\051.  For purposes of the F) 311.51 413 T
+(AR, the) 469.12 413 T
+(Softwar) 72 403 T
+(e shall be deemed to be `unpublished\325 and licensed with disclosur) 102.97 403 T
+(e pr) 364.99 403 T
+(ohibitions, rights r) 380.36 403 T
+(eserved) 453.55 403 T
+(under the copyright laws of the United States. Harlequin Incorporated, One Cambridge Center) 72 393 T
+(, Cambridge,) 448.48 393 T
+(Massachusetts 02142.\323) 72 383 T
+216 126 360 216 R
+7 X
+V
+0 X
+(North America:) 216 210 T
+1 F
+(Harlequin Incorporated) 216 189.5 T
+0 F
+(One Cambridge Center) 216 179.5 T
+(Cambridge, MA 02142) 216 169.5 T
+(U.S.A.) 216 159.5 T
+(telephone +1 617 374 2400) 216 139 T
+(fax +1 617 252 6505) 216 129 T
+72 126 216 216 R
+7 X
+V
+0 X
+(Eur) 72 210 T
+(ope:) 86.32 210 T
+1 F
+(Harlequin Limited) 72 195 T
+0 F
+(Barrington Hall) 72 185 T
+(Barrington) 72 175 T
+(Cambridge CB2 5RG) 72 165 T
+(U.K.) 72 155 T
+(telephone +44 1223 873 800) 72 140 T
+(fax +44 1223 872 519) 72 130 T
+360 126 504 216 R
+7 X
+V
+0 X
+(Electr) 360 210 T
+(onic Access:) 382.75 210 T
+(http://www) 360 189.5 T
+(.harlequin.co.uk) 411.36 189.5 T
+(http://www) 360 179.5 T
+(.harlequin.com) 411.36 179.5 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.ii/DEST FmPD2
+[/Dest/F.Copyrghtdoc/DEST FmPD2
+[/Dest/L.Copyrghtdoc/DEST FmPD2
+172 783/I2.1.850686 FmPA
+110 813/I2.1.850674 FmPA
+FMENDPAGE
+%%EndPage: "ii" 2
+%%Page: "iii" 3
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 540 522 630 R
+7 X
+0 0 0 1 0 0 0 K
+V
+0 30 Q
+0 X
+(Contents) 108 553.83 T
+108 540 522 630 C
+0 0 0 1 0 0 0 K
+108 588.83 405 619 C
+0 0 0 1 0 0 0 K
+104.67 603.83 266.67 603.83 2 L
+3 H
+2 Z
+0 X
+0 0 0 1 0 0 0 K
+N
+104.67 594.83 266.67 594.83 2 L
+1 H
+N
+0 0 0 1 0 0 0 K
+108 540 522 630 C
+36 72 576 720 C
+0 0 0 1 0 0 0 K
+108 126 486 468 R
+7 X
+0 0 0 1 0 0 0 K
+V
+108 81 540 117 R
+V
+1 11 Q
+0 X
+(iii) 282.51 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 468 R
+7 X
+V
+3 13 Q
+0 X
+(1) 108 459.33 T
+(MLWorks distribution format) 135 459.33 T
+(5) 293.69 459.33 T
+(2) 108 436.33 T
+(Contacting Harlequin Support) 135 436.33 T
+(5) 299.62 436.33 T
+(3) 108 413.33 T
+(Suggested minimum system configurations for MLWorks) 135 413.33 T
+(7) 437.65 413.33 T
+(4) 108 390.33 T
+(Installation) 135 390.33 T
+(7) 204.28 390.33 T
+(5) 108 367.33 T
+(Licenses) 135 367.33 T
+(12) 193.63 367.33 T
+(6) 108 344.33 T
+(Environment variables and startup files) 135 344.33 T
+(14) 347.65 344.33 T
+(7) 108 321.33 T
+(Contents of the installed MLWorks system) 135 321.33 T
+(15) 363.02 321.33 T
+(8) 108 298.33 T
+(Organization of the installed MLWorks system) 135 298.33 T
+(21) 381.99 298.33 T
+(9) 108 275.33 T
+(Setting up editor support) 135 275.33 T
+(22) 275.33 275.33 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.iii/DEST FmPD2
+[/Dest/F.installTOCdoc/DEST FmPD2
+[/Rect[108 455 486 467]/Border[0 0 0]/Dest/G4.853391/LNK FmPD2
+[/Rect[108 432 486 444]/Border[0 0 0]/Dest/G4.852951/LNK FmPD2
+[/Rect[108 409 486 421]/Border[0 0 0]/Dest/G4.853018/LNK FmPD2
+[/Rect[108 386 486 398]/Border[0 0 0]/Dest/G4.889003/LNK FmPD2
+[/Rect[108 363 486 375]/Border[0 0 0]/Dest/G4.905676/LNK FmPD2
+[/Rect[108 340 486 352]/Border[0 0 0]/Dest/G4.853104/LNK FmPD2
+[/Rect[108 317 486 329]/Border[0 0 0]/Dest/G4.853135/LNK FmPD2
+[/Rect[108 294 486 306]/Border[0 0 0]/Dest/G4.853223/LNK FmPD2
+[/Rect[108 271 486 283]/Border[0 0 0]/Dest/G4.853239/LNK FmPD2
+[/Title(A)/Rect[99 117 495 477]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "iii" 3
+%%Page: "iv" 4
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+72 81 504 117 R
+V
+1 11 Q
+0 X
+(iv) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.iv/DEST FmPD2
+[/Dest/L.installTOCdoc/DEST FmPD2
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "iv" 4
+%%Page: "5" 5
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 81 540 117 R
+7 X
+0 0 0 1 0 0 0 K
+V
+1 9 Q
+0 X
+(5) 535.5 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 513 504 648 R
+7 X
+V
+108 620.45 504 648 C
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 620.45 504 648 R
+7 X
+0 0 0 1 0 0 0 K
+V
+108 641.14 270 641.14 2 L
+3 H
+2 Z
+0 X
+N
+108 632.14 270 632.14 2 L
+1 H
+N
+36 72 576 720 C
+0 30 Q
+0 X
+0 0 0 1 0 0 0 K
+(Installing ML) 108 600.45 T
+(W) 285.39 600.45 T
+(orks) 312.63 600.45 T
+108 126 486 432 R
+7 X
+V
+3 16 Q
+0 X
+(1  ML) 108 421.33 T
+(W) 140.5 421.33 T
+(orks distrib) 152.11 421.33 T
+(ution f) 223.33 421.33 T
+(ormat) 263.17 421.33 T
+108 565/G4.853391 FmPA
+0 11 Q
+(ML) 108 400.67 T
+(W) 124.31 400.67 T
+(orks\252 2.0 is distributed on a CD-ROM and via FTP fr) 134.3 400.67 T
+(om Harlequin\325s) 394.46 400.67 T
+(W) 108 386.67 T
+(orld W) 117.99 386.67 T
+(ide W) 151.41 386.67 T
+(eb site. The distributions ar) 179.34 386.67 T
+(e pr) 311.51 386.67 T
+(oduced with InstallShield) 330.29 386.67 T
+0 8.8 Q
+(\250) 455.21 391.07 T
+0 11 Q
+(.) 461.79 386.67 T
+3 16 Q
+(2  Contacting Harlequin Suppor) 108 351.33 T
+(t) 305.09 351.33 T
+108 495/G4.852951 FmPA
+3 13 Q
+(2.1  P) 108 317.33 T
+(er) 135.55 317.33 T
+(sonal edition) 145.48 317.33 T
+108 461/G4.906207 FmPA
+0 11 Q
+(Users of ML) 108 297.67 T
+(W) 166.98 297.67 T
+(orks Personal edition may \336nd the newsgr) 176.97 297.67 T
+(oups) 383.15 297.67 T
+4 9.5 Q
+(comp.lang.ml) 409.82 297.67 T
+0 11 Q
+(and) 108 283.67 T
+4 9.5 Q
+(comp.lang.functional) 129.37 283.67 T
+0 11 Q
+( useful. The pr) 243.37 283.67 T
+(oduct knowledgebase in the Sup-) 313.61 283.67 T
+(port ar) 108 269.67 T
+(ea of our website can also be accessed:) 140.95 269.67 T
+4 9 Q
+(http://www.harlequin.com/devtools/ml) 135 249 T
+3 13 Q
+(2.2  Pr) 108 217.33 T
+(of) 139.81 217.33 T
+(essional edition) 149.78 217.33 T
+108 361/G4.906155 FmPA
+0 11 Q
+(Register) 108 197.67 T
+(ed users of ML) 147.6 197.67 T
+(W) 219.4 197.67 T
+(orks Pr) 229.38 197.67 T
+(ofessional edition can contact Harlequin Sup-) 264.06 197.67 T
+(port via email at:) 108 183.67 T
+4 9 Q
+(mlworks-support@harlequin.com) 135 163 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.5/DEST FmPD2
+[/Dest/F.installdoc/DEST FmPD2
+123 506/M4.9.14296.1Heading.12.How.to.reach.Harlequin.Support FmPA
+123 506/I4.1.852950 FmPA
+465 538/I4.1.919324 FmPA
+320 538/I4.1.919312 FmPA
+[/Title(A)/Rect[99 504 513 657]/ARTICLE FmPD2
+[/Title(A)/Rect[99 117 495 441]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "5" 5
+%%Page: "6" 6
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(6) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+0 11 Q
+0 X
+(Please be certain to include the CD serial number in the subject line of your) 126 640.67 T
+(email message.) 126 626.67 T
+(If you ar) 126 606.67 T
+(e not r) 167.27 606.67 T
+(egister) 198.18 606.67 T
+(ed, please visit our r) 230.43 606.67 T
+(egistration page on our website:) 328.69 606.67 T
+4 9 Q
+(http://www.harlequin.com/devtools/mlworks) 153 586 T
+0 11 Q
+(Y) 126 565.67 T
+(ou should have your serial number r) 132.32 565.67 T
+(eady) 310.35 565.67 T
+(. The serial number is located on a) 332.73 565.67 T
+(sticker on the back of the CD envelope.) 126 551.67 T
+(Please contact Harlequin Support in the following cir) 126 529.17 T
+(cumstances:) 384.14 529.17 T
+(\245) 135 511.67 T
+(Y) 153 509.17 T
+(ou need assistance with installing or r) 159.32 509.17 T
+(unning ML) 342.9 509.17 T
+(W) 397.12 509.17 T
+(orks.) 407.11 509.17 T
+(If you need a license name and code for ML) 153 491.17 T
+(W) 364.64 491.17 T
+(orks, please send mail to) 374.63 491.17 T
+4 9.5 Q
+(mlworks-keys@harlequin.com) 153 477.17 T
+0 11 Q
+( rather than the) 301.2 477.17 T
+4 9.5 Q
+(mlworks-support) 378.79 477.17 T
+0 11 Q
+(addr) 153 463.17 T
+(ess.) 176.09 463.17 T
+(\245) 135 445.67 T
+(Y) 153 443.17 T
+(ou encounter a bug in the ML) 159.32 443.17 T
+(W) 302.77 443.17 T
+(orks softwar) 312.75 443.17 T
+(e or documentation and) 373.37 443.17 T
+(wish to submit a bug r) 153 429.17 T
+(eport.) 262.14 429.17 T
+(\245) 135 411.67 T
+(Y) 153 409.17 T
+(ou have any comments or suggestions for impr) 159.32 409.17 T
+(oving the ML) 388.21 409.17 T
+(W) 453.22 409.17 T
+(orks) 463.21 409.17 T
+(softwar) 153 395.17 T
+(e or documentation.) 189.74 395.17 T
+(W) 126 375.17 T
+(e pr) 135.99 375.17 T
+(efer communication by electr) 154.76 375.17 T
+(onic mail, particularly when you submit) 296.25 375.17 T
+(bug r) 126 361.17 T
+(eports.) 151.73 361.17 T
+(If you use electr) 126 341.17 T
+(onic mail and wish to submit a bug r) 203.3 341.17 T
+(eport, please \336ll in the) 381.42 341.17 T
+(bug template distributed with ML) 126 327.17 T
+(W) 291.25 327.17 T
+(orks and then send it to us. Y) 301.24 327.17 T
+(ou can \336nd) 441.71 327.17 T
+(the template in the top-level installation folder in the \336le) 126 313.17 T
+4 9.5 Q
+(bug-) 403.01 313.17 T
+(template.txt) 425.81 313.17 T
+0 11 Q
+(.) 494.21 313.17 T
+-0.22 (When you r) 126 295.67 P
+-0.22 (eport a bug, it is very important to include a stack backtrace when) 183.04 295.67 P
+(necessary) 126 281.67 T
+(. Backtraces ar) 171.89 281.67 T
+(e necessary when the bug you ar) 241.26 281.67 T
+(e r) 399.88 281.67 T
+(eporting causes) 412.04 281.67 T
+(ML) 126 267.67 T
+(W) 142.31 267.67 T
+(orks to enter the debugger on an unhandled exception.) 152.3 267.67 T
+(It is only possible to see a backtrace in the TTY \050that is, non-windowing\051) 126 247.67 T
+(debugger) 126 233.67 T
+(, so if you ar) 171.74 233.67 T
+(e r) 231.42 233.67 T
+(unning ML) 243.7 233.67 T
+(W) 297.92 233.67 T
+(orks in GUI mode you must:) 307.91 233.67 T
+1 F
+(1.) 135 213.67 T
+0 F
+(Choose) 153 213.67 T
+5 9.6 Q
+(Usa) 191.9 213.67 T
+(g) 209.41 213.67 T
+(e > General Pref) 215.37 213.67 T
+(erences > General) 288.64 213.67 T
+0 11 Q
+( fr) 371.63 213.67 T
+(om the ML) 382.19 213.67 T
+(W) 434.98 213.67 T
+(orks) 444.96 213.67 T
+(podium\325s menubar.) 153 199.67 T
+(A dialog appears.) 153 181.67 T
+1 F
+(2.) 135 161.67 T
+0 F
+(T) 153 161.67 T
+(urn of) 158.75 161.67 T
+(f the \322Always use window debugger\323 option and click) 188.35 161.67 T
+5 9.6 Q
+(OK) 456.75 161.67 T
+0 11 Q
+( or) 471.15 161.67 T
+5 9.6 Q
+(Appl) 153 147.67 T
+(y) 174.19 147.67 T
+0 11 Q
+(.) 178.3 147.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.6/DEST FmPD2
+407 495/I4.1.853010 FmPA
+126 683/I4.1.918421 FmPA
+246 351/I4.1.919348 FmPA
+323 467/I4.1.919333 FmPA
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "6" 6
+%%Page: "7" 7
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(3) 305.21 695.67 T
+(Suggested minimum system configurations for MLWorks) 319.46 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(7) 535.5 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+0 11 Q
+0 X
+(Once you have done this, ML) 108 640.67 T
+(W) 250.41 640.67 T
+(orks will enter the TTY debugger when you) 260.39 640.67 T
+(next r) 108 626.67 T
+(epr) 135.83 626.67 T
+(oduce the err) 151.86 626.67 T
+(or) 215.89 626.67 T
+(. At the \322Debugger>\323 pr) 225.43 626.67 T
+(ompt, enter) 343.35 626.67 T
+4 9.5 Q
+(b) 402.38 626.67 T
+0 11 Q
+(. ML) 408.08 626.67 T
+(W) 429.89 626.67 T
+(orks will) 439.88 626.67 T
+(generate a backtrace suitable for submission in a bug r) 108 612.67 T
+(eport.) 371.64 612.67 T
+3 16 Q
+(3  Sug) 108 577.33 T
+(g) 147.26 577.33 T
+(ested minim) 155.41 577.33 T
+(um system con\336gurations f) 231.73 577.33 T
+(or ML) 402.82 577.33 T
+(W) 437.49 577.33 T
+(orks) 449.1 577.33 T
+108 721/G4.853018 FmPA
+0 11 Q
+-0.27 (T) 108 556.67 P
+-0.27 (o r) 113.73 556.67 P
+-0.27 (un the W) 126.47 556.67 P
+-0.27 (indows 95 version of ML) 170.12 556.67 P
+-0.27 (W) 289.29 556.67 P
+-0.27 (orks 1.1 we r) 299.28 556.67 P
+-0.27 (ecommend at least 20 MB) 360.19 556.67 P
+(RAM. For r) 108 542.67 T
+(unning on W) 163.29 542.67 T
+(indows NT) 226.74 542.67 T
+(, we r) 280.73 542.67 T
+(ecommend at least 24 MB RAM.) 307.57 542.67 T
+(The distribution folder for W) 108 522.67 T
+(indows 95 and W) 248.66 522.67 T
+(indows NT is 9 MB; the) 333.09 522.67 T
+(installed system takes up ar) 108 508.67 T
+(ound 23 MB. Ther) 242.78 508.67 T
+(efor) 330.23 508.67 T
+(e, during installation you) 349.32 508.67 T
+(will need ar) 108 494.67 T
+(ound 32 MB of fr) 165.59 494.67 T
+(ee disk space.) 247.95 494.67 T
+(See Section 10 on page 16 for details of how to tune settings in ML) 108 474.67 T
+(W) 428.13 474.67 T
+(orks and) 438.12 474.67 T
+(W) 108 460.67 T
+(indows to impr) 118.39 460.67 T
+(ove performance.) 193.33 460.67 T
+3 16 Q
+(4) 108 425.33 T
+(Installation) 122.59 425.33 T
+108 569/G4.889003 FmPA
+0 11 Q
+(Please note that license r) 108 404.67 T
+(egistration for Pr) 226.92 404.67 T
+(ofessional edition users now takes) 309.1 404.67 T
+(place during installation. See \322Licenses\323 on page 12 for details on how to) 108 390.67 T
+(enter your license information.) 108 376.67 T
+3 13 Q
+(4.1  Fr) 108 343.33 T
+(om the CD-R) 139.21 343.33 T
+(OM) 203.56 343.33 T
+108 487/G4.893089 FmPA
+1 11 Q
+(1.) 117 323.67 T
+0 F
+(Mount the CD-ROM on your CD-ROM drive.) 135 323.67 T
+1 F
+(2.) 117 303.67 T
+0 F
+(Using W) 135 303.67 T
+(indows Explor) 177.09 303.67 T
+(er) 248.37 303.67 T
+(, go to the folder containing the ML) 257.17 303.67 T
+(W) 428.61 303.67 T
+(orks dis-) 438.6 303.67 T
+(tribution.) 135 289.67 T
+1 F
+(3.) 117 269.67 T
+0 F
+(Double-click on) 135 269.67 T
+4 9.5 Q
+(setup.exe) 214.56 269.67 T
+0 11 Q
+(.) 265.86 269.67 T
+(The InstallShield application will now guide you thr) 108 249.67 T
+(ough ML) 362.39 249.67 T
+(W) 406.61 249.67 T
+(orks installa-) 416.59 249.67 T
+(tion.) 108 235.67 T
+(ML) 108 215.67 T
+(W) 124.31 215.67 T
+(orks is now fully installed.) 134.3 215.67 T
+3 13 Q
+(4.2  Fr) 108 182.33 T
+(om the W) 139.21 182.33 T
+(orld Wide W) 186.56 182.33 T
+(eb) 247.79 182.33 T
+108 326/G4.905628 FmPA
+0 11 Q
+(After downloading your ML) 108 162.67 T
+(W) 246.53 162.67 T
+(orks distribution fr) 256.52 162.67 T
+(om the Harlequin web) 348.59 162.67 T
+(site, follow these instr) 108 148.67 T
+(uctions to install ML) 214.27 148.67 T
+(W) 313.56 148.67 T
+(orks.) 323.55 148.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.7/DEST FmPD2
+129 496/M4.9.28000.2Heading.41.From.the.CDROM FmPA
+129 496/I4.1.897135 FmPA
+123 580/I4.1.919375 FmPA
+108 367/I4.1.919403 FmPA
+108 708/I4.1.919357 FmPA
+108 556/I4.1.919385 FmPA
+[/Rect[251 385 359 398]/Border[0 0 0]/Page 8/View[/XYZ null 141 678 FmDC exch pop null]/LNK FmPD
+[/Rect[127 469 231 482]/Border[0 0 0]/Page 16/View[/XYZ null 148 516 FmDC exch pop null]/LNK FmPD
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "7" 7
+%%Page: "8" 8
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(8) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+1 11 Q
+0 X
+(4.) 135 640.67 T
+0 F
+(Double-click on the) 153 640.67 T
+4 9.5 Q
+(exe) 250.57 640.67 T
+0 11 Q
+( \336le that you downloaded fr) 267.67 640.67 T
+(om the Harlequin) 403.9 640.67 T
+(web site.This is a self-extracting executable which r) 153 626.67 T
+(uns the InstallShield) 401.34 626.67 T
+(setup automatically) 153 612.67 T
+(. Click on) 247.92 612.67 T
+5 9.6 Q
+(Setup) 296.53 612.67 T
+0 11 Q
+( to start the installation pr) 323.2 612.67 T
+(ocedur) 448.68 612.67 T
+(e.) 482.34 612.67 T
+(The InstallShield application will now guide you thr) 126 592.67 T
+(ough ML) 380.39 592.67 T
+(W) 424.61 592.67 T
+(orks installa-) 434.59 592.67 T
+(tion.) 126 578.67 T
+(ML) 126 558.67 T
+(W) 142.31 558.67 T
+(orks is now fully installed.) 152.3 558.67 T
+3 16 Q
+(5) 126 523.33 T
+(Licenses) 140.59 523.33 T
+126 667/G4.905676 FmPA
+0 11 Q
+(ML) 126 502.67 T
+(W) 142.31 502.67 T
+(orks will only r) 152.3 502.67 T
+(un in Personal edition mode) 226.44 502.67 T
+2 F
+(unless) 366.95 502.67 T
+0 F
+( you enter a valid) 395.08 502.67 T
+(license during the installation pr) 126 488.67 T
+(ocedur) 283.77 488.67 T
+(e. Licenses can be obtained fr) 317.43 488.67 T
+(om Har-) 458.99 488.67 T
+(lequin for the Pr) 126 474.67 T
+(ofessional edition by sending electr) 205.18 474.67 T
+(onic mail to one of the fol-) 376.47 474.67 T
+(lowing addr) 126 460.67 T
+(esses:) 185.94 460.67 T
+4 9 Q
+(mlworks-keys@harlequin.co.uk) 153 440 T
+(mlworks-keys@harlequin.com) 153 421 T
+0 11 Q
+(Licenses can also be served fr) 126 400.67 T
+(om a copy of the Harlequin License Server dae-) 268.63 400.67 T
+(mon r) 126 386.67 T
+(unning on your internal network.) 155.13 386.67 T
+(If you have dif) 126 366.67 T
+(\336culty with the license code system please contact ML) 197.15 366.67 T
+(W) 459.3 366.67 T
+(orks) 469.29 366.67 T
+(Support. See Section 2 on page 5 for support contact information.) 126 352.67 T
+3 13 Q
+(5.1) 126 319.33 T
+(The license code system) 146.75 319.33 T
+126 463/G4.905689 FmPA
+0 11 Q
+(When you install ML) 126 299.67 T
+(W) 228.15 299.67 T
+(orks, it pr) 238.13 299.67 T
+(ompts you to input your license name and) 285.06 299.67 T
+(code. The following is example output fr) 126 285.67 T
+(om ML) 323.48 285.67 T
+(W) 358.27 285.67 T
+(orks:) 368.25 285.67 T
+4 9 Q
+(Input your license name: MLPRO-WNT-I7TKQ@%) 153 265 T
+(Input your license code:) 153 246 T
+5 9.6 Q
+(C9F6@@6@436HW8Z) 288 246 T
+1 11 Q
+(Note:) 126 225.67 T
+0 F
+( Please r) 153.19 225.67 T
+(epr) 193.39 225.67 T
+(oduce the license name and code exactly as supplied. Pr) 209.41 225.67 T
+(e-) 481.06 225.67 T
+(serve the case of alphabetical characters and do not intr) 126 211.67 T
+(oduce any extra) 394.75 211.67 T
+-0.01 (whitespace \050including leading and trailing space\051. T) 126 197.67 P
+-0.01 (o r) 377.1 197.67 P
+-0.01 (educe the likelihood of) 390 197.67 P
+(err) 126 183.67 T
+(or the license code does not use the digits 0 and 1, and all letter ar) 139.76 183.67 T
+(e upper) 458.16 183.67 T
+(-) 495.45 183.67 T
+(case.) 126 169.67 T
+(Also note the following:) 126 149.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.8/DEST FmPD2
+141 678/M4.9.13418.1Heading.5.Licenses FmPA
+141 678/I4.1.906209 FmPA
+153 590/I4.1.905678 FmPA
+304 590/I4.1.905679 FmPA
+153 571/I4.1.905681 FmPA
+293 571/I4.1.905682 FmPA
+126 710/I4.1.919438 FmPA
+141 678/I4.1.918535 FmPA
+141 678/I4.1.918544 FmPA
+141 678/I4.1.919464 FmPA
+141 678/I4.1.919506 FmPA
+372 518/I4.1.919515 FmPA
+147 472/I4.1.919524 FmPA
+[/Rect[190 347 283 360]/Border[0 0 0]/Page 5/View[/XYZ null 123 506 FmDC exch pop null]/LNK FmPD
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "8" 8
+%%Page: "9" 9
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(6) 400.12 695.67 T
+(Registry entries and startup files) 414.37 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(9) 535.5 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+0 11 Q
+0 X
+(\245) 117 640.67 T
+(If the system r) 135 640.67 T
+(ejects your license, possibly because it was mistyped,) 204.04 640.67 T
+(clicking) 135 626.67 T
+5 9.6 Q
+(Retr) 175.76 626.67 T
+(y) 195.05 626.67 T
+0 11 Q
+( gives you another chance to enter it.) 200.39 626.67 T
+(\245) 117 606.67 T
+-0.24 (The standar) 135 606.67 P
+-0.24 (d) 192.45 606.67 P
+5 9.6 Q
+-0.23 (Cut) 201.68 606.67 P
+0 11 Q
+-0.24 (,) 217.67 606.67 P
+5 9.6 Q
+-0.23 (Cop) 222.93 606.67 P
+-0.23 (y) 241.45 606.67 P
+0 11 Q
+-0.24 (, and) 245.57 606.67 P
+5 9.6 Q
+-0.23 (P) 271.96 606.67 P
+-0.23 (aste) 278.08 606.67 P
+0 11 Q
+-0.24 ( keyboar) 297.29 606.67 P
+-0.24 (d accelerators \050Ctrl+X, Ctrl+C) 339.04 606.67 P
+(and Ctrl+V\051 work in the license dialog box.) 135 592.67 T
+(\245) 117 572.67 T
+(If you wish to install ML) 135 572.67 T
+(W) 253.98 572.67 T
+(orks as a Personal edition, leave the license) 263.96 572.67 T
+(name and code \336elds blank and click on) 135 558.67 T
+5 9.6 Q
+(OK) 332.52 558.67 T
+0 11 Q
+(.) 346.92 558.67 T
+-0 (ML) 108 538.67 P
+-0 (W) 124.31 538.67 P
+-0 (orks stor) 134.3 538.67 P
+-0 (es valid license information in your home dir) 176.58 538.67 P
+-0 (ectory in the r) 395.64 538.67 P
+-0 (egis-) 463.09 538.67 P
+(try) 108 524.67 T
+(, under HKEY_LOCAL_MACHINE. ML) 120.83 524.67 T
+(W) 316.38 524.67 T
+(orks r) 326.37 524.67 T
+(eads the license name and) 354.4 524.67 T
+(code fr) 108 510.67 T
+(om ther) 141.44 510.67 T
+(e in subsequent sessions, so you do not need to type them in) 179.31 510.67 T
+(again.) 108 496.67 T
+(If you delete this stor) 108 476.67 T
+(ed license information, you will have to r) 210.7 476.67 T
+(einstall) 410.26 476.67 T
+(ML) 108 462.67 T
+(W) 124.31 462.67 T
+(orks in or) 134.3 462.67 T
+(der to r) 180.69 462.67 T
+(e-enter license information.) 216.26 462.67 T
+3 16 Q
+(6) 108 427.33 T
+(Registr) 122.59 427.33 T
+(y entries and star) 167.92 427.33 T
+(tup \336les) 276.83 427.33 T
+108 571/G4.853104 FmPA
+0 11 Q
+-0.24 (This section lists all the envir) 108 406.67 P
+-0.24 (onment variables and startup \336les that ML) 247.26 406.67 P
+-0.24 (W) 452.38 406.67 P
+-0.24 (orks) 462.36 406.67 P
+(uses. They ar) 108 392.67 T
+(e all described in mor) 171.66 392.67 T
+(e detail elsewher) 276.45 392.67 T
+(e in the documentation,) 358.1 392.67 T
+(but ar) 108 378.67 T
+(e listed her) 136.7 378.67 T
+(e for r) 189.93 378.67 T
+(efer) 218.86 378.67 T
+(ence.) 237.21 378.67 T
+3 13 Q
+(6.1  Registr) 108 345.33 T
+(y entries) 165.58 345.33 T
+108 489/G4.853106 FmPA
+0 11 Q
+(Note the case dif) 108 325.67 T
+(fer) 189.21 325.67 T
+(ence in these r) 202.29 325.67 T
+(egistry settings between) 271.31 325.67 T
+4 9.5 Q
+(SOFTWARE) 391.39 325.67 T
+0 11 Q
+( and) 436.99 325.67 T
+4 9.5 Q
+(Software) 108 311.67 T
+0 11 Q
+(.) 153.6 311.67 T
+(Items in) 108 291.67 T
+4 9.5 Q
+(HKEY_CURRENT_USER\134Software\134Harlequin\134MLWorks\134) 150.04 291.67 T
+(Source Path) 135 265.67 T
+0 11 Q
+(The compilation system sour) 216 265.67 T
+(ce path.) 356.44 265.67 T
+4 9.5 Q
+(Pervasive Path) 135 242.67 T
+0 11 Q
+(The folder containing the pervasive library units.) 216 225.17 T
+4 9.5 Q
+(Startup Directory) 135 199.17 T
+0 11 Q
+(The folder containing the startup \336les) 216 181.17 T
+4 9.5 Q
+(.mlworks) 401.79 181.17 T
+0 11 Q
+( and) 447.39 181.17 T
+4 9.5 Q
+(.mlworks-preferences) 216 167.17 T
+0 11 Q
+(.) 330 167.17 T
+(Items in) 108 147.17 T
+4 9.5 Q
+(HKEY_LOCAL_MACHINE\134SOFTWARE\134Harlequin\134MLWorks\1342.0\134) 150.04 147.17 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.9/DEST FmPD2
+135 792/I4.1.918571 FmPA
+346 614/I4.1.919546 FmPA
+123 582/I4.1.918589 FmPA
+222 582/I4.1.919568 FmPA
+209 498/I4.1.919580 FmPA
+108 477/I4.1.918621 FmPA
+441 690/I4.1.919534 FmPA
+123 582/I4.1.919555 FmPA
+108 477/I4.1.919589 FmPA
+108 477/I4.1.919599 FmPA
+108 477/I4.1.919609 FmPA
+108 477/I4.1.919619 FmPA
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "9" 9
+%%Page: "10" 10
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(10) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+4 9.5 Q
+0 X
+(License) 153 640.67 T
+0 11 Q
+(Saved r) 234 640.67 T
+(egistration information.) 270.38 640.67 T
+4 9.5 Q
+(User) 153 614.67 T
+0 11 Q
+(Saved r) 234 614.67 T
+(egistration information.) 270.38 614.67 T
+3 13 Q
+(6.2  Star) 126 581.33 T
+(tup \336les) 167.69 581.33 T
+126 725/G4.853126 FmPA
+4 9.5 Q
+(.mlworks) 153 555.67 T
+0 11 Q
+(Startup \336le.) 234 537.67 T
+4 9.5 Q
+(.mlworks_preferences) 153 511.67 T
+0 11 Q
+(Saved pr) 234 493.67 T
+(efer) 276.99 493.67 T
+(ences fr) 295.34 493.67 T
+(om the GUI.) 332.38 493.67 T
+3 16 Q
+(7) 126 458.33 T
+(Contents of the installed ML) 140.59 458.33 T
+(W) 315.23 458.33 T
+(orks system) 326.85 458.33 T
+126 602/G4.853135 FmPA
+0 11 Q
+(In addition to the ML) 126 437.67 T
+(W) 229.61 437.67 T
+(orks compiler and interactive envir) 239.6 437.67 T
+(onment, the) 410.27 437.67 T
+(ML) 126 423.67 T
+(W) 142.31 423.67 T
+(orks system contains various scripts, manual pages, libraries and a r) 152.3 423.67 T
+(un-) 482.91 423.67 T
+(time system executable.) 126 409.67 T
+(Befor) 126 389.67 T
+(e we can discuss the contents of the installation in mor) 151.81 389.67 T
+(e detail, ther) 416.14 389.67 T
+(e ar) 476.54 389.67 T
+(e) 494.2 389.67 T
+(two concepts to explain:) 126 375.67 T
+2 F
+(object \336les) 246.27 375.67 T
+0 F
+( and) 291.9 375.67 T
+2 F
+(image \336les) 316.02 375.67 T
+0 F
+(.) 362.48 375.67 T
+(ML) 126 355.67 T
+(W) 142.31 355.67 T
+(orks pr) 152.3 355.67 T
+(ovides a separate compilation system which allows you to com-) 186.94 355.67 T
+(pile ML sour) 126 341.67 T
+(ce \336les down to object \336les on disk. Object \336les have the suf) 188.36 341.67 T
+(\336x) 477.48 341.67 T
+4 9.5 Q
+(.mo) 126 327.67 T
+0 11 Q
+(. They ar) 143.1 327.67 T
+(e suitable for loading into the ML) 185.53 327.67 T
+(W) 347.36 327.67 T
+(orks interactive envir) 357.35 327.67 T
+(onment) 460.67 327.67 T
+(\050) 126 313.67 T
+4 9.5 Q
+(mlworks) 129.66 313.67 T
+0 11 Q
+( or) 169.56 313.67 T
+4 9.5 Q
+(mlworks-basis) 185.41 313.67 T
+0 11 Q
+(\051 or r) 259.51 313.67 T
+(untime \050via) 283.29 313.67 T
+4 9.5 Q
+(mlpervasive.bat) 342.17 313.67 T
+0 11 Q
+(, which) 427.67 313.67 T
+(includes the pervasive library code necessary for r) 126 299.67 T
+(unning all code compiled) 369.83 299.67 T
+(by ML) 126 285.67 T
+(W) 157.26 285.67 T
+(orks\051 for execution.) 167.25 285.67 T
+(In addition, ther) 126 265.67 T
+(e ar) 205.1 265.67 T
+(e facilities in the Pr) 222.77 265.67 T
+(ofessional edition for turning ML) 315.06 265.67 T
+(applications you have developed under the ML) 126 251.67 T
+(W) 356.23 251.67 T
+(orks pr) 366.22 251.67 T
+(ogramming envir) 400.86 251.67 T
+(on-) 485.95 251.67 T
+(ment into fr) 126 237.67 T
+(ee-standing \336les. This delivery pr) 183.48 237.67 T
+(ocess works in two ways; you) 345.91 237.67 T
+-0.03 (can either compile an application down into an executable \336le packaged with) 126 223.67 P
+(the ML) 126 209.67 T
+(W) 160.32 209.67 T
+(orks r) 170.31 209.67 T
+(untime, or you can save your curr) 198.45 209.67 T
+(ent session. In the former) 363.15 209.67 T
+(case, you can execute the application by r) 126 195.67 T
+(unning the executable \336le; in the lat-) 326.86 195.67 T
+(ter) 126 181.67 T
+(, you do so by invoking the ML) 138.39 181.67 T
+(W) 289.97 181.67 T
+(orks session as saved.) 299.95 181.67 T
+(The ML) 126 161.67 T
+(W) 163.48 161.67 T
+(orks installation pr) 173.46 161.67 T
+(ovides libraries in the form of sour) 265.3 161.67 T
+(ce and object) 433.39 161.67 T
+(\336les, and image \336les. The various ML) 126 147.67 T
+(W) 307.29 147.67 T
+(orks scripts work with either object) 317.28 147.67 T
+(\336les or image \336les or both.) 126 133.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.10/DEST FmPD2
+153 707/I4.1.919643 FmPA
+141 613/I4.1.918649 FmPA
+153 663/I4.1.919652 FmPA
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "10" 10
+%%Page: "11" 11
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(7) 362.41 695.67 T
+(Contents of the installed MLWorks system) 376.66 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(1) 531.33 100 T
+(1) 535.5 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+3 13 Q
+0 X
+(7.1  Documentation) 108 639.33 T
+108 783/G4.853141 FmPA
+0 11 Q
+-0.19 (The) 108 619.67 P
+2 F
+-0.19 (ML) 128.98 619.67 P
+-0.19 (W) 144.66 619.67 P
+-0.19 (orks V) 154.83 619.67 P
+-0.19 (ersion 2.0 Release Notes) 182.64 619.67 P
+0 F
+-0.19 ( ar) 289.03 619.67 P
+-0.19 (e important r) 301.24 619.67 P
+-0.19 (eading for all users. This) 364.73 619.67 P
+(document is available in the) 108 605.67 T
+4 9.5 Q
+(documentation) 247.36 605.67 T
+0 11 Q
+( folder as a PDF \336le:) 321.46 605.67 T
+4 9 Q
+(documentation\134release-notes\134pdf\134RN-2-0.pdf) 135 585 T
+0 11 Q
+(Y) 108 564.67 T
+(ou will need Adobe Acr) 114.32 564.67 T
+(obat Reader to r) 230.63 564.67 T
+(ead and print PDF \336les.) 308.24 564.67 T
+(It is also available in HTML form under:) 108 544.67 T
+4 9 Q
+(documentation\134release-notes\134html\134INDEX.HTM) 135 524 T
+0 11 Q
+(The ML) 108 503.67 T
+(W) 145.48 503.67 T
+(orks interactive envir) 155.46 503.67 T
+(onment is described in the) 258.79 503.67 T
+2 F
+(ML) 389.8 503.67 T
+(W) 405.48 503.67 T
+(orks User) 415.65 503.67 T
+(Guide) 108 489.67 T
+0 F
+(. This manual is available in the) 134.9 489.67 T
+4 9.5 Q
+(documentation) 291.25 489.67 T
+0 11 Q
+( folder as a PDF \336le:) 365.35 489.67 T
+4 9 Q
+(documentation\134guide\134pdf\134UG_2-0-W.pdf) 135 469 T
+0 11 Q
+(It is also available in HTML form under:) 108 448.67 T
+4 9 Q
+(documentation\134guide\134html\134INDEX.HTM) 135 428 T
+0 11 Q
+(The libraries distributed with ML) 108 407.67 T
+(W) 269.91 407.67 T
+(orks ar) 279.9 407.67 T
+(e described in the) 313.42 407.67 T
+2 F
+(ML) 401.71 407.67 T
+(W) 417.4 407.67 T
+(orks) 427.56 407.67 T
+(Refer) 108 393.67 T
+(ence Manual) 131.03 393.67 T
+0 F
+(. This manual is available in the) 188.38 393.67 T
+4 9.5 Q
+(documentation) 344.73 393.67 T
+0 11 Q
+( folder as a) 418.83 393.67 T
+(PDF \336le:) 108 379.67 T
+4 9 Q
+(documentation\134reference\134pdf) 135 359 T
+4 9.5 Q
+(\134) 280.8 359 T
+4 9 Q
+(RM_2-0.pdf) 286.5 359 T
+0 11 Q
+(It is also available in HTML form under:) 108 338.67 T
+4 9 Q
+(documentation\134reference\134html\134INDEX.HTM) 135 318 T
+0 11 Q
+(HTML documentation for the Standar) 108 297.67 T
+(d ML Basis library can be found with) 292.83 297.67 T
+(the URL:) 108 283.67 T
+4 9 Q
+(http://www.harlequin.com/products/ads/ml/basis/) 135 263 T
+3 13 Q
+(7.2) 108 231.33 T
+(Shor) 128.75 231.33 T
+(tcuts) 153.24 231.33 T
+108 375/G4.853170 FmPA
+0 11 Q
+(All the ML) 108 211.67 T
+(W) 160.03 211.67 T
+(orks shortcuts ar) 170.02 211.67 T
+(e located in the installation\325s) 251.07 211.67 T
+4 9.5 Q
+(bin) 392.28 211.67 T
+0 11 Q
+( subdir) 409.38 211.67 T
+(ectory) 443.58 211.67 T
+(.) 472.57 211.67 T
+4 9.5 Q
+(mlworks) 135 185.67 T
+0 11 Q
+(A shortcut that invokes the ML) 216 185.67 T
+(W) 366.93 185.67 T
+(orks interactive envi-) 376.92 185.67 T
+(r) 216 171.67 T
+(onment with only the) 220.15 171.67 T
+4 9.5 Q
+(General) 327.87 171.67 T
+0 11 Q
+( str) 367.77 171.67 T
+(uctur) 383.03 171.67 T
+(e of the Stan-) 408.91 171.67 T
+(dar) 216 157.67 T
+(d ML Basis Library) 232.37 157.67 T
+(.) 324.31 157.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.11/DEST FmPD2
+135 413/I4.1.853163 FmPA
+389 413/I4.1.853165 FmPA
+353 757/I4.1.919667 FmPA
+281 735/I4.1.919690 FmPA
+302 735/I4.1.919702 FmPA
+205 674/I4.1.919714 FmPA
+281 674/I4.1.919726 FmPA
+308 674/I4.1.919738 FmPA
+397 641/I4.1.919753 FmPA
+238 619/I4.1.919784 FmPA
+259 619/I4.1.919796 FmPA
+308 619/I4.1.919811 FmPA
+238 578/I4.1.919832 FmPA
+265 578/I4.1.919844 FmPA
+451 545/I4.1.919859 FmPA
+259 509/I4.1.919882 FmPA
+281 509/I4.1.919894 FmPA
+205 468/I4.1.919906 FmPA
+259 468/I4.1.919918 FmPA
+286 468/I4.1.919930 FmPA
+108 449/I4.1.919942 FmPA
+179 384/I4.1.919966 FmPA
+267 337/I4.1.919990 FmPA
+205 735/I4.1.919678 FmPA
+397 641/I4.1.919763 FmPA
+205 619/I4.1.919772 FmPA
+205 578/I4.1.919820 FmPA
+205 509/I4.1.919870 FmPA
+129 384/I4.1.919951 FmPA
+194 363/I4.1.919975 FmPA
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "11" 11
+%%Page: "12" 12
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(12) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+4 9.5 Q
+0 X
+(mlworks-basis) 153 640.67 T
+0 11 Q
+-0.09 (A shortcut that invokes a version of the ML) 234 640.67 P
+-0.09 (W) 443.75 640.67 P
+-0.09 (orks inter-) 453.74 640.67 P
+-0.49 (active envir) 234 626.67 P
+-0.49 (onment containing a built-in copy of the full) 290.15 626.67 P
+(Standar) 234 612.67 T
+(d ML Basis library) 271.63 612.67 T
+(.) 360.05 612.67 T
+4 9.5 Q
+(main.exe) 153 586.67 T
+0 11 Q
+(An executable \336le that invokes the ML) 234 586.67 T
+(W) 420.47 586.67 T
+(orks r) 430.46 586.67 T
+(untime) 458.6 586.67 T
+(system on the MS-DOS command line, pr) 234 572.67 T
+(oviding stan-) 435.48 572.67 T
+(dar) 234 558.67 T
+(d I/O. The r) 250.37 558.67 T
+(untime system pr) 309.78 558.67 T
+(ovides support for) 394.85 558.67 T
+(r) 234 544.67 T
+(unning ML) 238.26 544.67 T
+(W) 292.48 544.67 T
+(orks object \336les \050) 302.46 544.67 T
+4 9.5 Q
+(.mo) 383.7 544.67 T
+0 11 Q
+(\051 and image \336les) 400.8 544.67 T
+(\050) 234 530.67 T
+4 9.5 Q
+(.img) 237.66 530.67 T
+0 11 Q
+(\051.) 260.46 530.67 T
+(See the output of) 234 512.67 T
+4 9.5 Q
+(main.exe -help) 319.29 512.67 T
+0 11 Q
+( for mor) 399.09 512.67 T
+(e details.) 438.47 512.67 T
+4 9.5 Q
+(main-windows.exe) 153 489.67 T
+0 11 Q
+-0.5 (An executable \336le that invokes the ML) 234 472.17 P
+-0.5 (W) 417.47 472.17 P
+-0.5 (orks r) 427.46 472.17 P
+-0.5 (untime in) 455.09 472.17 P
+(the W) 234 458.17 T
+(indows context.) 262.4 458.17 T
+4 9.5 Q
+(mlbatch.bat) 153 432.17 T
+0 11 Q
+-0.26 (A script that invokes ML) 234 432.17 P
+-0.26 (W) 353.08 432.17 P
+-0.26 (orks on the command line as) 363.07 432.17 P
+(a batch compiler) 234 418.17 T
+(. It can be used to compile ML sour) 313.87 418.17 T
+(ce) 484.39 418.17 T
+(\336les \050) 234 404.17 T
+4 9.5 Q
+(.sml) 260.2 404.17 T
+0 11 Q
+(\051 into ML) 283 404.17 T
+(W) 327.67 404.17 T
+(orks object \336les \050) 337.66 404.17 T
+4 9.5 Q
+(.mo) 418.9 404.17 T
+0 11 Q
+(\051) 436 404.17 T
+4 9.5 Q
+(mlimage-windows.bat) 153 381.17 T
+0 11 Q
+(A script that r) 234 363.67 T
+(estarts saved ML) 301.32 363.67 T
+(W) 383.12 363.67 T
+(orks interactive envi-) 393.1 363.67 T
+-0.23 (r) 234 349.67 P
+-0.23 (onment sessions \050that is, sessions started with) 238.15 349.67 P
+4 9.5 Q
+-0.49 (mlworks) 461.58 349.67 P
+0 11 Q
+(or) 234 335.67 T
+4 9.5 Q
+(mlworks-basis) 247.1 335.67 T
+0 11 Q
+(\051. Interactive envir) 321.2 335.67 T
+(onment sessions) 410.31 335.67 T
+(can be saved to a) 234 321.67 T
+4 9.5 Q
+(.img) 319.35 321.67 T
+0 11 Q
+( \336le fr) 342.15 321.67 T
+(om the GUI envir) 370.58 321.67 T
+(onment) 455.7 321.67 T
+(podium window \050) 234 307.67 T
+5 9.6 Q
+(File > Sa) 322.73 307.67 T
+(ve Session As ...) 361.81 307.67 T
+0 11 Q
+(\051 or pr) 437.58 307.67 T
+(ogram-) 467.85 307.67 T
+(matically with the) 234 293.67 T
+4 9.5 Q
+(Shell.saveImage) 324.77 293.67 T
+0 11 Q
+( function.) 410.27 293.67 T
+4 9.5 Q
+(mlimage-console.bat) 153 267.67 T
+0 11 Q
+(A script for r) 234 249.67 T
+(unning deliver) 296.37 249.67 T
+(ed images that r) 368.3 249.67 T
+(un as con-) 446.33 249.67 T
+-0.46 (sole applications in an MS-DOS window) 234 235.67 P
+-0.46 (, that is, images) 427.92 235.67 P
+(that use standar) 234 221.67 T
+(d I/O.) 311.66 221.67 T
+4 9.5 Q
+(mlpervasive.bat) 153 195.67 T
+0 11 Q
+(Because main.exe cannot execute object \336les without a) 234 177.67 T
+-0.08 (copy of the pervasive library to hand, it r) 234 163.67 P
+-0.08 (equir) 432.3 163.67 P
+-0.08 (es you to) 457.7 163.67 P
+(pass a copy of the pervasive library to it whenever you) 234 149.67 T
+(want to execute object \336les. For convenience, ther) 234 135.67 T
+(e is a) 473.86 135.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.12/DEST FmPD2
+285 792/I4.1.920002 FmPA
+199 738/I4.1.920014 FmPA
+270 682/I4.1.920026 FmPA
+153 347/I4.1.920054 FmPA
+153 347/I4.1.918938 FmPA
+276 329/I4.1.920075 FmPA
+234 664/I4.1.920035 FmPA
+153 347/I4.1.920063 FmPA
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "12" 12
+%%Page: "13" 13
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(7) 362.41 695.67 T
+(Contents of the installed MLWorks system) 376.66 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(13) 531 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+0 11 Q
+0 X
+(script) 216 640.67 T
+4 9.5 Q
+(mlpervasive.bat) 246.04 640.67 T
+0 11 Q
+(, which is like) 331.54 640.67 T
+4 9.5 Q
+(main.exe) 401.01 640.67 T
+0 11 Q
+( but) 446.61 640.67 T
+(which loads the pervasive library image,) 216 626.67 T
+4 9.5 Q
+(images\134per-) 416.54 626.67 T
+(vasive.img) 216 612.67 T
+0 11 Q
+(, automatically) 273 612.67 T
+(. \050The various supplied) 343.91 612.67 T
+(image \336les ar) 216 598.67 T
+(e cover) 280.73 598.67 T
+(ed in Section 7.5 on page 20.\051) 315.27 598.67 T
+3 13 Q
+(7.3  Libraries) 108 565.33 T
+108 709/G4.853194 FmPA
+0 11 Q
+-0.34 (ML) 108 545.67 P
+-0.34 (W) 124.31 545.67 P
+-0.34 (orks comes with a set of libraries. The libraries ar) 134.3 545.67 P
+-0.34 (e supplied in two ways:) 369.18 545.67 P
+1 F
+(1.) 117 525.67 T
+0 F
+(As mixtur) 135 525.67 T
+(es of sour) 183.93 525.67 T
+(ce and object \336les) 230.48 525.67 T
+1 F
+(2.) 117 505.67 T
+0 F
+(As image \336les) 135 505.67 T
+(The libraries ar) 108 485.67 T
+(e:) 181.37 485.67 T
+(\245) 117 465.67 T
+(The Standar) 135 465.67 T
+(d ML Basis library) 193.79 465.67 T
+(. This library is an implementation of the) 282.21 465.67 T
+(Standar) 135 451.67 T
+(d ML Basis library developed by the SML community) 172.63 451.67 T
+(. It pr) 432.69 451.67 T
+(o-) 458.99 451.67 T
+(vides a basic SML toolkit for general pr) 135 437.67 T
+(ogramming tasks such as I/O;) 325.63 437.67 T
+(extensions to the SML type system; internationalization; and Posix sup-) 135 423.67 T
+(port. The) 135 409.67 T
+4 9.5 Q
+(General) 182.21 409.67 T
+0 11 Q
+( str) 222.11 409.67 T
+(uctur) 237.37 409.67 T
+(e of the Basis library is pr) 263.25 409.67 T
+(e-loaded into the) 386.11 409.67 T
+(interactive system in ML) 135 395.67 T
+(W) 254.64 395.67 T
+(orks, and is ther) 264.62 395.67 T
+(efor) 342.65 395.67 T
+(e permanently available) 361.73 395.67 T
+(at the top level.) 135 381.67 T
+(Object and sour) 135 363.67 T
+(ce \336les for the Basis library ar) 211.62 363.67 T
+(e in the) 354.52 363.67 T
+4 9.5 Q
+(basis) 392.89 363.67 T
+0 11 Q
+( compound,) 421.39 363.67 T
+(an installation subdir) 135 349.67 T
+(ectory) 238.3 349.67 T
+(. An image \336le of the Basis library is in) 267.29 349.67 T
+4 9.5 Q
+(images\134basis.img) 135 335.67 T
+0 11 Q
+(. T) 226.2 335.67 T
+(o use the Basis Library in your own code, you) 237.43 335.67 T
+(should make the pr) 135 321.67 T
+(oject) 229.49 321.67 T
+4 9.5 Q
+(basis.mlp) 254.56 321.67 T
+0 11 Q
+( a subpr) 305.86 321.67 T
+(oject of your own pr) 345 321.67 T
+(oject.) 443.42 321.67 T
+(This pr) 135 307.67 T
+(oject \336le is found in the) 169.52 307.67 T
+4 9.5 Q
+(basis) 285.61 307.67 T
+0 11 Q
+( subfolder) 314.11 307.67 T
+(.) 362.63 307.67 T
+(\245) 117 287.67 T
+(The ML) 135 287.67 T
+(W) 172.48 287.67 T
+(orks pervasive library) 182.46 287.67 T
+(. This library is ML) 287.95 287.67 T
+(W) 379.68 287.67 T
+(orks\325 own general-) 389.67 287.67 T
+(purpose library containing facilities for I/O, cr) 135 273.67 T
+(eation of standalone) 361.31 273.67 T
+(applications, multipr) 135 259.67 T
+(ocessing, pr) 236.96 259.67 T
+(o\336ling, and so on. Ther) 294.42 259.67 T
+(e is some over-) 406.77 259.67 T
+(lap between the facilities pr) 135 245.67 T
+(ovided by the pervasive library and those) 268.75 245.67 T
+(pr) 135 231.67 T
+(ovided by the Basis library) 145.76 231.67 T
+(.) 274.67 231.67 T
+(The pervasive library literally pervades the ML) 135 213.67 T
+(W) 363.78 213.67 T
+(orks envir) 373.77 213.67 T
+(onment, as) 422.88 213.67 T
+(the permanently available str) 135 199.67 T
+(uctur) 277.1 199.67 T
+(e) 302.98 199.67 T
+4 9.5 Q
+(MLWorks) 311 199.67 T
+0 11 Q
+(. Object and sour) 350.9 199.67 T
+(ce \336les for) 433.02 199.67 T
+(the pervasive library ar) 135 185.67 T
+(e also available in the) 248.23 185.67 T
+4 9.5 Q
+(pervasive) 355.15 185.67 T
+0 11 Q
+( compound, an) 406.45 185.67 T
+(installation subdir) 135 171.67 T
+(ectory) 223.65 171.67 T
+(. An image \336le can be found in) 252.63 171.67 T
+4 9.5 Q
+(images\134pervasive.img) 135 157.67 T
+0 11 Q
+(.) 249 157.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.13/DEST FmPD2
+401 792/I4.1.920090 FmPA
+451 778/I4.1.920102 FmPA
+129 718/I4.1.920114 FmPA
+334 459/I4.1.920140 FmPA
+169 309/I4.1.920152 FmPA
+169 487/I4.1.920128 FmPA
+[/Rect[342 593 449 606]/Border[0 0 0]/Page 14/View[/XYZ null 147 558 FmDC exch pop null]/LNK FmPD
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "13" 13
+%%Page: "14" 14
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(14) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+0 11 Q
+0 X
+(\245) 135 640.67 T
+(The ML) 153 640.67 T
+(W) 190.48 640.67 T
+(orks for) 200.46 640.67 T
+(eign interface library) 238.16 640.67 T
+(. This library is ML) 338.34 640.67 T
+(W) 430.07 640.67 T
+(orks\325 own) 440.06 640.67 T
+(library for interfacing to code written in languages other than Standar) 153 626.67 T
+(d) 492.04 626.67 T
+(ML. C is the only for) 153 612.67 T
+(eign language supported at pr) 253.09 612.67 T
+(esent.) 400.1 612.67 T
+-0.34 (Object and sour) 153 594.67 P
+-0.34 (ce \336les for the for) 228.93 594.67 P
+-0.34 (eign interface library ar) 311.58 594.67 P
+-0.34 (e in the) 424.35 594.67 P
+4 9.5 Q
+-0.71 (foreign) 461.69 594.67 P
+0 11 Q
+(compound, an installation subdir) 153 580.67 T
+(ectory) 314.78 580.67 T
+(. The image \336le is) 343.76 580.67 T
+4 9.5 Q
+(images\134foreign.img) 153 566.67 T
+0 11 Q
+(.) 255.6 566.67 T
+(\245) 135 546.67 T
+(The ML) 153 546.67 T
+(W) 190.48 546.67 T
+(orks W) 200.46 546.67 T
+(indows interface library) 234.74 546.67 T
+(. This library is ML) 350.1 546.67 T
+(W) 441.83 546.67 T
+(orks\325 own) 451.82 546.67 T
+(library for GUI pr) 153 532.67 T
+(ogramming thr) 239.47 532.67 T
+(ough W) 313.47 532.67 T
+(in32.) 351.77 532.67 T
+(Object \336les for the W) 153 514.67 T
+(in32 interface library ar) 254.5 514.67 T
+(e in the) 367.91 514.67 T
+4 9.5 Q
+(winsys) 406.29 514.67 T
+0 11 Q
+( compound;) 440.49 514.67 T
+(the image \336le is) 153 500.67 T
+4 9.5 Q
+(images\134windows.img) 232.05 500.67 T
+0 11 Q
+(.) 334.65 500.67 T
+(Additionally) 126 480.67 T
+(, the ML) 187.19 480.67 T
+(W) 227.01 480.67 T
+(orks interactive envir) 237 480.67 T
+(onment pr) 340.32 480.67 T
+(ovides the) 391.21 480.67 T
+4 9.5 Q
+(Shell) 444.04 480.67 T
+0 11 Q
+( str) 472.54 480.67 T
+(uc-) 487.8 480.67 T
+(tur) 126 466.67 T
+(e, a library r) 140.37 466.67 T
+(elating to the interactive envir) 199.07 466.67 T
+(onment only) 344.89 466.67 T
+(. This interactive) 405.52 466.67 T
+(envir) 126 452.67 T
+(onment library cannot be used in user applications, and is ther) 151.23 452.67 T
+(efor) 454.85 452.67 T
+(e not) 473.93 452.67 T
+(distributed in separate \336les like the other libraries.) 126 438.67 T
+3 13 Q
+(7.4  Ima) 126 405.33 T
+(g) 165.03 405.33 T
+(e \336les) 171.64 405.33 T
+126 549/G4.853209 FmPA
+0 11 Q
+(Under the) 126 385.67 T
+4 9.5 Q
+(images) 178.05 385.67 T
+0 11 Q
+( subfolder of your installation folder, you can \336nd the fol-) 212.25 385.67 T
+(lowing image \336les:) 126 371.67 T
+4 9.5 Q
+(basis.img) 153 345.67 T
+0 11 Q
+(The Standar) 234 345.67 T
+(d ML Basis library) 292.8 345.67 T
+(.) 381.21 345.67 T
+4 9.5 Q
+(batch.img) 153 319.67 T
+0 11 Q
+(The ML) 234 319.67 T
+(W) 271.48 319.67 T
+(orks batch compiler) 281.46 319.67 T
+(. This is the image loaded) 376.97 319.67 T
+(into) 234 305.67 T
+4 9.5 Q
+(main-window.exe) 255.95 305.67 T
+0 11 Q
+( by the) 341.45 305.67 T
+4 9.5 Q
+(mlbatch.bat) 377.15 305.67 T
+0 11 Q
+( script.) 439.85 305.67 T
+4 9.5 Q
+(foreign.img) 153 279.67 T
+0 11 Q
+(The ML) 234 279.67 T
+(W) 271.48 279.67 T
+(orks for) 281.46 279.67 T
+(eign interface library) 319.16 279.67 T
+(.) 419.34 279.67 T
+4 9.5 Q
+(gui.img) 153 253.67 T
+0 11 Q
+-0.28 (The interactive ML) 234 253.67 P
+-0.28 (W) 325.12 253.67 P
+-0.28 (orks image with the GUI interface.) 335.11 253.67 P
+(This is the image loaded into) 234 239.67 T
+4 9.5 Q
+(main-windows.exe) 377.04 239.67 T
+0 11 Q
+( by the) 468.24 239.67 T
+4 9.5 Q
+(mlworks) 234 225.67 T
+0 11 Q
+( shortcut.) 273.9 225.67 T
+4 9.5 Q
+(guib.img) 153 199.67 T
+0 11 Q
+(As) 234 199.67 T
+4 9.5 Q
+(gui.img) 249.97 199.67 T
+0 11 Q
+(, but with a copy of the Standar) 289.87 199.67 T
+(d ML Basis) 442.21 199.67 T
+(library pr) 234 185.67 T
+(eloaded. This is the image loaded into) 280.3 185.67 T
+4 9.5 Q
+(main-) 467.53 185.67 T
+(windows.exe) 234 171.67 T
+0 11 Q
+(  by the) 296.7 171.67 T
+4 9.5 Q
+(mlworks-basis) 335.16 171.67 T
+0 11 Q
+( shortcut.) 409.26 171.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.14/DEST FmPD2
+147 558/M4.9.41744.2Heading.75.Image.files FmPA
+147 558/I4.1.856475 FmPA
+187 718/I4.1.920164 FmPA
+126 632/I4.1.920180 FmPA
+262 537/I4.1.920193 FmPA
+389 537/I4.1.920205 FmPA
+277 377/I4.1.920226 FmPA
+468 337/I4.1.920238 FmPA
+452 323/I4.1.920253 FmPA
+377 391/I4.1.920214 FmPA
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "14" 14
+%%Page: "15" 15
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(8) 345.53 695.67 T
+(Organization of the installed MLWorks system) 359.78 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(15) 531 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+4 9.5 Q
+0 X
+(pervasive.img) 135 640.67 T
+0 11 Q
+( The ML) 216 640.67 T
+(W) 256.23 640.67 T
+(orks pervasive library) 266.21 640.67 T
+(. This is the image) 371.7 640.67 T
+(loaded into) 216 626.67 T
+4 9.5 Q
+(main.exe) 274.11 626.67 T
+0 11 Q
+( by the) 319.71 626.67 T
+4 9.5 Q
+(mlpervasive.bat) 355.42 626.67 T
+0 11 Q
+(short-) 446.62 626.67 T
+(cut.) 216 612.67 T
+4 9.5 Q
+(windows.img) 135 586.67 T
+0 11 Q
+(The ML) 216 586.67 T
+(W) 253.48 586.67 T
+(orks W) 263.46 586.67 T
+(indows interface library) 297.74 586.67 T
+(.) 413.1 586.67 T
+1 F
+(Note:) 108 566.67 T
+4 9.5 Q
+(mlworks) 137.94 566.67 T
+0 11 Q
+(,) 177.84 566.67 T
+4 9.5 Q
+(mlworks-basis) 183.34 566.67 T
+0 11 Q
+(,) 257.44 566.67 T
+4 9.5 Q
+(mlbatch.bat) 262.94 566.67 T
+0 11 Q
+(, and) 325.64 566.67 T
+4 9.5 Q
+(mlpervasive.bat) 352.52 566.67 T
+0 11 Q
+( wer) 438.02 566.67 T
+(e) 459.36 566.67 T
+(designed speci\336cally for using) 108 552.67 T
+4 9.5 Q
+(batch.img) 258.58 552.67 T
+0 11 Q
+(,) 309.88 552.67 T
+4 9.5 Q
+(gui.img) 315.38 552.67 T
+0 11 Q
+( and) 355.28 552.67 T
+4 9.5 Q
+(pervasive.img) 379.4 552.67 T
+0 11 Q
+(, and) 453.5 552.67 T
+(you should use the scripts rather than invoke them dir) 108 538.67 T
+(ectly with) 372.49 538.67 T
+4 9.5 Q
+(main-) 108 524.67 T
+(windows.exe) 136.5 524.67 T
+0 11 Q
+( or) 199.2 524.67 T
+4 9.5 Q
+(main.exe) 215.05 524.67 T
+0 11 Q
+(. This is particularly important in the case of) 260.65 524.67 T
+4 9.5 Q
+(gui.img) 108 510.67 T
+0 11 Q
+( and) 147.9 510.67 T
+4 9.5 Q
+(guib.img) 172.02 510.67 T
+0 11 Q
+(, wher) 217.62 510.67 T
+(e the corr) 248.12 510.67 T
+(esponding shortcuts) 293.52 510.67 T
+4 9.5 Q
+(mlworks) 395.18 510.67 T
+0 11 Q
+( and) 435.08 510.67 T
+4 9.5 Q
+(mlworks-basis) 108 496.67 T
+0 11 Q
+( set up a number of envir) 182.1 496.67 T
+(onment variables derived fr) 304.21 496.67 T
+(om the) 439.37 496.67 T
+(installation pr) 108 482.67 T
+(ocess, and pass particular parameters to the images. W) 175.96 482.67 T
+(ithout) 441.32 482.67 T
+(these extra details ML) 108 468.67 T
+(W) 214.27 468.67 T
+(orks would r) 224.26 468.67 T
+(un into dif) 286.88 468.67 T
+(\336culty) 338 468.67 T
+(.) 367.85 468.67 T
+3 16 Q
+(8  Or) 108 433.33 T
+(ganization of the installed ML) 137.73 433.33 T
+(W) 320.4 433.33 T
+(orks system) 332.02 433.33 T
+108 577/G4.853223 FmPA
+0 11 Q
+-0.38 (The installation pr) 108 412.67 P
+-0.38 (ocess cr) 196.36 412.67 P
+-0.38 (eates a number of subdir) 233.25 412.67 P
+-0.38 (ectories of your installation) 352.08 412.67 P
+-0.29 (dir) 108 398.67 P
+-0.29 (ectory in or) 122.07 398.67 P
+-0.29 (der to stor) 176.94 398.67 P
+-0.29 (e the various \336les that make up the ML) 226.19 398.67 P
+-0.29 (W) 413.2 398.67 P
+-0.29 (orks system.) 423.19 398.67 P
+(It is worth knowing a little about what these subdir) 108 384.67 T
+(ectories contain.) 357.49 384.67 T
+4 9.5 Q
+(basis) 135 358.67 T
+0 11 Q
+(The Standar) 216 358.67 T
+(d ML Basis library) 274.8 358.67 T
+(.) 363.21 358.67 T
+4 9.5 Q
+(bin) 135 332.67 T
+0 11 Q
+(The various scripts \050) 216 332.67 T
+4 9.5 Q
+(mlworks) 314.85 332.67 T
+0 11 Q
+(,) 354.75 332.67 T
+4 9.5 Q
+(mlbatch.bat) 360.25 332.67 T
+0 11 Q
+(, and so on\051) 422.95 332.67 T
+(and the r) 216 318.67 T
+(untime \050) 259.64 318.67 T
+4 9.5 Q
+(main-windows.exe) 300.85 318.67 T
+0 11 Q
+( and) 392.05 318.67 T
+4 9.5 Q
+(main.exe) 416.18 318.67 T
+0 11 Q
+(, for) 461.78 318.67 T
+(windowing and console applications r) 216 304.67 T
+(espectively\051.) 401.97 304.67 T
+4 9.5 Q
+(documentation) 135 278.67 T
+0 11 Q
+-0.14 (The online documentation for ML) 216 278.67 P
+-0.14 (W) 379.55 278.67 P
+-0.14 (orks 2.0, which con-) 389.54 278.67 P
+(sists of the) 216 264.67 T
+2 F
+(ML) 269.95 264.67 T
+(W) 285.64 264.67 T
+(orks User Guide) 295.8 264.67 T
+0 F
+(,) 367.92 264.67 T
+2 F
+(ML) 373.42 264.67 T
+(W) 389.11 264.67 T
+(orks Refer) 399.27 264.67 T
+(ence) 443.38 264.67 T
+-0.29 (Manual) 216 250.67 P
+0 F
+-0.29 (, the) 251.44 250.67 P
+2 F
+-0.29 (Release Notes) 274.36 250.67 P
+0 F
+-0.29 ( and a copy of these) 334.88 250.67 P
+2 F
+-0.29 (Installation) 432.22 250.67 P
+(Notes) 216 236.67 T
+0 F
+(.) 241.66 236.67 T
+4 9.5 Q
+(examples) 135 210.67 T
+0 11 Q
+(Example code.) 216 210.67 T
+4 9.5 Q
+(foreign) 135 184.67 T
+0 11 Q
+(The ML) 216 184.67 T
+(W) 253.48 184.67 T
+(orks For) 263.46 184.67 T
+(eign Interface library) 303.61 184.67 T
+(.) 404.3 184.67 T
+4 9.5 Q
+(images) 135 158.67 T
+0 11 Q
+(The various image \336les.) 216 158.67 T
+4 9.5 Q
+(objects) 135 132.67 T
+0 11 Q
+(Compiled \336les for) 216 132.67 T
+4 9.5 Q
+(basis) 306.57 132.67 T
+0 11 Q
+(, and) 335.07 132.67 T
+4 9.5 Q
+(utils) 361.95 132.67 T
+0 11 Q
+(.) 390.45 132.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.15/DEST FmPD2
+447 778/I4.1.920277 FmPA
+135 738/I4.1.920289 FmPA
+423 690/I4.1.920307 FmPA
+392 662/I4.1.920322 FmPA
+301 470/I4.1.920334 FmPA
+135 362/I4.1.920346 FmPA
+274 778/I4.1.920262 FmPA
+307 284/I4.1.920355 FmPA
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "15" 15
+%%Page: "16" 16
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(16) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+4 9.5 Q
+0 X
+(pervasive) 153 640.67 T
+0 11 Q
+(The ML) 234 640.67 T
+(W) 271.48 640.67 T
+(orks pervasive library) 281.46 640.67 T
+(.) 386.95 640.67 T
+4 9.5 Q
+(scripts) 153 614.67 T
+0 11 Q
+(Contains information for constr) 234 614.67 T
+(ucting the corr) 387.65 614.67 T
+(ect) 458.61 614.67 T
+(scripts for your system during the installation of) 234 600.67 T
+(ML) 234 586.67 T
+(W) 250.31 586.67 T
+(orks.) 260.3 586.67 T
+4 9.5 Q
+(utils) 153 560.67 T
+0 11 Q
+(Signatur) 234 560.67 T
+(es r) 275.36 560.67 T
+(elated to the Standar) 292.19 560.67 T
+(d ML Basis library) 392.47 560.67 T
+(.) 480.88 560.67 T
+4 9.5 Q
+(winsys) 153 534.67 T
+0 11 Q
+(The ML) 234 534.67 T
+(W) 271.48 534.67 T
+(orks W) 281.46 534.67 T
+(indows interface library) 315.74 534.67 T
+(.) 431.1 534.67 T
+3 16 Q
+(9  Setting up editor suppor) 126 499.33 T
+(t) 293.2 499.33 T
+126 643/G4.853239 FmPA
+0 11 Q
+(ML) 126 478.67 T
+(W) 142.31 478.67 T
+(orks supports a variety of external editors. The following sections of the) 152.3 478.67 T
+(main documentation describe how to set up editor support:) 126 464.67 T
+(\245) 135 444.67 T
+-0.07 (In the) 153 444.67 P
+2 F
+-0.07 (ML) 183.72 444.67 P
+-0.07 (W) 199.41 444.67 P
+-0.07 (orks Refer) 209.57 444.67 P
+-0.07 (ence Manual) 253.61 444.67 P
+0 F
+-0.07 (, r) 310.88 444.67 P
+-0.07 (ead the sections on the) 320.45 444.67 P
+4 9.5 Q
+-0.15 (Shell.Editor) 432.92 444.67 P
+0 11 Q
+(str) 153 430.67 T
+(uctur) 165.51 430.67 T
+(e and the) 191.39 430.67 T
+4 9.5 Q
+(Shell.Preferences) 238.79 430.67 T
+0 11 Q
+( str) 335.69 430.67 T
+(uctur) 350.95 430.67 T
+(e.) 376.83 430.67 T
+(\245) 135 410.67 T
+(In the) 153 410.67 T
+2 F
+(ML) 183.87 410.67 T
+(W) 199.55 410.67 T
+(orks User Guide) 209.72 410.67 T
+0 F
+(, r) 281.83 410.67 T
+(ead the section on \322Editing ML Files\323 in) 291.48 410.67 T
+(Chapter 1.) 153 396.67 T
+3 16 Q
+(10  Impr) 126 361.33 T
+(o) 176.08 361.33 T
+(ving perf) 183.86 361.33 T
+(ormance) 239.02 361.33 T
+126 505/G4.920389 FmPA
+0 11 Q
+-0.22 (The following notes pr) 126 340.67 P
+-0.22 (esent suitable system settings for r) 235.66 340.67 P
+-0.22 (unning ML) 401.41 340.67 P
+-0.22 (W) 455.41 340.67 P
+-0.22 (orks on) 465.4 340.67 P
+(W) 126 326.67 T
+(indows.) 136.4 326.67 T
+(Ensur) 126 306.67 T
+(e a minimum amount of disk space. 64MB is plenty for most applica-) 154.57 306.67 T
+(tions.) 126 292.67 T
+(Y) 126 272.67 T
+(ou can contr) 132.32 272.67 T
+(ol the memory usage of ML) 192.27 272.67 T
+(W) 325.82 272.67 T
+(orks with the) 335.8 272.67 T
+4 9.5 Q
+(-limit) 402.8 272.67 T
+2 11 Q
+(n) 439.75 272.67 T
+0 F
+( option to) 445.87 272.67 T
+(the ML) 126 258.67 T
+(W) 160.32 258.67 T
+(orks r) 170.31 258.67 T
+(untime itself, and also by setting the swap characteristics of) 198.45 258.67 T
+-0.31 (W) 126 244.67 P
+-0.31 (indows. The settings depend on the sort of work you ar) 136.4 244.67 P
+-0.31 (e doing, for example) 402.54 244.67 P
+(student work, r) 126 230.67 T
+(unning a medium-sized application, or lar) 201.01 230.67 T
+(ge-scale softwar) 406.33 230.67 T
+(e) 484.39 230.67 T
+(development \050all \336gur) 126 216.67 T
+(es in MB\051:) 234.88 216.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.16/DEST FmPD2
+153 712/I4.1.919182 FmPA
+148 516/M4.9.12295.1Heading.110.Improving.performance FmPA
+148 516/I4.1.920388 FmPA
+153 792/I4.1.920364 FmPA
+153 686/I4.1.920375 FmPA
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "16" 16
+%%Page: "17" 17
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(10) 430.84 695.67 T
+(Improving performance) 449.84 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(17) 531 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+0 11 Q
+0 X
+(The) 108 363.67 T
+4 9.5 Q
+(-limit) 129.16 363.67 T
+0 11 Q
+( in T) 163.36 363.67 T
+(able 1 r) 184.2 363.67 T
+(efers to the) 219.4 363.67 T
+4 9.5 Q
+(-limit) 275.71 363.67 T
+2 11 Q
+(n) 312.66 363.67 T
+0 F
+( option to the ML) 318.77 363.67 T
+(W) 402.75 363.67 T
+(orks r) 412.73 363.67 T
+(untime,) 440.87 363.67 T
+-0.01 (which speci\336es an advisory ar) 108 349.67 P
+-0.01 (ena extent size in MB. The default is 100. If you) 254.56 349.67 P
+-0.42 (have pr) 108 335.67 P
+-0.42 (oblems with memory usage, try this setting \336rst, using the suggested) 144.48 335.67 P
+2 F
+-0.42 (n) 477.55 335.67 P
+0 F
+-0.18 (fr) 108 321.67 P
+-0.18 (om the table above. T) 115.81 321.67 P
+-0.18 (o change it, edit the) 218.26 321.67 P
+4 9.5 Q
+-0.37 (mlworks) 315.27 321.67 P
+0 11 Q
+-0.18 ( shortcut by choosing) 355.17 321.67 P
+5 9.6 Q
+-0.17 (Star) 461.44 321.67 P
+-0.17 (t) 480.31 321.67 P
+(> Settings > T) 108 307.67 T
+(askbar) 170.19 307.67 T
+0 11 Q
+(, then in the T) 200.32 307.67 T
+(askbar pr) 266.33 307.67 T
+(operties dialog, choose) 312.04 307.67 T
+5 9.6 Q
+(Star) 425.97 307.67 T
+(t Men) 444.83 307.67 T
+(u) 469.8 307.67 T
+(Pr) 108 293.67 T
+(ograms) 117.95 293.67 T
+0 11 Q
+( and click on the) 152.62 293.67 T
+5 9.6 Q
+(Ad) 234.95 293.67 T
+(v) 247.6 293.67 T
+(anced ...) 252.74 293.67 T
+0 11 Q
+( button. This explor) 291.16 293.67 T
+(es the start menu) 386.38 293.67 T
+(pr) 108 279.67 T
+(ograms. Find and select the) 118.76 279.67 T
+4 9.5 Q
+(mlworks) 254.79 279.67 T
+0 11 Q
+( shortcut and choose) 294.7 279.67 T
+5 9.6 Q
+(File > Pr) 397.65 279.67 T
+(oper) 435.08 279.67 T
+(ties) 456.08 279.67 T
+0 11 Q
+(.) 472.62 279.67 T
+-0.32 (Then choose) 108 265.67 P
+5 9.6 Q
+-0.31 (Shor) 170.9 265.67 P
+-0.31 (tcut) 192.96 265.67 P
+0 11 Q
+-0.32 (. The shortcut is pr) 210.56 265.67 P
+-0.32 (esented in the T) 300.16 265.67 P
+-0.32 (ar) 375.21 265.67 P
+-0.32 (get text box, and can) 384.86 265.67 P
+(be edited ther) 108 251.67 T
+(e.) 175.02 251.67 T
+-0.24 (Reserved swap is how much disk space you should have available to your vir-) 108 231.67 P
+-0.43 (tual memory system. This is what determines whether ML) 108 217.67 P
+-0.43 (W) 388.12 217.67 P
+-0.43 (orks will die fr) 398.1 217.67 P
+-0.43 (om) 467.96 217.67 P
+(lack of memory) 108 203.67 T
+(.) 182.81 203.67 T
+(Minimum swap is the smallest size you should allow your swap \336le to) 108 183.67 T
+(become. Y) 108 169.67 T
+(ou can set this in the Contr) 157.05 169.67 T
+(ol Panel under) 287.15 169.67 T
+5 9.6 Q
+(System) 360.99 169.67 T
+0 11 Q
+(. The operations) 395.14 169.67 T
+(necessary dif) 108 155.68 T
+(fer between W) 171.25 155.68 T
+(indows 95 and W) 241.47 155.68 T
+(indows NT) 325.91 155.68 T
+(.) 379.9 155.68 T
+0 0 0 1 0 0 0 K
+108 606.01 486 614 C
+36 72 576 720 C
+0 0 0 1 0 0 0 K
+0 11 Q
+0 X
+0 0 0 1 0 0 0 K
+(T) 136.12 617.67 T
+(able 1  Recommended W) 141.86 617.67 T
+(indows memory settings \050in Megabytes\051) 262.12 617.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Personal) 259.17 577.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+-0.93 (Pr) 315.5 584.67 P
+-0.93 (ofessional) 326.3 584.67 P
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050medium\051) 320.9 570.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(Pr) 392.5 584.67 T
+(ofessional) 403.3 584.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050lar) 406.41 570.67 T
+(ge\051) 422.92 570.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(~live data) 138.31 547.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(16) 258.69 547.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(24) 313.69 547.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 388.69 547.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(~max. heap size) 138.31 526.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 258.69 526.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(48) 313.69 526.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(48) 388.69 526.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050no) 388.69 512.67 T
+4 9.5 Q
+(-limit) 407.51 512.67 T
+0 11 Q
+(\051) 441.71 512.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(suitable) 138.31 491.67 T
+4 9.5 Q
+(-limit) 179.2 491.67 T
+0 11 Q
+( value) 213.4 491.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 258.69 491.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(48) 313.69 491.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(64) 388.69 491.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(~max. heap size) 138.31 470.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(24) 258.69 470.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 313.69 470.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(40) 388.69 470.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(\050with) 388.69 456.67 T
+4 9.5 Q
+(-limit) 417.46 456.67 T
+0 11 Q
+(\051) 451.66 456.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(suitable RAM) 138.31 435.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(16) 258.69 435.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(24) 313.69 435.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 388.69 435.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(r) 138.31 414.67 T
+(eserved swap) 142.46 414.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(64) 258.69 414.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(64) 313.69 414.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(128) 388.69 414.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(minimum swap) 138.31 393.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(23) 258.69 393.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 313.69 393.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+(32) 388.69 393.67 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+252.69 600.01 252.69 386.01 2 L
+V
+0.25 H
+0 Z
+N
+307.69 600.01 307.69 386.01 2 L
+V
+N
+382.69 600.01 382.69 386.01 2 L
+V
+N
+132.31 561.01 461.69 561.01 2 L
+V
+N
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.17/DEST FmPD2
+176 769/M4.9.40688.Table.Table.12.Recommended.Windows.memory.settings.in.Megabytes FmPA
+176 769/I4.1.920395 FmPA
+[/Rect[207 358 213 371]/Border[0 0 0]/Page 17/View[/XYZ null 176 769 FmDC exch pop null]/LNK FmPD
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "17" 17
+%%Page: "18" 18
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(18) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+0 11 Q
+0 X
+(On W) 126 640.67 T
+(indows 95, select the Performance page, then click on the) 154.19 640.67 T
+5 9.6 Q
+(Vir) 433.64 640.67 T
+(tual) 446.64 640.67 T
+-0.19 (Memor) 126 626.67 P
+-0.19 (y) 157.57 626.67 P
+-0.19 (...) 162.13 626.67 P
+0 11 Q
+-0.2 ( button in the Advanced Settings pane. Then select the) 170.14 626.67 P
+5 9.6 Q
+-0.19 (Let me specify) 435.15 626.67 P
+0 11 Q
+(radio button and \336ll out the \336elds appr) 126 612.67 T
+(opriately) 315.86 612.67 T
+(.) 358.47 612.67 T
+(On W) 126 592.67 T
+(indows NT) 154.19 592.67 T
+(, select the Performance page, then click on) 208.18 592.67 T
+5 9.6 Q
+(Chang) 419.7 592.67 T
+(e) 449.66 592.67 T
+(...) 455.19 592.67 T
+0 11 Q
+( in the) 463.2 592.67 T
+(V) 126 578.67 T
+(irtual Memory pane. Then \336ll out the \336elds appr) 133.34 578.67 T
+(opriately) 368.92 578.67 T
+(.) 411.54 578.67 T
+-0.16 (If you still have tr) 126 558.67 P
+-0.16 (ouble, we suggest using the W) 211.44 558.67 P
+-0.16 (indows 95 System Monitor or) 358.48 558.67 P
+(W) 126 544.67 T
+(indows NT Performance Monitor) 136.4 544.67 T
+(.) 297.88 544.67 T
+(In the W) 126 524.67 T
+(indows 95 System Monitor \050) 167.26 524.67 T
+5 9.6 Q
+(Star) 304.17 524.67 T
+(t > Pr) 323.03 524.67 T
+(ograms > Accessories > System) 347.12 524.67 T
+-0.09 (T) 126 510.67 P
+-0.09 (ools > System Monitor) 131.1 510.67 P
+0 11 Q
+-0.09 (\051, select) 233.51 510.67 P
+5 9.6 Q
+-0.09 (Edit > Ad) 272.11 510.67 P
+-0.09 (d Item) 313.71 510.67 P
+0 11 Q
+-0.09 (. In the Category list, select Mem-) 341.89 510.67 P
+(ory Manager) 126 496.67 T
+(, then fr) 187.94 496.67 T
+(om Items choose \322Swap\336le in use\323 and \322Swap\336le size\323.) 225.66 496.67 T
+(Click) 126 482.67 T
+5 9.6 Q
+(OK) 153.95 482.67 T
+0 11 Q
+(.) 168.35 482.67 T
+(In the W) 126 462.67 T
+(indows NT Performance Monitor \050) 167.26 462.67 T
+5 9.6 Q
+(Star) 335.97 462.67 T
+(t > Pr) 354.83 462.67 T
+(ograms > Administrative) 378.92 462.67 T
+(T) 126 448.67 T
+(ools [ Common ] > P) 131.1 448.67 T
+(erf) 223.89 448.67 T
+(ormance Monitor) 235.97 448.67 T
+0 11 Q
+(\051, select) 313.84 448.67 T
+5 9.6 Q
+(Edit > Ad) 352.63 448.67 T
+(d to Char) 394.41 448.67 T
+(t) 436.73 448.67 T
+0 11 Q
+(. Choose) 439.93 448.67 T
+-0.46 (\322Paging File\323 fr) 126 434.67 P
+-0.46 (om the Object dr) 201.16 434.67 P
+-0.46 (op-down list and \322%Usage\323 fr) 280.92 434.67 P
+-0.46 (om the Counter) 426.11 434.67 P
+(dr) 126 420.67 T
+(op-down list. Click) 136.87 420.67 T
+5 9.6 Q
+(Ad) 232.3 420.67 T
+(d) 245.01 420.67 T
+0 11 Q
+(.) 250.87 420.67 T
+(The next thing to do is to monitor the chart while you ar) 126 400.67 T
+(e performing typical) 398.71 400.67 T
+(tasks in ML) 126 386.67 T
+(W) 181.95 386.67 T
+(orks. Ther) 191.93 386.67 T
+(e is a danger that r) 241.13 386.67 T
+(eadings will disappear fr) 331.08 386.67 T
+(om the) 452.22 386.67 T
+(chart too quickly for you to interpr) 126 372.67 T
+(et them. T) 295.05 372.67 T
+(o avoid this, slow down the dis-) 342.85 372.67 T
+(play by selecting) 126 358.67 T
+5 9.6 Q
+(Options > Char) 210.47 358.67 T
+(t) 279.74 358.67 T
+0 11 Q
+( and changing the \322Update interval\323 slider) 282.94 358.67 T
+(setting \050W) 126 344.67 T
+(indows 95\051 or Update T) 175.63 344.67 T
+(ime interval setting \050W) 290.2 344.67 T
+(indows NT\051.) 401.23 344.67 T
+-0.16 (Diagnosis again dif) 126 324.67 P
+-0.16 (fers between W) 219.55 324.67 P
+-0.16 (indows 95 and W) 294.11 324.67 P
+-0.16 (indows NT) 378.05 324.67 P
+-0.16 (. On W) 431.88 324.67 P
+-0.16 (indows) 465.24 324.67 P
+(95, if the swap\336le size goes up and down a lot, the minimum swap\336le size) 126 310.67 T
+(should be incr) 126 296.67 T
+(eased. If the swap\336le size does not go up and down at all, the) 195.11 296.67 T
+(minimum swap\336le size could be r) 126 282.67 T
+(educed. A suggested number in either case) 290.98 282.67 T
+(is 4/3 of the peak value of \322Swap\336le in use\322.) 126 268.67 T
+-0.42 (On W) 126 248.67 P
+-0.42 (indows NT) 153.77 248.67 P
+-0.42 (, if the paging \336le usage stays very low) 207.34 248.67 P
+-0.42 (, your PC is not paging) 391.93 248.67 P
+(very much and you need not make changes. If the usage gets very high, you) 126 234.67 T
+(need to r) 126 220.67 T
+(educe the value of) 168.9 220.67 T
+4 9.5 Q
+(-limit) 260.42 220.67 T
+0 11 Q
+( used by the ML) 294.62 220.67 T
+(W) 372.68 220.67 T
+(orks r) 382.66 220.67 T
+(untime, or r) 410.8 220.67 T
+(educe) 468.35 220.67 T
+(the maximum paging \336le size, or do fewer tasks at once.) 126 206.67 T
+(Also of inter) 126 186.67 T
+(est for monitoring on W) 186.2 186.67 T
+(indows NT is the \322Memory\323 object and) 302.52 186.67 T
+(its \322Page Faults/sec\323 counter) 126 172.67 T
+(. If this r) 267.72 172.67 T
+(emains high \050over 100, say; though the) 308.09 172.67 T
+-0.12 (exact number depends on your PC\051 for a pr) 126 158.67 P
+-0.12 (olonged period, you ar) 335.94 158.67 P
+-0.12 (e thrashing) 446.85 158.67 P
+-0.29 (and need to r) 126 144.67 P
+-0.29 (educe your) 189.4 144.67 P
+4 9.5 Q
+-0.6 (-limit) 246.2 144.67 P
+0 11 Q
+-0.29 (, get mor) 280.4 144.67 P
+-0.29 (e physical memory) 322.91 144.67 P
+-0.29 (, or do fewer tasks) 413.62 144.67 P
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.18/DEST FmPD2
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "18" 18
+%%Page: "19" 19
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+108 675 540 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(10) 430.84 695.67 T
+(Improving performance) 449.84 695.67 T
+108 81 540 117 R
+7 X
+V
+1 9 Q
+0 X
+(19) 531 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+108 126 486 648 R
+7 X
+V
+0 11 Q
+0 X
+(at once. Note that the Performance Monitor graphs ar) 108 640.67 T
+(e scaled independently) 368.01 640.67 T
+(of each other) 108 626.67 T
+(.) 170.02 626.67 T
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.19/DEST FmPD2
+[/Title(A)/Rect[99 117 495 657]/ARTICLE FmPD2
+FMENDPAGE
+%%EndPage: "19" 19
+%%Page: "20" 20
+612 792 0 FMBEGINPAGE
+[0 0 0 1 0 0 0]
+[ 0 1 1 0 1 0 0]
+[ 1 0 1 0 0 1 0]
+[ 1 1 0 0 0 0 1]
+[ 1 0 0 0 0 1 1]
+[ 0 1 0 0 1 0 1]
+[ 0 0 1 0 1 1 0]
+[ 0.51 0 0.18 0 0.49 1 0.82]
+[ 0.6 0 0 0.3 0.1 0.7 0.7]
+ 9 FrameSetSepColors
+FrameNoSep
+0 0 0 1 0 0 0 K
+72 675 504 702 R
+7 X
+0 0 0 1 0 0 0 K
+V
+2 9.5 Q
+0 X
+(Installing MLWorks) 72 695.67 T
+72 81 504 117 R
+7 X
+V
+1 9 Q
+0 X
+(20) 72 100 T
+0 0 0 1 0 0 0 K
+0 0 0 1 0 0 0 K
+126 126 504 648 R
+7 X
+V
+0 0 0 1 0 0 0 K
+[/CropBox[36 72 FmDC 576 720 FmDC FmBx]/PAGE FmPD
+[/Dest/P.20/DEST FmPD2
+[/Dest/L.installdoc/DEST FmPD2
+[/Title(A)/Rect[117 117 513 657]/ARTICLE FmPD2
+[/Page 1/View[/XYZ null 109 714 FmDC exch pop null]/Title(MLWorks)/Count 11/OUT FmPD
+[/Page 5/View[/XYZ null 108 764 FmDC exch pop null]/Title(Installing MLWorks)/OUT FmPD
+[/Page 5/View[/XYZ null 123 576 FmDC exch pop null]/Title(1 MLWorks distribution format)/OUT FmPD
+[/Page 5/View[/XYZ null 123 506 FmDC exch pop null]/Title(2 Contacting Harlequin Support)/Count 2/OUT FmPD
+[/Page 5/View[/XYZ null 129 470 FmDC exch pop null]/Title(2.1 Personal edition)/OUT FmPD
+[/Page 5/View[/XYZ null 129 370 FmDC exch pop null]/Title(2.2 Professional edition)/OUT FmPD
+[/Page 7/View[/XYZ null 123 732 FmDC exch pop null]/Title(3 Suggested minimum system configurations for MLWo...)/OUT FmPD
+[/Page 7/View[/XYZ null 123 580 FmDC exch pop null]/Title(4 Installation)/Count 2/OUT FmPD
+[/Page 7/View[/XYZ null 129 496 FmDC exch pop null]/Title(4.1 From the CD-ROM)/OUT FmPD
+[/Page 7/View[/XYZ null 129 335 FmDC exch pop null]/Title(4.2 From the World Wide Web)/OUT FmPD
+[/Page 8/View[/XYZ null 141 678 FmDC exch pop null]/Title(5 Licenses)/Count 1/OUT FmPD
+[/Page 8/View[/XYZ null 147 472 FmDC exch pop null]/Title(5.1 The license code system)/OUT FmPD
+[/Page 9/View[/XYZ null 123 582 FmDC exch pop null]/Title(6 Registry entries and startup files)/Count 2/OUT FmPD
+[/Page 9/View[/XYZ null 129 498 FmDC exch pop null]/Title(6.1 Registry entries)/OUT FmPD
+[/Page 10/View[/XYZ null 147 734 FmDC exch pop null]/Title(6.2 Startup files)/OUT FmPD
+[/Page 10/View[/XYZ null 141 613 FmDC exch pop null]/Title(7 Contents of the installed MLWorks system)/Count 4/OUT FmPD
+[/Page 11/View[/XYZ null 129 792 FmDC exch pop null]/Title(7.1 Documentation)/OUT FmPD
+[/Page 11/View[/XYZ null 129 384 FmDC exch pop null]/Title(7.2 Shortcuts)/OUT FmPD
+[/Page 13/View[/XYZ null 129 718 FmDC exch pop null]/Title(7.3 Libraries)/OUT FmPD
+[/Page 14/View[/XYZ null 147 558 FmDC exch pop null]/Title(7.4 Image files)/OUT FmPD
+[/Page 15/View[/XYZ null 123 588 FmDC exch pop null]/Title(8 Organization of the installed MLWorks system)/OUT FmPD
+[/Page 16/View[/XYZ null 141 654 FmDC exch pop null]/Title(9 Setting up editor support)/OUT FmPD
+[/Page 16/View[/XYZ null 148 516 FmDC exch pop null]/Title(10 Improving performance)/OUT FmPD
+FMENDPAGE
+%%EndPage: "20" 20
+%%Trailer
+%%BoundingBox: 0 0 612 792
+%%PageOrder: Ascend
+%%Pages: 20
+%%DocumentFonts: Palatino-Roman
+%%+ Palatino-Bold
+%%+ Palatino-Italic
+%%+ Helvetica-Narrow-Bold
+%%+ Courier-Bold
+%%+ Helvetica-Bold
+%%EOF
