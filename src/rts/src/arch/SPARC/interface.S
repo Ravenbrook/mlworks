@@ -23,11 +23,7 @@
  * Revision Log
  * ------------
  * $Log: interface.S,v $
- * Revision 1.28  1998/10/30 17:18:15  jont
- * [Bug #70226]
- * Remove raise_count and stack_extension_count (gone to mlw_start.c)
- *
- * Revision 1.27  1998/05/20  14:01:25  jont
+ * Revision 1.27  1998/05/20 14:01:25  jont
  * [Bug #70035]
  * Add stub_code_start and stub_code_end variables
  * for use in address validation
@@ -1393,4 +1389,10 @@ C_NAME(switch_to_thread):
 #ifdef COLLECT_STATS
 	.global C_NAME(raise_count)
 	.global C_NAME(stack_extension_count)
+	.data
+	.align 2
+C_NAME(raise_count):
+	.word 0
+C_NAME(stack_extension_count):
+	.word 0
 #endif

@@ -9,14 +9,10 @@
  *  Revision Log
  *  ------------
  *  $Log: modules.c,v $
- *  Revision 1.5  1998/08/21 16:34:08  jont
- *  [Bug #30108]
- *  Implement DLL based ML code
- *
- * Revision 1.4  1998/02/23  18:24:07  jont
- * [Bug #70018]
- * Modify declare_root to accept a second parameter
- * indicating whether the root is live for image save
+ *  Revision 1.4  1998/02/23 18:24:07  jont
+ *  [Bug #70018]
+ *  Modify declare_root to accept a second parameter
+ *  indicating whether the root is live for image save
  *
  * Revision 1.3  1996/02/14  15:06:11  jont
  * Changing ERROR to MLERROR
@@ -83,7 +79,6 @@
 #include "values.h"
 #include "allocator.h"
 #include "gc.h"
-#include "pervasives.h"
 
 mlval mt_empty(void)
 {
@@ -107,7 +102,7 @@ mlval mt_add(mlval table, mlval name, mlval structure, mlval time)
   retract_root(&name);
   retract_root(&structure);
   retract_root(&time);
-  new_table = mlw_cons(triple, table);
+  new_table = cons(triple, table);
 
   return(new_table);
 }
@@ -210,11 +205,4 @@ mlval mt_lookup_time(mlval table, mlval name, mlval parent)
   } while (index != 0);
 
   return(MLERROR);
-}
-
-extern void mt_update(mlval structure, mlval name, mlval time)
-{
-  mlval temp = mt_add(DEREF(modules), name, structure, time);
-  /* Do NOT inline this */
-  MLUPDATE(modules, 0, temp);
 }

@@ -9,12 +9,8 @@
  *  Revision Log
  *  ------------
  *  $Log: modules.h,v $
- *  Revision 1.3  1998/07/06 10:13:39  jont
- *  [Bug #30108]
- *  Implement DLL based ML code
- *
- * Revision 1.2  1994/06/09  14:43:38  nickh
- * new file
+ *  Revision 1.2  1994/06/09 14:43:38  nickh
+ *  new file
  *
  * Revision 1.1  1994/06/09  11:12:07  nickh
  * new file
@@ -55,6 +51,6 @@ extern mlval mt_empty(void);
 extern mlval mt_add(mlval table, mlval name, mlval structure, mlval time);
 extern mlval mt_lookup(mlval table, mlval name, mlval parent);
 extern mlval mt_lookup_time(mlval table, mlval name, mlval parent);
-extern void mt_update(mlval structure, mlval name, mlval time);
+
 
 #endif

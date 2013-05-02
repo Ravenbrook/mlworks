@@ -17,24 +17,7 @@
  * ------------
  *
  * $Log: time_date.c,v $
- * Revision 1.16  1998/10/09 14:33:57  jont
- * [Bug #30489]
- * Ensure we don't fault strftime results on empty formats
- *
- * Revision 1.15  1998/10/08  09:18:41  jont
- * [Bug #70188]
- * Ensure Date.localOffset can cope with timezones ahead of GMT
- * ,
- *
- * Revision 1.14  1998/10/02  13:38:57  jont
- * [Bug #30487]
- * Modify functions dealing in seconds to use Int32
- *
- * Revision 1.13  1998/09/30  14:09:59  jont
- * [Bug #70108]
- * Add include of syscalls.h to get round problems in Red Hat 5 with struct timespec
- *
- * Revision 1.12  1998/02/23  18:47:53  jont
+ * Revision 1.12  1998/02/23 18:47:53  jont
  * [Bug #70018]
  * Modify declare_root to accept a second parameter
  * indicating whether the root is live for image save
@@ -84,7 +67,6 @@
  *
  */
 
-#include "syscalls.h"
 #include <assert.h>
 #include <sys/time.h>		/* struct timeval, mktime, ... */
 #include <limits.h>		/* LONG_MAX ... */
@@ -97,7 +79,6 @@
 #include "gc.h"			/* declare_root, retract_root */
 #include "utils.h" 		/* alloc */
 #include "values.h"		/* mlw_option_XXX */
-#include "words.h"		/* word32_to_num and inverse */
 #include "time_date.h"
 #include "time_date_init.h"	/* mlw__get_time_now */
 #include "time_date_local.h"
@@ -187,17 +168,14 @@ static mlval mlw_time_to_real(mlval arg)
 
 
 /*
- * Time.toSeconds: time -> LargeInt.int
+ * Time.toSeconds: time -> int
  * Raises: Overflow
  */
 static mlval mlw_time_to_secs(mlval arg)
 {
-  mlval result = allocate_word32();
   long secs= mlw_time_sec(arg);
-  if (secs > INT_MAX)
+  if (secs > ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  num_to_word32((word)secs, result);
-  return result;
   return MLINT(secs);
 }
 
@@ -205,54 +183,50 @@ static mlval mlw_time_to_secs(mlval arg)
 
 
 /*
- * Time.toMilliseconds: time -> LargeInt.int
+ * Time.toMilliseconds: time -> int
  * Raises: Overflow
  */
 static mlval mlw_time_to_msecs(mlval arg)
 {
-  mlval result = allocate_word32();
   long secs= mlw_time_sec(arg);
   long usecs= mlw_time_usec(arg);
   long msecs= usecs/mlw_time_msecs_per_sec;
-  if (secs > INT_MAX/mlw_time_msecs_per_sec)
+  if (secs > ML_MAX_INT/mlw_time_msecs_per_sec)
     exn_raise(perv_exn_ref_overflow);
-  if (msecs > (INT_MAX - secs*mlw_time_msecs_per_sec))
+  if (msecs > (ML_MAX_INT - secs*mlw_time_msecs_per_sec))
     exn_raise(perv_exn_ref_overflow);
-  num_to_word32((word)(secs*1000+msecs), result);
-  return result;
+  return MLINT(secs*1000+msecs);
 }
 
 
 
 /*
- * Time.toMicroseconds: time -> LargeInt.int
+ * Time.toMicroseconds: time -> int
  * Raises: Overflow
  */
 static mlval mlw_time_to_usecs(mlval arg)
 {
-  mlval result = allocate_word32();
   long secs= mlw_time_sec(arg);
   long usecs= mlw_time_usec(arg);
 
-  if (secs > INT_MAX/mlw_time_usecs_per_sec)
+  if (secs > ML_MAX_INT/mlw_time_usecs_per_sec)
     exn_raise(perv_exn_ref_overflow);
 
-  if (usecs > (INT_MAX - secs*mlw_time_usecs_per_sec))
+  if (usecs > (ML_MAX_INT - secs*mlw_time_usecs_per_sec))
     exn_raise(perv_exn_ref_overflow);
 
-  num_to_word32((word)(secs*mlw_time_usecs_per_sec+usecs), result);
-  return result;
+  return MLINT(secs*mlw_time_usecs_per_sec+usecs);
 }
 
 
 
 /*
- * Time.fromSeconds: LargeInt.int -> time
+ * Time.fromSeconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_secs(mlval arg)
 {
-  long secs= word32_to_num(arg);
+  long secs= CINT(arg);
   if (secs < 0)
     exn_raise(mlw_time_exn_ref_time);
   return mlw_time_make(secs, 0);
@@ -261,12 +235,12 @@ static mlval mlw_time_from_secs(mlval arg)
 
 
 /*
- * Time.fromMilliseconds: LargeInt.int -> time
+ * Time.fromMilliseconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_msecs(mlval arg)
 {
-  long msecs= word32_to_num(arg);
+  long msecs= CINT(arg);
   if (msecs < 0) {
     exn_raise(mlw_time_exn_ref_time);
   } else {
@@ -279,12 +253,12 @@ static mlval mlw_time_from_msecs(mlval arg)
 
 
 /*
- * Time.fromMicroseconds: LargeInt.int -> time
+ * Time.fromMicroseconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_usecs(mlval arg)
 {
-  long usecs= word32_to_num(arg);
+  long usecs= CINT(arg);
   if (usecs < 0) {
     exn_raise(mlw_time_exn_ref_time);
   } else {
@@ -415,10 +389,7 @@ static mlval mlw_date_local_offset(mlval arg){
 
   offset = (difftime(t2, t1));
 
-  /* Make sure offset is in the range 0..24 hours */
-  if(offset < 0.0)
-    offset += (60.0 * 60.0 * 24.0);
- /* Convert the double into an ML Time.time.
+  /* Convert the double into an ML Time.time.
      The code is the same as for Time.fromReal */
   if (offset < 0 || offset > LONG_MAX)
     exn_raise(mlw_date_exn_ref_date);
@@ -526,25 +497,21 @@ static mlval mlw_date_fmt(mlval string_date)
   size_t size;
   mlval result = MLUNIT;
   char *format = CSTRING(FIELD(string_date, 0));
-  if (strlen(format) == 0) {
-    result = allocate_string(1);
-    *(CSTRING(result)) = '\0';
-    return result;
-  } else {
-    mlw_date_to_tm(FIELD(string_date, 1), &tm);
-    for(size=256; result==MLUNIT; size*=2) {
-      char *buffer = alloc(size, "Unable to allocate buffer for time_format()");
-      size_t length = strftime(buffer, size-1, format, &tm);
+  mlw_date_to_tm(FIELD(string_date, 1), &tm);
+  for(size=256; result==MLUNIT; size*=2)
+  {
+    char *buffer = alloc(size, "Unable to allocate buffer for time_format()");
+    size_t length = strftime(buffer, size-1, format, &tm);
 
-      if(length > 0) {
-	result = allocate_string(length+1);
-	memcpy(CSTRING(result), buffer, length+1);
-      }
-
-      free(buffer);
+    if(length > 0)
+    {
+      result = allocate_string(length+1);
+      memcpy(CSTRING(result), buffer, length+1);
     }
-    return result;
+
+    free(buffer);
   }
+  return result;
 }
 
 static struct timeval start_time;

@@ -9,17 +9,9 @@
  *  Revision Log
  *  ------------
  *  $Log: os.h,v $
- *  Revision 1.9  1998/09/16 15:05:52  jont
- *  [Bug #70174]
- *  Modify type of parse_command_line to fix compiler warnings
- *
- * Revision 1.8  1998/09/16  10:46:36  jont
- * [Bug #30108]
- * System specific stuff for command lines
- *
- * Revision 1.7  1998/08/17  11:29:16  jont
- * [Bug #70153]
- * Add system_validate_ml_address
+ *  Revision 1.7  1998/08/17 11:29:16  jont
+ *  [Bug #70153]
+ *  Add system_validate_ml_address
  *
  * Revision 1.6  1997/03/24  15:03:25  nickb
  * Make malloc() and realloc() edge cases match the OS libraries.
@@ -101,9 +93,5 @@ extern void *os_allocator(int code, void *arg);
 /* This is important for when code may live in shared objects */
 
 extern int system_validate_ml_address(void *addr);
-
-/* A function to get and parse the command line the command line */
-
-extern const char *const *parse_command_line(int *argc);
 
 #endif

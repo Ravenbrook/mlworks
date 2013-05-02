@@ -23,25 +23,7 @@
  * Revision Log
  * ------------
  * $Log: interface.S,v $
- * Revision 1.41  1998/10/30 17:08:27  jont
- * [Bug #70226]
- * Fix alignment of raise_count and stack_extensions
- *
- * Revision 1.40  1998/10/20  10:37:15  jont
- * [Bug #70201]
- * Add interface to retract_root
- *
- * Revision 1.39  1998/09/15  10:25:22  jont
- * [Bug #20133]
- * Add an extra gc_limit slot so we can modify the other one when space profiling
- *
- * Revision 1.38  1998/07/31  11:05:23  jont
- * [Bug #70146]
- * Make sure that ml_profile_alloc is all excuted not in ML
- * This requires making a macro of the guts of ml_gc, and
- * placing that in both ml_gc and ml_profile_alloc
- *
- * Revision 1.37  1998/06/09  09:36:28  jont
+ * Revision 1.37  1998/06/09 09:36:28  jont
  * [Bug #70129]
  * Make sure code is not in data section
  *
@@ -287,7 +269,7 @@ stub_code_end:
 
 /* === LOOK UP A VALUE IN THE RUNTIME ENVIRONMENT ===
  *
- * Calls directly through to perv_lookup() from environment.h.
+ * Calls directly through to env_lookup() from environment.h.
  */
 
 	.global C_NAME(ml_lookup_pervasive)
@@ -298,117 +280,30 @@ C_NAME(ml_lookup_pervasive):
 	load_ML_regs
 	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* We are now in ML */
 	ret
-#define ml_gc_internals								  \
-	save_all_ML_regs		/* Save all the standard registers */	; \
-	mov	%esp, THREAD_ml_sp(thread) /* Save last frame for gc */		; \
-	movl	$0, C_NAME(global_state)+GLOBAL_in_ML	/* Not in ML */		; \
-	mov	THREAD_c_sp(thread), %esp  /* Onto c stack */			; \
-	push	%edi								; \
-	push	%ecx								; \
-	call	C_NAME(gc)		/* Call garbage collector */		; \
-	load_ML_state(%ecx)							; \
-	mov	THREAD_ml_sp(thread), %esp /* Point back to ml frame */		; \
-	mov	THREAD_ml_global(thread), %ecx /* Answer in correct place */	; \
-	movl	$2, C_NAME(global_state)+GLOBAL_in_ML	/* Not in ML, ml_sp invalid*/; \
-	load_all_ML_regs		/* restore ml's registers */
-
 /*
- * Call declare_root
- * ebx is root address
- *
- */
-	.globl	ml_declare_root
-ml_declare_root:
-	save_ML_regs
-	mov	$0, %eax	/* This is not a root as far as image saving is concerened */
-	ML_to_C(declare_root)
-	load_ML_regs
-	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* We are now in ML */
-	ret
-/*
- * Call retract_root
- * eax is root address
- *
- */
-	.globl	ml_retract_root
-ml_retract_root:
-	save_ML_regs
-	ML_to_C(retract_root)
-	load_ML_regs
-	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* We are now in ML */
-	ret
-/*
- * Add a setup function result to the module table
- * %ebx is value to be added
- * %eax is module name
- * %edx is timestamp
- */
-	.globl	ml_mt_update
-ml_mt_update:
-	save_ML_regs
-	ML_to_C(mt_update)
-	load_ML_regs
-	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* We are now in ML */
-	ret
-
-/*
- * Add a code item to the weak table of code items
- * %ebx is value to be added
- */
-	.globl	ml_loader_code_add
-ml_loader_code_add:
-	save_ML_regs
-	ML_to_C(loader_code_add)
-	load_ML_regs
-	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* We are now in ML */
-	ret
-
-/*
- * Add a global to be reinstated on image reload
- * %ebx is value to be added
- * %eax is module name
- */
-	.globl	ml_declare_global
-ml_declare_global:
-	push	%eax
-	push	%ebx
-	call	C_NAME(declare_global_result)
-	add	$8, %esp
-	ret
-	
-/*
- * Record the time stamp of a dll
- * %eax is start address
- */
-	.globl	ml_register_time_stamp
-ml_register_time_stamp:
-	push	%eax
-	call	C_NAME(register_time_stamp)
-	add	$4,%esp
-	ret
-
-/*
- * ml_internal_gc
+ * ml_gc
  *
  * ecx = requested size
  * return address on stack
  * edi = current closure
  */
-	.global C_NAME(ml_internal_gc)
-C_NAME(ml_internal_gc):
-	mov	IMPLICIT_profile_alloc_2(thread), %ecx	/* alloc amount back */
-	save_all_ML_regs				/* Save all the standard registers */
-	mov	%esp, THREAD_ml_sp(thread)		/* Save last frame for gc */
+
+	.global C_NAME(ml_gc)
+C_NAME(ml_gc):
+	movl	$2, C_NAME(global_state)+GLOBAL_in_ML	/* Not really in ML */
+	save_all_ML_regs		/* Save all the standard registers */
+	mov	%esp, THREAD_ml_sp(thread) /* Save last frame for gc */
 	movl	$0, C_NAME(global_state)+GLOBAL_in_ML	/* Not in ML */
-	mov	THREAD_c_sp(thread), %esp		/* Onto c stack */
+	mov	THREAD_c_sp(thread), %esp  /* Onto c stack */
 	push	%edi
 	push	%ecx
-	call	C_NAME(gc)				/* Call garbage collector */
+	call	C_NAME(gc)		/* Call garbage collector */
 	load_ML_state(%ecx)
-	mov	THREAD_ml_sp(thread), %esp		/* Point back to ml frame */
-	mov	THREAD_ml_global(thread), %ecx		/* Answer in correct place */
+	mov	THREAD_ml_sp(thread), %esp /* Point back to ml frame */
+	mov	THREAD_ml_global(thread), %ecx /* Answer in correct place */
 	movl	$2, C_NAME(global_state)+GLOBAL_in_ML	/* Not in ML, ml_sp invalid*/
-	load_all_ML_regs				/* restore ml's registers */
+	load_all_ML_regs		/* restore ml's registers */
+	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* Now in ML */
 	ret
 
 /* On the Intel x86 we do not allow allocation in leaf functions */
@@ -1017,7 +912,8 @@ C_NAME(switch_to_thread):
 #endif
 
 /* Space profiling. We come here as if we were going to ml_gc. */
-	.global	C_NAME(ml_gc)
+
+	.global	C_NAME(ml_profile_alloc)
 /*
  * ml_gc
  *
@@ -1026,67 +922,43 @@ C_NAME(switch_to_thread):
  * edi = current closure
  */
 
-C_NAME(ml_gc):
-	mov	%ecx, IMPLICIT_profile_alloc_2(thread)	/* save alloc amount */
+C_NAME(ml_profile_alloc):
+	mov	%ecx, IMPLICIT_profile_alloc_2(thread) /* save alloc amount */
 	mov	IMPLICIT_gc_base(thread), %ecx		/* test for GC */
-	cmp	IMPLICIT_real_gc_limit(thread), %ecx
-	jbe	ml_gc_noGC				/* no GC */
+	cmp	IMPLICIT_gc_limit(thread), %ecx
+	jbe	ml_profile_alloc_noGC	/* no GC */
 
 /* a GC is required */	
 
 	movl	$2, C_NAME(global_state)+GLOBAL_in_ML	/* Not really in ML */
-	push	%edi					/* create fake frame */
+	push	%edi				/* create fake frame */
 	lea	8(%esp), %ecx
 	push	%ecx
-	mov	IMPLICIT_profile_alloc_2(thread), %ecx	/* restore alloc amt */
-	movl	$STACK_SPACE_PROFILE, %edi		/* fake frame closure */
-	call	C_NAME(ml_internal_gc)
-	add	$4, %esp				/* pop fp */
+	mov	IMPLICIT_profile_alloc_2(thread), %ecx /* restore alloc amt */
+	movl	$STACK_SPACE_PROFILE, %edi	/* fake frame closure */
+	call	C_NAME(ml_gc)
+	add	$4, %esp			/* pop fp */
 	pop	%edi
 	movl	$1, C_NAME(global_state)+GLOBAL_in_ML	/* back in ML */
-	jmp	ml_gc_record
-ml_gc_noGC:	
-	mov	IMPLICIT_gc_base(thread), %ecx		/* advanced alloc point */
+	jmp	ml_profile_alloc_record
+ml_profile_alloc_noGC:	
+	mov	IMPLICIT_gc_base(thread), %ecx	/* advanced alloc point */
 	sub	IMPLICIT_profile_alloc_2(thread), %ecx	/* alloc point */
-ml_gc_record:
-/*
- * Now determine if we are space profiling
- */
-	.globl	C_NAME(space_profile_active)
+ml_profile_alloc_record:
 	mov	%eax, IMPLICIT_profile_alloc_2(thread)	/* save eax */
-	mov	C_NAME(space_profile_active), %eax	/* get flag */
-	cmp	$0, %eax
-	je	ml_gc_exit				/* branch if not space profiling */
 	mov	THREAD_ml_profile(thread), %eax
 	mov	%edi, 0(%eax)
 	mov	%ecx, 4(%eax)
 	add	$8, %eax
 	mov	%eax, THREAD_ml_profile(thread)
-#ifdef	SPACE_PROFILE_OVERFLOW
-/*
- * Now ensure that the limit is set to the base so we reenter at next allocation
- */
-	mov	IMPLICIT_gc_base(thread), %eax
-	mov	%eax, IMPLICIT_gc_limit(thread)
-#endif
-ml_gc_exit:
 	mov	IMPLICIT_profile_alloc_2(thread), %eax	/* restore eax */
 	ret
-
-	.global	C_NAME(ml_profile_alloc)
-C_NAME(ml_profile_alloc):
-#ifdef	SPACE_PROFILE_OVERFLOW
-	jmp	C_NAME(ml_gc)
-#else
-/* Deprecated interface */
-	call	C_NAME(ml_profile_alloc_die)
-#endif
 
 /* leaf allocation is not allowed on the x86 */
 
 	.global	C_NAME(ml_profile_alloc_leaf)
 C_NAME(ml_profile_alloc_leaf):
-	call	C_NAME(ml_gc_leaf_die)
+	call	C_NAME(ml_gc_leaf_die);
 
 /* fpu control word reading for linux */
 	
@@ -1118,72 +990,13 @@ l0:	movl	$1, %eax	/* Return 1 */
 l1:	movl	$2, %eax	/* Return 2 */
 	ret
 
-/* Trampoline call ML from C
- *
- * trampoline is a C-like function which allows C to invoke an ML function in
- * the manner of a coroutine.
- *
- * Parameters:
- *   4(ESP)     Function to be called
- *   0(ESP)	Link register for return to C
- *   ESP	Current stack pointer
- *   EBP	Current (C) frame pointer (callee save)
- *   EBX	Callee save
- *   ESI	Callee save
- *   EDI	Callee save
- *   EAX	Function to be called
- * Returns:
- *   EAX	Result of the ML function
- */
-
-/* enter with in_ML = 0 */
-
-	.global C_NAME(asm_trampoline)
-C_NAME(asm_trampoline):
-	mov	%esp, %eax		/* save esp so we can refer to args */
-	save_C_regs
-	mov	4(%eax), %ebp		/* The function closure */
-	lea	(C_NAME(global_state)), %eax
-	mov	GLOBAL_current_thread(%eax), %esi
-	mov	THREAD_c_sp(%esi), %edi  /* Old c_state.sp */
-	mov	%esp, THREAD_c_sp(%esi)  /* Remember C sp for calls to C */
-	load_ML_state(%ecx)
-	mov	THREAD_ml_sp(%esi), %esp	/* saved ml_state.sp */
-/* Now create a small frame at the top of the ml stack */
-	mov	%esp, %edx		/* Remember current esp */
-	pushl	$0			/* Dummy link here */
-	push	%edi			/* Save old c_state.sp */
-	pushl	$STACK_C_CALL		/* Dummy closure value */
-	push	%edx			/* Link fp */
-	movl	$1, GLOBAL_in_ML(%eax)	/* now in ML */
-	mov	$STACK_START, %edi	/* Set up old closure value */
-	mov	-1(%ebp), %ecx		/* Get code pointer */
-	add	$CODE_OFFSET, %ecx
-	call	%ecx
-/* we enter ML with edx = old ml_sp, esi = thread */
-/* all these values are preserved in ML */
-	lea	(C_NAME(global_state)), %eax
-	movl	$2, GLOBAL_in_ML(%eax)		/* no longer in ML */
-	mov	8(%esp), %ecx
-	add	$16, %esp			/* Pop ML frame */
-	mov	%esp, THREAD_ml_sp(thread)
-	movl	$0, GLOBAL_in_ML(%eax)		/* ml_sp is valid */
-	mov	THREAD_c_sp(thread), %esp	/* Reset to C stack */
-	mov	%ecx, THREAD_c_sp(thread)	/* restore c_sp */
-	mov	fnarg, %eax			/* Get result */
-	load_C_regs
-	ret
-
-
-	.section	.drectve
-	.asciz	"-export:ml_declare_root"
-	.asciz	"-export:ml_retract_root"
-	.asciz	"-export:ml_mt_update"
-	.asciz	"-export:ml_declare_global"
-	.asciz	"-export:ml_register_time_stamp"
-	.asciz	"-export:ml_loader_code_add"
-
 #ifdef COLLECT_STATS
 	.global C_NAME(raise_count)
 	.global C_NAME(stack_extension_count)
+	.data
+	.align 2
+C_NAME(raise_count):
+	.long 0
+C_NAME(stack_extension_count):
+	.long 0
 #endif

@@ -16,14 +16,10 @@
  *  Revision Log
  *  ------------
  *  Revision log: $Log: pervasives.c,v $
- *  Revision log: Revision 1.18  1999/03/09 14:56:39  johnh
- *  Revision log: [Bug #190506]
- *  Revision log: Remove old FI - references to foreign_loader.
+ *  Revision log: Revision 1.17  1998/04/27 15:37:48  jkbrook
+ *  Revision log: [Bug #30354]
+ *  Revision log: Temporarily restore old FI to distribution
  *  Revision log:
- * Revision 1.17  1998/04/27  15:37:48  jkbrook
- * [Bug #30354]
- * Temporarily restore old FI to distribution
- *
  * Revision 1.16  1997/05/22  14:34:52  stephenb
  * [Bug #30121]
  * Move to new FI: remove the reference to foreign_loader.h
@@ -399,8 +395,10 @@
 #include "vector.h"
 #include "stacks.h"
 #include "trace.h"
+#include "foreign_loader.h"
 #include "words.h"
 #include "pack_words.h"
+#include "libml.h"
 
 /*  The message level is initialised to a ref cell containing an integer,
  *  and is used by the garbage collector to determine whether to print
@@ -482,6 +480,8 @@ void pervasives_init(void)
   vector_init();
   stacks_init();
   trace_init();
+  foreign_init();
   words_init();
   pack_words_init();
+  libml_init();
 }

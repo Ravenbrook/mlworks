@@ -8,11 +8,7 @@
  * ------------
  *
  * $Log: os_io_poll.c,v $
- * Revision 1.8  1998/09/30 14:20:37  jont
- * [Bug #70108]
- * Add include of syscalls.h to get round problems in Red Hat 5 with struct timespec
- *
- * Revision 1.7  1998/02/24  11:19:01  jont
+ * Revision 1.7  1998/02/24 11:19:01  jont
  * [Bug #70018]
  * Modify declare_root to accept a second parameter
  * indicating whether the root is live for image save
@@ -59,10 +55,8 @@
  */
 
 
-#include "syscalls.h"
-#include <string.h>		/* strerror might be here */
 #include <assert.h>		/* assert */
-#include <errno.h>		/* errno and maybe strerror */
+#include <errno.h>		/* errno */
 #include <sys/types.h>		/* select */
 #include <sys/time.h>		/* select */
 #include <unistd.h>		/* select */

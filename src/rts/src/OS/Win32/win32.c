@@ -10,47 +10,9 @@
  *  Revision Log
  *  ------------
  *  $Log: win32.c,v $
- *  Revision 1.50  1999/03/18 12:41:29  daveb
- *  [Bug #190523]
- *  Changes to the Windows structure.
- *
- * Revision 1.49  1999/03/18  12:28:28  daveb
- * [Bug #190521]
- * OS.FileSys.readDir now returns an option type.
- *
- * Revision 1.48  1998/11/03  14:30:08  jont
- * [Bug #70234]
- * Add calls to GetEnvironmentStrings and FreeEnvironmentStrings
- * and pass result as environment in call to CreateProcess
- *
- * Revision 1.47  1998/11/02  15:07:18  jont
- * [Bug #70238]
- * Use WaitForSingleObject istead of busy wait in Windows.execute
- *
- * Revision 1.46  1998/10/29  16:30:14  jont
- * [Bug #70232]
- * Pass correct command line to CreateProcess (70233)
- * Close leftover handles
- *
- * Revision 1.45  1998/10/27  15:58:22  jont
- * [Bug #70220]
- * Add reap function
- *
- * Revision 1.44  1998/10/12  16:29:11  jont
- * [Bug #30490]
- * Get streams from Windows.streamsOf in the right order (they were reversed)
- *
- * Revision 1.43  1998/10/02  09:56:13  jont
- * [Bug #50095]
- * Fix Windows.hasOwnConsole
- *
- * Revision 1.42  1998/08/21  14:09:29  jont
- * [Bug #30108]
- * Implement DLL based ML code
- *
- * Revision 1.41  1998/08/18  11:52:29  jont
- * [Bug #70153]
- * Add prototype for system_validate_ml_address
+ *  Revision 1.41  1998/08/18 11:52:29  jont
+ *  [Bug #70153]
+ *  Add prototype for system_validate_ml_address
  *
  * Revision 1.40  1998/08/17  11:16:52  jont
  * [Bug #70153]
@@ -272,8 +234,6 @@
 #include "win32_error.h"        /* mlw_win32_strerror ... */
 #include "os.h"		        /* system_validate_ml_address ... */
 #include "window.h"
-#include "words.h"
-#include "cache.h"
 
 mlval win32_std_in;
 mlval win32_std_out;
@@ -491,7 +451,6 @@ static mlval win32_open(mlval argument)
 
 
 
-
 /*
  * file_desc -> unit
  * Raises: SysErr
@@ -653,7 +612,7 @@ static mlval mlw_os_file_sys_open_dir(mlval arg)
 
 
 /*
- * OS.FileSys.readDir : dirstream -> string option
+ * OS.FileSys.readDir : dirstream -> string
  */
 static mlval mlw_os_file_sys_read_dir(mlval arg)
 {
@@ -667,7 +626,12 @@ static mlval mlw_os_file_sys_read_dir(mlval arg)
   if (!FindNextFile(handle, &file_data)) {
     if (GetLastError() != ERROR_NO_MORE_FILES)
       mlw_raise_win32_syserr(GetLastError());
-    return mlw_option_make_none();
+    result= mlw_ref_value(mlw_dirstream_file_name(arg));
+    if (CSTRING(result)[0] != '\0') {
+      declare_root(&result, 0);
+      mlw_ref_update(mlw_dirstream_file_name(arg), ml_string(""));
+      retract_root(&result);
+    }
   } else {
     mlval ml_file_name;
     declare_root(&arg, 0);
@@ -677,8 +641,8 @@ static mlval mlw_os_file_sys_read_dir(mlval arg)
     mlw_ref_update(mlw_dirstream_file_name(arg), ml_file_name);
     retract_root(&result);
     retract_root(&arg);
-    return mlw_option_make_some(result);
   }
+  return result;
 }
 
 
@@ -1165,18 +1129,18 @@ static mlval mlw_os_file_sys_tmp_name(mlval unit)
 
 
 /*
- * OS.Process.exit: word32 -> 'a
+ * OS.Process.exit: int -> 'a
  */
 static mlval mlw_os_process_exit(mlval exit_code)
 {
-  exit(unbox(exit_code));
+  exit(CINT(exit_code));
   return MLUNIT;		/* keep dumb compilers happy */
 }
 
 
 
 /*
- * OS.Process.system: string -> word32
+ * OS.Process.system: string -> int
  * Raises: OS.SysErr
  */
 static mlval mlw_os_process_system(mlval arg)
@@ -1186,7 +1150,7 @@ static mlval mlw_os_process_system(mlval arg)
   if (status == -1 || status == 127)
     mlw_raise_c_syserr(errno);
 
-  return box(status);
+  return MLINT(status);
 }
 
 
@@ -1370,9 +1334,7 @@ static mlval win32_create_process (mlval arg)
 		     (LPSTARTUPINFO)&startup_info,        /* Start up info */
 		     (LPPROCESS_INFORMATION)&proc_info    /* Process information */
 		   );
-   /* Now avoid hanging onto the process and main thread handles */
-   CloseHandle(proc_info.hThread);
-   CloseHandle(proc_info.hProcess);
+
    return MLBOOL(result != 0);
 }
 
@@ -1421,6 +1383,7 @@ static mlval ml_getvolumeinformation(mlval arg)
     mlval volName;
     mlval sysName;
     mlval serNum;
+    mlval ml_flags;
     mlval result;
     volName = ml_string(volumeName);
     declare_root(&volName, 0);
@@ -1428,14 +1391,18 @@ static mlval ml_getvolumeinformation(mlval arg)
     declare_root(&sysName, 0);
     serNum = box(serial);
     declare_root(&serNum, 0);
-    result = allocate_record(4);
-    FIELD(result, 0) = MLINT(component_length);
-    FIELD(result, 1) = serNum;
-    FIELD(result, 2) = sysName;
-    FIELD(result, 3) = volName;
+    ml_flags = box(flags);
+    declare_root(&ml_flags, 0);
+    result = allocate_record(5);
+    FIELD(result, 0) = ml_flags;
+    FIELD(result, 1) = MLINT(component_length);
+    FIELD(result, 2) = serNum;
+    FIELD(result, 3) = sysName;
+    FIELD(result, 4) = volName;
     retract_root(&volName);
     retract_root(&sysName);
     retract_root(&serNum);
+    retract_root(&ml_flags);
     return result;
   } else {
     mlw_raise_win32_syserr(GetLastError());
@@ -1490,19 +1457,18 @@ static char *get_args(mlval list, const char *fun)
   return args;
 }
 
-/*
- * shell_execute is called by ml_open_document and ml_launch_application.
- * It calls ShellExecute, frees the arguments, and checks the result status.
- */
-static void shell_execute (char *name, char* c_args, char* fn)
+static mlval ml_shell_execute(mlval arg)
 {
+  char *name = CSTRING(FIELD(arg, 0));
+  mlval args = FIELD(arg, 1);
+  char *c_args = get_args(args, "Windows.shellExcute");
   HINSTANCE handle = ShellExecute(NULL, "open", name, c_args, NULL, SW_NORMAL);
   free(c_args);
   if ((DWORD)handle < 32) {
     switch((DWORD)handle) {
     case SE_ERR_OOM:
     case 0:
-      exn_raise_syserr(format_to_ml_string("System out of resource during %s", fn), 0);
+      exn_raise_syserr(ml_string("System out of resource during Windows.shellExecute"), 0);
 #ifdef Win95
     case SE_ERR_FNF:
 #else
@@ -1514,7 +1480,7 @@ static void shell_execute (char *name, char* c_args, char* fn)
 #else
     case ERROR_PATH_NOT_FOUND:
 #endif
-      exn_raise_syserr(format_to_ml_string("A path was not found during %s", fn), 0);
+      exn_raise_syserr(ml_string("A path was not found during Windows.shellExecute"), 0);
     case ERROR_BAD_FORMAT:
       exn_raise_syserr(format_to_ml_string("file '%s' does not specify a valid Win32 executable", name), 0);
     case SE_ERR_ACCESSDENIED:
@@ -1522,85 +1488,56 @@ static void shell_execute (char *name, char* c_args, char* fn)
     case SE_ERR_ASSOCINCOMPLETE:
       exn_raise_syserr(format_to_ml_string("Association to '%s' incomplete or invalid", name), 0);
     case SE_ERR_DDEBUSY:
-      exn_raise_syserr(format_to_ml_string("The DDE transaction could not be completed because other DDE transactions were being processed during %s", fn), 0);
+      exn_raise_syserr(ml_string("The DDE transaction could not be completed because other DDE transactions were being processed during Windows.shellExecute"), 0);
     case SE_ERR_DDEFAIL:
-      exn_raise_syserr(format_to_ml_string("DDE transaction failed during %s", fn), 0);
+      exn_raise_syserr(ml_string("DDE transaction failed during Windows.shellExecute"), 0);
     case SE_ERR_DDETIMEOUT:
-      exn_raise_syserr(format_to_ml_string("The DDE transaction request timed out during %s", fn), 0);
+      exn_raise_syserr(ml_string("The DDE transaction request timed out during Windows.shellExecute"), 0);
     case SE_ERR_DLLNOTFOUND:
       exn_raise_syserr(ml_string("DLL not found"), 0);
     case SE_ERR_NOASSOC:
       exn_raise_syserr(format_to_ml_string("No application associated with the given filename extension in '%s'", name), 0);
     case SE_ERR_SHARE:
-      exn_raise_syserr(format_to_ml_string("A sharing violation occurred during %s of '%s'", fn, name), 0);
+      exn_raise_syserr(format_to_ml_string("A sharing violation occurred during Windows.shellExecute of '%s'", name), 0);
     default: mlw_raise_win32_syserr(GetLastError());
     }
+  } else {
+    return MLUNIT;
   }
 }
 
-static mlval ml_launch_application(mlval arg)
+static mlval ml_new_console(mlval arg)
 {
-  char *name = CSTRING(FIELD(arg, 0));
-  mlval args = FIELD(arg, 1);
-  char *c_args = get_args(args, "Windows.shellExecute");
-  shell_execute (name, c_args, "Windows.launchApplication");
-  return MLUNIT;
-}
-
-static mlval ml_open_document(mlval arg)
-{
-  char *name = CSTRING(arg);
-  shell_execute (name, NULL, "Windows.openDocument");
-  return MLUNIT;
-}
-
-
-static BOOL CALLBACK find_child_console(HWND hwnd, DWORD pid)
-{
-  DWORD thread_id;
-  DWORD process_id;
-
-  thread_id = GetWindowThreadProcessId (hwnd, &process_id);
-  if (thread_id) {
-    if (process_id == pid) {
-      char window_class[32];
-      GetClassName (hwnd, window_class, sizeof (window_class));
-      if (strcmp(window_class, "tty") == 0 ||
-	  strcmp(window_class, "ConsoleWindowClass") == 0) {
-	return FALSE;
-      }
+  BOOL res = FreeConsole();
+  if (res == TRUE) {
+    res = AllocConsole();
+    if (res == TRUE) {
+      return MLUNIT;
+    } else {
+      mlw_raise_win32_syserr(GetLastError());
     }
+  } else {
+    mlw_raise_win32_syserr(GetLastError());
   }
-  /* keep looking */
-  return TRUE;
 }
 
 static mlval ml_has_console(mlval arg)
 {
-  HANDLE console_handle =
-    CreateFile("CONOUT$",
-	       GENERIC_READ | GENERIC_WRITE,
-	       FILE_SHARE_READ | FILE_SHARE_WRITE,
-	       NULL,
-	       OPEN_EXISTING,
-	       0,
-	       NULL);
-  if (console_handle == INVALID_HANDLE_VALUE) {
-    mlw_raise_win32_syserr(GetLastError());
-  } else {
-    if (EnumWindows(find_child_console, (LPARAM)GetCurrentProcessId()) == TRUE) {
+  HANDLE stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO info;
+  if (GetConsoleScreenBufferInfo(stdOut, &info) == TRUE) {
+    if (info.dwCursorPosition.X == 0 && info.dwCursorPosition.Y == 0) {
       return MLFALSE;
     } else {
       return MLTRUE;
     }
+  } else {
+    mlw_raise_win32_syserr(GetLastError());
   }
 }
 
 #define BUFSIZE 4096
 
-/* XXX: The error cases in ml_execute don't close the duplicated handles.
- * Is this a problem?  -- daveb, 26/1/99.
- */
 static mlval ml_execute(mlval arg)
 {
   HANDLE hChildStdinRd, hChildStdinWr, hChildStdinWrDup,
@@ -1608,42 +1545,32 @@ static mlval ml_execute(mlval arg)
     hSaveStdin, hSaveStdout;
   PROCESS_INFORMATION piProcInfo;
   STARTUPINFO siStartInfo;
-  mlval name = FIELD(arg, 0);
+  char *name = CSTRING(FIELD(arg, 0));
   mlval args = FIELD(arg, 1);
-  char *c_args = get_args(mlw_cons(name, args), "Windows.execute");
+  char *c_args = get_args(args, "Windows.excute");
   SECURITY_ATTRIBUTES saAttr;
   BOOL fSuccess;
-  LPVOID env;
-  BOOL created_console;
-  
   /* Set the bInheritHandle flag so pipe handles are inherited. */
+
   saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
   saAttr.bInheritHandle = TRUE;
   saAttr.lpSecurityDescriptor = NULL;
-
-  /* First we allocate a console, if we don't have one already */
-  created_console = AllocConsole();
- 
   hSaveStdout = GetStdHandle(STD_OUTPUT_HANDLE);
   if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0))
     exn_raise_syserr(ml_string("Stdout pipe creation failed in Windows.execute"), 0);
-  if (!SetStdHandle(STD_OUTPUT_HANDLE, hChildStdoutWr)) {
-    CloseHandle(hChildStdoutRd);  /* Get rid of the pipe */
-    CloseHandle(hChildStdoutWr);
-    exn_raise_syserr(ml_string("Redirecting stdOut failed in Windows.execute"), 0);
-  }
+  if (!SetStdHandle(STD_OUTPUT_HANDLE, hChildStdoutWr))
+    exn_raise_syserr(ml_string("Redirecting STDOUT failed in Windows.execute"), 0);
   fSuccess = DuplicateHandle(GetCurrentProcess(), hChildStdoutRd,
 			     GetCurrentProcess(), &hChildStdoutRdDup , 0,
 			     FALSE,
 			     DUPLICATE_SAME_ACCESS);
   if( !fSuccess ) {
     SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    CloseHandle(hChildStdoutRd);  /* Get rid of the pipe */
-    CloseHandle(hChildStdoutWr);
-    exn_raise_syserr(ml_string("DuplicateHandle failed on stdOut in Windows.execute"), 0);
+    CloseHandle(hChildStdoutRd);
+    CloseHandle(hChildStdoutWr); /* Get rid of the pipe */
+    exn_raise_syserr(ml_string("DuplicateHandle failed in Windows.execute"), 0);
   }
   CloseHandle(hChildStdoutRd);
-
   hSaveStdin = GetStdHandle(STD_INPUT_HANDLE);
   if (! CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)) {
     SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
@@ -1652,10 +1579,10 @@ static mlval ml_execute(mlval arg)
   }
   if (! SetStdHandle(STD_INPUT_HANDLE, hChildStdinRd)) {
     SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    CloseHandle(hChildStdoutWr); /* Get rid of the pipes */
+    CloseHandle(hChildStdoutWr); /* Get rid of the pipe */
     CloseHandle(hChildStdinRd);
-    CloseHandle(hChildStdinWr);
-    exn_raise_syserr(ml_string("Redirecting StdIn failed in Windows.execute"), 0);
+    CloseHandle(hChildStdinWr); /* Get rid of the pipe */
+    exn_raise_syserr(ml_string("Redirecting Stdin failed in Windows.execute"), 0);
   }
   fSuccess = DuplicateHandle(GetCurrentProcess(), hChildStdinWr,
 			     GetCurrentProcess(), &hChildStdinWrDup, 0,
@@ -1663,537 +1590,45 @@ static mlval ml_execute(mlval arg)
 			     DUPLICATE_SAME_ACCESS);
   if (! fSuccess) {
     SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    CloseHandle(hChildStdoutWr); /* Get rid of the pipes */
+    CloseHandle(hChildStdoutWr); /* Get rid of the pipe */
     CloseHandle(hChildStdinRd);
-    CloseHandle(hChildStdinWr);
+    CloseHandle(hChildStdinWr); /* Get rid of the pipe */
     exn_raise_syserr(ml_string("DuplicateHandle failed on stdIn in Windows.execute"), 0);
   }
   CloseHandle(hChildStdinWr);
 
   ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
   siStartInfo.cb = sizeof(STARTUPINFO);
-  env = GetEnvironmentStrings();
-  if (CreateProcess(NULL, c_args, NULL, NULL, TRUE, 0, env, NULL, &siStartInfo, &piProcInfo) == FALSE) {
+  if (CreateProcess(name, c_args, NULL, NULL, TRUE, 0, NULL, NULL, &siStartInfo, &piProcInfo) == FALSE) {
     SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
     SetStdHandle(STD_INPUT_HANDLE, hSaveStdin);   /* Restore original stdIn */
-    CloseHandle(hChildStdoutWr); /* Get rid of the pipes */
-    CloseHandle(hChildStdinRd);
-    (void)FreeEnvironmentStrings(env);
+    CloseHandle(hChildStdoutWr); /* Get rid of the pipe */
+    CloseHandle(hChildStdinRd);  /* Get rid of the pipe */
     mlw_raise_win32_syserr(GetLastError());
   }
-  (void)FreeEnvironmentStrings(env);
-  CloseHandle(piProcInfo.hThread); /* We don't need this, so we close it straight away */
   SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
   SetStdHandle(STD_INPUT_HANDLE, hSaveStdin);   /* Restore original stdIn */
-  CloseHandle(hChildStdoutWr); /* Get rid of the pipes */
-  CloseHandle(hChildStdinRd);
-
   /* Here we need to create something to hold the stdOut and stdIn so we can return them to ML */
-  /* We also need the process handle so we can reap */
   {
-    mlval streams = allocate_record(2);
-    mlval proc;
-    FIELD(streams, 0) = MLINT(hChildStdoutRdDup);
-    FIELD(streams, 1) = MLINT(hChildStdinWrDup);
-    declare_root(&streams, 0);
-    proc = allocate_record(2);
-    FIELD(proc, 0) = streams;
-    FIELD(proc, 1) = MLINT(piProcInfo.hProcess);
-    retract_root(&streams);
-    if (created_console)
-      FreeConsole ();
+    mlval proc = allocate_record(2);
+    FIELD(proc, 0) = MLINT(hChildStdinWrDup);
+    FIELD(proc, 1) = MLINT(hChildStdoutRdDup);
     return proc;
   }
 }
-
-static mlval ml_execute_null_streams(mlval arg)
-{
-  HANDLE hNullDevice, hSaveStdin, hSaveStdout, hSaveStderr;
-  PROCESS_INFORMATION piProcInfo;
-  STARTUPINFO siStartInfo;
-  mlval name = FIELD(arg, 0);
-  mlval args = FIELD(arg, 1);
-  char *c_args = get_args(mlw_cons(name, args), "Windows.simpleExecute");
-  SECURITY_ATTRIBUTES saAttr;
-  /*  BOOL fSuccess;  */
-  LPVOID env;
-
-  /* Set the bInheritHandle flag so pipe handles are inherited. */
-  saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-  saAttr.bInheritHandle = TRUE;
-  saAttr.lpSecurityDescriptor = NULL;
-
-  hNullDevice = CreateFile("NUL:", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-				   NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (hNullDevice == INVALID_HANDLE_VALUE)
-    exn_raise_syserr(ml_string("Failed to open null device in Windows.simpleExecute"), 0);
-
-  hSaveStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-  if (!SetStdHandle(STD_OUTPUT_HANDLE, hNullDevice)) {
-    CloseHandle(hNullDevice);
-    exn_raise_syserr(ml_string("Redirecting STDOUT failed in Windows.simpleExecute"), 0);
-  }
-
-  hSaveStdin = GetStdHandle(STD_INPUT_HANDLE);
-  if (! SetStdHandle(STD_INPUT_HANDLE, hNullDevice)) {
-    SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    CloseHandle(hNullDevice);
-    exn_raise_syserr(ml_string("Redirecting Stdin failed in Windows.simpleExecute"), 0);
-  }
-
-  hSaveStderr = GetStdHandle(STD_ERROR_HANDLE);
-  if (! SetStdHandle(STD_ERROR_HANDLE, hNullDevice)) {
-    SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    SetStdHandle(STD_INPUT_HANDLE, hSaveStdin); /* Restore original stdin */
-    CloseHandle(hNullDevice);
-    exn_raise_syserr(ml_string("Redirecting Stderr failed in Windows.simpleExecute"), 0);
-  }
-
-  ZeroMemory(&siStartInfo, sizeof(STARTUPINFO));
-  siStartInfo.cb = sizeof(STARTUPINFO);
-  env = GetEnvironmentStrings();
-  if (CreateProcess(NULL, c_args, NULL, NULL, TRUE, 0, env, NULL, &siStartInfo, &piProcInfo) == FALSE) {
-    SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-    SetStdHandle(STD_INPUT_HANDLE, hSaveStdin);   /* Restore original stdIn */
-    SetStdHandle(STD_ERROR_HANDLE, hSaveStderr);   /* Restore original stdErr */
-    CloseHandle(hNullDevice);
-    (void)FreeEnvironmentStrings(env);
-    mlw_raise_win32_syserr(GetLastError());
-  }
-
-  (void)FreeEnvironmentStrings(env);
-  CloseHandle(piProcInfo.hThread); /* We don't need this, so we close it straight away */
-  SetStdHandle(STD_OUTPUT_HANDLE, hSaveStdout); /* Restore original stdOut */
-  SetStdHandle(STD_INPUT_HANDLE, hSaveStdin);   /* Restore original stdIn */
-  SetStdHandle(STD_ERROR_HANDLE, hSaveStderr);   /* Restore original stdErr */
-  CloseHandle(hNullDevice);
-
-  /* Here we need to create dummy stdIn/stdOut values so we can return them to ML */
-  /* We also need the process handle so we can reap */
-  {
-    mlval streams = allocate_record(2);
-    mlval proc;
-    FIELD(streams, 0) = MLINT(0);
-    FIELD(streams, 1) = MLINT(0);
-    declare_root(&streams, 0);
-    proc = allocate_record(2);
-    FIELD(proc, 0) = streams;
-    FIELD(proc, 1) = MLINT(piProcInfo.hProcess);
-    retract_root(&streams);
-    return proc;
-  }
-}
-
 
 /*
  * NB, we probably need to do something about these streams
  * when we stop and restart, as they will no longer be valid
- * Turns out the basis does this for us
  */
 
 static mlval ml_streams_of(mlval arg)
 {
-  return (FIELD(arg, 0)); /* The arg is a pair of the streams and the process handle */
-}
-
-
-/*
- * reap a windows function, ie wait for it to die and return its status
- */
-
-static mlval ml_reap(mlval arg)
-{
-  HANDLE hProcess = (HANDLE)(CINT(FIELD(arg, 1)));
-  mlval streams = FIELD(arg, 0);
-  HANDLE out = (HANDLE)(CINT(FIELD(streams, 0)));
-  HANDLE in = (HANDLE)(CINT(FIELD(streams, 1)));
-  DWORD status;
-  DWORD res = WaitForSingleObject(hProcess, INFINITE);
-
-  switch(res) {
-  case WAIT_OBJECT_0:
-    if (GetExitCodeProcess(hProcess, &status)) {
-      /* Close our resources */
-      CloseHandle(hProcess);
-      CloseHandle(in);
-      CloseHandle(out);
-      return box(status);
-    };
-    /* Fall through */
-  case WAIT_FAILED:
-  default:
-    {
-      /* Failed */
-      int error = GetLastError();
-      mlw_raise_win32_syserr(error);
-    }
-  }
-}
-
-
-/* === Handle uniqueness of DLLs and SOs
- *
- * During DLL init we set up a table
- * chained through the dlls, each element of which
- * conforms to the following struct
- * struct info {
- * unsigned long stamp1, stamp2, stamp3, stamp4; A GUID
- * unsigned long *text_start,
- *               *data_start,
- *               *text_end,
- *               *data_end; The text and data bounds of this dll
- * struct info *next; A pointer to the next element, or NULL(0)
- * char          name[]; A name by which this can be identified
- * }
- *
- * At environment init we translate this table
- * into a global root with the following semantics
- * At save:    Save the table away in the image
- * At deliver: Save the table away in the image (unclear what to do here)
- * At reload:  Compare the table from the image with the one we have
- *             and error exit if different in the stamps
- *             If different in the addresses, fix up the heap
- */
-
-typedef struct dll_info *dll_info_ptr;
-
-typedef struct dll_info
-{
-  word stamp1, stamp2, stamp3, stamp4;
-  word text_start, data_start, text_end, data_end;
-  dll_info_ptr next;
-  char name; /* Really an inline string */
-} dll_info;
-
-static mlval shared_object_info = MLNIL;
-
-static void fix(mlval *what, dll_info_ptr old, dll_info_ptr new)
-{
-  mlval value = *what;
-  if (MLVALISPTR(value)) {
-    word addr = (word)value;
-    while (old != NULL) {
-      word text_start = old->text_start;
-      word text_end = old->text_end;
-      word data_start = old->data_start;
-      word data_end = old->data_end;
-      word new_text_start = new->text_start;
-      word new_data_start = new->data_start;
-      /*
-      printf("fix 0x%p(0x%x)\n", what, value);
-      */
-      if (addr >= text_start && addr < text_end) {
-	*what = (mlval)(addr + new_text_start - text_start);
-	/*
-	if (value != *what)
-	  printf("fix 0x%p(0x%x) to 0x%x\n", what, value, *what);
-	  */
-	break;
-      } else if (addr >= data_start && addr < data_end) {
-	*what = (mlval)(addr + new_data_start - data_start);
-	/*
-	if (value != *what)
-	  printf("fix 0x%p(0x%x) to 0x%x\n", what, value, *what);
-	  */
-	break;
-      }
-      old = old->next;
-      new = new->next;
-    }
-  } else {
-    return;
-  }
-}
-
-static void scan(mlval *start, mlval *end, dll_info_ptr old, dll_info_ptr new)
-{
-  while(start < end) {
-    mlval value = *start;
-    
-    switch(PRIMARY(value)) {
-      case INTEGER0:
-      case INTEGER1:
-      case PRIMARY6:
-      case PRIMARY7:
-      ++start;
-      break;
-      
-      case HEADER:
-      switch(SECONDARY(value)) {
-	case STRING:
-	case BYTEARRAY:
-	start = (mlval *)double_align((byte *)(start+1) + LENGTH(value));
-	continue;
-
-	case CODE:
-	fix(start+1, old, new);
-	cache_flush((void*)(start+2), (LENGTH(value)+1) * sizeof(mlval));
-	start += LENGTH(value)+1;
-	continue;
-	
-	case ARRAY:
-	case WEAKARRAY:
-	{
-	  union ml_array_header *array = (union ml_array_header *)start;
-	  /* No need to deal with forward or backward pointers */
-	  /* As these can't go through the dll area */
-	  start = &array->the.element[0];
-	}
-	break;
-	
-	default:
-	++start;
-      }
-      break;
-      
-      default:
-      fix(start, old, new);
-      ++start;
-    }
-  }
-}
-
-static void display_bounds(dll_info_ptr old, dll_info_ptr new)
-{
-  while (old != NULL) {
-    printf("DLL %s has bounds 0x%x - 0x%x (text), 0x%x - 0x%x (data) moved to 0x%x - 0x%x, 0x%x - 0x%x\n",
-	   &old->name, old->text_start, old->text_end, old->data_start, old->data_end,
-	   new->text_start, new->text_end, new->data_start, new->data_end);
-    old = old->next;
-    new = new->next;
-  }
-}
-
-static void fix_heap(dll_info_ptr old, dll_info_ptr new)
-{
-  struct ml_heap *gen;
-  /*
-  display_bounds(old, new);
-  */
-  /* Modelled on the relevant part of image_load_common from <URI://MLWrts/src/image.c> */
-  for(gen = creation; gen != NULL; gen = gen->parent) {
-    struct ml_static_object *stat = gen->statics.forward;
-    /* No need to look at entry lists, as we have no static reference objects */
-    /* Fix the static object chain */
-    while(stat != &gen->statics) {
-      mlval header = stat->object[0];
-      mlval secondary = SECONDARY(header);
-      mlval length = LENGTH(header);
-      size_t size = OBJECT_SIZE(secondary,length);
-      mlval *base = &stat->object[0];
-      mlval *top = (mlval*) ((byte*)base + size);
-
-      stat->gen = gen;
-      scan(base, top, old, new);
-
-      stat = stat->forward;
-    }
-    /* Now do the rest of the normal heap */
-    scan(gen->start, gen->top, old, new);
-  }
-}
-
-void put_nibble(unsigned char x)
-{
-  char s[2];
-  s[1] = '\0';
-  s[0] = (x < 10) ? '0' + x : 'a' + x - 10;
-  fputs(s, stdout);
-}
-
-/*
-void put_byte(unsigned char x)
-{
-  put_nibble((x >> 4) & 0xf);
-  put_nibble(x & 0xf);
-}
-
-void put_short(unsigned short x)
-{
-  put_byte((x >> 8) & 0xff);
-  put_byte(x & 0xff);
-}
-
-void put_long(unsigned long x)
-{
-  put_short((unsigned short)((x >> 16) & 0xffff));
-  put_short((unsigned short)(x & 0xffff));
-}
-*/
-
-static unsigned long *time_stamps = NULL;
-
-int dll_validate(void *addr)
-{
-  dll_info_ptr ptr = (dll_info_ptr)time_stamps;
-  while (ptr != NULL) {
-    word text_start = ptr->text_start;
-    word text_end = ptr->text_end;
-    word data_start = ptr->data_start;
-    word data_end = ptr->data_end;
-    if ((word)addr >= text_start && (word)addr < text_end) {
-      return 1;
-    } else if ((word)addr >= data_start && (word)addr < data_end) {
-      return 1;
-    }
-    ptr = ptr->next;
-  }
-  return 0;
-}
-
-void register_time_stamp(unsigned long *addr)
-{
-  /*
-  fputs("stamp found address: ", stdout);
-  put_long((unsigned long)addr);
-  fputs("\nvalue: ", stdout);
-  put_long(addr[0]);
-  fputs(", ", stdout);
-  put_long(addr[1]);
-  fputs(", ", stdout);
-  put_long(addr[2]);
-  fputs(", ", stdout);
-  put_long(addr[3]);
-  fputs(", ", stdout);
-  put_long(addr[4]);
-  fputs(", ", stdout);
-  put_long(addr[5]);
-  fputs(", ", stdout);
-  put_long(addr[6]);
-  fputs(", ", stdout);
-  put_long(addr[7]);
-  fputs("\n", stdout);
-  */
-  /* Now save them away */
-  if (time_stamps == NULL) {
-    time_stamps = addr;
-  } else {
-    unsigned long *stamps = time_stamps;
-    while (stamps[8] != 0) {
-      /*
-      fputs("Following stamp at ", stdout);
-      put_long((unsigned long)stamps);
-      fputs(" to ", stdout);
-      put_long(stamps[8]);
-      fputs("\n", stdout);
-      */
-      stamps = (unsigned long *)(stamps[8]);
-    }
-    stamps[8] = (unsigned long)addr;
-  }
-}
-
-static dll_info_ptr make_image_stamps(mlval list)
-{
-  mlval head;
-  if (list != MLNIL) {
-    dll_info_ptr tail = make_image_stamps(MLTAIL(list));
-    dll_info_ptr result = malloc(sizeof(struct dll_info));
-    if (result == NULL) {
-      error_without_alloc("failed to allocate dll_info structure when fixing dll relocation");
-    };
-    result->next = tail;
-    head = MLHEAD(list);
-    result->stamp1 = word32_to_num(FIELD(head, 0));
-    result->stamp2 = word32_to_num(FIELD(head, 1));
-    result->stamp3 = word32_to_num(FIELD(head, 2));
-    result->stamp4 = word32_to_num(FIELD(head, 3));
-    result->text_start = word32_to_num(FIELD(head, 4));
-    result->data_start = word32_to_num(FIELD(head, 5));
-    result->text_end = word32_to_num(FIELD(head, 6));
-    result->data_end = word32_to_num(FIELD(head, 7));
-    /* Don't both with the name as we won't be accessing it */
-    return result;
-  } else {
-    return NULL;
-  }
-}
-
-static mlval initialise_shared_object_info(unsigned long *stamps)
-{
-  if (stamps == NULL) {
-    return MLNIL;
-  } else {
-    mlval name = MLUNIT;
-    mlval record = MLUNIT;
-    mlval word32 = MLUNIT;
-    mlval temp = MLUNIT;
-    mlval result = initialise_shared_object_info((unsigned long *)(stamps[8]));
-    /* Get result from tail of list first */
-    int i;
-    declare_root(&name, 0);
-    declare_root(&record, 0);
-    declare_root(&temp, 0);
-    declare_root(&result, 0);
-    temp = allocate_array(8);
-    /* We need an array because we're going to allocate and update */
-    for (i=0; i<8; ++i) {
-      MLUPDATE(temp, i, MLUNIT);
-    }
-    name = ml_string((char *)(stamps+9));
-    for (i = 0; i< 8; ++i) {
-      word32 = allocate_word32();
-      num_to_word32(stamps[i], word32);
-      MLUPDATE(temp, i, word32);
-      /* Copy in unique stamp plus memory limits */
-    }
-    record = allocate_record(9);
-    FIELD(record, 8) = name;
-    for (i = 0; i< 8; ++i) {
-      FIELD(record, i) = MLSUB(temp, i);
-      /* Put this stuff in the right place */
-    }
-    result = mlw_cons(record, result);
-    retract_root(&name);
-    retract_root(&record);
-    retract_root(&temp);
-    retract_root(&result);
-    return result;
-  }
-}
-
-static void check_loaded_shared_object_info(const char *name, mlval *root, mlval value)
-{
-  /* We're given the global name, the heap image root and the value for this name */
-  mlval head;
-  mlval list = value;
-  int i;
-  char *image_name;
-  unsigned long *stamps = time_stamps;
-  dll_info_ptr image_stamps;
-  /*
-  printf("Check_Loaded_Shared_Object_Info of %s\n", name);
-  */
-  while (list != MLNIL) {
-    head = MLHEAD(list);
-    image_name = CSTRING(FIELD(head, 8));
-    if (stamps == NULL) {
-      error("DLL %s found in image but not loaded\n", image_name);
-    }
-    if (strcmp(image_name, (char *)(stamps+9)) != 0) {
-      error("DLL %s found in image but %s loaded\n", image_name, (char *)(stamps+9));
-    }
-    for (i = 0; i < 4; ++i) {
-      if (stamps[i] != word32_to_num(FIELD(head, i))) {
-	error("Consistency failure for DLL %s\n", image_name);
-      }
-    }
-    /*
-    printf("DLL %s found\n", CSTRING(FIELD(head, 8)));
-    */
-    list = MLTAIL(list);
-    stamps = (unsigned long *)(stamps[8]);
-  }
-  image_stamps = make_image_stamps(value);
-  fix_heap(image_stamps, (dll_info_ptr)time_stamps);
-  *root = initialise_shared_object_info(time_stamps);
-  /* Reinitialise as image loading will have wiped this */
-  return;
+  return arg; /* At present, this is precisely what we want */
 }
 
 extern int system_validate_ml_address(void *addr)
 {
-  return dll_validate(addr);
   return 0;
   /* Temporary implementation until shared objects done */
 }
@@ -2304,16 +1739,9 @@ void win32_init(void)
 
   /* Processes */
   env_function("Windows.findExecutable", ml_find_executable);
-  env_function("Windows.openDocument", ml_open_document);
-  env_function("Windows.launchApplication", ml_launch_application);
+  env_function("Windows.shellExecute", ml_shell_execute);
+  env_function("Windows.newConsole", ml_new_console);
   env_function("Windows.hasOwnConsole", ml_has_console);
   env_function("Windows.execute", ml_execute);
-  env_function("Windows.executeNullStreams", ml_execute_null_streams);
   env_function("Windows.streamsOf", ml_streams_of);
-  env_function("Windows.reap", ml_reap);
-
-  /* DLL/SO initialisation */
-  declare_global("shared_object_info", &shared_object_info, GLOBAL_DEFAULT,
-		 NULL, check_loaded_shared_object_info, NULL);
-  shared_object_info = initialise_shared_object_info(time_stamps);
 }

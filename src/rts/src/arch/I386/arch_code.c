@@ -6,11 +6,7 @@
  * Copyright (C) 1995 Harlequin Ltd.
  *
  * $Log: arch_code.c,v $
- * Revision 1.4  1998/08/21 14:54:07  jont
- * [Bug #20133]
- * Stop modifying code vectors for space profiling
- *
- * Revision 1.3  1996/12/19  13:25:53  nickb
+ * Revision 1.3  1996/12/19 13:25:53  nickb
  * Add instruction cache flushing.
  *
  * Revision 1.2  1995/12/13  11:36:51  nickb
@@ -183,9 +179,6 @@ extern int arch_space_unprofile_code(mlval codepointer)
     
 extern int arch_space_profile_code(mlval codepointer)
 {
-#ifdef SPACE_PROFILE_OVERFLOW
-  return 0;
-#else
   word *first_instruction, *last_instruction;
   int changes;
   first_and_last_instructions(&first_instruction, &last_instruction,
@@ -193,5 +186,5 @@ extern int arch_space_profile_code(mlval codepointer)
   changes = add_space_profiling(first_instruction, last_instruction);
   /* would flush icache here if that was meaningful on x86 */
   return changes;
-#endif  
+  
 }

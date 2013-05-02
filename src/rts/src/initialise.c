@@ -2,11 +2,7 @@
  * initialise.c
  * Initialise the run-time system.
  * $Log: initialise.c,v $
- * Revision 1.11  1998/11/10 15:58:02  mitchell
- * [Bug #70242]
- * Initialise sockets support
- *
- * Revision 1.10  1997/04/30  13:51:11  stephenb
+ * Revision 1.10  1997/04/30 13:51:11  stephenb
  * Add a call to mlw_c_init to support new C interface.
  *
  * Revision 1.9  1996/08/27  14:23:44  nickb
@@ -168,7 +164,6 @@
 #include "signals.h"
 #include "stubs.h"
 #include "threads.h"
-#include "sockets.h"
 #include "mlw_ci_init.h"
 
 
@@ -186,7 +181,6 @@ void initialise()
   threads_init();
   implicit_init();
   mlw_ci_init();
-  sockets_init();
 
   gc_clock = 0.0;
   in_GC = 0;

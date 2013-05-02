@@ -12,17 +12,9 @@
  *  Revision Log
  *  ------------
  *  $Log: arena.c,v $
- *  Revision 1.15  1998/09/30 11:40:10  jont
- *  [Bug #70108]
- *  Fix problems with caddr_t under Red Hat 5
- *
- * Revision 1.14  1998/08/04  15:16:05  jont
- * [Bug #20134]
- * Implement system_validate_address
- *
- * Revision 1.13  1998/07/15  13:28:44  jont
- * [Bug #20124]
- * Add implementation of system_valid_address
+ *  Revision 1.13  1998/07/15 13:28:44  jont
+ *  [Bug #20124]
+ *  Add implementation of system_valid_address
  *
  * Revision 1.12  1998/05/21  14:39:39  jont
  * [Bug #70030]
@@ -116,10 +108,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <fcntl.h>
-
-/* Red Hat seems confused about what caddr_t should be */
-/* and what should be able to see it */
-#define caddr_t __caddr_t
 
 /* type and extent tables */
 
@@ -347,9 +335,15 @@ static int reserve_arena_space(caddr_t *base)
       }
     }
   }
+  /*
+  printf("arena_init reserved 0x%x bytes at 0x%x\n", SPACE_SIZE, *base);
+  */
   space_type[space]   = TYPE_FREE;
   space_extent[space] = 0;
   SPACE_MAP(space) = NULL;
+  /*
+  printf("reserve_arena_space at 0x%x\n", (unsigned)*base);
+  */
   return 0;
 }
 
@@ -375,21 +369,6 @@ static void release_arena_space(int space)
   space_extent[space] = (size_t)-1;
   SPACE_MAP(space)    = NULL;
 }
-
-#ifdef DEBUG
-void test_validate_address(void)
-{
-  unsigned int i = 0;
-  do {
-    if (system_validate_address((void *)i)) {
-      printf("Address 0x%x ok\n", i);
-    } else {
-      printf("Address 0x%x bad\n", i);
-    }
-    i += page_size;
-  } while (i != 0);
-}
-#endif
 
 void arena_init(void)
 {
@@ -423,6 +402,9 @@ void arena_init(void)
 	error_without_alloc("Arena initializing unable to reserve memory\n");
       }
       space = SPACE(((word)base) + (SPACE_SIZE) -1);
+      /*
+      printf("arena_init reserved 0x%x bytes at 0x%x\n", SPACE_SIZE, base);
+      */
       if (first_block_space == 0) {
 	/* Allocate first block space to what we've just got */
 	int i;
@@ -460,6 +442,9 @@ void arena_init(void)
 void space_free(byte *space)
 {
   int space_no = SPACE(space);
+  /*
+  printf("space_free: at 0x%x\n", (unsigned)space);
+  */
   unmap(space, space_extent[space_no]);
   release_arena_space(space_no);
 }
@@ -590,40 +575,5 @@ void block_free(byte *block, size_t size)
 
 int system_validate_address(void *addr)
 {
-  unsigned long page_mask = -1 ^ (page_size-1);
-  unsigned long start_addr = ((unsigned long)addr) & page_mask;
-  int pid = getpid();
-  char buffer[256];
-  FILE *file;
-  sprintf(buffer, "/proc/%d/maps", pid);
-  file = fopen(buffer, "r");
-  if (file == NULL) {
-    error("system_validate_address fails with errno %d(%s) to open '%s'\n", errno, strerror(errno), buffer);
-  }
-  do {
-    unsigned long start, end;
-    char *ptr;
-    if (fread(buffer, 1, 17, file) != 17) {
-      fclose(file);
-      return 0;
-    }
-    buffer[17] = '\0';
-    start = strtoul(buffer, &ptr, 16);
-    if (ptr - buffer != 8) {
-      error("system_validate_address: address start wrong size in '%s'", buffer);
-    }
-    end = strtoul(buffer+9, &ptr, 16);
-    if (ptr - buffer != 17) {
-      error("system_validate_address: address end wrong size in '%s'", buffer);
-    }
-    if (start <= start_addr && start_addr < end) {
-      fclose(file);
-      return 1;
-    }
-    while (!feof(file) && fgetc(file) !='\n') {
-      /* Skip to end of line */
-    }
-  } while(1);
-  fclose(file);
-  return 0;
+  return 1; /* Dummy until we find a real implementation */
 }

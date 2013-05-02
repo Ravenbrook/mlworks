@@ -1,19 +1,7 @@
 # ==== MLWorks runtime system x86/Linux-specific (Gnu) Makefile ====
 #
 # $Log: GNUmake,v $
-# Revision 1.25  1999/03/17 12:20:15  mitchell
-# [Bug #190531]
-# Link in Xp
-#
-# Revision 1.24  1998/10/07  14:45:47  jont
-# [Bug #70108]
-# Add /usr/X11R6/lib/xrt/lib to -L path
-#
-# Revision 1.23  1998/09/18  10:14:10  jont
-# [Bug #70176]
-# Add SPACE_PROFILE_OVERFLOW to DEFINES
-#
-# Revision 1.22  1998/04/28  16:31:36  jkbrook
+# Revision 1.22  1998/04/28 16:31:36  jkbrook
 # [Bug #30354]
 # Merge from MLWorks_10r3:
 # Port of old FI to Linux
@@ -76,7 +64,7 @@ MODULESSTATIC   := $(MODULES)
 
 # add target-specific defines
 
-DEFINES		:= $(DEFINES) MACH_FIXUP LITTLE_ENDIAN _SVID_SOURCE SPACE_PROFILE_OVERFLOW
+DEFINES		:= $(DEFINES) MACH_FIXUP LITTLE_ENDIAN _SVID_SOURCE
 
 # add target-specific includes
 
@@ -92,8 +80,8 @@ DLLFLAGS      = -shared
 
 # add target-specific libraries
 
-LIBRARIES	= -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/lib -L/usr/X11R6/lib/xrt/lib -lm -lXm -lXt -lXext -lX11 -lXpm -lXp -lelf -ldl
-LIBRARIESSTATIC = -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/usr/X11R6/lib/xrt/lib -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lm -lSM -lICE -lXt -lX11 -lXp -lelf -ldl -lXpm -lXext
+LIBRARIES	= -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/lib -lm -lXm -lXt -lXext -lX11 -lXpm -lelf -ldl
+LIBRARIESSTATIC = -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lm -lSM -lICE -lXt -lX11 -lelf -ldl -lXpm -lXext
 
 # other target-specific things
 

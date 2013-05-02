@@ -27,13 +27,9 @@
  * Revision Log
  * ------------
  * $Log: interface.S,v $
- * Revision 1.36  1998/10/30 17:18:01  jont
- * [Bug #70226]
- * Remove raise_count and stack_extension_count (gone to mlw_start.c)
- *
- *Revision 1.35  1996/11/07  17:32:55  stephenb
- *[Bug #1461]
- *Remove fake frame builds from ml_disturbance.
+ * Revision 1.35  1996/11/07 17:32:55  stephenb
+ * [Bug #1461]
+ * Remove fake frame builds from ml_disturbance.
  *
  *Revision 1.34  1996/08/16  13:44:37  io
  *Some URI comments for replacement_code
@@ -1071,4 +1067,10 @@ ml_profile_alloc_leaf_record:
 #ifdef COLLECT_STATS
 	.globl raise_count
 	.globl stack_extension_count
+	.sdata
+	.align 2
+raise_count:
+	.word 0
+stack_extension_count:
+	.word 0
 #endif

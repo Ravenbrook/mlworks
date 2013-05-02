@@ -9,13 +9,9 @@
  *  Revision Log
  *  ------------
  *  $Log: stacks.c,v $
- *  Revision 1.20  1998/09/17 15:22:04  jont
- *  [Bug #20124]
- *  Use validate_address in is_ml_heap/is_ml_stack
- *
- * Revision 1.19  1998/04/24  10:32:05  jont
- * [Bug #70034]
- * TYPE_STACK has become TYPE_ML_STACK
+ *  Revision 1.19  1998/04/24 10:32:05  jont
+ *  [Bug #70034]
+ *  TYPE_STACK has become TYPE_ML_STACK
  *
  * Revision 1.18  1998/03/18  11:16:50  jont
  * [Bug #70026]
@@ -237,27 +233,6 @@ extern void explore_stacks(void)
 
 /* Stack backtrace */
 
-static const char *code_vector_name(word closure)
-{
-  if (validate_ml_address(&(FIELD(closure, 0)))) {
-    word code = FIELD(closure, 0);
-    if (validate_ml_address((void *)code) && validate_ml_address((void *)(OBJECT(code)))) {
-      if (validate_ml_address(&(CCODEANCILLARY(code))) &&
-	  validate_ml_address(&(CCODEANCRECORD(code, NAMES))) &&
-	  validate_ml_address(&(CCODEANCVALUE(code, NAMES))) &&
-	  validate_ml_address(CSTRING(CCODENAME(code)))) {
-	return CSTRING(CCODENAME(code));
-      } else {	
-	return "invalid code ancillary";
-      }
-    } else {
-      return "invalid code pointer";
-    }
-  } else {
-    return "invalid closure";
-  }
-}
-
 int max_backtrace_depth = 50;
 
 void backtrace(struct stack_frame *sp, struct thread_state *thread,
@@ -268,49 +243,28 @@ void backtrace(struct stack_frame *sp, struct thread_state *thread,
     message_content("  No stack!\n");
   else if ((word)sp == thread->ml_state.stack_top)
     message_content("  %p empty stack.\n",sp);
-  if (validate_address(&sp->closure)) {
-    if (!is_ml_stack(sp)) {
-      message_content("  %p closure 0x%08X\n", sp, sp->closure);
-      if (validate_address(&sp->fp)) sp = sp->fp;
+  message_content("  %p closure 0x%08X\n", sp, sp->closure);
+
+  while(depth_max-- && sp->fp) {
+    struct stack_frame *fp = sp->fp;
+    if(is_ml_stack(fp)) {
+      const char *name =
+	MLVALISPTR(fp->closure) ? CSTRING(CCODENAME(FIELD(fp->closure, 0))) :
+	  fp->closure == STACK_START ? "stack start" :
+	  fp->closure == STACK_DISTURB_EVENT ? "disturb event" :
+	  fp->closure == STACK_EXTENSION ? "stack extension" :
+	  fp->closure == STACK_RAISE ? "raise" :
+	  fp->closure == STACK_EVENT ? "asynchronous event handler" :
+	  fp->closure == STACK_C_RAISE ? "raise from C" :
+	  fp->closure == STACK_C_CALL ? "call to C" :
+	  fp->closure == STACK_INTERCEPT ? "intercept" :
+	  fp->closure == STACK_SPACE_PROFILE ? "space profile" : "special";
+      message_content("  %p closure 0x%08X: ", fp, fp->closure);
+      message_string(name);
+      message_string("\n");
     }
-  } else {
-    message_content("  %p cannot read closure address %p\n", sp, &sp->closure);
-    if (validate_address(&sp->fp)) sp = sp->fp;
-  }
-  while(depth_max-- && sp) {
-    if(is_ml_stack(sp)) {
-      if (validate_address(&sp->closure)) {
-	const char *name =
-	  MLVALISPTR(sp->closure) ? code_vector_name(sp->closure) :
-	  sp->closure == STACK_START ? "stack start" :
-	  sp->closure == STACK_DISTURB_EVENT ? "disturb event" :
-	  sp->closure == STACK_EXTENSION ? "stack extension" :
-	  sp->closure == STACK_RAISE ? "raise" :
-	  sp->closure == STACK_EVENT ? "asynchronous event handler" :
-	  sp->closure == STACK_C_RAISE ? "raise from C" :
-	  sp->closure == STACK_C_CALL ? "call to C" :
-	  sp->closure == STACK_INTERCEPT ? "intercept" :
-	  sp->closure == STACK_SPACE_PROFILE ? "space profile" : "special";
-	message_content("  %p closure 0x%08X: ", sp, sp->closure);
-	message_string(name);
-	message_string("\n");
-      } else {
-	message_content("  %p cannot read closure address %p\n",
-			sp, &sp->closure);
-	break;
-      }
-    }
-    if (validate_address(&sp->fp)) {
-      sp = sp->fp;
-    } else {
-      break;
-    }
-  }
-  if (sp == NULL || (word)sp == thread->ml_state.stack_top)
-    message_content("--- base of stack --- \n");
-  else if (depth_max > 0 && !validate_address(&sp->fp)) {
-    /* Not at top of stack, but address invalid */
-    message_content("  %p cannot read frame address %p\n", sp, &sp->fp);
+
+    sp = sp->fp;
   }
 }
 
@@ -321,15 +275,26 @@ mlval is_ml_frame(struct stack_frame *sp)
 {
   mlval closure = sp->closure;
 
-  if(ISORDPTR(closure) && validate_ml_address((void *)closure)) {
+  if(is_ml_stack(sp->fp) && ISORDPTR(closure))
+  {
     mlval secondary = SECONDARY(GETHEADER(closure));
-    if(secondary == RECORD || secondary == 0) {
-      mlval code = FIELD(closure, 0);
-      if(validate_ml_address((void *)code) && PRIMARY(code) == POINTER &&
-	 SECONDARY(GETHEADER(code)) == BACKPTR)
-	return(code);
+
+    if(secondary == RECORD || secondary == 0)
+    {
+      mlval *object = OBJECT(closure);
+
+      if(is_ml_heap(object) || is_ml_stack(object))
+      {
+	mlval code = FIELD(closure, 0);
+
+	if((is_ml_heap(OBJECT(code)) || code == stub_c) && PRIMARY(code) == POINTER &&
+	   (SECONDARY(GETHEADER(code)) == CODE ||
+	    SECONDARY(GETHEADER(code)) == BACKPTR))
+	  return(code);
+      }
     }
   }
+
   return(MLUNIT);
 }
 

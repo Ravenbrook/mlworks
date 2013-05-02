@@ -1,21 +1,17 @@
 /* Copyright 1997 The Harlequin Group Limited.  All rights reserved.
- *
- * This is the OS dependent part of the C<->ML interface.
- * Implements dynamic loading of shared objects via LoadLibrary.
- *
- * Revision Log
- * ------------
- *
- * $Log: mlw_ci_os.c,v $
- * Revision 1.5  1998/10/05 11:01:24  jont
- * [Bug #70182]
- * Use error rather than exn_raise_syserr for errors during mlw_ci_load_files
- *
- * Revision 1.4  1998/02/24  11:21:40  jont
- * [Bug #70018]
- * Modify declare_root to accept a second parameter
- * indicating whether the root is live for image save
- *
+**
+** This is the OS dependent part of the C<->ML interface.
+** Implements dynamic loading of shared objects via LoadLibrary.
+**
+** Revision Log
+** ------------
+**
+** $Log: mlw_ci_os.c,v $
+** Revision 1.4  1998/02/24 11:21:40  jont
+** [Bug #70018]
+** Modify declare_root to accept a second parameter
+** indicating whether the root is live for image save
+**
  * Revision 1.3  1997/06/30  12:31:38  stephenb
  * [Bug #30029]
  * Add mlw_ci_raise_syserr
@@ -40,7 +36,7 @@
 #include "mlw_ci_globals.h"	/* mlw_c_init_globals */
 #include "mlw_ci_os_init.h"	/* mlw_ci_os_init */
 #include "win32_error.h"	/* mlw_raise_c_syerr */
-#include "utils.h"		/* error */
+
 
 
 mlw_ci_export mlw_val mlw_ci_raise_syserr(int i)
@@ -138,17 +134,15 @@ static void mlw_ci_load_files(mlw_val files)
     HINSTANCE dll_handle;
     if ((dll_handle= LoadLibrary(file_name)) == NULL) {
       retract_root(&fs);
-      error("%s", CSTRING(mlw_win32_strerror(GetLastError())));
+      mlw_raise_win32_syserr(GetLastError());
     } else {
       FARPROC init_function= GetProcAddress(dll_handle, init_name);
       if (init_function == NULL) {
 	retract_root(&fs);
-	error("%s", CSTRING(mlw_win32_strerror(GetLastError())));
+	mlw_raise_win32_syserr(GetLastError());
       } else {
 	/* XXX: If this raises an exception, the fs root will be left
-         * dangling .
-	 * In fact, if this raises an exception, the world will die
-	 * as we are in the middle of fixing global roots.
+         * dangling 
 	 */
 	init_function();
       }

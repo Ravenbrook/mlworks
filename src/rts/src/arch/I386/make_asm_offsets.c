@@ -5,11 +5,7 @@
  * Copyright (C) 1995 Harlequin Ltd.
  *
  * $Log: make_asm_offsets.c,v $
- * Revision 1.5  1998/06/11 11:36:41  jont
- * [Bug #30108]
- * Implement DLL based ML code
- *
- * Revision 1.4  1995/11/13  13:47:15  nickb
+ * Revision 1.4  1995/11/13 13:47:15  nickb
  * Add native thread fields.
  *
  * Revision 1.3  1995/09/06  13:09:20  nickb
@@ -27,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "threads.h"
-#include "values.h"
 
 #include "make_asm_offsets_common.c"
 
@@ -53,8 +48,6 @@ int main(int argc, char*argv[])
     output_thread("c_eip", thread_offsetof(c_state.eip));
     output_thread("ml_profile", thread_offsetof(ml_state.space_profile));
     output_common();
-    output("STUB_ANCILL_","0",CCODE_MAKE_ANCILL(0,0,0,CCODE_NO_INTERCEPT,0,0));
-    output("STUB_ANCILL_","1",CCODE_MAKE_ANCILL(0,0,0,CCODE_NO_INTERCEPT,0,1));
   }
   return 0;
 }

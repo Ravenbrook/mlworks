@@ -5,13 +5,9 @@
  *  Revision Log
  *  ------------
  *  $Log: mem.c,v $
- *  Revision 1.23  1998/10/23 14:09:15  jont
- *  [Bug #70219]
- *  Make stack backtrace function easily available
- *
- * Revision 1.22  1998/08/17  11:34:54  jont
- * [Bug #70153]
- * Add validate_ml_address
+ *  Revision 1.22  1998/08/17 11:34:54  jont
+ *  [Bug #70153]
+ *  Add validate_ml_address
  *
  * Revision 1.21  1998/07/15  15:21:02  jont
  * [Bug #20134]
@@ -233,7 +229,6 @@
 #include "pervasives.h"
 #include "stubs.h"
 #include "os.h"
-#include "stacks.h"
 
 #include <errno.h>
 #include <sys/types.h>
@@ -780,9 +775,4 @@ int validate_address(void *addr)
       return 0;
     }
   }
-}
-
-extern void ml_backtrace(int depth_max)
-{
-  backtrace((struct stack_frame *)&(CURRENT_THREAD->ml_state.sp), CURRENT_THREAD, depth_max);
 }

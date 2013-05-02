@@ -5,12 +5,8 @@
  *  Revision Log
  *  ------------
  *  $Log: os.c,v $
- *  Revision 1.11  1998/09/17 14:24:29  jont
- *  [Bug #30108]
- *  Move dummy definitions os asm_trampoline from unix.c into os.c
- *
- * Revision 1.10  1997/03/25  12:38:22  nickb
- * Remove compilation warnings.
+ *  Revision 1.10  1997/03/25 12:38:22  nickb
+ *  Remove compilation warnings.
  *
  * Revision 1.9  1997/03/24  15:03:34  nickb
  * Make malloc() and realloc() edge cases match the OS libraries.
@@ -144,9 +140,3 @@ extern void *os_allocator(int code, void *arg)
   return NULL;
 }
 
-extern mlval asm_trampoline(mlval x);
-
-extern mlval asm_trampoline(mlval x)
-{
-  error("Unix version of asm_trampoline not yet implemented and shouldn't be called");
-}

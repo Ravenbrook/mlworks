@@ -2,11 +2,7 @@
  * objectfile.h
  * The ML object file format.
  * $Log: objectfile.h,v $
- * Revision 1.13  1998/09/16 15:40:52  jont
- * [Bug #30108]
- * Increment code version as implicit vector layout has changed
- *
- * Revision 1.12  1998/04/22  11:30:27  jont
+ * Revision 1.12  1998/04/22 11:30:27  jont
  * [Bug #70091]
  * Change OBJECT_FILE_VERSION as we're about
  * to change the consistency info format
@@ -133,7 +129,7 @@
  * a wordset in the interpreter (interload.sml).
  */
 
-#define OBJECT_FILE_VERSION 20
+#define OBJECT_FILE_VERSION 19
 
 /*
  * The earliest version number with code format compatible with the latest version
@@ -141,7 +137,7 @@
  * is no need to change this
 */
 
-#define OBJECT_CODE_VERSION 20
+#define OBJECT_CODE_VERSION 19
 
 /*
  * The opcodes used in the object file.

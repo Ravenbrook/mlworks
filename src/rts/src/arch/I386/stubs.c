@@ -4,11 +4,7 @@
  * assembler is defective and can't do it itself
  *
  * $Log: stubs.c,v $
- * Revision 1.9  1998/09/15 10:24:45  jont
- * [Bug #20133]
- * Add ml_profile_alloc_die
- *
- * Revision 1.8  1998/05/20  15:02:01  jont
+ * Revision 1.8  1998/05/20 15:02:01  jont
  * [Bug #70035]
  * Add stubs_code_start, stubs_code_end, stubs_data_start, stubs_data_end
  *
@@ -158,15 +154,6 @@ extern void ml_gc_leaf_die(void)
   fprintf(stderr, "ml_gc_leaf_die called\n");
   exit(1);
 }
-
-extern void ml_profile_alloc_die(void);
-
-extern void ml_profile_alloc_die(void)
-{
-  fprintf(stderr, "ml_profile_alloc_die called\n");
-  exit(1);
-}
-
 extern void ml_disturbance_die(void);
 
 extern void ml_disturbance_die(void)

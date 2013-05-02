@@ -9,17 +9,9 @@
  *  Revision Log
  *  ------------
  *  $Log: loader.c,v $
- *  Revision 1.44  1998/09/30 14:53:23  jont
- *  [Bug #70108]
- *  Make sure stat.h is included before syscalls.h to avoid problems with lstat
- *
- * Revision 1.43  1998/08/21  16:36:05  jont
- * [Bug #30108]
- * Implement DLL based ML code
- *
- * Revision 1.42  1998/04/23  14:23:11  jont
- * [Bug #70034]
- * Rationalising names in mem.h
+ *  Revision 1.42  1998/04/23 14:23:11  jont
+ *  [Bug #70034]
+ *  Rationalising names in mem.h
  *
  * Revision 1.41  1998/04/22  15:06:06  jont
  * [Bug #70091]
@@ -372,15 +364,6 @@
  *  Initial revision
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <setjmp.h>
-#include <errno.h>
-#include <memory.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include "ansi.h"
 #include "syscalls.h"
 #include "mltypes.h"
@@ -402,6 +385,15 @@
 #include "loader_local.h"	/* mlw_path_dir_separator, mlw_path_src_tag */
 #include "mem.h"		/* GENERATION */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <setjmp.h>
+#include <errno.h>
+#include <memory.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 /*  == Loaded code vector list ==  */
 
 mlval loader_code;
@@ -409,7 +401,7 @@ void (*loader_code_observer)(mlval code) = NULL;
 
 void (*loader_code_trace_observer)(mlval code) = NULL;
 
-void loader_code_add(mlval code)
+static void loader_code_add(mlval code)
 {
   declare_root(&code, 0);
   loader_code = weak_add(loader_code, code); /* This may call gc, hence declare */
@@ -422,15 +414,8 @@ void loader_code_add(mlval code)
 
 static mlval disable(unsigned int index, mlval code)
 {
-  int type = SPACE_TYPE(code);
-  int ok = 0;
-  if (type == TYPE_RESERVED && validate_ml_address((void *)code)) {
-    ok = 1;
-  } else if (type == TYPE_ML_HEAP) {
-    struct ml_heap *gen = VALUE_GEN(code);
-    ok = live_in_gen(gen, (mlval *)code);
-  }
-  if (ok) {
+  struct ml_heap *gen = VALUE_GEN(code);
+  if (live_in_gen(gen, (mlval *)code)) {
     CCODE_SET_PROFILE(code,(mlval)NULL);
     return(code);
   } else {
@@ -1346,7 +1331,7 @@ mlval load_wordset(mlval argument)
     pair = allocate_record(2);
     FIELD(pair, 0) = position;
     FIELD(pair, 1) = code;
-    result = mlw_cons(pair, result);
+    result = cons(pair, result);
   }
 
   /* When the code object is complete, we can apply loader_code_add() */

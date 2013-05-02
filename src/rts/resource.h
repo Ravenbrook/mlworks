@@ -2,7 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by runtime.rc
 //
-#define IDOK2                           2
 #define IDAPPLY                         3
 #define IDRESET                         4
 #define external_editor_command         1001
@@ -49,9 +48,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        123
 #define _APS_NEXT_COMMAND_VALUE         40069
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -5,13 +5,9 @@
  *  Revision Log
  *  ------------
  *  $Log: profiler.h,v $
- *  Revision 1.5  1998/07/29 12:54:57  jont
- *  [Bug #20133]
- *  Make space_profile_active visible to external code (interface.S)
- *
- * Revision 1.4  1998/04/23  13:43:57  jont
- * [Bug #70034]
- * Rationalising names in mem.h
+ *  Revision 1.4  1998/04/23 13:43:57  jont
+ *  [Bug #70034]
+ *  Rationalising names in mem.h
  *
  * Revision 1.3  1995/07/17  08:58:34  nickb
  * Move to new profiler framework, with results into ML.
@@ -134,7 +130,6 @@ extern int profile_select_all(mlval code);
 /* profile_on is non-zero when profiling and zero otherwise */
 
 extern int profile_on;
-extern int space_profile_active;
 
 /*  profile_begin() and profile_end() are used to `bracket' a section of
  *  code to be profiled.

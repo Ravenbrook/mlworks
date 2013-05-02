@@ -6,15 +6,7 @@
  * ------------
  *
  * $Log: time_date.c,v $
- * Revision 1.25  1998/10/09 14:34:22  jont
- * [Bug #30489]
- * Ensure we don't fault strftime results on empty formats
- *
- * Revision 1.24  1998/10/02  15:10:29  jont
- * [Bug #30487]
- * Modify conversions to and from seconds and parts thereof to return int32
- *
- * Revision 1.23  1998/08/13  15:57:05  jont
+ * Revision 1.23  1998/08/13 15:57:05  jont
  * [Bug #70152]
  * Ensure Time.start uses GetSystemTime
  *
@@ -120,7 +112,6 @@
 #include "global.h"		/* declare_global */
 #include "utils.h" 		/* alloc */
 #include "gc.h"			/* declare_root, retract_root */
-#include "words.h"		/* num_to_word32 */
 #include "time_date.h"
 #include "time_date_init.h"
 
@@ -242,85 +233,79 @@ static mlval mlw_time_to_real(mlval arg)
 }
 
 /*
- * Time.toSeconds: time -> LargeInt.int
+ * Time.toSeconds: time -> int
  */
 static mlval mlw_time_to_secs(mlval arg)
 {
-  mlval result = allocate_word32();
   double secs= ((double)CINT(FIELD(arg, 0)))*mlw_time_secs_lo_val + (double)CINT(FIELD(arg, 1));
-  if (secs > (double)INT_MAX)
+  if (secs > (double)ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  num_to_word32((word)secs,result);
-  return (result);
+  return MLINT((int)secs);
 }
 
 /*
- * Time.toMilliseconds: time -> LargeInt.int
+ * Time.toMilliseconds: time -> int
  */
 static mlval mlw_time_to_msecs(mlval arg)
 {
-  mlval result = allocate_word32();
   double secs= ((double)CINT(FIELD(arg, 0)))*mlw_time_secs_lo_val + (double)CINT(FIELD(arg, 1));
   double nsecs100= (double)CINT(FIELD(arg, 2));
   double real_time= secs + (nsecs100/mlw_time_ticks_per_sec);
   double msecs= real_time*1000.0;
-  if (real_time > (double)INT_MAX)
+  if (real_time > (double)ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  if (msecs > (double)INT_MAX)
+  if (msecs > (double)ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  num_to_word32((word)msecs,result);
-  return (result);
+  return MLINT((int)msecs);
 }
 
 /*
- * Time.toMicroseconds: time -> LargeInt.int
+ * Time.toMicroseconds: time -> int
  */
 static mlval mlw_time_to_usecs(mlval arg)
 {
-  mlval result = allocate_word32();
   double secs= ((double)CINT(FIELD(arg, 0)))*mlw_time_secs_lo_val + (double)CINT(FIELD(arg, 1));
   double nsecs100= (double)CINT(FIELD(arg, 2));
   double real_time= secs + (nsecs100/mlw_time_ticks_per_sec);
   double usecs= real_time*1000000.0;
-  if (real_time > (double)INT_MAX)
+  if (real_time > (double)ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  if (usecs > (double)INT_MAX)
+  if (usecs > (double)ML_MAX_INT)
     exn_raise(perv_exn_ref_overflow);
-  num_to_word32((word)usecs,result);
-  return (result);
+  return MLINT((int)usecs);
 }
 
 /*
- * Time.fromSeconds: LargeInt.int -> time
+ * Time.fromSeconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_secs(mlval arg)
 {
-  int secs = word32_to_num(arg);
+  int secs= CINT(arg);
   if (secs < 0)
     exn_raise(mlw_time_exn_ref_time);
   return mlw_time_from_double((double)secs);
 }
 
 /*
- * Time.fromMilliseconds: LargeInt.int -> time
+ * Time.fromMilliseconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_msecs(mlval arg)
 {
-  int msecs = word32_to_num(arg);
+  int msecs= CINT(arg);
   if (msecs < 0)
     exn_raise(mlw_time_exn_ref_time);
   return mlw_time_from_double((double)(msecs/1000));
 }
 
 /*
- * Time.fromMicroseconds: LargeInt.int -> time
+ * Time.fromMicroseconds: int -> time
  * Raises: Time
  */
 static mlval mlw_time_from_usecs(mlval arg)
 {
-  int usecs = word32_to_num(arg);
+  int usecs= CINT(arg);
   if (usecs < 0)
     exn_raise(mlw_time_exn_ref_time);
   return mlw_time_from_double((double)(usecs/1000000));
@@ -617,25 +602,21 @@ static mlval mlw_date_fmt(mlval string_date)
   size_t size;
   mlval result = MLUNIT;
   char *format = CSTRING(FIELD(string_date, 0));
-  if (strlen(format) == 0) {
-    result = allocate_string(1);
-    *(CSTRING(result)) = '\0';
-    return result;
-  } else {
-    mlw_date_to_tm(FIELD(string_date, 1), &tm);
-    for(size=256; result==MLUNIT; size*=2) {
-      char *buffer = alloc(size, "Unable to allocate buffer for time_format()");
-      size_t length = strftime(buffer, size-1, format, &tm);
+  mlw_date_to_tm(FIELD(string_date, 1), &tm);
+  for(size=256; result==MLUNIT; size*=2)
+  {
+    char *buffer = alloc(size, "Unable to allocate buffer for time_format()");
+    size_t length = strftime(buffer, size-1, format, &tm);
 
-      if(length > 0) {
-	result = allocate_string(length+1);
-	memcpy(CSTRING(result), buffer, length+1);
-      }
-
-      free(buffer);
+    if(length > 0)
+    {
+      result = allocate_string(length+1);
+      memcpy(CSTRING(result), buffer, length+1);
     }
-    return result;
+
+    free(buffer);
   }
+  return result;
 }
 
 static FILETIME start_time;

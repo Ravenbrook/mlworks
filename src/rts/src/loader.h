@@ -15,14 +15,10 @@
  *  Revision Log
  *  ------------
  *  $Log: loader.h,v $
- *  Revision 1.6  1998/07/23 11:08:01  jont
- *  [Bug #30108]
- *  Implement DLL based ML code
- *
- * Revision 1.5  1998/03/18  11:49:51  jont
- * [Bug #70026]
- * Allow profiling of stub_c functions, recording the time according
- * to the name of the runtime system functions
+ *  Revision 1.5  1998/03/18 11:49:51  jont
+ *  [Bug #70026]
+ *  Allow profiling of stub_c functions, recording the time according
+ *  to the name of the runtime system functions
  *
  * Revision 1.4  1995/05/05  14:17:17  jont
  * Make load_module static, as it's only called internally.
@@ -149,7 +145,6 @@ extern mlval loader_code;
 extern void (*loader_code_observer)(mlval code);
 extern void (*loader_code_trace_observer)(mlval code);
 
-extern void loader_code_add(mlval code); /* Allow dll based stuff to call this */
 
 /*  === LOAD AN ML MODULE ===
  *

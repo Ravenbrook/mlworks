@@ -15,15 +15,7 @@
  * Revision Log
  * ------------
  * $Log: mlw_ci.h,v $
- * Revision 1.4  1999/03/17 17:25:46  johnh
- * [Bug #190529]
- * Add support (expose declaring/retracting of gc roots) for stub generator.
- *
- * Revision 1.3  1998/10/15  12:53:17  jont
- * [Bug #20139]
- * Fix mlw_val_int_to_int to work with negative ints
- *
- * Revision 1.2  1997/07/01  14:12:42  stephenb
+ * Revision 1.2  1997/07/01 14:12:42  stephenb
  * [Bug #30029]
  * Lots of renaming
  *
@@ -73,7 +65,7 @@ typedef unsigned int mlw_val;
 #define mlw_val_int_min (-(1<<(mlw_val_int_bits-1)))
 
 #define mlw_val_int_from_int(x) ((x)<<2)
-#define mlw_val_int_to_int(x) (((int)(x))>>2)
+#define mlw_val_int_to_int(x) ((x)>>2)
 
 
 /* Char */
@@ -159,9 +151,7 @@ typedef unsigned int mlw_val;
 extern mlw_ci_export mlw_val mlw_ci_boxi_make(unsigned int);
 extern mlw_ci_export mlw_val mlw_ci_real_make(double);
 extern mlw_ci_export mlw_val mlw_ci_raise_syserr(int);
-extern mlw_ci_export mlw_val mlw_ci_tuple_make(int);
-extern mlw_ci_export void declare_gc_root(mlw_val);
-extern mlw_ci_export void retract_gc_root(mlw_val);
+
 
 #define mlw_ci_word32_to_uint(w) (*((unsigned int *)mlw_ci_str_to_charp(w)))
 #define mlw_ci_word32_from_uint(ui) mlw_ci_boxi_make(ui)
@@ -184,11 +174,6 @@ extern mlw_ci_export void retract_gc_root(mlw_val);
 #define mlw_ci_ushort_to_ushort(x)   ((x)>>2)
 #define mlw_ci_ushort_from_ushort(x) ((x)<<2)
 
-
-/* MLWorksCInterface.short.int */
-
-#define mlw_ci_short_to_short(x)   ((x)>>2)
-#define mlw_ci_short_from_short(x) ((x)<<2)
 
 /* MLWorksCInterface.Uint.word */
 

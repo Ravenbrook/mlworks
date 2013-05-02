@@ -11,12 +11,8 @@
  *  Revision Log
  *  ------------
  *  $Log: implicit.c,v $
- *  Revision 1.10  1998/07/30 11:03:04  jont
- *  [Bug #20133]
- *  Initialise gc_real_limit
- *
- * Revision 1.9  1995/12/11  15:43:18  nickb
- * Add space profiling for MIPS.
+ *  Revision 1.9  1995/12/11 15:43:18  nickb
+ *  Add space profiling for MIPS.
  *
  * Revision 1.8  1995/06/19  14:36:10  nickb
  * Add profiling slots.
@@ -135,7 +131,6 @@ void initialize_top_thread_implicit(void)
   TOP_THREAD.implicit.gc_modified_list	= NULL;
   TOP_THREAD.implicit.gc_base		= 0;
   TOP_THREAD.implicit.gc_limit		= 0;
-  TOP_THREAD.implicit.real_gc_limit	= 0;
 
 #ifdef IMPLICIT_PROFILE_CODE
   {

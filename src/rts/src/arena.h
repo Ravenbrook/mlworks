@@ -29,13 +29,9 @@
  *  Revision Log
  *  ------------
  *  $Log: arena.h,v $
- *  Revision 1.3  1998/08/18 11:25:43  jont
+ *  Revision 1.2  1998/07/15 12:49:44  jont
  *  [Bug #20134]
- *  Add prototype for test_validate_address
- *
- * Revision 1.2  1998/07/15  12:49:44  jont
- * [Bug #20134]
- * Add interface for address validation outside of ml heap
+ *  Add interface for address validation outside of ml heap
  *
  * Revision 1.1  1998/01/16  17:42:04  jont
  * new unit
@@ -152,7 +148,6 @@ extern int system_validate_address(void *addr);
 
 #ifdef DEBUG
 extern void test_mapping(void);
-extern void test_validate_address(void);
 #endif
 
 #endif

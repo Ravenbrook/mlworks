@@ -13,11 +13,7 @@
  * ------------
  *
  * $Log: mlw_timer.c,v $
- * Revision 1.3  1998/09/30 14:09:51  jont
- * [Bug #70108]
- * Add include of syscalls.h to get round problems in Red Hat 5 with struct timespec
- *
- * Revision 1.2  1998/02/23  18:47:10  jont
+ * Revision 1.2  1998/02/23 18:47:10  jont
  * [Bug #70018]
  * Modify declare_root to accept a second parameter
  * indicating whether the root is live for image save
@@ -27,7 +23,6 @@
  *
  */
 
-#include "syscalls.h"
 #include <sys/time.h>		/* struct timeval */
 #include <sys/resource.h>	/* struct rusage */
 #include "environment.h"	/* env_function ... etc. */

@@ -18,13 +18,9 @@
  *  Revision Log
  *  ------------
  *  $Log: time.c,v $
- *  Revision 1.17  1998/09/30 13:56:47  jont
- *  [Bug #70108]
- *  Add include of syscalls.h
- *
- * Revision 1.16  1997/11/18  12:22:59  jont
- * [Bug #30089]
- * Remove stuff only required by old MLWorks.Time (now removed)
+ *  Revision 1.16  1997/11/18 12:22:59  jont
+ *  [Bug #30089]
+ *  Remove stuff only required by old MLWorks.Time (now removed)
  *
  * Revision 1.15  1997/11/07  17:03:06  jont
  * [Bug #30089]
@@ -119,7 +115,6 @@
  *
  */
 
-#include "syscalls.h"
 #include <errno.h>
 #include <sys/resource.h>
 

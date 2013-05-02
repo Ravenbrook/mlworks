@@ -7,7 +7,7 @@
  *  This header declares Unix system calls which are not declared in
  *  system header files. 
  *
- *  $Id: syscalls.h,v 1.6 1998/09/30 15:53:49 jont Exp $
+ *  $Id: syscalls.h,v 1.5 1997/11/06 14:22:54 johnh Exp $
  */
 
 #ifndef syscall_h
@@ -92,22 +92,4 @@ extern char *sys_errlist [];
 /* Return the current machine's Internet number.  */
 extern long int gethostid __P ((void));
 
-/* struct timespec, messed up in Red Hat 5 */
-
-#ifndef _STRUCT_TIMESPEC
-#define _STRUCT_TIMESPEC
-struct timespec {
-	long	tv_sec;		/* seconds */
-	long	tv_nsec;	/* nanoseconds */
-};
-#endif /* _STRUCT_TIMESPEC */
-
-/* lstat, messed up in Red Hat 5 */
-
-#define lstat __lstat
-
-/* S_ISLNK and S_ISSOCK, also screwed up in Red Hat 5 */
-
-#define S_ISLNK(m)	(((m) & S_IFMT) == S_IFLNK)
-#define S_ISSOCK(m)	(((m) & S_IFMT) == S_IFSOCK)
 #endif /* syscall_h */

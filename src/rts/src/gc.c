@@ -12,18 +12,10 @@
  *  Revision Log
  *  ------------
  *  $Log: gc.c,v $
- *  Revision 1.51  1998/09/30 13:37:28  jont
- *  [Bug #70108]
- *  Remove requirement for time.h and resource.h
- *
- * Revision 1.50  1998/08/21  16:33:17  jont
- * [Bug #20133]
- * Set up GC_HEAP_REAL_LIMIT
- *
- * Revision 1.49  1998/06/29  11:07:15  jont
- * [Bug #20115]
- * Make sure we don't try to calculate the generation of values outside the
- * heap when fixing entry lists
+ *  Revision 1.49  1998/06/29 11:07:15  jont
+ *  [Bug #20115]
+ *  Make sure we don't try to calculate the generation of values outside the
+ *  heap when fixing entry lists
  *
  * Revision 1.48  1998/05/29  12:49:01  jont
  * [Bug #70124]
@@ -518,11 +510,16 @@
 #include "explore.h"
 #include "global.h"
 
+#include <time.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#ifndef OS_NT
+#include <sys/time.h>
+#include <sys/resource.h>
+#endif
 
 /* Define this to be 1 if you want to allow crestion to be resized */
 #define RESIZE_CREATION 0
@@ -2070,7 +2067,6 @@ void gc(size_t space_required, mlval closure)
     creation = make_ml_heap(creation_size, creation_size);
     GC_RETURN     = creation->start;
     GC_HEAP_START = creation->start + values_required;
-    GC_HEAP_REAL_LIMIT = creation->end;
     GC_HEAP_LIMIT = creation->end;
   }
   else
@@ -2101,9 +2097,8 @@ void gc(size_t space_required, mlval closure)
       DIAGNOSTIC(1, "new static object at 0x%X size %u words", stat, values_required);
 
       GC_HEAP_START -= values_required;
-      GC_HEAP_REAL_LIMIT = creation->end;
-      GC_HEAP_LIMIT = creation->end;
-      GC_RETURN = &stat->object[0];
+      GC_HEAP_LIMIT  = creation->end;
+      GC_RETURN      = &stat->object[0];
     }
     else
     {
@@ -2136,9 +2131,8 @@ void gc(size_t space_required, mlval closure)
       gc_statistics(gc_stat_stream, user_clock(), 1);
 
       GC_HEAP_LIMIT = creation->end;
-      GC_HEAP_REAL_LIMIT = creation->end;
       GC_HEAP_START = creation->top + values_required;
-      GC_RETURN = creation->top;
+      GC_RETURN     = creation->top;
     }
   }
 
@@ -2182,7 +2176,6 @@ extern void gc_collect_gen(unsigned int number)
   }
   
   GC_HEAP_LIMIT = creation->end;
-  GC_HEAP_REAL_LIMIT = creation->end;
   GC_HEAP_START = creation->top;
   
   if (collected) {
@@ -2216,7 +2209,6 @@ static void collect_all(void)
     self_collect(gen);
   
   GC_HEAP_LIMIT = creation->end;
-  GC_HEAP_REAL_LIMIT = creation->end;
   GC_HEAP_START = creation->top;
   
   stop = user_clock();
@@ -2267,7 +2259,6 @@ static void promote_all(void)
   }
   
   GC_HEAP_LIMIT = creation->end;
-  GC_HEAP_REAL_LIMIT = creation->end;
   GC_HEAP_START = creation->top;
   
   stop = user_clock();
@@ -2349,7 +2340,7 @@ extern void gc_promote_all(void)
 
 extern mlval gc_collections(mlval unit)
 {
-  return mlw_cons(MLINT(collections),
+  return cons(MLINT(collections),
 	      MLINT((GC_HEAP_START- creation->start))<<2);
 }
 

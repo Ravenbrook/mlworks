@@ -5,14 +5,10 @@
  *  Revision Log
  *  ------------
  *  $Log: reals.c,v $
- *  Revision 1.29  1998/10/08 13:03:18  jont
- *  [Bug #70189]
- *  Fix inadequacies in strtod when dealing with ~0.0
- *
- * Revision 1.28  1998/04/23  11:36:51  jont
- * [Bug #30397]
- * Make fmt test for nan before inf,
- * as the inf test will also detect nans under NT
+ *  Revision 1.28  1998/04/23 11:36:51  jont
+ *  [Bug #30397]
+ *  Make fmt test for nan before inf,
+ *  as the inf test will also detect nans under NT
  *
  * Revision 1.27  1998/04/21  09:27:08  mitchell
  * [Bug #30336]
@@ -356,6 +352,7 @@ static mlval fmt (mlval arg)
   mlval format = FIELD (arg, 0);
   double x = GETREAL (FIELD (arg,1));
   int prec = 0;
+
   /* Check the precision first */
   if (format != EXACT_FORMAT) {
     int format_type = CINT (FIELD (format, 0));
@@ -504,17 +501,7 @@ static mlval from_string(mlval arg)
   unsigned int length = CSTRINGLENGTH(arg)+1, i;
   char *original = CSTRING(arg);
   char *buffer = alloc(length, "Couldn't allocate buffer in ml_scan_real"), *end;
-  int negative = 0;
-  for (i=0; i<length; ++i) {
-    if (!(isspace(original[i]))) {
-      if (original[i] == '~') {
-	original += i+1;
-	negative = 1;
-	length -= i+1;
-      }
-      break;
-    }
-  }
+
   for(i=0; i<length; ++i)
     switch(original[i])
     {
@@ -531,7 +518,7 @@ static mlval from_string(mlval arg)
 
   errno = 0;
   result = strtod(buffer, &end);
-  if (negative) result = -result;
+
   if(*end == '\0' && errno == 0)
   {
     mlval real = allocate_real();

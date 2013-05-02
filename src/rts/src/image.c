@@ -13,13 +13,9 @@
  *  Revision Log
  *  ------------
  *  $Log: image.c,v $
- *  Revision 1.23  1998/08/21 16:33:35  jont
- *  [Bug #20133]
- *  Modify to use GC_HEAP_REAL_LIMIT
- *
- * Revision 1.22  1998/04/24  10:30:15  jont
- * [Bug #70032]
- * gen->values now measured in bytes
+ *  Revision 1.22  1998/04/24 10:30:15  jont
+ *  [Bug #70032]
+ *  gen->values now measured in bytes
  *
  * Revision 1.21  1998/04/23  13:51:56  jont
  * [Bug #70034]
@@ -1021,7 +1017,6 @@ static mlval image_load_common (struct stream *image)
   /* Copy the creation space pointers to the ML registers so that ML can use */
   /* them. */
   GC_HEAP_LIMIT = creation->end;
-  GC_HEAP_REAL_LIMIT = creation->end;
   GC_HEAP_START = creation->top;
   GC_MODIFIED_LIST = NULL;
 
@@ -1212,7 +1207,7 @@ mlval image_table(mlval argument)
   declare_root(&result, 0);
   for(scan=strtok(table, " "); scan!=NULL; scan=strtok(NULL, " ")) {
     mlval s = ml_string(scan);
-    result = mlw_cons(s, result);
+    result = cons(s, result);
   }
   retract_root(&result);
   free(table);

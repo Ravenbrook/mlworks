@@ -3,13 +3,9 @@
  *  Copyright (C) 1991 Harlequin Ltd.
  *
  *  $Log: utils.c,v $
- *  Revision 1.24  1998/08/24 15:44:39  jont
- *  [Bug #70170]
- *  Add a fflush stderr at the end of message_end
- *
- * Revision 1.23  1998/08/17  13:28:43  jkbrook
- * [Bug #50100]
- * Remove use of env_lookup("license edition")
+ *  Revision 1.23  1998/08/17 13:28:43  jkbrook
+ *  [Bug #50100]
+ *  Remove use of env_lookup("license edition")
  *
  * Revision 1.22  1998/07/17  15:16:28  jkbrook
  * [Bug #30436]
@@ -232,10 +228,8 @@ extern void message_end (void)
     messager_function("]\n");
     if (message_flusher)
       message_flusher ();
-  } else {
+  } else
     fputs("]\n",stderr);
-    fflush(stderr);
-  }
 }
 
 extern void message(const char *format, ...)

@@ -12,13 +12,9 @@
  *  Revision Log
  *  ------------
  *  $Log: allocator.c,v $
- *  Revision 1.16  1998/07/29 13:12:02  jont
- *  [Bug #20133]
- *  Modify to use GC_HEAP_REAL_LIMIT
- *
- * Revision 1.15  1998/04/23  13:23:43  jont
- * [Bug #70034]
- * Rationalising names in mem.h
+ *  Revision 1.15  1998/04/23 13:23:43  jont
+ *  [Bug #70034]
+ *  Rationalising names in mem.h
  *
  * Revision 1.14  1997/10/21  12:42:51  daveb
  * [Bug #30259]
@@ -162,7 +158,7 @@ do { 						\
 						\
   p = GC_HEAP_START;				\
   GC_HEAP_START += w;				\
-  if(GC_HEAP_START >= GC_HEAP_REAL_LIMIT)		\
+  if(GC_HEAP_START >= GC_HEAP_LIMIT)		\
   {						\
     gc(w * sizeof(mlval), MLUNIT);		\
     p = GC_RETURN;				\
@@ -460,7 +456,7 @@ mlval ml_string (const char *cstring)
 
 size_t allocate_multiple(size_t size, size_t number, mlval **start)
 {
-  signed long available = (GC_HEAP_REAL_LIMIT - GC_HEAP_START)/size;
+  signed long available = (GC_HEAP_LIMIT - GC_HEAP_START)/size;
 
   assert(available >= 0);
 

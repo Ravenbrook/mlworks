@@ -10,13 +10,9 @@
  *  Revision Log
  *  ------------
  *  $Log: dde_lib.c,v $
- *  Revision 1.7  1999/03/11 16:36:13  daveb
- *  [Bug #190523]
- *  Removed dde_send_request_string.
- *
- * Revision 1.6  1998/03/30  15:13:55  jont
- * [Bug #70086]
- * Add a request function for use by the Windows structure
+ *  Revision 1.6  1998/03/30 15:13:55  jont
+ *  [Bug #70086]
+ *  Add a request function for use by the Windows structure
  *
  * Revision 1.5  1998/03/27  18:57:24  jont
  * [Bug #30090]
@@ -219,7 +215,7 @@ static mlval start_dde_dialog (mlval arg)
 }
 
 
-static mlval send_dde_execute_string (mlval arg)
+static mlval send_dde_command (mlval arg, DWORD type)
 {
    dde_info *info;
    char *cmd;
@@ -253,7 +249,7 @@ static mlval send_dde_execute_string (mlval arg)
 		   hConv,        /* Conversation being used             */
 		   0L,           /* handle to item name - not needed    */
 		   0,            /* clipboard data format - not needed  */
-		   XTYP_EXECUTE, /* Type of transaction */
+		   type,         /* Type of transaction */
 		   TIMEOUT_SYNC, /* timeout                             */
 		   NULL);        /* transaction result pointer - unused */
 
@@ -273,6 +269,16 @@ static mlval send_dde_execute_string (mlval arg)
    };
 
    return MLUNIT;
+}
+
+static mlval send_dde_execute_string (mlval arg)
+{
+  return send_dde_command(arg, XTYP_EXECUTE);
+}
+
+static mlval send_dde_request_string (mlval arg)
+{
+  return send_dde_command(arg, XTYP_REQUEST);
 }
 
 static mlval stop_dde_dialog (mlval arg)
@@ -645,6 +651,7 @@ extern void dde_init(void)
 {
   env_function("dde start dialog",         start_dde_dialog);
   env_function("dde send execute string",  send_dde_execute_string);
+  env_function("dde send request string",  send_dde_request_string);
   env_function("dde stop dialog",          stop_dde_dialog);
   env_function("win32 open web location",  open_web_location);
 }

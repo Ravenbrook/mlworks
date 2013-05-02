@@ -9,17 +9,9 @@
  *  and secondly, rerunning it
  *
  *  $Log: exec_delivery.c,v $
- *  Revision 1.10  1999/03/17 12:16:03  mitchell
- *  [Bug #190531]
- *  Include elf.h
- *
- * Revision 1.9  1998/09/30  14:00:31  jont
- * [Bug #70108]
- * Acquire libelf.h from libelf/libelf.h
- *
- * Revision 1.8  1998/04/14  12:46:19  mitchell
- * [Bug #50061]
- * Reverse treatment of command-line argument passing for executables with embedded image
+ *  Revision 1.8  1998/04/14 12:46:19  mitchell
+ *  [Bug #50061]
+ *  Reverse treatment of command-line argument passing for executables with embedded image
  *
  * Revision 1.7  1997/11/26  10:40:31  johnh
  * [Bug #30134]
@@ -46,8 +38,7 @@
  *
  */
 
-#include <elf.h>
-#include <libelf/libelf.h>
+#include <libelf.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>

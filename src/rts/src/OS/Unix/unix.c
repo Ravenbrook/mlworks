@@ -27,38 +27,7 @@
  * ------------
  *
  * $Log: unix.c,v $
- * Revision 1.37  1999/03/22 17:04:12  mitchell
- * [Bug #30286]
- * Support for the Unix structure
- *
- * Revision 1.36  1999/03/20  16:19:16  daveb
- * [Bug #190523]
- * OS.Process.status is now a Word32.word.
- *
- * Revision 1.35  1999/03/17  12:10:48  daveb
- * [Bug #190521]
- * Type of OS.FileSys.readDir has changed.
- *
- * Revision 1.34  1999/01/25  17:58:26  johnh
- * Make changes for the Unix structure.
- *
- * Revision 1.33  1998/09/30  15:06:54  jont
- * [Bug #70108]
- * Ensure syscalls.h included before time.h because of Red Hat 5 stupidities
- *
- * Revision 1.32  1998/09/17  14:30:21  jont
- * [Bug #30108]
- * Move dummy definitions os asm_trampoline from unix.c into os.c
- *
- * Revision 1.31  1998/09/16  15:15:45  jont
- * [Bug #70174]
- * Modify type of parse_command_line to fix compiler warnings
- *
- * Revision 1.30  1998/09/16  11:16:28  jont
- * [Bug #30108]
- * Add parse_command_line
- *
- * Revision 1.29  1998/08/18  11:40:21  jont
+ * Revision 1.29  1998/08/18 11:40:21  jont
  * [Bug #70153]
  * Add prototype for system_validate_ml_address
  *
@@ -208,7 +177,6 @@
 #include <unistd.h>		/* read, write, readlink, ... etc. */
 #include <sys/param.h>		/* MAXPATHLEN, realpath */
 #include <sys/types.h>		/* mode_t ... */
-#include <sys/wait.h>		
 #include <sys/stat.h>		/* mkdir, chmod, umask, S_ISDIR, ... */
 #include <dirent.h>		/* opendir, ... etc. */
 #include <fcntl.h>		/* open, creat, O_RDONLY, ... */
@@ -216,7 +184,6 @@
 #include <pwd.h>		/* struct passwd */
 #include <utime.h>		/* utime, utimbuf */
 
-#include "syscalls.h"
 #ifndef MLW_OVERRIDE_RUSAGE
 #include "mltime.h"		/* ml_time */
 #include <sys/time.h>
@@ -225,6 +192,7 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
+#include "syscalls.h"
 #include "unixlocal.h"
 #include "time_date.h"		/* mlw_time_make,mlw_time_sec,mlw_time_usec */
 #include "time_date_init.h"	/* mlw_time_date_init */
@@ -273,30 +241,6 @@ static mlval mlw_posix_file_sys_o_sync;
 static mlval mlw_posix_file_sys_o_trunc;
 
 #define SOCKADDR_BUFFER		sizeof(struct sockaddr_un)
-
-
-/* The box and unbox functions duplicate code in x.c,
- * and probably win32.c and windows.c (although
- * Windows uses a different C compiler.
- */
-
-static inline mlval box(unsigned long int x)
-{
-  mlval b = allocate_string(sizeof(x));
-
-  memcpy(CSTRING(b), (char *)&x, sizeof(x));
-
-  return(b);
-}
-
-static inline unsigned long int unbox(mlval b)
-{
-  unsigned long int x;
-
-  memcpy((char *)&x, CSTRING(b), sizeof(x));
-
-  return(x);
-}
 
 /*
  * OS.errorMsg : syserror -> string
@@ -646,31 +590,9 @@ static char **list_to_array(mlval list)
   return array;
 }
 
-static char **list_to_arg_array(char* fun_location, mlval list)
-{
-  size_t i;
-  mlval l;
-  char **array;
-
-  i = 0;
-  for(l=list; l!=MLNIL; l=MLTAIL(l))
-    ++i;
-
-  array = alloc(sizeof(char *)*(i+2), "list_to_arg_array");
-
-  i = 1;
-  for(l=list; l!=MLNIL; l=MLTAIL(l))
-    array[i++] = CSTRING(MLHEAD(l));
-  array[i] = NULL;
-
-  array[0] = fun_location;
-
-  return array;
-}
-
 static mlval unix_execve(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   char **envp = list_to_array(FIELD(arg, 2));
   int e;
 
@@ -687,7 +609,7 @@ static mlval unix_execve(mlval arg)
 
 static mlval unix_execv(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   int e;
 
   execv(CSTRING(FIELD(arg, 0)), argv);
@@ -702,7 +624,7 @@ static mlval unix_execv(mlval arg)
 
 static mlval unix_execvp(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   int e;
 
   execvp(CSTRING(FIELD(arg, 0)), argv);
@@ -726,40 +648,17 @@ static mlval unix_execvp(mlval arg)
 #define fork_for_exec() fork()
 #endif
 
-static mlval unix_pipe (mlval arg)
-{
-  int filedes[2];
-  int result;
-  mlval ml_result;
-
-  result = pipe(filedes);
-
-  /*   printf("ML pipe called.  Returned values are %d and %d.\n", filedes[0], filedes[1]); */
-
-  ml_result = allocate_record(2);
-  FIELD(ml_result, 0) = MLINT(filedes[0]);
-  FIELD(ml_result, 1) = MLINT(filedes[1]);
-
-  return ml_result;
-}
-
 static mlval unix_fork_execve(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   char **envp = list_to_array(FIELD(arg, 2));
   int e, pid;
   volatile int exec_errno = 0;
-  int in_fd = CINT(FIELD(arg, 3));
-  int out_fd = CINT(FIELD(arg, 4));
-  int err_fd = CINT(FIELD(arg, 5));
 
   pid = fork_for_exec();
 
   if (pid == 0)
   {
-    dup2(in_fd, 0);
-    dup2(out_fd, 1);
-    dup2(err_fd, 2);
     execve(CSTRING(FIELD(arg, 0)), argv, envp);
     exec_errno = errno;
     _exit(-1);			/* only reached on error */
@@ -779,20 +678,14 @@ static mlval unix_fork_execve(mlval arg)
 
 static mlval unix_fork_execv(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   int e, pid;
   volatile int exec_errno = 0;
-  int in_fd = CINT(FIELD(arg, 2));
-  int out_fd = CINT(FIELD(arg, 3));
-  int err_fd = CINT(FIELD(arg, 4));
 
   pid = fork_for_exec();
 
   if (pid == 0)
   {
-    dup2(in_fd, 0);
-    dup2(out_fd, 1);
-    dup2(err_fd, 2);
     execv(CSTRING(FIELD(arg, 0)), argv);
     exec_errno = errno;
     _exit(-1);			/* only reached on error */
@@ -811,7 +704,7 @@ static mlval unix_fork_execv(mlval arg)
 
 static mlval unix_fork_execvp(mlval arg)
 {
-  char **argv = list_to_arg_array(CSTRING(FIELD(arg, 0)), FIELD(arg, 1));
+  char **argv = list_to_array(FIELD(arg, 1));
   int e, pid;
   volatile int exec_errno = 0;
 
@@ -834,23 +727,6 @@ static mlval unix_fork_execvp(mlval arg)
 
   return MLINT(pid);
 }
-
-static mlval unix_wait(mlval arg) {
-  pid_t proc = (pid_t)(CINT(arg));
-  int stat;
-
-  if (proc == waitpid(proc, &stat, 0)) {
-    if (WIFEXITED(stat)) 
-      return(box(WEXITSTATUS(stat))); 
-    else 
-      return(box(-1));
-  }
-  else {
-    mlw_raise_syserr(errno);
-    return(box(-1));
-  }
-}
-  
 
 static mlval ml_passwd(struct passwd *pw)
 {
@@ -970,7 +846,7 @@ static mlval mlw_posix_file_sys_opendir(mlval arg)
 }
 
 /*
- * POSIX.FileSys.readdir : dirstream -> string option
+ * POSIX.FileSys.readdir : dirstream -> string
  */
 static mlval mlw_posix_file_sys_readdir(mlval arg)
 {
@@ -984,9 +860,9 @@ static mlval mlw_posix_file_sys_readdir(mlval arg)
     if (errno)
       mlw_raise_syserr(errno);
     else
-      return mlw_option_make_none();
+      return ml_string("");	/* by analogy with lookahead */
   }
-  return mlw_option_make_some(ml_string(d->d_name));
+  return ml_string(d->d_name);
 }
 
 /*
@@ -1498,24 +1374,18 @@ static mlval unix_password_file(mlval arg)
 }
 
 static mlval unix_kill(mlval arg)
-{ if (kill(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1)))) {
+{
+  if (kill(CINT(FIELD(arg, 0)), CINT(FIELD(arg, 1))))
     mlw_raise_syserr(errno);
-  }
   return MLUNIT;
 }
 
-/*
- * OS.Process.terminate: Word32.word -> 'a
- */
 static mlval unix_exit(mlval exit_code)
 {
-  exit(unbox(exit_code));
+  exit(CINT(exit_code));
   return MLUNIT;		/* keep dumb compilers happy */
 }
 
-/*
- * OS.Process.system: string -> Word32.word
- */
 static mlval unix_system(mlval arg)
 {
   char const * command= CSTRING(arg);
@@ -1523,7 +1393,7 @@ static mlval unix_system(mlval arg)
   if (status == -1 || status == 127)
     mlw_raise_syserr(errno);
 
-  return box(status);
+  return MLINT(status);
 }
 
 static mlval unix_getenv(mlval arg)
@@ -1661,7 +1531,6 @@ extern void unix_init(void)
   env_function("system os unix fork_execve", unix_fork_execve);
   env_function("system os unix fork_execv", unix_fork_execv);
   env_function("system os unix fork_execvp", unix_fork_execvp);
-  env_function("system os unix wait", unix_wait);
   env_function("system os unix getpwent", unix_getpwent);
   env_function("system os unix setpwent", unix_setpwent);
   env_function("system os unix endpwent", unix_endpwent);
@@ -1669,8 +1538,6 @@ extern void unix_init(void)
   env_function("system os unix getpwnam", unix_getpwnam);
   env_function("system os unix password_file", unix_password_file);
   env_function("system os unix kill", unix_kill);
-
-  env_function("system os unix pipe", unix_pipe);
 
   env_function("system os exit", unix_exit);
   env_function("system os system", unix_system);
@@ -1746,16 +1613,4 @@ extern int system_validate_ml_address(void *addr)
 {
   return 0;
   /* Temporary implementation until shared objects done */
-}
-
-extern const char *const *parse_command_line(int *argc)
-{
-  error("Unix version of parse_command_line not yet implemented and shouldn't be called");
-}
-
-extern void register_time_stamp(unsigned long *addr);
-
-extern void register_time_stamp(unsigned long *addr)
-{
-  error("Unix version of register_time_stamp not yet implemented and shouldn't be called");
 }

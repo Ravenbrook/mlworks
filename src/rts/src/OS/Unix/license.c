@@ -8,21 +8,10 @@
  *
  * 
  *  $Log: license.c,v $
- *  Revision 1.40  1999/03/25 12:40:07  mitchell
- *  [Bug #190509]
- *  Use magic numbers from a working version of hqn_ms...
- *
- * Revision 1.39  1999/03/19  17:25:20  mitchell
- * Add strings for new permit
- *
- * Revision 1.38  1999/03/09  16:00:18  mitchell
- * [Bug #190509]
- * Update version strings to 2.1
- *
- * Revision 1.37  1998/08/23  16:14:51  jkbrook
- * [Bug #50100]
- * Set default to PERSONAL when license info is not found during
- * an interactive session
+ *  Revision 1.37  1998/08/23 16:14:51  jkbrook
+ *  [Bug #50100]
+ *  Set default to PERSONAL when license info is not found during
+ *  an interactive session
  *
  * Revision 1.36  1998/08/13  14:02:10  jkbrook
  * [Bug #30469]
@@ -270,45 +259,46 @@ extern long gethostid(void)
 
 #define PUBLISHER_NAME	"Harlequin Limited"
 #define PRODUCT_NAME	"MLWorks Professional"
-#define VERSION_STRING	"Version 2.1"
+#define VERSION_STRING	"Version 2.0"
 
 static int have_a_license = 0;
 static int use_license_server = 0;
 
 /* hqn_ms output follows: */
+
 static hls_uint Chalvals[N_CHALLENGES] = {
-    0x77d09eeb,
-    0x1a7ca930,
-    0x3503784,
-    0x1c68674c,
+    0x6040c1ed,
+    0x53875d0a,
+    0x436ca756,
+    0x2692afb6,
 };
 
 static hls_uint Signature1[ 16 ] = {
-0x6073b5fd, 0x6fa870bc, 0x33ec7a98, 0xbc559b3e,
-0x28bfac6f, 0xdefee315, 0xa3a1fa0a, 0x7d7d47a9,
-0x826a4563, 0xc4537919, 0xb20d401c, 0xb4776b5b,
-0x1d2fc6dc, 0x8eb5dbde, 0x31896029, 0xbfa2f430,
+0xa298bcab, 0xd3c5a620, 0xd9c8655e, 0x2a367547,
+0xd205af84, 0x3776cd94, 0xd30d26c2, 0xa2224961,
+0x7d6c85e0, 0xdd2e0d08, 0xd739b254, 0x948211f9,
+0x294a7ae8, 0xdd9de74a, 0x9a8e69b8, 0xa40a22be,
 };
 
 static hls_uint Signature2[ 16 ] = {
-0x27b7a68c, 0x11ac2c7, 0x5d3b781c, 0x7582c96d,
-0xd709b161, 0x5ec6c22e, 0xc71d741d, 0xeb7d2733,
-0xf290319c, 0x3e445a04, 0x539c8524, 0x7eca1455,
-0xde49f718, 0xaf2342ed, 0x92d2424d, 0xed58d042,
+0xd53836c0, 0x9d2e630b, 0xfcef3f55, 0x1ec6984d,
+0x46eb1676, 0xe381cc35, 0xc9b2809c, 0x5fcbd805,
+0xf55b3ee6, 0x1e27a694, 0xb9b62365, 0xb758f16a,
+0x84f78996, 0xb1734f33, 0xc931db8d, 0x9d0b9bb7,
 };
 
 static hls_uint Signature3[ 16 ] = {
-0x7954b5df, 0xe3f45f21, 0x97b6a687, 0x9573df4d,
-0xfc2e93f7, 0x588c6208, 0x2538b956, 0xf64b9b4f,
-0x3f2d8521, 0x3e4158d6, 0xc80d2d05, 0x279e921b,
-0xd7470970, 0xc61e3486, 0x61d3ae89, 0xee1feefb,
+0xa5d926a6, 0xcccce65f, 0xf69708bf, 0x24fdbaf8,
+0xc931c7f6, 0xb73d1785, 0x1980ee46, 0xbf7c8e9,
+0x6662d95a, 0x74a44f6c, 0x2cb4d78b, 0x7a96bcaf,
+0x5b6136e9, 0x8b61febd, 0xc1bbc510, 0x548f5334,
 };
 
 static hls_uint Signature4[ 16 ] = {
-0xb78c9023, 0x369e1214, 0x418eef21, 0xe93480ca,
-0xf88f1631, 0x7d41679e, 0x8572997, 0x7ceaae0c,
-0xba9e8071, 0x7d2cd7eb, 0xb1ec8763, 0x8849b302,
-0xb6bd93b3, 0xcba247bf, 0x873b734e, 0xd0e251dd,
+0x2770804b, 0x3149d22c, 0xe4d6eea2, 0x72c0202f,
+0xac5510e9, 0x6f598be4, 0x40931f5a, 0xd5df3923,
+0xae9d99f8, 0x8e2e13a2, 0x883472d1, 0x8513f62f,
+0x3e79077, 0x85fcea0d, 0x31caa09a, 0x3a57f230,
 };
 
 /* the following made static (it is not in the hqn_ms output) */

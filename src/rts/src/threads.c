@@ -5,11 +5,7 @@
  * Copyright (C) 1995 Harlequin Ltd.
  *
  * $Log: threads.c,v $
- * Revision 1.35  1998/08/21 14:15:52  jont
- * [Bug #30108]
- * Implement DLL based ML code
- *
- * Revision 1.34  1998/08/07  10:30:10  jont
+ * Revision 1.34  1998/08/07 10:30:10  jont
  * [Bug #20129]
  * Fix compiler warning
  *
@@ -282,7 +278,7 @@ static mlval thread_toplevel_handler(mlval packet)
 
   DIAGNOSTIC(1,"toplevel handler for thread %d", thread->number, 0);
   declare_root(&packet, 0);
-  result = mlw_cons(THREAD_EXCEPTION,packet); /* Died (r) */
+  result = cons(THREAD_EXCEPTION,packet); /* Died (r) */
   SET_RESULT(ML_THREAD(thread),result);
   retract_root(&packet);
 
@@ -388,7 +384,7 @@ static void run_ml_thread(void)
   thread_retract_root(thread,THREAD_CLOSURE);
   result = callml(MLUNIT, closure);
   declare_root(&result, 0);
-  result = mlw_cons(THREAD_RESULT,result); /* Result (r) */
+  result = cons(THREAD_RESULT,result); /* Result (r) */
   SET_RESULT(ML_THREAD(thread),result);
   retract_root(&result);
   DIAGNOSTIC(1, "thread %d returned", thread->number, 0);
@@ -410,7 +406,7 @@ static void run_c_thread(void)
 
   DIAGNOSTIC(1, "starting thread %d in C", thread->number, 0);
   f(arg0,arg1,arg2,arg3);
-  SET_RESULT(ML_THREAD(thread),mlw_cons(THREAD_RESULT,MLUNIT)); /* Result () */
+  SET_RESULT(ML_THREAD(thread),cons(THREAD_RESULT,MLUNIT)); /* Result () */
   DIAGNOSTIC(1, "thread %d returned", thread->number, 0);
   END_THREAD;
 }
@@ -525,7 +521,7 @@ static struct thread_state *make_thread (struct thread_state *parent, const char
   { /* the ML thread value */
     mlval result = ref(THREAD_RUNNING);
     declare_root(&result, 0);
-    thread->ml_thread = mlw_cons(result,(mlval)thread);
+    thread->ml_thread = cons(result,(mlval)thread);
     retract_root(&result);
     declare_root(&thread->ml_thread, 1);
     threads = weak_add(threads,thread->ml_thread);
@@ -626,8 +622,8 @@ static inline struct thread_state *next_runnable_thread
  * for more info.
  */
 
-extern void run_scheduler(int (*start_mlworks)(int, const char *const *, mlval, void (*)(void)),
-			  int argc, const char *const *argv, mlval setup, void (*declare)(void))
+extern void run_scheduler(int (*start_mlworks)(int, const char *const *),
+			  int argc, const char *const *argv)
 {
   sm_init();
   stubs_init();
@@ -644,12 +640,11 @@ extern void run_scheduler(int (*start_mlworks)(int, const char *const *, mlval, 
 		 &thread_1_fatal_handler, GLOBAL_ENV + GLOBAL_MISSING_UNIT,
 		 NULL, thread_1_fatal_handler_fix, NULL);
 
-  thread_c_fork((void (*)()) start_mlworks, (word) argc, (word) argv, (word)setup, (word) declare, "start_mlworks");
+  thread_c_fork((void (*)()) start_mlworks, (word) argc, (word) argv, 0, 0, "start_mlworks");
 
   /* The scheduler loop */
   while (TOP_THREAD.next != &TOP_THREAD) {
-    struct thread_state *thread;
-    thread =
+    struct thread_state *thread = 
       change_thread(next_runnable_thread(TOP_THREAD.next));
     DIAGNOSTIC(5,"thread %d returned to the scheduler", thread->number, 0);
     unmake_thread(thread);
@@ -903,7 +898,7 @@ static mlval thread_children(mlval ml_thread)
   declare_root(&children, 0);
 
   while (child != thread) {
-    children = mlw_cons(child->ml_thread, children);
+    children = cons(child->ml_thread, children);
     child = child->next_sib;
   }
   retract_root(&children);
@@ -918,7 +913,7 @@ static mlval thread_all(mlval unit)
   DIAGNOSTIC(3,"constructing list of all threads", 0, 0);
   declare_root(&threads, 0);
   do {
-    threads = mlw_cons(thread->ml_thread, threads);
+    threads = cons(thread->ml_thread, threads);
     thread = thread->next;
   } while (thread != &TOP_THREAD);
 

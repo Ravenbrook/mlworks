@@ -6,11 +6,7 @@
  * Copyright (C) 1995 Harlequin Ltd.
  *
  * $Log: threads.h,v $
- * Revision 1.11  1998/07/08 10:39:00  jont
- * [Bug #30108]
- * Implement DLL based ML code
- *
- * Revision 1.10  1998/07/02  14:03:36  jont
+ * Revision 1.10  1998/07/02 14:03:36  jont
  * [Bug #70131]
  * Add names to threads
  *
@@ -149,8 +145,8 @@ struct global_state {
   struct thread_state toplevel;
 };
 
-extern void run_scheduler(int (*start_mlworks)(int, const char *const *, mlval, void (*)(void)),
-			  int argc, const char *const *argv, mlval, void (*)(void));
+extern void run_scheduler(int (*start_mlworks)(int, const char *const *),
+			  int argc, const char *const *argv);
 
 extern unsigned long int next_thread_number;
 

@@ -11,14 +11,10 @@
  *  Revision Log
  *  ------------
  *  $Log: global.c,v $
- *  Revision 1.13  1998/07/17 16:30:18  jont
- *  [Bug #30108]
- *  Implement DLL based ML code
- *
- * Revision 1.12  1998/03/02  13:21:56  jont
- * [Bug #70018]
- * Modify declare_root to accept a second parameter
- * indicating whether the root is live for image save
+ *  Revision 1.12  1998/03/02 13:21:56  jont
+ *  [Bug #70018]
+ *  Modify declare_root to accept a second parameter
+ *  indicating whether the root is live for image save
  *
  * Revision 1.11  1997/08/19  15:14:09  nickb
  * [Bug #30250]
@@ -148,12 +144,6 @@ extern void declare_global
 mlval global_save_die(const char *name, mlval *root, int deliver)
 {
   return DEAD;
-}
-
-extern void declare_global_result(mlval *result, mlval name)
-{
-  word flags = GLOBAL_SAVE_RECORD | GLOBAL_MISSING_UNIT;
-  declare_global(CSTRING(name), result, flags, NULL, NULL, NULL);
 }
 
 /* when packing the global table, we want to create a record
@@ -330,7 +320,7 @@ mlval weak_add(mlval list, mlval value)
     MLUPDATE(array, i, DEAD);
   }
 
-  l = mlw_cons(array, MLSUB(list, 1)); /* Do NOT inline this */
+  l = cons(array, MLSUB(list, 1)); /* Do NOT inline this */
   MLUPDATE(list, 1, l);
   retract_root(&list);
 
@@ -406,7 +396,7 @@ static void weak_tidy(mlval value)
 	MLUPDATE(new_array,index++,value);
     }
   }
-  new_cons = mlw_cons(new_array,MLNIL);
+  new_cons = cons(new_array,MLNIL);
   MLUPDATE(value,1,new_cons);
   retract_root(&value);
 }

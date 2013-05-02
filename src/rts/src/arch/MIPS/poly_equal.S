@@ -13,14 +13,10 @@
  * -----
  *
  * $Log: poly_equal.S,v $
- * Revision 1.8  1998/08/24 12:48:55  jont
- * Automatic checkin:
- * changed attribute _comment to ' * '
+ * Revision 1.6  1997/05/23 18:28:40  andreww
+ * [Bug #30047]
+ * altering jump tables so that linker can correctly patch them.
  *
-# Revision 1.6  1997/05/23  18:28:40  andreww
-# [Bug #30047]
-# altering jump tables so that linker can correctly patch them.
-#
 # Revision 1.5  1996/05/23  12:55:30  nickb
 # String equality could read an unnecessary word, which
 # could cause a segmentation fault.
@@ -192,7 +188,8 @@ ml_eq_pointer:
 	.set	at
 	la	$19, ml_eq_secondary_switch
 	.set	noat
-	addu	$20, $18, $19
+	srl	$20, $18, 1		/* Table offset, still clean */
+	addu	$20, $20, $19
 	jr	$20
 	srl	$18, $17, 6		/* Compute record length (callee cleans $18) */
 

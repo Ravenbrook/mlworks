@@ -10,14 +10,10 @@
  *  Revision Log
  *  ------------
  *  $Log: mlw_dll.h,v $
- *  Revision 1.2  1998/09/16 11:06:56  jont
- *  [Bug #30108]
- *  Add trampoline to declarations
- *
- * Revision 1.1  1997/05/22  11:19:53  andreww
- * new unit
- * [Bug #30045]
- * conversion of main.h to be part of dll.
+ *  Revision 1.1  1997/05/22 11:19:53  andreww
+ *  new unit
+ *  [Bug #30045]
+ *  conversion of main.h to be part of dll.
  *
  * Revision 1.3  1995/09/26  10:40:15  jont
  * Add runtime to record the current executable
@@ -62,8 +58,6 @@ extern const char *const *module_argv;
 extern int mono;		 /* running on a mono screen? */
 
 extern mlw_ci_export int mlw_main(int argc, const char *const *argv);
-
-mlw_ci_export void trampoline(mlval setup, void (*declare)(void));
 
 extern const char *runtime;   /* The executable we started from */
 #endif

@@ -18,11 +18,7 @@
  * ------------
  *
  * $Log: mlw_ci.c,v $
- * Revision 1.3  1999/03/17 17:26:21  johnh
- * [Bug #190529]
- * Add support (expose declaring/retracting of gc roots) for stub generator.
- *
- * Revision 1.2  1997/07/01  14:13:39  stephenb
+ * Revision 1.2  1997/07/01 14:13:39  stephenb
  * [Bug #30029]
  * Renaming
  *
@@ -59,27 +55,6 @@ mlw_ci_export mlw_val mlw_ci_boxi_make(unsigned int i)
   return v;
 }
 
-/* 
-** Needed to be able to pass back several or more values to ML.
-*/
-mlw_ci_export mlw_val mlw_ci_tuple_make(int n)
-{
-  mlw_val v = allocate_record(n);
-  return v;
-}
-
-/* Used in conjunction with the above tuple making function to 
-** ensure gc safety when allocating multiple ML values.
-*/
-mlw_ci_export void declare_gc_root (mlw_val v)
-{
-  declare_root (&v, 0);
-}
-
-mlw_ci_export void retract_gc_root (mlw_val v)
-{
-  retract_root (&v);
-}
 
 
 

@@ -2,19 +2,7 @@
 # information. For instance, using Visual C++
 
 # $Log: GNUmake,v $
-# Revision 1.29  1999/03/19 15:35:16  daveb
-# [Bug #190523]
-# Ensure that statuses.sml is generated automatically.
-#
-# Revision 1.28  1999/03/11  16:43:37  daveb
-# [Bug #190523]
-# Added make_statuses.
-#
-# Revision 1.27  1998/08/18  10:19:06  jont
-# [Bug #20133]
-# Avoid trying to update code vectors in DLL based version
-#
-# Revision 1.26  1998/08/10  15:39:16  jont
+# Revision 1.26  1998/08/10 15:39:16  jont
 # [Bug #70151]
 # Change the debugging linker options to put the debug info in the DLL
 #
@@ -81,7 +69,7 @@ RTSMODULES    := $(RTSMODULES) heap
 
 MODULESSTATIC := $(MODULES)
 
-GENFILES      := $(GENFILES) $(ARCH)/$(OS)/keys.sml $(ARCH)/$(OS)/statuses.sml
+GENFILES      := $(GENFILES) $(ARCH)/$(OS)/keys.sml
 
 VCCOPTS = -nologo -Gd -W3
 
@@ -104,8 +92,6 @@ VCCDEBUGOPTS = $(VCCOPTS) -Zi -Od -FR
 VCCNODEBUGOPTS = $(VCCOPTS) -O2
 
 # -O2 optimize for speed
-
-DEFINES := $(DEFINES) SPACE_PROFILE_OVERFLOW
 
 DEFINEOPTS = $(DEFINES:%=/D%)
 
@@ -209,15 +195,6 @@ $(TARGETDIR)/make_keys:	obj/$(ARCH)/$(OS)/make_keys.o
 	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console
 
 gen/$(ARCH)/$(OS)/keys.sml:	$(TARGETDIR)/make_keys
-	@echo 'MAKE: $@'
-	$< > $@
-
-$(TARGETDIR)/make_statuses:	obj/$(ARCH)/$(OS)/make_statuses.o
-	@echo 'MAKE: $@'
-	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
-	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS) -subsystem:console
-
-gen/$(ARCH)/$(OS)/statuses.sml:	$(TARGETDIR)/make_statuses
 	@echo 'MAKE: $@'
 	$< > $@
 

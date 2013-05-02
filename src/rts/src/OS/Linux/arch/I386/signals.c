@@ -11,15 +11,7 @@
  * Revision Log
  * ------------
  * $Log: signals.c,v $
- * Revision 1.31  1998/10/06 11:10:08  jont
- * [Bug #70108]
- * Modify to get working on Red Hat 4 and 5
- *
- * Revision 1.30  1998/09/30  15:53:59  jont
- * [Bug #70108]
- * Sort out Red Hat 5 signal rearrangement problems
- *
- * Revision 1.29  1997/01/30  18:11:49  jont
+ * Revision 1.29  1997/01/30 18:11:49  jont
  * Merge in license stuff
  *
  * Revision 1.28.2.2  1996/10/09  11:13:32  nickb
@@ -168,16 +160,11 @@
 #include "state.h"
 #include "x.h"
 #include "main.h"
+#include "pervasives.h"
 #include "global.h"
 #include "allocator.h"
 #include "i386_code.h"
 #include "image.h"
-
-#ifndef __USE_POSIX
-#define __USE_POSIX
-#define __USED_POSIX
-#endif
-#include <signal.h>
 
 #include <time.h>
 #include <sys/types.h>
@@ -185,6 +172,8 @@
 #include <string.h>
 #include <memory.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <sys/signal.h>
 #include <errno.h>
 #include <sys/errno.h>
 #include <math.h>

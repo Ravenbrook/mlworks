@@ -15,12 +15,8 @@
  *  Revision Log
  *  ------------
  *  $Log: implicit.h,v $
- *  Revision 1.9  1998/07/28 10:37:44  jont
- *  [Bug #20133]
- *  Add an extra gc_limit slot so we can modify the other one when space profiling
- *
- * Revision 1.8  1995/06/19  14:32:05  nickb
- * Add space profiling offsets.
+ *  Revision 1.8  1995/06/19 14:32:05  nickb
+ *  Add space profiling offsets.
  *
  * Revision 1.7  1995/06/02  15:24:15  jont
  * Add field for stack limit register (for Intel)
@@ -107,7 +103,6 @@ struct implicit_vector
   /* profile_alloc_leaf_3   */  word ml_profile_alloc_leaf_3;
   /* gc_base		    */  word gc_base;
   /* gc_limit		    */  word gc_limit;
-  /* real_gc_limit     	    */  word real_gc_limit;
   /* handler		    */  word handler;
   /* stack_limit	    */  word stack_limit;
   /* register_stack_limit   */  word register_stack_limit;

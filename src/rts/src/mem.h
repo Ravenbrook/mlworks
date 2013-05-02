@@ -28,13 +28,9 @@
  *  Revision Log
  *  ------------
  *  $Log: mem.h,v $
- *  Revision 1.21  1998/10/23 14:17:30  jont
- *  [Bug #70219]
- *  Make stack backtrace function easily available
- *
- * Revision 1.20  1998/08/17  10:56:40  jont
- * [Bug #70153]
- * Add validate_ml_address
+ *  Revision 1.20  1998/08/17 10:56:40  jont
+ *  [Bug #70153]
+ *  Add validate_ml_address
  *
  * Revision 1.19  1998/05/19  14:49:29  jont
  * [Bug #70120]
@@ -388,9 +384,5 @@ extern void sm_init(void);
 #define DEFAULT_ARENA_LIMIT	(100<<20)
 
 extern size_t arena_limit;
-
-/* Stack backtrace (easy version) */
-
-extern void ml_backtrace(int depth_max);
 
 #endif

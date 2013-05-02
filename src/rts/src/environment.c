@@ -20,14 +20,10 @@
  *  Revision Log
  *  ------------
  *  $Log: environment.c,v $
- *  Revision 1.12  1998/10/05 11:50:43  jont
- *  [Bug #70185]
- *  Avoid calling weak_add on loader_code if loader_code is DEAD
- *
- * Revision 1.11  1998/03/19  11:49:02  jont
- * [Bug #70026]
- * Allow profiling of stub_c functions, recording the time according
- * to the name of the runtime system functions
+ *  Revision 1.11  1998/03/19 11:49:02  jont
+ *  [Bug #70026]
+ *  Allow profiling of stub_c functions, recording the time according
+ *  to the name of the runtime system functions
  *
  * Revision 1.10  1998/02/23  17:59:57  jont
  * [Bug #70018]
@@ -251,11 +247,11 @@ static mlval new_stub
   declare_root(&name, 0);
   dummy_code = make_dummy_code(name);
   declare_root(&dummy_code, 0);
-  if (loader_code && loader_code != DEAD) {
+  if (loader_code) {
     loader_code = weak_add(loader_code, dummy_code); /* This may call gc, hence declare */
   } else {
     /*
-     * loader_code can be DEAD during global root fixup in image load
+    printf("Not adding extra code for '%s'\n", string);
     */
   } /* Don't worry about stuff done so early */
   closure = allocate_record(5);
