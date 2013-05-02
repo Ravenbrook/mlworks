@@ -76,11 +76,15 @@
 #define OPTION_CHAR	'-'
 
 
-/*  == Option desciptor ==
+/*  == Option descriptor ==
  *
  *  An option descriptor specifies the keyword for an option and the number
- *  of arguments it requires.  An array of these desciptors is passed to
+ *  of arguments it requires.  An array of these descriptors is passed to
  *  option_parse() below and updated to contains the parameters.
+ *
+ *  If nr_arguments is -1, the option takes a variable number of
+ *  arguments, delimited by the next parameter.
+ *  (for example, "-foo xxx 1 2 3 wibble z xxx -bar").
  */
 
 struct option
@@ -100,9 +104,9 @@ struct option
  *  argv+1.) It also takes an array of option descriptors (see
  *  above) terminated with a descriptor whose `name' field is NULL.  The
  *  parameters in the argv array are matched against the option names and
- *  the option desciptors are updated to inidicate that they were specified.
+ *  the option descriptors are updated to indicate that they were specified.
  *
- *  For example, if OPTION_CHAR is '-' and the desciptor array is
+ *  For example, if OPTION_CHAR is '-' and the descriptor array is
  *  initialised to
  *   {{"x", 0, 0, NULL}, {"y", 2, 0, NULL}, {"z", 1, 0, NULL},
  *    {NULL, 0, 0, NULL}}
@@ -110,7 +114,7 @@ struct option
  *   foo -y A B -x -- -z loofah
  *  i.e. it is the array
  *   {"foo", "-y", "A", "B", "-x", "--", "-z", "loofah"}
- *  the desciptors will be updated to
+ *  the descriptors will be updated to
  *   {{"x", 0, 1, ?}, {"y", 2, 1, {"A", "B"}}, {"z", 1, 0, NULL},
  *    {NULL, 0, 0, NULL}}
  *  and the command array will be
@@ -126,7 +130,7 @@ struct option
 
 enum
 {
-  EOPTIONUNKNOWN=1,	/* An option not in the desciptors was specified. */
+  EOPTIONUNKNOWN=1,	/* An option not in the descriptors was specified. */
   EOPTIONARGS,		/* The wrong number of arguments were specified. */
   EOPTIONDELIM		/* Missing delimiter from delimited option. */
 };

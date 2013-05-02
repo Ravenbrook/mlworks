@@ -249,7 +249,7 @@
 CMODULES = alloc allocator arena bytearrays cache diagnostic endian \
           environment event exceptions fi_call_stub fixup foreign_loader \
           gc global image implicit initialise integers intercept \
-          libml lists loader marshal mem modules \
+          libml license lists loader marshal mem modules \
           options pack_words pervasives print profiler reals dtoa stacks state \
           streams strings system time trace utils value values vector words \
           os signals stubs threads mach_state arch_code exec_delivery explore \

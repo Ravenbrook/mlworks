@@ -118,56 +118,7 @@ functor License (
   structure Version: VERSION
 ): LICENSE =
 struct
-  fun env s = MLWorks.Internal.Value.cast
-	        (MLWorks.Internal.Runtime.environment s)
-
-  (* this datatype must be kept consistent with that in rts/src/license.h *)
-
-  datatype license_check_result = EXPIRED
-                                | ILLEGAL_CHARS
-	                        | INSTALLDATE   
-			        | INTERNAL_ERROR
-                                | INVALID       
-			        | NOT_FOUND
-                                | OK            
-                                | WRONG_EDITION            
-
-
-  val license_check = env "license check": unit -> license_check_result
-  val license_error_invalid = env "license error invalid": unit -> string
-  val license_error_expired = env "license error expired": unit -> string
-  val license_error_installdate = env "license error install date": unit -> string
-  val license_error_version = env "license error wrong version": unit -> string
-  val license_error_chars = env "license error illegal chars": unit -> string
-
-  fun ttyComplain st =
-    (print st;
-     print "You need to reinstall your license information.\n";
-     print "\nContinue anyway with a restricted session (y/n)? ";
-     let 
-      fun massageString s =
-        let
-          val ss = Substring.all s
-          val dl = Substring.dropl Char.isSpace ss 
-          val dr = Substring.dropr Char.isSpace dl
-        in
-          Substring.translate str dr
-        end
-
-       val reply_line = massageString (TextIO.inputLine TextIO.stdIn)
-       val reply_char = 
-       if size reply_line > 0 then
-         substring (reply_line, 0, 1)
-       else "n"
-       fun default_to_free () = env "license set edition"
-     in
-       if reply_char = "y" then 
-       (ignore(default_to_free ());
-       SOME false)
-       else
-         (ignore(OS.Process.terminate OS.Process.failure);
-	  NONE)
-     end)
+  fun ttyComplain st = SOME true
 
   (* license_complain returns SOME _ whenever we want to startup a session.
      SOME true  == license is valid -- get edition from license
@@ -177,25 +128,6 @@ struct
      NONE       == license is corrupt and user has chosen to exit
   *)
 
-  fun license complain = 
-      (* 
-       * OK              == stored license is valid and has not expired
-       * EXPIRED         == stored license has expired
-       * ILLEGAL_CHARS   == input contains zero or one 
-       * INVALID         == stored license is invalid
-       * NOT_FOUND       == start session as Free version
-       * INTERNAL_ERROR  == internal errors (e.g., malloc failures)
-       * WRONG_EDITION   == license is for a different edition  
-       *)
-
-      case license_check() of
-        OK             => (SOME true)
-      | NOT_FOUND      => (SOME true)
-      | EXPIRED        => complain(license_error_expired())
-      | INVALID        => complain(license_error_invalid())
-      | INTERNAL_ERROR => complain(license_error_invalid())
-      | INSTALLDATE    => complain(license_error_invalid()) 
-      | WRONG_EDITION  => complain(license_error_version())
-      | ILLEGAL_CHARS  => complain(license_error_chars())
+  fun license complain = SOME true
       
 end
