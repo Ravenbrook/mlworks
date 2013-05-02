@@ -101,7 +101,6 @@
 
 #include "values.h"
 #include "profiler.h"
-#include "license.h"
 #include "options.h"
 #include "mem.h"
 #include "gc.h"
@@ -506,10 +505,6 @@ static int start_mlworks(int argc, const char *const *argv)
 #ifdef DIAGNOSTICS
   if(option_diagnostic.specified)
     diagnostic_level = to_unsigned(option_diagnostic.arguments[0]);
-#endif
-
-#ifdef LICENSE
-  license_init();
 #endif
 
   /* Now we're ready to initialize the runtime */

@@ -47,6 +47,7 @@
 #include "ansi.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 /* call stub file name */
 #define filename       "fi_call_stub"

@@ -416,7 +416,6 @@ static void stop_mlworks(void)
   report_fixup();
   #endif
 #endif
-  license_release();
 }
 
 /* Now the main function run in the top thread */
@@ -480,10 +479,6 @@ static int start_mlworks(int argc, const char *const *argv)
     diagnostic_level = to_unsigned(option_diagnostic.arguments[0]);
 #endif
 
-#ifdef LICENSE
-  license_init();
-#endif
-
   /* Now we're ready to initialize the runtime */
 
   initialise();
@@ -494,7 +489,6 @@ static int start_mlworks(int argc, const char *const *argv)
     max_backtrace_depth = to_int(option_backtrace_depth.arguments[0]);
 
   if (option_batch.specified) {
-    license_failure_hang = 0;
   } else {
     out_of_memory_dialog = standard_out_of_memory_dialog;
   }
@@ -538,14 +532,6 @@ static int start_mlworks(int argc, const char *const *argv)
     print_defaults.tags = to_int(option_print.arguments[3]);
   }
  
-  if (option_free_edition.specified) {
-    DIAGNOSTIC(1,"Setting act_as_free to 1", 0, 0);
-    act_as_free = 1;
-  } else {
-    DIAGNOSTIC(1,"Setting act_as_free to 0", 0, 0);
-    act_as_free = 0;
-  };
-
   /* Load initial image */
   /* First try for an image in the executable, if not prohibited */
   /* If none found, load from command line if one specified */

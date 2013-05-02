@@ -506,7 +506,7 @@ else
 	@$(LINK) $(LINKFLAGS)$@ $< $(LINKENDFLAGS)
 endif
 
-$(TARGETDIR)/fi_call_stub_h_gen: $(OBJECTDIR)/fi_call_stub_h_gen.o
+$(TARGETDIR)/fi_call_stub_h_gen: $(OBJECTDIR)/fi_call_stub_h_gen.$(OBJ)
 	@echo 'MAKE: $< -> $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 ifeq "$(NTTYPE)" "TRUE"
@@ -520,7 +520,7 @@ gen/fi_call_stub.h: $(TARGETDIR)/fi_call_stub_h_gen
 	@$(MKDIR) gen $(MKDIREND)
 	@$< $(FI_CALL_SIZE) > $@
 
-$(TARGETDIR)/fi_call_stub_c_gen: $(OBJECTDIR)/fi_call_stub_c_gen.o
+$(TARGETDIR)/fi_call_stub_c_gen: $(OBJECTDIR)/fi_call_stub_c_gen.$(OBJ)
 	@echo 'MAKE: $< -> $@'
 	$(MKDIR) $(TARGETDIR) $(MKDIREND)
 ifeq "$(NTTYPE)" "TRUE"
