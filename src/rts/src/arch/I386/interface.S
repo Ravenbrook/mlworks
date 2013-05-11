@@ -255,7 +255,7 @@ C_NAME(text_internal_stub_c):
 	mov	THREAD_c_sp(thread), %esp  /* %sp = c_sp */
 	push	fnarg			/* Stack argument */
 
-#if __WINNT__
+#if defined(__WINNT__) || defined(OS_NT)
 	mov	3(%ebp), %ecx
 	shr	$2, %ecx
 	call	%ecx
@@ -277,7 +277,7 @@ C_NAME(text_internal_stub_c_end):
 	.globl	C_NAME(text_internal_stub_asm)
 	.globl	C_NAME(text_internal_stub_asm_end)
 C_NAME(text_internal_stub_asm):
-#if __WINNT__
+#if defined(__WINNT__) || defined(OS_NT)
 	mov	3(%ebp), %ecx
 	shr	$2, %ecx
 	jmp	%ecx
