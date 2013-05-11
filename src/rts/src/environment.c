@@ -144,6 +144,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 
 /*  === THE ENVIRONMENT ===  */
@@ -269,6 +270,7 @@ static mlval new_stub
   mlval closure, name, dummy_code;
 
 #ifdef OS_NT
+  assert(CINT(MLINT(f)) == (int)f);
   f = (mlval (*)(mlval))(MLINT(f)); /* NT compilers don't align functions properly */
 #endif
   name = ml_string(string);
