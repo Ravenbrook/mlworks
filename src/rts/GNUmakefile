@@ -578,7 +578,7 @@ $(TARGETDIR)/libmlw: $(DLLOBJECTS)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 ifeq "$(NTTYPE)" "TRUE"
-	@$(LINK) /LD $(LINKFLAGS)$@ $(DLLOBJECTS) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGS) /SUBSYSTEM:console
+	@$(LINK) /LD $(LINKFLAGS)$@ $(DLLOBJECTS) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGS) /SUBSYSTEM:console /FIXED /BASE:0x800000
 else
 # 	for the sole benefit of Irix 5.1 OS, we have to name the shared library
 # 	"libmlw.so" rather than "bin/MIPS/Irix/libmlw.so", otherwise at
@@ -594,7 +594,7 @@ $(TARGETDIR)/libmlw-g: $(DLLOBJECTSDEBUG)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 ifeq "$(NTTYPE)" "TRUE"
-	@$(LINK) /LDd  $(LINKFLAGSDEBUG)$@ $(DLLOBJECTSDEBUG) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGSDEBUG) /SUBSYSTEM:console
+	$(LINK) /LDd  $(LINKFLAGSDEBUG)$@ $(DLLOBJECTSDEBUG) $(DLLLIBRARIES) $(LIBRARIES) $(LINKENDFLAGSDEBUG) /SUBSYSTEM:console /FIXED /BASE:0x800000
 	@bscmake /oruntime-g.bsc $(DLLOBJECTSSBR)
 else
 #see note in libmlw target
