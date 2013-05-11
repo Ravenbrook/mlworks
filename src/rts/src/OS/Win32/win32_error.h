@@ -41,8 +41,10 @@
 #ifndef win32_error_h
 #define win32_error_h
 
-extern void mlw_raise_win32_syserr(int);
-extern void mlw_raise_c_syserr(int);
+#include "extensions.h"
+
+extern nonreturning(void, mlw_raise_win32_syserr, (int));
+extern nonreturning(void, mlw_raise_c_syserr, (int));
 extern mlval mlw_win32_strerror(unsigned int);
 
 #endif

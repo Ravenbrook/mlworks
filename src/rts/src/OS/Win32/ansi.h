@@ -114,6 +114,4 @@ extern clock_t clock(void);
 
 extern int system(const char *string);
 
-extern void exit(int);
-
 #endif /* win32_ansi_h */

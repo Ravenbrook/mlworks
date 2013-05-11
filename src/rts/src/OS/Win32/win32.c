@@ -1278,7 +1278,7 @@ static mlval mlw_os_io_kind(mlval arg)
 
   switch (st.st_mode & _S_IFMT) {
   case _S_IFREG:
-    return isatty(io_desc) ? mlw_os_io_kind_tty : mlw_os_io_kind_file;
+    return _isatty(io_desc) ? mlw_os_io_kind_tty : mlw_os_io_kind_file;
   case _S_IFDIR:
     return mlw_os_io_kind_dir;
   case _S_IFIFO:
@@ -1579,7 +1579,7 @@ static mlval ml_open_document(mlval arg)
 }
 
 
-static BOOL CALLBACK find_child_console(HWND hwnd, DWORD pid)
+static BOOL CALLBACK find_child_console(HWND hwnd, LPARAM pid)
 {
   DWORD thread_id;
   DWORD process_id;
@@ -1612,7 +1612,7 @@ static mlval ml_has_console(mlval arg)
   if (console_handle == INVALID_HANDLE_VALUE) {
     mlw_raise_win32_syserr(GetLastError());
   } else {
-    if (EnumWindows(find_child_console, (LPARAM)GetCurrentProcessId()) == TRUE) {
+    if (EnumWindows(find_child_console, GetCurrentProcessId()) == TRUE) {
       return MLFALSE;
     } else {
       return MLTRUE;
