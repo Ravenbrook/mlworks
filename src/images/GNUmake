@@ -1338,12 +1338,12 @@ ar-files: force
 	echo $(ARMO) > ar-files
 
 pervasive.img: $(PERVASIVEMO)
-	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ $(PERVASIVEMO) MLWargs
+	echo make: $@ from $^
+	$(RUNTIME) $(RUNTIMEOPTS) -save $@ $(PERVASIVEMO)
 
 basis.img: pervasive.img $(BASISMO)
-	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load pervasive.img -save $@ $(BASISMO) MLWargs
+	echo make: $@ from $^
+	$(RUNTIME) $(RUNTIMEOPTS) -load pervasive.img -save $@ $(BASISMO)
 
 $(FOREIGNMO): batch.img
 	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../foreign/foreign.mlp -configuration $(ARCH_OS) -build
@@ -1368,16 +1368,16 @@ windows.img: basis.img $(TERMINALMO) $(WINDOWSMO)
 
 lexer.img: pervasive.img $(LEXERMO)
 	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load pervasive.img -save $@ $(LEXERMO) MLWargs
+	$(RUNTIME) $(RUNTIMEOPTS) -load pervasive.img -save $@ $(LEXERMO)
 
 typechecker.img: lexer.img $(PARSERMO) $(TYPERMO)
 	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ -load lexer.img $(PARSERMO) $(TYPERMO) MLWargs -parser-tables $(SRC)/parser/ml-tables/
+	$(RUNTIME) $(RUNTIMEOPTS) -save $@ -load lexer.img -pass foo -parser-tables $(SRC)/parser/ml-tables/ foo $(PARSERMO) $(TYPERMO)
 
 batch.img: typechecker.img $(COMPILERMO) $(BATCHMO)
 	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load typechecker.img $(COMPILERMO) $(BATCHMO) MLWargs -verbose -save $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load batch.img MLWargs -pervasive-dir ../../../pervasive -project ../../../utils/utils.mlp -configuration $(ARCH_OS) -build
+	$(RUNTIME) $(RUNTIMEOPTS) -load typechecker.img -pass foo -verbose -save $@ foo $(COMPILERMO) $(BATCHMO)
+	#$(RUNTIME) $(RUNTIMEOPTS) -load batch.img -pass foo -pervasive-dir ../../../pervasive -project ../../../utils/utils.mlp -configuration $(ARCH_OS) -build foo
 
 distribution: $(DISTRIBUTED_IMAGES) 
 ifdef OS

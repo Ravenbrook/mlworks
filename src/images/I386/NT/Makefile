@@ -599,7 +599,7 @@ gui2-files: $(INTERMO) $(NTGUIMO)
 
 shell.img: typechecker.img $(COMPILERMO) $(SHELLMO)
 	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -load typechecker.img -save $@ $(COMPILERMO) $(SHELLMO) MLWargs -pervasive-dir ${SRC}/pervasive
+	$(RUNTIME) $(RUNTIMEOPTS) -load typechecker.img -save $@ $(COMPILERMO) $(SHELLMO) -pass foo -pervasive-dir ${SRC}/pervasive foo
 
 TTY_LOADER = 'Shell.saveImage("tty.img", false);'
 
