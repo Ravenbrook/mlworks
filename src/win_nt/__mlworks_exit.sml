@@ -55,7 +55,7 @@
  *)
 
 require "../utils/mlworks_exit";
-require "__windows"
+require "__windows";
 require "__sys_word";
 
 structure MLWorksExit :> MLWORKS_EXIT =
