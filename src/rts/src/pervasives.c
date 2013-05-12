@@ -457,9 +457,18 @@ mlval perv_lookup(mlval string)
   DIAGNOSTIC(2, "perv_lookup(\"%s\")", CSTRING(string), 0);
 
   if(value == MLERROR)
+    value = env_lookup("fake stub");
+
+  if(value == MLERROR)
     exn_raise_string(perv_exn_ref_unbound, CSTRING(string));
 
   return(value);
+}
+
+static mlval fake_stub(mlval whatever)
+{
+  exn_raise_string(perv_exn_ref_unbound, "fake stub reached");
+  return MLUNIT;
 }
 
 static mlval save_modules(const char *name, mlval *root, int deliver)
@@ -508,4 +517,6 @@ void pervasives_init(void)
   words_init();
   pack_words_init();
   libml_init();
+
+  env_function("fake stub", fake_stub);
 }

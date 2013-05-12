@@ -189,6 +189,7 @@
 #include "stubs.h"
 #include "threads.h"
 #include "mlw_ci_init.h"
+#include "sockets.h"
 #include "license.h"
 
 
@@ -207,6 +208,7 @@ void initialise()
   threads_init();
   implicit_init();
   mlw_ci_init();
+  sockets_init();
 
   gc_clock = 0.0;
   in_GC = 0;
