@@ -154,8 +154,8 @@ require "../lambda/__environtypes";
 require "../main/__pervasives";
 require "../main/__info";
 require "../main/__code_module";
-require "../rts/gen/__objectfile";
 require "../debugger/__debugger_types";
+require "__objectfile";
 require "__enc_sub";
 require "_encapsulate";
 
