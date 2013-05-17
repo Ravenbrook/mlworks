@@ -11,6 +11,23 @@ compiler that can compile itself on Windows.  See `the roadmap` for
 our plans to get it running on other platforms, and work beyond that.
 Get involved!
 
+Want to run the command-line compiler?  On Windows, grab
+<http://www.ravenbrook.com/project/mlworks/release/reboot/MLWorks-reboot.zip>.
+Unpack that then::
+
+    cd MLWorks-reboot
+    bin/I386/NT/main -MLWpass foo -load images/I386/NT/batch.img -MLWpass foo
+
+and you should get a batch compiler.
+
+Append arguments to the batch compiler to the second command.  For
+example::
+
+    bin/I386/NT/main -MLWpass foo -load images/I386/NT/batch.img -MLWpass foo -help
+
+This is the barest of bare releases, but it's enough to compile a
+compiler.
+
 **IMPORTANT**: This repository currently starts at the latest revision
 of the MLWorks sources, and does not include the full version history.
 The master branch at some point be *rebased* to include the full
