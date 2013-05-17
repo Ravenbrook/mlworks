@@ -6,10 +6,10 @@ Ravenbrook Limited.
 
 The main project page is at <http://www.ravenbrook.com/project/mlworks/>.
 
-MLWorks does not currently build.  The compiler is written in Standard
-ML and should be easy to bootstrap.  The run-time system is a mixture of
-C and assembler but is neither large nor complicated, and should be easy
-to port.  Get involved!
+MLWorks has recently been rebooted [#reboot]_ and we now have a command-line
+compiler that can compile itself on Windows.  See `the roadmap` for
+our plans to get it running on other platforms, and work beyond that.
+Get involved!
 
 **IMPORTANT**: This repository currently starts at the latest revision
 of the MLWorks sources, and does not include the full version history.
@@ -31,3 +31,7 @@ project.
 Ravenbrook would like to thank Xanalys, and especially Paul Miller, for
 being both willing and generous to help with the open source publishing
 of this work.
+
+.. [#reboot] See "MLWorks rebooted!" in the mlworks-discussion mailing
+   list archive
+   <http://mailman.ravenbrook.com/mailman/private/mlworks-discussion/2013-May/000056.html>
