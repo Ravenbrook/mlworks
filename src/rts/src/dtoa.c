@@ -1902,10 +1902,11 @@ strtod
 		if ((word0(rv) & Exp_mask) <= P*Exp_msk1
 		 && word1(rv) & 1
 		 && dsign != 2)
-			if (dsign)
+		  if (dsign) {
 				rv += ulp(rv);
-			else
+		  } else {
 				word1(rv) &= ~1;
+		  }
 		word0(rv0) = Exp_1 - P*Exp_msk1;
 		word1(rv0) = 0;
 		rv *= rv0;

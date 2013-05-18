@@ -118,6 +118,7 @@ extern long int gethostid __P ((void));
 
 /* struct timespec, messed up in Red Hat 5 */
 
+#if 0 /* RB 2013-05-18 */
 #ifndef _STRUCT_TIMESPEC
 #define _STRUCT_TIMESPEC
 struct timespec {
@@ -125,6 +126,7 @@ struct timespec {
 	long	tv_nsec;	/* nanoseconds */
 };
 #endif /* _STRUCT_TIMESPEC */
+#endif
 
 /* lstat, messed up in Red Hat 5 */
 
@@ -132,6 +134,9 @@ struct timespec {
 
 /* S_ISLNK and S_ISSOCK, also screwed up in Red Hat 5 */
 
+#if 0 /* RB 2013-05-18 */
 #define S_ISLNK(m)	(((m) & S_IFMT) == S_IFLNK)
+#endif
 #define S_ISSOCK(m)	(((m) & S_IFMT) == S_IFSOCK)
+
 #endif /* syscall_h */

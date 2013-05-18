@@ -271,7 +271,7 @@ static void unmake_thread (struct thread_state *thread)
   thread->last->next = thread->next;
 
   /* disentangle from ML */
-  C_THREAD(ML_THREAD(thread)) = (mlval) NULL;
+  C_THREAD(ML_THREAD(thread)) = NULL;
   ML_THREAD(thread) = MLUNIT;
   retract_root(&thread->ml_thread);
   retract_root(&thread->implicit.handler);
@@ -468,7 +468,7 @@ static mlval thread_fix(unsigned int index, mlval ml_thread)
       break;
     default:
       message("expired thread %d", index);
-      C_THREAD(ml_thread) = (mlval) NULL;
+      C_THREAD(ml_thread) = NULL;
       SET_RESULT(ml_thread,THREAD_EXPIRED);
     }
     return ml_thread;

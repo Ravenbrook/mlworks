@@ -49,10 +49,12 @@
 static double posinf = 1.0/0.0;
 
 /* It appears that abs doesn't work properly under Linux either */
+#if 0 /* RB 2013-05-18 */
 static double abs(double a)
 {
   return ((a >= 0.0) ? a : -a);
 }
+#endif
 
 extern int localpower(double a, double b, double *result)
 {

@@ -2142,7 +2142,7 @@ void gc(size_t space_required, mlval closure)
 	} else
 	  heap_analysis_count(creation->start,creation->top);
       }
-#endif DEBUG
+#endif /* DEBUG */
 
       gc_statistics(gc_stat_stream, user_clock(), 0);
 
