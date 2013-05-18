@@ -90,7 +90,7 @@ void initialize_c_state(struct c_state *c_state);
 
 void initialize_top_thread_state(void);
 
-#define GC_RETURN		((mlval *)CURRENT_THREAD->ml_state.global)
+#define GC_RETURN		(*(mlval **)&CURRENT_THREAD->ml_state.global)
 #define GC_SP(thread)		((struct stack_frame *)(thread)->ml_state.sp)
 
 #define C_PC(c_state)		((c_state)->eip)

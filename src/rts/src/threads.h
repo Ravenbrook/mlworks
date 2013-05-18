@@ -189,7 +189,7 @@ extern int thread_in_critical_section;
 extern int runnable_threads;
 
 #define ML_THREAD(c_thread)	((c_thread)->ml_thread)
-#define C_THREAD(ml_thread)	((struct thread_state *)(FIELD(ml_thread,1)))
+#define C_THREAD(ml_thread)	(*(struct thread_state **)(&FIELD(ml_thread,1)))
 
 #define THREAD_DIED		(MLINT(0))	/* received fatal signal */
 #define THREAD_EXCEPTION	(MLINT(1))	/* raised uncaught exn */

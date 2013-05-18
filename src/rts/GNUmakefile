@@ -569,8 +569,8 @@ vpath %.S \
 # automatically kept up to date by the general rules above.
 # For details, see the GNU make documentation.
 
-include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
-include $(DEPENDDIR)/test_fixup.d
+-include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
+-include $(DEPENDDIR)/test_fixup.d
 
 # === TARGETS ===
 
