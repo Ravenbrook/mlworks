@@ -619,6 +619,7 @@ SML_HOME =	/u/sml
 ADB =		adb
 endif
 DISTRIB =	$(SML_HOME)/distribution/images
+PARSER_TABLES = $(SRC)/parser/ml-tables/
 
 COMMON_DISTRIBUTED_IMAGES = pervasive.img batch.img gui.img foreign.img basis.img guib.img
 
@@ -1254,7 +1255,6 @@ ARSRC =		utils/lists \
 		ml_utils/ml_ar
 
 .PRECIOUS: pervasive.img lexer.img typechecker.img shell.img gui.img batch.img basis.img foreign.img
-.SILENT:
 
 profile:
 	$(MAKE_COMMAND) RUNTIMEOPTS="-verbose -c 2 -profile -profile-frequency 100"
@@ -1372,7 +1372,7 @@ lexer.img: pervasive.img $(LEXERMO)
 
 typechecker.img: lexer.img $(PARSERMO) $(TYPERMO)
 	echo make: $@
-	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ -load lexer.img $(PARSERMO) $(TYPERMO) MLWargs -parser-tables $(SRC)/parser/ml-tables/
+	$(RUNTIME) -MLWpass MLWargs $(RUNTIMEOPTS) -save $@ -load lexer.img $(PARSERMO) $(TYPERMO) MLWargs -parser-tables $(PARSER_TABLES)
 
 batch.img: typechecker.img $(COMPILERMO) $(BATCHMO)
 	echo make: $@
