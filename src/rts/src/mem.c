@@ -281,7 +281,7 @@ struct ml_heap *space_gen[SPACES_IN_ARENA];
 static struct ml_stack *stack_cache = NULL;
 static size_t stack_cache_size = 0, stack_total = 0;
 
-static stack_blocks = 0;
+static int stack_blocks = 0;
 
 /*  == Making and unmaking stacks == */
 

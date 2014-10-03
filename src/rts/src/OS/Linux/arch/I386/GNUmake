@@ -80,12 +80,12 @@ DEFINES		:= $(DEFINES) MACH_FIXUP LITTLE_ENDIAN _SVID_SOURCE SPACE_PROFILE_OVERF
 
 # add target-specific includes
 
-INCLUDEDIRS	:= $(INCLUDEDIRS) - /usr/X11R6/include /usr/X11/include
+INCLUDEDIRS	:= $(INCLUDEDIRS)
 
 # add target-specific options (none for SunOS)
 
-TARGETOPTS	=
-TARGETOPTSDEBUG =
+TARGETOPTS	= -m32
+TARGETOPTSDEBUG = $(TARGETOPTS)
 
 DLLLIBRARIES  =
 DLLFLAGS      = -shared
@@ -93,7 +93,7 @@ DLLFLAGS      = -shared
 # add target-specific libraries
 
 LIBRARIES	= -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/lib -L/usr/X11R6/lib/xrt/lib -lm -lXm -lXt -lXext -lX11 -lXpm -lXp -lelf -ldl
-LIBRARIESSTATIC = -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/usr/X11R6/lib/xrt/lib -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lm -lSM -lICE -lXt -lX11 -lXp -lelf -ldl -lXpm -lXext
+LIBRARIESSTATIC = -L/usr/lib -L/usr/X11R6/lib -L/usr/X11/lib -L/usr/X11R6/lib/xrt/lib -Xlinker -Bstatic -lXm -Xlinker -Bdynamic -lm -lSM -lICE -lXt -lX11 -lXp -lelf -ldl -lXpm -lXext -lXft
 
 # other target-specific things
 

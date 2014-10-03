@@ -82,7 +82,7 @@
 #include "foreign_loader.h"
 
 #include <dlfcn.h>      /* Run-Time Dynamic Linking libraries */ 
-#include <libelf/libelf.h>     /* ELF libraries -- Linux            */
+#include <libelf.h>     /* ELF libraries -- Linux            */
 
 #include <fcntl.h>
 #include <unistd.h>

@@ -297,7 +297,7 @@ struct ml_static_space
 
 /* SPACE_STATIC(space) gives the static space descriptor for the space */
 
-#define SPACE_STATIC(space)	((struct ml_static_space *)space_info[space])
+#define SPACE_STATIC(space)	(*(struct ml_static_space **)&space_info[space])
 
 /*  == Generation descriptor ==
  *

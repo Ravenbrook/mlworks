@@ -398,7 +398,11 @@ DEPENDDIR	= depend/$(ARCH)/$(OS)
 ifeq "$(NTTYPE)" "TRUE"
 RUNTIMES	= runtime runtime-g runtime-windows runtime-windows-g
 else
+ifeq "$(OS)" "Linux"
+RUNTIMES	= runtime runtime-g
+else
 RUNTIMES	= runtime runtime-g runtime-static
+endif
 endif
 
 all: $(GENERATED) $(RUNTIMES)
@@ -569,8 +573,8 @@ vpath %.S \
 # automatically kept up to date by the general rules above.
 # For details, see the GNU make documentation.
 
-include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
-include $(DEPENDDIR)/test_fixup.d
+-include $(MODULESSTATIC:%=$(DEPENDDIR)/%.d)
+-include $(DEPENDDIR)/test_fixup.d
 
 # === TARGETS ===
 
@@ -649,11 +653,14 @@ endif
 
 ifeq "$(NTTYPE)" "TRUE"
 else
+ifeq "$(OS)" "Linux" # Can't find libXaw.a on Ubuntu 12
+else
 $(TARGETDIR)/main-static: $(OBJECTSSTATIC)
 	@echo 'MAKE: $@'
 	@$(MKDIR) $(TARGETDIR) $(MKDIREND)
 	@$(LINK) -Xlinker -Bstatic $(LINKFLAGS)$@ $(OBJECTSSTATIC) $(LIBRARIESSTATIC) $(LINKENDFLAGS)
 	@$(STRIP) $@
+endif
 endif
 
 
@@ -758,9 +765,12 @@ endif
 
 ifeq "$(NTTYPE)" "TRUE"
 else
+ifeq "$(OS)" "Linux" # Can't find libXaw.a on Ubuntu 12
+else
 runtime-static: force $(TARGETDIR)/main-static
 	@$(RM) $@
 	$(LN) -s $(TARGETDIR)/main-static $@
+endif
 endif
 
 ifeq "$(OS)" "SunOS"

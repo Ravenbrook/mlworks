@@ -89,12 +89,16 @@
 #include "syscalls.h"
 #include "diagnostic.h"
 #include "utils.h"
+#include <i386-linux-gnu/fpu_control.h>
+
 
 extern void os_init(void)
 {
+  unsigned short cw;
   unix_init();
   /* This should be done properly sometime */
-  __setfpucw (0x037f);
+  cw = 0x037f;
+  _FPU_SETCW(cw);
   x_init();
 }
 
@@ -161,7 +165,7 @@ extern void os_set_rounding_mode (int arg)
   control = modes[arg];
   old = get_fpu_control_word();
   control |= (old & (~_FPU_MASK));
-  __setfpucw(control);
+  _FPU_SETCW(control);
 }
 
 /* The behaviour of malloc(0), realloc(NULL,0) and realloc(p,0)

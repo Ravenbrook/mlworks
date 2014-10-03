@@ -177,8 +177,6 @@ size_t arena_extent = 0;
 size_t max_arena_extent = 0;
 #endif
 
-static int zero_device;
-static int reserve_device;
 static int page_size;
 
 /* arena_state is UNINITIALIZED until the arena has been initialized.
@@ -237,8 +235,8 @@ static void map(void *start, size_t length)
   while(length > 0 &&
 	mmap((caddr_t)start, length,
 	     PROT_READ | PROT_WRITE | PROT_EXEC,
-	     MAP_FIXED | MAP_PRIVATE,
-	     zero_device, 0) == (caddr_t)-1)
+	     MAP_FIXED | MAP_PRIVATE | MAP_ANON,
+	     -1, 0) == (caddr_t)-1)
     switch(errno) {
       /* The Linux kernel sources tell me that this can fail with either
        * ENOMEM or EAGAIN */
@@ -264,13 +262,12 @@ static void map(void *start, size_t length)
 
 static void unmap(void *start, size_t length)
 {
-  /* We simply rereserve this via mmap on reserve_device,
-   * rather than unmapping */
+  /* We simply rereserve this via mmap but with no backing store, rather than unmapping */
   int space = SPACE(start);
   off_t offset = (unsigned long)start - (unsigned long)(SPACE_BASE(space));
   if (length > 0 &&
-      mmap((caddr_t)start, length, PROT_NONE, MAP_FIXED | MAP_SHARED,
-	   reserve_device, offset) == (caddr_t)-1) {
+      mmap((caddr_t)start, length, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANON,
+	   -1, offset) == (caddr_t)-1) {
     error("unmap has failed with an unexpected error code %d meaning %s\n",
 	  errno, strerror(errno));
   };
@@ -335,8 +332,8 @@ void test_mapping(void)
 static int reserve_arena_space(caddr_t *base)
 {
   int space;
-  *base = mmap((caddr_t)0, SPACE_SIZE, PROT_NONE, MAP_SHARED,
-	       reserve_device, (off_t)0);
+  *base = mmap(*base, SPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON,
+	       -1, (off_t)0);
   if (*base == (caddr_t)-1 || (unsigned long)(*base) > ARENA_LIMIT) {
     /* Failed to reserve */
     return 1;
@@ -348,8 +345,8 @@ static int reserve_arena_space(caddr_t *base)
     if (munmap(*base, SPACE_SIZE) == -1) {
       error("munmap(1)(0x%x, 0x%x) has returned an unexpected error code %d meaning %s", *base, SPACE_SIZE, errno, strerror(errno));
     }
-    *base = mmap((caddr_t)0, 2*(SPACE_SIZE), PROT_NONE, MAP_SHARED,
-		 reserve_device, (off_t)0);
+    *base = mmap((caddr_t)0, 2*(SPACE_SIZE), PROT_NONE, MAP_PRIVATE | MAP_ANON,
+		 -1, (off_t)0);
     if (*base == (caddr_t)-1) {
       /* Failed to reserve */
       return 1;
@@ -425,13 +422,6 @@ void arena_init(void)
     arena_state = INITIALIZING;
     page_size = getpagesize();
 
-    zero_device = open("/dev/zero", O_RDONLY);
-    if(zero_device == -1)
-      error_without_alloc("Arena initializing unable to open /dev/zero.");
-    reserve_device = open("/etc/passwd", O_RDONLY);
-    if(reserve_device == -1)
-      error_without_alloc("Arena initializing unable to open /etc/passwd.");
-
     /* First mark all spaces reserved */
     for (i = 0; i < NR_SPACES; i++) {
       space_type[i]   = TYPE_RESERVED;
@@ -442,7 +432,7 @@ void arena_init(void)
     /* Now allocate the spaces we want */
     for (i = 0; i < 2; i++) {
       int space;
-      caddr_t base;
+      caddr_t base = (caddr_t)((i + 1) * SPACE_SIZE); /* Hack RB 2013-05-18 because mmap was returning addresses above ARENA_LIMIT */
       if (reserve_arena_space(&base)) {
 	error_without_alloc("Arena initializing unable to reserve memory\n");
       }

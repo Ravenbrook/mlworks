@@ -92,6 +92,7 @@
 #include <sys/wait.h>		/* WIFERXITED, ... */
 #include <unistd.h>
 #include <assert.h>		/* assert */
+#include <stdlib.h>
 
 #include "diagnostic.h"
 #include "gc.h"

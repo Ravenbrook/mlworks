@@ -157,8 +157,8 @@ static mlval modulo (mlval argument)
 
 static mlval int32_mul(mlval argument)
 {
-  int *val1 = CWORD32(FIELD(argument,0)),
-      *val2 = CWORD32(FIELD(argument,1));
+  int *val1 = CINT32(FIELD(argument,0)),
+      *val2 = CINT32(FIELD(argument,1));
   mlval result;
   double prod = ((double) *val1) * ((double) *val2);
   if ((prod > (double) ML_MAX_INT32))
@@ -192,8 +192,8 @@ static mlval int32_div(mlval argument)
 {
   int answer,
       remainder,
-      *divisor = CWORD32(FIELD(argument,0)),
-      *dividend = CWORD32(FIELD(argument,1));
+      *divisor = CINT32(FIELD(argument,0)),
+      *dividend = CINT32(FIELD(argument,1));
   mlval result;
 
   if (*dividend == 0u) exn_raise(perv_exn_ref_div);
@@ -215,8 +215,8 @@ static mlval int32_div(mlval argument)
 static mlval int32_mod(mlval argument)
 {
   int answer,
-     *divisor = CWORD32(FIELD(argument,0)),
-     *dividend = CWORD32(FIELD(argument,1));
+     *divisor = CINT32(FIELD(argument,0)),
+     *dividend = CINT32(FIELD(argument,1));
   mlval result;
 
   if (*dividend == 0u) exn_raise(perv_exn_ref_div);
