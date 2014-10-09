@@ -896,7 +896,7 @@ signature MLWORKS =
         structure Exit :
         sig
           eqtype key
-          type status = int
+          type status = Types.word32
           val success : status
           val failure : status
           val uncaughtIOException : status
