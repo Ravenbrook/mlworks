@@ -82,7 +82,7 @@ structure Time : TIME =
     datatype time = datatype MLWorks.Internal.Types.time
 
     exception Time
-    val timeRef = env "Time.Time"
+    val timeRef = (env "Time.Time"):exn ref
     val _ = timeRef := Time
 
     val zeroTime = TIME (0, 0, 0)

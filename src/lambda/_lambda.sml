@@ -888,13 +888,13 @@ struct
   val dummy_var = new_LVar()
   val dummy_varexp = LambdaTypes.VAR dummy_var
 
-  val env_reduce =
-    Lists.reducel
-    (fn (env, (env', _, _)) => Environ.augment_env(env, env'))
+  fun env_reduce (init, list) =
+      Lists.reducel (fn (env, (env', _, _)) => Environ.augment_env(env, env'))
+		    (init, list)
 
-  val denv_reduce =
-    Lists.reducel
-    (fn (env, (_, env',_)) => Environ.augment_denv(env, env'))
+  fun denv_reduce (init, list) =
+      Lists.reducel (fn (env, (_, env',_)) => Environ.augment_denv(env, env'))
+		    (init, list)
 
   fun env_from_list env_le_list =
     env_reduce(Environ.empty_env, env_le_list)

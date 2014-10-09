@@ -169,8 +169,8 @@ functor TypeUtils(
 
     val vcc_fun = is_vcc o type_from_scheme
     val null_fun = not o vcc_fun
-    val null_exists = NewMap.exists (null_fun o #2) 
-    val vcc_exists = NewMap.exists (vcc_fun o #2) 
+    fun null_exists map = NewMap.exists (null_fun o #2) map
+    fun vcc_exists map = NewMap.exists (vcc_fun o #2) map
     val vcc_len = Lists.filter_length vcc_fun
     val null_len = Lists.filter_length null_fun
 

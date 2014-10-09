@@ -1167,7 +1167,8 @@ struct
   val empty_env =
     CB(Parser.empty_pB, Basis.empty_basis, Environ.empty_top_env)
 
-  val empty_string_map = NewMap.empty (op < : string * string -> bool, op =)
+  val empty_string_map : (string, (string * int * int)) NewMap.map =
+      NewMap.empty (op < : string * string -> bool, op =)
 
   val empty_debug_info = Debugger_Types.empty_information
 

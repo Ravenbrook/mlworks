@@ -1073,7 +1073,7 @@ struct
   fun mark_visited (v, m) = NewMap.define (v, m, false)
   fun mark_compiled (v, m) = NewMap.define (v, m, true)
 
-  val empty_map = NewMap.empty (ModuleId.lt, ModuleId.eq)
+  val empty_map : StatusMap = NewMap.empty (ModuleId.lt, ModuleId.eq)
   val visited_pervasives = mark_compiled (empty_map, Io.pervasive_library_id)
 
   fun no_targets (error_info, location) projectName = 

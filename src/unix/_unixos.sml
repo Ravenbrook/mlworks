@@ -172,7 +172,7 @@ struct
   end
 
   exception WouldBlock
-  val would_block_ref = env "system os unix exception Would Block"
+  val would_block_ref = (env "system os unix exception Would Block"):exn ref
   val _ = would_block_ref := WouldBlock
 
   datatype sockaddr = SOCKADDR_UNIX of string

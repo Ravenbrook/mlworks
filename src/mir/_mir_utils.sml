@@ -1227,9 +1227,9 @@ struct
         assign (args,regs,[])
       end
   in
-    val assign_caller_regs = assign_regs caller_arg_regs
-    val assign_tail_regs = assign_regs tail_arg_regs
-    val assign_fp_regs = assign_regs MirRegisters.fp_arg_regs
+    fun assign_caller_regs args = assign_regs caller_arg_regs args
+    fun assign_tail_regs args = assign_regs tail_arg_regs args
+    fun assign_fp_regs args = assign_regs MirRegisters.fp_arg_regs args
   end
 
   fun do_app(debugger_information,

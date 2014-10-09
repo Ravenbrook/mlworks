@@ -165,9 +165,10 @@ functor Share(
      * occur later in the structure's type name list.
      *)
 
-    val share_failures = ref []
-    val old_share_failures = ref []
-    val failure_reasons = ref []
+    type failures = IdentPrint.Ident.TyCon list ref
+    val share_failures : failures = ref []
+    val old_share_failures : failures = ref []
+    val failure_reasons : string list ref = ref []
 
     (****
      Handles the sharing of types present in two structures being shared.
