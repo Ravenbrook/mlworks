@@ -242,562 +242,254 @@
  *  Revision 1.40  1993/04/13  09:59:17  matthew
  *  Changed TypeRep to Dynamic and restructured
  *  Moved break stuff out of tracing.
- *  
+ *
  *  Revision 1.39  1993/04/08  17:29:56  jont
  *  Minor modifications to editor structure
- *  
+ *
  *  Revision 1.38  1993/04/06  13:00:31  jont
  *  Removed use of pervasive ordof
- *  
+ *
  *  Revision 1.37  1993/04/02  15:27:40  jont
  *  Extended images structure to include table of contents reading
- *  
+ *
  *  Revision 1.36  1993/03/26  15:53:27  matthew
  *  Added break function to Tracing substructure
- *  
+ *
  *  Revision 1.35  1993/03/23  18:32:34  jont
  *  Minor change to interface to edit file
- *  
+ *
  *  Revision 1.34  1993/03/11  18:37:25  jont
  *  Added Intermal.Images including save and clean. Added other_operation to
  *  Editor for arbitrary bits of emacs lisp
- *  
+ *
  *  Revision 1.33  1993/03/10  16:30:56  jont
  *  Added editor substructure to MLWorks
- *  
+ *
  *  Revision 1.32  1993/02/18  16:56:08  matthew
  *  Added TypeRep signature in MLWorks.Internal
- *  
+ *
  *  Revision 1.31  1993/02/17  11:05:21  daveb
  *  Corrected string argument to Unimplemented for MLWorks.Time.Real.now.
- *  
+ *
  *  Revision 1.30  1993/01/05  16:54:24  richard
  *  Added some extra exceptions for the runtime system.
- *  
+ *
  *  Revision 1.29  1992/12/22  10:50:12  clive
  *  ExtendedArray should not be available at the top level
- *  
+ *
  *  Revision 1.28  1992/12/22  10:25:37  daveb
  *  Made ExtendedArray visible at top level.
- *  
+ *
  *  Revision 1.27  1992/12/22  10:05:26  clive
  *  Needed to define the type T in the Array structure
- *  
+ *
  *  Revision 1.26  1992/12/22  10:02:01  matthew
  *  Added 'agreed' Array and Vector structures.
- *  
+ *
  *  Revision 1.25  1992/12/01  13:05:26  matthew
  *  Fixed problem with IO
- *  
+ *
  *  Revision 1.24  1992/12/01  12:45:10  matthew
  *  Changed IO structure to mirror __pervasive_library
- *  
+ *
  *  Revision 1.23  1992/11/12  15:58:16  clive
  *  Added some rts support for tracing
- *  
+ *
  *  Revision 1.22  1992/11/10  13:14:23  richard
  *  Added StorageManager exception and changed the type of the
  *  StorageManager interface function.
- *  
+ *
  *  Revision 1.21  1992/11/02  10:06:49  richard
  *  Many changes.  See MLWorks signature.
- *  
+ *
  *  Revision 1.20  1992/09/25  14:36:13  matthew
  *  Added Internal.string_to_real
- *  
+ *
  *  Revision 1.19  1992/09/23  16:16:41  daveb
  *  Added clear_eof function to IO (unimplemented).
- *  
+ *
  *  Revision 1.18  1992/09/01  14:34:40  richard
  *  Changed the OS information stuff to functions.  Added Prod and
  *  Value exceptions.
  *  Implemented save.
- *  
+ *
  *  Revision 1.17  1992/08/28  15:00:49  clive
  *  Added a function to the pervasive_library to get debug_info from a
  *  function
- *  
+ *
  *  Revision 1.16  1992/08/28  08:26:28  richard
  *  Changed call to environment so that environment is not
  *  preserved across images.
  *  Added floating-point exceptions.
- *  
+ *
  *  Revision 1.15  1992/08/26  14:34:26  richard
  *  Rationalisation of the MLWorks structure.
- *  
+ *
  *  Revision 1.14  1992/08/25  16:27:11  richard
  *  Added ByteArray structure and writebf in FileIO.
- *  
+ *
  *  Revision 1.13  1992/08/24  14:16:46  davidt
  *  Added a faster implementation of FileIO.writef which
  *  doesn't allocate as many bytearrays.
- *  
+ *
  *  Revision 1.12  1992/08/20  12:44:05  richard
  *  Changed path of require of mlworks to use pervasive directory.
- *  
+ *
  *  Revision 1.11  1992/08/20  08:33:04  richard
  *  Enriched the Array structure.
- *  
+ *
  *  Revision 1.10  1992/08/18  16:40:49  richard
  *  Added real_to_string.
- *  
+ *
  *  Revision 1.9  1992/08/18  14:44:59  richard
  *  Changes to the MLWorks signature.  See mlworks file for
  *  details.
- *  
+ *
  *  Revision 1.8  1992/08/17  11:05:12  richard
  *  Added MLWorks.System.Runtime.GC.interface.
- *  
+ *
  *  Revision 1.7  1992/08/15  17:32:57  davidt
  *  Put in MLWorks.IO.input_line function.
- *  
+ *
  *  Revision 1.6  1992/08/13  15:30:59  clive
  *  Added two functions to the debugger
- *  
+ *
  *  Revision 1.4  1992/08/12  14:21:36  davidt
  *  Took out copying of Array and String structures from the
  *  MLWorks structure in an attempt to see if NewJersey was
  *  getting confused and not inlining code for array updates.
- *  
+ *
  *  Revision 1.3  1992/08/11  05:59:23  richard
  *  Added load_wordset to Int structure.
- *  
+ *
  *  Revision 1.2  1992/08/10  15:26:16  davidt
  *  Changed MLworks structure to MLWorks
- *  
+ *
  *  Revision 1.1  1992/08/07  15:03:28  davidt
  *  Initial revision
- *  
+ *
  *  Revision 1.1  1992/05/18  15:40:36  clive
  *  Initial revision
  *)
 
 (* This require is just for the pervasive modules. *)
-
 fun require s =
-  (fn SOME #" " => use ("../pervasive/" ^ String.substring (s, 1, size s - 1) ^ ".sml")
-    | _ => use ("../pervasive/" ^ s ^ ".sml")) (Char.fromString s);
-
-type word = int;
-
-nonfix quot rem;
+    use ("pervasive/"
+	 ^ (case Char.fromString s of
+		SOME #" " => String.substring (s, 1, size s - 1)
+	      | _ => s)
+	 ^ ".sml");
 
 require "mlworks";
 
-exception Unimplemented of string
-fun unimplemented name =
-  (output (std_out, "unimplemented MLWorks pervasive: " ^ name ^ "\n");
-   raise Unimplemented name)
+local
+    exception Unimplemented of string
+    fun unimplemented (name:string)  =
+	(TextIO.print ("unimplemented MLWorks pervasive: " ^ name ^ "\n");
+	 raise Unimplemented name;
+	 Unsafe.cast 0)
 
+    structure SMLBasisArray = Array
+    structure SMLBasisArraySlice = ArraySlice
+    structure SMLBasisVector = Vector
+    structure SMLBasisString = String
+    structure SMLBasisChar = Char
+    structure SMLBasisInt = Int
+    structure SMLBasisReal = Real
+    structure SMLBasisMath = Math
+    structure SMLBasisTime = Time
+    structure SMLBasisInt32 = Int32
+    structure SMLBasisWord = Word
+    structure SMLBasisWord32 = Word32
+    structure SMLBasisWord8 = Word8
+    structure SMLBasisWord8Array = Word8Array
+    structure SMLBasisWord8ArraySlice = Word8ArraySlice
+    structure SMLBasisRealArray = RealArray
+    structure SMLBasisRealArraySlice = RealArraySlice
+    structure SMLBasisOption = Option
+    structure SMLBasisOS = OS
+    structure SMLBasisOSProcess = OS.Process
+in
 structure MLWorks : MLWORKS =
   struct
 
-    structure Option = 
-      struct
-        datatype 'a option = SOME of 'a | NONE 
-        datatype ('a,'b) union = INL of 'a | INR of 'b 
-      end
-
-    structure Bits =
-      struct
-	open NewJersey.Bits
-	fun arshift _ = unimplemented "MLWorks.Bits.arshift"
-      end
-
-    structure Vector =
-      struct
-        datatype 'a vector = Vector of 'a list
-
-        exception Size
-        exception Subscript
-
-	nonfix sub
-
-        val vector = Vector
-
-        fun tabulate (i, f) =
-          let fun tab j = if j < i then f j :: tab (j+1) else nil
-          in if i < 0 then raise Size else Vector (tab 0)
-          end
-
-        fun sub (Vector nil, i) = raise Subscript
-        |   sub (Vector (a::r), i) =
-          if i > 0 then sub (Vector r, i-1)
-          else if i < 0 then raise Subscript
-          else a
-
-        fun length (Vector nil) = 0
-        |   length (Vector (a::r)) = 1 + length (Vector r)
-      end
-
-    structure Array = 
-      struct
-        open NewJersey.Array
-          type 'a T = 'a array
-      end
-
-    structure ExtendedArray =
-      struct
-        open NewJersey.Array
-
-        nonfix sub
-        type 'a T = 'a array
-
-        fun tabulate (l, f) =
-          if l = 0 then
-            arrayoflist []
-          else
-            let
-              val first = f 0
-              val a = array (l, first)
-
-              fun init 0 = a
-                | init n =
-                  (update (a, n-l, f (n-l));
-                   init (n-1))
-            in
-              init (l-1)
-            end
-
-        val from_list = arrayoflist
-
-        fun fill (a, x) =
-          let
-            fun fill' 0 = ()
-              | fill' n =
-                (update (a, n-1, x);
-                 fill' (n-1))
-          in
-            fill' (length a)
-          end
-
-        fun map f a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = f (sub (a, 0))
-                val new = array (l, first)
-
-                fun map' 0 = new
-                  | map' n =
-                    (update (new, l-n, f (sub (a, l-n)));
-                     map' (n-1))
-              in
-                map' (l-1)
-              end
-          end
-
-        fun map_index f a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = f (0, sub (a, 0))
-                val new = array (l, first)
-
-                fun map' 0 = new
-                  | map' n =
-                    (update (new, l-n, f (l-n, sub (a, l-n)));
-                     map' (n-1))
-              in
-                map' (l-1)
-              end
-          end
-
-        fun to_list a =
-          let
-            fun to_list' (0, list) = list
-              | to_list' (n, list) =
-                to_list' (n-1, sub (a, n-1) :: list)
-          in
-            to_list' (length a, nil)
-          end
-
-        fun iterate f a =
-          let
-            val l = length a
-
-            fun iterate' 0 = ()
-              | iterate' n =
-                (f (sub (a, l-n));
-                 iterate' (n-1))
-          in
-            iterate' l
-          end
-
-        fun iterate_index f a =
-          let
-            val l = length a
-
-            fun iterate' 0 = ()
-              | iterate' n =
-                (f (l-n, sub (a, l-n));
-                 iterate' (n-1))
-          in
-            iterate' l
-          end
-
-        fun rev a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = sub (a, 0)
-                val new = array (l, first)
-
-                fun rev' 0 = new
-                  | rev' n =
-                    (update (new, n-1, sub (a, l-n));
-                     rev' (n-1))
-              in
-                rev' (l-1)
-              end
-          end
-
-        fun duplicate a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = sub (a, 0)
-                val new = array (l, first)
-
-                fun duplicate' 0 = new
-                  | duplicate' n =
-                    (update (new, l-n, sub (a, l-n));
-                     duplicate' (n-1))
-              in
-                duplicate' (l-1)
-              end
-          end
-
-        exception Subarray of int * int
-        fun subarray (a, start, finish) =
-          let
-            val l = length a
-          in
-            if start < 0 orelse start > l orelse finish > l orelse
-               start > finish then
-              raise Subarray (start, finish)
-            else
-              let
-                val l' = finish - start
-              in
-                if l' = 0 then
-                  from_list []
-                else
-                  let
-                    val first = sub (a, start)
-                    val new = array (l', first)
-
-                    fun copy 0 = new
-                      | copy n =
-                        (update (new, l'-n, sub (a, start+l'-n));
-                         copy (n-1))
-                  in
-                    copy (l'-1)
-                  end
-              end
-          end
-
-        fun append (array1, array2) =
-          let
-            val l1 = length array1
-            val l2 = length array2
-            val l = l1 + l2
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first =
-                  if l1 = 0 then
-                    sub (array2, 0)
-                  else
-                    sub (array1, 0)
-
-                val new = array (l, first)
-
-                fun copy1 0 = new
-                  | copy1 n =
-                    (update (new, l1-n, sub (array1, l1-n));
-                     copy1 (n-1))
-
-                fun copy2 0 = copy1 (l1-1)
-                  | copy2 n =
-                    (update (new, l-n, sub (array2, l2-n));
-                     copy2 (n-1))
-              in
-                copy2 l2
-              end
-          end
-
-        fun reducel f (i, a) =
-          let
-            val l = length a
-
-            fun reducel' (i, 0) = i
-              | reducel' (i, n) =
-                reducel' (f (i, sub (a, l-n)), n-1)
-          in
-            reducel' (i, l)
-          end
-
-        fun reducel_index f (i, a) =
-          let
-            val l = length a
-
-            fun reducel' (i, 0) = i
-              | reducel' (i, n) =
-                reducel' (f (l-n, i, sub (a, l-n)), n-1)
-          in
-            reducel' (i, l)
-          end
-
-        fun reducer f (a, i) =
-          let
-            val l = length a
-
-            fun reducer' (0, i) = i
-              | reducer' (n, i) =
-                reducer' (n-1, f (sub (a, n-1), i))
-          in
-            reducer' (l, i)
-          end
-
-        fun reducer_index f (a, i) =
-          let
-            val l = length a
-
-            fun reducer' (0, i) = i
-              | reducer' (n, i) =
-                reducer' (n-1, f (n-1, sub (a, n-1), i))
-          in
-            reducer' (l, i)
-          end
-
-        exception Copy of int * int * int
-        fun copy (from, start, finish, to, start') =
-          let
-            val l1 = length from
-            val l2 = length to
-          in
-            if start < 0 orelse start > l1 orelse finish > l1 orelse
-               start > finish orelse
-               start' < 0 orelse start' + finish - start > l2 then
-              raise Copy (start, finish, start')
-            else
-              let
-                fun copy' 0 = ()
-                  | copy' n =
-                    (update (to, start'+n-1, sub (from, start+n-1));
-                     copy' (n-1))
-              in
-                copy' (finish - start)
-              end
-          end
-
-        exception Fill of int * int
-        fun fill_range (a, start, finish, x) =
-          let
-            val l = length a
-          in
-            if start < 0 orelse start > l orelse finish > l orelse
-               start > finish then
-              raise Fill (start, finish)
-            else
-              let
-                fun fill' 0 = ()
-                  | fill' n =
-                    (update (a, start+n-1, x);
-                     fill' (n-1))
-              in
-                fill' (finish - start)
-              end
-          end
-
-        exception Find
-        fun find predicate a =
-          let
-            val l = length a
-            fun find' 0 = raise Find
-              | find' n = if predicate (sub (a, l-n)) then l-n else find' (n-1)
-          in
-            find' l
-          end
-
-        fun find_default (predicate, default) a =
-          let
-            val l = length a
-            fun find' 0 = default
-              | find' n = if predicate (sub (a, l-n)) then l-n else find' (n-1)
-          in
-            find' l
-          end
-
-      end
-
     structure String =
       struct
+	local
+	    structure S = SMLBasisString
+	in
+	exception Substring = General.Subscript
+	exception Chr = General.Chr
+	exception Ord
+	val maxLen = S.maxSize
+	fun explode (s:string) = List.map S.str (S.explode s)
+	fun implode (l:string list) = S.concat l
+	val str = S.str
+	fun chr (i:int) = S.str (Char.chr i)
+	val sub = S.sub
+	val substring = S.substring
+	val op < = S.<
+	val op > = S.>
+	val op >= = S.>=
+	val op <= = S.<=
+	fun ordof (s, i) = SMLBasisChar.ord (sub (s, i))
+	fun ord (s:string) =
+	    case size s of
+		1 => Char.ord (sub (s, 0))
+	     |  _ => raise Ord
 	fun ml_string (s,max_size) =
-	  let
-	    fun to_digit n = chr (n +ord "0")
-	      
-	    fun aux ([],result,_) = implode (rev result)
-	      | aux (_,result,0) = implode (rev ("\\..." :: result))
-	      | aux (char::rest,result,n) =
-		let val newres =
-		  case char of 
-		    "\n" => "\\n"::result
-		  | "\t" => "\\t"::result
-		  | "\"" => "\\\""::result
-		  | "\\" => "\\\\"::result
-		  | c =>
-		      let val n = ord c
-		      in
-			if n < 32 orelse n >= 127 then
-			  let
-			    val n1 = n div 10
-			  in
-			    (to_digit (n mod 10))::
-			    (to_digit (n1 mod 10))::
-			    (to_digit (n1 div 10))::
-			    ("\\")::result
-			  end
-			else
-			  c::result
-		      end
-		in
-		  aux (rest, newres, n-1)
-		end
-	  in
-	    aux (explode s,[],if max_size<0 then ~1 else max_size)
-	  end
-	open NewJersey.String
+	    let
+		fun to_digit n = Char.chr (n + Char.ord #"0")
+		fun aux ([],result:char list,_) =
+		    S.implode (rev result)
+		  | aux (_,result,0) =
+		    S.implode (rev (#"\\" :: #"." :: #"." :: result))
+		  | aux (char::rest,result,n) =
+		    let val newres =
+			    case char of
+				#"\n" => #"\\"::char::result
+			      | #"\t" => #"\\"::char::result
+			      | #"\"" => #"\\"::char::result
+			      | #"\\" => #"\\"::char::result
+			      | c =>
+				let val n = Char.ord c
+				in
+				    if Int.< (n, 32) orelse Int.>= (n, 127)
+				    then
+					let
+					    val n1 = n div 10
+					in
+					    (to_digit (n mod 10))::
+					    (to_digit (n1 mod 10))::
+					    (to_digit (n1 div 10))::
+					    (#"\\")::result
+					end
+				    else
+					c::result
+				end
+		    in
+			aux (rest, newres, n-1)
+		    end
+	    in
+		aux (S.explode s,[],
+		     if Int.<(max_size, 0) then ~1 else max_size)
+	    end
+	fun implode_char ints =
+	    S.implode (map SMLBasisChar.chr ints)
 
-        fun implode_char l = implode (map chr l)
-
+	end
       end
-    
+
+    exception Interrupt
+
+    structure Option = SMLBasisOption
+
     structure Char =
       struct
-	type char = int
-	fun ml_char c = String.ml_string(chr c, ~1)
-	val chr = fn x => x
-	val ord = fn x => x
+	type char = SMLBasisChar.char
+	fun ml_char c = String.ml_string(c, ~1)
+	val chr = SMLBasisChar.chr
+	val ord = SMLBasisChar.ord
 	val maxCharOrd = 255
 	exception Chr = Chr
 
@@ -808,519 +500,123 @@ structure MLWorks : MLWORKS =
 	val op >= : char * char -> bool = op >=
       end
 
-    structure ByteArray = 
-      struct
-        open NewJersey.ByteArray
-
-        exception Range of int
-        exception Size
-
-        nonfix sub
-        type T = bytearray
- 
-        val iterate = app
-
-        val array = fn argument => 
-          array argument handle Ord => raise Size
-
-        exception Substring = NewJersey.Substring
-        fun substring argument =
-          extract argument handle _ => raise Substring
-
-        fun to_string b = extract (b, 0, length b)
-
-        fun from_string s =
-          let
-            val l = size s
-            val b = array (l, 0)
-            fun from_string' 0 = b
-              | from_string' n =
-                (update (b, n-1, NewJersey.String.ordof (s, n-1));
-                 from_string' (n-1))
-          in
-            from_string' l
-          end
-
-        fun from_list list =
-          let
-            fun list_length (n, []) = n
-              | list_length (n, _::xs) = list_length (n+1, xs)
-
-            val new = array (list_length (0, list), 0)
-
-            fun fill (_, []) = new
-              | fill (n, x::xs) =
-                (update (new, n, x);
-                 fill (n+1, xs))
-          in
-            fill (0, list)
-          end
-
-        val arrayoflist = from_list
-
-        fun tabulate (l, f) =
-          if l = 0 then
-            arrayoflist []
-          else
-            let
-              val first = f 0
-              val a = array (l, first)
-
-              fun init 0 = a
-                | init n =
-                  (update (a, n-l, f (n-l));
-                   init (n-1))
-            in
-              init (l-1)
-            end
-
-        val from_list = arrayoflist
-
-        fun fill (a, x) =
-          let
-            fun fill' 0 = ()
-              | fill' n =
-                (update (a, n-1, x);
-                 fill' (n-1))
-          in
-            fill' (length a)
-          end
-
-        fun map f a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = f (sub (a, 0))
-                val new = array (l, first)
-
-                fun map' 0 = new
-                  | map' n =
-                    (update (new, l-n, f (sub (a, l-n)));
-                     map' (n-1))
-              in
-                map' (l-1)
-              end
-          end
-
-        fun map_index f a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = f (0, sub (a, 0))
-                val new = array (l, first)
-
-                fun map' 0 = new
-                  | map' n =
-                    (update (new, l-n, f (l-n, sub (a, l-n)));
-                     map' (n-1))
-              in
-                map' (l-1)
-              end
-          end
-
-        fun to_list a =
-          let
-            fun to_list' (0, list) = list
-              | to_list' (n, list) =
-                to_list' (n-1, sub (a, n-1) :: list)
-          in
-            to_list' (length a, nil)
-          end
-
-        fun iterate f a =
-          let
-            val l = length a
-
-            fun iterate' 0 = ()
-              | iterate' n =
-                (f (sub (a, l-n));
-                 iterate' (n-1))
-          in
-            iterate' l
-          end
-
-        fun iterate_index f a =
-          let
-            val l = length a
-
-            fun iterate' 0 = ()
-              | iterate' n =
-                (f (l-n, sub (a, l-n));
-                 iterate' (n-1))
-          in
-            iterate' l
-          end
-
-        fun rev a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = sub (a, 0)
-                val new = array (l, first)
-
-                fun rev' 0 = new
-                  | rev' n =
-                    (update (new, n-1, sub (a, l-n));
-                     rev' (n-1))
-              in
-                rev' (l-1)
-              end
-          end
-
-        fun duplicate a =
-          let
-            val l = length a
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first = sub (a, 0)
-                val new = array (l, first)
-
-                fun duplicate' 0 = new
-                  | duplicate' n =
-                    (update (new, l-n, sub (a, l-n));
-                     duplicate' (n-1))
-              in
-                duplicate' (l-1)
-              end
-          end
-
-        exception Subarray of int * int
-        fun subarray (a, start, finish) =
-          let
-            val l = length a
-          in
-            if start < 0 orelse start > l orelse finish > l orelse
-               start > finish then
-              raise Subarray (start, finish)
-            else
-              let
-                val l' = finish - start
-              in
-                if l' = 0 then
-                  from_list []
-                else
-                  let
-                    val first = sub (a, start)
-                    val new = array (l', first)
-
-                    fun copy 0 = new
-                      | copy n =
-                        (update (new, l'-n, sub (a, start+l'-n));
-                         copy (n-1))
-                  in
-                    copy (l'-1)
-                  end
-              end
-          end
-
-        fun append (array1, array2) =
-          let
-            val l1 = length array1
-            val l2 = length array2
-            val l = l1 + l2
-          in
-            if l = 0 then
-              from_list []
-            else
-              let
-                val first =
-                  if l1 = 0 then
-                    sub (array2, 0)
-                  else
-                    sub (array1, 0)
-
-                val new = array (l, first)
-
-                fun copy1 0 = new
-                  | copy1 n =
-                    (update (new, l1-n, sub (array1, l1-n));
-                     copy1 (n-1))
-
-                fun copy2 0 = copy1 (l1-1)
-                  | copy2 n =
-                    (update (new, l-n, sub (array2, l2-n));
-                     copy2 (n-1))
-              in
-                copy2 l2
-              end
-          end
-
-        fun reducel f (i, a) =
-          let
-            val l = length a
-
-            fun reducel' (i, 0) = i
-              | reducel' (i, n) =
-                reducel' (f (i, sub (a, l-n)), n-1)
-          in
-            reducel' (i, l)
-          end
-
-        fun reducel_index f (i, a) =
-          let
-            val l = length a
-
-            fun reducel' (i, 0) = i
-              | reducel' (i, n) =
-                reducel' (f (l-n, i, sub (a, l-n)), n-1)
-          in
-            reducel' (i, l)
-          end
-
-        fun reducer f (a, i) =
-          let
-            val l = length a
-
-            fun reducer' (0, i) = i
-              | reducer' (n, i) =
-                reducer' (n-1, f (sub (a, n-1), i))
-          in
-            reducer' (l, i)
-          end
-
-        fun reducer_index f (a, i) =
-          let
-            val l = length a
-
-            fun reducer' (0, i) = i
-              | reducer' (n, i) =
-                reducer' (n-1, f (n-1, sub (a, n-1), i))
-          in
-            reducer' (l, i)
-          end
-
-        exception Copy of int * int * int
-        fun copy (from, start, finish, to, start') =
-          let
-            val l1 = length from
-            val l2 = length to
-          in
-            if start < 0 orelse start > l1 orelse finish > l1 orelse
-               start > finish orelse
-               start' < 0 orelse start' + finish - start > l2 then
-              raise Copy (start, finish, start')
-            else
-              let
-                fun copy' 0 = ()
-                  | copy' n =
-                    (update (to, start'+n-1, sub (from, start+n-1));
-                     copy' (n-1))
-              in
-                copy' (finish - start)
-              end
-          end
-
-        exception Fill of int * int
-        fun fill_range (a, start, finish, x) =
-          let
-            val l = length a
-          in
-            if start < 0 orelse start > l orelse finish > l orelse
-               start > finish then
-              raise Fill (start, finish)
-            else
-              let
-                fun fill' 0 = ()
-                  | fill' n =
-                    (update (a, start+n-1, x);
-                     fill' (n-1))
-              in
-                fill' (finish - start)
-              end
-          end
-
-        exception Find
-        fun find predicate a =
-          let
-            val l = length a
-            fun find' 0 = raise Find
-              | find' n = if predicate (sub (a, l-n)) then l-n else find' (n-1)
-          in
-            find' l
-          end
-
-        fun find_default (predicate, default) a =
-          let
-            val l = length a
-            fun find' 0 = default
-              | find' n = if predicate (sub (a, l-n)) then l-n else find' (n-1)
-          in
-            find' l
-          end
-
-      end
-
     structure Integer =
       struct
-	val makestring : int -> string = makestring
-	val print : int -> unit = fn i => output(std_out, makestring i)
+	val makestring : int -> string = SMLBasisInt.toString
+	val print : int -> unit = fn i => TextIO.print (makestring i)
 	fun hexmakestring _ = unimplemented"hexmakestring"
 	fun hexprint _ = unimplemented"hexprint"
       end
 
     structure Real =
       struct
-	val makestring : real -> string = makestring
-	val print : real -> unit = fn r => output(std_out, makestring r)
+	val makestring : real -> string = SMLBasisReal.toString
+	val print : real -> unit = fn r => TextIO.print (makestring r)
       end
 
-    structure Time =
-      struct
-
-	type time = NewJersey.System.Timer.time
-	val zero = NewJersey.System.Timer.TIME {sec=0, usec=0}
-
-	structure Interval =
-	  struct
-	    type T = time
-	    fun to_real _ = unimplemented "MLWorks.Time.Interval.to_real"
-	    fun from_real _ =  unimplemented "MLWorks.Time.Interval.from_real"
-
-	    val op+ = NewJersey.System.Timer.add_time
-	    val op- = NewJersey.System.Timer.sub_time
-	    fun x*y = unimplemented "MLWorks.Time.Interval.*"
-	    fun x/y = unimplemented "MLWorks.Time.Interval./"
-	    val op< = NewJersey.System.Timer.earlier
-	    val decimal_places = ref 2
-	    val format = NewJersey.System.Timer.makestring
-	  end
-
-	structure Elapsed = 
-	  struct
-	    datatype T = ELAPSED of {real: Interval.T,
-				     user: Interval.T,
-				     system: Interval.T,
-				     gc: Interval.T}
-	      val zero = ELAPSED {real=zero,
-				  user=zero,
-				  system=zero,
-				  gc=zero}
-	    fun elapsed () = zero
-	    fun elapsed_since _ = zero
-	    fun x+y = unimplemented "MLWorks.Time.Elapsed.+"
-	    fun x-y = unimplemented "MLWorks.Time.Elapsed.-"
-	    fun x*y = unimplemented "MLWorks.Time.Elapsed.*"
-	    fun x/y = unimplemented "MLWorks.Time.Elapsed./"
-	    fun format _ = ""
-	  end
-	
-	fun now _ = unimplemented "MLWorks.Time.now"
-	val op< = NewJersey.System.Timer.earlier
-
-	fun interval _ = unimplemented "MLWorks.Time.interval"
-
-	datatype zone = GREENWICH | LOCAL
-	fun format (_, _, time) = NewJersey.System.Timer.makestring time
-
-            (* This must encoded times in the same way as *)
-            (* rts/pervasive/time.c and rts/marshal.c *)
-	exception MLWorksTimeEncode
-
-	fun encode (NewJersey.System.Timer.TIME {sec, usec}) =
-	  let
-	    fun marshal_ints [] = []
-	      | marshal_ints (x::xs) =
-		if x >= 128 then
-		  chr ((x mod 128)+128) :: marshal_ints ((x div 128)::xs)
-		else
-		  chr x :: (marshal_ints xs)
-	  in
-	    implode (marshal_ints [sec,usec])
-	  end
-	    
-	fun decode s =
-	  let
-	    fun unmarshal_int (acc,s, []) = raise MLWorksTimeEncode
-	      | unmarshal_int (acc,s, c::cs) =
-		let
-		  val i = ord c
-		in
-		  if i >= 128 then
-		    unmarshal_int (acc+ ((i mod 128) * s),
-				   s*128, cs)
-		  else
-		    (acc+(i * s),cs)
-		end
-	    val (sec,s') = unmarshal_int (0,1,explode s)
-	    val (usec,_) = unmarshal_int (0,1,s')
-	  in
-	    NewJersey.System.Timer.TIME {sec = sec,usec = usec}
-	  end
-
-	val op+ = NewJersey.System.Timer.add_time
-	val op- = NewJersey.System.Timer.sub_time
+    structure Deliver = struct
+	datatype app_style = CONSOLE | WINDOWS
+	type deliverer = string * (unit -> unit) * app_style -> unit
+	type delivery_hook = deliverer -> deliverer
+	fun deliver (x,y,z) = (unimplemented "MLWorks.Deliver.deliver";
+			       ())
+	fun with_delivery_hook _ =
+	    unimplemented "MLWorks.Deliver.with_delivery_hook"
+	fun add_delivery_hook x =
+	    (TextIO.print ("add_delivery_hook called");
+	     ())
+	val exitFn = ref (fn () =>
+			     (unimplemented "MLWorks.Deliver.exitFn"; ()))
       end
+
+    val arguments = CommandLine.arguments
+    val name = CommandLine.name
 
     structure Threads =
       struct
-	type 'a thread = unit
+	datatype 'a thread = Thread of { r : 'a }
+        exception Threads of string
 
-	fun fork _ = unimplemented "MLWorks.Threads.fork"
-	fun yield _ = unimplemented "MLWorks.Threads.yield"
+	fun fork f =
+	    (unimplemented "MLWorks.Threads.fork";
+	     fn (a) => Thread {r=f(a)})
+	fun yield () = (unimplemented "MLWorks.Threads.yield"; ())
 
 	datatype 'a result =
-	  Running		(* still running *)
-	| Waiting		(* waiting *)
-	| Sleeping		(* sleeping *)
-	| Result of 'a		(* completed, with this result *)
-	| Exception of exn	(* exited with this uncaught exn *)
-	| Died			(* died (e.g. bus error) *)
-	| Killed		(* killed *)
-	| Expired		(* no longer exists (from a previous image) *)
+		 Running		(* still running *)
+		 | Waiting		(* waiting *)
+		 | Sleeping		(* sleeping *)
+		 | Result of 'a		(* completed, with this result *)
+		 | Exception of exn	(* exited with this uncaught exn *)
+		 | Died			(* died (e.g. bus error) *)
+		 | Killed		(* killed *)
+		 | Expired		(* no longer exists (from a previous image) *)
 
-	fun result _ = unimplemented "MLWorks.Threads.result"
-	fun sleep _ =  unimplemented "MLWorks.Threads.sleep"
-	fun wake _ =  unimplemented "MLWorks.Threads.wake"
+	fun result (Thread{r}) = (unimplemented "MLWorks.Threads.result";
+				  Result r)
+	fun sleep _ =  (unimplemented "MLWorks.Threads.sleep"; ())
+	fun wake _ =  (unimplemented "MLWorks.Threads.wake"; ())
 
-	structure Internal =
-	  struct
+	structure Internal = struct
 	    type thread_id = unit
-	    fun id _ = unimplemented "MLWorks.Threads.Internal.id"
-	    fun get_id _ = unimplemented "MLWorks.Threads.Internal.get_id"
-	    fun children _ = unimplemented "MLWorks.Threads.Internal.children"
-	    fun parent _ = unimplemented "MLWorks.Threads.Internal.parent"
-	    fun all _ = unimplemented "MLWorks.Threads.Internal.all"
-	    fun kill _ = unimplemented "MLWorks.Threads.Internal.kill"
-	    fun raise_in _ = unimplemented "MLWorks.Threads.Internal.raise_in"
-	    fun yield_to _ = unimplemented "MLWorks.Threads.Internal.yield_to"
-	    fun state _ = unimplemented "MLWorks.Threads.Internal.state"
-	    fun get_num _ = unimplemented "MLWorks.Threads.Internal.get_num"
+	    fun id _ = (unimplemented "MLWorks.Threads.Internal.id"; ())
+	    fun get_id _ = (unimplemented "MLWorks.Threads.Internal.get_id";())
+	    fun children _ =
+		(unimplemented "MLWorks.Threads.Internal.children";[])
+	    fun parent _ = (unimplemented "MLWorks.Threads.Internal.parent";())
+	    fun all _ = (unimplemented "MLWorks.Threads.Internal.all";[])
+	    fun kill _ = (unimplemented "MLWorks.Threads.Internal.kill";())
+	    fun raise_in _ =
+		(unimplemented "MLWorks.Threads.Internal.raise_in";())
+	    fun yield_to _ =
+		(unimplemented "MLWorks.Threads.Internal.yield_to";())
+	    fun state _ = (unimplemented "MLWorks.Threads.Internal.state";
+			   Result ())
+	    fun get_num _ = (unimplemented "MLWorks.Threads.Internal.get_num";
+			     0)
 	    fun set_handler _ =
-	      unimplemented "MLWorks.Threads.Internal.set_handler"
-	    fun reset_fatal_status _ = unimplemented "MLWorks.Threads.Internal.reset_fatal_status"
-	    structure Preemption = 
+		(unimplemented "MLWorks.Threads.Internal.set_handler"; ())
+	    fun reset_fatal_status _ =
+		(unimplemented "MLWorks.Threads.Internal.reset_fatal_status";
+		 ())
+	    structure Preemption =
 	      struct
-		fun start _ = unimplemented "MLWorks.Threads.Internal.Preemption.start"
-		fun stop _ = unimplemented "MLWorks.Threads.Internal.Preemption.stop"
-		fun on _ = unimplemented "MLWorks.Threads.Internal.Preemption.on"
-		fun get_interval _ = unimplemented "MLWorks.Threads.Internal.Preemption.get_interval"
-		fun set_interval _ = unimplemented "MLWorks.Threads.Internal.Preemption.set_interval"
+		fun start _ =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.start";
+		     ())
+		fun stop _ =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.stop";())
+		fun on _ =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.on";
+		     false)
+		fun get_interval _ =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.get_interval"; 0)
+		fun set_interval _ =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.set_interval"; ())
+		fun enter_critical_section () =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.enter_critical_section";
+		     ())
+		fun exit_critical_section () =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.exit_critical_section";
+		     ())
+		fun in_critical_section () =
+		    (unimplemented "MLWorks.Threads.Internal.Preemption.exit_critical_section";
+		     false)
 	      end
 	  end
       end
 
     structure RawIO =
       struct
-        open NewJersey (* types instream, outstream,
+        (* open NewJersey *) (* types instream, outstream,
 			  values std_in, std_out, std_err, open_in, open_out, end_of_stream, input,
-			         lookahead, output, close_in, close_out *)
+				 lookahead, output, close_in, close_out *)
 
-	fun output_byte(fd, byte) = output(fd, chr byte)
+	val std_in = TextIO.stdIn
+	val std_out = TextIO.stdOut
+	val std_err = TextIO.stdErr
+
+	fun output_byte(fd, byte) = TextIO.output1(fd, chr byte)
 
 	fun closed_in _ = unimplemented "MLWorks.IO.closed_in"
 	fun closed_out _ = unimplemented "MLWorks.IO.closed_out"
@@ -1329,148 +625,27 @@ structure MLWorks : MLWORKS =
 
     structure IO =
       struct
-        open RawIO
-        val terminal_in = std_in
+	open RawIO
+        val terminal_in = TextIO.stdIn
         fun with_standard_input _ = unimplemented "MLWorks.IO.with_standard_input"
-        val terminal_out = std_out
-	val messages = std_err
-        fun instream _ = std_in
-        fun outstream _ = std_out
+        val terminal_out = TextIO.stdOut
+	val messages = TextIO.stdErr
+        fun instream _ = TextIO.stdIn
+        fun outstream _ = TextIO.stdOut
         fun with_standard_output _ = unimplemented "MLWorks.IO.with_standard_output"
         fun with_standard_error _ = unimplemented "MLWorks.IO.with_standard_error"
 	datatype modtime = NOW | TIME of Time.time
 
-        fun file_modified filename =
-          NewJersey.System.Unsafe.SysIO.mtime
-          (NewJersey.System.Unsafe.SysIO.PATH filename)
-          handle _ => raise Io (implode ["Cannot mtime ", filename, ": doesn't exist"])
-
+        fun file_modified filename = OS.FileSys.modTime (filename)
 	fun set_file_modified _ = unimplemented "MLWorks.IO.set_file_modified";
 
       end
 
-    structure Profile =
-      struct
-	type manner = int
-	type function_id = string
-	type cost_centre_profile = unit
-	  
-	datatype object_kind =
-	  RECORD
-	| PAIR
-	| CLOSURE
-	| STRING
-	| ARRAY
-	| BYTEARRAY
-	| OTHER		(* includes weak arrays, code objects *)
-	| TOTAL		(* used when specifying a profiling manner *)
-	  
-	datatype large_size =
-	  Large_Size of
-	  {megabytes : int,
-	   bytes : int}	
-	  
-	datatype object_count =
-	  Object_Count of
-	  {number : int,
-	   size : large_size,
-	   overhead : int}
-	  
-	type object_breakdown = (object_kind * object_count) list
-	  
-	datatype function_space_profile =
-	  Function_Space_Profile of
-	  {allocated : large_size,	
-	   copied : large_size,		
-	   copies : large_size list,
-	   allocation : object_breakdown list}
-	  
-	datatype function_caller =
-	  Function_Caller of
-	  {id: function_id,
-	   found: int,
-	   top: int,
-	   scans: int,
-	   callers: function_caller list}
-	  
-	datatype function_time_profile =
-	  Function_Time_Profile of
-	  {found: int,
-	   top: int,
-	   scans: int,
-	   depth: int,
-	   self: int,
-	   callers: function_caller list}
-	  
-	datatype function_profile =
-	  Function_Profile of
-	  {id: function_id,
-	   call_count: int,
-	   time: function_time_profile,
-	   space: function_space_profile}
-	  
-	datatype general_header = 
-	  General of
-	  {data_allocated: int,
-	   period: Time.Interval.T,
-	   suspended: Time.Interval.T}
-	  
-	datatype call_header = 
-	  Call of {functions : int}
-	  
-	datatype time_header =
-	  Time of
-	  {data_allocated: int,
-	   functions: int,
-	   scans: int,
-	   gc_ticks: int,
-	   profile_ticks: int,
-	   frames: real,
-	   ml_frames: real,
-	   max_ml_stack_depth: int}
-	  
-	datatype space_header = 
-	  Space of
-	  {data_allocated: int,
-	   functions: int, 
-	   collections: int, 
-	   total_profiled : function_space_profile} 
-	  
-	type cost_header = unit
-	  
-	datatype profile =
-	  Profile of
-	  {general: general_header,
-	   call: call_header,
-	   time: time_header,
-	   space: space_header,
-	   cost: cost_header,
-	   functions: function_profile list,
-	   centres: cost_centre_profile list}
-	  
-	datatype options =
-	  Options of
-	  {scan : int,
-	   selector : function_id -> manner}
-	  
-	datatype 'a result = 
-	  Result of 'a
-	| Exception of exn
-	  
-	exception ProfileError of string
-	
-	fun profile (Options {scan, selector}) f a =
-	  unimplemented "MLWorks.Profile.profile"
-	  
-	fun make_manner {time, space, copies, calls, depth, breakdown} = 
-	  unimplemented "MLWorks.Profile.make_manner"
-	  
-      end
-
     exception Save of string
     fun save (filename, function) =
-      (NewJersey.exportFn (filename, fn _ => (function (); ()));
-       function)
+	(SMLofNJ.exportFn (filename,
+			   fn _ => (function(); OS.Process.success));
+	 function)
 
     fun deliver _ = unimplemented "MLWorks.deliver"
 
@@ -1479,109 +654,43 @@ structure MLWorks : MLWORKS =
     structure OS =
       struct
         fun arguments () =
-          case NewJersey.System.argv ()
-            of [] => []
-             | program_name::rest => rest
+            case CommandLine.arguments ()
+             of [] => []
+              | program_name::rest => rest
       end
 
     structure Debugger =
       struct
-        fun default_break s = IO.output(IO.std_out,"Break at " ^ s ^ "\n")
+        fun default_break s = TextIO.output(IO.std_out,"Break at " ^ s ^ "\n")
         val break_hook = ref default_break
         fun break s = (!break_hook) s
       end
 
     structure Internal =
       struct
-        val text_preprocess = ref (fn (f : int -> string ) => f)
-        val real_to_string = NewJersey.makestring
+	local
+	    fun w8vectorToString (v:Word8Vector.vector):string =
+		let fun b2c i = Char.chr (Word8.toInt (Word8Vector.sub (v, i)))
+		in CharVector.tabulate (Word8Vector.length v, b2c)
+		end
 
+	    fun stringToW8vector (s:string):Word8Vector.vector =
+		let fun c2b i = Word8.fromInt (Char.ord (String.sub (s, i)))
+		in Word8Vector.tabulate (SMLBasisString.size s, c2b)
+		end
+	in
+
+        exception Save of string
+	fun save (s, f) = (unimplemented "Internal.save"; f)
+	fun execSave (s, f) = (unimplemented "Internal.execSave"; f)
+	val text_preprocess = ref (fn (f : int -> string ) => f)
+	fun real_to_string (r, i) = SMLBasisReal.toString (r)
         exception StringToReal
 
-        fun string_to_real chars =
-          let
-            exception too_small
-            exception too_big
-            fun getint str =
-              let
-                fun convert res [] = res
-                  | convert res (h :: t) =
-                    let
-                      val d = ord h - ord "0"
-                    in
-                      if d >= 0 andalso d <= 9 then
-                        convert (res * 10 + d) t
-                      else
-                        raise StringToReal
-                    end
-              in
-                convert 0 str
-              end
-
-            fun decode_real x =
-              let
-                val string_chars = explode x
-                val (sign, string_chars) = case string_chars of
-                  [] => raise StringToReal
-                | "~" :: xs => (true, xs)
-                | _ => (false, string_chars)
-                val (integer, fraction, exponent) =
-                  let
-                    fun find_point_exp(integer, fraction, exponent, _, _, []) =
-                      (rev integer, rev fraction, rev exponent)
-                      | find_point_exp(integer, fraction, exponent, got_point, got_exp,
-                                       "." :: xs) =
-                        find_point_exp(integer, [], [], true, false, xs)
-                      | find_point_exp(integer, fraction, exponent, got_point, got_exp,
-                                       "E" :: xs) =
-                        find_point_exp(integer, fraction, [], true, true, xs)
-                      | find_point_exp(integer, fraction, exponent, got_point, got_exp,
-                                       x :: xs) =
-                        if got_exp then
-                          find_point_exp(integer, fraction, x :: exponent, true, true, xs)
-                        else
-                          if got_point then
-                            find_point_exp(integer, x :: fraction, [], true, false, xs)
-                          else
-                            find_point_exp(x :: integer, [], [], false, false, xs)
-                  in
-                    find_point_exp([], [], [], false, false, string_chars)
-                  end
-                val (exponent_sign, exponent) = case exponent of
-                  [] => (false, ["0"])
-                | "~" :: xs => (true, xs)
-                | _ => (false, exponent)
-                val integer = integer @ fraction
-                val exponent =
-                  getint exponent
-                  handle _ => raise(if exponent_sign then too_small else too_big)
-                val exponent =
-                  (if exponent_sign then ~exponent else exponent) - length fraction
-              in
-                (sign, integer, exponent < 0, abs exponent)
-              end
-            
-            
-            val (sign, floor, exp_sign, exponent) = decode_real chars
-              
-            fun floor_to_real([], result) = result
-              | floor_to_real(x :: xs, result) =
-                floor_to_real(xs, 10.0 * result + real(ord(x) - ord"0"))
-            val r = floor_to_real(floor, 0.0)
-              
-            fun apply_exponent(r, sign, exponent) =
-              if exponent = 0 then r
-              else
-                let
-                  val conv = real exponent * ln 10.0
-                  val conv = if sign then ~conv else conv
-                in
-                  r * exp conv handle _ => raise(if sign then too_small else too_big)
-                end
-            val r = apply_exponent(r, exp_sign, exponent)
-          in
-            if sign then ~r else r
-          end
+        fun string_to_real string =
+	    case SMLBasisReal.fromString string of
+		NONE => raise StringToReal
+	      | SOME r => r
 
 	structure Images =
 	  struct
@@ -1594,64 +703,518 @@ structure MLWorks : MLWORKS =
 	structure Types =
 	  struct
 	    (* These are all somewhat bogus. *)
-	    type word8 = int
+	    type word8 = SMLBasisWord8.word
 	    type int8 = int
 	    type word16 = int
 	    type int16 = int
-	    type word32 = int
-	    type int32 = int
+	    type word32 = SMLBasisWord32.word
+	    type int32 = SMLBasisInt32.int
+	    datatype option = datatype SMLBasisOption.option
+	    datatype time = TIME of int * int * int (* basis time *)
+
 	  end
 
-        structure Word =
-          struct
-	    type word = int
+	structure Error =
+	  struct
+	    type syserror = Posix.Error.syserror
+	    exception SysErr = SMLBasisOS.SysErr
+	    val errorMsg = Posix.Error.errorMsg
+	    val errorName = Posix.Error.errorName
+	    val syserror = Posix.Error.syserror
+	  end
+
+        structure IO =
+	  struct
+            exception Io of {cause: exn, name: string, function: string}
+	    datatype file_desc = FILE_DESC of int
+	    datatype access_mode = datatype Posix.FileSys.access_mode
+
+	    structure W8 = Word8
+	    structure W32 = SMLBasisWord32
+	    structure W8A = Word8Array
+	    structure W8S = Word8ArraySlice
+
+	    fun stringToW8S (s, start, len) =
+		let fun c2b i = W8.fromInt (Char.ord (String.sub (s, start+i)))
+		in
+		    W8S.full (W8A.tabulate (len, c2b))
+		end
+
+	    fun posixFD (FILE_DESC fd) =
+		Posix.FileSys.wordToFD (W32.fromInt fd)
+
+            fun write (fd, s, start, len) =
+		Posix.IO.writeArr (posixFD fd, stringToW8S (s, start, len))
+
+	    fun read (fd, n:int) =
+		(* val _= TextIO.print ("D: read called: " ^ Int.toString n
+					 ^ "\n") *)
+		w8vectorToString (Posix.IO.readVec (posixFD fd, n))
+
+	    fun seek (fd, offset, whence) =
+		let val w = (case whence of
+				 0 => Posix.IO.SEEK_SET
+			       | 1 => Posix.IO.SEEK_CUR
+			       | 2 => Posix.IO.SEEK_END
+			       | _ => (unimplemented "seek whence";
+				       Posix.IO.SEEK_END))
+		in
+		    Posix.IO.lseek (posixFD fd, offset, w)
+		end
+
+	    fun close fd = Posix.IO.close (posixFD fd)
+
+	    fun can_input fd =
+		let val (_, mode) = Posix.IO.getfl (posixFD fd)
+		in
+		    (case mode of
+			 Posix.IO.O_RDONLY => 0
+		      |  Posix.IO.O_RDWR => 0
+		      |  Posix.IO.O_WRONLY => 1)
+		end
+	  end
+
+	structure StandardIO =
+	  struct
+	    type IOData = {input: {descriptor: IO.file_desc Types.option,
+                                   get: int -> string,
+                                   get_pos: (unit -> int) Types.option,
+                                   set_pos: (int -> unit) Types.option,
+                                   can_input: (unit-> bool) Types.option,
+                                   close: unit->unit},
+			   output: {descriptor: IO.file_desc Types.option,
+				    put: {buf:string,i:int,sz:int Types.option} -> int,
+				    get_pos: (unit -> int) Types.option,
+				    set_pos: (int -> unit) Types.option,
+				    can_output: (unit-> bool) Types.option,
+				    close: unit->unit},
+			   error: {descriptor: IO.file_desc Types.option,
+				   put: {buf:string,i:int,sz:int Types.option} -> int,
+				   get_pos: (unit -> int) Types.option,
+				   set_pos: (int -> unit) Types.option,
+				   can_output: (unit->bool) Types.option,
+				   close: unit-> unit},
+			   access: (unit->unit)->unit}
+
 	    local
-	      open NewJersey.Bits
+		fun put_ {buf:string,i:int,sz:int Types.option} : int =
+		    let val j = case sz of
+				    SOME s => i + s
+				  | NONE => SMLBasisString.size buf
+			val s = SMLBasisString.substring (buf, i, j)
+		    in
+			TextIO.print (s);
+			SMLBasisString.size s
+		    end
+		fun close_ () =
+		    (TextIO.print ("D: change_nj.sml close_ called\n");
+		     ())
+		val dummyIO:IOData = {
+		      output = { descriptor = NONE,
+				 put = put_,
+				 get_pos = NONE,
+				 set_pos = NONE,
+				 can_output = NONE,
+				 close = close_ },
+		      error = { descriptor= NONE,
+				put = put_,
+				get_pos = NONE,
+				set_pos = NONE,
+				can_output = NONE,
+				close = close_ },
+		      input = { descriptor = NONE,
+				get = fn _ => (unimplemented "IOData.get";
+					       ""),
+				get_pos = NONE,
+				set_pos = NONE,
+				close = close_,
+				can_input = NONE },
+		      access = fn f =>f() }
 	    in
-	      val word_lshift  : word * word -> word = lshift
-	      val word_rshift  : word * word -> word = rshift
-	      val word_arshift : word * word -> word =
-	        fn _ => unimplemented "MLWorks.Word.arshift"
-	      val word_orb  : word * word -> word = orb
-	      val word_xorb : word * word -> word = xorb
-	      val word_andb : word * word -> word = andb
-	      val word_notb : word -> word = notb
+	    fun currentIO () = (dummyIO)
+	    fun redirectIO x = (TextIO.print "D: redirectIO called\n"; ())
+	    fun resetIO () = (TextIO.print "D: resetIO called\n"; ())
+	    fun print _ = unimplemented "print"
+	    fun printError _ = unimplemented "printError"
 	    end
-          end
+	  end
+
+	structure Bits : BITS =
+	  struct
+            local
+		structure W = SMLBasisWord32
+		fun lift (f) =
+		    fn (x:int, y:int) =>
+		       W.toIntX (f (W.fromInt x, W.fromInt y))
+		fun lifts (f) =
+		    fn (x:int, y:int) =>
+		       W.toIntX (f (W.fromInt x, Word31.fromInt y))
+	    in
+	    val andb = lift W.andb
+	    val orb = lift W.orb
+	    val xorb = lift W.xorb
+	    val lshift = lifts W.<<
+	    val rshift = lifts W.>>
+	    val arshift = lifts W.~>>
+	    fun notb (x) = W.toIntX (W.notb (W.fromInt x))
+	    end
+	  end
 
         structure Word32 =
           struct
-	    type word = int
 	    local
-	      open NewJersey.Bits
+		(* open NewJersey.Bits *)
+		structure W = SMLBasisWord32
+		type w32 = W.word
+		fun lifts (f) =
+		    fn (x:w32, y:word) =>
+		       (f (x, Word31.fromLarge (SMLBasisWord.toLarge y))):w32
 	    in
-	      val word32_lshift  : word * word -> word = lshift
-	      val word32_rshift  : word * word -> word = rshift
-	      val word32_arshift : word * word -> word =
-	        fn _ => unimplemented "MLWorks.Word.arshift"
-	      val word32_orb  : word * word -> word = orb
-	      val word32_xorb : word * word -> word = xorb
-	      val word32_andb : word * word -> word = andb
-	      val word32_notb : word -> word = notb
+	    val word32_lshift  : w32 * word -> w32 = lifts W.<<
+	    val word32_rshift  : w32 * word -> w32 = lifts W.>>
+	    val word32_arshift : w32 * word -> w32 = lifts W.~>>
+	    val word32_orb  : w32 * w32 -> w32 = W.orb
+	    val word32_xorb : w32 * w32 -> w32 = W.xorb
+	    val word32_andb : w32 * w32 -> w32 = W.andb
+	    val word32_notb : w32 -> w32 = W.notb
 	    end
           end
+
+	structure Word =
+          struct
+	    local
+		type word = SMLBasisWord.word
+		type w = Word31.word
+	    in
+	    val word_lshift = SMLBasisWord.<<
+	    val word_rshift  : word * w -> word = SMLBasisWord.>>
+	    val word_arshift : word * w -> word = SMLBasisWord.~>>
+	    val word_orb  : word * word -> word = SMLBasisWord.orb
+	    val word_xorb : word * word -> word = SMLBasisWord.xorb
+	    val word_andb : word * word -> word = SMLBasisWord.andb
+	    val word_notb : word -> word = SMLBasisWord.notb
+	    end
+          end
+
+	structure Array : ARRAY =
+	  struct
+	    open SMLBasisArray
+	    exception Size
+	    exception Subscript
+	    val arrayoflist = SMLBasisArray.fromList
+	  end
+
+	structure ByteArray : BYTEARRAY =
+	  struct
+            local
+		structure W8A = SMLBasisWord8Array
+		structure W8S = SMLBasisWord8ArraySlice
+		structure W8 = SMLBasisWord8
+		structure S = SMLBasisString
+		structure C = SMLBasisChar
+	    in
+	    type bytearray = W8A.array
+
+	    exception Range of int
+	    exception Size
+	    exception Subscript
+	    exception Substring
+	    exception Find
+
+	    fun array (len, init) = W8A.array (len, (W8.fromInt init))
+	    val length = W8A.length
+	    fun update (arr, i, x) = W8A.update (arr, i, (W8.fromInt x))
+	    fun sub (arr, i) = W8.toInt (W8A.sub (arr, i))
+	    fun arrayoflist ilist = W8A.fromList (map W8.fromInt ilist)
+	    fun tabulate (n, f) = W8A.tabulate (n, fn (i) => W8.fromInt (f i))
+	    val from_list = arrayoflist
+	    fun to_list arr = List.tabulate (length arr, fn i => sub (arr, i))
+	    fun from_string s =
+		tabulate (S.size s, fn i => C.ord (S.sub (s, i)))
+	    fun substring (arr, start, len) =
+		let fun f i = C.chr (sub (arr, start + i))
+		in CharVector.tabulate (len, f)
+		end
+	    fun to_string arr = substring (arr, 0, length arr)
+	    fun fill (arr, x) =
+		let val b = W8.fromInt x
+		in W8A.modify (fn _ => b) arr
+		end
+	    fun map_index f arr =
+		tabulate (length arr, fn i => f (i, sub (arr, i)))
+	    fun map f arr = map_index (f o #2) arr
+	    fun iterate_index f arr =
+		W8A.appi (fn (i, w) => f (i, W8.toInt w)) arr
+	    fun iterate f arr = iterate_index (f o #2) arr
+	    fun rev arr =
+		let val len = length arr
+		in W8A.tabulate (len, fn i => W8A.sub (arr, (len - 1) - i))
+		end
+	    fun duplicate arr =
+		let val result = W8A.array (length arr, 0w0)
+		in
+		    W8A.copy { src = arr, dst = result, di = 0 };
+		    result
+		end
+	    fun subarray (arr, start, end_) =
+		let val result = W8A.array (end_ - start, 0w0)
+		in
+		    W8S.copy { src = W8S.slice (arr, start, SOME end_),
+			       dst = result,
+			       di = 0 };
+		    result
+		end
+	    fun append (arr1, arr2) =
+		let val len1 = length arr1
+		    val len2 = length arr2
+		    val result = W8A.array (len1 + len2, 0w0)
+		in
+		    W8A.copy {src = arr1, dst = result, di = 0};
+		    W8A.copy {src = arr2, dst = result, di = len1};
+		    result
+		end
+	    fun reducel_index f (init, arr) =
+		let fun g (i, w, state) = f (i, state, W8.toInt w)
+		in W8A.foldli g init arr
+		end
+	    fun reducer_index f (arr, init) =
+		let fun g (i, w, state) = f (i, W8.toInt w, state)
+		in W8A.foldri g init arr
+		end
+	    fun reducel f (init, arr) =
+		reducel_index (fn (_, state, x) => f (state, x)) (init, arr)
+	    fun reducer f (arr, init) =
+		reducer_index (fn (_, x, state) => f (x, state)) (arr, init)
+	    fun copy (src, start, end_, dst, start') =
+		W8S.copy { src = W8S.slice (src, start, SOME end_),
+			   dst = dst,
+			   di = start'}
+	    fun fill_range (arr, start, end_, x) =
+		let val w = W8.fromInt x
+		in W8S.modify (fn _ => w) (W8S.slice (arr, start, SOME end_))
+		end
+	    local
+		fun find' f arr = W8A.findi (fn (_, w) => f (W8.toInt w)) arr
+	    in
+	    fun find f arr =
+		case find' f arr of
+		    NONE => raise Find
+		  | SOME (i, _) => i
+	    fun find_default (f, default) arr =
+		case find' f arr of
+		    NONE => default
+		  | SOME (i, _) => i
+	    end
+	    val maxLen = W8A.maxLen
+
+	    end
+	  end
+
+        structure FloatArray : FLOATARRAY =
+	  struct
+	    local
+		structure A = SMLBasisRealArray
+		structure S = SMLBasisRealArraySlice
+	    in
+	    type floatarray = A.array
+	    exception Range of int
+	    exception Size
+	    exception Subscript
+	    exception Find
+	    val array = A.array
+	    val length = A.length
+	    val sub = A.sub
+	    val update = A.update
+	    val tabulate = A.tabulate
+	    val arrayoflist = A.fromList
+	    val from_list = A.fromList
+	    fun to_list arr = List.tabulate (length arr, fn i => sub (arr, i))
+	    fun fill (arr, x) = A.modify (fn _ => x) arr
+	    fun map_index f arr =
+		tabulate (length arr, fn i => f (i, (sub (arr, i))))
+	    fun map f arr = map_index (f o #2) arr
+	    val iterate = A.app
+	    val iterate_index = A.appi
+	    fun rev arr =
+		let val len = length arr
+		in tabulate (len, fn i => sub (arr, (len - 1) - i))
+		end
+	    fun duplicate arr =
+		let val result = array (length arr, 0.0)
+		in
+		    A.copy { src = arr, dst = result, di = 0 };
+		    result
+		end
+	    fun subarray (arr, start, end_) =
+		let val result = array (end_ - start, 0.0)
+		in
+		    S.copy { src = S.slice (arr, start, SOME end_),
+			     dst = result,
+			     di = 0 };
+		    result
+		end
+	    fun append (arr1, arr2) =
+		let val len1 = length arr1
+		    val len2 = length arr2
+		    val result = array (len1 + len2, 0.0)
+		in
+		    A.copy {src = arr1, dst = result, di = 0};
+		    A.copy {src = arr2, dst = result, di = len1};
+		    result
+		end
+	    fun reducel_index f (init, arr) =
+		let fun g (i, x, state) = f (i, state, x)
+		in A.foldli g init arr
+		end
+	    fun reducer_index f (arr, init) = A.foldri f init arr
+	    fun reducel f (init, arr) =
+		reducel_index (fn (_, state, x) => f (state, x)) (init, arr)
+	    fun reducer f (arr, init) = A.foldr f init arr
+	    fun copy (src, start, end_, dst, start') =
+		S.copy { src = S.slice (src, start, SOME end_),
+			 dst = dst,
+			 di = start'}
+	    fun fill_range (arr, start, end_, x) =
+		S.modify (fn _ => x) (S.slice (arr, start, SOME end_))
+	    local
+		fun find' f arr = A.findi (fn (_, x) => f x) arr
+	    in
+	    fun find f arr =
+		case find' f arr of
+		    NONE => raise Find
+		  | SOME (i, _) => i
+	    fun find_default (f, default) arr =
+		case find' f arr of
+		    NONE => default
+		  | SOME (i, _) => i
+	    end
+	    val maxLen = A.maxLen
+
+	    end
+	  end
+
+	structure ExtendedArray : EXTENDED_ARRAY =
+	  struct
+	    local
+		structure A = SMLBasisArray
+		structure S = SMLBasisArraySlice
+	    in
+	    type 'a array = 'a A.array
+	    exception Range of int
+	    exception Size
+	    exception Subscript
+	    exception Find
+	    val array = A.array
+	    val length = A.length
+	    val sub = A.sub
+	    val update = A.update
+	    val tabulate = A.tabulate
+	    val arrayoflist = A.fromList
+	    val from_list = A.fromList
+	    fun to_list arr = List.tabulate (length arr, fn i => sub (arr, i))
+	    fun fill (arr, x) = A.modify (fn _ => x) arr
+	    fun map_index f arr =
+		tabulate (length arr, fn i => f (i, (sub (arr, i))))
+	    fun map f arr = map_index (f o #2) arr
+	    val iterate = A.app
+	    val iterate_index = A.appi
+	    fun rev arr =
+		let val len = length arr
+		in tabulate (len, fn i => sub (arr, (len - 1) - i))
+		end
+	    local
+		fun alloc (len, proto) =
+		    if len = 0
+		    then tabulate (0, fn i => sub (proto, i))
+		    else array (len, sub (proto, 0))
+	    in
+	    fun duplicate arr =
+		let val result = alloc (length arr, arr)
+		in
+		    A.copy { src = arr, dst = result, di = 0 };
+		    result
+		end
+	    fun subarray (arr, start, end_) =
+		let val result = alloc (end_ - start, arr)
+		in
+		    S.copy { src = S.slice (arr, start, SOME end_),
+			     dst = result,
+			     di = 0 };
+		    result
+		end
+	    fun append (arr1, arr2) =
+		let val len1 = length arr1
+		    val len2 = length arr2
+		    val result = alloc (len1 + len2, arr1)
+		in
+		    A.copy {src = arr1, dst = result, di = 0};
+		    A.copy {src = arr2, dst = result, di = len1};
+		    result
+		end
+	    end
+	    fun reducel_index f (init, arr) =
+		let fun g (i, x, state) = f (i, state, x)
+		in A.foldli g init arr
+		end
+	    fun reducer_index f (arr, init) = A.foldri f init arr
+	    fun reducel f (init, arr) =
+		reducel_index (fn (_, state, x) => f (state, x)) (init, arr)
+	    fun reducer f (arr, init) = A.foldr f init arr
+	    fun copy (src, start, end_, dst, start') =
+		S.copy { src = S.slice (src, start, SOME end_),
+			 dst = dst,
+			 di = start'}
+	    fun fill_range (arr, start, end_, x) =
+		S.modify (fn _ => x) (S.slice (arr, start, SOME end_))
+	    local
+		fun find' f arr = A.findi (fn (_, x) => f x) arr
+	    in
+	    fun find f arr =
+		case find' f arr of
+		    NONE => raise Find
+		  | SOME (i, _) => i
+	    fun find_default (f, default) arr =
+		case find' f arr of
+		    NONE => default
+		  | SOME (i, _) => i
+	    end
+	    val maxLen = A.maxLen
+
+	    end
+	  end
+
+	structure Vector : VECTOR =
+	  struct
+	    local
+		structure V = SMLBasisVector
+	    in
+	    type 'a vector = 'a V.vector
+	    exception Size
+	    exception Subscript
+	    val vector = V.fromList
+	    val tabulate = V.tabulate
+	    val sub = V.sub
+	    val length = V.length
+	    val maxLen = V.maxLen
+	    end
+	  end
 
         structure Value =
           struct
             type T = unit
             type ml_value = T
             exception Value of string
-            val cast = NewJersey.System.Unsafe.cast
-            val ccast = NewJersey.System.Unsafe.cast
+            val cast = Unsafe.cast
+            val ccast = Unsafe.cast
             datatype print_options =
-              DEFAULT |
-              OPTIONS of {depth_max	  	: int,
-                          string_length_max	: int,
-                          indent		: bool,
-                          tags		  	: bool}
+		     DEFAULT |
+		     OPTIONS of {depth_max		: int,
+				 string_length_max	: int,
+				 indent		: bool,
+				 tags			: bool}
 
-            fun unsafe_plus _ = unimplemented "MLWorks.Internal.Value.unsafe_plus"
-            fun unsafe_minus _ = unimplemented "MLWorks.Internal.Value.unsafe_minus"
+            fun unsafe_plus _ = unimplemented "unsafe_plus"
+            fun unsafe_minus _ = unimplemented "unsafe_minus"
 
             val unsafe_array_sub = Array.sub
             val unsafe_array_update = Array.update
@@ -1659,45 +1222,78 @@ structure MLWorks : MLWORKS =
             val unsafe_bytearray_sub = ByteArray.sub
             val unsafe_bytearray_update = ByteArray.update
 
-            fun unsafe_record_sub _ = unimplemented "MLWorks.Internal.Value.unsafe_record_sub"
-            fun unsafe_record_update _ = unimplemented "MLWorks.Internal.Value.unsafe_record_update"
+	    val unsafe_floatarray_sub = FloatArray.sub
+            val unsafe_floatarray_update = FloatArray.update
 
-            fun unsafe_string_sub _ = unimplemented "MLWorks.Internal.Value.unsafe_string_sub"
-            fun unsafe_string_update _ = unimplemented "MLWorks.Internal.Value.unsafe_string_update"
+            fun unsafe_record_sub (x, _) = unimplemented "unsafe_record_sub"
+            fun unsafe_record_update _ = unimplemented "unsafe_record_update"
 
-            fun alloc_pair _ = unimplemented "MLWorks.Internal.Value.alloc_pair"
-            fun alloc_string _ = unimplemented "MLWorks.Internal.Value.alloc_string"
-            fun alloc_vector _ = unimplemented "MLWorks.Internal.Value.alloc_vector"
+            fun unsafe_string_sub (s, i) = Char.ord (String.sub (s, i))
+            fun unsafe_string_update _ = unimplemented "unsafe_string_update"
 
-            fun list_to_tuple _ = unimplemented "MLWorks.Internal.Value.list_to_tuple"
-            fun tuple_to_list _ = unimplemented "MLWorks.Internal.Value.tuple_to_list"
-            fun string_to_real _ = unimplemented "MLWorks.Internal.Value.string_to_real"
-            fun real_to_string _ = unimplemented "MLWorks.Internal.Value.real_to_string"
-            fun print _ = unimplemented "MLWorks.Internal.Value.print"
-            fun primary _ = unimplemented "MLWorks.Internal.Value.primary"
-            fun header _ = unimplemented "MLWorks.Internal.Value.secondary"
+            fun alloc_pair _ = unimplemented "alloc_pair"
+            fun alloc_string _ = unimplemented "Value.alloc_string"
+            fun alloc_vector _ = unimplemented "alloc_vector"
+
+            fun list_to_tuple _ = unimplemented "list_to_tuple"
+            fun tuple_to_list _ = unimplemented "tuple_to_list"
+	    local
+		(* encode a 64bit float as a Word8Vector with
+		   big endian order. *)
+		fun packReal64Big r =
+		    let val r64a = Real64Array.array (1, r)
+			(* i386 is little endian  *)
+			fun load_byte i =
+			    Unsafe.Word8Array.sub (r64a, 8 - 1 - i)
+		    in Word8Vector.tabulate (8, load_byte)
+		    end
+		fun unpackReal64Big v =
+		    let val r64a = Real64Array.array (1, 0.0)
+			fun store_byte (i, b) =
+			    Unsafe.Word8Array.update (r64a, 8 - 1 - i, b)
+		    in Word8Vector.appi store_byte v;
+		       Real64Array.sub (r64a, 0)
+		    end
+	    in
+            fun string_to_real (s:string):real =
+		unpackReal64Big (stringToW8vector s)
+            fun real_to_string (r:real):string =
+		w8vectorToString (packReal64Big r)
+	    end
+	    fun real_equal (x, y) = SMLBasisReal.== (x, y)
+	    fun arctan x = SMLBasisMath.atan x
+	    fun cos x = SMLBasisMath.cos x
+	    fun exp x = SMLBasisMath.exp x
+	    fun sin x = SMLBasisMath.cos x
+	    fun sqrt x = SMLBasisMath.sqrt x
+
+            fun print _ = unimplemented "Value.print"
+            fun primary _ = unimplemented "Value.primary"
+            fun header _ = unimplemented "Value.header"
             fun update_header _ = unimplemented "MLWorks.Internal.Value.update_header"
-            fun pointer _ = unimplemented "MLWorks.Internal.Value.pointer"
+            fun pointer _ = unimplemented "Value.pointer"
             fun update _ = unimplemented "MLWorks.Internal.Value.update"
             fun sub _ = unimplemented "MLWorks.Internal.Value.sub"
             fun update_byte _ = unimplemented "MLWorks.Internal.Value.update_byte"
-            fun sub_byte _ = unimplemented "MLWorks.Internal.Value.sub_byte"
+            fun sub_byte _ = (unimplemented "MLWorks.Internal.Value.sub_byte"; 0)
             fun update_header _ = unimplemented "MLWorks.Internal.Value.update_header"
-            fun exn_name _ = unimplemented "MLWorks.Internal.Value.exn_name"
-            fun code_name _ = unimplemented "MLWorks.Internal.Value.code_name"
+            fun exn_name _ = (unimplemented "MLWorks.Internal.Value.exn_name"; "")
+            fun code_name _ = (unimplemented "MLWorks.Internal.Value.code_name"; "")
             fun exn_argument _ = unimplemented "MLWorks.Internal.Value.exn_argument"
             fun exn_name_string _ = unimplemented "MLWorks.Internal.Value.exn_name_string"
+	    fun update_exn _ = unimplemented "Value.update_exn"
+	    fun update_exn_cons _ = unimplemented "Value.update_exn_cons"
 
-            structure Frame = 
+            structure Frame =
               struct
                 type frame = unit
 
-                fun frame_call _ = unimplemented "MLWorks.Internal.Value.Frame.frame_call"
-                fun frame_next _ = unimplemented "MLWorks.Internal.Value.Frame.frame_next"
+                fun frame_call f = (unimplemented "MLWorks.Internal.Value.Frame.frame_call"; f ())
+                fun frame_next _ = (unimplemented "MLWorks.Internal.Value.Frame.frame_next"; (false, (), 0))
                 fun frame_offset _ = unimplemented "MLWorks.Internal.Value.Frame.frame_offset"
                 fun frame_double _ = unimplemented "MLWorks.Internal.Value.Frame.frame_double"
-                fun frame_allocations _ = unimplemented "MLWorks.Internal.Value.Frame.frame_allocations"
-                fun is_ml_frame _ = unimplemented "MLWorks.Internal.Value.Frame.is_ml_frame"
+                fun frame_allocations _ = (unimplemented "MLWorks.Internal.Value.Frame.frame_allocations"; false)
+                fun is_ml_frame _ = (unimplemented "MLWorks.Internal.Value.Frame.is_ml_frame"; false)
                 fun sub _ = unimplemented "MLWorks.Internal.Value.Frame.sub"
                 fun update _ = unimplemented "MLWorks.Internal.Value.Frame.update"
                 fun current _ = unimplemented "MLWorks.Internal.Value.Frame.current"
@@ -1709,10 +1305,10 @@ structure MLWorks : MLWORKS =
             exception Trace of string
             fun intercept _ = unimplemented "MLWorks.Internal.Trace.intercept"
             fun replace _ = unimplemented "MLWorks.Internal.Trace.replace"
-            fun restore _ = unimplemented "MLWorks.Internal.Trace.restore" 
-	    fun restore_all _ = unimplemented "MLWorks.Internal.Trace.restore_all" 
-            datatype status = INTERCEPT | NONE | REPLACE
-            fun status _ = unimplemented "MLWorks.Internal.Trace.status"
+            fun restore _ = unimplemented "MLWorks.Internal.Trace.restore"
+	    fun restore_all _ = unimplemented "MLWorks.Internal.Trace.restore_all"
+            datatype status = INTERCEPT | NONE | REPLACE | UNTRACEABLE
+            fun status _ = (unimplemented "MLWorks.Internal.Trace.status"; NONE)
           end
 
         structure Dynamic =
@@ -1722,93 +1318,114 @@ structure MLWorks : MLWORKS =
             exception Coerce of type_rep * type_rep
 
             val generalises_ref : (type_rep * type_rep -> bool) ref =
-	      ref (fn _ => false)
+		ref (fn _ => false)
 
 	    local
-              fun generalises data = (!generalises_ref) data
+		fun generalises data = (!generalises_ref) data
 
-              val get_type = Value.cast (fn (a,b) => b)
-              val get_value = Value.cast (fn (a,b) => a)
+		val get_type = Value.cast (fn (a,b) => b)
+		val get_value = Value.cast (fn (a,b) => a)
 	    in
-              fun coerce (d,t) =
+            fun coerce (d,t) =
                 if generalises (get_type d,t) then
-		  get_value d
+		    get_value d
                 else
-		  raise Coerce(get_type d,t)
+		    raise Coerce(get_type d,t)
 	    end
           end
 
+	structure Exit =
+	  struct
+	    local
+		structure P = SMLBasisOSProcess
+		structure W = SMLBasisWord32
+	    in
+	    type key = int
+	    type status = W.word
+            val success = W.fromInt P.success
+            val failure = W.fromInt P.failure
+            val uncaughtIOException = W.fromInt 2
+            val badUsage = W.fromInt 3
+            val stop = W.fromInt 4
+            val save = W.fromInt 5
+            val badInput = W.fromInt 6
+            fun atExit f = (P.atExit f; 0)
+            fun removeAtExit key = unimplemented "removeAtExit"
+            fun exit w = P.exit (W.toIntX w)
+            fun terminate w = P.terminate (W.toIntX w)
+	    end
+          end
+
+	structure Debugger =
+	  struct
+	    local
+		fun f (s:string) = (unimplemented "break_hook"; ())
+	    in
+	    val break_hook = ref f
+	    fun break s = unimplemented "break"
+	    end
+	  end
+
         structure FileIO =
           struct
-            type fd = NewJersey.System.Unsafe.SysIO.fd * NewJersey.ByteArray.bytearray * int ref
             datatype offset = BEG | CUR | END
 
-            fun flush (fd, buffer, bp) =
-              (NewJersey.System.Unsafe.SysIO.write(fd, buffer, !bp); bp := 0)
+            fun flush stream = BinIO.flushOut stream
 
-            fun openf s =
-              (NewJersey.System.Unsafe.SysIO.openf(s, NewJersey.System.Unsafe.SysIO.O_WRITE),
-               NewJersey.ByteArray.array (4096, 0), ref 0)
+            fun openf s = BinIO.openOut
 
-	      (* to close:
+	    (* to close:
 	       - flush our buffer,
 	       - do an fsync,
 	       - close the file.
 	       The fsync is required to avoid MLWorks bug 561, q.v.
 	       The fsync is very ugly. Nick Haines 14-Mar-94 *)
-	      
-            fun closef (f as (fd, _, _)) =
-              (flush f;
-	       NewJersey.System.Unsafe.CInterface.wrap_sysfn
-	       "fsync"
-	       NewJersey.System.Unsafe.CInterface.syscall
-	       (95,[NewJersey.System.Unsafe.cast fd]);
-	       NewJersey.System.Unsafe.SysIO.closef fd)
 
-            fun seekf (f as (fd, _, _), i, p) =
-              let
-                val pos = case p of
-                  BEG => NewJersey.System.Unsafe.SysIO.L_SET
-                | CUR => NewJersey.System.Unsafe.SysIO.L_INCR
-                | END => NewJersey.System.Unsafe.SysIO.L_XTND
-              in
-                flush f; NewJersey.System.Unsafe.SysIO.lseek (fd, i, pos); ()
-              end
+            fun closef s = BinIO.closeOut
 
-            fun writebf (f as (fd, _, _), bytearray, start, length) =
-              (flush f; NewJersey.System.Unsafe.SysIO.writei (fd, bytearray, start, length))
+            fun seekf (stream, i, p) =
+		(unimplemented "seekf"; ())
 
-            fun writef ((fd, buffer, bp), s) =
-              let
-                val sz = size s
+            fun writebf (stream, bytearray, start, length) =
+		let val aslice = Word8ArraySlice.slice (bytearray, start,
+							SOME(length))
+		in
+		    BinIO.output (stream, Word8ArraySlice.vector (aslice))
+		end
 
-                fun copy (x, ptr) =
-                  if x > 4095 then
-                    (NewJersey.System.Unsafe.SysIO.write(fd, buffer, 4096); copy(0, ptr))
-                  else
-                    if ptr < sz then
-                      (NewJersey.ByteArray.update(buffer, x, NewJersey.String.ordof(s,ptr)); copy(x+1, ptr+1))
-                    else
-                      (bp := x)
-              in
-                copy(!bp, 0)
-              end
+	    fun write_byte (stream, byte) = BinIO.output1 (stream, byte)
 
-	    fun write_byte(fd, byte) = writef(fd, chr byte)
+            fun writef (stream, s:string) =
+		let fun write1 (c:char) =
+			let val byte = Word8.fromInt(ord c)
+			in write_byte (stream, byte)
+			end
+		    val sz = size s
+		    fun loop (i) =
+			if i = sz then ()
+			else (write1 (String.sub (s, i)); loop (1 + i))
+		in
+		    loop (0)
+		end
+
           end
 
         structure Runtime =
 	  struct
             exception Unbound of string
-            val environment = Value.cast o nj_environment (* Defined in nj_env.sml *)
+            fun environment name =
+		Unsafe.cast (nj_environment name) (* Defined in nj_env.sml *)
 
-            val modules = ref ([] : (string * Value.T * Time.time) list)
+            val modules = ref ([] : (string * Value.T * Value.T) list)
 
             structure Loader =
               struct
                 exception Load of string
-                fun load_module _ = unimplemented "MLWorks.Internal.Runtime.Loader.load_module"
-                fun load_wordset _ = unimplemented "MLWorks.Internal.Runtime.Loader.load_wordset"
+                fun load_module name =
+		    (unimplemented "MLWorks.Internal.Runtime.Loader.load_module"; (name, ()))
+
+		fun load_wordset _ =
+		    (unimplemented "MLWorks.Internal.Runtime.Loader.load_wordset"; [])
               end
 
 	    structure Memory =
@@ -1818,7 +1435,8 @@ structure MLWorks : MLWORKS =
                 fun collect _ = unimplemented "MLWorks.Internal.Runtime.Memory.collect"
                 fun collect_all _ = unimplemented "MLWorks.Internal.Runtime.Memory.collect_all"
                 fun promote_all _ = unimplemented "MLWorks.Internal.Runtime.Memory.promote_all"
-                fun collections _ = unimplemented "MLWorks.Internal.Runtime.Memory.collections"
+                fun collections _ =
+		    (unimplemented "MLWorks.Internal.Runtime.Memory.collections"; (0,0))
 	      end
 
             structure Event =
@@ -1828,14 +1446,140 @@ structure MLWorks : MLWORKS =
                 fun signal _ = unimplemented "MLWorks.Internal.Runtime.Event.signal"
 		fun stack_overflow_handler _ = unimplemented "MLWorks.Internal.Runtime.Event.stack_overflow_handler"
 		fun interrupt_handler _ = unimplemented "MLWorks.Internal.Runtime.Event.interrput_handler"
-		  
+
               end
 
           end
+	end
       end
 
-  end;
+    structure Profile =
+      struct
+	type manner = int
+	type function_id = string
+	type cost_centre_profile = unit
 
-structure Bits = NewJersey.Bits;
-structure OldNewJersey = NewJersey;
-structure NewJersey = struct end;
+	datatype object_kind =
+		 RECORD
+		 | PAIR
+		 | CLOSURE
+		 | STRING
+		 | ARRAY
+		 | BYTEARRAY
+		 | OTHER		(* includes weak arrays, code objects *)
+		 | TOTAL		(* used when specifying a profiling manner *)
+
+	datatype large_size =
+		 Large_Size of
+		 {megabytes : int,
+		  bytes : int}
+
+	datatype object_count =
+		 Object_Count of
+		 {number : int,
+		  size : large_size,
+		  overhead : int}
+
+	type object_breakdown = (object_kind * object_count) list
+
+	datatype function_space_profile =
+		 Function_Space_Profile of
+		 {allocated : large_size,
+		  copied : large_size,
+		  copies : large_size list,
+		  allocation : object_breakdown list}
+
+	datatype function_caller =
+		 Function_Caller of
+		 {id: function_id,
+		  found: int,
+		  top: int,
+		  scans: int,
+		  callers: function_caller list}
+
+	datatype function_time_profile =
+		 Function_Time_Profile of
+		 {found: int,
+		  top: int,
+		  scans: int,
+		  depth: int,
+		  self: int,
+		  callers: function_caller list}
+
+	datatype function_profile =
+		 Function_Profile of
+		 {id: function_id,
+		  call_count: int,
+		  time: function_time_profile,
+		  space: function_space_profile}
+
+	datatype general_header =
+		 General of
+		 {data_allocated: int,
+		  period: Internal.Types.time,
+		  suspended: Internal.Types.time}
+
+	datatype call_header =
+		 Call of {functions : int}
+
+	datatype time_header =
+		 Time of
+		 {data_allocated: int,
+		  functions: int,
+		  scans: int,
+		  gc_ticks: int,
+		  profile_ticks: int,
+		  frames: real,
+		  ml_frames: real,
+		  max_ml_stack_depth: int}
+
+	datatype space_header =
+		 Space of
+		 {data_allocated: int,
+		  functions: int,
+		  collections: int,
+		  total_profiled : function_space_profile}
+
+	type cost_header = unit
+
+	datatype profile =
+		 Profile of
+		 {general: general_header,
+		  call: call_header,
+		  time: time_header,
+		  space: space_header,
+		  cost: cost_header,
+		  functions: function_profile list,
+		  centres: cost_centre_profile list}
+
+	datatype options = Options of { scan : int,
+					selector : function_id -> manner}
+
+	datatype 'a result =
+		 Result of 'a
+		 | Exception of exn
+
+	exception ProfileError of string
+
+	fun profile (Options {scan, selector}) f a =
+	    (unimplemented "MLWorks.Profile.profile";
+	     Unsafe.cast 0)
+
+	fun make_manner {time, space, copies, calls, depth, breakdown} =
+	    (unimplemented "MLWorks.Profile.make_manner";
+	     Unsafe.cast 0)
+
+      end
+
+  end
+end;
+
+local
+    structure MLWorksGeneral =
+      struct
+	open General
+	val op <> = op <>
+      end
+in
+structure General = MLWorksGeneral
+end

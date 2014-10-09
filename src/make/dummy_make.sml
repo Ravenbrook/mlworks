@@ -54,8 +54,6 @@
  *
 *)
 
-Shell.Options.set (Shell.Options.Language.requireReservedWord,false);
-
 local
   datatype Path = ABS of string list| REL of string list
   fun strip (#"\t" :: rest) = strip rest
@@ -87,14 +85,11 @@ local
     let
      val s = TextIO.openIn f
      fun doline acc =
-                 let
-                   val line = TextIO.inputLine s
-                 in
-                   if line = "" then rev acc
-                   else case getrequire line of
-                     SOME r => doline (r ::acc)
-                   | _ => doline acc
-                 end
+	 case TextIO.inputLine s of
+	     NONE => rev acc
+	   | SOME line => case getrequire line of
+			      SOME r => doline (r ::acc)
+			    | _ => doline acc
      val res = doline []
    in
                  TextIO.closeIn s;
