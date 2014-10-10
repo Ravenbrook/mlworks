@@ -1078,7 +1078,10 @@ fun parse_table_row row =
 fun with_open_in_file (file,f) =
   let
     val stream = TextIO.openIn file
-    val result = (f stream handle e => (TextIO.closeIn stream; raise e))
+    val result = (f stream
+		  (* D: FIXME: enable again
+handle e => (TextIO.closeIn stream; raise e)
+		   *) )
   in
     (TextIO.closeIn stream;
      result)
