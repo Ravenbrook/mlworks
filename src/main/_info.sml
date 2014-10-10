@@ -356,7 +356,7 @@ functor Info (structure Location : LOCATION) : INFO =
              error_count = error_count
              })
             a
-            (* D: FIXME: restore handle exn => (finish (); raise exn) *)
+            handle exn => (finish (); raise exn)
       in
         finish ();
         result
