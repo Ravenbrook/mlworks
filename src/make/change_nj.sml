@@ -711,8 +711,6 @@ structure MLWorks : MLWORKS =
 		Posix.IO.writeArr (posixFD fd, stringToW8S (s, start, len))
 
 	    fun read (fd, n:int) =
-		(* val _= TextIO.print ("D: read called: " ^ Int.toString n
-					 ^ "\n") *)
 		w8vectorToString (Posix.IO.readVec (posixFD fd, n))
 
 	    fun seek (fd, offset, whence) =
