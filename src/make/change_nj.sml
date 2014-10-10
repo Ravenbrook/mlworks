@@ -606,41 +606,6 @@ structure MLWorks : MLWORKS =
 	  end
       end
 
-    structure RawIO =
-      struct
-        (* open NewJersey *) (* types instream, outstream,
-			  values std_in, std_out, std_err, open_in, open_out, end_of_stream, input,
-				 lookahead, output, close_in, close_out *)
-
-	val std_in = TextIO.stdIn
-	val std_out = TextIO.stdOut
-	val std_err = TextIO.stdErr
-
-	fun output_byte(fd, byte) = TextIO.output1(fd, chr byte)
-
-	fun closed_in _ = unimplemented "MLWorks.IO.closed_in"
-	fun closed_out _ = unimplemented "MLWorks.IO.closed_out"
-	fun clear_eof _ = unimplemented "MLWorks.IO.clear_eof"
-      end
-
-    structure IO =
-      struct
-	open RawIO
-        val terminal_in = TextIO.stdIn
-        fun with_standard_input _ = unimplemented "MLWorks.IO.with_standard_input"
-        val terminal_out = TextIO.stdOut
-	val messages = TextIO.stdErr
-        fun instream _ = TextIO.stdIn
-        fun outstream _ = TextIO.stdOut
-        fun with_standard_output _ = unimplemented "MLWorks.IO.with_standard_output"
-        fun with_standard_error _ = unimplemented "MLWorks.IO.with_standard_error"
-	datatype modtime = NOW | TIME of Time.time
-
-        fun file_modified filename = OS.FileSys.modTime (filename)
-	fun set_file_modified _ = unimplemented "MLWorks.IO.set_file_modified";
-
-      end
-
     exception Save of string
     fun save (filename, function) =
 	(SMLofNJ.exportFn (filename,
@@ -661,7 +626,7 @@ structure MLWorks : MLWORKS =
 
     structure Debugger =
       struct
-        fun default_break s = TextIO.output(IO.std_out,"Break at " ^ s ^ "\n")
+        fun default_break s = TextIO.print("Break at " ^ s ^ "\n")
         val break_hook = ref default_break
         fun break s = (!break_hook) s
       end
@@ -710,8 +675,7 @@ structure MLWorks : MLWORKS =
 	    type word32 = SMLBasisWord32.word
 	    type int32 = SMLBasisInt32.int
 	    datatype option = datatype SMLBasisOption.option
-	    datatype time = TIME of int * int * int (* basis time *)
-
+	    datatype time = datatype MLWTime.time
 	  end
 
 	structure Error =
@@ -1351,7 +1315,7 @@ structure MLWorks : MLWORKS =
             val badInput = W.fromInt 6
             fun atExit f = (P.atExit f; 0)
             fun removeAtExit key = unimplemented "removeAtExit"
-            fun exit w = P.exit (W.toIntX w)
+            fun exit w = (TextIO.print "D: exit called\n"; Unsafe.cast w)
             fun terminate w = P.terminate (W.toIntX w)
 	    end
           end
