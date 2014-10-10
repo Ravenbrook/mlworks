@@ -1,11 +1,11 @@
-(* this code 
+(* this code is used to load the MLWorks compiler into SML/NJ
    1. loads the emulation layer
    2. loads the dummy_make system
    3. loads the batch compiler
-   4. dumps an image, which the the batch compiler *)
+   4. dumps an image, which includes the batch compiler *)
 
 (* SML/NJ's backtrace feature is sometimes useful but it causes a
-   noticable slowdown both at runtime and compile time. 
+   noticable slowdown both at runtime and compile time.
 CM.make "$smlnj-tdp/back-trace.cm";
 SMLofNJ.Internals.TDP.mode := true;
  *)
