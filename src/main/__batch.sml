@@ -167,4 +167,5 @@ structure Batch_ = Batch(
   structure Exit = MLWorksExit);
 
 MLWorks.Internal.Runtime.modules := [];
-val _ = MLWorksExit.exit (Batch_.obey (MLWorks.arguments ()));
+(* val _ = MLWorksExit.exit (Batch_.obey (MLWorks.arguments ())); *)
+print ("D: not running batch compiler now\n")
