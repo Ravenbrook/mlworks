@@ -319,7 +319,7 @@ void test_mapping(void)
 #endif
 
 /* It seems that mmap()s past 0x60000000 will break Linux. */
-
+/* FIXME: no longer needed */
 #define ARENA_LIMIT 0x60000000
 
 /*
@@ -332,16 +332,22 @@ void test_mapping(void)
 static int reserve_arena_space(caddr_t *base)
 {
   int space;
-  *base = mmap(*base, SPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON,
+  void* addr = *base;
+  *base = mmap(addr, SPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON,
 	       -1, (off_t)0);
   if (*base == (caddr_t)-1) {
     /* Failed to reserve */
     return 1;
   }
 
-  /* if ((unsigned long)(*base) > ARENA_LIMIT) { */
-  /*   return 1; */
-  /* } */
+  /* FIXME: no longer needed
+  if ((unsigned long)(*base) > ARENA_LIMIT) {
+    DIAGNOSTIC(1, "  mmaped address %p is above ARENA_LIMIT %p; retrying",
+	       *base, ARENA_LIMIT);
+    *base = addr;
+    return reserve_arena_space (base);
+  }
+  */
 
   space = SPACE(((word)(*base)) + (SPACE_SIZE) -1);
   if ((caddr_t)(SPACE_BASE(space)) != *base) {
