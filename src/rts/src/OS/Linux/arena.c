@@ -334,10 +334,15 @@ static int reserve_arena_space(caddr_t *base)
   int space;
   *base = mmap(*base, SPACE_SIZE, PROT_NONE, MAP_PRIVATE | MAP_ANON,
 	       -1, (off_t)0);
-  if (*base == (caddr_t)-1 || (unsigned long)(*base) > ARENA_LIMIT) {
+  if (*base == (caddr_t)-1) {
     /* Failed to reserve */
     return 1;
   }
+
+  /* if ((unsigned long)(*base) > ARENA_LIMIT) { */
+  /*   return 1; */
+  /* } */
+
   space = SPACE(((word)(*base)) + (SPACE_SIZE) -1);
   if ((caddr_t)(SPACE_BASE(space)) != *base) {
     /* Oh dear, we've got an unaligned piece of space */
