@@ -114,20 +114,26 @@ functor Location () : LOCATION =
     val first_line = 1
     val first_col = 1
 
+    (* This uses GNU style for compiler messages
+       https://www.gnu.org/prep/standards/html_node/Errors.html#Errors
+
+       It's also worth to look at /etc/compilation.txt that comes with
+       Emacs to see what is recognized.
+     *)
     fun to_string UNKNOWN = unknown_string
       | to_string (FILE name) = name
       | to_string (LINE (name, line)) =
       concat [name, ":", Int.toString line]
       | to_string (POSITION (name, line, column)) =
-      concat [name, ":", Int.toString line, ",", Int.toString column]
+      concat [name, ":", Int.toString line, ".", Int.toString column]
       | to_string
       (EXTENT{name:string, s_line:int, s_col:int, e_line:int, e_col: int}) =
       if s_line = e_line andalso (s_col >= e_col - 1) then
-	concat [name, ":", Int.toString s_line, ",", Int.toString s_col]
+	concat [name, ":", Int.toString s_line, ".", Int.toString s_col]
       else
-	concat [name, ":", Int.toString s_line, ",",
-		Int.toString s_col, " to ", Int.toString e_line,
-		",", Int.toString
+	concat [name, ":", Int.toString s_line, ".",
+		Int.toString s_col, "-", Int.toString e_line,
+		".", Int.toString
 		(if e_col = first_col then first_col else e_col - 1)]
 
 
@@ -196,7 +202,7 @@ functor Location () : LOCATION =
           else
             ("",s)
       in
-        case parse_string ([":", ",", " to ", ","],rest) of 
+        case parse_string ([":", ".", "-", "."],rest) of 
           [] => []
         | (name::stuff) => device ^ name ::stuff
       end
