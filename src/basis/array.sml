@@ -70,6 +70,7 @@ signature ARRAY =
 
     val update : ('a array * int * 'a) -> unit
 
+    val vector : 'a array -> 'a vector
     val extract : ('a array * int * int option) -> 'a vector
 
     val copy : {src : 'a array, si : int, len : int option, dst : 'a array, di : int} -> unit
