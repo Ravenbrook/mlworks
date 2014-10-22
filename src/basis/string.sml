@@ -81,6 +81,7 @@ signature STRING =
     val sub : (string * int) -> char
     val extract : (string * int * int option) -> string 
     val concat    : string list -> string
+    val concatWith : string -> string list -> string
     val ^         : string * string -> string
     val implode   : char list -> string
     val explode : string -> char list
