@@ -98,12 +98,17 @@ structure Array : ARRAY =
     val sub = MLWorks.Internal.Array.sub
     val update = MLWorks.Internal.Array.update
 
+    (* FIXME: inefficient *)
+    fun vector array =
+	MLWorks.Internal.Vector.tabulate(length array, fn i => sub (array, i))
+
     fun extract(array, i, j) =
       let
         val len = check_slice (array,i,j)
       in
         MLWorks.Internal.Vector.tabulate(len, fn n => sub (array, n+i))
       end
+
 
     fun copy {src, si, len, dst, di} =
       let
