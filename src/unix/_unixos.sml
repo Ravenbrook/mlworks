@@ -344,6 +344,18 @@ struct
     val close : FileSys.file_desc -> unit = MLWorks.Internal.IO.close
   end
 
+  structure Process = struct
+      datatype pid = PID of int
+      fun pidToWord (PID id) = SysWord.fromInt id
+      fun wordToPid w = PID (SysWord.toInt w)
+    end
+
+  structure ProcEnv = struct
+      type pid = Process.pid
+      val getpid' : unit -> int = env "system os unix getpid"
+      fun getpid () = Process.PID (getpid' ())
+    end
+
   val can_input : FileSys.file_desc -> int = MLWorks.Internal.IO.can_input
 
   val set_block_mode : FileSys.file_desc * bool -> unit = 

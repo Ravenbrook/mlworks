@@ -37,6 +37,8 @@
 
 require "unix";
 require "__unix";
+require "__unixos";
 
 signature UNIX = UNIX;
 structure Unix = Unix;
+structure Posix = UnixOS_;
