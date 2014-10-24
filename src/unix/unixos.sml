@@ -280,11 +280,20 @@ signature UNIXOS =
 
     end
 
-
     structure IO : sig
       val close : FileSys.file_desc -> unit
     end
 
+    structure Process : sig
+      eqtype pid
+      val pidToWord : pid -> SysWord.word
+      val wordToPid : SysWord.word -> pid
+    end
+
+    structure ProcEnv : sig
+      eqtype pid
+      val getpid : unit -> pid
+    end
 
     val can_input       : FileSys.file_desc -> int
     val set_block_mode  : FileSys.file_desc * bool -> unit

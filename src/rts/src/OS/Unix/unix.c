@@ -1528,6 +1528,12 @@ static mlval unix_kill(mlval arg)
   return MLUNIT;
 }
 
+static mlval unix_getpid(mlval arg)
+{
+  pid_t pid = getpid ();
+  return MLINT(pid);
+}
+
 /*
  * OS.Process.terminate: Word32.word -> 'a
  */
@@ -1693,6 +1699,7 @@ extern void unix_init(void)
   env_function("system os unix getpwnam", unix_getpwnam);
   env_function("system os unix password_file", unix_password_file);
   env_function("system os unix kill", unix_kill);
+  env_function("system os unix getpid", unix_getpid);
 
   env_function("system os unix pipe", unix_pipe);
 
