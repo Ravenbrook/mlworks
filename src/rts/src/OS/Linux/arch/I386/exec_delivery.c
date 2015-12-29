@@ -71,11 +71,12 @@
  */
 
 #include <elf.h>
-#include <libelf/libelf.h>
+#include <libelf.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 #include "exec_delivery.h"
 #include "gc.h"

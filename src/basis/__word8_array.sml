@@ -101,20 +101,24 @@ structure Word8Array : MONO_ARRAY =
     fun check_size n =
       if n < 0 orelse n > maxLen then raise Size else n
 
+    val cast = MLWorks.Internal.Value.cast
+
     fun array (i: int, e: elem) : array =
-      A (MLWorks.Internal.ByteArray.array (check_size i, MLWorks.Internal.Value.cast e))
+      A (MLWorks.Internal.ByteArray.array (check_size i, cast e))
 
     fun tabulate (i : int, f : int -> elem) : array =
-      A (MLWorks.Internal.ByteArray.tabulate (check_size i,MLWorks.Internal.Value.cast f))
+      A (MLWorks.Internal.ByteArray.tabulate (check_size i,cast f))
 
     (* uses toplevel List.length which is overridden afterwords *)
     fun fromList (l : elem list) : array =
       (ignore(check_size (length l));
-       A (MLWorks.Internal.ByteArray.arrayoflist (MLWorks.Internal.Value.cast l)))
+       A (MLWorks.Internal.ByteArray.arrayoflist (cast l)))
 
-    val length   : array -> int                     = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.length) 
-    val sub      : (array * int) -> elem            = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.sub)
-    val update   : (array * int * elem) -> unit     = MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.update)
+
+    fun length (A ba) : int = MLWorks.Internal.ByteArray.length ba
+    fun sub (A ba, i:int) : elem = cast(MLWorks.Internal.ByteArray.sub (ba, i))
+    fun update (A ba, i:int, x:elem) : unit =
+	MLWorks.Internal.ByteArray.update (ba, i, cast x)
 
     val extract  : (array * int * int option ) -> vector =
       fn (A a,i,len) =>
@@ -125,7 +129,7 @@ structure Word8Array : MONO_ARRAY =
           | NONE => MLWorks.Internal.ByteArray.length a - i
       in 
         if i >= 0 andalso len >= 0 andalso i + len <= MLWorks.Internal.ByteArray.length a
-          then MLWorks.Internal.Value.cast(MLWorks.Internal.ByteArray.substring (a,i,len))
+        then cast (MLWorks.Internal.ByteArray.substring (a,i,len))
         else raise Subscript
       end
 

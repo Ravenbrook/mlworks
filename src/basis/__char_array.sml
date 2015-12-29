@@ -117,9 +117,10 @@ structure CharArray : MONO_ARRAY =
       (ignore(check_size (length l));
        A (MLWorks.Internal.ByteArray.arrayoflist (cast l)))
 
-    val length   : array -> int                     = cast(MLWorks.Internal.ByteArray.length)
-    val sub      : (array * int) -> elem            = cast(MLWorks.Internal.ByteArray.sub)
-    val update   : (array * int * elem) -> unit     = cast(MLWorks.Internal.ByteArray.update)
+    fun length (A ba) : int = MLWorks.Internal.ByteArray.length ba
+    fun sub (A ba, i:int) : elem = cast(MLWorks.Internal.ByteArray.sub (ba, i))
+    fun update (A ba, i:int, x:elem) : unit =
+	MLWorks.Internal.ByteArray.update (ba, i, cast x)
 
     val extract  : (array * int * int option ) -> vector =
       fn (A a,i,len) =>
@@ -130,7 +131,7 @@ structure CharArray : MONO_ARRAY =
           | NONE => MLWorks.Internal.ByteArray.length a - i
       in 
         if i >= 0 andalso len >= 0 andalso i + len <= MLWorks.Internal.ByteArray.length a
-          then cast(MLWorks.Internal.ByteArray.substring (a,i,len))
+          then MLWorks.Internal.ByteArray.substring (a,i,len)
         else raise Subscript
       end
 

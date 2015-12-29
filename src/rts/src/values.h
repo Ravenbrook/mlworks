@@ -520,6 +520,7 @@ word:
  */
 
 #define CWORD32(v)  ((word *)CSTRING(v))
+#define CINT32(v)   ((int *)CSTRING(v))
 
 
 /*  == Booleans ==

@@ -75,7 +75,12 @@ functor LambdaFlow (structure SimpleUtils : SIMPLEUTILS
                     structure RuntimeEnv : RUNTIMEENV
                     structure MachSpec : MACHSPEC
 
+                    (* D: FIXME: apparently a SMLNJ bug that prevents
+                       this Compilation continues without it, tho.
+                       Not sure if it causes problems later.
                     sharing LambdaPrint.LambdaTypes = SimpleUtils.LambdaTypes
+		     *)
+
                     sharing type SimpleUtils.LambdaTypes.FunInfo = 
                       RuntimeEnv.FunInfo
                       ) : LAMBDAFLOW =

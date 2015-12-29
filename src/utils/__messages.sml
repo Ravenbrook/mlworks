@@ -37,6 +37,6 @@ require "messages";
 structure Messages : MESSAGES =
   struct
     fun env s = MLWorks.Internal.Value.cast(MLWorks.Internal.Runtime.environment s)
-    val output = env"stream message output"
-    val flush = env"stream message flush"
+    val output : string -> unit = env"stream message output"
+    val flush : unit -> unit = env"stream message flush"
   end;

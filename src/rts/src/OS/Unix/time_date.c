@@ -112,6 +112,7 @@
 #include <assert.h>
 #include <sys/time.h>		/* struct timeval, mktime, ... */
 #include <limits.h>		/* LONG_MAX ... */
+#include <string.h>
 #include "alloc.h"		/* free */
 #include "allocator.h"		/* allocate_real, allocate_record */
 #include "date.h"		/* mlw_date_hour ... */

@@ -1118,24 +1118,29 @@ fun check_empty_tyvars (opts,tyvars) =
 
 
 local
-  fun check_disjoint_tycons (key,message)(opts,item,list) =
-    if member(fn (x,y) => Ident.tycon_eq(key x,key y))(item,list)
+    fun check_disjoint_tycons (key: 'a -> Ident.TyCon, message:string)
+			      (opts, item:'a, list:'a list) =
+      if member(fn (x,y) => Ident.tycon_eq(key x,key y))(item,list)
       then
-        let val Ident.TYCON sym = key item
-        in
-          error (opts,"Multiple declaration of type constructor " ^
-                 Symbol.symbol_name sym ^ " in " ^ message)
-        end
-    else ()
+          let val Ident.TYCON sym = key item
+          in
+              error (opts,"Multiple declaration of type constructor " ^
+			  Symbol.symbol_name sym ^ " in " ^ message)
+          end
+      else ()
 in
-  val check_disjoint_datbind = check_disjoint_tycons
-                               (fn (_,x,_,_,_) => x, "datatype binding")
-  val check_disjoint_typbind = check_disjoint_tycons
-                               (fn (_,x,_,_) => x, "type binding")
-  val check_disjoint_datdesc = check_disjoint_tycons
-                               (fn (_,x,_) => x, "datatype specification")
-  val check_disjoint_typdesc = check_disjoint_tycons
-                               (fn (_,x,_) => x, "type specification")
+fun check_disjoint_datbind (opts, item, list) =
+    check_disjoint_tycons (fn (_,x,_,_,_) => x, "datatype binding")
+			  (opts, item, list)
+fun check_disjoint_typbind (opts, item, list) =
+    check_disjoint_tycons (fn (_,x,_,_) => x, "type binding")
+			  (opts, item, list)
+fun check_disjoint_datdesc (opts, item, list) =
+    check_disjoint_tycons (fn (_,x,_) => x, "datatype specification")
+			  (opts, item, list)
+fun check_disjoint_typdesc (opts, item, list) =
+    check_disjoint_tycons (fn (_,x,_) => x, "type specification")
+			  (opts, item, list)
 end
 
 (* need to ensure that all bindings in a rec are of form <pat,fn match> *)

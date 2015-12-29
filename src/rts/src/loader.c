@@ -413,7 +413,7 @@
 #include "objectfile.h"
 #include "allocator.h"
 #include "interface.h"
-#include "endian.h"
+#include "mlw_endian.h"
 #include "modules.h"
 #include "diagnostic.h"
 #include "utils.h"

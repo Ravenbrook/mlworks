@@ -268,7 +268,7 @@ static mlval new_stub
   (const char *string, mlval (*f)(mlval), mlval type, mlval code)
 {
   mlval closure, name, dummy_code;
-
+  assert(is_word_aligned(f));
 #ifdef OS_NT
   assert(CINT(MLINT(f)) == (int)f);
   f = (mlval (*)(mlval))(MLINT(f)); /* NT compilers don't align functions properly */

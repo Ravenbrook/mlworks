@@ -497,7 +497,7 @@ functor StreamIO(structure PrimIO : PRIM_IO
       }
 
 
-    val openStreams = ref []
+    val openStreams = ref ([]:outstream list)
 
     fun addOpenStream (s as Out{name,...}) =
           (openStreams := s :: !openStreams; s)
@@ -511,7 +511,8 @@ functor StreamIO(structure PrimIO : PRIM_IO
     fun handler(Out{name,...},function, cause) =
                      raise IO.Io{name=name,function=function,cause=cause}
 
-    val exit_function_key = ref NONE (* Handle to exit function if installed *)
+    (* Handle to exit function if installed *)
+    val exit_function_key = ref (NONE:MLWorks.Internal.Exit.key option)
 
     fun mkOutstream(w, mode) =
         let val s =
@@ -657,7 +658,9 @@ functor StreamIO(structure PrimIO : PRIM_IO
           val blen = Array.length data
           val p = !pos
 	  fun copy offset =
-	    (Array.copyVec {src=s, si=0, len=SOME slen, dst=data, di=offset};
+	    ((if slen = 0 then ()
+	      else Array.copyVec {src=s, si=0, len=SOME slen,
+				  dst=data, di=offset});
              pos := offset + slen)
         in if p+slen < blen
              then copy p

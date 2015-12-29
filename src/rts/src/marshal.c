@@ -100,14 +100,14 @@ char *marshal(char *out, const char *desc, ...)
       /* Characters are encoded as themselves. */
 
       case 'c':
-      *out++ = va_arg(arg, char);
+      *out++ = va_arg(arg, int); /* promoted from char */
       break;
 
       /* Integers are encoded in 7-bit chunks with the eighth bit indicating */
       /* that there is another chunk to come. */
 
       case 's':
-      out = marshal_long(out, (unsigned long int)va_arg(arg, unsigned short int));
+      out = marshal_long(out, (unsigned long int)va_arg(arg, int)); /* promoted from unsigned short int */
       break;
 
       case 'i':

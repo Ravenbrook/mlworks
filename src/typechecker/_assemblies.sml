@@ -389,8 +389,10 @@ functor Assemblies(
 	lsub a_list
       end
 
-    val empty_str_offspring = NewMap.empty (Ident.strid_lt,Ident.strid_eq)
-    val empty_type_offspring = NewMap.empty (Ident.tycon_lt,Ident.tycon_eq)
+    val empty_str_offspring : StrOffspring
+	= NewMap.empty (Ident.strid_lt,Ident.strid_eq)
+    val empty_type_offspring : TypeOffspring
+	= NewMap.empty (Ident.tycon_lt,Ident.tycon_eq)
     val empty_strassembly = fn _ => []
 
     val empty_tyassembly = IntMap.empty

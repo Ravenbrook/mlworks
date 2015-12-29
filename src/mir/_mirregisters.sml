@@ -301,8 +301,13 @@ functor MirRegisters(
 
     (* These association lists define the real registers onto which the *)
     (* special purpose registers will map. *)
-
-    val special_assignments =
+    local
+	type alist = (int * MachSpec.register) list
+	type special_assignments = {gc : alist,
+				    non_gc : alist,
+				    fp : alist}
+    in
+    val special_assignments : special_assignments =
       let
 	val callers = Lists.zip (caller_arg_regs, MachSpec.caller_arg_regs)
 	val callees = Lists.zip (callee_arg_regs, MachSpec.callee_arg_regs)
@@ -322,6 +327,7 @@ functor MirRegisters(
 	 non_gc = [],
 	 fp = Lists.zip (fp_global :: fp_arg_regs, MachSpec.fp_global :: MachSpec.fp_arg_regs)}
       end
+    end
 
     (*  === REAL REGISTER ASSIGNMENTS ===  *)
 

@@ -113,7 +113,7 @@ structure Timer : TIMER =
 
     fun totalRealTimer() = TOTAL
 
-    val startTime = env "Time.start"
+    val startTime : unit -> Time.time = env "Time.start"
 
     fun checkRealTimer arg =
       let

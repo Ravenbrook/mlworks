@@ -1284,7 +1284,8 @@ struct
     | count_gc_tags(AugLambda.SCON_TAG(Ident.STRING _, _)) = 1
     | count_gc_tags _ = 0
 
-  val empty_string_tree = NewMap.empty ((op<):string*string->bool,op= : string * string -> bool)
+  val empty_string_tree : (string, LambdaTypes.LVar) NewMap.map =
+      NewMap.empty ((op<):string*string->bool,op= : string * string -> bool)
 
   fun last [] = Crash.impossible"Last empty list"
     | last [x] = x
@@ -1404,9 +1405,9 @@ struct
         assign (args,regs,[])
       end
   in
-    val assign_caller_regs = assign_regs caller_arg_regs
-    val assign_callee_regs = assign_regs callee_arg_regs
-    val assign_fp_regs = assign_regs MirRegisters.fp_arg_regs
+    fun assign_caller_regs args = assign_regs caller_arg_regs args
+    fun assign_callee_regs args = assign_regs callee_arg_regs args
+    fun assign_fp_regs args = assign_regs MirRegisters.fp_arg_regs args
   end
 
   fun make_get_args_code (args,copies) =
