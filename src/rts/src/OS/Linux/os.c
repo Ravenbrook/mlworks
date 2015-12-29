@@ -89,7 +89,7 @@
 #include "syscalls.h"
 #include "diagnostic.h"
 #include "utils.h"
-#include <i386-linux-gnu/fpu_control.h>
+#include <fpu_control.h>
 
 
 extern void os_init(void)
