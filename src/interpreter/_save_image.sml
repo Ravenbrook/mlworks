@@ -387,12 +387,9 @@ struct
                 | parse1 (a::rest,acc) = parse1 (rest,a::acc)
 
               fun loop acc =
-                let
-                  val line = TextIO.inputLine instream
-                in
-                  if line = "" then rev acc
-                  else loop (parse1 (explode line,[])::acc)
-                end
+		case TextIO.inputLine instream of
+		    NONE => rev acc
+		  | SOME line => loop (parse1 (explode line,[])::acc)
 
               val items = loop []
                 handle

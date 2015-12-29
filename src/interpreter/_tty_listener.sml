@@ -373,7 +373,7 @@ struct
         let
 	  val _ = output_fn(do_prompt ("MLWorks", state))
 	  (* val _ = MLWorks.IO.clear_eof MLWorks.IO.std_in *)
-          val line = TextIO.inputLine TextIO.stdIn
+          val line = getOpt (TextIO.inputLine TextIO.stdIn, "")
 		     handle IO.Io _ => ""
           val new_state =
 	    (case #3 (ShellTypes.with_toplevel_name title
