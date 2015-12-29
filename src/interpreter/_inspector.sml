@@ -218,7 +218,7 @@ functor Inspector (
             val _ = print "Inspector> "
             val _ = TextIO.flushOut TextIO.stdOut;
           in
-            case rev (explode (TextIO.inputLine(TextIO.stdIn))) of
+            case rev (explode (getOpt (TextIO.inputLine(TextIO.stdIn), ""))) of
               [] => ()
             | (_::tagl) =>
                 let

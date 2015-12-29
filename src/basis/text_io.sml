@@ -127,7 +127,7 @@ signature TEXT_IO =
     val setOutstream : (outstream * StreamIO.outstream) -> unit
 
 
-    val inputLine : instream -> string
+    val inputLine : instream -> string option
 
     val outputSubstr : (outstream * Substring.substring) -> unit
 

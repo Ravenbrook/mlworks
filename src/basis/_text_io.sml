@@ -153,16 +153,13 @@ functor TextIO(include sig
            (TextIO'.StreamIO.mkInstream
              (OSPrimIO.openString s,""))
 
-     
      fun inputLine (f: TextIO'.instream) =
-       let
-         val g0 = TextIO'.getInstream f
-         val (s,gn) = TextStreamIO.inputLine g0
-         val _ = TextIO'.setInstream(f,gn)
+       let val g0 = TextIO'.getInstream f
        in
-         s
+	   case TextStreamIO.inputLine g0 of
+	       NONE => NONE
+	     | SOME (line, g1) => (TextIO'.setInstream(f, g1); SOME line)
        end
-         
 
      fun outputSubstr(f:TextIO'.outstream, ss:Substring.substring) =
        TextIO'.output(f,Substring.string ss)

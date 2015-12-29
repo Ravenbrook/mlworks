@@ -2426,7 +2426,7 @@ functor Ml_Debugger(
                             (do_quit(); raise Exit)
                           else ()
 
-                        val line = TextIO.inputLine TextIO.stdIn
+                        val line = getOpt (TextIO.inputLine TextIO.stdIn, "")
                       in
                         parse_command line
                       end
