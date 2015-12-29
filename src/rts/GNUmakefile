@@ -262,7 +262,7 @@
 #
 # and do "gnumake"
 
-CMODULES = alloc allocator arena bytearrays cache diagnostic endian \
+CMODULES = alloc allocator arena bytearrays cache diagnostic mlw_endian \
           environment event exceptions fixup \
           gc global image implicit initialise integers intercept \
           license lists loader marshal mem modules \
