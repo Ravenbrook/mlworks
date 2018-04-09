@@ -1135,7 +1135,7 @@ static void pairs_to_args(Arg args[], Cardinal *nr_args_return, mlval list)
 
 
 
-static void args_to_pairs(Arg args[], mlval list)
+static void xt_args_to_pairs(Arg args[], mlval list)
 {
   Cardinal nr_args = 0;
   mlval ref= MLUNIT;
@@ -1152,24 +1152,24 @@ static void args_to_pairs(Arg args[], mlval list)
     switch(FIELD(argument, 0)) {
     case mlw_x_arg_bool:
       /* Need to cast the pointer before dereferencing */
-      mlw_ref_update(ref, MLBOOL(*(Boolean *)(&(args[nr_args].value))));
+      mlw_ref_update(ref, MLBOOL(*(Boolean *)(args[nr_args].value)));
       break;
 
     case mlw_x_arg_boxed:
       {
-	mlval string = box((unsigned long int)args[nr_args].value);
+	mlval string = box(*(unsigned long int*)(args[nr_args].value));
 	mlw_ref_update(ref, string);
       }
       break;
 
     case mlw_x_arg_int:
       /* Need to cast the pointer before dereferencing */
-      mlw_ref_update(ref, MLINT(*(int *)(&(args[nr_args].value))));
+      mlw_ref_update(ref, MLINT(*(int *)(args[nr_args].value)));
       break;
 
     case mlw_x_arg_short:
       /* Need to cast the pointer before dereferencing */
-      mlw_ref_update(ref, MLINT(*(short *)(&(args[nr_args].value))));
+      mlw_ref_update(ref, MLINT(*(short *)(args[nr_args].value)));
       break;
 
     case mlw_x_arg_string:
@@ -1180,11 +1180,11 @@ static void args_to_pairs(Arg args[], mlval list)
       break;
 
     case mlw_x_arg_unboxed:
-      mlw_ref_update(ref, (mlval)args[nr_args].value);
+      mlw_ref_update(ref, (mlval)*((XtArgVal *)args[nr_args].value));
       break;
 
     default:
-      error("args_to_pairs: Illegal Argument constructor for resource `%s': 0x%X",
+      error("xt_args_to_pairs: Illegal Argument constructor for resource `%s': 0x%X",
 	    CSTRING(FIELD(head, 0)), FIELD(argument, 0));
     }
 
@@ -1885,24 +1885,16 @@ static mlval widget_values_set(mlval argument)
 static mlval widget_values_get(mlval argument)
 {
   Arg args[MAX_NR_ARGS];
+  XtArgVal vals[MAX_NR_ARGS] = {0};
   Cardinal nr_args, i;
   mlval list = FIELD(argument, 1);
 
   pairs_to_args(args, &nr_args, list);
   for(i=0; i<nr_args; ++i) {
-    XtArgVal tmp = (XtArgVal)XtMalloc(sizeof (XtArgVal));
-    if (tmp == 0)
-      error("widget_values_get: malloc failed", 0, 0);
-    else
-      args[i].value = tmp;
+      args[i].value = (XtArgVal)&vals[i];
   }
   XtGetValues((Widget)FIELD(argument, 0), args, nr_args);
-  for(i=0; i<nr_args; ++i) {
-    XtArgVal *tmp = (XtArgVal*)args[i].value;
-    args[i].value = *tmp;
-    XtFree ((char*)tmp);
-  }
-  args_to_pairs(args, list);
+  xt_args_to_pairs(args, list);
 
   return(MLUNIT);
 }  
