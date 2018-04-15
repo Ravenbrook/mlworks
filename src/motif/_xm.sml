@@ -1011,7 +1011,7 @@ functor Xm (structure List: LIST) : XM =
           | pairToRep (MESSAGE_WINDOW, WIDGET w) =
 	      ("messageWindow", ARGUNBOXED (ref (cast w)))
           | pairToRep (WIDTH, INT i) =
-	      ("width", ARGSHORT (ref i))
+	      ("width", ARGSHORT (ref i ))
           | pairToRep (HEIGHT, INT i) =
 	      ("height", ARGSHORT (ref i))
           | pairToRep (X, INT i) =
